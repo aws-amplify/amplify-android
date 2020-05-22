@@ -64,6 +64,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
 import io.reactivex.disposables.CompositeDisposable;
@@ -76,7 +77,7 @@ import io.reactivex.subjects.Subject;
  */
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-
+    private static final long THREAD_POOL_TERMINATE_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     // Database Version
     private static final int DATABASE_VERSION = 1;
 
@@ -93,7 +94,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private final ModelSchemaRegistry modelSchemaRegistry;
 
     // ThreadPool for SQLite operations.
-    private final ExecutorService threadPool;
+    private ExecutorService threadPool;
 
     // Data is read from SQLite and de-serialized using GSON
     // into a strongly typed Java object.
@@ -120,6 +121,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Stores the reference to disposable objects for cleanup
     private final CompositeDisposable toBeDisposed;
 
+    // Need to keep a reference to the app context so we can
+    // re-initialize the adapter after deleting the file in the clear() method
+    private Context context;
+
     /**
      * Construct the SQLiteStorageAdapter object.
      * @param modelSchemaRegistry A registry of schema for all models used by the system
@@ -132,7 +137,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             ModelProvider systemModelsProvider) {
         this.modelSchemaRegistry = modelSchemaRegistry;
         this.modelsProvider = CompoundModelProvider.of(systemModelsProvider, userModelsProvider);
-        this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();
         this.itemChangeSubject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
@@ -167,7 +171,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(context);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
-
+        this.threadPool = Executors.newCachedThreadPool();
+        this.context = context;
         threadPool.submit(() -> {
             try {
                 /*
@@ -548,7 +553,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             insertSqlPreparedStatements = null;
 
             if (toBeDisposed != null) {
-                toBeDisposed.dispose();
+                toBeDisposed.clear();
             }
             if (itemChangeSubject != null) {
                 itemChangeSubject.onComplete();
@@ -566,6 +571,44 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             throw new DataStoreException("Error in terminating the SQLiteStorageAdapter.", exception,
                     "See attached exception for details.");
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized void clear(@NonNull Action onComplete,
+                                   @NonNull Consumer<DataStoreException> onError) {
+        try {
+            LOG.debug("Shutting down thread pool for the storage adapter.");
+            threadPool.shutdown();
+            if (!threadPool.awaitTermination(THREAD_POOL_TERMINATE_TIMEOUT, TimeUnit.MILLISECONDS)) {
+                threadPool.shutdownNow();
+            }
+            LOG.debug("Storage adapter thread pool shutdown.");
+        } catch (InterruptedException exception) {
+            LOG.warn("Storage adapter thread pool was interrupted during shutdown.", exception);
+        }
+        sqliteStorageHelper.close();
+        databaseConnectionHandle.close();
+        LOG.debug("Clearing DataStore.");
+        if (!context.deleteDatabase(DATABASE_NAME)) {
+            DataStoreException dataStoreException = new DataStoreException(
+                "Error while trying to clear data from the local DataStore storage.",
+                "See attached exception for details.");
+            onError.accept(dataStoreException);
+        }
+        LOG.debug("DataStore cleared. Re-initializing storage adapter.");
+
+        //Re-initialize the adapter.
+        initialize(context, schemaList -> {
+            onComplete.call();
+        }, exception -> {
+                onError.accept(new DataStoreException(
+                    "Error occurred whilte trying to re-initialize the storage adapter",
+                    exception.getMessage()));
+            }
+        );
     }
 
     private CreateSqlCommands getCreateCommands(@NonNull Set<Class<? extends Model>> models) {

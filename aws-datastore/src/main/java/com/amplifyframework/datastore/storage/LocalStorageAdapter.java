@@ -187,4 +187,15 @@ public interface LocalStorageAdapter {
      * @throws DataStoreException if something goes wrong during terminate
      */
     void terminate() throws DataStoreException;
+
+    /**
+     * Each implementation of this adapter interface will have its own
+     * interpretation of what clear means. The intent is to destroy
+     * any DataStore-related artifacts and reset the adapter such that
+     * it is usable by the DataStore plugin.
+     * @param onComplete Invoked if the call is successful.
+     * @param onError Invoked if an exception occurs.
+     */
+    void clear(@NonNull Action onComplete,
+               @NonNull Consumer<DataStoreException> onError);
 }

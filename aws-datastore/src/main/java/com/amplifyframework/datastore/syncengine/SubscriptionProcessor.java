@@ -120,6 +120,9 @@ final class SubscriptionProcessor {
                 emitter::onError,
                 emitter::onComplete
             );
+            // When the observable is disposed, we need to call cancel() on the subscription
+            // so it can properly dispose of resources if necessary. For the AWS API plugin,
+            // this means means closing the underlying network connection.
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
             latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         })
@@ -157,6 +160,24 @@ final class SubscriptionProcessor {
                     failure -> LOG.warn("Reading subscriptions buffer has failed.", failure)
                 )
         );
+    }
+
+    /**
+     * Checks if the subscription processor is listening
+     * for events coming from the remote DataStore.
+     * @return true if there are listeners. False otherwise.
+     */
+    boolean isObservingSubscriptionEvents() {
+        return ongoingOperationsDisposable.size() > 0;
+    }
+
+    /**
+     * Check if the subscription processor is processing
+     * changes coming from the remote DataStore.
+     * @return
+     */
+    boolean isDrainingMutationBuffer() {
+        return buffer.hasObservers();
     }
 
     /**

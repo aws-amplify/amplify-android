@@ -225,4 +225,15 @@ public interface DataStoreCategoryBehavior {
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted
     );
+
+    /**
+     * Resets the underlying DataStore to its pre-initialized state such that no data remains on the local
+     * device. Every implementation of this behavior may have its own interpretation of what clear means.
+     * This is meant to be a destructive operation that allows for safe disposal of data stored locally.
+     *
+     * @param onComplete Invoked if the call is successful.
+     * @param onError Invoked if an exception occurs.
+     */
+    void clear(@NonNull Action onComplete,
+               @NonNull Consumer<DataStoreException> onError);
 }
