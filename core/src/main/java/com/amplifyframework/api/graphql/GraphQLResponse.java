@@ -85,16 +85,14 @@ public final class GraphQLResponse<R> {
     }
 
     @Override
-    public boolean equals(Object thatObject) {
+    public boolean equals(@Nullable Object thatObject) {
         if (this == thatObject) {
             return true;
         }
         if (thatObject == null || getClass() != thatObject.getClass()) {
             return false;
         }
-
         GraphQLResponse<?> that = (GraphQLResponse<?>) thatObject;
-
         if (!ObjectsCompat.equals(data, that.data)) {
             return false;
         }
@@ -108,6 +106,7 @@ public final class GraphQLResponse<R> {
         return result;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "GraphQLResponse{" +
