@@ -66,8 +66,10 @@ final class AppSyncResponseDeserializer implements AppSyncClient.ResponseDeseria
     public <T extends Model> GraphQLResponse<Iterable<ModelWithMetadata<T>>> deserialize(
             Iterable<String> jsons, Class<T> memberClazz) {
         List<ModelWithMetadata<T>> modelWithMetadataList = new ArrayList<>();
-        for (String jsonItem : jsons) {
-            modelWithMetadataList.add(toModelWithMetadata(jsonItem, memberClazz));
+        if (jsons != null) {
+            for (String jsonItem : jsons) {
+                modelWithMetadataList.add(toModelWithMetadata(jsonItem, memberClazz));
+            }
         }
         return new GraphQLResponse<>(modelWithMetadataList, Collections.emptyList());
     }
