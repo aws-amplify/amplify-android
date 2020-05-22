@@ -161,8 +161,9 @@ final class MutationProcessor {
      * Don't process any more mutations.
      */
     void stopDrainingMutationOutbox() {
-        ongoingOperationsDisposable.dispose();
-        //disposable.clear();
+        // Calling clear on ongoingOperationsDisposable triggers dispose method
+        // to anything that was added to ongoingOperationsDisposable
+        ongoingOperationsDisposable.clear();
     }
 
     /**

@@ -43,6 +43,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
@@ -57,7 +58,8 @@ import io.reactivex.Completable;
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
-    private static final long INIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final long PLUGIN_INIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -190,7 +192,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     public void initialize(@NonNull Context context) throws AmplifyException {
         Throwable initError = initializeStorageAdapter(context)
             .andThen(initializeOrchestrator())
-            .blockingGet(INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         if (initError != null) {
             throw new AmplifyException("Failed to initialize the local storage " +
                 "adapter for the DataStore plugin.",
@@ -430,10 +432,17 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     private void beforeOperation(@NonNull final Runnable runnable) {
-        Completable.fromAction(categoryInitializationsPending::await)
-            .andThen(initializeOrchestrator())
+        Completable opCompletable = Completable.fromAction(categoryInitializationsPending::await);
+        if (!orchestrator.isStarted()) {
+            opCompletable = opCompletable
+                .andThen(initializeOrchestrator());
+        }
+        Throwable throwable = opCompletable
             .andThen(Completable.fromRunnable(runnable))
-            .blockingAwait();
+            .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        if (throwable != null) {
+            LOG.warn("Failed to execute request due to an unexpected error.", throwable);
+        }
     }
 
     private Completable initializeOrchestrator() {

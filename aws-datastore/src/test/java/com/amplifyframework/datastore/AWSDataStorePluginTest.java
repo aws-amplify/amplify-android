@@ -38,13 +38,14 @@ import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvide
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
+import com.amplifyframework.util.Time;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
+import org.mockito.ArgumentMatcher;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
@@ -54,18 +55,21 @@ import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
+    private static final int ASSERTION_TIMEOUT_MS = 1000;
     private Context context;
     private ModelProvider modelProvider;
     private AtomicInteger subscriptionStartedCounter;
@@ -158,6 +162,7 @@ public final class AWSDataStorePluginTest {
     @Test
     public void clearStopsSyncUntilNextInteraction() throws AmplifyException, JSONException {
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
+        ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
         AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
@@ -170,21 +175,62 @@ public final class AWSDataStorePluginTest {
 
         assertRemoteSubscriptionsStarted();
 
+        // Setup objects
         Person person1 = createPerson("Test", "Dummy I");
         Person person2 = createPerson("Test", "Dummy II");
+        ArgumentMatcher<GraphQLRequest<String>> person1Matcher = getMatcherFor(person1);
+        ArgumentMatcher<GraphQLRequest<String>> person2Matcher = getMatcherFor(person2);
 
+        // Mock responses for person 1
+        doAnswer(invocation -> {
+            int indexOfResponseConsumer = 1;
+            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfResponseConsumer);
+            String data = new JSONObject()
+                .put("id", person1.getId())
+                .put("first_name", person1.getFirstName())
+                .put("last_name", person1.getLastName())
+                .put("_deleted", false)
+                .put("_version", 1)
+                .put("_lastSyncedAt", Time.now())
+                .toString();
+            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
+            return mock(GraphQLOperation.class);
+        }).when(mockApiPlugin).mutate(any(), any(), any());
+
+        // Save person 1
         synchronousDataStore.save(person1);
         Person result1 = synchronousDataStore.get(Person.class, person1.getId());
         assertEquals(person1, result1);
 
+        verify(mockApiCategory, timeout(ASSERTION_TIMEOUT_MS).atLeastOnce())
+            .mutate(argThat(person1Matcher), any(), any());
+
+        // Mock responses for person 2
+        doAnswer(invocation -> {
+            int indexOfResponseConsumer = 1;
+            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfResponseConsumer);
+            String data = new JSONObject()
+                .put("id", person2.getId())
+                .put("first_name", person2.getFirstName())
+                .put("last_name", person2.getLastName())
+                .put("_deleted", false)
+                .put("_version", 1)
+                .put("_lastSyncedAt", Time.now())
+                .toString();
+            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
+            return mock(GraphQLOperation.class);
+        }).when(mockApiPlugin).mutate(any(), any(), any());
+
         synchronousDataStore.clear();
         assertRemoteSubscriptionsCancelled();
 
+        // Save person 2
         synchronousDataStore.save(person2);
         Person result2 = synchronousDataStore.get(Person.class, person2.getId());
         assertEquals(person2, result2);
 
-        verify(mockApiCategory, times(2)).mutate(Mockito.any(), Mockito.any(), Mockito.any());
+        verify(mockApiCategory, timeout(ASSERTION_TIMEOUT_MS).atLeastOnce())
+            .mutate(argThat(person2Matcher), any(), any());
     }
 
     private void assertRemoteSubscriptionsCancelled() {
@@ -237,16 +283,6 @@ public final class AWSDataStorePluginTest {
             onResponse.accept(new GraphQLResponse<>(Collections.emptyList(), Collections.emptyList()));
             return null;
         }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
-
-        // Make believe that mutations return response immediately
-        doAnswer(invocation -> {
-            int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfResponseConsumer);
-            // Calling onResponse with an invalid input generates an error in MutationOutbox.hasPendingMutation.
-            // Disabling it for now since it does not affect the assertions we need for this test.
-            // onResponse.accept(new GraphQLResponse<>("{}", Collections.emptyList()));
-            return null;
-        }).when(mockApiPlugin).mutate(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
 
         // Make believe that subscriptions return response immediately
         doAnswer(invocation -> {
@@ -322,5 +358,18 @@ public final class AWSDataStorePluginTest {
             .firstName(firstName)
             .lastName(lastName)
             .build();
+    }
+
+    private static ArgumentMatcher<GraphQLRequest<String>> getMatcherFor(Person person) {
+        return graphQLRequest -> {
+            try {
+                JSONObject payload = new JSONObject(graphQLRequest.getContent());
+                String modelIdInRequest = payload.getJSONObject("variables").getJSONObject("input").getString("id");
+                return person.getId().equals(modelIdInRequest);
+            } catch (JSONException exception) {
+                fail("Invalid GraphQLRequest payload." + exception.getMessage());
+            }
+            return false;
+        };
     }
 }

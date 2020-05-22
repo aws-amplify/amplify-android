@@ -64,6 +64,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
 import io.reactivex.disposables.CompositeDisposable;
@@ -76,7 +77,7 @@ import io.reactivex.subjects.Subject;
  */
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-
+    private static final long THREAD_POOL_TERMINATE_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     // Database Version
     private static final int DATABASE_VERSION = 1;
 
@@ -552,7 +553,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             insertSqlPreparedStatements = null;
 
             if (toBeDisposed != null) {
-                toBeDisposed.dispose();
+                toBeDisposed.clear();
             }
             if (itemChangeSubject != null) {
                 itemChangeSubject.onComplete();
@@ -578,15 +579,23 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public synchronized void clear(@NonNull Action onComplete,
                                    @NonNull Consumer<DataStoreException> onError) {
+        try {
+            LOG.debug("Shutting down thread pool for the storage adapter.");
+            threadPool.awaitTermination(THREAD_POOL_TERMINATE_TIMEOUT, TimeUnit.MILLISECONDS);
+            LOG.debug("Storage adapter thread pool shutdown.");
+        } catch (InterruptedException exception) {
+            LOG.warn("Storage adapter thread pool was interrupted during shutdown.", exception);
+        }
         sqliteStorageHelper.close();
         databaseConnectionHandle.close();
-
+        LOG.debug("Clearing DataStore.");
         if (!context.deleteDatabase(DATABASE_NAME)) {
             DataStoreException dataStoreException = new DataStoreException(
                 "Error while trying to clear data from the local DataStore storage.",
                 "See attached exception for details.");
             onError.accept(dataStoreException);
         }
+        LOG.debug("DataStore cleared. Re-initializing storage adapter.");
 
         //Re-initialize the adapter.
         initialize(context, schemaList -> {
