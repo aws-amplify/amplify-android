@@ -379,15 +379,15 @@ public final class RxApiBindingTest {
             .post(eq(options), anyConsumer(), anyConsumer());
     }
 
-    private static <R> GraphQLRequest<R> createMockMutationRequest(Class<R> responseType) {
-        return new GraphQLRequest<R>("", responseType, null);
+    private static <T> GraphQLRequest<T> createMockMutationRequest(Class<T> responseType) {
+        return new GraphQLRequest<>("", responseType, null);
     }
 
-    private static <R> GraphQLRequest<Iterable<R>> createMockListRequest(Class<R> responseType) {
-        return new GraphQLRequest<Iterable<R>>("", responseType, null);
+    private static <T> GraphQLRequest<Iterable<T>> createMockListRequest(Class<T> responseType) {
+        return new GraphQLRequest<>("", responseType, null);
     }
 
-    private static <R> GraphQLRequest<R> createMockSubscriptionRequest(Class<R> responseType) {
-        return new GraphQLRequest<R>("", responseType, null);
+    private static <T> GraphQLRequest<T> createMockSubscriptionRequest(Class<T> responseType) {
+        return new GraphQLRequest<>("", responseType, null);
     }
 }
