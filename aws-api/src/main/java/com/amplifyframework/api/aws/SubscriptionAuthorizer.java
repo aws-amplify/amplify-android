@@ -150,15 +150,15 @@ final class SubscriptionAuthorizer {
     ) throws ApiException {
         final URI apiUrl = getRequestEndpoint(connectionFlag);
         final String apiRegion = apiUrl.getAuthority().split("\\.")[2];
-        final String requestContent = getRequestContent(request);
+        final String requestContent = request != null ? request.getContent() : "{}";
 
         // Construct a request to be signed
         DefaultRequest<?> canonicalRequest = new DefaultRequest<>("appsync");
+        canonicalRequest.setEndpoint(apiUrl);
         canonicalRequest.addHeader("accept", "application/json, text/javascript");
         canonicalRequest.addHeader("content-encoding", "amz-1.0");
         canonicalRequest.addHeader("content-type", "application/json; charset=UTF-8");
         canonicalRequest.setHttpMethod(HttpMethodName.valueOf("POST"));
-        canonicalRequest.setEndpoint(apiUrl);
         canonicalRequest.setContent(new ByteArrayInputStream(requestContent.getBytes()));
 
         // Sign with AppSync's SigV4 signer that also considers connection resource path
@@ -196,20 +196,6 @@ final class SubscriptionAuthorizer {
             throw new ApiException(
                     "Error constructing canonical URI for IAM request signature",
                     uriException, AmplifyException.TODO_RECOVERY_SUGGESTION
-            );
-        }
-    }
-
-    private String getRequestContent(GraphQLRequest<?> request) throws ApiException {
-        if (request == null) {
-            return "{}";
-        }
-        try {
-            return new JSONObject(request.getContent()).toString();
-        } catch (JSONException jsonException) {
-            throw new ApiException(
-                    "Error constructing JSON object with the subscription request data.",
-                    jsonException, AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }
     }

@@ -62,26 +62,26 @@ public final class AppSyncV4Signer extends AWS4Signer {
     }
 
     @Override
-    protected String extractServiceName(URI endpoint) {
+    public String extractServiceName(URI endpoint) {
         return SERVICE_NAME_SCOPE;
     }
 
     @Override
-    protected String getCanonicalizedResourcePath(String resourcePath) {
+    public String getCanonicalizedResourcePath(String resourcePath) {
         return isWebSocketConnectionWithIam
                 ? RESOURCE_PATH + CONNECTION_PATH
                 : RESOURCE_PATH;
     }
 
     @Override
-    protected String getCanonicalizedResourcePath(String resourcePath, boolean urlEncode) {
+    public String getCanonicalizedResourcePath(String resourcePath, boolean urlEncode) {
         return isWebSocketConnectionWithIam
                 ? RESOURCE_PATH + CONNECTION_PATH
                 : RESOURCE_PATH;
     }
 
     @Override
-    protected String calculateContentHash(Request<?> request) {
+    public String calculateContentHash(Request<?> request) {
         final InputStream payloadStream = request.getContent();
         payloadStream.mark(-1);
         // We will not reset this as OkHttp does not allow reset of stream.
