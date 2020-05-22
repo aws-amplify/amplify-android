@@ -18,7 +18,7 @@ apply plugin: 'idea'
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'maven-publish'
 
-apply from: rootProject.file('gradle-mvn-push.gradle')
+apply from: rootProject.file('publishing.gradle')
 
 sourceSets.main.groovy.srcDirs = ['src/main/groovy']
 
