@@ -13,11 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
+package com.amplifyframework.core.model.graphql;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;

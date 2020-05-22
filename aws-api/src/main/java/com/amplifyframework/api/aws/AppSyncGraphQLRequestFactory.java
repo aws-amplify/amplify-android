@@ -57,14 +57,23 @@ import java.util.Map;
  * with automatically generated GraphQL documents that follow
  * AppSync specifications.
  */
-final class AppSyncGraphQLRequestFactory {
+public final class AppSyncGraphQLRequestFactory {
     private static final int DEFAULT_QUERY_LIMIT = 1000;
     private static final int DEFAULT_LEVEL_DEPTH = 2;
 
     // This class should not be instantiated
     private AppSyncGraphQLRequestFactory() { }
 
-    static <R, T extends Model> GraphQLRequest<R> buildQuery(
+    /**
+     * TODO.
+     * @param modelClass todo.
+     * @param objectId todo.
+     * @param <R> todo.
+     * @param <T> todo.
+     * @return todo.
+     * @throws IllegalStateException todo.
+     */
+    public static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
             String objectId
     ) {
@@ -100,7 +109,15 @@ final class AppSyncGraphQLRequestFactory {
         }
     }
 
-    static <R, T extends Model> GraphQLRequest<R> buildQuery(
+    /**
+     * TODO.
+     * @param modelClass todo.
+     * @param predicate todo.
+     * @param <R> todo.
+     * @param <T> todo.
+     * @return todo.
+     */
+    public static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
             QueryPredicate predicate
     ) {
@@ -108,7 +125,17 @@ final class AppSyncGraphQLRequestFactory {
         return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, null, dataType);
     }
 
-    static <R, T extends Model> GraphQLRequest<R> buildPaginatedResultQuery(
+    /**
+     * TODO.
+     * @param modelClass todo.
+     * @param predicate todo.
+     * @param limit todo.
+     * @param nextToken todo.
+     * @param <R> todo.
+     * @param <T> todo.
+     * @return todo.
+     */
+    public static <R, T extends Model> GraphQLRequest<R> buildPaginatedResultQuery(
             Class<T> modelClass,
             QueryPredicate predicate,
             int limit,
@@ -166,8 +193,17 @@ final class AppSyncGraphQLRequestFactory {
         }
     }
 
+    /**
+     * TODO.
+     * @param model todo.
+     * @param predicate todo.
+     * @param type todo.
+     * @param <R> todo.
+     * @param <T> todo.
+     * @return todo.
+     */
     @SuppressWarnings("unchecked")
-    static <R, T extends Model> GraphQLRequest<R> buildMutation(
+    public static <R, T extends Model> GraphQLRequest<R> buildMutation(
             T model,
             QueryPredicate predicate,
             MutationType type
@@ -242,8 +278,16 @@ final class AppSyncGraphQLRequestFactory {
         }
     }
 
+    /**
+     * TODO.
+     * @param modelClass todo.
+     * @param type todo.
+     * @param <R> todo.
+     * @param <T> todo.
+     * @return todo.
+     */
     @SuppressWarnings("SameParameterValue")
-    static <R, T extends Model> GraphQLRequest<R> buildSubscription(
+    public static <R, T extends Model> GraphQLRequest<R> buildSubscription(
             Class<T> modelClass,
             SubscriptionType type
     ) {
