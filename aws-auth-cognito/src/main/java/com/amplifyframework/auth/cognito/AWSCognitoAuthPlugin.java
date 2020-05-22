@@ -55,7 +55,6 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.logging.LogFactory;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
@@ -614,9 +613,49 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     public void signOut(
             @NonNull AuthSignOutOptions options,
             @NonNull Action onSuccess,
-            @NonNull Consumer<AuthException> onError) {
+            @NonNull Consumer<AuthException> onError
+    ) {
+        if (options.isGlobalSignOut()) {
+            awsMobileClient.signOut(
+                    SignOutOptions.builder().signOutGlobally(true).build(),
+                    new Callback<Void>() {
+                        @Override
+                        public void onResult(Void result) {
+                            onSuccess.call();
+                        }
 
-        Callback<Void> callback = new Callback<Void>() {
+                        @Override
+                        public void onError(Exception error) {
+                            // This exception is thrown if the user was signed out globally on another device
+                            // already and tries to sign out globally here. In which case, we just complete the
+                            // global sign out by locally signing them out here.
+                            if (error instanceof NotAuthorizedException) {
+                                signOutLocally(onSuccess, onError);
+                            } else {
+                                // Any other runtime exception means global sign out failed for another reason
+                                // (e.g. device offline), in which case we pass that error back to the customer.
+                                onError.accept(new AuthException(
+                                        "Failed to sign out globally",
+                                        error,
+                                        "See attached exception for more details"
+                                ));
+                            }
+                        }
+                    }
+            );
+        } else {
+            signOutLocally(onSuccess, onError);
+        }
+    }
+
+    @NonNull
+    @Override
+    public AWSMobileClient getEscapeHatch() {
+        return awsMobileClient;
+    }
+
+    private void signOutLocally(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
+        awsMobileClient.signOut(SignOutOptions.builder().signOutGlobally(false).build(), new Callback<Void>() {
             @Override
             public void onResult(Void result) {
                 onSuccess.call();
@@ -637,35 +676,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     ));
                 }
             }
-        };
-
-        try {
-            awsMobileClient.signOut(
-                    SignOutOptions.builder().signOutGlobally(options.isGlobalSignOut()).build(),
-                    callback
-            );
-        } catch (NotAuthorizedException exception) {
-            // This exception is thrown if the user was signed out globally on another device already and tries to sign
-            // out globally here. In which case, we just complete the global sign out by locally signing them out.
-            awsMobileClient.signOut(
-                    SignOutOptions.builder().signOutGlobally(false).build(),
-                    callback
-            );
-        } catch (AmazonServiceException exception) {
-            // Any other runtime exception means global sign out failed for another reason (e.g. device offline), in
-            // which case we pass that error back to the customer.
-            onError.accept(new AuthException(
-                    "Failed to sign out globally",
-                    exception,
-                    "See attached exception for more details"
-            ));
-        }
-    }
-
-    @NonNull
-    @Override
-    public AWSMobileClient getEscapeHatch() {
-        return awsMobileClient;
+        });
     }
 
     private void signInWithWebUIHelper(
