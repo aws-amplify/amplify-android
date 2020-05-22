@@ -47,8 +47,6 @@ import java.util.Date;
 import java.util.List;
 
 import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposables;
 import io.reactivex.observers.TestObserver;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
@@ -315,11 +313,10 @@ public final class AppSyncClientInstrumentationTest {
         return response.getErrors();
     }
 
+    @SuppressWarnings({"CodeBlock2Expr", "SameParameterValue"})
     private <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onCreate(
-            @SuppressWarnings("SameParameterValue") @NonNull Class<T> clazz) {
+            @NonNull Class<T> clazz) {
         return Observable.create(emitter -> {
-            CompositeDisposable disposable = new CompositeDisposable();
-            emitter.setDisposable(disposable);
             Await.result((onSubscriptionStarted, ignored) -> {
                 Cancelable cancelable = api.onCreate(
                     clazz,
@@ -328,7 +325,7 @@ public final class AppSyncClientInstrumentationTest {
                     emitter::onError,
                     emitter::onComplete
                 );
-                disposable.add(Disposables.fromAction(cancelable::cancel));
+                emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
             });
         });
     }

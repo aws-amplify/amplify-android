@@ -29,6 +29,7 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.testutils.AmplifyDisposables;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.util.Immutable;
 
@@ -271,11 +272,10 @@ public final class SynchronousApi {
      * @param <T> The type of model for which creation notifications will be dispatched
      * @return An Observable that can be used to observe the subscription data
      */
+    @SuppressWarnings("CodeBlock2Expr")
     @NonNull
     public <T extends Model> Observable<GraphQLResponse<T>> onCreate(@NonNull String apiName, @NonNull Class<T> clazz) {
         return Observable.create(emitter -> {
-            CompositeDisposable disposable = new CompositeDisposable();
-            emitter.setDisposable(disposable);
             Await.<String, ApiException>result(OPERATION_TIMEOUT_MS,
                 (onSubscriptionStarted, onError) -> {
                     Cancelable cancelable = asyncDelegate.subscribe(
@@ -287,9 +287,7 @@ public final class SynchronousApi {
                         onError,
                         emitter::onComplete
                     );
-                    if (cancelable != null) {
-                        disposable.add(Disposables.fromAction(cancelable::cancel));
-                    }
+                    emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
                 }
             );
         });

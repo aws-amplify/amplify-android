@@ -23,8 +23,6 @@ import com.amplifyframework.core.async.Cancelable;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposables;
 
 /**
  * Utility method to convert between behaviors that use the Amplify framework's native
@@ -41,34 +39,22 @@ final class RxAdapters {
 
     static <T, E extends Throwable> Single<T> toSingle(CancelableResultEmitter<T, E> cancelableResultEmitter) {
         return Single.defer(() -> Single.create(emitter -> {
-            final CompositeDisposable disposable = new CompositeDisposable();
-            emitter.setDisposable(disposable);
             final Cancelable cancelable =
                 cancelableResultEmitter.emitTo(emitter::onSuccess, emitter::onError);
-            disposable.add(Disposables.fromAction(() -> {
-                if (cancelable != null) {
-                    cancelable.cancel();
-                }
-            }));
+            emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         }));
     }
 
     static <S, T, E extends Throwable> Observable<T> toObservable(
             CancelableStreamEmitter<S, T, E> cancelableStreamEmitter) {
         return Observable.defer(() -> Observable.create(emitter -> {
-            final CompositeDisposable disposable = new CompositeDisposable();
-            emitter.setDisposable(disposable);
-            final Cancelable cancelable = cancelableStreamEmitter.streamTo(
+            Cancelable cancelable = cancelableStreamEmitter.streamTo(
                 NoOpConsumer.create(),
                 emitter::onNext,
                 emitter::onError,
                 emitter::onComplete
             );
-            disposable.add(Disposables.fromAction(() -> {
-                if (cancelable != null) {
-                    cancelable.cancel();
-                }
-            }));
+            emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         }));
     }
 
