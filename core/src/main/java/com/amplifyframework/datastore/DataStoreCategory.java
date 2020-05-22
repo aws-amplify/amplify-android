@@ -182,4 +182,12 @@ public final class DataStoreCategory
         getSelectedPlugin().observe(itemClass, selectionCriteria,
             onObservationStarted, onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clear(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        getSelectedPlugin().clear(onComplete, onError);
+    }
 }

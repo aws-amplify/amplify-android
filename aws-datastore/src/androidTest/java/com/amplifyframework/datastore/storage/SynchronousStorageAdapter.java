@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 
 /**
@@ -285,5 +286,18 @@ public final class SynchronousStorageAdapter {
         return Observable.create(emitter ->
             asyncDelegate.observe(emitter::onNext, emitter::onError, emitter::onComplete)
         );
+    }
+
+    /**
+     * Invokes the clear method of the underlying adapter and
+     * either completes or throws an exception.
+     */
+    public void clear() {
+        //noinspection ResultOfMethodCallIgnored
+        Completable.fromSingle(single -> {
+            asyncDelegate.clear(() -> {
+                single.onSuccess(true);
+            }, single::onError);
+        }).blockingAwait(DEFAULT_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 }

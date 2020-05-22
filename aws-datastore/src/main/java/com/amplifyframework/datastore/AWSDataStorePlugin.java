@@ -43,12 +43,14 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
 
@@ -56,6 +58,8 @@ import io.reactivex.Completable;
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final long PLUGIN_INIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -185,12 +189,15 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     @WorkerThread
     @Override
-    public void initialize(@NonNull Context context) {
-        Completable completable = initializeStorageAdapter(context);
-        if (!api.getPlugins().isEmpty()) {
-            completable = completable.andThen(orchestrator.start());
+    public void initialize(@NonNull Context context) throws AmplifyException {
+        Throwable initError = initializeStorageAdapter(context)
+            .andThen(initializeOrchestrator())
+            .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        if (initError != null) {
+            throw new AmplifyException("Failed to initialize the local storage adapter for the DataStore plugin.",
+                                        initError,
+                                        AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
-        completable.blockingAwait();
     }
 
     /**
@@ -244,7 +251,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @Nullable QueryPredicate predicate,
             @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
             @NonNull Consumer<DataStoreException> onFailureToSave) {
-        afterInitialization(() -> sqliteStorageAdapter.save(
+        beforeOperation(() -> sqliteStorageAdapter.save(
             item,
             StorageItemChange.Initiator.DATA_STORE_API,
             predicate,
@@ -279,7 +286,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @Nullable QueryPredicate predicate,
             @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
             @NonNull Consumer<DataStoreException> onFailureToDelete) {
-        afterInitialization(() -> sqliteStorageAdapter.delete(
+        beforeOperation(() -> sqliteStorageAdapter.delete(
             item,
             StorageItemChange.Initiator.DATA_STORE_API,
             itemDeletion -> {
@@ -301,7 +308,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Class<T> itemClass,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
-        afterInitialization(() -> sqliteStorageAdapter.query(itemClass, onQueryResults, onQueryFailure));
+        beforeOperation(() -> sqliteStorageAdapter.query(itemClass, onQueryResults, onQueryFailure));
     }
 
     /**
@@ -322,7 +329,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull QueryOptions options,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
-        afterInitialization(() ->
+        beforeOperation(() ->
                 sqliteStorageAdapter.query(itemClass, options, onQueryResults, onQueryFailure));
     }
 
@@ -332,7 +339,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        afterInitialization(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+        beforeOperation(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
                     onDataStoreItemChange.accept(toDataStoreItemChange(itemChange));
@@ -352,7 +359,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        afterInitialization(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+        beforeOperation(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
                     if (itemChange.itemClass().equals(itemClass)) {
@@ -377,7 +384,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        afterInitialization(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+        beforeOperation(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
                     if (itemChange.itemClass().equals(itemClass) && itemChange.item().getId().equals(uniqueId)) {
@@ -405,10 +412,44 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         onObservationFailure.accept(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
     }
 
-    private void afterInitialization(@NonNull final Runnable runnable) {
-        Completable.fromAction(categoryInitializationsPending::await)
+    /**
+     * Stops all synchronization processes and invokes
+     * the clear method of the underlying storage
+     * adapter. Any items pending synchronization in the outbound queue will
+     * be lost. Synchronization processes will be restarted on the
+     * next interaction with the DataStore.
+     * @param onComplete Invoked if the call is successful.
+     * @param onError Invoked if not successful
+     */
+    @Override
+    public void clear(@NonNull Action onComplete,
+                      @NonNull Consumer<DataStoreException> onError) {
+        beforeOperation(() -> {
+            orchestrator.stop();
+            sqliteStorageAdapter.clear(onComplete, onError);
+        });
+    }
+
+    private void beforeOperation(@NonNull final Runnable runnable) {
+        Completable opCompletable = Completable.fromAction(categoryInitializationsPending::await);
+        if (!orchestrator.isStarted()) {
+            opCompletable = opCompletable
+                .andThen(initializeOrchestrator());
+        }
+        Throwable throwable = opCompletable
             .andThen(Completable.fromRunnable(runnable))
-            .blockingAwait();
+            .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        if (throwable != null) {
+            LOG.warn("Failed to execute request due to an unexpected error.", throwable);
+        }
+    }
+
+    private Completable initializeOrchestrator() {
+        if (api.getPlugins().isEmpty()) {
+            return Completable.complete();
+        } else {
+            return orchestrator.start();
+        }
     }
 
     /**

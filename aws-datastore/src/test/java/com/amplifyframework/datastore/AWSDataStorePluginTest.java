@@ -21,49 +21,60 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.InitializationStatus;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.random.RandomString;
+import com.amplifyframework.testutils.sync.SynchronousDataStore;
+import com.amplifyframework.util.Time;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-
-import io.reactivex.Completable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
-    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
+    private static final int ASSERTION_TIMEOUT_MS = 1000;
     private Context context;
     private ModelProvider modelProvider;
+    private AtomicInteger subscriptionStartedCounter;
+    private AtomicInteger subscriptionCancelledCounter;
+    private int modelCount;
 
     /**
      * Sets up the test. The {@link SimpleModelProvider} is spy'd, so that
@@ -74,16 +85,16 @@ public final class AWSDataStorePluginTest {
     @Before
     public void setup() {
         this.context = getApplicationContext();
-        modelProvider = spy(SimpleModelProvider.builder()
-            .version(RandomString.string())
-            .addModel(Person.class)
-            .build());
+        modelProvider = spy(AmplifyCliGeneratedModelProvider.singletonInstance());
+        subscriptionCancelledCounter = new AtomicInteger();
+        subscriptionStartedCounter = new AtomicInteger();
+        modelCount = modelProvider.models().size();
     }
 
     /**
      * Configuring and initializing the plugin succeeds without freezing or
      * crashing the calling thread. Basic. 🙄
-     * @throws AmplifyException Not expected; on failure to configure of initialize plugin
+     * @throws AmplifyException Not expected; on failure to configure of initialize plugin.
      */
     @Test
     public void configureAndInitializeInLocalMode() throws AmplifyException {
@@ -99,7 +110,6 @@ public final class AWSDataStorePluginTest {
      * Configuring and initialization the plugin when in API sync mode succeeds without
      * freezing or crashing the the calling thread.
      * @throws JSONException on failure to arrange plugin config
-     * @throws DataStoreException on failure to configure
      * @throws AmplifyException on failure to arrange API plugin via Amplify facade
      */
     @Test
@@ -110,7 +120,7 @@ public final class AWSDataStorePluginTest {
         AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
-        assertSyncProcessorStarted();
+        assertRemoteSubscriptionsStarted();
     }
 
     /**
@@ -127,6 +137,7 @@ public final class AWSDataStorePluginTest {
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
         AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
 
@@ -134,53 +145,136 @@ public final class AWSDataStorePluginTest {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
         Person person1 = createPerson("Test", "Dummy I");
-        Throwable exception = Completable.fromSingle(single -> { // Save a record to local store
-            awsDataStorePlugin.save(person1, itemSaved -> {
-                assertNotNull(itemSaved.item().getId());
-                assertEquals(person1.getLastName(), itemSaved.item().getLastName());
-                single.onSuccess(true);
-            }, single::onError);
-        }).andThen(
-            Completable.fromSingle(single -> { // Verify the record has been saved
-                awsDataStorePlugin.query(Person.class, results -> {
-                    Person actualPerson = results.next();
-                    assertNotNull(actualPerson);
-                    assertFalse(results.hasNext()); // We should only have one result.
-                    assertEquals(person1, actualPerson);
-                    single.onSuccess(true);
-                }, single::onError);
-            })
-        ).doOnError(error -> {
-            fail(error.getMessage());
-        }).blockingGet(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (exception != null) {
-            throw new AmplifyException("Unexpected exception.", exception, "Look at the stacktrace.");
-        }
+        synchronousDataStore.save(person1);
+        assertNotNull(person1.getId());
+        Person person1FromDb = synchronousDataStore.get(Person.class, person1.getId());
+        assertEquals(person1, person1FromDb);
     }
 
-    private void assertSyncProcessorStarted() {
-        boolean syncProcessorInvoked = mockingDetails(modelProvider)
-            .getInvocations()
-            .stream()
-            .anyMatch(invocation -> invocation.getLocation().getSourceFile().contains("SyncProcessor"));
+    /**
+     * Verify that when the clear method is called, the following happens
+     * - All remote synchronization processes are stopped
+     * - The database is deleted.
+     * - On the next interaction with the DataStore, the synchronization processes are restarted.
+     * @throws JSONException on failure to arrange plugin config
+     * @throws AmplifyException on failure to arrange API plugin via Amplify facade
+     */
+    @Test
+    public void clearStopsSyncUntilNextInteraction() throws AmplifyException, JSONException {
+        ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
+        ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
+        JSONObject dataStorePluginJson = new JSONObject()
+            .put("syncIntervalInMinutes", 60);
+        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
+        awsDataStorePlugin.configure(dataStorePluginJson, context);
+        awsDataStorePlugin.initialize(context);
 
-        assertTrue(syncProcessorInvoked);
+        // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
+        Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
+
+        assertRemoteSubscriptionsStarted();
+
+        // Setup objects
+        Person person1 = createPerson("Test", "Dummy I");
+        Person person2 = createPerson("Test", "Dummy II");
+        ArgumentMatcher<GraphQLRequest<String>> person1Matcher = getMatcherFor(person1);
+        ArgumentMatcher<GraphQLRequest<String>> person2Matcher = getMatcherFor(person2);
+
+        // Mock responses for person 1
+        doAnswer(invocation -> {
+            int indexOfResponseConsumer = 1;
+            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfResponseConsumer);
+            String data = new JSONObject()
+                .put("id", person1.getId())
+                .put("first_name", person1.getFirstName())
+                .put("last_name", person1.getLastName())
+                .put("_deleted", false)
+                .put("_version", 1)
+                .put("_lastSyncedAt", Time.now())
+                .toString();
+            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
+            return mock(GraphQLOperation.class);
+        }).when(mockApiPlugin).mutate(any(), any(), any());
+
+        // Save person 1
+        synchronousDataStore.save(person1);
+        Person result1 = synchronousDataStore.get(Person.class, person1.getId());
+        assertEquals(person1, result1);
+
+        verify(mockApiCategory, timeout(ASSERTION_TIMEOUT_MS).atLeastOnce())
+            .mutate(argThat(person1Matcher), any(), any());
+
+        // Mock responses for person 2
+        doAnswer(invocation -> {
+            int indexOfResponseConsumer = 1;
+            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfResponseConsumer);
+            String data = new JSONObject()
+                .put("id", person2.getId())
+                .put("first_name", person2.getFirstName())
+                .put("last_name", person2.getLastName())
+                .put("_deleted", false)
+                .put("_version", 1)
+                .put("_lastSyncedAt", Time.now())
+                .toString();
+            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
+            return mock(GraphQLOperation.class);
+        }).when(mockApiPlugin).mutate(any(), any(), any());
+
+        synchronousDataStore.clear();
+        assertRemoteSubscriptionsCancelled();
+
+        // Save person 2
+        synchronousDataStore.save(person2);
+        Person result2 = synchronousDataStore.get(Person.class, person2.getId());
+        assertEquals(person2, result2);
+
+        verify(mockApiCategory, timeout(ASSERTION_TIMEOUT_MS).atLeastOnce())
+            .mutate(argThat(person2Matcher), any(), any());
     }
 
+    private void assertRemoteSubscriptionsCancelled() {
+        // Check that we've had active subscriptions
+        assertTrue(subscriptionStartedCounter.get() > 0);
+        // And the number of started and cancelled are the same
+        assertEquals(subscriptionStartedCounter.get(), subscriptionCancelledCounter.get());
+    }
+
+    private void assertRemoteSubscriptionsStarted() {
+        // For each model, there should be 3 subscriptions setup.
+        // If subscriptions are active, the active counters should be:
+        // activeCount - cancelledCount = modelCount * 3
+        // The difference between active and cancelled should always be at most modelCount * 3
+        final int diffTypesOfSubscriptions = SubscriptionType.values().length;
+        assertEquals(
+            modelCount * diffTypesOfSubscriptions,
+            subscriptionStartedCounter.get() - subscriptionCancelledCounter.get()
+        );
+    }
+
+    /**
+     * Check that there were no interactions between the SyncProcessor
+     * and the model provider. This is used to verify that the synchronization
+     * processes don't start if there's no API configured.
+     */
     private void assertSyncProcessorNotStarted() {
         boolean syncProcessorNotInvoked = mockingDetails(modelProvider)
             .getInvocations()
             .stream()
             .noneMatch(invocation -> invocation.getLocation().getSourceFile().contains("SyncProcessor"));
-
         assertTrue(syncProcessorNotInvoked);
     }
 
+    private static ApiCategory mockApiCategoryWithoutPlugins() throws JSONException {
+        return spy(ApiCategory.class);
+    }
+
     @SuppressWarnings("unchecked")
-    private static ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
+    private ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
         ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
-        when(mockApiPlugin.getPluginKey()).thenReturn("MockApiPlugin");
+        when(mockApiPlugin.getPluginKey()).thenReturn(MOCK_API_PLUGIN_NAME);
+        when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
         // Make believe that queries return response immediately
         doAnswer(invocation -> {
@@ -190,20 +284,20 @@ public final class AWSDataStorePluginTest {
             return null;
         }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
 
-        // Make believe that mutations return response immediately
-        doAnswer(invocation -> {
-            int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfResponseConsumer);
-            onResponse.accept(new GraphQLResponse<>("{}", Collections.emptyList()));
-            return null;
-        }).when(mockApiPlugin).mutate(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
-
         // Make believe that subscriptions return response immediately
         doAnswer(invocation -> {
-            int indexOfStartConsumer = 2;
-            Consumer<String> onResponse = invocation.getArgument(indexOfStartConsumer);
-            onResponse.accept(RandomString.string());
-            return null;
+            int indexOfStartConsumer = 1;
+            Consumer<String> onStart = invocation.getArgument(indexOfStartConsumer);
+            GraphQLOperation<?> mockOperation = mock(GraphQLOperation.class);
+            doAnswer(opAnswer -> {
+                this.subscriptionCancelledCounter.incrementAndGet();
+                return null;
+            }).when(mockOperation).cancel();
+
+            this.subscriptionStartedCounter.incrementAndGet();
+            // Trigger the subscription start event.
+            onStart.accept(RandomString.string());
+            return mockOperation;
         }).when(mockApiPlugin).subscribe(
             any(GraphQLRequest.class),
             any(Consumer.class),
@@ -224,7 +318,8 @@ public final class AWSDataStorePluginTest {
     private static ApiCategory mockApiPluginWithExceptions() throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
         ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
-        when(mockApiPlugin.getPluginKey()).thenReturn("MockApiPlugin");
+        when(mockApiPlugin.getPluginKey()).thenReturn(MOCK_API_PLUGIN_NAME);
+        when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
         doAnswer(invocation -> {
             int indexOfErrorConsumer = 2;
@@ -263,5 +358,18 @@ public final class AWSDataStorePluginTest {
             .firstName(firstName)
             .lastName(lastName)
             .build();
+    }
+
+    private static ArgumentMatcher<GraphQLRequest<String>> getMatcherFor(Person person) {
+        return graphQLRequest -> {
+            try {
+                JSONObject payload = new JSONObject(graphQLRequest.getContent());
+                String modelIdInRequest = payload.getJSONObject("variables").getJSONObject("input").getString("id");
+                return person.getId().equals(modelIdInRequest);
+            } catch (JSONException exception) {
+                fail("Invalid GraphQLRequest payload." + exception.getMessage());
+            }
+            return false;
+        };
     }
 }
