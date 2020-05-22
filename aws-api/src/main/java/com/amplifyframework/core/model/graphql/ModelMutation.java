@@ -24,29 +24,32 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 /**
- * TODO docs.
+ * Helper class that provides methods to create {@link GraphQLRequest} from {@link Model}.
  */
 public final class ModelMutation {
 
+    /** This class should not be instantiated. */
     private ModelMutation() {
     }
 
     /**
-     * TODO docs.
-     * @param model todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a create mutation for a given {@code model} instance.
+     * @param model the model instance populated with values.
+     * @param <M> the model concrete type.
+     * @return a valid {@code GraphQLRequest} instance.
+     * @see MutationType#CREATE
      */
     public static <M extends Model> GraphQLRequest<M> create(@NonNull M model) {
         return AppSyncGraphQLRequestFactory.buildMutation(model, null, MutationType.CREATE);
     }
 
     /**
-     * TODO docs.
-     * @param model todo.
-     * @param predicate todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents an update mutation for a given {@code model} instance.
+     * @param model the model instance populated with values.
+     * @param predicate a predicate passed as the condition to apply the mutation.
+     * @param <M> the model concrete type.
+     * @return a valid {@code GraphQLRequest} instance.
+     * @see MutationType#UPDATE
      */
     public static <M extends Model> GraphQLRequest<M> update(
             @NonNull M model,
@@ -56,21 +59,24 @@ public final class ModelMutation {
     }
 
     /**
-     * TODO docs.
-     * @param model todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents an update mutation for a given {@code model} instance.
+     * @param model the model instance populated with values.
+     * @param <M> the model concrete type.
+     * @return a valid {@code GraphQLRequest} instance.
+     * @see MutationType#UPDATE
+     * @see #update(Model, QueryPredicate)
      */
     public static <M extends Model> GraphQLRequest<M> update(@NonNull M model) {
         return AppSyncGraphQLRequestFactory.buildMutation(model, null, MutationType.UPDATE);
     }
 
     /**
-     * TODO docs.
-     * @param model todo.
-     * @param predicate todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a delete mutation for a given {@code model} instance.
+     * @param model the model instance populated with values.
+     * @param predicate a predicate passed as the condition to apply the mutation.
+     * @param <M> the model concrete type.
+     * @return a valid {@code GraphQLRequest} instance.
+     * @see MutationType#DELETE
      */
     public static <M extends Model> GraphQLRequest<M> delete(
             @NonNull M model,
@@ -80,10 +86,12 @@ public final class ModelMutation {
     }
 
     /**
-     * TODO docs.
-     * @param model todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a delete mutation for a given {@code model} instance.
+     * @param model the model instance populated with values.
+     * @param <M> the model concrete type.
+     * @return a valid {@code GraphQLRequest} instance.
+     * @see MutationType#DELETE
+     * @see #delete(Model, QueryPredicate)
      */
     public static <M extends Model> GraphQLRequest<M> delete(@NonNull M model) {
         return AppSyncGraphQLRequestFactory.buildMutation(model, null, MutationType.DELETE);
