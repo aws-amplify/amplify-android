@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.options.AuthSignInOptions;
+import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
@@ -239,12 +240,22 @@ public interface AuthCategoryBehavior {
     AuthUser getCurrentUser();
 
     /**
-     * Sign out of all devices. The current credentials cached on other devices will be valid but will not be able to
-     * be refreshed without signing in again so will expire shortly.
+     * Sign out of the current device.
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void signOut(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Sign out with advanced options.
+     * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void signOut(
+            @NonNull AuthSignOutOptions options,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
 }

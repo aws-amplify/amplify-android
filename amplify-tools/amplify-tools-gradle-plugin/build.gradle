@@ -13,16 +13,26 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.s3;
+apply plugin: 'groovy'
+apply plugin: 'idea'
+apply plugin: 'java-gradle-plugin'
+apply plugin: 'maven-publish'
 
-/**
- * Interface for providing identity ID of the authorized
- * requester.
- */
-public interface IdentityIdProvider {
-    /**
-     * Returns the identity ID.
-     * @return the identity ID
-     */
-    String getIdentityId();
+apply from: rootProject.file('publishing.gradle')
+
+sourceSets.main.groovy.srcDirs = ['src/main/groovy']
+
+publishing {
+    publications {
+        pluginPublication(MavenPublication) {
+            from components.java
+            groupId 'com.amplifyframework'
+            artifactId 'amplify-tools-gradle-plugin'
+            version VERSION_NAME
+        }
+    }
 }
+
+// java version
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"

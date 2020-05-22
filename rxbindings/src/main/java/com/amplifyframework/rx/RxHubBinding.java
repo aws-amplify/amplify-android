@@ -27,7 +27,6 @@ import com.amplifyframework.hub.SubscriptionToken;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposables;
 
 final class RxHubBinding implements RxHubCategoryBehavior {
@@ -38,6 +37,7 @@ final class RxHubBinding implements RxHubCategoryBehavior {
         this(Amplify.Hub);
     }
 
+    @SuppressWarnings("WeakerAccess")
     @VisibleForTesting
     RxHubBinding(HubCategory hub) {
         this.hub = hub;
@@ -53,13 +53,8 @@ final class RxHubBinding implements RxHubCategoryBehavior {
     @Override
     public Observable<HubEvent<?>> on(@NonNull HubChannel hubChannel) {
         return Observable.defer(() -> Observable.create(emitter -> {
-            final CompositeDisposable disposable = new CompositeDisposable();
-            emitter.setDisposable(disposable);
             SubscriptionToken token = hub.subscribe(hubChannel, emitter::onNext);
-            disposable.add(Disposables.fromAction(() -> {
-                hub.unsubscribe(token);
-                emitter.onComplete();
-            }));
+            emitter.setDisposable(Disposables.fromAction(() -> hub.unsubscribe(token)));
         }));
     }
 }

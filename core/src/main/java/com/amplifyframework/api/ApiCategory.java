@@ -48,7 +48,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Nullable
     @Override
-    public <T extends Model> GraphQLOperation<T> query(
+    public <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull Class<T> modelClass,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
@@ -67,7 +67,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Nullable
     @Override
-    public <T extends Model> GraphQLOperation<T> query(
+    public <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull Class<T> modelClass,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
@@ -77,16 +77,16 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> query(
-            @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+    public <R> GraphQLOperation<R> query(
+            @NonNull GraphQLRequest<R> graphQlRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         return getSelectedPlugin().query(graphQlRequest, onResponse, onFailure);
     }
 
     @Nullable
     @Override
-    public <T extends Model> GraphQLOperation<T> query(
+    public <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
@@ -107,7 +107,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Nullable
     @Override
-    public <T extends Model> GraphQLOperation<T> query(
+    public <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull QueryPredicate predicate,
@@ -118,10 +118,10 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> query(
+    public <R> GraphQLOperation<R> query(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull GraphQLRequest<R> graphQlRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         return getSelectedPlugin().query(apiName, graphQlRequest, onResponse, onFailure);
     }
@@ -149,9 +149,9 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> mutate(
-            @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+    public <R> GraphQLOperation<R> mutate(
+            @NonNull GraphQLRequest<R> graphQlRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         return getSelectedPlugin().mutate(graphQlRequest, onResponse, onFailure);
     }

@@ -57,7 +57,10 @@ final class GsonFactory {
             .registerTypeAdapter(Temporal.Time.class, new TemporalDeserializers.AWSTimeDeserializer())
             .registerTypeAdapter(Temporal.Timestamp.class, new TemporalDeserializers.AWSTimestampDeserializer())
             .registerTypeAdapter(Temporal.DateTime.class, new TemporalDeserializers.AWSDateTimeDeserializer())
-            .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer());
+            .registerTypeAdapter(GraphQLResponse.class, new GraphQLResponseDeserializer())
+            .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer())
+            .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer())
+            .registerTypeAdapter(String.class, new StringDeserializer());
     }
 
     private static void withAdditionalAdapters(GsonBuilder builder, Map<Class<?>, Object> additionalAdapters) {

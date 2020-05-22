@@ -210,59 +210,57 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     }
 
     /**
-     * A persistent record of a PendingMutation.
+     * Used for storing PendingMutations into a {@link LocalStorageAdapter}.
      *
-     * This type is persisted to a {@link LocalStorageAdapter}.
-     *
-     * Since a PendingMutation contains a reference to an actual model, and we don't want to refer
-     * to that model via a foreign key, we first convert the {@link PendingMutation} to a
+     * Since a PendingMutation contains a reference to an ACTUAL, non-system model,
+     * and we don't want to refer to that model via a foreign key, we first convert
+     * the {@link PendingMutation} to String, and stuff it into an
      * {@link PendingMutation.PersistentRecord}.
      *
-     * A PersistentRecord is something the storage adapter can handle easily, since the
-     * referenced model is just a Gson-serialized String version of itself -- handled external
-     * to the data modeling system.
+     * The mutation ID, model ID and model class are stored alongside the serialized mutation,
+     * to facilitate record search/retrieval.
      */
     @ModelConfig(pluralName = "PersistentRecords")
-    @Index(fields = "decodedModelClassName", name = "decodedModelClassNameBasedIndex")
+    @Index(fields = "containedModelClassName", name = "containedModelClassNameBasedIndex")
     public static final class PersistentRecord implements Model, Comparable<PersistentRecord> {
         @ModelField(targetType = "ID", isRequired = true)
         private final String id;
 
         @ModelField(targetType = "String", isRequired = true)
-        private final String decodedModelId;
+        private final String containedModelId;
 
         @ModelField(targetType = "String", isRequired = true)
-        private final String encodedModelData;
+        private final String serializedMutationData;
 
         @ModelField(targetType = "String", isRequired = true)
-        private final String decodedModelClassName;
+        private final String containedModelClassName;
 
         /**
          * Constructs a Record.
          * Note: by arrangement of the {@link PersistentRecord.Builder#build()} method, it should be
          * impossible for any null value to be passed into this constructor.
          * @param id ID for the mutation record
-         * @param decodedModelId The id of the model that is encoded into this record
-         * @param encodedModelData entry for record
-         * @param decodedModelClassName Class of item held in entry
+         * @param containedModelId The id of the model that is contained inside of the serialized mutation data
+         * @param serializedMutationData A serialized form of a PendingMutation, itself containing model data.
+         * @param containedModelClassName Class name of the model inside the serialized mutation data
          */
         @SuppressWarnings("checkstyle:ParameterName") // "id" is less than 3 chars, but is name used by model
         private PersistentRecord(
                 String id,
-                String decodedModelId,
-                String encodedModelData,
-                String decodedModelClassName) {
+                String containedModelId,
+                String serializedMutationData,
+                String containedModelClassName) {
             this.id = id;
-            this.decodedModelId = decodedModelId;
-            this.encodedModelData = encodedModelData;
-            this.decodedModelClassName = decodedModelClassName;
+            this.containedModelId = containedModelId;
+            this.serializedMutationData = serializedMutationData;
+            this.containedModelClassName = containedModelClassName;
         }
 
         /**
-         * Gets the ID of the record. This ID does *NOT* match the encoded item.
-         * Instead, this is a unique time-based UUID for the mutation itself.
-         * For the ID of the model (in its decoded form), use {@link #getDecodedModelId()}.
-         * @return The record id
+         * Gets the ID of the record. This ID is *NOT* the same as the ID of the model contained in the
+         * mutation. Instead, this is a unique time-based UUID for the mutation itself.
+         * For the ID of the model (in its original, non-encapsulated form), use {@link #getContainedModelId()}.
+         * @return The ID of the persistent record, *NOT* the ID of the model contained within it.
          */
         @NonNull
         @Override
@@ -271,38 +269,38 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
         }
 
         /**
-         * Gets the ID of the model (in the model's decoded form).
+         * Gets the ID of the Model instance that is contained within the mutation data.
          * This is not the same as {@link #getId()}, which is an ID for the mutation itself.
          * The mutation ID is a v1 UUID which can be compared by timestamp. This current ID
          * is a v4 ID which is a better choice choice for UUID since it does not rely on flaky
          * notions of time.
          * @return The ID of the model, that would be returned if that model were
-         *         decoded and {@link Model#getId()} were called.
+         *         extracted from the record, and {@link Model#getId()} were called. on it.
          */
+        @SuppressWarnings("unused")
         @NonNull
-        String getDecodedModelId() {
-            return this.decodedModelId;
+        String getContainedModelId() {
+            return this.containedModelId;
         }
 
         /**
-         * Gets the encoded form of the model. The model is encoded into a JSON data structure,
-         * stored as String.
-         * @return The model data, in its encoded string form
+         * Gets a JSON-serialized representation of a {@link PendingMutation}, as String.
+         * @return The PendingMutation, in a JSON-serialized form, as String
          */
         @NonNull
-        String getEncodedModelData() {
-            return this.encodedModelData;
+        String getSerializedMutationData() {
+            return this.serializedMutationData;
         }
 
         /**
-         * Gets the class of the model, in its decoded form.
-         * The encoded data is always of type String, but the decoded class
-         * is some model type.
-         * @return Class of encoded model
+         * Gets the class of the model that is contained within the mutation data.
+         * The mutation data is always of type String. The decoded data is a PendingMutation of T.
+         * The "contained model class name" is the class name for T.
+         * @return Class of the Model contained within the mutation data
          */
         @NonNull
-        String getDecodedModelClassName() {
-            return decodedModelClassName;
+        String getContainedModelClassName() {
+            return containedModelClassName;
         }
 
         @Override
@@ -317,17 +315,17 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             PersistentRecord record = (PersistentRecord) thatObject;
 
             return ObjectsCompat.equals(id, record.id) &&
-                ObjectsCompat.equals(decodedModelId, record.decodedModelId) &&
-                ObjectsCompat.equals(encodedModelData, record.encodedModelData) &&
-                ObjectsCompat.equals(decodedModelClassName, record.decodedModelClassName);
+                ObjectsCompat.equals(containedModelId, record.containedModelId) &&
+                ObjectsCompat.equals(serializedMutationData, record.serializedMutationData) &&
+                ObjectsCompat.equals(containedModelClassName, record.containedModelClassName);
         }
 
         @Override
         public int hashCode() {
             int result = id.hashCode();
-            result = 31 * result + decodedModelId.hashCode();
-            result = 31 * result + encodedModelData.hashCode();
-            result = 31 * result + decodedModelClassName.hashCode();
+            result = 31 * result + containedModelId.hashCode();
+            result = 31 * result + serializedMutationData.hashCode();
+            result = 31 * result + containedModelClassName.hashCode();
             return result;
         }
 
@@ -336,9 +334,9 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
         public String toString() {
             return "Record{" +
                 "id='" + id + '\'' +
-                ", decodedModelId='" + decodedModelId + '\'' +
-                ", encodedModelData='" + encodedModelData + '\'' +
-                ", decodedModelClassName='" + decodedModelClassName + '\'' +
+                ", containedModelId='" + containedModelId + '\'' +
+                ", serializedMutationData='" + serializedMutationData + '\'' +
+                ", containedModelClassName='" + containedModelClassName + '\'' +
                 '}';
         }
 
@@ -371,62 +369,63 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          * @param <T> Type of model for which a pending mutation is being built
          */
         static final class Builder<T extends Model> {
-            private TimeBasedUuid recordId;
-            private UUID decodedModelId;
-            private String encodedModelData;
-            private String decodedModelClassName;
+            private TimeBasedUuid mutationId;
+            private UUID containedModelId;
+            private String serializedMutationData;
+            private String containedModelClassName;
 
             /**
-             * Configures the Record ID to a specified TimeBasedUUID value.
-             * @param timeBasedUuid A time based UUID for the record.
+             * Configures the ID for the record itself, which should match the ID of pending
+             * mutation stored in the serialized data.
+             * @param mutationId A time based UUID for the record.
              * @return Current builder, for fluent configuration chaining
              */
             @NonNull
-            PersistentRecord.Builder<T> recordId(@NonNull TimeBasedUuid timeBasedUuid) {
-                Objects.requireNonNull(timeBasedUuid);
-                this.recordId = timeBasedUuid;
+            PersistentRecord.Builder<T> mutationId(@NonNull TimeBasedUuid mutationId) {
+                Objects.requireNonNull(mutationId);
+                this.mutationId = mutationId;
                 return this;
             }
 
             /**
-             * Configures the ID that is associated with the decoded form of the model
-             * that is encoded into this record. For example, if this record encodes
-             * a Blog object, then this ID value is the same as the value returned by calling
-             * getId() on that object.
-             * @param decodedModelId The ID of the model in it decoded state
-             * @return The ID of the model, when that model is in its decoded form
+             * Configures the ID that is associated with the model buried inside of this
+             * mutation record. For example, if this record contains serialzied data for a mutation of a
+             * Blog object, then this ID value is the same as that returned by calling
+             * `getId()` on that Model object.
+             * @param containedModelId The ID of the model nested inside the serialized mutation
+             * @return Current builder, for fluent configuration chaining
              */
             @NonNull
-            PersistentRecord.Builder<T> decodedModelId(@NonNull String decodedModelId) {
-                Objects.requireNonNull(decodedModelId);
+            PersistentRecord.Builder<T> containedModelId(@NonNull String containedModelId) {
+                Objects.requireNonNull(containedModelId);
                 // This is stored this way for the purpose of validating hte input.
-                this.decodedModelId = UUID.fromString(decodedModelId);
+                this.containedModelId = UUID.fromString(containedModelId);
                 return this;
             }
 
             /**
-             * Configures the encoded data associated with an item that has undergone a mutation.
+             * Configures the serialized data that represents a pending mutation.
              * This value will be used in the next-build {@link PersistentRecord}.
-             * @param encodedModelData Value for the {@link PersistentRecord}'s encoded model data
+             * @param serializedMutationData Value for the {@link PersistentRecord}'s serialized mutation
              * @return Current Builder instance, for fluent configuration chaining
              */
             @NonNull
-            PersistentRecord.Builder<T> encodedModelData(@NonNull String encodedModelData) {
-                this.encodedModelData = Objects.requireNonNull(encodedModelData);
+            PersistentRecord.Builder<T> serializedMutationData(@NonNull String serializedMutationData) {
+                this.serializedMutationData = Objects.requireNonNull(serializedMutationData);
                 return this;
             }
 
             /**
-             * Configures the model class of item that has undergone a mutation. This is the model's class
-             * in its decoded form, before being stored into this structure. The type of the class
-             * in encoded form is String.class.
-             * @param decodedModelClassName The name of the model class to which the encoded model data
-             *                              may be decoded
+             * Configures the model class of item that has undergone a mutation.
+             * The serialized mutation data is a JSON string, and it represents a PendingMutation.
+             * Inside of that (logical) mutation is data about a model, and that model has _this_
+             * "contained model class name" as its type.
+             * @param containedModelClassName The class name of the model buried inside the serialized mutation
              * @return Current builder for fluent method chaining
              */
             @NonNull
-            PersistentRecord.Builder<T> decodedModelClassName(@NonNull String decodedModelClassName) {
-                this.decodedModelClassName = Objects.requireNonNull(decodedModelClassName);
+            PersistentRecord.Builder<T> containedModelClassName(@NonNull String containedModelClassName) {
+                this.containedModelClassName = Objects.requireNonNull(containedModelClassName);
                 return this;
             }
 
@@ -437,17 +436,17 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             @NonNull
             PendingMutation.PersistentRecord build() {
                 return new PendingMutation.PersistentRecord(
-                    Objects.requireNonNull(recordId).toString(),
-                    Objects.requireNonNull(decodedModelId).toString(),
-                    Objects.requireNonNull(encodedModelData),
-                    Objects.requireNonNull(decodedModelClassName)
+                    Objects.requireNonNull(mutationId).toString(),
+                    Objects.requireNonNull(containedModelId).toString(),
+                    Objects.requireNonNull(serializedMutationData),
+                    Objects.requireNonNull(containedModelClassName)
                 );
             }
         }
     }
 
     /**
-     * The type of mutation this is.
+     * The type of mutation.
      */
     enum Type {
         /**
@@ -473,7 +472,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
         /**
          * Converts a {@link PendingMutation} into a {@link PendingMutation.PersistentRecord}.
          * @param pendingMutation Mutation to convert to record
-         * @param <T> Type of object that has undergone mutation
+         * @param <T> Type of Model that has undergone mutation - the reason for having a PendingMutation, to begin
          * @return A record representation of the mutation
          */
         <T extends Model> PersistentRecord toRecord(PendingMutation<T> pendingMutation);

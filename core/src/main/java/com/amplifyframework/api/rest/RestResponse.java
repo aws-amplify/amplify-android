@@ -15,6 +15,10 @@
 
 package com.amplifyframework.api.rest;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
+
 import com.amplifyframework.util.Range;
 
 import org.json.JSONException;
@@ -26,7 +30,6 @@ import java.util.Arrays;
  * Response from rest request.
  */
 public final class RestResponse {
-
     private final Data data;
     private final Code code;
 
@@ -62,6 +65,37 @@ public final class RestResponse {
      */
     public Code getCode() {
         return code;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+        RestResponse that = (RestResponse) thatObject;
+        if (!ObjectsCompat.equals(this.getData(), that.getData())) {
+            return false;
+        }
+        return ObjectsCompat.equals(this.getCode(), that.getCode());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getData() != null ? getData().hashCode() : 0;
+        result = 31 * result + (getCode() != null ? getCode().hashCode() : 0);
+        return result;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "RestResponse{" +
+            "data=" + data +
+            ", code=" + code +
+            '}';
     }
 
     /**
@@ -106,18 +140,43 @@ public final class RestResponse {
         public JSONObject asJSONObject() throws JSONException {
             return new JSONObject(asString());
         }
+
+        @Override
+        public boolean equals(@Nullable Object thatObject) {
+            if (this == thatObject) {
+                return true;
+            }
+            if (thatObject == null || getClass() != thatObject.getClass()) {
+                return false;
+            }
+            Data data = (Data) thatObject;
+            return ObjectsCompat.equals(getRawBytes(), data.getRawBytes());
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(getRawBytes());
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "Data{" +
+                "rawBytes=" + Arrays.toString(rawBytes) +
+                '}';
+        }
     }
 
     /**
      * Status code of the response.
      */
     public static final class Code {
+        private static final Range<Integer> ALL_VALID_CODES = new Range<>(100, 599);
+        private static final Range<Integer> SERVICE_FAILURE_CODES = new Range<>(500, 599);
+        private static final Range<Integer> CLIENT_ERROR_CODES = new Range<>(400, 499);
+        private static final Range<Integer> SUCCESS_CODES = new Range<>(200, 299);
 
         private final int statusCode;
-        private final Range<Integer> validCodes = new Range<>(100, 599);
-        private final Range<Integer> serviceFailureCodes = new Range<>(500, 599);
-        private final Range<Integer> clientErrorCodes = new Range<>(400, 499);
-        private final Range<Integer> successCodes = new Range<>(200, 299);
 
         /**
          * Constructs the Code object.
@@ -133,7 +192,7 @@ public final class RestResponse {
          * @return Input if valid or -1 if invalid.
          */
         private int validateValue(int statusCode) {
-            return validCodes.contains(statusCode) ? statusCode : -1;
+            return ALL_VALID_CODES.contains(statusCode) ? statusCode : -1;
         }
 
         /**
@@ -141,7 +200,7 @@ public final class RestResponse {
          * @return true if service failure occurred.
          */
         public boolean isServiceFailure() {
-            return serviceFailureCodes.contains(statusCode);
+            return SERVICE_FAILURE_CODES.contains(statusCode);
         }
 
         /**
@@ -149,7 +208,7 @@ public final class RestResponse {
          * @return true if client error occurred.
          */
         public boolean isClientError() {
-            return clientErrorCodes.contains(statusCode);
+            return CLIENT_ERROR_CODES.contains(statusCode);
         }
 
         /**
@@ -157,7 +216,32 @@ public final class RestResponse {
          * @return true if response has success code.
          */
         public boolean isSuccessful() {
-            return successCodes.contains(statusCode);
+            return SUCCESS_CODES.contains(statusCode);
+        }
+
+        @Override
+        public boolean equals(@Nullable Object thatObject) {
+            if (this == thatObject) {
+                return true;
+            }
+            if (thatObject == null || getClass() != thatObject.getClass()) {
+                return false;
+            }
+            Code code = (Code) thatObject;
+            return statusCode == code.statusCode;
+        }
+
+        @Override
+        public int hashCode() {
+            return statusCode;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "Code{" +
+                "statusCode=" + statusCode +
+                '}';
         }
     }
 }

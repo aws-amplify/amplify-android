@@ -36,6 +36,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOption
 import com.amplifyframework.auth.cognito.util.AuthProviderConverter;
 import com.amplifyframework.auth.cognito.util.SignInStateConverter;
 import com.amplifyframework.auth.options.AuthSignInOptions;
+import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
@@ -54,6 +55,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 
+import com.amazonaws.logging.LogFactory;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
 import com.amazonaws.mobile.client.HostedUIOptions;
@@ -70,6 +72,7 @@ import com.amazonaws.mobile.client.results.Tokens;
 import com.amazonaws.mobile.client.results.UserCodeDeliveryDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
+import com.amazonaws.services.cognitoidentity.model.NotAuthorizedException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -119,6 +122,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     ) throws AuthException {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Exception> asyncException = new AtomicReference<>();
+        LogFactory.setLevel(LogFactory.Level.OFF);
 
         awsMobileClient.initialize(
             context,
@@ -602,7 +606,56 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
     @Override
     public void signOut(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
-        awsMobileClient.signOut(SignOutOptions.builder().signOutGlobally(true).build(), new Callback<Void>() {
+        signOut(AuthSignOutOptions.builder().globalSignOut(false).build(), onSuccess, onError);
+    }
+
+    @Override
+    public void signOut(
+            @NonNull AuthSignOutOptions options,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        if (options.isGlobalSignOut()) {
+            awsMobileClient.signOut(
+                    SignOutOptions.builder().signOutGlobally(true).build(),
+                    new Callback<Void>() {
+                        @Override
+                        public void onResult(Void result) {
+                            onSuccess.call();
+                        }
+
+                        @Override
+                        public void onError(Exception error) {
+                            // This exception is thrown if the user was signed out globally on another device
+                            // already and tries to sign out globally here. In which case, we just complete the
+                            // global sign out by locally signing them out here.
+                            if (error instanceof NotAuthorizedException) {
+                                signOutLocally(onSuccess, onError);
+                            } else {
+                                // Any other runtime exception means global sign out failed for another reason
+                                // (e.g. device offline), in which case we pass that error back to the customer.
+                                onError.accept(new AuthException(
+                                        "Failed to sign out globally",
+                                        error,
+                                        "See attached exception for more details"
+                                ));
+                            }
+                        }
+                    }
+            );
+        } else {
+            signOutLocally(onSuccess, onError);
+        }
+    }
+
+    @NonNull
+    @Override
+    public AWSMobileClient getEscapeHatch() {
+        return awsMobileClient;
+    }
+
+    private void signOutLocally(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
+        awsMobileClient.signOut(SignOutOptions.builder().signOutGlobally(false).build(), new Callback<Void>() {
             @Override
             public void onResult(Void result) {
                 onSuccess.call();
@@ -624,12 +677,6 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 }
             }
         });
-    }
-
-    @NonNull
-    @Override
-    public AWSMobileClient getEscapeHatch() {
-        return awsMobileClient;
     }
 
     private void signInWithWebUIHelper(

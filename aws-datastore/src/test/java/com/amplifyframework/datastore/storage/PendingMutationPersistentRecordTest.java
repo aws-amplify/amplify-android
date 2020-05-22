@@ -52,19 +52,19 @@ public class PendingMutationPersistentRecordTest {
                 .type(String.class)
                 .build(),
             ModelField.builder()
-                .name("decodedModelId")
+                .name("containedModelId")
                 .targetType("String")
                 .isRequired(true)
                 .type(String.class)
                 .build(),
             ModelField.builder()
-                .name("encodedModelData")
+                .name("serializedMutationData")
                 .targetType("String")
                 .isRequired(true)
                 .type(String.class)
                 .build(),
             ModelField.builder()
-                .name("decodedModelClassName")
+                .name("containedModelClassName")
                 .targetType("String")
                 .isRequired(true)
                 .type(String.class)
@@ -77,8 +77,8 @@ public class PendingMutationPersistentRecordTest {
         }
 
         final ModelIndex index = ModelIndex.builder()
-            .indexFieldNames(Collections.singletonList("decodedModelClassName"))
-            .indexName("decodedModelClassNameBasedIndex")
+            .indexFieldNames(Collections.singletonList("containedModelClassName"))
+            .indexName("containedModelClassNameBasedIndex")
             .build();
 
         assertEquals(
@@ -87,7 +87,7 @@ public class PendingMutationPersistentRecordTest {
                 .name("PersistentRecord")
                 .pluralName("PersistentRecords")
                 .fields(expectedFieldsMap)
-                .indexes(Collections.singletonMap("decodedModelClassNameBasedIndex", index))
+                .indexes(Collections.singletonMap("containedModelClassNameBasedIndex", index))
                 .build(),
             // Actual
             ModelSchema.fromModelClass(PendingMutation.PersistentRecord.class)

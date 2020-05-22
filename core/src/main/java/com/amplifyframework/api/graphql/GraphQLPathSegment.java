@@ -16,6 +16,7 @@
 package com.amplifyframework.api.graphql;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 /**
@@ -92,7 +93,7 @@ public final class GraphQLPathSegment {
     }
 
     @Override
-    public boolean equals(Object thatObject) {
+    public boolean equals(@Nullable Object thatObject) {
         if (this == thatObject) {
             return true;
         }
@@ -116,6 +117,7 @@ public final class GraphQLPathSegment {
         return value.hashCode();
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "GraphQLPathSegment{" +

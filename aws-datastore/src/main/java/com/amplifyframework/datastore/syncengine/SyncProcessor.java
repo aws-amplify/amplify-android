@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.Disposables;
@@ -166,7 +167,7 @@ final class SyncProcessor {
         return Single.<Iterable<ModelWithMetadata<T>>>create(emitter -> {
             final Cancelable cancelable =
                 appSync.sync(modelClass, lastSyncTimeAsLong, metadataEmitter(emitter), emitter::onError);
-            emitter.setDisposable(Disposables.fromCancelable(cancelable));
+            emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         }).doOnSuccess(results ->
             LOG.debug("Successfully sync'd down cloud state for model type = " + modelClass.getSimpleName())
         ).doOnError(failureToSync ->

@@ -22,6 +22,7 @@ import com.amplifyframework.api.aws.sigv4.AppSyncSigV4SignerInterceptor;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
+import com.amplifyframework.core.Amplify;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -32,6 +33,7 @@ import com.amazonaws.mobile.client.AWSMobileClient;
  * This factory should be constructed once in a plugin.
  */
 final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
+    private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
     private final ApiAuthProviders apiAuthProviders;
 
     AppSyncSigV4SignerInterceptorFactory(ApiAuthProviders apiAuthProviders) {
@@ -76,7 +78,17 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 // This instance is reused by this factory.
                 AWSCredentialsProvider credentialsProvider = apiAuthProviders.getAWSCredentialsProvider();
                 if (credentialsProvider == null) {
-                    credentialsProvider = AWSMobileClient.getInstance();
+                    try {
+                        credentialsProvider =
+                                (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
+                    } catch (IllegalStateException exception) {
+                        throw new ApiException(
+                                "AWSApiPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
+                                exception,
+                                "Before configuring Amplify, be sure to add AWSCognitoAuthPlugin same as you added " +
+                                        "AWSApiPlugin."
+                        );
+                    }
                 }
                 return new AppSyncSigV4SignerInterceptor(credentialsProvider,
                         config.getRegion(),

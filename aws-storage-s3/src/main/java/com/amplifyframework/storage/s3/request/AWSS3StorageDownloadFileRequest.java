@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.request;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.StorageAccessLevel;
 
@@ -36,14 +37,14 @@ public final class AWSS3StorageDownloadFileRequest {
      * @param key key for item to download
      * @param local Target file for the downloaded file to be saved to
      * @param accessLevel Storage access level
-     * @param targetIdentityId The user id for the user this file should be downloaded for
-     *                         (to override it from assuming the currently logged in user)
+     * @param targetIdentityId If set, this should override the current user's identity ID.
+     *                         If null, the operation will fetch the current identity ID.
      */
     public AWSS3StorageDownloadFileRequest(
             @NonNull String key,
             @NonNull File local,
             @NonNull StorageAccessLevel accessLevel,
-            @NonNull String targetIdentityId
+            @Nullable String targetIdentityId
     ) {
         this.key = key;
         this.local = local;
@@ -70,10 +71,10 @@ public final class AWSS3StorageDownloadFileRequest {
     }
 
     /**
-     * Gets the target identity id.
-     * @return target identity id
+     * Gets the target identity id override. If null, the operation gets the default, current user's identity ID.
+     * @return target identity id override
      */
-    @NonNull
+    @Nullable
     public String getTargetIdentityId() {
         return targetIdentityId;
     }

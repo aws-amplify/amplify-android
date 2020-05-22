@@ -41,8 +41,8 @@ public final class AWSS3StorageUploadFileRequest {
      * @param key key for item to upload
      * @param local File to upload
      * @param accessLevel Storage access level
-     * @param targetIdentityId The user id for the user this file should be uploaded for
-     *                         (to override it from assuming the currently logged in user)
+     * @param targetIdentityId If set, this should override the current user's identity ID.
+     *                         If null, the operation will fetch the current identity ID.
      * @param contentType The standard MIME type describing the format of the object to store
      * @param metadata Metadata for the object to store
      */
@@ -50,7 +50,7 @@ public final class AWSS3StorageUploadFileRequest {
             @NonNull String key,
             @NonNull File local,
             @NonNull StorageAccessLevel accessLevel,
-            @NonNull String targetIdentityId,
+            @Nullable String targetIdentityId,
             @Nullable String contentType,
             @Nullable Map<String, String> metadata
     ) {
@@ -93,10 +93,10 @@ public final class AWSS3StorageUploadFileRequest {
     }
 
     /**
-     * Gets the target identity id.
-     * @return target identity id
+     * Gets the target identity id override. If null, the operation gets the default, current user's identity ID.
+     * @return target identity id override
      */
-    @NonNull
+    @Nullable
     public String getTargetIdentityId() {
         return targetIdentityId;
     }

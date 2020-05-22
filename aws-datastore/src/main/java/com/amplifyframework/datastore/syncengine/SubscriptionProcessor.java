@@ -27,6 +27,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.Disposables;
 import com.amplifyframework.datastore.appsync.AppSync;
@@ -113,7 +114,7 @@ final class SubscriptionProcessor {
         return Observable.<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
             CountDownLatch latch = new CountDownLatch(1);
             SubscriptionMethod method = subscriptionMethodFor(appSync, subscriptionType);
-            Cancelable subscriptionCancelable = method.subscribe(
+            Cancelable cancelable = method.subscribe(
                 clazz,
                 token -> latch.countDown(),
                 emitter::onNext,
@@ -123,9 +124,7 @@ final class SubscriptionProcessor {
             // When the observable is disposed, we need to call cancel() on the subscription
             // so it can properly dispose of resources if necessary. For the AWS API plugin,
             // this means means closing the underlying network connection.
-            emitter.setDisposable(
-                Disposables.fromCancelable(subscriptionCancelable)
-            );
+            emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
             latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         })
         .doOnError(subscriptionError ->
