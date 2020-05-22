@@ -22,8 +22,10 @@ import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.aws.ModelMutation;
+import com.amplifyframework.api.aws.ModelQuery;
+import com.amplifyframework.api.aws.ModelSubscription;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
@@ -89,17 +91,18 @@ public final class RxApiBindingTest {
             onResponse.accept(response);
             return null;
         }).when(delegate)
-            .query(eq(Model.class), anyConsumer(), anyConsumer());
+            .query(eq(ModelQuery.list(Model.class)), anyConsumer(), anyConsumer());
 
         // Act: query the Api via the Rx Binding
-        TestObserver<GraphQLResponse<Iterable<Model>>> observer = rxApi.query(Model.class).test();
+        TestObserver<GraphQLResponse<Iterable<Model>>> observer = rxApi.query(
+                ModelQuery.list(Model.class)).test();
 
         // Assert: got back a the same response as from category behavior
         observer.awaitTerminalEvent();
         observer.assertValue(response);
 
         verify(delegate)
-            .query(eq(Model.class), anyConsumer(), anyConsumer());
+            .query(eq(ModelQuery.list(Model.class)), anyConsumer(), anyConsumer());
     }
 
     /**
@@ -115,17 +118,18 @@ public final class RxApiBindingTest {
             onFailure.accept(expectedFailure);
             return null;
         }).when(delegate)
-            .query(eq(Model.class), anyConsumer(), anyConsumer());
+            .query(eq(ModelQuery.list(Model.class)), anyConsumer(), anyConsumer());
 
         // Act: access query() method via Rx binding
-        TestObserver<GraphQLResponse<Iterable<Model>>> observer = rxApi.query(Model.class).test();
+        TestObserver<GraphQLResponse<Iterable<Model>>> observer = rxApi.query(
+                ModelQuery.list(Model.class)).test();
 
         // Assert: failure bubbles up to Rx
         observer.awaitTerminalEvent();
         observer.assertError(expectedFailure);
 
         verify(delegate)
-            .query(eq(Model.class), anyConsumer(), anyConsumer());
+            .query(eq(ModelQuery.list(Model.class)), anyConsumer(), anyConsumer());
     }
 
     /**
@@ -135,7 +139,6 @@ public final class RxApiBindingTest {
     public void mutateEmitsResult() {
         // Arrange: category behaviour will yield a response
         Model model = RandomModel.model();
-        MutationType mutationType = MutationType.DELETE;
         GraphQLResponse<Model> response = new GraphQLResponse<>(model, Collections.emptyList());
         doAnswer(invocation -> {
             final int positionOfResultConsumer = 2;
@@ -143,17 +146,17 @@ public final class RxApiBindingTest {
             onResponse.accept(response);
             return null;
         }).when(delegate)
-            .mutate(eq(model), eq(mutationType), anyConsumer(), anyConsumer());
+            .mutate(eq(ModelMutation.delete(model)), anyConsumer(), anyConsumer());
 
         // Act: mutation via the Rx binding
-        TestObserver<GraphQLResponse<Model>> observer = rxApi.mutate(model, mutationType).test();
+        TestObserver<GraphQLResponse<Model>> observer = rxApi.mutate(ModelMutation.delete(model)).test();
 
         // Assert: response is propagated via Rx
         observer.awaitTerminalEvent();
         observer.assertValue(response);
 
         verify(delegate)
-            .mutate(eq(model), eq(mutationType), anyConsumer(), anyConsumer());
+            .mutate(eq(ModelMutation.delete(model)), anyConsumer(), anyConsumer());
     }
 
     /**
@@ -163,7 +166,6 @@ public final class RxApiBindingTest {
     public void mutateEmitsFailure() {
         // Arrange category behavior to fail
         Model model = RandomModel.model();
-        MutationType mutationType = MutationType.DELETE;
         ApiException expectedFailure = new ApiException("Expected", "Failure");
         doAnswer(invocation -> {
             final int positionOfFailureConsumer = 3;
@@ -171,17 +173,19 @@ public final class RxApiBindingTest {
             onFailure.accept(expectedFailure);
             return null;
         }).when(delegate)
-            .mutate(eq(model), eq(mutationType), anyConsumer(), anyConsumer());
+            .mutate(eq(ModelMutation.delete(model)), anyConsumer(), anyConsumer());
 
         // Act: access it via binding
-        TestObserver<GraphQLResponse<Model>> observer = rxApi.mutate(model, mutationType).test();
+        TestObserver<GraphQLResponse<Model>> observer = rxApi.mutate(
+                ModelMutation.delete(model)
+        ).test();
 
         // Assert: failure is propagated
         observer.awaitTerminalEvent();
         observer.assertError(expectedFailure);
 
         verify(delegate)
-            .mutate(eq(model), eq(mutationType), anyConsumer(), anyConsumer());
+            .mutate(eq(ModelMutation.delete(model)), anyConsumer(), anyConsumer());
     }
 
     /**
@@ -206,8 +210,7 @@ public final class RxApiBindingTest {
             onComplete.call();
             return null;
         }).when(delegate).subscribe(
-            eq(Model.class),
-            eq(SubscriptionType.ON_CREATE),
+            eq(ModelSubscription.of(Model.class, SubscriptionType.ON_CREATE)),
             anyConsumer(),
             anyConsumer(),
             anyConsumer(),
@@ -216,7 +219,7 @@ public final class RxApiBindingTest {
 
         // Act: subscribe via binding
         TestObserver<GraphQLResponse<Model>> observer =
-            rxApi.subscribe(Model.class, SubscriptionType.ON_CREATE).test();
+            rxApi.subscribe(ModelSubscription.of(Model.class, SubscriptionType.ON_CREATE)).test();
 
         observer.awaitTerminalEvent();
         observer.assertValue(response);
@@ -241,8 +244,7 @@ public final class RxApiBindingTest {
             onFailure.accept(expectedFailure);
             return null;
         }).when(delegate).subscribe(
-            eq(Model.class),
-            eq(SubscriptionType.ON_CREATE),
+            eq(ModelSubscription.of(Model.class, SubscriptionType.ON_CREATE)),
             anyConsumer(),
             anyConsumer(),
             anyConsumer(),
@@ -251,7 +253,7 @@ public final class RxApiBindingTest {
 
         // Act: subscribe via binding
         TestObserver<GraphQLResponse<Model>> observer =
-            rxApi.subscribe(Model.class, SubscriptionType.ON_CREATE).test();
+            rxApi.subscribe(ModelSubscription.of(Model.class, SubscriptionType.ON_CREATE)).test();
 
         observer.awaitTerminalEvent();
         observer.assertNoValues();

@@ -18,6 +18,7 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 
 dependencies {
     implementation project(path: ':core')
+    implementation project(path: ':aws-api')
     implementation dependency.aws.mobileclient
     implementation dependency.junit
     implementation dependency.androidx.test.core
