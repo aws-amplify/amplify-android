@@ -91,7 +91,8 @@ final class SubscriptionAuthorizer {
                     oidcProvider = () -> {
                         throw new ApiException(
                                 "OidcAuthProvider interface is not implemented.",
-                                AmplifyException.TODO_RECOVERY_SUGGESTION
+                                "Please implement OidcAuthProvider interface to return " +
+                                        "appropriate token from the appropriate service."
                         );
                     };
                 }
@@ -103,16 +104,16 @@ final class SubscriptionAuthorizer {
     }
 
     private JSONObject forApiKey(ApiKeyAuthProvider keyProvider) throws ApiException {
-        final String apiKey = keyProvider.getAPIKey();
         try {
             return new JSONObject()
                     .put("host", getHost())
                     .put("x-amz-date", Iso8601Timestamp.now())
-                    .put("x-api-key", apiKey);
+                    .put("x-api-key", keyProvider.getAPIKey());
         } catch (JSONException jsonException) {
+            // This error should never be thrown
             throw new ApiException(
-                    "Error constructing the authorization json for Api key. ",
-                    jsonException, AmplifyException.TODO_RECOVERY_SUGGESTION
+                    "Error constructing the authorization json for Api key.",
+                    jsonException, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
         }
     }
@@ -123,9 +124,10 @@ final class SubscriptionAuthorizer {
                     .put("host", getHost())
                     .put("Authorization", cognitoProvider.getLatestAuthToken());
         } catch (JSONException jsonException) {
+            // This error should never be thrown
             throw new ApiException(
                     "Error constructing the authorization json for Cognito User Pools.",
-                    jsonException, AmplifyException.TODO_RECOVERY_SUGGESTION
+                    jsonException, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
         }
     }
@@ -136,9 +138,10 @@ final class SubscriptionAuthorizer {
                     .put("host", getHost())
                     .put("Authorization", oidcProvider.getLatestAuthToken());
         } catch (JSONException jsonException) {
+            // This error should never be thrown
             throw new ApiException(
                     "Error constructing the authorization json for Open ID Connect.",
-                    jsonException, AmplifyException.TODO_RECOVERY_SUGGESTION
+                    jsonException, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
         }
     }
@@ -169,18 +172,7 @@ final class SubscriptionAuthorizer {
 
         // Extract header from signed request and return
         Map<String, String> signedHeaders = canonicalRequest.getHeaders();
-        JSONObject authorization = new JSONObject();
-        try {
-            for (Map.Entry<String, String> headerEntry : signedHeaders.entrySet()) {
-                authorization.put(headerEntry.getKey(), headerEntry.getValue());
-            }
-        } catch (JSONException jsonException) {
-            throw new ApiException(
-                    "Error constructing the authorization json for AWS IAM.",
-                    jsonException, AmplifyException.TODO_RECOVERY_SUGGESTION
-            );
-        }
-        return authorization;
+        return new JSONObject(signedHeaders);
     }
 
     private String getHost() {
@@ -195,7 +187,8 @@ final class SubscriptionAuthorizer {
         } catch (URISyntaxException uriException) {
             throw new ApiException(
                     "Error constructing canonical URI for IAM request signature",
-                    uriException, AmplifyException.TODO_RECOVERY_SUGGESTION
+                    uriException,
+                    "Verify that the API configuration contains valid GraphQL endpoint."
             );
         }
     }
