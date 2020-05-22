@@ -27,8 +27,8 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.datastore.AsyncUtils;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.Disposables;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.logging.Logger;
@@ -124,7 +124,7 @@ final class SubscriptionProcessor {
             // so it can properly dispose of resources if necessary. For the AWS API plugin,
             // this means means closing the underlying network connection.
             emitter.setDisposable(
-                AsyncUtils.asDisposable(subscriptionCancelable)
+                Disposables.fromCancelable(subscriptionCancelable)
             );
             latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         })

@@ -604,8 +604,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         initialize(context, schemaList -> {
             onComplete.call();
         }, exception -> {
-                onError.accept(new DataStoreException("Error occurred whilte trying to re-initialize " +
-                    "the storage adapter", exception.getMessage()));
+                onError.accept(new DataStoreException(
+                    "Error occurred whilte trying to re-initialize the storage adapter",
+                    exception.getMessage()));
             }
         );
     }

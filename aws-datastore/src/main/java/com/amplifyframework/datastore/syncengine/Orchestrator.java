@@ -113,33 +113,33 @@ public final class Orchestrator {
     @NonNull
     public Completable start() {
         // Only start if it's stopped.
-        if (OrchestratorStatus.STOPPED.equals(status.get())) {
-            LOG.debug("Starting the orchestrator.");
-            status.compareAndSet(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTING);
-            initializationCompletable = mutationOutbox.load()
-                .andThen(
-                    Completable.fromAction(() -> {
-                        if (!storageObserver.isObservingStorageChanges()) {
-                            LOG.debug("Starting local storage observer.");
-                            storageObserver.startObservingStorageChanges();
-                        }
-                        if (!subscriptionProcessor.isObservingSubscriptionEvents()) {
-                            LOG.debug("Starting subscription processor.");
-                            subscriptionProcessor.startSubscriptions();
-                        }
-                        syncProcessor.hydrate().blockingAwait();
-                        if (!mutationProcessor.isDrainingMutationOutbox()) {
-                            LOG.debug("Starting mutation processor.");
-                            mutationProcessor.startDrainingMutationOutbox();
-                        }
-                        if (!subscriptionProcessor.isDrainingMutationBuffer()) {
-                            LOG.debug("Starting draining mutation buffer.");
-                            subscriptionProcessor.startDrainingMutationBuffer();
-                        }
-                        status.compareAndSet(OrchestratorStatus.STARTING, OrchestratorStatus.STARTED);
-                    })
-                );
+        if (!OrchestratorStatus.STOPPED.equals(status.get())) {
+            return initializationCompletable;
         }
+        LOG.debug("Starting the orchestrator.");
+        status.compareAndSet(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTING);
+        initializationCompletable = mutationOutbox.load().andThen(
+            Completable.fromAction(() -> {
+                if (!storageObserver.isObservingStorageChanges()) {
+                    LOG.debug("Starting local storage observer.");
+                    storageObserver.startObservingStorageChanges();
+                }
+                if (!subscriptionProcessor.isObservingSubscriptionEvents()) {
+                    LOG.debug("Starting subscription processor.");
+                    subscriptionProcessor.startSubscriptions();
+                }
+                syncProcessor.hydrate().blockingAwait();
+                if (!mutationProcessor.isDrainingMutationOutbox()) {
+                    LOG.debug("Starting mutation processor.");
+                    mutationProcessor.startDrainingMutationOutbox();
+                }
+                if (!subscriptionProcessor.isDrainingMutationBuffer()) {
+                    LOG.debug("Starting draining mutation buffer.");
+                    subscriptionProcessor.startDrainingMutationBuffer();
+                }
+                status.compareAndSet(OrchestratorStatus.STARTING, OrchestratorStatus.STARTED);
+            })
+        );
         return initializationCompletable;
     }
 
@@ -147,7 +147,7 @@ public final class Orchestrator {
      * Stop all model synchronization.
      */
     public void stop() {
-        if (OrchestratorStatus.STARTED.equals(status.get())) {
+        if (isStarted()) {
             LOG.info("Intentionally stopping cloud synchronization, now.");
             status.compareAndSet(OrchestratorStatus.STARTED, OrchestratorStatus.STOPPING);
             subscriptionProcessor.stopAllSubscriptionActivity();
@@ -164,19 +164,28 @@ public final class Orchestrator {
      */
     enum OrchestratorStatus {
         /**
-         * The orchestrator is stopping.
+         * The orchestrator is in the process of shutting down all the necessary components. Any requests to
+         * start it will be ignored.
+         *
+         * Upon completion, the state should be changed to {@link #STOPPED}.
          */
         STOPPING,
         /**
-         * The orchestrator is stopped.
+         * The orchestrator is stopped and it is currently not performing any background processing. At this point
+         * it is safe to start it. Only possible transition from this state should be to {@link #STARTING}
+         * which happens by invoking {@link #start()}
          */
         STOPPED,
         /**
-         * The orchestrator is starting.
+         * The orchestrator is bootstrapping all the components needed to perform the different background
+         * processes it orchestrates.
+         *
+         * Upon completion, the state should be changed to {@link #STARTED}
          */
         STARTING,
         /**
-         * The orchestrator is started.
+         * The orchestrator is started. Only possible transition from this state should be to {@link #STOPPING}
+         * which happens by invoking {@link #stop()}
          */
         STARTED
     }

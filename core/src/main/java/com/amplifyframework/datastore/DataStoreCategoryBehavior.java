@@ -227,9 +227,10 @@ public interface DataStoreCategoryBehavior {
     );
 
     /**
-     * Every class that implements this behavior will have its own
-     * interpretation of what clear means. At a high level, the intent is to destroy
-     * any artifacts created by the implementation from local disk and/or memory.
+     * Resets the underlying DataStore to its pre-initialized state such that no data remains on the local
+     * device. Every implementation of this behavior may have its own interpretation of what clear means.
+     * This is meant to be a destructive operation that allows for safe disposal of data stored locally.
+     *
      * @param onComplete Invoked if the call is successful.
      * @param onError Invoked if an exception occurs.
      */

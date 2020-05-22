@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
 import android.os.FileObserver;
-import android.os.Handler;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
@@ -36,7 +35,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -95,11 +93,9 @@ public final class SQLiteStorageAdapterClearTest {
      * Then call clear and verify that the database file is re-created
      * and is writable.
      * @throws DataStoreException bubbles up exceptions thrown from the adapter
-     * @throws IOException if it can't ready file creation time
-     * @throws InterruptedException if something happens when sleeping for 1 second
      */
     @Test
-    public void clearDeletesAndRecreatesDatabase() throws DataStoreException, IOException, InterruptedException {
+    public void clearDeletesAndRecreatesDatabase() throws DataStoreException {
         assertDbFileExists();
         assertEquals(0, fileObserver.createFileEventCount);
         assertEquals(0, fileObserver.deleteFileEventCount);
@@ -169,12 +165,12 @@ public final class SQLiteStorageAdapterClearTest {
     private static final class TestFileObserver extends FileObserver {
         private int createFileEventCount;
         private int deleteFileEventCount;
+
         /**
          * Equivalent to FileObserver(file, FileObserver.ALL_EVENTS).
          *
          * @param path Directory to watch
          */
-
         @SuppressWarnings("deprecation")
         TestFileObserver(@NonNull String path) {
             super(path, FileObserver.CREATE | FileObserver.DELETE | FileObserver.DELETE_SELF);
@@ -184,19 +180,7 @@ public final class SQLiteStorageAdapterClearTest {
         }
 
         /**
-         * The event handler, which must be implemented by subclasses.
-         *
-         * <p class="note">This method is invoked on a special FileObserver thread.
-         * It runs independently of any threads, so take care to use appropriate
-         * synchronization!  Consider using {@link Handler#post(Runnable)} to shift
-         * event handling work to the main thread to avoid concurrency problems.</p>
-         *
-         * <p>Event handlers must not throw exceptions.</p>
-         *
-         * @param event The type of event which happened
-         * @param path  The path, relative to the main monitored file or directory,
-         *              of the file or directory which triggered the event.  This value can
-         *              be {@code null} for certain events, such as {@link #MOVE_SELF}.
+         * {@inheritDoc}
          */
         @Override
         public void onEvent(int event, @Nullable String path) {

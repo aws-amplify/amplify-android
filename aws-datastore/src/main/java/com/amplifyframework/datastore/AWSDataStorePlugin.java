@@ -194,10 +194,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             .andThen(initializeOrchestrator())
             .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         if (initError != null) {
-            throw new AmplifyException("Failed to initialize the local storage " +
-                "adapter for the DataStore plugin.",
-                initError,
-                AmplifyException.TODO_RECOVERY_SUGGESTION);
+            throw new AmplifyException("Failed to initialize the local storage adapter for the DataStore plugin.",
+                                        initError,
+                                        AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
     }
 

@@ -27,17 +27,16 @@ import io.reactivex.disposables.Disposable;
 /**
  * Utility class for functions used throughout DataStore.
  */
-public final class AsyncUtils {
-    private AsyncUtils() {
+public final class Disposables {
 
-    }
+    private Disposables() {}
 
     /**
      * A utility method to convert a cancelable to a Disposable.
      * @param cancelable An Amplify Cancelable
      * @return An RxJava2 Disposable that disposed by invoking the cancellation.
      */
-    public static Disposable asDisposable(@NonNull Cancelable cancelable) {
+    public static Disposable fromCancelable(@NonNull Cancelable cancelable) {
         Objects.requireNonNull(cancelable);
         return new Disposable() {
             private final AtomicReference<Boolean> isCanceled = new AtomicReference<>(false);
