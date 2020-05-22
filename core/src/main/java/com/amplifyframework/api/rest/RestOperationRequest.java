@@ -15,6 +15,10 @@
 
 package com.amplifyframework.api.rest;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
+
 import com.amplifyframework.util.Immutable;
 
 import java.util.Arrays;
@@ -25,7 +29,6 @@ import java.util.Map;
  * Request object used by the RestOperation.
  */
 public final class RestOperationRequest {
-
     private final HttpMethod httpMethod;
     private final String path;
     private final byte[] data;
@@ -104,5 +107,51 @@ public final class RestOperationRequest {
      */
     public Map<String, String> getHeaders() {
         return headers;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "RestOperationRequest{" +
+            "httpMethod=" + httpMethod +
+            ", path='" + path + '\'' +
+            ", data=" + Arrays.toString(data) +
+            ", headers=" + headers +
+            ", queryParameters=" + queryParameters +
+            '}';
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+        RestOperationRequest that = (RestOperationRequest) thatObject;
+        if (!ObjectsCompat.equals(this.getHttpMethod(), that.getHttpMethod())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(this.getPath(), that.getPath())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(this.getData(), that.getData())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(this.getHeaders(), that.getHeaders())) {
+            return false;
+        }
+        return ObjectsCompat.equals(this.getQueryParameters(), that.getQueryParameters());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getHttpMethod() != null ? getHttpMethod().hashCode() : 0;
+        result = 31 * result + (getPath() != null ? getPath().hashCode() : 0);
+        result = 31 * result + Arrays.hashCode(getData());
+        result = 31 * result + (getHeaders() != null ? getHeaders().hashCode() : 0);
+        result = 31 * result + (getQueryParameters() != null ? getQueryParameters().hashCode() : 0);
+        return result;
     }
 }
