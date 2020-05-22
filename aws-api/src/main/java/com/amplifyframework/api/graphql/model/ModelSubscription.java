@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.graphql;
+package com.amplifyframework.api.graphql.model;
 
 import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory;
 import com.amplifyframework.api.graphql.GraphQLRequest;

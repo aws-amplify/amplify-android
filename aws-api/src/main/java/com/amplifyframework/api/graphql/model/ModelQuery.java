@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.graphql;
+package com.amplifyframework.api.graphql.model;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

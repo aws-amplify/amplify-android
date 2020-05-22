@@ -18,9 +18,12 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 
 dependencies {
     implementation project(path: ':core')
-    implementation project(path: ':aws-api')
     implementation dependency.aws.mobileclient
     implementation dependency.junit
     implementation dependency.androidx.test.core
     implementation dependency.rxjava
+
+    // dependency on Model/GraphQL integration classes
+    // remove when modules are re-organized to provide better isolation
+    compileOnly project(path: ':aws-api')
 }
