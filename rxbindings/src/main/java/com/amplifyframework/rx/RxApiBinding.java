@@ -23,13 +23,9 @@ import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -51,50 +47,8 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     }
 
     @NonNull
-    @Override
-    public <T extends Model> Single<GraphQLResponse<Iterable<T>>> query(@NonNull Class<T> modelClass) {
-        return toSingle((onResult, onError) -> api.query(modelClass, onResult, onError));
-    }
-
-    @NonNull
-    @Override
-    public <T extends Model> Single<GraphQLResponse<T>> query(
-            @NonNull Class<T> modelClass, @NonNull String modelId) {
-        return toSingle((onResult, onError) -> api.query(modelClass, modelId, onResult, onError));
-    }
-
-    @NonNull
-    @Override
-    public <T extends Model> Single<GraphQLResponse<Iterable<T>>> query(
-            @NonNull Class<T> modelClass, @NonNull QueryPredicate searchCriteria) {
-        return toSingle((onResult, onError) -> api.query(modelClass, searchCriteria, onResult, onError));
-
-    }
-
-    @NonNull
     public <R> Single<GraphQLResponse<R>> query(@NonNull GraphQLRequest<R> graphQlRequest) {
         return toSingle((onResult, onError) -> api.query(graphQlRequest, onResult, onError));
-    }
-
-    @NonNull
-    @Override
-    public <T extends Model> Single<GraphQLResponse<Iterable<T>>> query(
-            @NonNull String apiName, @NonNull Class<T> modelClass) {
-        return toSingle((onResult, onError) -> api.query(apiName, modelClass, onResult, onError));
-    }
-
-    @NonNull
-    @Override
-    public <T extends Model> Single<GraphQLResponse<T>> query(
-            @NonNull String apiName, @NonNull Class<T> modelClass, @NonNull String modelId) {
-        return toSingle((onResult, onError) -> api.query(apiName, modelClass, modelId, onResult, onError));
-    }
-
-    @NonNull
-    @Override
-    public <T extends Model> Single<GraphQLResponse<Iterable<T>>> query(
-            @NonNull String apiName, @NonNull Class<T> modelClass, @NonNull QueryPredicate searchCriteria) {
-        return toSingle((onResult, onError) -> api.query(apiName, modelClass, searchCriteria, onResult, onError));
     }
 
     @NonNull
@@ -106,40 +60,8 @@ final class RxApiBinding implements RxApiCategoryBehavior {
 
     @NonNull
     @Override
-    public <T extends Model> Single<GraphQLResponse<T>> mutate(
-            @NonNull T model, @NonNull MutationType mutationType) {
-        return toSingle((onResult, onError) -> api.mutate(model, mutationType, onResult, onError));
-    }
-
-    @NonNull
-    @Override
-    public <T extends Model> Single<GraphQLResponse<T>> mutate(
-            @NonNull T model, @NonNull QueryPredicate mutationCriteria, @NonNull MutationType mutationType) {
-        return toSingle((onResult, onError) -> api.mutate(model, mutationCriteria, mutationType, onResult, onError));
-    }
-
-    @NonNull
-    @Override
-    public <T> Single<GraphQLResponse<T>> mutate(@NonNull GraphQLRequest<T> graphQlRequest) {
+    public <R> Single<GraphQLResponse<R>> mutate(@NonNull GraphQLRequest<R> graphQlRequest) {
         return toSingle((onResult, onError) -> api.mutate(graphQlRequest, onResult, onError));
-    }
-
-    @NonNull
-    @Override
-    public <T extends Model> Single<GraphQLResponse<T>> mutate(
-            @NonNull String apiName, @NonNull T model, @NonNull MutationType mutationType) {
-        return toSingle((onResult, onError) -> api.mutate(apiName, model, mutationType, onResult, onError));
-    }
-
-    @NonNull
-    @Override
-    public <T extends Model> Single<GraphQLResponse<T>> mutate(
-            @NonNull String apiName,
-            @NonNull T model,
-            @NonNull QueryPredicate mutationCriteria,
-            @NonNull MutationType mutationType) {
-        return toSingle((onResult, onError) ->
-            api.mutate(apiName, model, mutationCriteria, mutationType, onResult, onError));
     }
 
     @NonNull
@@ -151,25 +73,9 @@ final class RxApiBinding implements RxApiCategoryBehavior {
 
     @NonNull
     @Override
-    public <T extends Model> Observable<GraphQLResponse<T>> subscribe(
-            @NonNull Class<T> modelClass, @NonNull SubscriptionType subscriptionType) {
-        return toObservable((onStart, onResult, onError, onComplete) ->
-            api.subscribe(modelClass, subscriptionType, onStart, onResult, onError, onComplete));
-    }
-
-    @NonNull
-    @Override
     public <T> Observable<GraphQLResponse<T>> subscribe(@NonNull GraphQLRequest<T> graphQlRequest) {
         return toObservable((onStart, onResult, onError, onComplete) ->
-            api.subscribe(graphQlRequest, onStart, onResult, onError, onComplete));
-    }
-
-    @NonNull
-    @Override
-    public <T extends Model> Observable<GraphQLResponse<T>> subscribe(
-            @NonNull String apiName, @NonNull Class<T> modelClass, @NonNull SubscriptionType subscriptionType) {
-        return toObservable((onStart, onResult, onError, onComplete) ->
-            api.subscribe(apiName, modelClass, subscriptionType, onStart, onResult, onError, onComplete));
+                api.subscribe(graphQlRequest, onStart, onResult, onError, onComplete));
     }
 
     @NonNull
@@ -177,7 +83,7 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     public <T> Observable<GraphQLResponse<T>> subscribe(
             @NonNull String apiName, @NonNull GraphQLRequest<T> graphQlRequest) {
         return toObservable((onStart, onResult, onError, onComplete) ->
-            api.subscribe(apiName, graphQlRequest, onStart, onResult, onError, onComplete));
+                api.subscribe(apiName, graphQlRequest, onStart, onResult, onError, onComplete));
     }
 
     @NonNull
