@@ -61,6 +61,7 @@ ext {
                 junit: 'androidx.test.ext:junit:1.1.1'
             ]
         ],
+
         aws: [
             s3: "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion",
             comprehend: "com.amazonaws:aws-android-sdk-comprehend:$awsSdkVersion",
@@ -73,10 +74,8 @@ ext {
             textract: "com.amazonaws:aws-android-sdk-textract:$awsSdkVersion",
             translate: "com.amazonaws:aws-android-sdk-translate:$awsSdkVersion"
         ],
-        okhttp: [
-            okhttp: 'com.squareup.okhttp3:okhttp:4.7.2',
-            mockwebserver: 'com.squareup.okhttp3:mockwebserver:4.7.2'
-        ],
+
+        okhttp: 'com.squareup.okhttp3:okhttp:4.7.2',
         gson: 'com.google.code.gson:gson:2.8.6',
         rxandroid: 'io.reactivex.rxjava2:rxandroid:2.1.1',
         rxjava: 'io.reactivex.rxjava2:rxjava:2.2.13',
@@ -86,6 +85,7 @@ ext {
 
         junit: 'junit:junit:4.13',
         mockito: 'org.mockito:mockito-core:3.1.0',
+        mockwebserver: 'com.squareup.okhttp3:mockwebserver:4.7.2',
         robolectric: 'org.robolectric:robolectric:4.3.1',
         jsonassert: 'org.skyscreamer:jsonassert:1.5.0'
     ]
