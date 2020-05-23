@@ -24,7 +24,7 @@ dependencies {
     implementation dependency.aws.authcore
     implementation dependency.aws.mobileclient
     implementation dependency.gson
-    implementation dependency.okhttp.okhttp
+    implementation dependency.okhttp
     implementation dependency.threetenabp
 
     testImplementation project(path: ':testutils')
@@ -33,7 +33,7 @@ dependencies {
     testImplementation dependency.jsonassert
     testImplementation dependency.junit
     testImplementation dependency.mockito
-    testImplementation dependency.okhttp.mockwebserver
+    testImplementation dependency.mockwebserver
     testImplementation dependency.rxjava
     testImplementation (dependency.robolectric) {
         // https://github.com/robolectric/robolectric/issues/5245
