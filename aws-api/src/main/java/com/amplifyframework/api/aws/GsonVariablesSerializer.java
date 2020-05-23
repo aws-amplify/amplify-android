@@ -46,6 +46,23 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
         return gson.toJson(variables);
     }
 
+    @Override
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
+    }
+
     /**
      * Serializer of {@link Temporal.Date}, an extended ISO-8601 Date string, with an optional timezone offset.
      *

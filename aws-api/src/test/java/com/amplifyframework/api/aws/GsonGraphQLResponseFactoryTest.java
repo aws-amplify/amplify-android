@@ -189,9 +189,8 @@ public final class GsonGraphQLResponseFactoryTest {
         String nextToken = "eyJ2ZXJzaW9uIjoyLCJ0b2tlbiI6IkFRSUNBSGg5OUIvN3BjWU41eE96NDZJMW5GeGM4";
         Map<String, Object> variables = Collections.singletonMap("nextToken", nextToken);
         Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
-        GsonVariablesSerializer serializer = new GsonVariablesSerializer();
         GraphQLRequest<PaginatedResult<Todo>> expectedRequest =
-                new GraphQLRequest<>("document", variables, responseType, serializer);
+                new GraphQLRequest<>("document", variables, responseType, new GsonVariablesSerializer());
         final PaginatedResult<Todo> expectedPaginatedResult =
                 new AppSyncPaginatedResult<>(expectedTodos, expectedRequest);
 
@@ -220,7 +219,7 @@ public final class GsonGraphQLResponseFactoryTest {
         final String partialResponseJson = Resources.readAsString("partial-gql-response.json");
 
         final GraphQLRequest<PaginatedResult<Todo>> request =
-                new GraphQLRequest<>("document", responseType, serializer);
+                new GraphQLRequest<>("document", responseType, new GsonVariablesSerializer());
         final GraphQLResponse<PaginatedResult<Todo>> response =
                 responseFactory.buildResponse(request, partialResponseJson, responseType);
 
