@@ -57,17 +57,29 @@ import java.util.Map;
  * with automatically generated GraphQL documents that follow
  * AppSync specifications.
  */
-final class AppSyncGraphQLRequestFactory {
+public final class AppSyncGraphQLRequestFactory {
     private static final int DEFAULT_QUERY_LIMIT = 1000;
     private static final int DEFAULT_LEVEL_DEPTH = 2;
 
     // This class should not be instantiated
     private AppSyncGraphQLRequestFactory() { }
 
-    static <R, T extends Model> GraphQLRequest<R> buildQuery(
+    /**
+     * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result.
+     * The request will be created with the correct document based on the model schema and
+     * variables based on given {@code objectId}.
+     *
+     * @param modelClass the model class.
+     * @param objectId the model identifier.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+     */
+    public static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
             String objectId
-    ) throws ApiException {
+    ) {
         try {
             StringBuilder doc = new StringBuilder();
             Map<String, Object> variables = new HashMap<>();
@@ -93,28 +105,54 @@ final class AppSyncGraphQLRequestFactory {
                     new GsonVariablesSerializer()
             );
         } catch (AmplifyException exception) {
-            throw new ApiException(
+            throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
-                    exception,
-                    "Check the included exception for more details"
+                    exception
             );
         }
     }
 
-    static <R, T extends Model> GraphQLRequest<R> buildQuery(
+    /**
+     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result.
+     * The request will be created with the correct document based on the model schema and variables
+     * for filtering based on the the given predicate.
+     *
+     * @param modelClass the model class.
+     * @param predicate the model predicate.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+     */
+    public static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
             QueryPredicate predicate
-    ) throws ApiException {
+    ) {
         Type dataType = TypeMaker.getParameterizedType(Iterable.class, modelClass);
         return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, null, dataType);
     }
 
-    static <R, T extends Model> GraphQLRequest<R> buildPaginatedResultQuery(
+    /**
+     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result
+     * within a certain range (i.e. paginated).
+     *
+     * The request will be created with the correct document based on the model schema and variables
+     * for filtering based on the the given predicate and pagination.
+     *
+     * @param modelClass the model class.
+     * @param predicate the predicate for filtering.
+     * @param limit the page size/limit.
+     * @param nextToken the next page token.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     */
+    public static <R, T extends Model> GraphQLRequest<R> buildPaginatedResultQuery(
             Class<T> modelClass,
             QueryPredicate predicate,
             int limit,
             String nextToken
-    ) throws ApiException {
+    ) {
         Type dataType = TypeMaker.getParameterizedType(PaginatedResult.class, modelClass);
         return buildQuery(modelClass, predicate, limit, nextToken, dataType);
     }
@@ -125,7 +163,7 @@ final class AppSyncGraphQLRequestFactory {
             int limit,
             String nextToken,
             Type responseType
-    ) throws ApiException {
+    ) {
         try {
             StringBuilder doc = new StringBuilder();
             Map<String, Object> variables = new HashMap<>();
@@ -160,20 +198,30 @@ final class AppSyncGraphQLRequestFactory {
                     new GsonVariablesSerializer()
             );
         } catch (AmplifyException exception) {
-            throw new ApiException(
+            throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
-                    exception,
-                    "Check the included exception for more details"
+                    exception
             );
         }
     }
 
+    /**
+     * Creates a {@link GraphQLRequest} that represents a mutation of a given type.
+     *
+     * @param model the model instance.
+     * @param predicate the model predicate.
+     * @param type the mutation type.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+     */
     @SuppressWarnings("unchecked")
-    static <R, T extends Model> GraphQLRequest<R> buildMutation(
+    public static <R, T extends Model> GraphQLRequest<R> buildMutation(
             T model,
             QueryPredicate predicate,
             MutationType type
-    ) throws ApiException {
+    ) {
         try {
             // model is of type T so this is a safe cast - hence the warning suppression
             Class<T> modelClass = (Class<T>) model.getClass();
@@ -218,10 +266,9 @@ final class AppSyncGraphQLRequestFactory {
                 try {
                     variables.put("input", schema.getMapOfFieldNameAndValues(model));
                 } catch (AmplifyException exception) {
-                    throw new ApiException(
+                    throw new IllegalStateException(
                             "Failed to build the map of variables for this mutation.",
-                            exception,
-                            "See included AmplifyException for more details and a recovery suggestion."
+                            exception
                     );
                 }
             }
@@ -237,19 +284,28 @@ final class AppSyncGraphQLRequestFactory {
                     new GsonVariablesSerializer()
             );
         } catch (AmplifyException exception) {
-            throw new ApiException(
+            throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
-                    exception,
-                    "Check the included exception for more details"
+                    exception
             );
         }
     }
 
+    /**
+     * Creates a {@link GraphQLRequest} that represents a subscription of a given type.
+     *
+     * @param modelClass the model type.
+     * @param type the subscription type.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+     */
     @SuppressWarnings("SameParameterValue")
-    static <R, T extends Model> GraphQLRequest<R> buildSubscription(
+    public static <R, T extends Model> GraphQLRequest<R> buildSubscription(
             Class<T> modelClass,
             SubscriptionType type
-    ) throws ApiException {
+    ) {
         return buildSubscription(modelClass, type, null);
     }
 
@@ -257,7 +313,7 @@ final class AppSyncGraphQLRequestFactory {
             Class<T> modelClass,
             SubscriptionType type,
             CognitoUserPoolsAuthProvider cognitoAuth
-    ) throws ApiException {
+    ) {
         try {
             StringBuilder doc = new StringBuilder();
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
@@ -322,18 +378,15 @@ final class AppSyncGraphQLRequestFactory {
                         new GsonVariablesSerializer()
                 );
             }
-        } catch (ApiException exception) {
-            throw exception;
         } catch (AmplifyException exception) {
-            throw new ApiException(
+            throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
-                    exception,
-                    "Check the included exception for more details"
+                    exception
             );
         }
     }
 
-    private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws ApiException {
+    private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) {
         if (queryPredicate instanceof QueryPredicateOperation) {
             QueryPredicateOperation<?> qpo = (QueryPredicateOperation) queryPredicate;
             QueryOperator<?> op = qpo.operator();
@@ -348,10 +401,9 @@ final class AppSyncGraphQLRequestFactory {
                 try {
                     return Collections.singletonMap("not", parsePredicate(qpg.predicates().get(0)));
                 } catch (IndexOutOfBoundsException exception) {
-                    throw new ApiException(
+                    throw new IllegalStateException(
                         "Predicate group of type NOT must include a value to negate.",
-                        exception,
-                        "Check if you created a NOT condition in your Predicate with no included value."
+                        exception
                     );
                 }
             } else {
@@ -364,14 +416,13 @@ final class AppSyncGraphQLRequestFactory {
                 return Collections.singletonMap(qpg.type().toString().toLowerCase(Locale.getDefault()), predicates);
             }
         } else {
-            throw new ApiException(
-                "Tried to parse an unsupported QueryPredicate",
-                "Try changing to one of the supported values: QueryPredicateOperation, QueryPredicateGroup."
+            throw new IllegalStateException(
+                "Invalid predicate type, supported values: QueryPredicateOperation, QueryPredicateGroup."
             );
         }
     }
 
-    private static String appSyncOpType(QueryOperator.Type type) throws ApiException {
+    private static String appSyncOpType(QueryOperator.Type type) {
         switch (type) {
             case NOT_EQUAL:
                 return "ne";
@@ -392,15 +443,14 @@ final class AppSyncGraphQLRequestFactory {
             case BEGINS_WITH:
                 return "beginsWith";
             default:
-                throw new ApiException(
-                    "Tried to parse an unsupported QueryOperator type",
-                    "Check if a new QueryOperator.Type enum has been created which is not supported " +
-                    "in the AppSyncGraphQLRequestFactory."
+                throw new IllegalStateException(
+                    "Tried to parse an unsupported QueryOperator type. Check if a new QueryOperator.Type enum " +
+                    "has been created which is not supported in the AppSyncGraphQLRequestFactory."
                 );
         }
     }
 
-    private static Object appSyncOpValue(QueryOperator<?> qOp) throws ApiException {
+    private static Object appSyncOpValue(QueryOperator<?> qOp) {
         switch (qOp.type()) {
             case NOT_EQUAL:
                 return ((NotEqualQueryOperator) qOp).value();
@@ -422,10 +472,9 @@ final class AppSyncGraphQLRequestFactory {
             case BEGINS_WITH:
                 return ((BeginsWithQueryOperator) qOp).value();
             default:
-                throw new ApiException(
-                    "Tried to parse an unsupported QueryOperator type",
-                    "Check if a new QueryOperator.Type enum has been created which is not supported " +
-                    "in the AppSyncGraphQLRequestFactory."
+                throw new IllegalStateException(
+                    "Tried to parse an unsupported QueryOperator type. Check if a new QueryOperator.Type enum " +
+                    "has been created which is not implemented yet."
                 );
         }
     }
