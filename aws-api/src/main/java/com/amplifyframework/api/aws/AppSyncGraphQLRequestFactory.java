@@ -65,13 +65,16 @@ public final class AppSyncGraphQLRequestFactory {
     private AppSyncGraphQLRequestFactory() { }
 
     /**
-     * TODO.
-     * @param modelClass todo.
-     * @param objectId todo.
-     * @param <R> todo.
-     * @param <T> todo.
-     * @return todo.
-     * @throws IllegalStateException todo.
+     * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result.
+     * The request will be created with the correct correct document based on the model schema and
+     * variables based on given {@code objectId}.
+     *
+     * @param modelClass the model class.
+     * @param objectId the model identifier.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
      */
     public static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
@@ -110,12 +113,16 @@ public final class AppSyncGraphQLRequestFactory {
     }
 
     /**
-     * TODO.
-     * @param modelClass todo.
-     * @param predicate todo.
-     * @param <R> todo.
-     * @param <T> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result.
+     * The request will be created with the correct document based on the model schema and variables
+     * for filtering based on the the given predicate.
+     *
+     * @param modelClass the model class.
+     * @param predicate the model predicate.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
      */
     public static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
@@ -126,14 +133,19 @@ public final class AppSyncGraphQLRequestFactory {
     }
 
     /**
-     * TODO.
-     * @param modelClass todo.
-     * @param predicate todo.
-     * @param limit todo.
-     * @param nextToken todo.
-     * @param <R> todo.
-     * @param <T> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result
+     * within a certain range (i.e. paginated).
+     *
+     * The request will be created with the correct document based on the model schema and variables
+     * for filtering based on the the given predicate and pagination.
+     *
+     * @param modelClass the model class.
+     * @param predicate the predicate for filtering.
+     * @param limit the page size/limit.
+     * @param nextToken the next page token.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
      */
     public static <R, T extends Model> GraphQLRequest<R> buildPaginatedResultQuery(
             Class<T> modelClass,
@@ -194,14 +206,15 @@ public final class AppSyncGraphQLRequestFactory {
     }
 
     /**
-     * TODO.
-     * @param model todo.
-     * @param predicate todo.
-     * @param type todo.
-     * @param <R> todo.
-     * @param <T> todo.
-     * @return todo.
-     * @throws IllegalStateException todo.
+     * Creates a {@link GraphQLRequest} that represents a mutation of a given type.
+     *
+     * @param model the model instance.
+     * @param predicate the model predicate.
+     * @param type the mutation type.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
      */
     @SuppressWarnings("unchecked")
     public static <R, T extends Model> GraphQLRequest<R> buildMutation(
@@ -279,12 +292,14 @@ public final class AppSyncGraphQLRequestFactory {
     }
 
     /**
-     * TODO.
-     * @param modelClass todo.
-     * @param type todo.
-     * @param <R> todo.
-     * @param <T> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a subscription of a given type.
+     *
+     * @param modelClass the model type.
+     * @param type the subscription type.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
      */
     @SuppressWarnings("SameParameterValue")
     public static <R, T extends Model> GraphQLRequest<R> buildSubscription(
