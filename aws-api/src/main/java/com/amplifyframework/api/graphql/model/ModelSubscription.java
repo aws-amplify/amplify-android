@@ -21,48 +21,53 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 
 /**
- * TODO docs.
+ * Helper class that provides methods to create {@link GraphQLRequest} that represents
+ * subscriptions from {@link Model}.
  */
 public final class ModelSubscription {
 
+    /** This class should not be instantiated. */
     private ModelSubscription() {}
 
     /**
-     * TODO docs.
-     * @param modelType todo.
-     * @param type todo.
-     * @param <M> todo.
-     * @return todo.
+     * Builds a subscriptions request of a given {@code type} for a {@code modelType}.
+     * @param modelType the model class.
+     * @param type the subscription type.
+     * @param <M> the concrete type of the model.
+     * @return a valid {@link GraphQLRequest} instance.
      */
     public static <M extends Model> GraphQLRequest<M> of(Class<M> modelType, SubscriptionType type) {
         return AppSyncGraphQLRequestFactory.buildSubscription(modelType, type);
     }
 
     /**
-     * TODO docs.
-     * @param modelType todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a subscription request of type {@link SubscriptionType#ON_CREATE}.
+     * @param modelType the model class.
+     * @param <M> the concrete type of the model.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @see #of(Class, SubscriptionType)
      */
     public static <M extends Model> GraphQLRequest<M> onCreate(Class<M> modelType) {
         return of(modelType, SubscriptionType.ON_CREATE);
     }
 
     /**
-     * TODO docs.
-     * @param modelType todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a subscription request of type {@link SubscriptionType#ON_DELETE}.
+     * @param modelType the model class.
+     * @param <M> the concrete type of the model.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @see #of(Class, SubscriptionType)
      */
     public static <M extends Model> GraphQLRequest<M> onDelete(Class<M> modelType) {
         return of(modelType, SubscriptionType.ON_DELETE);
     }
 
     /**
-     * TODO docs.
-     * @param modelType todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a subscription request of type {@link SubscriptionType#ON_UPDATE}.
+     * @param modelType the model class.
+     * @param <M> the concrete type of the model.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @see #of(Class, SubscriptionType)
      */
     public static <M extends Model> GraphQLRequest<M> onUpdate(Class<M> modelType) {
         return of(modelType, SubscriptionType.ON_UPDATE);

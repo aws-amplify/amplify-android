@@ -30,14 +30,17 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
  */
 public final class ModelQuery {
 
+    /** This class should not be instantiated. */
     private ModelQuery() {}
 
     /**
-     * TODO write docs.
-     * @param modelType todo.
-     * @param modelId todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result.
+     * The request will be created with the correct correct document based on the model schema and
+     * variables based on given {@code modelId}.
+     * @param modelType the model class.
+     * @param modelId the model identifier.
+     * @param <M> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
      */
     public static <M extends Model> GraphQLRequest<M> get(
             @NonNull Class<M> modelType,
