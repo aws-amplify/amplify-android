@@ -16,6 +16,8 @@
 package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -59,5 +61,30 @@ public final class ApplyRemoteConflictHandler implements DataStoreConflictHandle
             ),
             dataStoreErrorHandler
         );
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+        ApplyRemoteConflictHandler that = (ApplyRemoteConflictHandler) thatObject;
+        return ObjectsCompat.equals(dataStoreErrorHandler, that.dataStoreErrorHandler);
+    }
+
+    @Override
+    public int hashCode() {
+        return dataStoreErrorHandler != null ? dataStoreErrorHandler.hashCode() : 0;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "ApplyRemoteConflictHandler{" +
+            "dataStoreErrorHandler=" + dataStoreErrorHandler +
+            '}';
     }
 }

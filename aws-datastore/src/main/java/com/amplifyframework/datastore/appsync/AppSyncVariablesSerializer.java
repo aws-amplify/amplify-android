@@ -31,4 +31,21 @@ final class AppSyncVariablesSerializer implements GraphQLRequest.VariablesSerial
     public String serialize(Map<String, Object> variables) {
         return new Gson().toJson(variables);
     }
+
+    @Override
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
+    }
 }

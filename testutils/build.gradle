@@ -22,4 +22,8 @@ dependencies {
     implementation dependency.junit
     implementation dependency.androidx.test.core
     implementation dependency.rxjava
+
+    // dependency on Model/GraphQL integration classes
+    // remove when modules are re-organized to provide better isolation
+    compileOnly project(path: ':aws-api')
 }
