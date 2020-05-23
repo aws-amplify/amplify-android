@@ -19,6 +19,7 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.util.ObjectsCompat;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -175,6 +176,57 @@ public final class DataStoreConfiguration {
     @IntRange(from = 0)
     public Integer getSyncPageSize() {
         return this.syncPageSize;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+        DataStoreConfiguration that = (DataStoreConfiguration) thatObject;
+        if (!ObjectsCompat.equals(getDataStoreErrorHandler(), that.getDataStoreConflictHandler())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getDataStoreConflictHandler(), that.getDataStoreConflictHandler())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getSyncMaxRecords(), that.getSyncMaxRecords())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getSyncPageSize(), that.getSyncPageSize())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getSyncIntervalInMinutes(), that.getSyncIntervalInMinutes())) {
+            return false;
+        }
+        return ObjectsCompat.equals(getSyncIntervalMs(), that.getSyncIntervalMs());
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Override
+    public int hashCode() {
+        int result = getDataStoreErrorHandler() != null ? getDataStoreErrorHandler().hashCode() : 0;
+        result = 31 * result + (getDataStoreConflictHandler() != null ? getDataStoreConflictHandler().hashCode() : 0);
+        result = 31 * result + (getSyncMaxRecords() != null ? getSyncMaxRecords().hashCode() : 0);
+        result = 31 * result + (getSyncPageSize() != null ? getSyncPageSize().hashCode() : 0);
+        result = 31 * result + (getSyncIntervalInMinutes() != null ? getSyncIntervalInMinutes().hashCode() : 0);
+        result = 31 * result + (getSyncIntervalMs() != null ? getSyncIntervalMs().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DataStoreConfiguration{" +
+            "dataStoreErrorHandler=" + dataStoreErrorHandler +
+            ", dataStoreConflictHandler=" + dataStoreConflictHandler +
+            ", syncMaxRecords=" + syncMaxRecords +
+            ", syncPageSize=" + syncPageSize +
+            ", syncIntervalInMinutes=" + syncIntervalInMinutes +
+            ", syncIntervalMs=" + syncIntervalMs +
+            '}';
     }
 
     /**
