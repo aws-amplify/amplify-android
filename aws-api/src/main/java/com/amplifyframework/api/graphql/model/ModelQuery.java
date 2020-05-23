@@ -25,7 +25,8 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 /**
- * TODO write docs.
+ * Helper class that provides methods to create {@link GraphQLRequest} for queries
+ * from {@link Model} and {@link QueryPredicate}.
  */
 public final class ModelQuery {
 
@@ -46,11 +47,13 @@ public final class ModelQuery {
     }
 
     /**
-     * TODO write docs.
-     * @param modelType todo.
-     * @param predicate todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result.
+     * The request will be created with the correct document based on the model schema and variables
+     * for filtering based on the the given predicate.
+     * @param modelType the model class.
+     * @param predicate the predicate for filtering.
+     * @param <M> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
      */
     public static <M extends Model> GraphQLRequest<Iterable<M>> list(
             @NonNull Class<M> modelType,
@@ -60,22 +63,31 @@ public final class ModelQuery {
     }
 
     /**
-     * TODO write docs.
-     * @param modelType todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result.
+     * The request will be created with the correct document based on the model schema.
+     * @param modelType the model class.
+     * @param <M> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @see #list(Class, QueryPredicate)
      */
     public static <M extends Model> GraphQLRequest<Iterable<M>> list(@NonNull Class<M> modelType) {
         return list(modelType, (QueryPredicate) null);
     }
 
     /**
-     * TODO write docs.
-     * @param modelType todo.
-     * @param predicate todo.
-     * @param pagination todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result
+     * within a certain range (i.e. paginated).
+     * 
+     * The request will be created with the correct document based on the model schema and variables
+     * for filtering based on the the given predicate and pagination.
+     * 
+     * @param modelType the model class.
+     * @param predicate the predicate for filtering.
+     * @param pagination the pagination settings.
+     * @param <M> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @see ModelPagination#nextToken(String)
+     * @see ModelPagination#firstPage()
      */
     public static <M extends Model> GraphQLRequest<PaginatedResult<M>> list(
             @NonNull Class<M> modelType,
@@ -87,11 +99,18 @@ public final class ModelQuery {
     }
 
     /**
-     * TODO write docs.
-     * @param modelType todo.
-     * @param pagination todo.
-     * @param <M> todo.
-     * @return todo.
+     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result
+     * within a certain range (i.e. paginated).
+     *
+     * The request will be created with the correct document based on the model schema and variables
+     * for pagination based on the given {@link ModelPagination}.
+     *
+     * @param modelType the model class.
+     * @param pagination the pagination settings.
+     * @param <M> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @see ModelPagination#nextToken(String)
+     * @see ModelPagination#firstPage()
      */
     public static <M extends Model> GraphQLRequest<PaginatedResult<M>> list(
             @NonNull Class<M> modelType,
