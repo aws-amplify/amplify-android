@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelQuery;
@@ -159,7 +160,7 @@ public final class AWSApiPluginTest {
 
     /**
      * It should be possible to perform a successful call to
-     * {@link AWSApiPlugin#mutate(com.amplifyframework.api.graphql.GraphQLRequest, Consumer, Consumer)}.
+     * {@link AWSApiPlugin#mutate(GraphQLRequest, Consumer, Consumer)}.
      * When the server returns a valid response, then the mutate methods should
      * emit content via their value consumer.
      * @throws ApiException If call to mutate(...) itself emits such an exception
