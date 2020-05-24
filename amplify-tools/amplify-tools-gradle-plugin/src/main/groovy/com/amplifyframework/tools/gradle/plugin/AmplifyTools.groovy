@@ -6,9 +6,6 @@ import groovy.json.JsonOutput
 
 class AmplifyTools implements Plugin<Project> {
     void apply(Project project) {
-        def doesNodeExist = true
-        def doesGradleConfigExist
-
         // profile name can be changed in amplify-gradle-config
         def profile = 'default'
         def accessKeyId = null
@@ -16,34 +13,27 @@ class AmplifyTools implements Plugin<Project> {
         def region = null
         def envName = 'amplify'
         def syncEnabled = 'true'
-
-        project.task('verifyNode') {
-            try {
-                project.exec {
-                    commandLine 'npx', '-v'
-                    standardOutput = new ByteArrayOutputStream()
-                }
-            } catch (commandLineFailure) {
-                doesNodeExist = false
-                println("Node is not installed. Visit https://nodejs.org/en/download/ to install it")
-            }
-        }
+        def gradleConfigFileName = 'amplify-gradle-config.json'
 
         project.task('createAmplifyApp') {
-            doesGradleConfigExist = project.file('amplify-gradle-config.json').isFile()
-            if (doesNodeExist && !doesGradleConfigExist) {
-                if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                    project.exec {
-                        commandLine 'npx.cmd', 'amplify-app', '--platform', 'android'
-                    }
-                } else {
-                    project.exec {
-                        commandLine 'npx', 'amplify-app', '--platform', 'android'
-                    }
+            def npx = 'npx'
+
+            if (project.file(gradleConfigFileName).exists()) {
+                return
+            }
+
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                npx += '.cmd'
+            }
+
+            try {
+                project.exec {
+                    commandLine npx, 'amplify-app', '--platform', 'android'
                 }
+            } catch (commandLineFailure) {
+                throw new Exception('Node.js is not installed. Visit https://nodejs.org/en/download/ to install it.')
             }
         }
-        project.createAmplifyApp.dependsOn('verifyNode')
 
         project.task('getConfig') {
             def inputConfigFile = project.file('amplify-gradle-config.json')
