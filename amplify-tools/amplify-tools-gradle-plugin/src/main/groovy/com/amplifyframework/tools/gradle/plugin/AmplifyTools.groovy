@@ -3,6 +3,7 @@ import org.gradle.api.Project
 import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+import groovy.json.StringEscapeUtils
 
 class AmplifyTools implements Plugin<Project> {
     void apply(Project project) {
@@ -135,22 +136,22 @@ class AmplifyTools implements Plugin<Project> {
             ])
 
             doLast {
-                def doesLocalEnvExist = project.file('./amplify/.config/local-env-info.json').exists()
-                if (doesLocalEnvExist) {
-                    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        project.exec { commandLine 'amplify.cmd', 'push', '--yes' }
-                    } else {
-                        project.exec { commandLine 'amplify', 'push', '--yes' }
+                def amplify = 'amplify'
+
+                if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                    amplify += '.cmd'
+                }
+
+                if (project.file('./amplify/.config/local-env-info.json').exists()) {
+                    project.exec {
+                        commandLine amplify, 'push', '--yes'
                     }
                 } else {
-                    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        project.exec {
-                            commandLine 'amplify.cmd', 'init', '--amplify', AMPLIFY, '--providers', PROVIDERS, '--yes'
-                        }
-                    } else {
-                        project.exec {
-                            commandLine 'amplify', 'init', '--amplify', AMPLIFY, '--providers', PROVIDERS, '--yes'
-                        }
+                    project.exec {
+                        commandLine amplify, 'init',
+                                '--amplify', StringEscapeUtils.escapeJavaScript(AMPLIFY),
+                                '--providers', StringEscapeUtils.escapeJavaScript(PROVIDERS),
+                                '--yes'
                     }
                 }
             }
