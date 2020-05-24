@@ -86,8 +86,16 @@ class AmplifyTools implements Plugin<Project> {
         project.datastoreSync.dependsOn('getConfig')
 
         project.task('modelgen') {
+            def amplify = 'amplify'
+
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                amplify += '.cmd'
+            }
+
             doLast {
-                project.exec { commandLine 'amplify', 'codegen', 'model' }
+                project.exec {
+                    commandLine amplify, 'codegen', 'model'
+                }
             }
         }
         project.modelgen.dependsOn('datastoreSync')
