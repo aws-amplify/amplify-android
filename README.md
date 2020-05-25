@@ -17,9 +17,15 @@ Guide](https://docs.amplify.aws/lib/getting-started/setup/q/platform/android).
 
 ## Features / APIs
 
-- **[Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android)**
-  Easily collect analytics data for your app. Analytics data includes user
-  sessions and other custom events that you want to track in your app.
+- **[Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)**
+  APIs and building blocks for developers who want to create user authentication
+  experiences.
+- **[Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android)**
+  Provides a simple mechanism for managing user content for your app in public,
+  protected or private storage buckets
+- **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**
+  Provides a programming model for leveraging shared and distributed data
+  without writing additional code for offline and online scenarios.
 - **[API
   (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)**
   Interact with your GraphQL server or AWS AppSync API with an easy-to-use &
@@ -29,19 +35,13 @@ Guide](https://docs.amplify.aws/lib/getting-started/setup/q/platform/android).
   Provides a simple solution when making HTTP requests. It provides an
   automatic, lightweight signing process which complies with AWS Signature
   Version 4.
-- **[Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)**
-  APIs and building blocks for developers who want to create user authentication
-  experiences.
-- **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**
-  Provides a programming model for leveraging shared and distributed data
-  without writing additional code for offline and online scenarios.
+- **[Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android)**
+  Easily collect analytics data for your app. Analytics data includes user
+  sessions and other custom events that you want to track in your app.
 - **[Predictions](https://docs.amplify.aws/lib/predictions/getting-started/q/platform/android)**
   Connect your application with machine learning cloud services to enhance your
   application with natural language processing, computer vision, text to speech,
   and more.
-- **[Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android)**
-  Provides a simple mechanism for managing user content for your app in public,
-  protected or private storage buckets
 
 ## Platform Support
 
