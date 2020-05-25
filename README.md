@@ -85,6 +85,17 @@ android {
 }
 ```
 
+### Authentication
+
+The default plugins for Amplify Android use the Authentication category to
+provide authentication with AWS services. The default implementation uses Amazon
+Cognito which allows you to add user sign-up, sign-in, and access control to
+your mobile apps.
+
+Please see [Getting Started with
+Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)
+for full details.
+
 ## License
 
 This library is licensed under the [Apache 2.0 License](./LICENSE).
