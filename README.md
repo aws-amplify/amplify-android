@@ -19,7 +19,7 @@ Guide](https://docs.amplify.aws/lib/getting-started/setup/q/platform/android).
 
 - **[Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android)**
   Easily collect analytics data for your app. Analytics data includes user
-  sessions and other custom events that you want to track in your app.
+  sessions and other custom events.
 - **[API
   (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)**
   Interact with your GraphQL server or AWS AppSync API with an easy-to-use &
