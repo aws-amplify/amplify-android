@@ -30,8 +30,7 @@ Guide](https://docs.amplify.aws/lib/getting-started/setup/q/platform/android).
   automatic, lightweight signing process which complies with AWS Signature
   Version 4.
 - **[Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)**
-  APIs and building blocks for developers who want to create user authentication
-  experiences.
+  Uniquely identify your app's users, and define their access to different resources.
 - **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**
   Provides a programming model for leveraging shared and distributed data
   without writing additional code for offline and online scenarios.
