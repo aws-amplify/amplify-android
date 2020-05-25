@@ -37,7 +37,7 @@ Guide](https://docs.amplify.aws/lib/getting-started/setup/q/platform/android).
   Version 4.
 - **[Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android)**
   Easily collect analytics data for your app. Analytics data includes user
-  sessions and other custom events that you want to track in your app.
+  sessions and other custom events.
 - **[Predictions](https://docs.amplify.aws/lib/predictions/getting-started/q/platform/android)**
   Connect your application with machine learning cloud services to enhance your
   application with natural language processing, computer vision, text to speech,
