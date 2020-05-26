@@ -22,14 +22,13 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.result.AuthSessionResult;
 
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
 
 import java.util.Objects;
 
 /**
  * Cognito extension of AuthSession containing AWS Cognito specific tokens.
  */
-public final class AWSCognitoAuthSession extends AuthSession implements AWSCredentialsProvider {
+public final class AWSCognitoAuthSession extends AuthSession {
     private final AuthSessionResult<String> identityId;
     private final AuthSessionResult<AWSCredentials> awsCredentials;
     private final AuthSessionResult<String> userSub;
@@ -129,20 +128,5 @@ public final class AWSCognitoAuthSession extends AuthSession implements AWSCrede
                 ", identityId='" + getIdentityId() + '\'' +
                 ", userPoolTokens='" + getUserPoolTokens() + '\'' +
                 '}';
-    }
-
-    @Override
-    public AWSCredentials getCredentials() {
-        switch (getAWSCredentials().getType()) {
-            case SUCCESS:
-                return getAWSCredentials().getValue();
-            default:
-                return null;
-        }
-    }
-
-    @Override
-    public void refresh() {
-        // NO-OP since this is a session snapshot
     }
 }
