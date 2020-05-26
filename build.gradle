@@ -132,7 +132,7 @@ private void configureAndroidLibrary(Project project) {
         buildTypes {
             release {
                 minifyEnabled true
-                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                proguardFiles 'proguard-rules.pro'
             }
         }
     }
