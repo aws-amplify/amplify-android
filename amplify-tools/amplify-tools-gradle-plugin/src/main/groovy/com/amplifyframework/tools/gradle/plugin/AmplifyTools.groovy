@@ -102,15 +102,15 @@ class AmplifyTools implements Plugin<Project> {
         project.modelgen.dependsOn('datastoreSync')
 
         project.task('amplifyPush') {
-            def AWSCLOUDFORMATIONCONFIG
+            def awsCloudFormationConfig
             if (!accessKeyId || !secretAccessKey || !region) {
-                AWSCLOUDFORMATIONCONFIG = [
+                awsCloudFormationConfig = [
                         'configLevel': 'project',
                         'useProfile' : true,
                         'profileName': profile,
                 ]
             } else {
-                AWSCLOUDFORMATIONCONFIG = [
+                awsCloudFormationConfig = [
                         'configLevel'    : 'project',
                         'useProfile'     : true,
                         'profileName'    : profile,
@@ -120,19 +120,19 @@ class AmplifyTools implements Plugin<Project> {
                 ]
             }
 
-            def AMPLIFY
+            def amplifyConfig
             if (!envName) {
-                AMPLIFY = JsonOutput.toJson([
+                amplifyConfig = JsonOutput.toJson([
                         'envName': 'amplify',
                 ])
             } else {
-                AMPLIFY = JsonOutput.toJson([
+                amplifyConfig = JsonOutput.toJson([
                         'envName': envName,
                 ])
             }
 
-            def PROVIDERS = JsonOutput.toJson([
-                    'awscloudformation': AWSCLOUDFORMATIONCONFIG,
+            def providersConfig = JsonOutput.toJson([
+                    'awscloudformation': awsCloudFormationConfig,
             ])
 
             doLast {
@@ -140,6 +140,8 @@ class AmplifyTools implements Plugin<Project> {
 
                 if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                     amplify += '.cmd'
+                    amplifyConfig = StringEscapeUtils.escapeJavaScript(amplifyConfig)
+                    providersConfig = StringEscapeUtils.escapeJavaScript(providersConfig)
                 }
 
                 if (project.file('./amplify/.config/local-env-info.json').exists()) {
@@ -149,8 +151,8 @@ class AmplifyTools implements Plugin<Project> {
                 } else {
                     project.exec {
                         commandLine amplify, 'init',
-                                '--amplify', StringEscapeUtils.escapeJavaScript(AMPLIFY),
-                                '--providers', StringEscapeUtils.escapeJavaScript(PROVIDERS),
+                                '--amplify', amplifyConfig,
+                                '--providers', providersConfig,
                                 '--yes'
                     }
                 }
