@@ -122,6 +122,22 @@ public final class RestRequestFactoryTest {
     }
 
     /**
+     * Test creates a POST request with a body.
+     * @throws MalformedURLException Throws when the URL is invalid.
+     */
+    @Test
+    public void createPostRequestWithBody() throws MalformedURLException {
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
+                "path/to/path",
+                null);
+        Request request = RestRequestFactory.createRequest(url,
+                "{}".getBytes(),
+                null,
+                HttpMethod.POST);
+        assertNotNull("Request should not be null", request);
+    }
+
+    /**
      * Test creates a POST request with headers.
      * @throws MalformedURLException Throws when the URL is invalid.
      */
