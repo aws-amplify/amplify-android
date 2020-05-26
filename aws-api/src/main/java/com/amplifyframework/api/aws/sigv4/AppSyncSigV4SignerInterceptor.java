@@ -24,6 +24,7 @@ import com.amazonaws.DefaultRequest;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.http.HttpMethodName;
+import com.amazonaws.util.IOUtils;
 import com.amazonaws.util.VersionInfoUtils;
 
 import java.io.ByteArrayInputStream;
@@ -165,17 +166,17 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         String userAgent = toHumanReadableAscii(VersionInfoUtils.getUserAgent());
         dr.addHeader(HEADER_USER_AGENT, userAgent);
 
-        Buffer body = null;
-
+        byte[] bodyBytes;
         if (req.body() != null) {
-            //write the body to a byte array stream.
+            //write the body to a byte array.
             final Buffer buffer = new Buffer();
             req.body().writeTo(buffer);
-            dr.setContent(buffer.inputStream());
-            body = buffer.clone();
+            bodyBytes = IOUtils.toByteArray(buffer.inputStream());
         } else {
-            dr.setContent(new ByteArrayInputStream("".getBytes()));
+            bodyBytes = "".getBytes();
         }
+
+        dr.setContent(new ByteArrayInputStream(bodyBytes));
 
         //Sign or Decorate request with the required headers
         if (AuthorizationType.AWS_IAM.equals(authType)) {
@@ -218,8 +219,9 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
         //Set the URL and Method
         okReqBuilder.url(req.url());
-        final RequestBody requestBody = body != null ?
-                RequestBody.create(body.readByteArray(), JSON_MEDIA_TYPE) : null;
+        final RequestBody requestBody = req.body() != null ?
+                RequestBody.create(bodyBytes, JSON_MEDIA_TYPE) : null;
+
         okReqBuilder.method(req.method(), requestBody);
 
         //continue with chain.
