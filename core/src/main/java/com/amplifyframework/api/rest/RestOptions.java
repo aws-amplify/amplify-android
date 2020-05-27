@@ -42,7 +42,7 @@ public final class RestOptions {
      * @param headers Headers for the request.
      * @param queryParameters Query parameters for the request. This value is nullable
      */
-    public RestOptions(String path,
+    private RestOptions(String path,
                        byte[] data,
                        Map<String, String> headers,
                        Map<String, String> queryParameters) {
