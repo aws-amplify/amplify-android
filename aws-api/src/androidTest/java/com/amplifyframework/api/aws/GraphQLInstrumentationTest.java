@@ -117,16 +117,16 @@ public final class GraphQLInstrumentationTest {
      * @throws SynchronousMobileClient.MobileClientException On failure
      *          to sign in as a valid user
      */
-    @Test
-    public void subscriptionReceivesMutationOverCognitoUserPools() throws
-            ApiException, JSONException, SynchronousMobileClient.MobileClientException {
-        currentApiName = API_WITH_COGNITO_USER_POOLS;
-        JSONObject credentials = Resources.readAsJson(getApplicationContext(), R.raw.credentials);
-        String username = credentials.getString("username");
-        String password = credentials.getString("password");
-        mobileClient.signIn(username, password);
-        subscriptionReceivesMutation();
-    }
+//    @Test
+//    public void subscriptionReceivesMutationOverCognitoUserPools() throws
+//            ApiException, JSONException, SynchronousMobileClient.MobileClientException {
+//        currentApiName = API_WITH_COGNITO_USER_POOLS;
+//        JSONObject credentials = Resources.readAsJson(getApplicationContext(), R.raw.credentials);
+//        String username = credentials.getString("username");
+//        String password = credentials.getString("password");
+//        mobileClient.signIn(username, password);
+//        subscriptionReceivesMutation();
+//    }
 
     /**
      * Test that subscription fails when using Cognito User Pools as

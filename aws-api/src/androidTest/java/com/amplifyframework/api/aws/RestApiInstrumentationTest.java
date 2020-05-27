@@ -62,7 +62,7 @@ public final class RestApiInstrumentationTest {
     @Ignore("Temporarily disabled due to consistent failure.")
     public void getRequestWithNoAuth() throws JSONException, ApiException {
         RestResponse response =
-            api.get("nonAuthApi", new RestOptions("simplesuccess"));
+            api.get("nonAuthApi", RestOptions.builder().addPath("simplesuccess").build());
 
         final JSONObject resultJSON = response.getData().asJSONObject();
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
@@ -85,7 +85,7 @@ public final class RestApiInstrumentationTest {
     @Test
     @Ignore("Temporarily disabled due to consistent failure.")
     public void postRequestWithNoAuth() throws JSONException, ApiException {
-        final RestOptions options = new RestOptions("simplesuccess", "sample body".getBytes());
+        final RestOptions options = RestOptions.builder().addPath("simplesuccess").addBody("sample body".getBytes()).build();
         final RestResponse response = api.post("nonAuthApi", options);
 
         final JSONObject resultJSON = response.getData().asJSONObject();
@@ -110,7 +110,7 @@ public final class RestApiInstrumentationTest {
     @Ignore("Temporarily disabled due to consistent failure.")
     public void getRequestWithApiKey() throws JSONException, ApiException {
         final RestResponse response =
-            api.get("apiKeyApi", new RestOptions("simplesuccessapikey"));
+            api.get("apiKeyApi", RestOptions.builder().addPath("simplesuccessapikey").build());
 
         final JSONObject resultJSON = response.getData().asJSONObject();
         final JSONObject contextJSON = resultJSON.getJSONObject("context");

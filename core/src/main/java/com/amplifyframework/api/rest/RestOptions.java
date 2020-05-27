@@ -47,37 +47,9 @@ public final class RestOptions {
                        Map<String, String> headers,
                        Map<String, String> queryParameters) {
         this.path = path;
-        this.data = data == null ? null : Arrays.copyOf(data, data.length);
+        this.data = data == null ? new byte[0] : Arrays.copyOf(data, data.length);
         this.headers = headers == null ? Collections.emptyMap() : Immutable.of(headers);
         this.queryParameters = queryParameters == null ? Collections.emptyMap() : Immutable.of(queryParameters);
-    }
-
-    /**
-     * Construct a REST request.
-     * @param path Path for the endpoint to make the request
-     * @param data Data for the rest option
-     */
-    public RestOptions(String path,
-                       byte[] data) {
-        this(path, data, null, null);
-    }
-
-    /**
-     * Construct a REST request.
-     * @param path Path for the endpoint to make the request
-     * @param queryParameters Query parameters for the request. This value is nullable
-     */
-    public RestOptions(String path,
-                       Map<String, String> queryParameters) {
-        this(path, null, null, queryParameters);
-    }
-
-    /**
-     * Construct a REST request.
-     * @param path Path for the endpoint to make the request
-     */
-    public RestOptions(String path) {
-        this(path, null, null, null);
     }
 
     /**
