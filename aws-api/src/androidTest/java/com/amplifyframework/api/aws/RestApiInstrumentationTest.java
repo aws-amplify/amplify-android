@@ -85,7 +85,8 @@ public final class RestApiInstrumentationTest {
     @Test
     @Ignore("Temporarily disabled due to consistent failure.")
     public void postRequestWithNoAuth() throws JSONException, ApiException {
-        final RestOptions options = RestOptions.builder().addPath("simplesuccess").addBody("sample body".getBytes()).build();
+        final RestOptions options =
+                RestOptions.builder().addPath("simplesuccess").addBody("sample body".getBytes()).build();
         final RestResponse response = api.post("nonAuthApi", options);
 
         final JSONObject resultJSON = response.getData().asJSONObject();
