@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Await;
 
@@ -111,15 +112,14 @@ public final class SynchronousStorageAdapter {
      * @throws DataStoreException On any failure to save model into storage adapter
      */
     public <T extends Model> void save(@NonNull T model) throws DataStoreException {
-        //noinspection ConstantConditions
-        save(model, null);
+        save(model, QueryPredicates.matchAll());
     }
 
     /**
      * Save a model.
      * @param model Model to save
      * @param predicate An existing instance of the model in the storage adapter must meet these criteria
-     *                  in order for the save to succeed. If null, no criteria are considered
+     *                  in order for the save to succeed.
      * @param <T> Type of model being saved
      * @throws DataStoreException On any failure to save the model
      */
@@ -145,8 +145,7 @@ public final class SynchronousStorageAdapter {
      * @return The exception that was raised while attempting to save the model
      */
     public <T extends Model> DataStoreException saveExpectingError(@NonNull T model) {
-        //noinspection ConstantConditions
-        return saveExpectingError(model, null);
+        return saveExpectingError(model, QueryPredicates.matchAll());
     }
 
     /**
@@ -213,8 +212,7 @@ public final class SynchronousStorageAdapter {
      * @throws DataStoreException On any failure to delete model
      */
     public <T extends Model> void delete(@NonNull T model) throws DataStoreException {
-        //noinspection ConstantConditions
-        delete(model, null);
+        delete(model, QueryPredicates.matchAll());
     }
 
     /**
@@ -249,8 +247,7 @@ public final class SynchronousStorageAdapter {
      */
     @SuppressWarnings("unused")
     public <T extends Model> DataStoreException deleteExpectingError(@NonNull T model) {
-        //noinspection ConstantConditions
-        return deleteExpectingError(model, null);
+        return deleteExpectingError(model, QueryPredicates.matchAll());
     }
 
     /**
@@ -294,10 +291,8 @@ public final class SynchronousStorageAdapter {
      */
     public void clear() {
         //noinspection ResultOfMethodCallIgnored
-        Completable.fromSingle(single -> {
-            asyncDelegate.clear(() -> {
-                single.onSuccess(true);
-            }, single::onError);
-        }).blockingAwait(DEFAULT_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        Completable.create(emitter ->
+            asyncDelegate.clear(emitter::onComplete, emitter::onError)
+        ).blockingAwait(DEFAULT_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 }

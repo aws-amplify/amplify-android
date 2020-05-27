@@ -66,6 +66,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("SameParameterValue")
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
@@ -263,10 +264,6 @@ public final class AWSDataStorePluginTest {
             .stream()
             .noneMatch(invocation -> invocation.getLocation().getSourceFile().contains("SyncProcessor"));
         assertTrue(syncProcessorNotInvoked);
-    }
-
-    private static ApiCategory mockApiCategoryWithoutPlugins() throws JSONException {
-        return spy(ApiCategory.class);
     }
 
     @SuppressWarnings("unchecked")

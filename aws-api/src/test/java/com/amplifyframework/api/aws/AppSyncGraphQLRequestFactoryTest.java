@@ -20,6 +20,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
@@ -156,7 +157,7 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
         // Act: build a mutation to create a Meeting
         GraphQLRequest<Meeting> requestToCreateMeeting1 =
-                AppSyncGraphQLRequestFactory.buildMutation(meeting1, null, MutationType.CREATE);
+                AppSyncGraphQLRequestFactory.buildMutation(meeting1, QueryPredicates.matchAll(), MutationType.CREATE);
 
         // Assert: expected is actual
         JSONAssert.assertEquals(Resources.readAsString("create-meeting1.txt"),

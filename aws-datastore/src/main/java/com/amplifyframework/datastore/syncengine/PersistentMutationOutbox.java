@@ -24,6 +24,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -314,6 +315,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     // statement. This way, we can differentiate between an incoming create being processed
                     // multiple times (this case), versus outgoing mutations being processed out of order.
                     return conflictingCreationError();
+                case DELETE:
+                case UPDATE:
                 default:
                     // A create mutation should never show up after an update or delete for the same modelId.
                     return unexpectedMutationScenario();
@@ -330,9 +333,9 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     // Update after the create -> replace item of the create mutation (and keep it as a create).
                     // No condition needs to be provided, because as far as the remote store is concerned,
                     // we're simply performing the create (with the updated item item contents)
-                    return overwriteExistingAndNotify(PendingMutation.Type.CREATE, null);
+                    return overwriteExistingAndNotify(PendingMutation.Type.CREATE, QueryPredicates.matchAll());
                 case UPDATE:
-                    if (incoming.getPredicate() == null) {
+                    if (QueryPredicates.matchAll().equals(incoming.getPredicate())) {
                         // If the incoming update does not have a condition, we want to delete any
                         // existing mutations for the modelId before saving the incoming one.
                         return remove(existing.getMutationId()).andThen(saveIncomingAndNotify());
@@ -374,7 +377,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         }
 
         private Completable overwriteExistingAndNotify(@NonNull PendingMutation.Type type,
-                                                       @Nullable QueryPredicate predicate) {
+                                                       @NonNull QueryPredicate predicate) {
             // Keep the old mutation ID, but update the contents of that mutation.
             // Now, it will have the contents of the incoming update mutation.
             TimeBasedUuid id = existing.getMutationId();

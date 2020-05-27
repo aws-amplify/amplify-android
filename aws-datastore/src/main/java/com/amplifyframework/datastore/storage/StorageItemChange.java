@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.storage;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -85,7 +84,7 @@ public final class StorageItemChange<T extends Model> {
      * Gets the predicate that was applied before this item change.
      * @return Predicate applied for this item change
      */
-    @Nullable
+    @NonNull
     public QueryPredicate predicate() {
         return predicate;
     }
@@ -140,7 +139,7 @@ public final class StorageItemChange<T extends Model> {
         if (type != that.type) {
             return false;
         }
-        if (!ObjectsCompat.equals(predicate, that.predicate)) {
+        if (!predicate.equals(that.predicate)) {
             return false;
         }
         if (!item.equals(that.item)) {
@@ -154,7 +153,7 @@ public final class StorageItemChange<T extends Model> {
         int result = changeId.hashCode();
         result = 31 * result + initiator.hashCode();
         result = 31 * result + type.hashCode();
-        result = 31 * result + (predicate != null ? predicate.hashCode() : 0);
+        result = 31 * result + predicate.hashCode();
         result = 31 * result + item.hashCode();
         result = 31 * result + itemClass.hashCode();
         return result;
@@ -238,8 +237,8 @@ public final class StorageItemChange<T extends Model> {
          * @return Current Builder instance for fluent configuration chainging
          */
         @NonNull
-        public Builder<T> predicate(@Nullable QueryPredicate predicate) {
-            this.predicate = predicate;
+        public Builder<T> predicate(@NonNull QueryPredicate predicate) {
+            this.predicate = Objects.requireNonNull(predicate);
             return this;
         }
 
@@ -279,7 +278,7 @@ public final class StorageItemChange<T extends Model> {
                 Objects.requireNonNull(usedId),
                 Objects.requireNonNull(initiator),
                 Objects.requireNonNull(type),
-                predicate, // Nullable
+                Objects.requireNonNull(predicate),
                 Objects.requireNonNull(item),
                 Objects.requireNonNull(itemClass)
             );

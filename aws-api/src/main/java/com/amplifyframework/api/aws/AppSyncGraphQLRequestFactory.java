@@ -37,6 +37,7 @@ import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Immutable;
@@ -170,6 +171,8 @@ public final class AppSyncGraphQLRequestFactory {
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
             String graphQlTypeName = schema.getName();
 
+            boolean includePredicate = !QueryPredicates.matchAll().equals(predicate);
+
             doc.append("query ")
                     .append("List")
                     .append(Casing.capitalizeFirst(graphQlTypeName))
@@ -183,7 +186,7 @@ public final class AppSyncGraphQLRequestFactory {
                     .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
                     .append("} nextToken }}");
 
-            if (predicate != null) {
+            if (includePredicate) {
                 variables.put("filter", parsePredicate(predicate));
             }
             if (nextToken != null) {
@@ -231,6 +234,8 @@ public final class AppSyncGraphQLRequestFactory {
             String typeStr = type.toString();
             String graphQlTypeName = schema.getName();
 
+            boolean includePredicate = !QueryPredicates.matchAll().equals(predicate);
+
             doc.append("mutation ")
                     .append(Casing.capitalize(typeStr))
                     .append(Casing.capitalizeFirst(graphQlTypeName))
@@ -239,7 +244,7 @@ public final class AppSyncGraphQLRequestFactory {
                     .append(Casing.capitalizeFirst(graphQlTypeName))
                     .append("Input!");
 
-            if (predicate != null) {
+            if (includePredicate) {
                 doc.append(", $condition: Model")
                         .append(graphQlTypeName)
                         .append("ConditionInput");
@@ -250,7 +255,7 @@ public final class AppSyncGraphQLRequestFactory {
                     .append(Casing.capitalizeFirst(graphQlTypeName))
                     .append("(input: $input");
 
-            if (predicate != null) {
+            if (includePredicate) {
                 doc.append(", condition: $condition");
             }
 
@@ -273,7 +278,7 @@ public final class AppSyncGraphQLRequestFactory {
                 }
             }
 
-            if (predicate != null) {
+            if (includePredicate) {
                 variables.put("condition", parsePredicate(predicate));
             }
 

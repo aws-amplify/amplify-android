@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.storage;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
@@ -27,6 +26,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.ArrayList;
@@ -73,7 +73,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<StorageItemChange<T>> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
-        save(item, initiator, null, onSuccess, onError);
+        save(item, initiator, QueryPredicates.matchAll(), onSuccess, onError);
     }
 
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
@@ -81,7 +81,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @Nullable final QueryPredicate predicate,
+            @NonNull final QueryPredicate predicate,
             @NonNull final Consumer<StorageItemChange<T>> onSuccess,
             @NonNull final Consumer<DataStoreException> onError) {
         StorageItemChange.Type type = StorageItemChange.Type.CREATE;
@@ -90,7 +90,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             // There is an existing record with that ID; this is an update.
             type = StorageItemChange.Type.UPDATE;
             Model savedItem = items.get(index);
-            if (predicate != null && !predicate.evaluate(savedItem)) {
+            if (!predicate.evaluate(savedItem)) {
                 onError.accept(new DataStoreException(
                     "Conditional check failed.",
                     "Verify that there is a saved model that matches the provided predicate."));
@@ -132,8 +132,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         final List<T> result = new ArrayList<>();
         final QueryPredicate predicate = options.getQueryPredicate();
         for (Model item : items) {
-            if (itemClass.isAssignableFrom(item.getClass())
-                    && (predicate == null || predicate.evaluate(item))) {
+            if (itemClass.isAssignableFrom(item.getClass()) && predicate.evaluate(item)) {
                 result.add((T) item);
             }
         }
@@ -147,7 +146,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<StorageItemChange<T>> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
-        delete(item, initiator, null, onSuccess, onError);
+        delete(item, initiator, QueryPredicates.matchAll(), onSuccess, onError);
     }
 
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
@@ -155,7 +154,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void delete(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @Nullable final QueryPredicate predicate,
+            @NonNull final QueryPredicate predicate,
             @NonNull final Consumer<StorageItemChange<T>> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
@@ -169,7 +168,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         }
         Model savedItem = items.remove(index);
 
-        if (predicate != null && !predicate.evaluate(savedItem)) {
+        if (!predicate.evaluate(savedItem)) {
             onError.accept(new DataStoreException(
                     "Conditional check failed.",
                     "Verify that there is a saved model that matches the provided predicate."));

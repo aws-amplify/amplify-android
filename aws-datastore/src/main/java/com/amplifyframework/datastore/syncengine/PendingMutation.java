@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
@@ -38,6 +39,7 @@ import java.util.UUID;
  * logic onto them, before ultimately uploading to a remote endpoint.
  * @param <T> Type of model that has experienced a mutation
  */
+@SuppressWarnings("SameParameterValue")
 public final class PendingMutation<T extends Model> implements Comparable<PendingMutation<? extends Model>> {
     private final T mutatedItem;
     private final Class<T> classOfMutatedItem;
@@ -74,13 +76,13 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             @NonNull T mutatedItem,
             @NonNull Class<T> classOfMutatedItem,
             @NonNull Type mutationType,
-            @Nullable QueryPredicate predicate) {
+            @NonNull QueryPredicate predicate) {
         return new PendingMutation<>(
             Objects.requireNonNull(mutationId),
             Objects.requireNonNull(mutatedItem),
             Objects.requireNonNull(classOfMutatedItem),
             Objects.requireNonNull(mutationType),
-            predicate
+            Objects.requireNonNull(predicate)
         );
     }
 
@@ -95,9 +97,9 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      */
     @NonNull
     static <T extends Model> PendingMutation<T> instance(@NonNull T mutatedItem,
-                                                         @NonNull Class<T> classOfMutatedItem,
-                                                         @NonNull Type mutationType,
-                                                         @Nullable QueryPredicate predicate) {
+                                                          @NonNull Class<T> classOfMutatedItem,
+                                                          @NonNull Type mutationType,
+                                                          @NonNull QueryPredicate predicate) {
         return instance(TimeBasedUuid.create(), mutatedItem, classOfMutatedItem, mutationType, predicate);
     }
 
@@ -110,7 +112,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      */
     @NonNull
     static <T extends Model> PendingMutation<T> creation(@NonNull T createdItem, @NonNull Class<T> classOfCreatedItem) {
-        return instance(createdItem, classOfCreatedItem, Type.CREATE, null);
+        return instance(createdItem, classOfCreatedItem, Type.CREATE, QueryPredicates.matchAll());
     }
 
     /**
@@ -123,7 +125,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     @NonNull
     static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem,
                                                        @NonNull Class<T> classOfUpdatedItem) {
-        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, null);
+        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, QueryPredicates.matchAll());
     }
 
     /**
@@ -137,7 +139,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     @NonNull
     static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem,
                                                        @NonNull Class<T> classOfUpdatedItem,
-                                                       @Nullable QueryPredicate predicate) {
+                                                       @NonNull QueryPredicate predicate) {
         return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, predicate);
     }
 
@@ -151,7 +153,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     @NonNull
     static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem,
                                                          @NonNull Class<T> classOfDeletedItem) {
-        return instance(deletedItem, classOfDeletedItem, Type.DELETE, null);
+        return instance(deletedItem, classOfDeletedItem, Type.DELETE, QueryPredicates.matchAll());
     }
 
     /**
@@ -165,7 +167,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     @NonNull
     static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem,
                                                          @NonNull Class<T> classOfDeletedItem,
-                                                         @Nullable QueryPredicate predicate) {
+                                                         @NonNull QueryPredicate predicate) {
         return instance(deletedItem, classOfDeletedItem, Type.DELETE, predicate);
     }
 
@@ -205,7 +207,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
         return mutationType;
     }
 
-    @Nullable
+    @NonNull
     QueryPredicate getPredicate() {
         return predicate;
     }

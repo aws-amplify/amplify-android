@@ -22,6 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 
 /**
  * Helper class that provides methods to create {@link GraphQLRequest} from {@link Model}.
@@ -40,7 +41,7 @@ public final class ModelMutation {
      * @see MutationType#CREATE
      */
     public static <M extends Model> GraphQLRequest<M> create(@NonNull M model) {
-        return AppSyncGraphQLRequestFactory.buildMutation(model, null, MutationType.CREATE);
+        return AppSyncGraphQLRequestFactory.buildMutation(model, QueryPredicates.matchAll(), MutationType.CREATE);
     }
 
     /**
@@ -67,7 +68,7 @@ public final class ModelMutation {
      * @see #update(Model, QueryPredicate)
      */
     public static <M extends Model> GraphQLRequest<M> update(@NonNull M model) {
-        return AppSyncGraphQLRequestFactory.buildMutation(model, null, MutationType.UPDATE);
+        return AppSyncGraphQLRequestFactory.buildMutation(model, QueryPredicates.matchAll(), MutationType.UPDATE);
     }
 
     /**
@@ -94,7 +95,7 @@ public final class ModelMutation {
      * @see #delete(Model, QueryPredicate)
      */
     public static <M extends Model> GraphQLRequest<M> delete(@NonNull M model) {
-        return AppSyncGraphQLRequestFactory.buildMutation(model, null, MutationType.DELETE);
+        return AppSyncGraphQLRequestFactory.buildMutation(model, QueryPredicates.matchAll(), MutationType.DELETE);
     }
 
 }

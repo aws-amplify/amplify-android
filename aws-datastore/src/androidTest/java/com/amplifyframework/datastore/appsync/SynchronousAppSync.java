@@ -22,6 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Await;
 
@@ -33,7 +34,10 @@ import io.reactivex.Observable;
  * A synchronous wrapper around an AppSync client, useful in test, so you can just
  * wait for the results of network operations.
  */
-@SuppressWarnings("unused") // Oh, that it might be, someday, though!
+@SuppressWarnings({
+    "unused", // Some of the behaviors aren't, currently, true.
+    "WeakerAccess"
+})
 public final class SynchronousAppSync {
     private final AppSync appSync;
 
@@ -93,8 +97,8 @@ public final class SynchronousAppSync {
      */
     @NonNull
     public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> update(
-        @NonNull T model, @NonNull Integer version) throws DataStoreException {
-        return update(model, version, null);
+            @NonNull T model, @NonNull Integer version) throws DataStoreException {
+        return update(model, version, QueryPredicates.matchAll());
     }
 
     /**
@@ -108,7 +112,7 @@ public final class SynchronousAppSync {
      */
     @NonNull
     public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> update(
-        @NonNull T model, @NonNull Integer version, @Nullable QueryPredicate predicate) throws DataStoreException {
+            @NonNull T model, @NonNull Integer version, @NonNull QueryPredicate predicate) throws DataStoreException {
         return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result(((onResult, onError) ->
             appSync.update(model, version, predicate, onResult, onError)
         ));
@@ -126,7 +130,7 @@ public final class SynchronousAppSync {
     @NonNull
     <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
         @NonNull Class<T> clazz, @NonNull String objectId, @NonNull Integer version) throws DataStoreException {
-        return delete(clazz, objectId, version, null);
+        return delete(clazz, objectId, version, QueryPredicates.matchAll());
     }
 
     /**
@@ -144,7 +148,7 @@ public final class SynchronousAppSync {
             @NonNull Class<T> clazz,
             @NonNull String objectId,
             @NonNull Integer version,
-            @Nullable QueryPredicate predicate) throws DataStoreException {
+            @NonNull QueryPredicate predicate) throws DataStoreException {
         return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result((onResult, onError) ->
             appSync.delete(clazz, objectId, version, predicate, onResult, onError)
         );

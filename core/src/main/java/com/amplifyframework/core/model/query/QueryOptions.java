@@ -20,13 +20,13 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 
 /**
  * A data structure that provides a query construction mechanism that consolidates all query-related
  * options (e.g. predicates, pagination, etc) and allows consumers to build queries in a fluent way.
  */
 public final class QueryOptions {
-
     private QueryPredicate queryPredicate;
     private QueryPaginationInput paginationInput;
 
@@ -38,7 +38,7 @@ public final class QueryOptions {
             @Nullable QueryPredicate queryPredicate,
             @Nullable QueryPaginationInput paginationInput
     ) {
-        this.queryPredicate = queryPredicate;
+        this.queryPredicate = queryPredicate == null ? QueryPredicates.matchAll() : queryPredicate;
         this.paginationInput = paginationInput;
     }
 
@@ -64,7 +64,7 @@ public final class QueryOptions {
      * Returns the {@code queryPredicate} property.
      * @return the {@code queryPredicate} property.
      */
-    @Nullable
+    @NonNull
     public QueryPredicate getQueryPredicate() {
         return queryPredicate;
     }
@@ -79,7 +79,7 @@ public final class QueryOptions {
     }
 
     @Override
-    public boolean equals(Object object) {
+    public boolean equals(@Nullable Object object) {
         if (this == object) {
             return true;
         }
@@ -96,6 +96,7 @@ public final class QueryOptions {
         return ObjectsCompat.hash(queryPredicate, paginationInput);
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "QueryOptions{" +
@@ -103,5 +104,4 @@ public final class QueryOptions {
                 ", paginationInput=" + paginationInput +
                 '}';
     }
-
 }
