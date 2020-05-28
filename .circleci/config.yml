@@ -90,12 +90,14 @@ jobs:
       - generate_gradle_wrapper
       - run:
           name: Build the project
-          command: bash gradlew build
-      - run:
-          name: Publish the project to local maven
-          command: bash gradlew publishToMavenLocal
+          command: |
+            bash gradlew build
+            .circleci/aggregate-test-results.sh ~/amplify-android-home
+            .circleci/aggregate-build-artifacts.sh
       - store_test_results:
           path: test-results
+      - store_artifacts:
+          path: build-artifacts.tar.gz
 
   integrationtest:
     working_directory: ~/amplify-android-home
