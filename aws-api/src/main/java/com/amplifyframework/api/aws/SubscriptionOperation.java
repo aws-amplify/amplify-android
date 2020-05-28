@@ -15,7 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
@@ -30,74 +29,38 @@ import com.amplifyframework.logging.Logger;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
-import okhttp3.OkHttpClient;
-
-@SuppressWarnings("unused")
 final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
 
-    private final String endpoint;
-    private final OkHttpClient client;
     private final SubscriptionEndpoint subscriptionEndpoint;
     private final ExecutorService executorService;
-    private final Consumer<String> onSubscriptionStarted;
+    private final Consumer<String> onSubscriptionStart;
     private final Consumer<GraphQLResponse<T>> onNextItem;
     private final Consumer<ApiException> onSubscriptionError;
     private final Action onSubscriptionComplete;
 
     private String subscriptionId;
+    private boolean canceled;
 
-    @SuppressLint("SyntheticAccessor")
-    private SubscriptionOperation(@NonNull SubscriptionOperation.Builder<T> builder) {
-        super(builder.graphQLRequest, builder.responseFactory);
-        this.endpoint = builder.endpoint;
-        this.client = builder.client;
-        this.subscriptionEndpoint = builder.subscriptionEndpoint;
-        this.onNextItem = builder.onNextItem;
-        this.onSubscriptionStarted = builder.onSubscriptionStarted;
-        this.onSubscriptionError = builder.onSubscriptionError;
-        this.onSubscriptionComplete = builder.onSubscriptionComplete;
-        this.executorService = builder.executorService;
-    }
-
-    @NonNull
-    SubscriptionEndpoint subscriptionManager() {
-        return subscriptionEndpoint;
-    }
-
-    @NonNull
-    String endpoint() {
-        return endpoint;
-    }
-
-    @NonNull
-    OkHttpClient client() {
-        return client;
-    }
-
-    @NonNull
-    Consumer<String> onSubscriptionStarted() {
-        return onSubscriptionStarted;
-    }
-
-    @NonNull
-    Consumer<GraphQLResponse<T>> onNextItem() {
-        return onNextItem;
-    }
-
-    @NonNull
-    Consumer<ApiException> onSubscriptionError() {
-        return onSubscriptionError;
-    }
-
-    @NonNull
-    Action onSubscriptionComplete() {
-        return onSubscriptionComplete;
-    }
-
-    @NonNull
-    ExecutorService executorService() {
-        return executorService;
+    @SuppressWarnings("ParameterNumber")
+    private SubscriptionOperation(
+            GraphQLRequest<T> graphQlRequest,
+            GraphQLResponse.Factory responseFactory,
+            SubscriptionEndpoint subscriptionEndpoint,
+            Consumer<String> onSubscriptionStart,
+            Consumer<GraphQLResponse<T>> onNextItem,
+            Consumer<ApiException> onSubscriptionError,
+            Action onSubscriptionComplete,
+            ExecutorService executorService) {
+        super(graphQlRequest, responseFactory);
+        this.subscriptionEndpoint = subscriptionEndpoint;
+        this.onSubscriptionStart = onSubscriptionStart;
+        this.onNextItem = onNextItem;
+        this.onSubscriptionError = onSubscriptionError;
+        this.onSubscriptionComplete = onSubscriptionComplete;
+        this.executorService = executorService;
+        this.subscriptionId = null;
+        this.canceled = false;
     }
 
     @NonNull
@@ -106,12 +69,21 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     }
 
     @Override
-    public void start() {
+    public synchronized void start() {
+        if (canceled) {
+            onSubscriptionError.accept(new ApiException(
+                "Operation already canceled.", "Don't cancel the subscription before starting it!"
+            ));
+            return;
+        }
         executorService.submit(() -> {
             LOG.debug("Requesting subscription: " + getRequest().getContent());
-            subscriptionId = subscriptionEndpoint.requestSubscription(
+            subscriptionEndpoint.requestSubscription(
                 getRequest(),
-                onSubscriptionStarted,
+                subscriptionId -> {
+                    SubscriptionOperation.this.subscriptionId = subscriptionId;
+                    onSubscriptionStart.accept(subscriptionId);
+                },
                 onNextItem,
                 onSubscriptionError,
                 onSubscriptionComplete
@@ -120,8 +92,9 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     }
 
     @Override
-    public void cancel() {
-        if (subscriptionId != null) {
+    public synchronized void cancel() {
+        if (subscriptionId != null && !canceled) {
+            canceled = true;
             try {
                 subscriptionEndpoint.releaseSubscription(subscriptionId);
             } catch (ApiException exception) {
@@ -132,52 +105,34 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     static final class Builder<T> implements
             SubscriptionManagerStep<T>,
-            EndpointStep<T>,
-            OkHttpClientStep<T>,
             GraphQlRequestStep<T>,
             ResponseFactoryStep<T>,
             ExecutorServiceStep<T>,
-            OnSubscriptionStartedStep<T>,
+            OnSubscriptionStartStep<T>,
             OnNextItemStep<T>,
             OnSubscriptionErrorStep<T>,
             OnSubscriptionCompleteStep<T>,
             BuilderStep<T> {
         private SubscriptionEndpoint subscriptionEndpoint;
-        private String endpoint;
-        private OkHttpClient client;
-        private GraphQLRequest<T> graphQLRequest;
+        private GraphQLRequest<T> graphQlRequest;
         private GraphQLResponse.Factory responseFactory;
         private ExecutorService executorService;
-        private Consumer<String> onSubscriptionStarted;
+        private Consumer<String> onSubscriptionStart;
         private Consumer<GraphQLResponse<T>> onNextItem;
         private Consumer<ApiException> onSubscriptionError;
         private Action onSubscriptionComplete;
 
         @NonNull
         @Override
-        public EndpointStep<T> subscriptionManager(@NonNull SubscriptionEndpoint subscriptionEndpoint) {
+        public GraphQlRequestStep<T> subscriptionEndpoint(@NonNull SubscriptionEndpoint subscriptionEndpoint) {
             this.subscriptionEndpoint = Objects.requireNonNull(subscriptionEndpoint);
             return this;
         }
 
         @NonNull
         @Override
-        public OkHttpClientStep<T> endpoint(@NonNull final String endpoint) {
-            this.endpoint = Objects.requireNonNull(endpoint);
-            return this;
-        }
-
-        @NonNull
-        @Override
-        public GraphQlRequestStep<T> client(@NonNull final OkHttpClient client) {
-            this.client = Objects.requireNonNull(client);
-            return this;
-        }
-
-        @NonNull
-        @Override
-        public ResponseFactoryStep<T> graphQLRequest(@NonNull GraphQLRequest<T> graphQLRequest) {
-            this.graphQLRequest = Objects.requireNonNull(graphQLRequest);
+        public ResponseFactoryStep<T> graphQlRequest(@NonNull GraphQLRequest<T> graphQlRequest) {
+            this.graphQlRequest = Objects.requireNonNull(graphQlRequest);
             return this;
         }
 
@@ -190,15 +145,15 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
         @NonNull
         @Override
-        public OnSubscriptionStartedStep<T> executorService(@NonNull ExecutorService executorService) {
+        public OnSubscriptionStartStep<T> executorService(@NonNull ExecutorService executorService) {
             this.executorService = Objects.requireNonNull(executorService);
             return this;
         }
 
         @NonNull
         @Override
-        public OnNextItemStep<T> onSubscriptionStarted(@NonNull Consumer<String> onSubscriptionStarted) {
-            this.onSubscriptionStarted = Objects.requireNonNull(onSubscriptionStarted);
+        public OnNextItemStep<T> onSubscriptionStart(@NonNull Consumer<String> onSubscriptionStart) {
+            this.onSubscriptionStart = Objects.requireNonNull(onSubscriptionStart);
             return this;
         }
 
@@ -223,42 +178,30 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             return this;
         }
 
-        @SuppressLint("SyntheticAccessor")
         @NonNull
         @Override
         public SubscriptionOperation<T> build() {
-            Objects.requireNonNull(Builder.this.subscriptionEndpoint);
-            Objects.requireNonNull(Builder.this.endpoint);
-            Objects.requireNonNull(Builder.this.client);
-            Objects.requireNonNull(Builder.this.graphQLRequest);
-            Objects.requireNonNull(Builder.this.responseFactory);
-            Objects.requireNonNull(Builder.this.onSubscriptionStarted);
-            Objects.requireNonNull(Builder.this.onNextItem);
-            Objects.requireNonNull(Builder.this.onSubscriptionError);
-            Objects.requireNonNull(Builder.this.onSubscriptionComplete);
-            Objects.requireNonNull(Builder.this.executorService);
-            return new SubscriptionOperation<>(Builder.this);
+            return new SubscriptionOperation<>(
+                Objects.requireNonNull(Builder.this.graphQlRequest),
+                Objects.requireNonNull(Builder.this.responseFactory),
+                Objects.requireNonNull(Builder.this.subscriptionEndpoint),
+                Objects.requireNonNull(Builder.this.onSubscriptionStart),
+                Objects.requireNonNull(Builder.this.onNextItem),
+                Objects.requireNonNull(Builder.this.onSubscriptionError),
+                Objects.requireNonNull(Builder.this.onSubscriptionComplete),
+                Objects.requireNonNull(Builder.this.executorService)
+            );
         }
     }
 
     interface SubscriptionManagerStep<T> {
         @NonNull
-        EndpointStep<T> subscriptionManager(@NonNull SubscriptionEndpoint subscriptionEndpoint);
-    }
-
-    interface EndpointStep<T> {
-        @NonNull
-        OkHttpClientStep<T> endpoint(@NonNull String apiName);
-    }
-
-    interface OkHttpClientStep<T> {
-        @NonNull
-        GraphQlRequestStep<T> client(@NonNull OkHttpClient okHttpClient);
+        GraphQlRequestStep<T> subscriptionEndpoint(@NonNull SubscriptionEndpoint subscriptionEndpoint);
     }
 
     interface GraphQlRequestStep<T> {
         @NonNull
-        ResponseFactoryStep<T> graphQLRequest(@NonNull GraphQLRequest<T> graphQlRequest);
+        ResponseFactoryStep<T> graphQlRequest(@NonNull GraphQLRequest<T> graphQlRequest);
     }
 
     interface ResponseFactoryStep<T> {
@@ -268,12 +211,12 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     interface ExecutorServiceStep<T> {
         @NonNull
-        OnSubscriptionStartedStep<T> executorService(@NonNull ExecutorService executorService);
+        OnSubscriptionStartStep<T> executorService(@NonNull ExecutorService executorService);
     }
 
-    interface OnSubscriptionStartedStep<T> {
+    interface OnSubscriptionStartStep<T> {
         @NonNull
-        OnNextItemStep<T> onSubscriptionStarted(@NonNull Consumer<String> onSubscriptionStarted);
+        OnNextItemStep<T> onSubscriptionStart(@NonNull Consumer<String> onSubscriptionStart);
     }
 
     interface OnNextItemStep<T> {
@@ -296,4 +239,3 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         SubscriptionOperation<T> build();
     }
 }
-
