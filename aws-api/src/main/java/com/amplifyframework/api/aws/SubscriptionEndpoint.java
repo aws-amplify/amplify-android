@@ -15,7 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.util.Base64;
 import androidx.annotation.NonNull;
@@ -79,7 +78,7 @@ final class SubscriptionEndpoint {
         this.connectionResponse = new CountDownLatch(1);
     }
 
-    synchronized <T> String requestSubscription(
+    synchronized <T> void requestSubscription(
             @NonNull GraphQLRequest<T> request,
             @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<T>> onNextItem,
@@ -101,7 +100,7 @@ final class SubscriptionEndpoint {
                         exception,
                         AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
-                return null;
+                return;
             }
 
             try {
@@ -109,18 +108,17 @@ final class SubscriptionEndpoint {
             } catch (InterruptedException interruptedException) {
                 // Outcome is inspected below
             }
-
             if (connectionResponse.getCount() != 0) {
                 onSubscriptionError.accept(new ApiException(
                     "Subscription timed out waiting for acknowledgement",
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
-                return null;
+                return;
             } else if (connectionFailure != null) {
                 onSubscriptionError.accept(new ApiException(
                     connectionFailure, "Check if you are authorized to make this subscription"
                 ));
-                return null;
+                return;
             }
         }
 
@@ -141,6 +139,7 @@ final class SubscriptionEndpoint {
                     exception,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
+            return;
         }
 
         Subscription<T> subscription = new Subscription<>(
@@ -151,11 +150,8 @@ final class SubscriptionEndpoint {
         if (subscription.awaitSubscriptionReady()) {
             onSubscriptionStarted.accept(subscriptionId);
         }
-
-        return subscriptionId;
     }
 
-    @SuppressLint("SyntheticAccessor")
     private WebSocket createWebSocket() throws ApiException {
         Request request = new Request.Builder()
             .url(buildConnectionRequestUrl())
@@ -463,7 +459,6 @@ final class SubscriptionEndpoint {
             onSubscriptionComplete.call();
         }
 
-        @SuppressWarnings("LineLength")
         @Override
         public boolean equals(Object thatObject) {
             if (this == thatObject) {
