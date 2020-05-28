@@ -17,10 +17,7 @@ module_test_results() {
 }
 readonly test_results_dirs=($(module_test_results))
 
-if [ ! -d $circle_ci_storage_dir ]; then
-    mkdir $circle_ci_storage_dir
-fi
-cd $circle_ci_storage_dir
+mkdir -p $circle_ci_storage_dir && cd $circle_ci_storage_dir
 
 for item in ${test_results_dirs[@]}; do
     echo "Aggregating test results for CircleCI [$item]..."

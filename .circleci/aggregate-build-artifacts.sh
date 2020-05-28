@@ -13,13 +13,10 @@ readonly modules=($(modules_with_build_trees))
 readonly current_dir="$(pwd)"
 readonly aggregation_dir="build-artifacts"
 
-if [ ! -d "$aggregation_dir" ]; then
-    mkdir "$aggregation_dir"
-fi
-cd "$aggregation_dir"
+mkdir -p "$aggregation_dir" && cd "$aggregation_dir"
 
 for item in ${modules[@]}; do
-    [ ! -d "$item" ] && mkdir "$item"
+    mkdir -p "$item"
     echo "Aggregating build artifacts for CircleCI [$item]..."
     cp -a "$current_dir/$item/build" "$item"
 done
