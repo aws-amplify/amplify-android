@@ -30,6 +30,7 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.testutils.AmplifyDisposables;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.util.Immutable;
@@ -128,9 +129,9 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> T update(
             @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) throws ApiException {
-        return awaitResponseData((onResponse, onFailure) -> {
-            asyncDelegate.mutate(apiName, ModelMutation.update(model, predicate), onResponse, onFailure);
-        });
+        return awaitResponseData((onResponse, onFailure) ->
+            asyncDelegate.mutate(apiName, ModelMutation.update(model, predicate), onResponse, onFailure)
+        );
     }
 
     /**
@@ -162,9 +163,9 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> List<GraphQLResponse.Error> updateExpectingErrors(
             @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) throws ApiException {
-        return this.<T>awaitResponseErrors((onResponse, onFailure) -> {
-            asyncDelegate.mutate(apiName, ModelMutation.update(model, predicate), onResponse, onFailure);
-        });
+        return this.<T>awaitResponseErrors((onResponse, onFailure) ->
+            asyncDelegate.mutate(apiName, ModelMutation.update(model, predicate), onResponse, onFailure)
+        );
     }
 
     /**
@@ -242,10 +243,10 @@ public final class SynchronousApi {
     public <T extends Model> List<T> list(
             @NonNull String apiName,
             @NonNull Class<T> clazz,
-            @SuppressWarnings("NullableProblems") @NonNull QueryPredicate predicate) throws ApiException {
-        final Iterable<T> queryResults = awaitResponseData((onResponse, onFailure) -> {
-            asyncDelegate.query(apiName, ModelQuery.list(clazz, predicate), onResponse, onFailure);
-        });
+            @NonNull QueryPredicate predicate) throws ApiException {
+        final Iterable<T> queryResults = awaitResponseData((onResponse, onFailure) ->
+            asyncDelegate.query(apiName, ModelQuery.list(clazz, predicate), onResponse, onFailure)
+        );
         final List<T> results = new ArrayList<>();
         for (T item : queryResults) {
             results.add(item);
@@ -264,8 +265,7 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T extends Model> List<T> list(@NonNull String apiName, @NonNull Class<T> clazz) throws ApiException {
-        //noinspection ConstantConditions To save boiler plate, we do this internally.
-        return list(apiName, clazz, null);
+        return list(apiName, clazz, QueryPredicates.all());
     }
 
     /**

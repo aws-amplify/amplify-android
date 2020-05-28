@@ -32,6 +32,7 @@ import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 
 import com.google.gson.reflect.TypeToken;
@@ -164,7 +165,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
-        return update(model, version, null, onResponse, onFailure);
+        return update(model, version, QueryPredicates.all(), onResponse, onFailure);
     }
 
     @SuppressWarnings("unchecked") // (Class<T>)
@@ -173,11 +174,12 @@ public final class AppSyncClient implements AppSync {
     public <T extends Model> Cancelable update(
             @NonNull T model,
             @NonNull Integer version,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final String doc = AppSyncRequestFactory.buildUpdateDoc(model.getClass(), predicate != null);
+            final boolean includePredicate = !QueryPredicates.all().equals(predicate);
+            final String doc = AppSyncRequestFactory.buildUpdateDoc(model.getClass(), includePredicate);
 
             Class<T> modelClass = (Class<T>) model.getClass();
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
@@ -186,7 +188,7 @@ public final class AppSyncClient implements AppSync {
             updateInput.put("_version", version);
 
             final Map<String, Object> variables = Collections.singletonMap("input", updateInput);
-            if (predicate != null) {
+            if (includePredicate) {
                 variables.put("condition", AppSyncRequestFactory.parsePredicate(predicate));
             }
 
@@ -219,7 +221,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
-        return delete(clazz, objectId, version, null, onResponse, onFailure);
+        return delete(clazz, objectId, version, QueryPredicates.all(), onResponse, onFailure);
     }
 
     @NonNull
@@ -228,18 +230,19 @@ public final class AppSyncClient implements AppSync {
             @NonNull Class<T> clazz,
             @NonNull String objectId,
             @NonNull Integer version,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final String doc = AppSyncRequestFactory.buildDeletionDoc(clazz, predicate != null);
+            final boolean includePredicate = !QueryPredicates.all().equals(predicate);
+            final String doc = AppSyncRequestFactory.buildDeletionDoc(clazz, includePredicate);
 
             final Map<String, Object> deleteInput = new HashMap<>();
             deleteInput.put("id", objectId);
             deleteInput.put("_version", version);
 
             final Map<String, Object> variables = Collections.singletonMap("input", deleteInput);
-            if (predicate != null) {
+            if (includePredicate) {
                 variables.put("condition", AppSyncRequestFactory.parsePredicate(predicate));
             }
 

@@ -16,13 +16,15 @@
 package com.amplifyframework.api.graphql.model;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+
+import java.util.Objects;
 
 /**
  * Helper class that provides methods to create {@link GraphQLRequest} for queries
@@ -60,8 +62,10 @@ public final class ModelQuery {
      */
     public static <M extends Model> GraphQLRequest<Iterable<M>> list(
             @NonNull Class<M> modelType,
-            @Nullable QueryPredicate predicate
+            @NonNull QueryPredicate predicate
     ) {
+        Objects.requireNonNull(modelType);
+        Objects.requireNonNull(predicate);
         return AppSyncGraphQLRequestFactory.buildQuery(modelType, predicate);
     }
 
@@ -74,7 +78,7 @@ public final class ModelQuery {
      * @see #list(Class, QueryPredicate)
      */
     public static <M extends Model> GraphQLRequest<Iterable<M>> list(@NonNull Class<M> modelType) {
-        return list(modelType, (QueryPredicate) null);
+        return list(modelType, QueryPredicates.all());
     }
 
     /**

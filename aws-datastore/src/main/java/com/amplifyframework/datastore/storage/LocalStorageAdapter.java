@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.storage;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
@@ -96,7 +95,7 @@ public interface LocalStorageAdapter {
     <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
@@ -158,7 +157,7 @@ public interface LocalStorageAdapter {
     <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );

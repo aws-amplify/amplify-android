@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.model;
 
+import com.amplifyframework.core.model.query.predicate.MatchAllQueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
@@ -40,7 +41,8 @@ public final class PredicateInterfaceAdapter implements
 
     private enum PredicateType {
         OPERATION,
-        GROUP
+        GROUP,
+        ALL
     }
 
     /**
@@ -63,6 +65,8 @@ public final class PredicateInterfaceAdapter implements
                 return context.deserialize(json, QueryPredicateOperation.class);
             case GROUP:
                 return context.deserialize(json, QueryPredicateGroup.class);
+            case ALL:
+                return context.deserialize(json, MatchAllQueryPredicate.class);
             default:
                 throw new JsonParseException("Unable to deserialize " +
                         json.toString() + " to QueryPredicate instance.");
@@ -80,7 +84,10 @@ public final class PredicateInterfaceAdapter implements
     ) throws JsonParseException {
         JsonElement json;
         PredicateType predicateType;
-        if (predicate instanceof QueryPredicateOperation) {
+        if (predicate instanceof MatchAllQueryPredicate) {
+            predicateType = PredicateType.ALL;
+            json = context.serialize(predicate, MatchAllQueryPredicate.class);
+        } else if (predicate instanceof QueryPredicateOperation) {
             json = context.serialize(predicate, QueryPredicateOperation.class);
             predicateType = PredicateType.OPERATION;
         } else if (predicate instanceof QueryPredicateGroup) {

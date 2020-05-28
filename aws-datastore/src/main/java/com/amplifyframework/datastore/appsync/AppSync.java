@@ -107,7 +107,7 @@ public interface AppSync {
     <T extends Model> Cancelable update(
             @NonNull T model,
             @NonNull Integer version,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure
     );
@@ -147,7 +147,7 @@ public interface AppSync {
             @NonNull Class<T> clazz,
             @NonNull String objectId,
             @NonNull Integer version,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure
     );
