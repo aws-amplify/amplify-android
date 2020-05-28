@@ -25,7 +25,6 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.http.HttpMethodName;
 import com.amazonaws.util.IOUtils;
-import com.amazonaws.util.VersionInfoUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -45,12 +44,9 @@ import okio.Buffer;
  */
 public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
-    private static final String TAG = AppSyncSigV4SignerInterceptor.class.getSimpleName();
-
     private static final String CONTENT_TYPE = "application/json";
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(CONTENT_TYPE);
     private static final String SERVICE_NAME = "appsync";
-    private static final String HEADER_USER_AGENT = "User-Agent";
     private static final String X_API_KEY = "x-api-key";
     private static final String AUTHORIZATION = "authorization";
 
@@ -162,15 +158,12 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         //set the http method
         dr.setHttpMethod(HttpMethodName.valueOf(req.method()));
 
-        //Add User Agent
-        String userAgent = toHumanReadableAscii(VersionInfoUtils.getUserAgent());
-        dr.addHeader(HEADER_USER_AGENT, userAgent);
-
-        byte[] bodyBytes;
-        if (req.body() != null) {
+        final byte[] bodyBytes;
+        RequestBody body = req.body();
+        if (body != null) {
             //write the body to a byte array.
             final Buffer buffer = new Buffer();
-            req.body().writeTo(buffer);
+            body.writeTo(buffer);
             bodyBytes = IOUtils.toByteArray(buffer.inputStream());
         } else {
             bodyBytes = "".getBytes();
