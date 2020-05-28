@@ -227,7 +227,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         // Append predicates.
         // WHERE condition
         final QueryPredicate predicate = options.getQueryPredicate();
-        if (!QueryPredicates.matchAll().equals(predicate)) {
+        if (!QueryPredicates.all().equals(predicate)) {
             final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
             bindings.addAll(sqlPredicate.getBindings());
             rawQuery.append(SqlKeyword.DELIMITER)

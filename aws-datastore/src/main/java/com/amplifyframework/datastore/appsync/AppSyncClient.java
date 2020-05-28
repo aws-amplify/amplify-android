@@ -165,7 +165,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
-        return update(model, version, QueryPredicates.matchAll(), onResponse, onFailure);
+        return update(model, version, QueryPredicates.all(), onResponse, onFailure);
     }
 
     @SuppressWarnings("unchecked") // (Class<T>)
@@ -178,7 +178,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final boolean includePredicate = !QueryPredicates.matchAll().equals(predicate);
+            final boolean includePredicate = !QueryPredicates.all().equals(predicate);
             final String doc = AppSyncRequestFactory.buildUpdateDoc(model.getClass(), includePredicate);
 
             Class<T> modelClass = (Class<T>) model.getClass();
@@ -221,7 +221,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
-        return delete(clazz, objectId, version, QueryPredicates.matchAll(), onResponse, onFailure);
+        return delete(clazz, objectId, version, QueryPredicates.all(), onResponse, onFailure);
     }
 
     @NonNull
@@ -234,7 +234,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final boolean includePredicate = !QueryPredicates.matchAll().equals(predicate);
+            final boolean includePredicate = !QueryPredicates.all().equals(predicate);
             final String doc = AppSyncRequestFactory.buildDeletionDoc(clazz, includePredicate);
 
             final Map<String, Object> deleteInput = new HashMap<>();

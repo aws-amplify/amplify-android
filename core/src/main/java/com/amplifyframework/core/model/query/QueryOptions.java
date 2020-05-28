@@ -38,7 +38,7 @@ public final class QueryOptions {
             @Nullable QueryPredicate queryPredicate,
             @Nullable QueryPaginationInput paginationInput
     ) {
-        this.queryPredicate = queryPredicate == null ? QueryPredicates.matchAll() : queryPredicate;
+        this.queryPredicate = queryPredicate == null ? QueryPredicates.all() : queryPredicate;
         this.paginationInput = paginationInput;
     }
 

@@ -78,7 +78,7 @@ public final class ModelQuery {
      * @see #list(Class, QueryPredicate)
      */
     public static <M extends Model> GraphQLRequest<Iterable<M>> list(@NonNull Class<M> modelType) {
-        return list(modelType, QueryPredicates.matchAll());
+        return list(modelType, QueryPredicates.all());
     }
 
     /**

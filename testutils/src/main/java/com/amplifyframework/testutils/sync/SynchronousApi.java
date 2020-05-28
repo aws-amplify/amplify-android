@@ -265,7 +265,7 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T extends Model> List<T> list(@NonNull String apiName, @NonNull Class<T> clazz) throws ApiException {
-        return list(apiName, clazz, QueryPredicates.matchAll());
+        return list(apiName, clazz, QueryPredicates.all());
     }
 
     /**

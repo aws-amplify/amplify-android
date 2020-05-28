@@ -333,9 +333,9 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     // Update after the create -> replace item of the create mutation (and keep it as a create).
                     // No condition needs to be provided, because as far as the remote store is concerned,
                     // we're simply performing the create (with the updated item item contents)
-                    return overwriteExistingAndNotify(PendingMutation.Type.CREATE, QueryPredicates.matchAll());
+                    return overwriteExistingAndNotify(PendingMutation.Type.CREATE, QueryPredicates.all());
                 case UPDATE:
-                    if (QueryPredicates.matchAll().equals(incoming.getPredicate())) {
+                    if (QueryPredicates.all().equals(incoming.getPredicate())) {
                         // If the incoming update does not have a condition, we want to delete any
                         // existing mutations for the modelId before saving the incoming one.
                         return remove(existing.getMutationId()).andThen(saveIncomingAndNotify());

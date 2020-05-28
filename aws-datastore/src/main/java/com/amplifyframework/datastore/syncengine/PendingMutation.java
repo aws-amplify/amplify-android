@@ -112,7 +112,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      */
     @NonNull
     static <T extends Model> PendingMutation<T> creation(@NonNull T createdItem, @NonNull Class<T> classOfCreatedItem) {
-        return instance(createdItem, classOfCreatedItem, Type.CREATE, QueryPredicates.matchAll());
+        return instance(createdItem, classOfCreatedItem, Type.CREATE, QueryPredicates.all());
     }
 
     /**
@@ -125,7 +125,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     @NonNull
     static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem,
                                                        @NonNull Class<T> classOfUpdatedItem) {
-        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, QueryPredicates.matchAll());
+        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, QueryPredicates.all());
     }
 
     /**
@@ -153,7 +153,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     @NonNull
     static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem,
                                                          @NonNull Class<T> classOfDeletedItem) {
-        return instance(deletedItem, classOfDeletedItem, Type.DELETE, QueryPredicates.matchAll());
+        return instance(deletedItem, classOfDeletedItem, Type.DELETE, QueryPredicates.all());
     }
 
     /**

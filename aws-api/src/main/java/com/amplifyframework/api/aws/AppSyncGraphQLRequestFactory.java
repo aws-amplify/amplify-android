@@ -171,7 +171,7 @@ public final class AppSyncGraphQLRequestFactory {
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
             String graphQlTypeName = schema.getName();
 
-            boolean includePredicate = !QueryPredicates.matchAll().equals(predicate);
+            boolean includePredicate = !QueryPredicates.all().equals(predicate);
 
             doc.append("query ")
                     .append("List")
@@ -234,7 +234,7 @@ public final class AppSyncGraphQLRequestFactory {
             String typeStr = type.toString();
             String graphQlTypeName = schema.getName();
 
-            boolean includePredicate = !QueryPredicates.matchAll().equals(predicate);
+            boolean includePredicate = !QueryPredicates.all().equals(predicate);
 
             doc.append("mutation ")
                     .append(Casing.capitalize(typeStr))

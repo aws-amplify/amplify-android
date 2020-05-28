@@ -87,7 +87,7 @@ public final class SynchronousStorageAdapter {
      * @throws DataStoreException On any failure to save model into storage adapter
      */
     public <T extends Model> void save(@NonNull T model) throws DataStoreException {
-        save(model, QueryPredicates.matchAll());
+        save(model, QueryPredicates.all());
     }
 
     /**
@@ -184,7 +184,7 @@ public final class SynchronousStorageAdapter {
      * @throws DataStoreException On any failure to delete model
      */
     public <T extends Model> void delete(@NonNull T model) throws DataStoreException {
-        delete(model, QueryPredicates.matchAll());
+        delete(model, QueryPredicates.all());
     }
 
     /**
@@ -225,7 +225,7 @@ public final class SynchronousStorageAdapter {
                 asyncDelegate.delete(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
-                    QueryPredicates.matchAll(),
+                    QueryPredicates.all(),
                     onResult,
                     onError
                 )

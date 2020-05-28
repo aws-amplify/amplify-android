@@ -240,7 +240,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull T item,
             @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
             @NonNull Consumer<DataStoreException> onFailureToSave) {
-        save(item, QueryPredicates.matchAll(), onItemSaved, onFailureToSave);
+        save(item, QueryPredicates.all(), onItemSaved, onFailureToSave);
     }
 
     /**
@@ -275,7 +275,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull T item,
             @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
             @NonNull Consumer<DataStoreException> onFailureToDelete) {
-        delete(item, QueryPredicates.matchAll(), onItemDeleted, onFailureToDelete);
+        delete(item, QueryPredicates.all(), onItemDeleted, onFailureToDelete);
     }
 
     /**

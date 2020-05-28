@@ -157,7 +157,7 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
         // Act: build a mutation to create a Meeting
         GraphQLRequest<Meeting> requestToCreateMeeting1 =
-                AppSyncGraphQLRequestFactory.buildMutation(meeting1, QueryPredicates.matchAll(), MutationType.CREATE);
+                AppSyncGraphQLRequestFactory.buildMutation(meeting1, QueryPredicates.all(), MutationType.CREATE);
 
         // Assert: expected is actual
         JSONAssert.assertEquals(Resources.readAsString("create-meeting1.txt"),

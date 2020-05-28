@@ -98,7 +98,7 @@ public final class SynchronousAppSync {
     @NonNull
     public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> update(
             @NonNull T model, @NonNull Integer version) throws DataStoreException {
-        return update(model, version, QueryPredicates.matchAll());
+        return update(model, version, QueryPredicates.all());
     }
 
     /**
@@ -130,7 +130,7 @@ public final class SynchronousAppSync {
     @NonNull
     <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
         @NonNull Class<T> clazz, @NonNull String objectId, @NonNull Integer version) throws DataStoreException {
-        return delete(clazz, objectId, version, QueryPredicates.matchAll());
+        return delete(clazz, objectId, version, QueryPredicates.all());
     }
 
     /**

@@ -25,7 +25,7 @@ public final class QueryPredicates {
      * Creates a {@link QueryPredicate} which matches any object it is asked to evaluate.
      * @return A query predicate that matches everything.
      */
-    public static MatchAllQueryPredicate matchAll() {
+    public static MatchAllQueryPredicate all() {
         return MatchAllQueryPredicate.instance();
     }
 }

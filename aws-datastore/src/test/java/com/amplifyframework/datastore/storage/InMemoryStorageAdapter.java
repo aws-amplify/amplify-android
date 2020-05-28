@@ -73,7 +73,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<StorageItemChange<T>> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
-        save(item, initiator, QueryPredicates.matchAll(), onSuccess, onError);
+        save(item, initiator, QueryPredicates.all(), onSuccess, onError);
     }
 
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
@@ -146,7 +146,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<StorageItemChange<T>> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
-        delete(item, initiator, QueryPredicates.matchAll(), onSuccess, onError);
+        delete(item, initiator, QueryPredicates.all(), onSuccess, onError);
     }
 
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.

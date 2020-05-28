@@ -207,7 +207,7 @@ public final class PersistentMutationOutboxTest {
             .build();
         TimeBasedUuid mutationId = TimeBasedUuid.create();
         PendingMutation<BlogOwner> pendingMutation = PendingMutation.instance(
-            mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, QueryPredicates.matchAll()
+            mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, QueryPredicates.all()
         );
         mutationOutbox.enqueue(pendingMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
@@ -236,7 +236,7 @@ public final class PersistentMutationOutboxTest {
         TimeBasedUuid mutationId = TimeBasedUuid.create();
         @SuppressWarnings("unused") // This is the point of this field.
         PendingMutation<BlogOwner> unrelatedMutation = PendingMutation.instance(
-            mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, QueryPredicates.matchAll()
+            mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, QueryPredicates.all()
         );
 
         assertFalse(mutationOutbox.hasPendingMutation(joeId));
@@ -575,7 +575,7 @@ public final class PersistentMutationOutboxTest {
                 modelInIncomingMutation,
                 BlogOwner.class,
                 PendingMutation.Type.CREATE,
-                QueryPredicates.matchAll()
+                QueryPredicates.all()
             ),
             mutationOutbox.peek()
         );
@@ -651,7 +651,7 @@ public final class PersistentMutationOutboxTest {
                 joe,
                 BlogOwner.class,
                 PendingMutation.Type.DELETE,
-                QueryPredicates.matchAll()
+                QueryPredicates.all()
             ),
             mutationOutbox.peek()
         );

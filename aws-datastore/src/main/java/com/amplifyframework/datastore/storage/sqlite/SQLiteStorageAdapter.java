@@ -264,7 +264,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(initiator);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
-        save(item, initiator, QueryPredicates.matchAll(), onSuccess, onError);
+        save(item, initiator, QueryPredicates.all(), onSuccess, onError);
     }
 
     /**
@@ -300,7 +300,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     // update always checks for ID first
                     final QueryPredicateOperation<?> idCheck =
                         QueryField.field(primaryKeyName).eq(item.getId());
-                    final QueryPredicate condition = !QueryPredicates.matchAll().equals(predicate)
+                    final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
                         ? idCheck.and(predicate)
                         : idCheck;
                     sqlCommand = sqlCommandFactory.updateFor(modelSchema, item, condition);
@@ -428,7 +428,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     ) {
-        delete(item, initiator, QueryPredicates.matchAll(), onSuccess, onError);
+        delete(item, initiator, QueryPredicates.all(), onSuccess, onError);
     }
 
     /**
@@ -460,7 +460,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 // delete always checks for ID first
                 final QueryPredicateOperation<?> idCheck =
                     QueryField.field(primaryKeyName).eq(item.getId());
-                final QueryPredicate condition = !QueryPredicates.matchAll().equals(predicate)
+                final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
                     ? idCheck.and(predicate)
                     : idCheck;
                 final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item, condition);
