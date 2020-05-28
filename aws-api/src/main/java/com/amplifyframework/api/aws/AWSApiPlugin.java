@@ -15,7 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -54,6 +53,7 @@ import okhttp3.OkHttpClient;
  * Plugin implementation to be registered with Amplify API category.
  * It uses OkHttp client to execute POST on GraphQL commands.
  */
+@SuppressWarnings("TypeParameterHidesVisibleType") // <R> shadows >com.amplifyframework.api.aws.R
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Map<String, ClientDetails> apiDetails;
     private final GraphQLResponse.Factory gqlResponseFactory;
@@ -80,7 +80,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      *
      * @param apiAuthProvider configured instance of {@link ApiAuthProviders}
      */
-    @SuppressWarnings("WeakerAccess") // Needs to be public so user's app package can access
     public AWSApiPlugin(@NonNull ApiAuthProviders apiAuthProvider) {
         this.apiDetails = new HashMap<>();
         this.gqlResponseFactory = new GsonGraphQLResponseFactory();
@@ -137,7 +136,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public Map<String, OkHttpClient> getEscapeHatch() {
         final Map<String, OkHttpClient> apiClientsByName = new HashMap<>();
         for (Map.Entry<String, ClientDetails> entry : apiDetails.entrySet()) {
-            apiClientsByName.put(entry.getKey(), entry.getValue().okHttpClient());
+            apiClientsByName.put(entry.getKey(), entry.getValue().getOkHttpClient());
         }
         return Collections.unmodifiableMap(apiClientsByName);
     }
@@ -257,17 +256,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         SubscriptionOperation<T> operation = SubscriptionOperation.<T>builder()
-                .subscriptionManager(clientDetails.webSocketEndpoint())
-                .endpoint(clientDetails.apiConfiguration().getEndpoint())
-                .client(clientDetails.okHttpClient())
-                .graphQLRequest(graphQLRequest)
-                .responseFactory(gqlResponseFactory)
-                .executorService(executorService)
-                .onSubscriptionStarted(onSubscriptionEstablished)
-                .onNextItem(onNextResponse)
-                .onSubscriptionError(onSubscriptionFailure)
-                .onSubscriptionComplete(onSubscriptionComplete)
-                .build();
+            .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
+            .graphQlRequest(graphQLRequest)
+            .responseFactory(gqlResponseFactory)
+            .executorService(executorService)
+            .onSubscriptionStart(onSubscriptionEstablished)
+            .onNextItem(onNextResponse)
+            .onSubscriptionError(onSubscriptionFailure)
+            .onSubscriptionComplete(onSubscriptionComplete)
+            .build();
         operation.start();
         return operation;
     }
@@ -538,8 +535,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         return AppSyncGraphQLOperation.<R>builder()
-                .endpoint(clientDetails.apiConfiguration().getEndpoint())
-                .client(clientDetails.okHttpClient())
+                .endpoint(clientDetails.getApiConfiguration().getEndpoint())
+                .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
                 .responseFactory(gqlResponseFactory)
                 .onResponse(onResponse)
@@ -591,7 +588,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 operationRequest = new RestOperationRequest(
                         type,
                         options.getPath(),
-                        options.getData(),
+                        options.getData() == null ? new byte[0] : options.getData(),
                         options.getHeaders(),
                         options.getQueryParameters());
                 break;
@@ -599,7 +596,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 throw new ApiException("Unknown REST operation type: " + type,
                         "Send support type for the request.");
         }
-        @SuppressLint("SyntheticAccessor")
         AWSRestOperation operation = new AWSRestOperation(operationRequest,
                 clientDetails.apiConfiguration.getEndpoint(),
                 clientDetails.okHttpClient,
@@ -631,25 +627,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             this.subscriptionEndpoint = subscriptionEndpoint;
         }
 
-        /**
-         * Gets the API configuration.
-         *
-         * @return API configuration
-         */
-        ApiConfiguration apiConfiguration() {
+        ApiConfiguration getApiConfiguration() {
             return apiConfiguration;
         }
 
-        /**
-         * Gets the HTTP client.
-         *
-         * @return OkHttp client
-         */
-        OkHttpClient okHttpClient() {
+        OkHttpClient getOkHttpClient() {
             return okHttpClient;
         }
 
-        SubscriptionEndpoint webSocketEndpoint() {
+        SubscriptionEndpoint getSubscriptionEndpoint() {
             return subscriptionEndpoint;
         }
 
@@ -663,7 +649,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             }
 
             ClientDetails that = (ClientDetails) thatObject;
-
             if (!ObjectsCompat.equals(apiConfiguration, that.apiConfiguration)) {
                 return false;
             }
