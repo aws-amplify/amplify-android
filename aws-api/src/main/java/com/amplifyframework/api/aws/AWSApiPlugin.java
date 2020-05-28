@@ -591,7 +591,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 operationRequest = new RestOperationRequest(
                         type,
                         options.getPath(),
-                        options.getData(),
+                        options.getData() == null ? new byte[0] : options.getData(),
                         options.getHeaders(),
                         options.getQueryParameters());
                 break;

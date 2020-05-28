@@ -47,7 +47,7 @@ public final class RestOptions {
                        Map<String, String> headers,
                        Map<String, String> queryParameters) {
         this.path = path;
-        this.data = data == null ? new byte[0] : Arrays.copyOf(data, data.length);
+        this.data = data == null ? null : Arrays.copyOf(data, data.length);
         this.headers = headers == null ? Collections.emptyMap() : Immutable.of(headers);
         this.queryParameters = queryParameters == null ? Collections.emptyMap() : Immutable.of(queryParameters);
     }
