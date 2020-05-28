@@ -36,6 +36,7 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -239,7 +240,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull T item,
             @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
             @NonNull Consumer<DataStoreException> onFailureToSave) {
-        save(item, null, onItemSaved, onFailureToSave);
+        save(item, QueryPredicates.all(), onItemSaved, onFailureToSave);
     }
 
     /**
@@ -248,7 +249,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public <T extends Model> void save(
             @NonNull T item,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
             @NonNull Consumer<DataStoreException> onFailureToSave) {
         beforeOperation(() -> sqliteStorageAdapter.save(
@@ -274,7 +275,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull T item,
             @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
             @NonNull Consumer<DataStoreException> onFailureToDelete) {
-        delete(item, null, onItemDeleted, onFailureToDelete);
+        delete(item, QueryPredicates.all(), onItemDeleted, onFailureToDelete);
     }
 
     /**
@@ -283,7 +284,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public <T extends Model> void delete(
             @NonNull T item,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
             @NonNull Consumer<DataStoreException> onFailureToDelete) {
         beforeOperation(() -> sqliteStorageAdapter.delete(

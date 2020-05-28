@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.query.Where;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -200,8 +201,9 @@ public final class MergerTest {
             new ModelMetadata(blogOwner.getId(), false, 1, Time.now());
         storageAdapter.save(blogOwner, localMetadata);
 
-        PendingMutation<BlogOwner> pendingMutation =
-            PendingMutation.instance(blogOwner, BlogOwner.class, PendingMutation.Type.CREATE, null);
+        PendingMutation<BlogOwner> pendingMutation = PendingMutation.instance(
+            blogOwner, BlogOwner.class, PendingMutation.Type.CREATE, QueryPredicates.all()
+        );
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(pendingMutation).test();
         enqueueObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
         enqueueObserver.assertNoErrors().assertComplete();

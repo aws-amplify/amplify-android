@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
@@ -177,7 +178,7 @@ public final class PersistentMutationOutboxTest {
         BlogOwner bill = BlogOwner.builder()
             .name("Bill Gates")
             .build();
-        PendingMutation<BlogOwner> deleteBillGates = PendingMutation.deletion(bill, BlogOwner.class, null);
+        PendingMutation<BlogOwner> deleteBillGates = PendingMutation.deletion(bill, BlogOwner.class);
         storage.save(converter.toRecord(deleteBillGates));
         mutationOutbox.load().blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
@@ -205,8 +206,9 @@ public final class PersistentMutationOutboxTest {
             .id(modelId)
             .build();
         TimeBasedUuid mutationId = TimeBasedUuid.create();
-        PendingMutation<BlogOwner> pendingMutation =
-            PendingMutation.instance(mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, null);
+        PendingMutation<BlogOwner> pendingMutation = PendingMutation.instance(
+            mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, QueryPredicates.all()
+        );
         mutationOutbox.enqueue(pendingMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
         assertTrue(mutationOutbox.hasPendingMutation(modelId));
@@ -233,8 +235,9 @@ public final class PersistentMutationOutboxTest {
 
         TimeBasedUuid mutationId = TimeBasedUuid.create();
         @SuppressWarnings("unused") // This is the point of this field.
-        PendingMutation<BlogOwner> unrelatedMutation =
-            PendingMutation.instance(mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, null);
+        PendingMutation<BlogOwner> unrelatedMutation = PendingMutation.instance(
+            mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, QueryPredicates.all()
+        );
 
         assertFalse(mutationOutbox.hasPendingMutation(joeId));
         assertFalse(mutationOutbox.hasPendingMutation(mutationId.toString()));
@@ -482,7 +485,7 @@ public final class PersistentMutationOutboxTest {
             .name("Papa Tony")
             .build();
         PendingMutation<BlogOwner> existingUpdate =
-            PendingMutation.update(modelInExistingMutation, BlogOwner.class, null);
+            PendingMutation.update(modelInExistingMutation, BlogOwner.class);
         String existingUpdateId = existingUpdate.getMutationId().toString();
         mutationOutbox.enqueue(existingUpdate).blockingAwait();
 
@@ -491,7 +494,7 @@ public final class PersistentMutationOutboxTest {
             .name("Tony Jr.")
             .build();
         PendingMutation<BlogOwner> incomingUpdate =
-            PendingMutation.update(modelInIncomingMutation, BlogOwner.class, null);
+            PendingMutation.update(modelInIncomingMutation, BlogOwner.class);
         String incomingUpdateId = incomingUpdate.getMutationId().toString();
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
@@ -572,7 +575,7 @@ public final class PersistentMutationOutboxTest {
                 modelInIncomingMutation,
                 BlogOwner.class,
                 PendingMutation.Type.CREATE,
-                null
+                QueryPredicates.all()
             ),
             mutationOutbox.peek()
         );
@@ -648,7 +651,7 @@ public final class PersistentMutationOutboxTest {
                 joe,
                 BlogOwner.class,
                 PendingMutation.Type.DELETE,
-                null
+                QueryPredicates.all()
             ),
             mutationOutbox.peek()
         );
