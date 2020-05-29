@@ -224,8 +224,7 @@ public final class Temporal {
          * @return A Java {@link java.util.Date} representation of the {@link Temporal.DateTime}
          */
         public java.util.Date toDate() {
-            long epochSeconds = offsetDateTime.toInstant().getEpochSecond();
-            return new java.util.Date(TimeUnit.SECONDS.toMillis(epochSeconds));
+            return new java.util.Date(offsetDateTime.toInstant().toEpochMilli());
         }
 
         /**
