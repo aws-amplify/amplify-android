@@ -18,10 +18,12 @@ package com.amplifyframework.datastore.syncengine;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.logging.Logger;
@@ -29,6 +31,7 @@ import com.amplifyframework.logging.Logger;
 import org.json.JSONObject;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Completable;
@@ -39,6 +42,7 @@ import io.reactivex.Completable;
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final long SYNC_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
@@ -128,7 +132,12 @@ public final class Orchestrator {
                     LOG.debug("Starting subscription processor.");
                     subscriptionProcessor.startSubscriptions();
                 }
-                syncProcessor.hydrate().blockingAwait();
+                if (!syncProcessor.hydrate().blockingAwait(SYNC_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                    throw new DataStoreException(
+                        "Initial sync during DataStore initialization exceeded timeout of " + SYNC_TIMEOUT_MS,
+                        AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                    );
+                }
                 if (!mutationProcessor.isDrainingMutationOutbox()) {
                     LOG.debug("Starting mutation processor.");
                     mutationProcessor.startDrainingMutationOutbox();
