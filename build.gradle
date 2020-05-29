@@ -49,6 +49,9 @@ ext {
 
     awsSdkVersion = '2.16.12'
     dependency = [
+        android: [
+            desugartools: 'com.android.tools:desugar_jdk_libs:1.0.5',
+        ],
         androidx: [
             v4support: 'androidx.legacy:legacy-support-v4:1.0.0',
             annotation: 'androidx.annotation:annotation:1.1.0',
@@ -80,7 +83,6 @@ ext {
         rxandroid: 'io.reactivex.rxjava2:rxandroid:2.1.1',
         rxjava: 'io.reactivex.rxjava2:rxjava:2.2.13',
         tensorflow: 'org.tensorflow:tensorflow-lite:2.0.0',
-        threetenabp: 'com.jakewharton.threetenabp:threetenabp:1.2.4',
         uuidgen: 'com.fasterxml.uuid:java-uuid-generator:4.0.1',
 
         junit: 'junit:junit:4.13',
@@ -125,6 +127,7 @@ private void configureAndroidLibrary(Project project) {
         }
 
         compileOptions {
+            coreLibraryDesugaringEnabled true
             sourceCompatibility JavaVersion.VERSION_1_8
             targetCompatibility JavaVersion.VERSION_1_8
         }
@@ -135,5 +138,9 @@ private void configureAndroidLibrary(Project project) {
                 proguardFiles 'proguard-rules.pro'
             }
         }
+    }
+
+    project.dependencies {
+        coreLibraryDesugaring dependency.android.desugartools
     }
 }
