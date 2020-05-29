@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * An implementation of text classification service using
@@ -45,6 +46,7 @@ import java.util.concurrent.CountDownLatch;
  */
 final class TensorFlowTextClassificationService {
     private static final String SERVICE_KEY = "textClassifier";
+    private static final long LOAD_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
 
     // Percentage multiplier
     private static final int PERCENT = 100;
@@ -142,12 +144,20 @@ final class TensorFlowTextClassificationService {
 
         // Wait for initialization to complete
         // TODO: encapsulate blocking logic elsewhere
+        boolean didLoad = false;
         try {
-            loaded.await();
+            didLoad = loaded.await(LOAD_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException exception) {
             onError.accept(new PredictionsException(
                     "Text classification service initialization was interrupted.",
                     "Please wait for the required assets to be fully loaded."
+            ));
+            return;
+        }
+        if (!didLoad) {
+            onError.accept(new PredictionsException(
+                    "Text classification service timed out while awaiting load.",
+                    "Your classification data may be too resource intensive?"
             ));
         }
 
