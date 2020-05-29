@@ -24,7 +24,7 @@ android {
 }
 
 dependencies {
-    coreLibraryDesugaring dependency.android.desugar_jdk_libs
+    coreLibraryDesugaring dependency.android.desugartools
 
     implementation dependency.androidx.v4support
     implementation dependency.androidx.annotation
