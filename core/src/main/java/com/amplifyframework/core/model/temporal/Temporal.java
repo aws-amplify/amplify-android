@@ -18,18 +18,16 @@ package com.amplifyframework.core.model.temporal;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import org.threeten.bp.DateTimeUtils;
-import org.threeten.bp.Instant;
-import org.threeten.bp.LocalDate;
-import org.threeten.bp.LocalTime;
-import org.threeten.bp.OffsetDateTime;
-import org.threeten.bp.OffsetTime;
-import org.threeten.bp.ZoneOffset;
-import org.threeten.bp.format.DateTimeFormatter;
-import org.threeten.bp.format.DateTimeFormatterBuilder;
-import org.threeten.bp.format.DateTimeParseException;
-import org.threeten.bp.temporal.ChronoField;
-
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -133,7 +131,7 @@ public final class Temporal {
         public java.util.Date toDate() {
             ZoneOffset zoneOffset = this.zoneOffset != null ? this.zoneOffset : ZoneOffset.UTC;
             OffsetDateTime oft = OffsetDateTime.of(localDate, LocalTime.MIDNIGHT, zoneOffset);
-            return DateTimeUtils.toDate(oft.toInstant());
+            return new java.util.Date(oft.toInstant().toEpochMilli());
         }
 
         /**
@@ -226,7 +224,7 @@ public final class Temporal {
          * @return A Java {@link java.util.Date} representation of the {@link Temporal.DateTime}
          */
         public java.util.Date toDate() {
-            return DateTimeUtils.toDate(offsetDateTime.toInstant());
+            return new java.util.Date(offsetDateTime.toInstant().toEpochMilli());
         }
 
         /**
@@ -348,7 +346,7 @@ public final class Temporal {
         public java.util.Date toDate() {
             ZoneOffset zo = zoneOffset != null ? zoneOffset : ZoneOffset.UTC;
             OffsetDateTime oft = OffsetDateTime.of(LocalDate.ofEpochDay(0), localTime, zo);
-            return DateTimeUtils.toDate(oft.toInstant());
+            return new java.util.Date(oft.toInstant().toEpochMilli());
         }
 
         /**
