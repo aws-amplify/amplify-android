@@ -20,7 +20,6 @@ apply from: rootProject.file("configuration/publishing.gradle")
 dependencies {
     implementation dependency.androidx.v4support
     implementation dependency.androidx.annotation
-
     testImplementation project(path: ':testmodels')
     testImplementation(project(path: ':testutils')) {
         transitive = false
@@ -41,4 +40,3 @@ dependencies {
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
 }
-
