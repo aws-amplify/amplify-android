@@ -127,6 +127,7 @@ private void configureAndroidLibrary(Project project) {
         }
 
         compileOptions {
+            coreLibraryDesugaringEnabled true
             sourceCompatibility JavaVersion.VERSION_1_8
             targetCompatibility JavaVersion.VERSION_1_8
         }
@@ -137,5 +138,9 @@ private void configureAndroidLibrary(Project project) {
                 proguardFiles 'proguard-rules.pro'
             }
         }
+    }
+
+    project.dependencies {
+        coreLibraryDesugaring dependency.android.desugartools
     }
 }

@@ -17,18 +17,9 @@ apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
-android {
-    compileOptions {
-        coreLibraryDesugaringEnabled true
-    }
-}
-
 dependencies {
-    coreLibraryDesugaring dependency.android.desugartools
-
     implementation dependency.androidx.v4support
     implementation dependency.androidx.annotation
-
 
     testImplementation project(path: ':testmodels')
     testImplementation(project(path: ':testutils')) {
