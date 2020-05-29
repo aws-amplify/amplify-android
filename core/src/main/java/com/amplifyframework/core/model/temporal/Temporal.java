@@ -131,8 +131,7 @@ public final class Temporal {
         public java.util.Date toDate() {
             ZoneOffset zoneOffset = this.zoneOffset != null ? this.zoneOffset : ZoneOffset.UTC;
             OffsetDateTime oft = OffsetDateTime.of(localDate, LocalTime.MIDNIGHT, zoneOffset);
-            long epochSeconds = oft.toInstant().getEpochSecond();
-            return new java.util.Date(TimeUnit.SECONDS.toMillis(epochSeconds));
+            return new java.util.Date(oft.toInstant().toEpochMilli());
         }
 
         /**
@@ -348,8 +347,7 @@ public final class Temporal {
         public java.util.Date toDate() {
             ZoneOffset zo = zoneOffset != null ? zoneOffset : ZoneOffset.UTC;
             OffsetDateTime oft = OffsetDateTime.of(LocalDate.ofEpochDay(0), localTime, zo);
-            long epochSeconds = oft.toInstant().getEpochSecond();
-            return new java.util.Date(TimeUnit.SECONDS.toMillis(epochSeconds));
+            return new java.util.Date(oft.toInstant().toEpochMilli());
         }
 
         /**
