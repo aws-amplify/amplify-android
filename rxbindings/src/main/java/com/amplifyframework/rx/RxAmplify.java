@@ -35,6 +35,7 @@ public final class RxAmplify {
     @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxDataStoreCategoryBehavior DataStore = new RxDataStoreBinding();
     @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxHubCategoryBehavior Hub = new RxHubBinding();
     @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxStorageCategoryBehavior Storage = new RxStorageBinding();
+    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxPredictionsCategoryBehavior Predictions = new RxPredictionsBinding();
     // Logging currently has no callback/async behaviors
     // Analytics currently has no callback/async behaviors
 
