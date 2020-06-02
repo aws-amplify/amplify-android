@@ -29,6 +29,7 @@ import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.QueryPaginationInput;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
@@ -226,7 +227,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         // Append predicates.
         // WHERE condition
         final QueryPredicate predicate = options.getQueryPredicate();
-        if (predicate != null) {
+        if (!QueryPredicates.all().equals(predicate)) {
             final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
             bindings.addAll(sqlPredicate.getBindings());
             rawQuery.append(SqlKeyword.DELIMITER)

@@ -6,7 +6,7 @@ commands:
     parameters:
       gradle_version:
         description: "The version of Gradle to install"
-        default: "6.3"
+        default: "6.4.1"
         type: string
 
     steps:
@@ -90,12 +90,14 @@ jobs:
       - generate_gradle_wrapper
       - run:
           name: Build the project
-          command: bash gradlew build
-      - run:
-          name: Publish the project to local maven
-          command: bash gradlew publishToMavenLocal
+          command: |
+            bash gradlew build
+            .circleci/aggregate-test-results.sh ~/amplify-android-home
+            .circleci/aggregate-build-artifacts.sh
       - store_test_results:
           path: test-results
+      - store_artifacts:
+          path: build-artifacts.tar.gz
 
   integrationtest:
     working_directory: ~/amplify-android-home

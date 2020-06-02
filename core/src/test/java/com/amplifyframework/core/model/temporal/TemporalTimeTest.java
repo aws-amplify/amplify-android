@@ -68,6 +68,8 @@ public final class TemporalTimeTest {
         cal.set(Calendar.HOUR_OF_DAY, 1); // 1 AM
         cal.set(Calendar.MINUTE, 2); // 1:02 AM
         cal.set(Calendar.SECOND, 3); // 1:02:03 AM
+        cal.set(Calendar.MILLISECOND, 4); // 1:02:03.004 AM
+
         Date date = cal.getTime();
         Temporal.Time temporalTime = new Temporal.Time(date);
         assertEquals(date, temporalTime.toDate());
@@ -90,6 +92,7 @@ public final class TemporalTimeTest {
         cal.set(Calendar.HOUR_OF_DAY, 1); // 1 AM
         cal.set(Calendar.MINUTE, 2); // 1:02 AM
         cal.set(Calendar.SECOND, 3); // 1:02:03 AM
+        cal.set(Calendar.MILLISECOND, 4); // 1:02:03.004 AM
 
         Date date = cal.getTime();
         long offsetInMillis = timeZone.getOffset(date.getTime());

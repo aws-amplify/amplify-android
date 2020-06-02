@@ -39,6 +39,7 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
@@ -263,7 +264,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(initiator);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
-        save(item, initiator, null, onSuccess, onError);
+        save(item, initiator, QueryPredicates.all(), onSuccess, onError);
     }
 
     /**
@@ -273,12 +274,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError) {
         Objects.requireNonNull(item);
         Objects.requireNonNull(initiator);
-        // Objects.requireNonNull(predicate); Not required!
+        Objects.requireNonNull(predicate);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
 
@@ -299,7 +300,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     // update always checks for ID first
                     final QueryPredicateOperation<?> idCheck =
                         QueryField.field(primaryKeyName).eq(item.getId());
-                    final QueryPredicate condition = predicate != null
+                    final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
                         ? idCheck.and(predicate)
                         : idCheck;
                     sqlCommand = sqlCommandFactory.updateFor(modelSchema, item, condition);
@@ -427,18 +428,18 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     ) {
-        delete(item, initiator, null, onSuccess, onError);
+        delete(item, initiator, QueryPredicates.all(), onSuccess, onError);
     }
 
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings({"unchecked", "ConstantConditions"}) // item.getClass() has Class<?>, but we assume Class<T>
+    @SuppressWarnings("unchecked") // item.getClass() has Class<?>, but we assume Class<T>
     @Override
     public <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     ) {
@@ -459,7 +460,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 // delete always checks for ID first
                 final QueryPredicateOperation<?> idCheck =
                     QueryField.field(primaryKeyName).eq(item.getId());
-                final QueryPredicate condition = predicate != null
+                final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
                     ? idCheck.and(predicate)
                     : idCheck;
                 final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item, condition);
@@ -601,13 +602,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         LOG.debug("DataStore cleared. Re-initializing storage adapter.");
 
         //Re-initialize the adapter.
-        initialize(context, schemaList -> {
-            onComplete.call();
-        }, exception -> {
-                onError.accept(new DataStoreException(
-                    "Error occurred whilte trying to re-initialize the storage adapter",
-                    exception.getMessage()));
-            }
+        initialize(context,
+            schemaList -> onComplete.call(),
+            exception -> onError.accept(new DataStoreException(
+                "Error occurred while trying to re-initialize the storage adapter",
+                String.valueOf(exception.getMessage())
+            ))
         );
     }
 
