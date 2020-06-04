@@ -111,7 +111,7 @@ private void configureAndroidLibrary(Project project) {
             versionCode rootProject.findProperty('VERSION_CODE').toInteger()
             versionName rootProject.findProperty('VERSION_NAME')
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-            consumerProguardFiles 'proguard-rules.pro'
+            consumerProguardFiles rootProject.file('configuration/consumer-rules.pro')
 
             testOptions {
                 unitTests {
@@ -130,13 +130,6 @@ private void configureAndroidLibrary(Project project) {
             coreLibraryDesugaringEnabled true
             sourceCompatibility JavaVersion.VERSION_1_8
             targetCompatibility JavaVersion.VERSION_1_8
-        }
-
-        buildTypes {
-            release {
-                minifyEnabled true
-                proguardFiles 'proguard-rules.pro'
-            }
         }
     }
 
