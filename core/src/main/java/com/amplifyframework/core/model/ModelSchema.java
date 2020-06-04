@@ -31,6 +31,7 @@ import com.amplifyframework.util.Immutable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,7 +56,7 @@ public final class ModelSchema {
 
     // Denotes whether this model has owner based authorization which changes the parameters for subscriptions
     // e.g. @auth(rules: [{allow: owner}]) on the model in the GraphQL Schema
-    private final boolean hasOwnerAuthorization;
+    private final List<AuthRule> authRules;
 
     // A map that contains the fields of a Model.
     // The key is the name of the instance variable in the Java class that represents the Model
@@ -77,13 +78,13 @@ public final class ModelSchema {
     private ModelSchema(
             String name,
             String pluralName,
-            boolean hasOwnerAuthorization,
+            List<AuthRule> authRules,
             Map<String, ModelField> fields,
             Map<String, ModelAssociation> associations,
             Map<String, ModelIndex> indexes) {
         this.name = name;
         this.pluralName = pluralName;
-        this.hasOwnerAuthorization = hasOwnerAuthorization;
+        this.authRules = authRules;
         this.fields = fields;
         this.associations = associations;
         this.indexes = indexes;
@@ -113,6 +114,7 @@ public final class ModelSchema {
             final TreeMap<String, ModelField> fields = new TreeMap<>();
             final TreeMap<String, ModelAssociation> associations = new TreeMap<>();
             final TreeMap<String, ModelIndex> indexes = new TreeMap<>();
+            final List<AuthRule> authRules = new ArrayList<>();
 
             // Set the model name and plural name (null if not provided)
             ModelConfig modelConfig = clazz.getAnnotation(ModelConfig.class);
@@ -120,7 +122,12 @@ public final class ModelSchema {
             final String modelPluralName = modelConfig != null && !modelConfig.pluralName().isEmpty()
                     ? modelConfig.pluralName()
                     : null;
-            final boolean hasOwnerAuthorization = modelConfig != null && modelConfig.hasOwnerAuthorization();
+
+            if (modelConfig != null) {
+                for (com.amplifyframework.core.model.annotations.AuthRule ruleAnnotation : modelConfig.authRules()) {
+                    authRules.add(new AuthRule(ruleAnnotation));
+                }
+            }
 
             for (Annotation annotation : clazz.getAnnotations()) {
                 ModelIndex modelIndex = createModelIndex(annotation);
@@ -143,7 +150,7 @@ public final class ModelSchema {
             return ModelSchema.builder()
                     .name(modelName)
                     .pluralName(modelPluralName)
-                    .hasOwnerAuthorization(hasOwnerAuthorization)
+                    .authRules(authRules)
                     .fields(fields)
                     .associations(associations)
                     .indexes(indexes)
@@ -165,6 +172,10 @@ public final class ModelSchema {
             final String fieldName = field.getName();
             final Class<?> fieldType = field.getType();
             final String targetType = annotation.targetType();
+            final List<AuthRule> authRules = new ArrayList<>();
+            for (com.amplifyframework.core.model.annotations.AuthRule ruleAnnotation : annotation.authRules()) {
+                authRules.add(new AuthRule(ruleAnnotation));
+            }
             return ModelField.builder()
                     .name(fieldName)
                     .type(fieldType)
@@ -173,6 +184,7 @@ public final class ModelSchema {
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
+                    .authRules(authRules)
                     .build();
         }
         return null;
@@ -242,12 +254,27 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns true if this model has owner based authorization which changes the parameters for subscriptions
-     * e.g. @auth(rules: [{allow: owner}]) on the model in the GraphQL Schema
-     * @return true if owner authorization is present on this model and false if not or if not explicitly annotated.
+     * Returns list of rules defining which users can access or operate against an object.
+     * e.g. @auth(rules: [{allow: owner}]) on the model in the GraphQL Schema.
+     *
+     * @return List of {@link AuthRule}s for this Model
      */
+    public List<AuthRule> authRules() {
+        return authRules;
+    }
+
+    /**
+     * Returns true if this model has owner based authorization which changes the parameters for subscriptions.
+     * @return true if owner authorization is present on this model and false if not or if not explicitly annotated
+     */
+
     public boolean hasOwnerAuthorization() {
-        return hasOwnerAuthorization;
+        for (AuthRule rule : authRules()) {
+            if (AuthStrategy.OWNER.equals(rule.allow())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -384,7 +411,7 @@ public final class ModelSchema {
 
             return ObjectsCompat.equals(getName(), that.getName()) &&
                 ObjectsCompat.equals(getPluralName(), that.getPluralName()) &&
-                ObjectsCompat.equals(hasOwnerAuthorization(), that.hasOwnerAuthorization()) &&
+                ObjectsCompat.equals(authRules(), that.authRules()) &&
                 ObjectsCompat.equals(getFields(), that.getFields()) &&
                 ObjectsCompat.equals(getAssociations(), that.getAssociations()) &&
                 ObjectsCompat.equals(getIndexes(), that.getIndexes());
@@ -396,7 +423,7 @@ public final class ModelSchema {
         return ObjectsCompat.hash(
                 getName(),
                 getPluralName(),
-                hasOwnerAuthorization(),
+                authRules(),
                 getFields(),
                 getAssociations(),
                 getIndexes()
@@ -408,7 +435,7 @@ public final class ModelSchema {
         return "ModelSchema{" +
             "name='" + name + '\'' +
             ", pluralName='" + pluralName + '\'' +
-            ", hasOwnerAuthorization='" + hasOwnerAuthorization + '\'' +
+            ", authRules='" + authRules + '\'' +
             ", fields=" + fields +
             ", associations" + associations +
             ", indexes=" + indexes +
@@ -425,10 +452,10 @@ public final class ModelSchema {
         private final Map<String, ModelIndex> indexes;
         private String name;
         private String pluralName;
-        private boolean hasOwnerAuthorization;
+        private List<AuthRule> authRules;
 
         Builder() {
-            this.hasOwnerAuthorization = false;
+            this.authRules = new ArrayList<>();
             this.fields = new TreeMap<>();
             this.associations = new TreeMap<>();
             this.indexes = new TreeMap<>();
@@ -458,14 +485,15 @@ public final class ModelSchema {
         }
 
         /**
-         * Denotes whether this model has owner based authorization which changes the parameters for subscriptions
+         * Denotes authorization rules for this model defined by the @auth directive.
          * e.g. @auth(rules: [{allow: owner}]) on the model in the GraphQL Schema
-         * @param hasOwnerAuthorization true if the model has owner based authorization, false otherwise
+         *
+         * @param authRules list of {@link AuthRule}s for this {@link Model}
          * @return the builder object
          */
         @NonNull
-        public Builder hasOwnerAuthorization(boolean hasOwnerAuthorization) {
-            this.hasOwnerAuthorization = hasOwnerAuthorization;
+        public Builder authRules(List<AuthRule> authRules) {
+            this.authRules = authRules;
             return this;
         }
 
@@ -519,7 +547,7 @@ public final class ModelSchema {
             return new ModelSchema(
                 name,
                 pluralName,
-                hasOwnerAuthorization,
+                authRules,
                 fields,
                 associations,
                 indexes
