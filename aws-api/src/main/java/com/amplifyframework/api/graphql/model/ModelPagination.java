@@ -29,35 +29,32 @@ public final class ModelPagination {
     private static final int DEFAULT_LIMIT = 1000;
 
     private int limit;
-    private final String nextToken;
 
     /**
-     * This class should be created using the factory methods {@link #firstPage()} and {@link #nextToken(String)}.
+     * This class should be created using the factory methods {@link #firstPage()} or {@link #limit(int)}.
      * @param limit the page size.
-     * @param nextToken the next page token.
      */
-    private ModelPagination(int limit, String nextToken) {
+    private ModelPagination(int limit) {
         this.limit = limit;
-        this.nextToken = nextToken;
     }
 
     /**
-     * Creates a reference to the first page. Same as {@link #nextToken(String)} passing {@code null}.
+     * Creates a reference to the first page.
      * @return an instance of {@link ModelPagination}.
      */
     @NonNull
     public static ModelPagination firstPage() {
-        return nextToken(null);
+        return limit(DEFAULT_LIMIT);
     }
 
     /**
-     * Creates a {@link ModelPagination} with the given {@code nextToken}.
-     * @param nextToken the value of the nextToken.
+     * Creates a {@link ModelPagination} with the given {@code limit}.
+     * @param limit the page size
      * @return an instance of {@link ModelPagination}.
      */
     @NonNull
-    public static ModelPagination nextToken(@Nullable String nextToken) {
-        return new ModelPagination(DEFAULT_LIMIT, nextToken);
+    public static ModelPagination limit(@Nullable int limit) {
+        return new ModelPagination(limit);
     }
 
     /**
@@ -77,14 +74,5 @@ public final class ModelPagination {
      */
     public int getLimit() {
         return limit;
-    }
-
-    /**
-     * Returns the {@code nextToken} property.
-     * @return the {@code nextToken} property.
-     */
-    @Nullable
-    public String getNextToken() {
-        return nextToken;
     }
 }
