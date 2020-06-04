@@ -50,7 +50,7 @@ The Amplify Framework supports Android API level 16 (Android 4.1) and above.
 ## Using Amplify from Your App
 
 For step-by-step setup instructions, checkout our [Project Setup
-guide](https://next-docs.amplify.aws/lib/project-setup/prereq/q/platform/android).
+guide](https://docs.amplify.aws/lib/project-setup/prereq/q/platform/android).
 
 ### Specifying Gradle Dependencies
 
