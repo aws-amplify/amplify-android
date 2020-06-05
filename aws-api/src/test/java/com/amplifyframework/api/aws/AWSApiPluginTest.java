@@ -20,7 +20,9 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.model.ModelMutation;
+import com.amplifyframework.api.graphql.model.ModelPagination;
 import com.amplifyframework.api.graphql.model.ModelQuery;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -51,6 +53,7 @@ import okhttp3.mockwebserver.MockWebServer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the {@link AWSApiPlugin}.
@@ -156,6 +159,32 @@ public final class AWSApiPluginTest {
                 .toList()
                 .blockingGet()
         );
+    }
+
+    /**
+     * Same as graphQlQueryRendersValidResponse, except with pagination.   Expect a PaginatedResult&lt;BlogOwner&gt;
+     * instead of an Iterable&lt;BlogOwner&gt;, and verify that getRequestForNextResult is not null.
+     * @throws ApiException If call to query(...) itself emits such an exception
+     */
+    @Test
+    public void graphQlPaginatedQueryRendersExpectedResponse() throws ApiException {
+        webServer.enqueue(new MockResponse()
+                .setBody(Resources.readAsString("blog-owners-query-results.json")));
+
+        GraphQLResponse<PaginatedResult<BlogOwner>> actualResponse =
+                Await.<GraphQLResponse<PaginatedResult<BlogOwner>>, ApiException>result(((onResult, onError) ->
+                        plugin.query(ModelQuery.list(BlogOwner.class, ModelPagination.firstPage()), onResult, onError)
+                ));
+
+        assertEquals(
+                Arrays.asList("Curly", "Moe", "Larry"),
+                Observable.fromIterable(actualResponse.getData().getItems())
+                        .map(BlogOwner::getName)
+                        .toList()
+                        .blockingGet()
+        );
+        assertTrue(actualResponse.getData().hasNextResult());
+        assertNotNull(actualResponse.getData().getRequestForNextResult());
     }
 
     /**
