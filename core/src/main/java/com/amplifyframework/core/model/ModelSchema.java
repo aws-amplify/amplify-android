@@ -259,7 +259,7 @@ public final class ModelSchema {
      *
      * @return List of {@link AuthRule}s for this Model
      */
-    public List<AuthRule> authRules() {
+    public List<AuthRule> getAuthRules() {
         return authRules;
     }
 
@@ -269,7 +269,7 @@ public final class ModelSchema {
      */
 
     public boolean hasOwnerAuthorization() {
-        for (AuthRule rule : authRules()) {
+        for (AuthRule rule : getAuthRules()) {
             if (AuthStrategy.OWNER.equals(rule.getAllow())) {
                 return true;
             }
@@ -411,7 +411,7 @@ public final class ModelSchema {
 
             return ObjectsCompat.equals(getName(), that.getName()) &&
                 ObjectsCompat.equals(getPluralName(), that.getPluralName()) &&
-                ObjectsCompat.equals(authRules(), that.authRules()) &&
+                ObjectsCompat.equals(getAuthRules(), that.getAuthRules()) &&
                 ObjectsCompat.equals(getFields(), that.getFields()) &&
                 ObjectsCompat.equals(getAssociations(), that.getAssociations()) &&
                 ObjectsCompat.equals(getIndexes(), that.getIndexes());
@@ -423,7 +423,7 @@ public final class ModelSchema {
         return ObjectsCompat.hash(
                 getName(),
                 getPluralName(),
-                authRules(),
+                getAuthRules(),
                 getFields(),
                 getAssociations(),
                 getIndexes()
