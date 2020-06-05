@@ -162,7 +162,8 @@ public final class AWSApiPluginTest {
     }
 
     /**
-     * Same as graphQlQueryRendersValidResponse, except with pagination.   Expect a PaginatedResult&lt;BlogOwner&gt;
+     * Same as {@link #graphQlQueryRendersValidResponse()}, except with pagination.
+     * Expect a PaginatedResult&lt;BlogOwner&gt;
      * instead of an Iterable&lt;BlogOwner&gt;, and verify that getRequestForNextResult is not null.
      * @throws ApiException If call to query(...) itself emits such an exception
      */
@@ -233,4 +234,3 @@ public final class AWSApiPluginTest {
         assertEquals("graphQlApi", selectedApi);
     }
 }
-
