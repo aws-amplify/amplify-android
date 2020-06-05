@@ -54,7 +54,7 @@ public final class AuthRule {
      * Returns the type of strategy for this {@link AuthRule}.
      * @return the type of strategy for this {@link AuthRule}
      */
-    public AuthStrategy allow() {
+    public AuthStrategy getAllow() {
         return this.allow;
     }
 
@@ -63,7 +63,7 @@ public final class AuthRule {
      *
      * @return name of a {@link ModelField} of type String which specifies the user which should have access
      */
-    public String ownerField() {
+    public String getOwnerField() {
         return this.ownerField;
     }
 
@@ -72,7 +72,7 @@ public final class AuthRule {
      *
      * @return identity claim
      */
-    public String identityClaim() {
+    public String getIdentityClaim() {
         return this.identityClaim;
     }
 
@@ -81,7 +81,7 @@ public final class AuthRule {
      *
      * @return group claim
      */
-    public String groupClaim() {
+    public String getGroupClaim() {
         return this.groupClaim;
     }
 
@@ -90,7 +90,7 @@ public final class AuthRule {
      *
      * @return array of groups which should have access
      */
-    public String[] groups() {
+    public String[] getGroups() {
         return this.groups;
     }
 
@@ -100,7 +100,7 @@ public final class AuthRule {
      * @return name of a {@link ModelField} of type String or array of Strings which specifies a group or list of groups
      * which should have access.
      */
-    public String groupsField() {
+    public String getGroupsField() {
         return this.groupsField;
     }
 
@@ -109,7 +109,7 @@ public final class AuthRule {
      * the list are not protected by default.
      * @return list of {@link ModelOperation}s for which this {@link AuthRule} should apply.
      */
-    public ModelOperation[] operations() {
+    public ModelOperation[] getOperations() {
         return this.operations;
     }
 
