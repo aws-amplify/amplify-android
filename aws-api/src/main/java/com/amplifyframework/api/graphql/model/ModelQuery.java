@@ -93,7 +93,6 @@ public final class ModelQuery {
      * @param pagination the pagination settings.
      * @param <M> the concrete model type.
      * @return a valid {@link GraphQLRequest} instance.
-     * @see ModelPagination#nextToken(String)
      * @see ModelPagination#firstPage()
      */
     public static <M extends Model> GraphQLRequest<PaginatedResult<M>> list(
@@ -102,7 +101,7 @@ public final class ModelQuery {
             @NonNull ModelPagination pagination
     ) {
         return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
-                modelType, predicate, pagination.getLimit(), pagination.getNextToken());
+                modelType, predicate, pagination.getLimit());
     }
 
     /**
@@ -116,7 +115,6 @@ public final class ModelQuery {
      * @param pagination the pagination settings.
      * @param <M> the concrete model type.
      * @return a valid {@link GraphQLRequest} instance.
-     * @see ModelPagination#nextToken(String)
      * @see ModelPagination#firstPage()
      */
     public static <M extends Model> GraphQLRequest<PaginatedResult<M>> list(
@@ -124,7 +122,7 @@ public final class ModelQuery {
             @NonNull ModelPagination pagination
     ) {
         return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
-                modelType, null, pagination.getLimit(), pagination.getNextToken());
+                modelType, QueryPredicates.all(), pagination.getLimit());
     }
 
 }

@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -27,7 +28,7 @@ final class AppSyncPaginatedResult<T extends Model> extends PaginatedResult<T> {
     private final Iterable<T> items;
 
     AppSyncPaginatedResult(@NonNull Iterable<T> items,
-                           @NonNull GraphQLRequest<PaginatedResult<T>> requestForNextResult) {
+                           @Nullable GraphQLRequest<PaginatedResult<T>> requestForNextResult) {
         this.requestForNextResult = requestForNextResult;
         this.items = items;
     }
