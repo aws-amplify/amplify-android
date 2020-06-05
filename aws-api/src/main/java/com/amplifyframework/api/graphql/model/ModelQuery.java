@@ -122,7 +122,7 @@ public final class ModelQuery {
             @NonNull ModelPagination pagination
     ) {
         return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
-                modelType, null, pagination.getLimit());
+                modelType, QueryPredicates.all(), pagination.getLimit());
     }
 
 }
