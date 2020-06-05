@@ -15,8 +15,9 @@
 
 package com.amplifyframework.core.model;
 
+import androidx.core.util.ObjectsCompat;
+
 import java.util.Arrays;
-import java.util.Objects;
 
 /**
  * {@link AuthRule} is used define an authorization rule for who can access and operate against a
@@ -125,17 +126,17 @@ public final class AuthRule {
         AuthRule authRule = (AuthRule) object;
 
         return allow == authRule.allow &&
-                Objects.equals(ownerField, authRule.ownerField) &&
-                Objects.equals(identityClaim, authRule.identityClaim) &&
-                Objects.equals(groupClaim, authRule.groupClaim) &&
+                ObjectsCompat.equals(ownerField, authRule.ownerField) &&
+                ObjectsCompat.equals(identityClaim, authRule.identityClaim) &&
+                ObjectsCompat.equals(groupClaim, authRule.groupClaim) &&
                 Arrays.equals(groups, authRule.groups) &&
-                Objects.equals(groupsField, authRule.groupsField) &&
+                ObjectsCompat.equals(groupsField, authRule.groupsField) &&
                 Arrays.equals(operations, authRule.operations);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(allow, ownerField, identityClaim, groupClaim, groupsField);
+        int result = ObjectsCompat.hash(allow, ownerField, identityClaim, groupClaim, groupsField);
         result = 31 * result + Arrays.hashCode(groups);
         result = 31 * result + Arrays.hashCode(operations);
         return result;
