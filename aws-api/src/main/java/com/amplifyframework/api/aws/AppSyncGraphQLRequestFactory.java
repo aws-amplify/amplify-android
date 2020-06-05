@@ -130,7 +130,7 @@ public final class AppSyncGraphQLRequestFactory {
             QueryPredicate predicate
     ) {
         Type dataType = TypeMaker.getParameterizedType(Iterable.class, modelClass);
-        return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, null, dataType);
+        return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType);
     }
 
     /**
@@ -143,7 +143,6 @@ public final class AppSyncGraphQLRequestFactory {
      * @param modelClass the model class.
      * @param predicate the predicate for filtering.
      * @param limit the page size/limit.
-     * @param nextToken the next page token.
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @return a valid {@link GraphQLRequest} instance.
@@ -151,18 +150,16 @@ public final class AppSyncGraphQLRequestFactory {
     public static <R, T extends Model> GraphQLRequest<R> buildPaginatedResultQuery(
             Class<T> modelClass,
             QueryPredicate predicate,
-            int limit,
-            String nextToken
+            int limit
     ) {
         Type dataType = TypeMaker.getParameterizedType(PaginatedResult.class, modelClass);
-        return buildQuery(modelClass, predicate, limit, nextToken, dataType);
+        return buildQuery(modelClass, predicate, limit, dataType);
     }
 
     static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
             QueryPredicate predicate,
             int limit,
-            String nextToken,
             Type responseType
     ) {
         try {
@@ -188,9 +185,6 @@ public final class AppSyncGraphQLRequestFactory {
 
             if (includePredicate) {
                 variables.put("filter", parsePredicate(predicate));
-            }
-            if (nextToken != null) {
-                variables.put("nextToken", nextToken);
             }
             variables.put("limit", limit);
 
