@@ -452,7 +452,7 @@ public final class ModelSchema {
         private final Map<String, ModelIndex> indexes;
         private String name;
         private String pluralName;
-        private List<AuthRule> authRules;
+        private final List<AuthRule> authRules;
 
         Builder() {
             this.authRules = new ArrayList<>();
@@ -492,8 +492,10 @@ public final class ModelSchema {
          * @return the builder object
          */
         @NonNull
-        public Builder authRules(List<AuthRule> authRules) {
-            this.authRules = authRules;
+        public Builder authRules(@NonNull List<AuthRule> authRules) {
+            Objects.requireNonNull(authRules);
+            this.authRules.clear();
+            this.authRules.addAll(authRules);
             return this;
         }
 
