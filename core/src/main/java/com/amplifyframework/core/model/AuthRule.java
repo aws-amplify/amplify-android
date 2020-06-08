@@ -23,7 +23,7 @@ import java.util.Arrays;
  * {@link AuthRule} is used define an authorization rule for who can access and operate against a
  * {@link Model} or a {@link ModelField}.
  *
- * @see <a href="https://docs.amplify.aws/cli/graphql-transformer/directives#auth")>GraphQL Transformer @auth directive
+ * @see <a href="https://docs.amplify.aws/cli/graphql-transformer/directives#auth">GraphQL Transformer @auth directive
  * documentation.</a>
  */
 public final class AuthRule {

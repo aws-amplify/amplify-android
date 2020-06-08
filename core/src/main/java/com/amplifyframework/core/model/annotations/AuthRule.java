@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  * {@link ElementType#ANNOTATION_TYPE} annotation is added to indicate {@link AuthRule} annotation can be used only on
  * other annotation types (i.e. {@link ModelConfig} or {@link ModelField}).
  *
- * @see <a href="https://docs.amplify.aws/cli/graphql-transformer/directives#auth")>GraphQL Transformer @auth directive
+ * @see <a href="https://docs.amplify.aws/cli/graphql-transformer/directives#auth">GraphQL Transformer @auth directive
  * documentation.</a>
  */
 @Retention(RetentionPolicy.RUNTIME)

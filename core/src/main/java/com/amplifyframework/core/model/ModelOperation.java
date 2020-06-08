@@ -17,7 +17,7 @@ package com.amplifyframework.core.model;
 
 /**
  * Used as a property of {@link AuthRule} to specify which operations the rule applies to.
- * @see <a href="https://docs.amplify.aws/cli/graphql-transformer/directives#auth")>GraphQL Transformer @auth directive
+ * @see <a href="https://docs.amplify.aws/cli/graphql-transformer/directives#auth">GraphQL Transformer @auth directive
  * documentation.</a>
  */
 public enum ModelOperation {

@@ -17,7 +17,7 @@ package com.amplifyframework.core.model;
 
 /**
  *  The type of strategy for an @auth directive rule.
- * @see <a href="https://docs.amplify.aws/cli/graphql-transformer/directives#auth")>GraphQL Transformer @auth directive
+ * @see <a href="https://docs.amplify.aws/cli/graphql-transformer/directives#auth">GraphQL Transformer @auth directive
  *  * documentation.</a>
  */
 public enum AuthStrategy {
