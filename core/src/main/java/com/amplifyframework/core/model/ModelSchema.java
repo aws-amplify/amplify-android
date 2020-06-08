@@ -270,7 +270,7 @@ public final class ModelSchema {
 
     public boolean hasOwnerAuthorization() {
         for (AuthRule rule : getAuthRules()) {
-            if (AuthStrategy.OWNER.equals(rule.getAllow())) {
+            if (AuthStrategy.OWNER.equals(rule.getAuthStrategy())) {
                 return true;
             }
         }

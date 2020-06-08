@@ -27,7 +27,7 @@ import java.util.Arrays;
  * documentation.</a>
  */
 public final class AuthRule {
-    private final AuthStrategy allow;
+    private final AuthStrategy authStrategy;
     private final String ownerField;
     private final String identityClaim;
     private final String groupClaim;
@@ -41,7 +41,7 @@ public final class AuthRule {
      * @param authRule an {@link com.amplifyframework.core.model.annotations.AuthRule} annotation.
      */
     public AuthRule(com.amplifyframework.core.model.annotations.AuthRule authRule) {
-        this.allow = authRule.allow();
+        this.authStrategy = authRule.allow();
         this.ownerField = authRule.ownerField();
         this.identityClaim = authRule.identityClaim();
         this.groupClaim = authRule.groupClaim();
@@ -54,8 +54,8 @@ public final class AuthRule {
      * Returns the type of strategy for this {@link AuthRule}.
      * @return the type of strategy for this {@link AuthRule}
      */
-    public AuthStrategy getAllow() {
-        return this.allow;
+    public AuthStrategy getAuthStrategy() {
+        return this.authStrategy;
     }
 
     /**
@@ -125,7 +125,7 @@ public final class AuthRule {
 
         AuthRule authRule = (AuthRule) object;
 
-        return allow == authRule.allow &&
+        return authStrategy == authRule.authStrategy &&
                 ObjectsCompat.equals(ownerField, authRule.ownerField) &&
                 ObjectsCompat.equals(identityClaim, authRule.identityClaim) &&
                 ObjectsCompat.equals(groupClaim, authRule.groupClaim) &&
@@ -136,7 +136,7 @@ public final class AuthRule {
 
     @Override
     public int hashCode() {
-        int result = ObjectsCompat.hash(allow, ownerField, identityClaim, groupClaim, groupsField);
+        int result = ObjectsCompat.hash(authStrategy, ownerField, identityClaim, groupClaim, groupsField);
         result = 31 * result + Arrays.hashCode(groups);
         result = 31 * result + Arrays.hashCode(operations);
         return result;
@@ -145,7 +145,7 @@ public final class AuthRule {
     @Override
     public String toString() {
         return "AuthRuleImpl{" +
-                "allow=" + allow +
+                "authStrategy=" + authStrategy +
                 ", ownerField='" + ownerField + '\'' +
                 ", identityClaim='" + identityClaim + '\'' +
                 ", groupClaim='" + groupClaim + '\'' +
