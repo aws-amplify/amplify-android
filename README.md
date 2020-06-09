@@ -13,7 +13,7 @@ Amazon Web Services (AWS). But, the Amplify framework is designed to be
 extensible to any other backend or service.
 
 To familiarize yourself with Amplify, checkout our [Getting Started
-Guide](https://docs.amplify.aws/lib/getting-started/setup/q/platform/android).
+Guide](https://docs.amplify.aws/start/q/integration/android).
 
 ## Features / APIs
 
