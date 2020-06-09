@@ -50,4 +50,10 @@ public @interface ModelField {
      *         in the GraphQL schema.
      */
     String targetType() default "";
+
+    /**
+     * Specifies an array of rules for owner based authorization.
+     * @return array of {@link AuthRule} annotations
+     */
+    AuthRule[] authRules() default {};
 }
