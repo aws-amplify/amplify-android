@@ -15,15 +15,15 @@
 
 package com.amplifyframework.core.model.annotations;
 
+import com.amplifyframework.core.model.Model;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@link ModelConfig} annotates any {@link com.amplifyframework.core.model.Model}
- * with the configuration information that is applicable to a
- * {@link com.amplifyframework.core.model.Model}.
+ * {@link ModelConfig} annotates any {@link Model} with applicable configuration information.
  *
  * The {@link RetentionPolicy#RUNTIME} annotation is added to
  * retain {@link ModelConfig} at runtime for the reflection capabilities to work
@@ -42,9 +42,8 @@ public @interface ModelConfig {
     String pluralName() default "";
 
     /**
-     * Specifies whether this model has owner based authorization.
-     * e.g. @auth(rules: [{allow: owner}]) on the model in the GraphQL Schema.
-     * @return true if the model has owner based authorization configured
+     * Specifies an array of authorization rules that should apply to this {@link Model}.
+     * @return list of {@link AuthRule} annotations.
      */
-    boolean hasOwnerAuthorization() default false;
+    AuthRule[] authRules() default {};
 }

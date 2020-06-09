@@ -18,6 +18,9 @@ package com.amplifyframework.core.model;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents a field of the {@link Model} class.
  * Encapsulates all the information of a field.
@@ -48,6 +51,9 @@ public final class ModelField {
     // True if the field is an instance of model.
     private final boolean isModel;
 
+    // An array of rules for owner based authorization
+    private final List<AuthRule> authRules;
+
     /**
      * Construct the ModelField object from the builder.
      */
@@ -59,6 +65,7 @@ public final class ModelField {
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
         this.isModel = builder.isModel;
+        this.authRules = builder.authRules;
     }
 
     /**
@@ -136,6 +143,15 @@ public final class ModelField {
      */
     public boolean isModel() {
         return isModel;
+    }
+
+    /**
+     * Specifies an array of rules for owner based authorization.
+     *
+     * @return list of {@link AuthRule}s
+     */
+    public List<AuthRule> getAuthRules() {
+        return authRules;
     }
 
     @Override
@@ -223,6 +239,9 @@ public final class ModelField {
         // True if the field's target type is Model.
         private boolean isModel = false;
 
+        // A list of rules for owner based authorization
+        private List<AuthRule> authRules = new ArrayList<>();
+
         /**
          * Set the name of the field.
          * @param name Name of the field is the name of the instance variable of the Model class.
@@ -292,6 +311,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder isModel(boolean isModel) {
             this.isModel = isModel;
+            return this;
+        }
+
+        /**
+         * Set the authRules of the {@link ModelField}.
+         * @param authRules list of authorization rules
+         * @return the builder object
+         */
+        public ModelFieldBuilder authRules(List<AuthRule> authRules) {
+            this.authRules = authRules;
             return this;
         }
 
