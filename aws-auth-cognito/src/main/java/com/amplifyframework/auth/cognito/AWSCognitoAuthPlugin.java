@@ -655,28 +655,31 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     private void signOutLocally(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
-        awsMobileClient.signOut(SignOutOptions.builder().signOutGlobally(false).build(), new Callback<Void>() {
-            @Override
-            public void onResult(Void result) {
-                onSuccess.call();
-            }
+        awsMobileClient.signOut(
+                SignOutOptions.builder().signOutGlobally(false).invalidateTokens(true).build(),
+                new Callback<Void>() {
+                    @Override
+                    public void onResult(Void result) {
+                        onSuccess.call();
+                    }
 
-            @Override
-            public void onError(Exception error) {
-                if (error != null && error.getMessage() != null && error.getMessage().contains("signed-out")) {
-                    onError.accept(new AuthException(
-                            "Failed to sign out since Auth is already signed out",
-                            "No need to sign out - you already are!"
-                    ));
-                } else {
-                    onError.accept(new AuthException(
-                            "Failed to sign out",
-                            error,
-                            "See attached exception for more details"
-                    ));
-                }
+                    @Override
+                    public void onError(Exception error) {
+                        if (error != null && error.getMessage() != null && error.getMessage().contains("signed-out")) {
+                            onError.accept(new AuthException(
+                                    "Failed to sign out since Auth is already signed out",
+                                    "No need to sign out - you already are!"
+                            ));
+                        } else {
+                            onError.accept(new AuthException(
+                                    "Failed to sign out",
+                                    error,
+                                    "See attached exception for more details"
+                            ));
+                        }
+                    }
             }
-        });
+        );
     }
 
     private void signInWithWebUIHelper(
