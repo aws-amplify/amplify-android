@@ -544,6 +544,7 @@ public final class AuthComponentTest {
         ArgumentCaptor<SignOutOptions> signOutOptionsCaptor = ArgumentCaptor.forClass(SignOutOptions.class);
         verify(mobileClient).signOut(signOutOptionsCaptor.capture(), any());
         assertFalse(signOutOptionsCaptor.getValue().isSignOutGlobally());
+        assertTrue(signOutOptionsCaptor.getValue().isInvalidateTokens());
     }
 
     /**
