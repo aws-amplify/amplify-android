@@ -21,15 +21,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 /**
- * Tests the {@link Quotes} utility.
+ * Tests the {@link Wrap} utility.
  */
-public final class QuotesTest {
+public final class WrapTest {
     /**
      * Validate wrapping a string in single quotes.
      */
     @Test
     public void wrapInSingleQuotesReturnsQuotedString() {
-        assertEquals("'Hamburger'", Quotes.wrapInSingle("Hamburger"));
+        assertEquals("'Hamburger'", Wrap.inSingleQuotes("Hamburger"));
     }
 
     /**
@@ -38,7 +38,7 @@ public final class QuotesTest {
     @Test
     public void passThroughNullWithoutSingleQuotes() {
         //noinspection ConstantConditions
-        assertNull(Quotes.wrapInSingle(null));
+        assertNull(Wrap.inSingleQuotes(null));
     }
 
     /**
@@ -46,7 +46,7 @@ public final class QuotesTest {
      */
     @Test
     public void wrapInDoubleQuotesReturnsQuotedString() {
-        assertEquals("\"Tomato\"", Quotes.wrapInDouble("Tomato"));
+        assertEquals("\"Tomato\"", Wrap.inDoubleQuotes("Tomato"));
     }
 
     /**
@@ -55,6 +55,40 @@ public final class QuotesTest {
     @Test
     public void passThroughNullWithoutDoubleQuotes() {
         //noinspection ConstantConditions
-        assertNull(Quotes.wrapInDouble(null));
+        assertNull(Wrap.inDoubleQuotes(null));
+    }
+
+    /**
+     * Validate wrapping a string in braces.
+     */
+    @Test
+    public void wrapInBracesReturnsBracedString() {
+        assertEquals("{Tomato}", Wrap.inBraces("Tomato"));
+    }
+
+    /**
+     * Don't try wrapping null in braces, just let it pass through.
+     */
+    @Test
+    public void passThroughNullWithoutBraces() {
+        //noinspection ConstantConditions
+        assertNull(Wrap.inBraces(null));
+    }
+
+    /**
+     * Validate wrapping a string in parentheses.
+     */
+    @Test
+    public void wrapInParenthesesReturnsParenthesizedString() {
+        assertEquals("(Tomato)", Wrap.inParentheses("Tomato"));
+    }
+
+    /**
+     * Don't try wrapping null in parentheses, just let it pass through.
+     */
+    @Test
+    public void passThroughNullWithoutParentheses() {
+        //noinspection ConstantConditions
+        assertNull(Wrap.inParentheses(null));
     }
 }

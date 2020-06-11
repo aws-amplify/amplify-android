@@ -18,10 +18,10 @@ package com.amplifyframework.util;
 import androidx.annotation.Nullable;
 
 /**
- * A utility to wrap strings into quotes.
+ * A utility to wrap strings.
  */
-public final class Quotes {
-    private Quotes() {}
+public final class Wrap {
+    private Wrap() {}
 
     /**
      * Returns original string wrapped with single quotes.
@@ -30,7 +30,7 @@ public final class Quotes {
      *         If original string is null or empty, it just returns the original.
      */
     @Nullable
-    public static String wrapInSingle(@Nullable String original) {
+    public static String inSingleQuotes(@Nullable String original) {
         if (original == null) {
             return null;
         }
@@ -45,10 +45,38 @@ public final class Quotes {
      */
     @SuppressWarnings("WeakerAccess")
     @Nullable
-    public static String wrapInDouble(@Nullable String original) {
+    public static String inDoubleQuotes(@Nullable String original) {
         if (original == null) {
             return null;
         }
         return "\"" + original + "\"";
     }
+
+    /**
+     * Returns original string wrapped with braces.
+     * @param original Original string to modify
+     * @return Original string wrapped with braces.
+     *         If original string is null or empty, it just returns the original.
+     */
+    @Nullable
+    public static String inBraces(@Nullable String original) {
+        if (original == null) {
+            return null;
+        }
+        return "{" + original + "}";
+    }
+    /**
+     * Returns original string wrapped with parentheses.
+     * @param original Original string to modify
+     * @return Original string wrapped with parentheses.
+     *         If original string is null or empty, it just returns the original.
+     */
+    @Nullable
+    public static String inParentheses(@Nullable String original) {
+        if (original == null) {
+            return null;
+        }
+        return "(" + original + ")";
+    }
+
 }
