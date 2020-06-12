@@ -1,4 +1,5 @@
 #!/bin/bash
+# Usage: retry.sh <max_tries> <command to run>
 
 readonly max_tries=$1
 readonly command="${@: 2}"
