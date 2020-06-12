@@ -118,6 +118,7 @@ jobs:
             .circleci/copy-configs
       - run:
           name: Run integration test
+          no_output_timeout: 30m
           command: .circleci/retry.sh 3 ./gradlew cAT --no-daemon
       - store_artifacts:
           path: logcat.log
