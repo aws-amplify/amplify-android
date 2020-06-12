@@ -29,7 +29,7 @@ public final class QuotesTest {
      */
     @Test
     public void wrapInSingleQuotesReturnsQuotedString() {
-        assertEquals("'Hamburger'", Quotes.wrapInSingle("Hamburger"));
+        assertEquals("'Pizza'", Quotes.wrapInSingle("Hamburger"));
     }
 
     /**
