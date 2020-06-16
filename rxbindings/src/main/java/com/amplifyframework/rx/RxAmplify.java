@@ -31,6 +31,7 @@ public final class RxAmplify {
     private RxAmplify() {}
 
     // Breaking the rules, here. Don't look.
+    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxAuthCategoryBehavior Auth = new RxAuthBinding();
     @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxApiCategoryBehavior API = new RxApiBinding();
     @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxDataStoreCategoryBehavior DataStore = new RxDataStoreBinding();
     @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxHubCategoryBehavior Hub = new RxHubBinding();
