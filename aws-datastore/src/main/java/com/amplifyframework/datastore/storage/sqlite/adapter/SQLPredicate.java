@@ -142,11 +142,11 @@ public final class SQLPredicate {
             case CONTAINS:
                 ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
                 addBinding(containsOp.value());
-                return builder.append("instr(")
-                  .append(field)
-                  .append(",")
-                  .append("?")
-                  .append(")");
+              return builder.append("instr(")
+                        .append(field)
+                        .append(",")
+                        .append("?")
+                        .append(")");
             case BEGINS_WITH:
                 BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
                 addBinding(beginsWithOp.value() + "%");
