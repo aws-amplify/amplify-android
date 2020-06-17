@@ -91,4 +91,13 @@ final class RxAdapters {
     interface CancelableStreamEmitter<S, T, E> {
         Cancelable streamTo(Consumer<S> onStart, Consumer<T> onItem, Consumer<E> onError, Action onComplete);
     }
+
+    /**
+     * Describes behavior which emits a completion notification via an {@link Action},
+     * or alternately, emits an error to a {@link Consumer}.
+     * @param <E> Type of error emitted
+     */
+    interface VoidCompletionEmitter<E> {
+        void emitTo(Action onComplete, Consumer<E> onError);
+    }
 }
