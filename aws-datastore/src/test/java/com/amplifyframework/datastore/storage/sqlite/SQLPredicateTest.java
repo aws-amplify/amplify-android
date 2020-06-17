@@ -16,21 +16,31 @@ import static org.junit.Assert.assertEquals;
 @RunWith(RobolectricTestRunner.class)
 public class SQLPredicateTest {
 
+    /**
+     * Test contains in the context of a String field.
+     * @throws DataStoreException
+     */
     @Test
     public void testContainsForStringField() throws DataStoreException {
         QueryPredicate predicate = Where.matches(Blog.NAME.contains("something")).getQueryPredicate();
         SQLPredicate sqlPredicate = new SQLPredicate(predicate);
-        assertEquals(1, sqlPredicate.getBindings().size());
-        assertEquals("%something%", sqlPredicate.getBindings().get(0));
-        assertEquals("name LIKE ?", sqlPredicate.toString());
+        assertStringResults(sqlPredicate, "name");
     }
 
+    /**
+     * Test contains in the context of a list.
+     * @throws DataStoreException
+     */
     @Test
-    public void testContainsForNonStringField() throws DataStoreException {
+    public void testContainsForStringList() throws DataStoreException {
         QueryPredicateOperation<String> predicate = Blog.TAGS.contains("something");
         SQLPredicate sqlPredicate = new SQLPredicate(predicate);
+        assertStringResults(sqlPredicate, "tags");
+    }
+
+    private void assertStringResults(SQLPredicate sqlPredicate, String fieldName) {
         assertEquals(1, sqlPredicate.getBindings().size());
         assertEquals("something", sqlPredicate.getBindings().get(0));
-        assertEquals("? IN tags", sqlPredicate.toString());
+        assertEquals("instr(" + fieldName + ",?)", sqlPredicate.toString());
     }
 }
