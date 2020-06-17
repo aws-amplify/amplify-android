@@ -146,7 +146,11 @@ public final class SQLPredicate {
                         .append(field)
                         .append(",")
                         .append("?")
-                        .append(")");
+                        .append(")")
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.fromQueryOperator(QueryOperator.Type.GREATER_THAN))
+                        .append(SqlKeyword.DELIMITER)
+                        .append("0");
             case BEGINS_WITH:
                 BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
                 addBinding(beginsWithOp.value() + "%");

@@ -41,6 +41,6 @@ public class SQLPredicateTest {
     private void assertStringResults(SQLPredicate sqlPredicate, String fieldName) {
         assertEquals(1, sqlPredicate.getBindings().size());
         assertEquals("something", sqlPredicate.getBindings().get(0));
-        assertEquals("instr(" + fieldName + ",?)", sqlPredicate.toString());
+        assertEquals("instr(" + fieldName + ",?) > 0", sqlPredicate.toString());
     }
 }
