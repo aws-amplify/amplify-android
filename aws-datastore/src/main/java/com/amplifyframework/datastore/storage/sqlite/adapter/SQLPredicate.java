@@ -142,11 +142,15 @@ public final class SQLPredicate {
             case CONTAINS:
                 ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
                 addBinding(containsOp.value());
-                return builder.append("?")
+                return builder.append("instr(")
+                        .append(field)
+                        .append(",")
+                        .append("?")
+                        .append(")")
                         .append(SqlKeyword.DELIMITER)
-                        .append(SqlKeyword.IN)
+                        .append(SqlKeyword.fromQueryOperator(QueryOperator.Type.GREATER_THAN))
                         .append(SqlKeyword.DELIMITER)
-                        .append(field);
+                        .append("0");
             case BEGINS_WITH:
                 BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
                 addBinding(beginsWithOp.value() + "%");
