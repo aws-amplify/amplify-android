@@ -141,12 +141,25 @@ public final class SQLPredicate {
                         .append("?");
             case CONTAINS:
                 ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
-                addBinding(containsOp.value());
-                return builder.append("?")
+                //TODO: Need to somehow the the underlying model type to determine whether the
+                //      field we're querying against is a string field of a list of primitive types
+                //
+                JavaFieldType javaType = TypeConverter.getJavaFieldTypeFromValue(containsOp.value());
+                if (JavaFieldType.STRING.equals(javaType)) {
+                    addBinding("%" + containsOp.value() + "%");
+                    return builder.append(field)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.LIKE)
+                        .append(SqlKeyword.DELIMITER)
+                        .append("?");
+                } else {
+                    addBinding(containsOp.value());
+                    return builder.append("?")
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.IN)
                         .append(SqlKeyword.DELIMITER)
                         .append(field);
+                }
             case BEGINS_WITH:
                 BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
                 addBinding(beginsWithOp.value() + "%");
