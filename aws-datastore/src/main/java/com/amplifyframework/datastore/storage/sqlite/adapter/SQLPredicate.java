@@ -142,7 +142,7 @@ public final class SQLPredicate {
             case CONTAINS:
                 ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
                 addBinding(containsOp.value());
-              return builder.append("instr(")
+                return builder.append("instr(")
                         .append(field)
                         .append(",")
                         .append("?")
