@@ -15,55 +15,32 @@
 
 package com.amplifyframework.api.graphql;
 
+import android.text.TextUtils;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.util.Wrap;
+
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 
 /**
  * A request against a GraphQL endpoint.
  * @param <R> The type of data contained in the GraphQLResponse expected from this request.
  */
-public final class GraphQLRequest<R> {
-    private final String document;
-    private final Map<String, Object> variables;
-    private final List<String> fragments;
+public abstract class GraphQLRequest<R> {
     private final Type responseType;
     private final VariablesSerializer variablesSerializer;
 
     /**
      * Constructor for GraphQLRequest with specification for type of API call.
-     * @param document query document to process
      * @param responseType Type of R, the data contained in the GraphQLResponse expected from this request
      * @param variablesSerializer an object which can take a map of variables and serialize it properly
      */
     public GraphQLRequest(
-            String document,
             Type responseType,
             VariablesSerializer variablesSerializer
     ) {
-        this(document, new HashMap<>(), responseType, variablesSerializer);
-    }
-
-    /**
-     * Constructor for GraphQLRequest with specification for type of API call.
-     * @param document query document to process
-     * @param variables variables to be added
-     * @param responseType Type of R, the data contained in the GraphQLResponse expected from this request
-     * @param variablesSerializer an object which can take a map of variables and serialize it properly
-     */
-    public GraphQLRequest(
-            String document,
-            Map<String, Object> variables,
-            Type responseType,
-            VariablesSerializer variablesSerializer
-    ) {
-        this.document = document;
-        this.variables = variables;
-        this.fragments = new ArrayList<>();
         this.responseType = responseType;
         this.variablesSerializer = variablesSerializer;
     }
@@ -74,9 +51,6 @@ public final class GraphQLRequest<R> {
      * @param <R> The type of data contained in the GraphQLResponse expected from this request.
      */
     public <R> GraphQLRequest(GraphQLRequest<R> request) {
-        this.document = request.document;
-        this.variables = new HashMap<>(request.variables);
-        this.fragments = new ArrayList<>(request.fragments);
         this.responseType = request.responseType;
         this.variablesSerializer = request.variablesSerializer;
     }
@@ -86,9 +60,19 @@ public final class GraphQLRequest<R> {
      * @param <R> The type of data contained in the GraphQLResponse expected from this request.
      * @return Copy of the GraphQLRequest object
      */
-    public <R> GraphQLRequest<R> copy() {
-        return new GraphQLRequest<R>(this);
-    }
+    public abstract <R> GraphQLRequest<R> copy();
+
+    /**
+     * Returns the GraphQL document which is set as "query" in the request.
+     * @return the GraphQL document which is set as "query" in the request.
+     */
+    public abstract String getQuery();
+
+    /**
+     * Returns Map of variables to be serialized and set as "variables" in the request.
+     * @return Map of variables to be serialized and set as "variables" in the request.
+     */
+    public abstract Map<String, Object> getVariables();
 
     /**
      * Processes query parameters into a query string to
@@ -96,63 +80,9 @@ public final class GraphQLRequest<R> {
      * @return processed query string
      */
     public String getContent() {
-        final StringBuilder completeQuery = new StringBuilder();
-        final StringBuilder realQuery = new StringBuilder();
-
-        completeQuery.append("{\"query\":")
-                .append("\"");
-
-        realQuery.append(document
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-        );
-
-        for (String fragment : fragments) {
-            realQuery
-                    .append("fragment ")
-                    .append(fragment);
-        }
-
-        completeQuery.append(realQuery)
-                .append("\"")
-                .append(",")
-                .append("\"variables\":");
-
-        if (variables.isEmpty()) {
-            completeQuery.append("null");
-        } else {
-            completeQuery.append(variablesSerializer.serialize(this.variables));
-        }
-
-        completeQuery.append("}");
-        String contentString = completeQuery.toString();
-
-        while (contentString.contains("\\\\")) {
-            contentString = contentString.replace("\\\\", "\\");
-        }
-
-        return contentString + "\n";
-    }
-
-    /**
-     * Attaches variable key-value pair.
-     * @param key variable name
-     * @param value variable value
-     * @return this query object for chaining
-     */
-    public GraphQLRequest<R> putVariable(String key, Object value) {
-        variables.put(key, value);
-        return this;
-    }
-
-    /**
-     * Attaches a fragment.
-     * @param fragment fragment
-     * @return this query object for chaining
-     */
-    public GraphQLRequest<R> addFragment(String fragment) {
-        fragments.add(fragment);
-        return this;
+        return Wrap.inBraces(TextUtils.join(", ", Arrays.asList(
+            "\"query\": \"" + getQuery() + "\"",
+            "\"variables\": " + (getVariables().isEmpty() ? null : variablesSerializer.serialize(getVariables())))));
     }
 
     /**
@@ -163,6 +93,9 @@ public final class GraphQLRequest<R> {
         return responseType;
     }
 
+    /**
+     * Any child class which overrides this method should return false if !super.equals(object).
+     */
     @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
@@ -174,30 +107,29 @@ public final class GraphQLRequest<R> {
 
         GraphQLRequest<?> request = (GraphQLRequest<?>) thatObject;
 
-        return ObjectsCompat.equals(document, request.document) &&
-                ObjectsCompat.equals(fragments, request.fragments) &&
-                ObjectsCompat.equals(responseType, request.responseType) &&
-                ObjectsCompat.equals(variables, request.variables) &&
+        return ObjectsCompat.equals(responseType, request.responseType) &&
                 ObjectsCompat.equals(variablesSerializer, request.variablesSerializer);
     }
 
+    /**
+     * Any child class which overrides this method should include super.hashCode() as an input for computing hashCode().
+     * @return hashCode
+     */
     @Override
     public int hashCode() {
-        int result = document.hashCode();
-        result = 31 * result + (fragments != null ? fragments.hashCode() : 0);
-        result = 31 * result + (responseType != null ? responseType.hashCode() : 0);
-        result = 31 * result + (variables != null ? variables.hashCode() : 0);
+        int result = responseType.hashCode();
         result = 31 * result + (variablesSerializer != null ? variablesSerializer.hashCode() : 0);
         return result;
     }
 
+    /**
+     * Any child class which overrides this method should append super.toString() to the return value.
+     * @return String representation of GraphQLRequest, useful for debugging.
+     */
     @Override
     public String toString() {
         return "GraphQLRequest{" +
-                "document=\'" + document + "\'" +
-                ", fragments=\'" + fragments + "\'" +
                 ", responseType=\'" + responseType + "\'" +
-                ", variables=\'" + variables + "\'" +
                 ", variablesSerializer=\'" + variablesSerializer + "\'" +
                 '}';
     }

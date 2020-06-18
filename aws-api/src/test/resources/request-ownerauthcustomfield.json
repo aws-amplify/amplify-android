@@ -1,0 +1,6 @@
+{
+  "query": "subscription OnUpdateOwnerAuthCustomField($owner: String!) {onUpdateOwnerAuthCustomField(owner: $owner) {editors id owner title}}",
+  "variables": {
+    "owner": "johndoe"
+  }
+}

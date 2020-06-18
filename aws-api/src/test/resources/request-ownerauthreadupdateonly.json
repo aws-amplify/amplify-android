@@ -1,0 +1,4 @@
+{
+  "query": "subscription OnUpdateOwnerAuthReadUpdateOnly {onUpdateOwnerAuthReadUpdateOnly {id owner title}}",
+  "variables": null
+}

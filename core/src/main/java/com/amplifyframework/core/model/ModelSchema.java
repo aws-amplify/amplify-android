@@ -264,20 +264,6 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns true if this model has owner based authorization which changes the parameters for subscriptions.
-     * @return true if owner authorization is present on this model and false if not or if not explicitly annotated
-     */
-
-    public boolean hasOwnerAuthorization() {
-        for (AuthRule rule : getAuthRules()) {
-            if (AuthStrategy.OWNER.equals(rule.getAuthStrategy())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Returns the map of fieldName and the fieldObject
      * of all the fields of the model.
      *

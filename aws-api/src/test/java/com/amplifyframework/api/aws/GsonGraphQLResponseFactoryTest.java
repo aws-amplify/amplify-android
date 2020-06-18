@@ -15,12 +15,14 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
+import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
@@ -100,8 +102,7 @@ public final class GsonGraphQLResponseFactoryTest {
             Resources.readAsString("partial-gql-response.json");
 
         // Act! Parse it into a model.
-        GraphQLRequest<ListTodosResult> request =
-                new GraphQLRequest<>("document", ListTodosResult.class, new GsonVariablesSerializer());
+        GraphQLRequest<ListTodosResult> request = buildDummyRequest(ListTodosResult.class);
         final GraphQLResponse<ListTodosResult> response =
             responseFactory.buildResponse(request, partialResponseJson, ListTodosResult.class);
 
@@ -187,10 +188,9 @@ public final class GsonGraphQLResponseFactoryTest {
         );
 
         String nextToken = "eyJ2ZXJzaW9uIjoyLCJ0b2tlbiI6IkFRSUNBSGg5OUIvN3BjWU41eE96NDZJMW5GeGM4";
-        Map<String, Object> variables = Collections.singletonMap("nextToken", nextToken);
         Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
-        GraphQLRequest<PaginatedResult<Todo>> expectedRequest =
-                new GraphQLRequest<>("document", variables, responseType, new GsonVariablesSerializer());
+        AppSyncGraphQLRequest<PaginatedResult<Todo>> expectedRequest = buildDummyRequest(responseType);
+        expectedRequest.setVariable("nextToken", "String", nextToken);
         final PaginatedResult<Todo> expectedPaginatedResult =
                 new AppSyncPaginatedResult<>(expectedTodos, expectedRequest);
 
@@ -218,8 +218,7 @@ public final class GsonGraphQLResponseFactoryTest {
         // Act
         final String partialResponseJson = Resources.readAsString("partial-gql-response.json");
 
-        final GraphQLRequest<PaginatedResult<Todo>> request =
-                new GraphQLRequest<>("document", responseType, new GsonVariablesSerializer());
+        final GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
         final GraphQLResponse<PaginatedResult<Todo>> response =
                 responseFactory.buildResponse(request, partialResponseJson, responseType);
 
@@ -324,8 +323,8 @@ public final class GsonGraphQLResponseFactoryTest {
         // Arrange some known JSON response
         final JSONObject partialResponseJson = Resources.readAsJson("partial-gql-response.json");
 
-        GraphQLRequest<String> request =
-                new GraphQLRequest<>("document", String.class, new GsonVariablesSerializer());
+        GraphQLRequest<String> request = buildDummyRequest(String.class);
+
         // Act! Parse it into a String data type.
         final GraphQLResponse<String> response =
                 responseFactory.buildResponse(request, partialResponseJson.toString(), String.class);
@@ -347,8 +346,7 @@ public final class GsonGraphQLResponseFactoryTest {
             Resources.readAsJson("base-sync-posts-response.json");
 
         Type responseType = TypeMaker.getParameterizedType(Iterable.class, String.class);
-        GraphQLRequest<Iterable<String>> request =
-                new GraphQLRequest<>("document", responseType, new GsonVariablesSerializer());
+        GraphQLRequest<Iterable<String>> request = buildDummyRequest(responseType);
         GraphQLResponse<Iterable<String>> response =
                 responseFactory.buildResponse(request, baseQueryResponseJson.toString(), responseType);
         final Iterable<String> queryResults = response.getData();
@@ -429,13 +427,25 @@ public final class GsonGraphQLResponseFactoryTest {
         // Act
         final String responseString = Resources.readAsString("list-meetings-response.json");
 
-        GraphQLRequest<ListMeetingsResult> request =
-                new GraphQLRequest<>("document", ListMeetingsResult.class, new GsonVariablesSerializer());
+        GraphQLRequest<ListMeetingsResult> request = buildDummyRequest(ListMeetingsResult.class);
         final GraphQLResponse<ListMeetingsResult> response =
                 responseFactory.buildResponse(request, responseString, ListMeetingsResult.class);
         final List<Meeting> actualMeetings = response.getData().getItems();
 
         // Assert
         assertEquals(expectedMeetings, actualMeetings);
+    }
+
+    private <R> AppSyncGraphQLRequest<R> buildDummyRequest(Type responseType) throws ApiException {
+        try {
+            return AppSyncGraphQLRequest.builder()
+                    .modelClass(Todo.class)
+                    .operationType(QueryType.LIST)
+                    .responseType(responseType)
+                    .build();
+        } catch (AmplifyException exception) {
+            throw new ApiException("Failed to build AppSyncGraphQLRequest", exception,
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
+        }
     }
 }

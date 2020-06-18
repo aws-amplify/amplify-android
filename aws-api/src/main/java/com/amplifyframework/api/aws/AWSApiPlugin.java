@@ -24,6 +24,8 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
+import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -193,13 +195,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> mutate(
+    public <R> GraphQLOperation<R> mutate(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull GraphQLRequest<R> graphQLRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         try {
-            final GraphQLOperation<T> operation =
+            final GraphQLOperation<R> operation =
                     buildAppSyncGraphQLOperation(apiName, graphQLRequest, onResponse, onFailure);
             operation.start();
             return operation;
@@ -236,11 +238,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> subscribe(
+    public <R> GraphQLOperation<R> subscribe(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull GraphQLRequest<R> graphQLRequest,
             @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
+            @NonNull Consumer<GraphQLResponse<R>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete) {
         final ClientDetails clientDetails = apiDetails.get(apiName);
@@ -255,7 +257,20 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             return null;
         }
 
-        SubscriptionOperation<T> operation = SubscriptionOperation.<T>builder()
+        if (graphQLRequest instanceof AppSyncGraphQLRequest) {
+            try {
+                AppSyncGraphQLRequest<R> request = (AppSyncGraphQLRequest<R>) graphQLRequest;
+                CognitoUserPoolsAuthProvider cognitoProvider = authProvider.getCognitoUserPoolsAuthProvider();
+                if (cognitoProvider == null) {
+                    cognitoProvider = new DefaultCognitoUserPoolsAuthProvider();
+                }
+                request.setAuthProvider(cognitoProvider);
+            } catch (ApiException exception) {
+                onSubscriptionFailure.accept(exception);
+            }
+        }
+
+        SubscriptionOperation<R> operation = SubscriptionOperation.<R>builder()
             .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
             .graphQlRequest(graphQLRequest)
             .responseFactory(gqlResponseFactory)

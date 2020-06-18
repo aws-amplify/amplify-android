@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,21 +16,13 @@
 package com.amplifyframework.api.graphql;
 
 /**
- * Enum of GraphQL operation types.
+ * Represents a GraphQL operation type.
  */
-public enum QueryType implements OperationType {
+public interface OperationType {
     /**
-     * GraphQL query get.
+     * Returns the name of the operation to be used in the GraphQL document (i.e. query, subscription, or mutation).
+     *
+     * @return the name of the operation to be used in the GraphQL document (i.e. query, subscription, or mutation).
      */
-    GET,
-
-    /**
-     * GraphQL query list.
-     */
-    LIST;
-
-    @Override
-    public String getOperationName() {
-        return "query";
-    }
+    String getOperationName();
 }

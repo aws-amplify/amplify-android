@@ -19,6 +19,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
@@ -130,7 +131,7 @@ public final class SubscriptionEndpointTest {
 
         GsonVariablesSerializer serializer = new GsonVariablesSerializer();
         Map<String, Object> variables = Collections.singletonMap("eventId", eventId);
-        GraphQLRequest<String> request = new GraphQLRequest<>(document, variables, String.class, serializer);
+        GraphQLRequest<String> request = new SimpleGraphQLRequest<>(document, variables, String.class, serializer);
 
         return Await.<String, ApiException>result((onResult, onError) ->
             executor.execute(() ->

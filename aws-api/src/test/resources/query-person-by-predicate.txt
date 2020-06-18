@@ -1,5 +1,5 @@
 {
-  "query": "query ListPerson($filter: ModelPersonFilterInput $limit: Int $nextToken: String) { listPersons(filter: $filter, limit: $limit, nextToken: $nextToken) { items {age dob first_name id last_name relationship } nextToken }}",
+  "query": "query ListPerson($filter: ModelPersonFilterInput, $limit: Int) {listPersons(filter: $filter, limit: $limit) {items {age dob first_name id last_name relationship} nextToken}}",
   "variables": {
     "filter": {
       "id": {

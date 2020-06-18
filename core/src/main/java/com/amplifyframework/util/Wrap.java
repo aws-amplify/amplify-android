@@ -65,6 +65,7 @@ public final class Wrap {
         }
         return "{" + original + "}";
     }
+
     /**
      * Returns original string wrapped with parentheses.
      * @param original Original string to modify
@@ -78,5 +79,4 @@ public final class Wrap {
         }
         return "(" + original + ")";
     }
-
 }

@@ -15,9 +15,11 @@
 
 package com.amplifyframework.core.model;
 
+import android.text.TextUtils;
 import androidx.core.util.ObjectsCompat;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * {@link AuthRule} is used define an authorization rule for who can access and operate against a
@@ -31,9 +33,9 @@ public final class AuthRule {
     private final String ownerField;
     private final String identityClaim;
     private final String groupClaim;
-    private final String[] groups;
+    private final List<String> groups;
     private final String groupsField;
-    private final ModelOperation[] operations;
+    private final List<ModelOperation> operations;
 
     /**
      * Constructor to create an {@link AuthRule} from an {@link com.amplifyframework.core.model.annotations.AuthRule}
@@ -45,9 +47,9 @@ public final class AuthRule {
         this.ownerField = authRule.ownerField();
         this.identityClaim = authRule.identityClaim();
         this.groupClaim = authRule.groupClaim();
-        this.groups = authRule.groups();
+        this.groups = Arrays.asList(authRule.groups());
         this.groupsField = authRule.groupsField();
-        this.operations = authRule.operations();
+        this.operations = Arrays.asList(authRule.operations());
     }
 
     /**
@@ -63,8 +65,8 @@ public final class AuthRule {
      *
      * @return name of a {@link ModelField} of type String which specifies the user which should have access
      */
-    public String getOwnerField() {
-        return this.ownerField;
+    public String getOwnerFieldOrDefault() {
+        return TextUtils.isEmpty(this.ownerField) ? "owner" : this.ownerField;
     }
 
     /**
@@ -90,7 +92,7 @@ public final class AuthRule {
      *
      * @return array of groups which should have access
      */
-    public String[] getGroups() {
+    public List<String> getGroups() {
         return this.groups;
     }
 
@@ -100,8 +102,8 @@ public final class AuthRule {
      * @return name of a {@link ModelField} of type String or array of Strings which specifies a group or list of groups
      * which should have access.
      */
-    public String getGroupsField() {
-        return this.groupsField;
+    public String getGroupsFieldOrDefault() {
+        return TextUtils.isEmpty(this.groupsField) ? "groups" : this.groupsField;
     }
 
     /**
@@ -109,7 +111,14 @@ public final class AuthRule {
      * the list are not protected by default.
      * @return list of {@link ModelOperation}s for which this {@link AuthRule} should apply.
      */
-    public ModelOperation[] getOperations() {
+    public List<ModelOperation> getOperationsOrDefault() {
+        if (this.operations == null || this.operations.isEmpty()) {
+            return Arrays.asList(
+                    ModelOperation.CREATE,
+                    ModelOperation.UPDATE,
+                    ModelOperation.DELETE,
+                    ModelOperation.READ);
+        }
         return this.operations;
     }
 
@@ -129,29 +138,26 @@ public final class AuthRule {
                 ObjectsCompat.equals(ownerField, authRule.ownerField) &&
                 ObjectsCompat.equals(identityClaim, authRule.identityClaim) &&
                 ObjectsCompat.equals(groupClaim, authRule.groupClaim) &&
-                Arrays.equals(groups, authRule.groups) &&
+                ObjectsCompat.equals(groups, authRule.groups) &&
                 ObjectsCompat.equals(groupsField, authRule.groupsField) &&
-                Arrays.equals(operations, authRule.operations);
+                ObjectsCompat.equals(operations, authRule.operations);
     }
 
     @Override
     public int hashCode() {
-        int result = ObjectsCompat.hash(authStrategy, ownerField, identityClaim, groupClaim, groupsField);
-        result = 31 * result + Arrays.hashCode(groups);
-        result = 31 * result + Arrays.hashCode(operations);
-        return result;
+        return ObjectsCompat.hash(authStrategy, ownerField, identityClaim, groupClaim, groups, groupsField, operations);
     }
 
     @Override
     public String toString() {
-        return "AuthRuleImpl{" +
+        return "AuthRule{" +
                 "authStrategy=" + authStrategy +
                 ", ownerField='" + ownerField + '\'' +
                 ", identityClaim='" + identityClaim + '\'' +
                 ", groupClaim='" + groupClaim + '\'' +
-                ", groups=" + Arrays.toString(groups) +
+                ", groups=" + groups + '\'' +
                 ", groupsField='" + groupsField + '\'' +
-                ", operations=" + Arrays.toString(operations) +
+                ", operations=" + operations + '\'' +
                 '}';
     }
 }

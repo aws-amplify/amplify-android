@@ -18,15 +18,21 @@ package com.amplifyframework.api.aws;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelPagination;
 import com.amplifyframework.api.graphql.model.ModelQuery;
+import com.amplifyframework.api.graphql.model.ModelSubscription;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
+import com.amplifyframework.testmodels.ownerauth.OwnerAuthCustomField;
+import com.amplifyframework.testmodels.ownerauth.OwnerAuthReadUpdateOnly;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -37,6 +43,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -54,6 +61,8 @@ import okhttp3.mockwebserver.MockWebServer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link AWSApiPlugin}.
@@ -63,6 +72,7 @@ public final class AWSApiPluginTest {
     private MockWebServer webServer;
     private HttpUrl baseUrl;
     private AWSApiPlugin plugin;
+    private CognitoUserPoolsAuthProvider authProvider;
 
     /**
      * Sets up the test.
@@ -75,6 +85,8 @@ public final class AWSApiPluginTest {
         webServer = new MockWebServer();
         webServer.start(8080);
         baseUrl = webServer.url("/");
+        authProvider = mock(CognitoUserPoolsAuthProvider.class);
+        when(authProvider.getUsername()).thenReturn("johndoe");
 
         JSONObject configuration = new JSONObject()
             .put("graphQlApi", new JSONObject()
@@ -84,7 +96,10 @@ public final class AWSApiPluginTest {
                 .put("authorizationType", "API_KEY")
                 .put("apiKey", "api-key")
             );
-        this.plugin = new AWSApiPlugin();
+
+        this.plugin = new AWSApiPlugin(ApiAuthProviders.builder()
+                .cognitoUserPoolsAuthProvider(authProvider)
+                .build());
         this.plugin.configure(configuration, ApplicationProvider.getApplicationContext());
     }
 
@@ -220,6 +235,63 @@ public final class AWSApiPluginTest {
 
         // Assert that the expected response was received
         assertEquals(expectedName, actualResponse.getData().getName());
+    }
+
+    /**
+     * Test that owner variable is added to subscription when needed.
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void graphQlSubscriptionAddsOwnerVariable() throws JSONException {
+        GraphQLRequest<OwnerAuth> request = ModelSubscription.onCreate(OwnerAuth.class);
+        plugin.subscribe(request,
+            subscriptionId -> { },
+            response -> { },
+            exception -> { },
+            EmptyAction.instance());
+
+        JSONAssert.assertEquals(Resources.readAsString("request-ownerauth.json"),
+                request.getContent(),
+                true);
+    }
+
+    /**
+     * Verify that the custom owner field variable is added to subscription when needed.
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void graphQLSubscriptionAddsCustomOwnerField() throws JSONException {
+        GraphQLRequest<OwnerAuthCustomField> request = ModelSubscription.onUpdate(OwnerAuthCustomField.class);
+        plugin.subscribe(request,
+            subscriptionId -> { },
+            response -> { },
+            exception -> { },
+            EmptyAction.instance());
+
+        JSONAssert.assertEquals(Resources.readAsString("request-ownerauthcustomfield.json"),
+                request.getContent(),
+                true);
+    }
+
+    /**
+     * Verify that the `owner` variable is only added if the type of subscription (onCreate, onUpdate, onDelete) is
+     * protected by owner based auth.  This test uses OwnerAuthReadUpdateOnly which protects create, and delete
+     * operations, but not update, so an onUpdate subscription is not expected to include the `owner` variable.
+     *
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void graphQLSubscriptionDoesntAddOwnerFieldIfTypeIsNotProtected() throws JSONException {
+        GraphQLRequest<OwnerAuthReadUpdateOnly> request = ModelSubscription.onUpdate(OwnerAuthReadUpdateOnly.class);
+        plugin.subscribe(request,
+            subscriptionId -> { },
+            response -> { },
+            exception -> { },
+            EmptyAction.instance());
+
+        JSONAssert.assertEquals(Resources.readAsString("request-ownerauthreadupdateonly.json"),
+                request.getContent(),
+                true);
     }
 
     /**

@@ -1,0 +1,1 @@
+{authors {items {author {id name posts} id post {authors blog comments id rating status title}} nextToken} blog {id name owner {blog id name wea} posts {items {authors blog comments id rating status title} nextToken}} comments {items {content id post {authors blog comments id rating status title}} nextToken} id rating status title}
