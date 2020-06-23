@@ -131,9 +131,18 @@ private void configureAndroidLibrary(Project project) {
             sourceCompatibility JavaVersion.VERSION_1_8
             targetCompatibility JavaVersion.VERSION_1_8
         }
+
+        buildTypes {
+            debug {
+                testCoverageEnabled = true
+            }
+        }
     }
 
     project.dependencies {
         coreLibraryDesugaring dependency.android.desugartools
     }
 }
+
+apply from: rootProject.file('configuration/coverage.gradle')
+

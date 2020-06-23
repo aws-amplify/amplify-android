@@ -39,6 +39,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -55,6 +56,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Instrumentation test for operational work on download.
  */
+@Ignore("Contains tests that hang, or hang the suite overall.")
 public final class AWSS3StorageDownloadTest {
     private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(20);
 
