@@ -80,8 +80,12 @@ public abstract class GraphQLRequest<R> {
      * @return processed query string
      */
     public String getContent() {
+        String query = getQuery()
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n");
+
         return Wrap.inBraces(TextUtils.join(", ", Arrays.asList(
-            "\"query\": \"" + getQuery() + "\"",
+            "\"query\": \"" + query + "\"",
             "\"variables\": " + (getVariables().isEmpty() ? null : variablesSerializer.serialize(getVariables())))));
     }
 

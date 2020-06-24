@@ -84,19 +84,21 @@ final class SelectionSet {
         ModelSchema schema = ModelSchema.fromModelClass(clazz);
         for (Field field : FieldFinder.findFieldsIn(clazz)) {
             String fieldName = field.getName();
-            Set<Node> fields = null;
             if (schema.getAssociations().containsKey(fieldName)) {
-                if (depth >= 1) {
-                    if (List.class.isAssignableFrom(field.getType())) {
+                if (List.class.isAssignableFrom(field.getType())) {
+                    if (depth >= 1) {
                         ParameterizedType listType = (ParameterizedType) field.getGenericType();
                         Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
-                        fields = wrapPagination(getModelFields(listTypeClass, depth - 1));
-                    } else {
-                        fields = getModelFields((Class<Model>) field.getType(), depth - 1);
+                        Set<Node> fields = wrapPagination(getModelFields(listTypeClass, depth - 1));
+                        result.add(new Node(fieldName, fields));
                     }
+                } else if (depth >= 1) {
+                    Set<Node> fields = getModelFields((Class<Model>) field.getType(), depth - 1);
+                    result.add(new Node(fieldName, fields));
                 }
+            } else {
+                result.add(new Node(fieldName, null));
             }
-            result.add(new Node(fieldName, fields));
             for (AuthRule authRule : schema.getAuthRules()) {
                 if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
                     result.add(new Node(authRule.getOwnerFieldOrDefault(), null));
