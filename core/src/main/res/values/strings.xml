@@ -15,5 +15,5 @@
 -->
 
 <resources >
-    <string name="testText">Testing developer menu</string>
+    <string name="menuTitle">Amplify Developer Menu</string>
 </resources>

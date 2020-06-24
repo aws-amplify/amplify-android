@@ -137,7 +137,7 @@ public final class Amplify {
             }
 
             // Start activity for developer menu
-            Intent mainIntent = new Intent();
+            Intent mainIntent = new Intent(context, DeveloperMenuActivity.class);
             mainIntent.setAction(Intent.ACTION_MAIN);
             mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(mainIntent);

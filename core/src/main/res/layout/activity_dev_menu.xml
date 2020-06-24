@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:visibility="visible">
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:gravity="bottom"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/textView2"
-        android:layout_width="334dp"
+        android:layout_width="match_parent"
         android:layout_height="179dp"
-        android:text="@string/testText" />
-</merge>
+        android:text="@string/menuTitle" />
+</LinearLayout>
