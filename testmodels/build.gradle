@@ -17,6 +17,7 @@ apply plugin: 'com.android.library'
 
 dependencies {
     implementation project(path: ':core')
+    implementation project(path: ':aws-appsync')
     implementation dependency.androidx.core
 
     testImplementation project(path: ':testutils')
