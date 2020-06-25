@@ -19,6 +19,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.appsync.GsonVariablesSerializer;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;

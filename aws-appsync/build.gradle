@@ -1,0 +1,13 @@
+apply plugin: 'com.android.library'
+apply from: rootProject.file('configuration/checkstyle.gradle')
+apply from: rootProject.file('configuration/publishing.gradle')
+
+dependencies {
+    api project(':core')
+
+    implementation dependency.gson
+    implementation dependency.androidx.annotation
+
+    testImplementation project(path: ':testutils')
+    testImplementation dependency.junit
+}

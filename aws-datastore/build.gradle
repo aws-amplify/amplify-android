@@ -19,6 +19,8 @@ apply from: rootProject.file("configuration/publishing.gradle")
 
 dependencies {
     implementation project(':core')
+    implementation project(':aws-appsync')
+
     implementation dependency.androidx.appcompat
     implementation dependency.androidx.multidex
     implementation dependency.gson
