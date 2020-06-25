@@ -20,8 +20,10 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
 
@@ -33,9 +35,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.robolectric.RobolectricTestRunner;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -122,5 +126,33 @@ public final class AppSyncClientTest {
             any(Consumer.class),
             any(Consumer.class)
         );
+    }
+
+    /**
+     * Validates date serialization when creating mutation.
+     * @throws JSONException from JSONAssert.assertEquals JSON parsing error
+     */
+    @Test
+    public void validateSyncQueryWithDates() throws JSONException {
+        // Act: build a mutation to create a Meeting
+        final Meeting meeting = Meeting.builder()
+                .name("meeting1")
+                .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
+                .date(new Temporal.Date("2001-02-03"))
+                .dateTime(new Temporal.DateTime("2001-02-03T01:30:15Z"))
+                .time(new Temporal.Time("01:22:33"))
+                .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .build();
+        endpoint.update(meeting, null, response -> { }, error -> { });
+
+        // Now, capture the request argument on API, so we can see what was passed.
+        ArgumentCaptor<GraphQLRequest<String>> requestCaptor = ArgumentCaptor.forClass(GraphQLRequest.class);
+        verify(api).mutate(requestCaptor.capture(), any(Consumer.class), any(Consumer.class));
+        GraphQLRequest<String> capturedRequest = requestCaptor.getValue();
+
+        // Assert
+        assertEquals(String.class, capturedRequest.getResponseType());
+        JSONAssert.assertEquals(Resources.readAsString("update-meeting.json"),
+                capturedRequest.getContent(), true);
     }
 }

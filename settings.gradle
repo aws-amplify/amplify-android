@@ -30,3 +30,4 @@ include ':testmodels'
 
 // Bindings and accessory modules
 include ':rxbindings'
+include ':aws-appsync'

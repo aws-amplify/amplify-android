@@ -25,6 +25,7 @@ import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.appsync.GsonVariablesSerializer;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
@@ -64,7 +65,7 @@ public final class AppSyncClient implements AppSync {
      */
     private AppSyncClient(GraphQLBehavior api) {
         this.api = api;
-        this.variablesSerializer = new AppSyncVariablesSerializer();
+        this.variablesSerializer = new GsonVariablesSerializer();
         this.responseDeserializer = new AppSyncResponseDeserializer();
     }
 

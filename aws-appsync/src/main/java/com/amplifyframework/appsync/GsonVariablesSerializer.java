@@ -38,6 +38,9 @@ import java.util.Map;
 public final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerializer {
     private final Gson gson;
 
+    /**
+     * Creates new instance of GsonVariablesSerializer.
+     */
     public GsonVariablesSerializer() {
         gson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new DateSerializer())
