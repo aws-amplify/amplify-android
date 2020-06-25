@@ -54,6 +54,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
@@ -449,7 +450,10 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         if (api.getPlugins().isEmpty()) {
             return Completable.complete();
         } else {
-            return orchestrator.start();
+            // Let's prevent the orchestrator startup from possibly running in main.
+            return orchestrator.start()
+                .observeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io());
         }
     }
 

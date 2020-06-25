@@ -117,14 +117,19 @@ final class SubscriptionProcessor {
                 clazz,
                 token -> latch.countDown(),
                 emitter::onNext,
-                emitter::onError,
+                AmplifyDisposables.onErrorConsumerWrapperFor(emitter),
                 emitter::onComplete
             );
             // When the observable is disposed, we need to call cancel() on the subscription
             // so it can properly dispose of resources if necessary. For the AWS API plugin,
             // this means means closing the underlying network connection.
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
-            latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            try {
+                latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException exception) {
+                LOG.warn("Subscription operation interrupted. " +
+                    (emitter.isDisposed() ? " Emitter already disposed." : ""));
+            }
         })
         .doOnError(subscriptionError ->
             LOG.warn(String.format(Locale.US,
@@ -184,7 +189,9 @@ final class SubscriptionProcessor {
      * Stop any active subscriptions, and stop draining the mutation buffer.
      */
     void stopAllSubscriptionActivity() {
+        LOG.info("Stopping subscription processor.");
         ongoingOperationsDisposable.clear();
+        LOG.info("Stopped subscription processor.");
     }
 
     @VisibleForTesting

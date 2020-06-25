@@ -31,6 +31,7 @@ import com.amplifyframework.logging.Logger;
 import org.json.JSONObject;
 
 import java.util.Objects;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -43,6 +44,7 @@ import io.reactivex.Completable;
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final long SYNC_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
+    private static final long ACQUIRE_PERMIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
@@ -50,6 +52,7 @@ public final class Orchestrator {
     private final MutationProcessor mutationProcessor;
     private final StorageObserver storageObserver;
     private final AtomicReference<OrchestratorStatus> status;
+    private final Semaphore startStopSemaphore;
     private Completable initializationCompletable;
 
     /**
@@ -99,6 +102,7 @@ public final class Orchestrator {
             .build();
         this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
+        this.startStopSemaphore = new Semaphore(1);
     }
 
     /**
@@ -115,15 +119,21 @@ public final class Orchestrator {
      * @return A Completable operation to start the sync engine orchestrator
      */
     @NonNull
-    public Completable start() {
-        // Only start if it's stopped.
-        if (!OrchestratorStatus.STOPPED.equals(status.get())) {
-            return initializationCompletable;
+    public synchronized Completable start() {
+        boolean permitAcquired = acquirePermit(OrchestratorAction.START);
+        // Only start if it's stopped AND if we can get a permit.
+        if (!permitAcquired || !status.compareAndSet(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTING)) {
+            LOG.warn(String.format("Orchestrator could not be started. Orchestrator status: %s", status.get()));
+            // If we acquired the permit but failed to set the status, let's release the permit.
+            if (permitAcquired) {
+                startStopSemaphore.release();
+            }
+            // initializationCompletable == null should never happen, but will protect against it just in case.
+            return initializationCompletable == null ? Completable.complete() : initializationCompletable;
         }
-        LOG.debug("Starting the orchestrator.");
-        status.compareAndSet(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTING);
         initializationCompletable = mutationOutbox.load().andThen(
             Completable.fromAction(() -> {
+                LOG.debug("Starting the orchestrator.");
                 if (!storageObserver.isObservingStorageChanges()) {
                     LOG.debug("Starting local storage observer.");
                     storageObserver.startObservingStorageChanges();
@@ -147,25 +157,50 @@ public final class Orchestrator {
                     subscriptionProcessor.startDrainingMutationBuffer();
                 }
                 status.compareAndSet(OrchestratorStatus.STARTING, OrchestratorStatus.STARTED);
+                LOG.debug("Orchestrator started.");
             })
-        );
+        ).doFinally(startStopSemaphore::release);
         return initializationCompletable;
     }
 
     /**
      * Stop all model synchronization.
      */
-    public void stop() {
-        if (isStarted()) {
+    public synchronized void stop() {
+        boolean permitAcquired = acquirePermit(OrchestratorAction.STOP);
+        // only stop if it's started AND if we can get a permit.
+        if (!permitAcquired || !status.compareAndSet(OrchestratorStatus.STARTED, OrchestratorStatus.STOPPING)) {
+            LOG.warn(String.format("Orchestrator could not be stopped. Orchestrator status: %s", status.get()));
+            // If we acquired the permit but failed to set the status, let's release the permit.
+            if (permitAcquired) {
+                startStopSemaphore.release();
+            }
+            return;
+        }
+        try {
             LOG.info("Intentionally stopping cloud synchronization, now.");
-            status.compareAndSet(OrchestratorStatus.STARTED, OrchestratorStatus.STOPPING);
             subscriptionProcessor.stopAllSubscriptionActivity();
             storageObserver.stopObservingStorageChanges();
             mutationProcessor.stopDrainingMutationOutbox();
             status.compareAndSet(OrchestratorStatus.STOPPING, OrchestratorStatus.STOPPED);
             LOG.debug("Stopped remote synchronization.");
+        } finally {
+            startStopSemaphore.release();
         }
+    }
 
+    private boolean acquirePermit(OrchestratorAction action) {
+        try {
+            LOG.debug(String.format("Trying to %s the orchestrator.", action.name()));
+            if (!startStopSemaphore.tryAcquire(ACQUIRE_PERMIT_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                LOG.warn(String.format("Unable to acquire permit to %s the orchestrator. ", action.name()));
+                return false;
+            }
+        } catch (InterruptedException exception) {
+            LOG.warn(String.format("Orchestrator %s attempt interrupted.", action.name()));
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -197,6 +232,17 @@ public final class Orchestrator {
          * which happens by invoking {@link #stop()}
          */
         STARTED
+    }
+
+    enum OrchestratorAction {
+        /**
+         * Indicates intent to start the orchestrator.
+         */
+        START,
+        /**
+         * Indicates intent to stop the orchestrator.
+         */
+        STOP
     }
 }
 
