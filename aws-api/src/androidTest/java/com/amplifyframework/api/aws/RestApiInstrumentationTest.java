@@ -61,7 +61,7 @@ public final class RestApiInstrumentationTest {
     @Test
     public void getRequestWithNoAuth() throws JSONException, ApiException {
         final RestOptions options = RestOptions.builder()
-            .addPath("simplesuccess")
+            .addPath("/simplesuccess")
             .build();
         final RestResponse response = api.get("nonAuthApi", options);
         final JSONObject resultJSON = response.getData().asJSONObject();
@@ -84,7 +84,7 @@ public final class RestApiInstrumentationTest {
     @Test
     public void postRequestWithNoAuth() throws ApiException {
         final RestOptions options = RestOptions.builder()
-                .addPath("simplesuccess")
+                .addPath("/simplesuccess")
                 .addBody("sample body".getBytes())
                 .build();
         final RestResponse response = api.post("nonAuthApi", options);
@@ -100,7 +100,7 @@ public final class RestApiInstrumentationTest {
     @Test
     public void getRequestWithApiKey() throws JSONException, ApiException {
         final RestOptions options = RestOptions.builder()
-            .addPath("simplesuccessapikey")
+            .addPath("/simplesuccessapikey")
             .build();
         final RestResponse response = api.get("apiKeyApi", options);
         final JSONObject resultJSON = response.getData().asJSONObject();
@@ -123,7 +123,7 @@ public final class RestApiInstrumentationTest {
     @Test
     public void getRequestWithIAM() throws ApiException {
         final RestOptions options = RestOptions.builder()
-            .addPath("items")
+            .addPath("/items")
             .build();
         final RestResponse response = api.get("iamAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());
@@ -137,7 +137,7 @@ public final class RestApiInstrumentationTest {
     @Test
     public void getRequestWithIAMFailedAccess() throws ApiException {
         final RestOptions options = RestOptions.builder()
-            .addPath("invalidPath")
+            .addPath("/invalidPath")
             .build();
         final RestResponse response = api.get("iamAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());
