@@ -152,7 +152,7 @@ public final class AppSyncClientTest {
 
         // Assert
         assertEquals(String.class, capturedRequest.getResponseType());
-        JSONAssert.assertEquals(Resources.readAsString("update-meeting.json"),
+        JSONAssert.assertEquals(Resources.readAsString("update-meeting.txt"),
                 capturedRequest.getContent(), true);
     }
 }
