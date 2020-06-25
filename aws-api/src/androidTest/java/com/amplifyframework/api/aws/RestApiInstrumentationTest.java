@@ -70,11 +70,13 @@ public final class RestApiInstrumentationTest {
         assertEquals(
                 "Should return the right value",
                 "GET",
-                contextJSON.getString("http-method"));
+                contextJSON.getString("http-method")
+        );
         assertEquals(
                 "Should return the right value",
                 "/simplesuccess",
-                contextJSON.getString("resource-path"));
+                contextJSON.getString("resource-path")
+        );
     }
 
     /**
@@ -84,9 +86,9 @@ public final class RestApiInstrumentationTest {
     @Test
     public void postRequestWithNoAuth() throws ApiException {
         final RestOptions options = RestOptions.builder()
-                .addPath("/simplesuccess")
-                .addBody("sample body".getBytes())
-                .build();
+            .addPath("/simplesuccess")
+            .addBody("sample body".getBytes())
+            .build();
         final RestResponse response = api.post("nonAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());
         assertTrue("Response should be successful", response.getCode().isSuccessful());
@@ -109,11 +111,13 @@ public final class RestApiInstrumentationTest {
         assertEquals(
                 "Should return the right value",
                 "GET",
-                contextJSON.getString("http-method"));
+                contextJSON.getString("http-method")
+        );
         assertEquals(
                 "Should return the right value",
                 "/simplesuccessapikey",
-                contextJSON.getString("resource-path"));
+                contextJSON.getString("resource-path")
+        );
     }
 
     /**

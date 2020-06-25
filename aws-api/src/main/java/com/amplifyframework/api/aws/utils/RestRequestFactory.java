@@ -51,17 +51,16 @@ public final class RestRequestFactory {
             @Nullable String path,
             @Nullable Map<String, String> queryParameters
     ) throws MalformedURLException {
-        // If path isn't specified, then use empty string
-        if (path == null) {
-            path = "";
-        }
 
         URL url = new URL(endpoint);
         HttpUrl.Builder builder = new HttpUrl.Builder()
             .scheme(url.getProtocol())
             .host(url.getHost())
-            .addPathSegment(stripLeadingSlashes(url.getPath()))
-            .addPathSegments(stripLeadingSlashes(path));
+            .addPathSegment(stripLeadingSlashes(url.getPath()));
+
+        if (path != null) {
+            builder.addPathSegments(stripLeadingSlashes(path));
+        }
 
         if (queryParameters != null) {
             for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
@@ -140,7 +139,7 @@ public final class RestRequestFactory {
     // Segment separator can be either '/' or '\'.
     // HttpUrl.Builder assumes an empty URL if path segments
     // begin with either character. Strip them before appending.
-    private static String stripLeadingSlashes(String path) {
+    private static String stripLeadingSlashes(final String path) {
         return path.replaceAll("^[\\\\/]+", "");
     }
 
