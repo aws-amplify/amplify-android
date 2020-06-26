@@ -183,7 +183,7 @@ public final class Orchestrator {
                 LOG.warn(String.format("Unable to acquire permit to %s the orchestrator. ", intendedAction.name()));
                 return false;
             }
-            boolean statusSet = status.compareAndSet(intendedAction.expectedCurrentStatus,intendedAction.targetStatus);
+            boolean statusSet = status.compareAndSet(intendedAction.expectedCurrentStatus, intendedAction.targetStatus);
             // only stop if it's started AND if we can get a permit.
             if (!statusSet) {
                 LOG.warn(String.format("Failed %s orchestrator. Current status: %s",
@@ -235,13 +235,13 @@ public final class Orchestrator {
     enum OrchestratorAction {
         /**
          * Indicates intent to start the orchestrator and the fact that it
-         * can only do so if it's {@link OrchestratorStatus#STOPPED}
+         * can only do so if it's {@link OrchestratorStatus#STOPPED}.
          */
         START(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTED),
 
         /**
          * Indicates intent to stop the orchestrator and the fact that it
-         * can only do so if it's {@link OrchestratorStatus#STARTED}
+         * can only do so if it's {@link OrchestratorStatus#STARTED}.
          */
         STOP(OrchestratorStatus.STARTED, OrchestratorStatus.STOPPED);
 
