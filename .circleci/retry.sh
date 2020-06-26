@@ -3,7 +3,7 @@
 
 tag="RETRY"
 readonly max_tries=$1
-readonly command="${@: 2}"
+readonly command="${*: 2}"
 attempts=0
 return_code=1
 
