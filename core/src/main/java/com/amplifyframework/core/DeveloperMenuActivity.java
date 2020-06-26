@@ -22,6 +22,7 @@ import android.os.Bundle;
  * This is the activity to display the developer menu.
  */
 public final class DeveloperMenuActivity extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

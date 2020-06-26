@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/devLayout"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_gravity="bottom"
-    android:gravity="bottom"
-    android:orientation="vertical">
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
 
-    <TextView
-        android:id="@+id/textView2"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="179dp"
-        android:text="@string/menuTitle" />
-</LinearLayout>
+        android:layout_height="wrap_content"
+        android:background="@android:color/background_light"
+        android:orientation="vertical"
+        android:layout_alignParentBottom="true">
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="179dp"
+            android:text="@string/menuTitle"
+            android:textColor="@android:color/black"/>
+    </LinearLayout>
+</RelativeLayout>
