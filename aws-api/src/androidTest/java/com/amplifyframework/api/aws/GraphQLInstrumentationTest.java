@@ -199,7 +199,7 @@ public final class GraphQLInstrumentationTest {
                 new GsonVariablesSerializer()
             )
         );
-        assertEquals("It's going to be exciting!", createdComment.content());
+        assertEquals("It's going to be fun!", createdComment.content());
     }
 
     /**
