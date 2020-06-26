@@ -21,7 +21,6 @@ import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.appsync.GsonVariablesSerializer;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.appsync;
+package com.amplifyframework.api.aws.appsync;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.model.temporal.Temporal;
