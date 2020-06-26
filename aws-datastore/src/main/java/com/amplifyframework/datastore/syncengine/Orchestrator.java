@@ -122,7 +122,7 @@ public final class Orchestrator {
     public synchronized Completable start() {
         boolean permitAcquired = acquirePermit(OrchestratorAction.START);
         // Only start if it's stopped AND if we can get a permit.
-        if (!permitAcquired || !status.compareAndSet(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTING)) {
+        if (!(permitAcquired && status.compareAndSet(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTING)) {
             LOG.warn(String.format("Orchestrator could not be started. Orchestrator status: %s", status.get()));
             // If we acquired the permit but failed to set the status, let's release the permit.
             if (permitAcquired) {
@@ -244,4 +244,3 @@ public final class Orchestrator {
         STOP
     }
 }
-
