@@ -118,7 +118,7 @@ jobs:
             .circleci/copy-configs
       - run:
           name: Run integration test
-          command: .circleci/retry.sh 3 ./gradlew connectedDebugAndroidTest --no-daemon
+          command: .circleci/run-integration-tests.sh
       - run:
           name: Store coverage data
           command: |
