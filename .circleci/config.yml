@@ -123,20 +123,7 @@ jobs:
           name: Store coverage data
           command: |
               .circleci/retry.sh 3 "./gradlew jacocoFullReport --no-daemon"
-              tmp_file="$(mktemp)"
-              curl -s https://codecov.io/bash > "$tmp_file"
-              actual_hash="$(cat $tmp_file | cksum | cut -f 1 -d\ )"
-              expected_hash='261829867'
-
-              if [ "$expected_hash" != "$actual_hash" ]; then
-                  echo "Unexpected file contents in codecov script." >&2
-                  exit 1
-              fi
-
-              chmod +x "$tmp_file"
-              bash "$tmp_file"
-              rm "$tmp_file"
-
+              .circleci/codecov.sh  # From https://codecov.io/bash
       - store_artifacts:
           path: logcat.log
 workflows:
