@@ -120,15 +120,7 @@ public final class Orchestrator {
      */
     @NonNull
     public synchronized Completable start() {
-        boolean permitAcquired = acquirePermit(OrchestratorAction.START);
-        // Only start if it's stopped AND if we can get a permit.
-        if (!permitAcquired || !status.compareAndSet(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTING)) {
-            LOG.warn(String.format("Orchestrator could not be started. Orchestrator status: %s", status.get()));
-            // If we acquired the permit but failed to set the status, let's release the permit.
-            if (permitAcquired) {
-                startStopSemaphore.release();
-            }
-            // If we're not going to start it up, just tell the caller to proceed with whatever they're doing
+        if (!performAction(OrchestratorAction.START)) {
             return Completable.complete();
         }
         return mutationOutbox.load().andThen(
@@ -166,14 +158,7 @@ public final class Orchestrator {
      * Stop all model synchronization.
      */
     public synchronized void stop() {
-        boolean permitAcquired = acquirePermit(OrchestratorAction.STOP);
-        // only stop if it's started AND if we can get a permit.
-        if (!permitAcquired || !status.compareAndSet(OrchestratorStatus.STARTED, OrchestratorStatus.STOPPING)) {
-            LOG.warn(String.format("Orchestrator could not be stopped. Orchestrator status: %s", status.get()));
-            // If we acquired the permit but failed to set the status, let's release the permit.
-            if (permitAcquired) {
-                startStopSemaphore.release();
-            }
+        if (!performAction(OrchestratorAction.STOP)) {
             return;
         }
         try {
@@ -188,15 +173,29 @@ public final class Orchestrator {
         }
     }
 
-    private boolean acquirePermit(OrchestratorAction action) {
+    private boolean performAction(OrchestratorAction intendedAction) {
+        OrchestratorStatus expectedCurrentStatus = OrchestratorAction.START.equals(intendedAction) ?
+            OrchestratorStatus.STOPPED : OrchestratorStatus.STARTED;
         try {
-            LOG.debug(String.format("Trying to %s the orchestrator.", action.name()));
-            if (!startStopSemaphore.tryAcquire(ACQUIRE_PERMIT_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                LOG.warn(String.format("Unable to acquire permit to %s the orchestrator. ", action.name()));
+            LOG.debug(String.format("Trying to %s the orchestrator.", intendedAction.name()));
+            boolean permitAcquired = startStopSemaphore.tryAcquire(ACQUIRE_PERMIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (!permitAcquired) {
+                LOG.warn(String.format("Unable to acquire permit to %s the orchestrator. ", intendedAction.name()));
+                return false;
+            }
+            boolean statusSet = status.compareAndSet(intendedAction.expectedCurrentStatus,intendedAction.targetStatus);
+            // only stop if it's started AND if we can get a permit.
+            if (!statusSet) {
+                LOG.warn(String.format("Failed %s orchestrator. Current status: %s",
+                    intendedAction.name(),
+                    status.get())
+                );
+                // Since we acquired the permit but failed to set the status, let's release the permit.
+                startStopSemaphore.release();
                 return false;
             }
         } catch (InterruptedException exception) {
-            LOG.warn(String.format("Orchestrator %s attempt interrupted.", action.name()));
+            LOG.warn(String.format("Orchestrator %s attempt interrupted.", intendedAction.name()));
             return false;
         }
         return true;
@@ -235,13 +234,24 @@ public final class Orchestrator {
 
     enum OrchestratorAction {
         /**
-         * Indicates intent to start the orchestrator.
+         * Indicates intent to start the orchestrator and the fact that it
+         * can only do so if it's {@link OrchestratorStatus#STOPPED}
          */
-        START,
+        START(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTED),
+
         /**
-         * Indicates intent to stop the orchestrator.
+         * Indicates intent to stop the orchestrator and the fact that it
+         * can only do so if it's {@link OrchestratorStatus#STARTED}
          */
-        STOP
+        STOP(OrchestratorStatus.STARTED, OrchestratorStatus.STOPPED);
+
+        private final OrchestratorStatus expectedCurrentStatus;
+        private final OrchestratorStatus targetStatus;
+
+        OrchestratorAction(OrchestratorStatus expectedCurrentStatus, OrchestratorStatus targetStatus) {
+            this.expectedCurrentStatus = expectedCurrentStatus;
+            this.targetStatus = targetStatus;
+        }
     }
 }
 
