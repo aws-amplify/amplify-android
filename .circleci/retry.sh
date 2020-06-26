@@ -8,16 +8,16 @@ return_code=1
 while [[ $attempts -lt $max_tries ]]; do
   ((attempts++))
   if [[ attempts -gt 1 ]]; then sleep 10; fi
-  echo "RETRY: Attempt $attempts of $max_tries."
+  echo "RETRY: $command : Attempt $attempts of $max_tries."
   $command && break
 done
 
 return_code=$?
 
 if [[ $return_code == 0 ]]; then
-  echo "RETRY: Attempt $attempts succeeded."
+  echo "RETRY: $command : Attempt $attempts succeeded."
 else
-  echo "RETRY: All $attempts attempts failed."
+  echo "RETRY: $command : All $attempts attempts failed."
 fi
 
 exit $return_code
