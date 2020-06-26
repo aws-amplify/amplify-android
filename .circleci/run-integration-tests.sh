@@ -10,7 +10,7 @@ summary=""
 tag="RUN_INTEGRATION_TESTS"
 for task in "${tasks[@]}"; do
   echo "$tag: $task"
-  .circleci/retry.sh 3 900 ./gradlew $task --no-daemon
+  .circleci/retry.sh 3 ./gradlew $task --no-daemon
   if [[ $? == 1 ]]; then
     return_code=1
     summary+="$task failed.\n"

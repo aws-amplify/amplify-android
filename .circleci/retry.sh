@@ -1,18 +1,15 @@
 #!/bin/bash
-# Usage: retry.sh <max_tries> <timeout_seconds> <command to run>
-sudo apt-get update
-sudo apt-get install expect
+# Usage: retry.sh <max_tries> <command to run>
 
 readonly max_tries=$1
-readonly timeout=$2
-readonly command="${@: 3}"
+readonly command="${@: 2}"
 attempts=0
 return_code=1
 while [[ $attempts -lt $max_tries ]]; do
   ((attempts++))
   if [[ attempts -gt 1 ]]; then sleep 10; fi
   echo "RETRY: $command : Attempt $attempts of $max_tries."
-  expect -c "set timeout $timeout; spawn $command; expect timeout { exit 1 } eof { exit 0 }" && break
+  $command && break
 done
 
 return_code=$?

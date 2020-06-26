@@ -91,10 +91,9 @@ jobs:
       - run:
           name: Build the project
           command: |
-            .circleci/retry.sh 3 900 ./gradlew build
+            .circleci/retry.sh 3 ./gradlew build
             .circleci/aggregate-test-results.sh ~/amplify-android-home
             .circleci/aggregate-build-artifacts.sh
-          no_output_timeout: 30m
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -120,11 +119,10 @@ jobs:
       - run:
           name: Run integration test
           command: .circleci/run-integration-tests.sh
-          no_output_timeout: 30m
       - run:
           name: Store coverage data
           command: |
-              .circleci/retry.sh 3 900 ./gradlew jacocoFullReport --no-daemon
+              .circleci/retry.sh 3 ./gradlew jacocoFullReport --no-daemon
               tmp_file="$(mktemp)"
               curl -s https://codecov.io/bash > "$tmp_file"
               actual_hash="$(cat $tmp_file | cksum | cut -f 1 -d\ )"
@@ -138,7 +136,7 @@ jobs:
               chmod +x "$tmp_file"
               bash "$tmp_file"
               rm "$tmp_file"
-          no_output_timeout: 30m
+
       - store_artifacts:
           path: logcat.log
 workflows:
