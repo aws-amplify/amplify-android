@@ -128,10 +128,10 @@ public final class Orchestrator {
             if (permitAcquired) {
                 startStopSemaphore.release();
             }
-            // initializationCompletable == null should never happen, but will protect against it just in case.
-            return initializationCompletable == null ? Completable.complete() : initializationCompletable;
+            // If we're not going to start it up, just tell the caller to proceed with whatever they're doing
+            return Completable.complete();
         }
-        initializationCompletable = mutationOutbox.load().andThen(
+        return mutationOutbox.load().andThen(
             Completable.fromAction(() -> {
                 LOG.debug("Starting the orchestrator.");
                 if (!storageObserver.isObservingStorageChanges()) {
@@ -160,7 +160,6 @@ public final class Orchestrator {
                 LOG.debug("Orchestrator started.");
             })
         ).doFinally(startStopSemaphore::release);
-        return initializationCompletable;
     }
 
     /**

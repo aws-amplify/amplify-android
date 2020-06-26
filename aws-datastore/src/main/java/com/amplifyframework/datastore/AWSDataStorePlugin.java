@@ -426,19 +426,22 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public void clear(@NonNull Action onComplete,
                       @NonNull Consumer<DataStoreException> onError) {
-        beforeOperation(() -> {
-            orchestrator.stop();
-            sqliteStorageAdapter.clear(onComplete, onError);
-        });
+        // We shouldn't call call beforeOperation when clearing the DataStore. The
+        // only thing we have to wait for is the category initialization latch.
+        try {
+            categoryInitializationsPending.await();
+        } catch (InterruptedException exception) {
+            LOG.warn("Execution interrupted while waiting for DataStore to be initialized.");
+        }
+        orchestrator.stop();
+        sqliteStorageAdapter.clear(() -> {
+            initializeOrchestrator().subscribe();
+            onComplete.call();
+        }, onError);
     }
 
     private void beforeOperation(@NonNull final Runnable runnable) {
-        Completable opCompletable = Completable.fromAction(categoryInitializationsPending::await);
-        if (!orchestrator.isStarted()) {
-            opCompletable = opCompletable
-                .andThen(initializeOrchestrator());
-        }
-        Throwable throwable = opCompletable
+        Throwable throwable = Completable.fromAction(categoryInitializationsPending::await)
             .andThen(Completable.fromRunnable(runnable))
             .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         if (throwable != null) {
