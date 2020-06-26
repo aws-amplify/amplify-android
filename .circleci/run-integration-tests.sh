@@ -19,6 +19,6 @@ for task in "${tasks[@]}"; do
   fi
 done
 echo "$tag SUMMARY:\n"
-echo $summary
+printf $summary
 exit $return_code
 
