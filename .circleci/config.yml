@@ -126,7 +126,7 @@ jobs:
               tmp_file="$(mktemp)"
               curl -s https://codecov.io/bash > "$tmp_file"
               actual_hash="$(cat $tmp_file | cksum | cut -f 1 -d\ )"
-              expected_hash='2175291078'
+              expected_hash='261829867'
 
               if [ "$expected_hash" != "$actual_hash" ]; then
                   echo "Unexpected file contents in codecov script." >&2
