@@ -24,7 +24,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.Map;
 
 final class GsonFactory {
@@ -36,19 +35,9 @@ final class GsonFactory {
 
     static Gson create(@NonNull Map<Class<?>, Object> additionalAdapters) {
         GsonBuilder builder = new GsonBuilder();
-        withSerializers(builder);
         withDeserializers(builder);
         withAdditionalAdapters(builder, additionalAdapters);
         return builder.create();
-    }
-
-    private static void withSerializers(GsonBuilder builder) {
-        builder
-            .registerTypeAdapter(Date.class, new GsonVariablesSerializer.DateSerializer())
-            .registerTypeAdapter(Temporal.Timestamp.class, new GsonVariablesSerializer.TemporalTimestampSerializer())
-            .registerTypeAdapter(Temporal.Date.class, new GsonVariablesSerializer.TemporalDateSerializer())
-            .registerTypeAdapter(Temporal.DateTime.class, new GsonVariablesSerializer.TemporalDateTimeSerializer())
-            .registerTypeAdapter(Temporal.Time.class, new GsonVariablesSerializer.TemporalTimeSerializer());
     }
 
     private static void withDeserializers(GsonBuilder builder) {
