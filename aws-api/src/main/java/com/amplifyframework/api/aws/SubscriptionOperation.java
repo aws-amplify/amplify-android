@@ -27,7 +27,9 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
@@ -41,6 +43,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     private String subscriptionId;
     private boolean canceled;
+    private Future<?> subscriptionFuture;
 
     @SuppressWarnings("ParameterNumber")
     private SubscriptionOperation(
@@ -59,7 +62,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         this.onSubscriptionError = onSubscriptionError;
         this.onSubscriptionComplete = onSubscriptionComplete;
         this.executorService = executorService;
-        this.subscriptionId = null;
+        this.subscriptionId = UUID.randomUUID().toString();
         this.canceled = false;
     }
 
@@ -76,14 +79,12 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             ));
             return;
         }
-        executorService.submit(() -> {
+        subscriptionFuture = executorService.submit(() -> {
             LOG.debug("Requesting subscription: " + getRequest().getContent());
             subscriptionEndpoint.requestSubscription(
+                subscriptionId,
                 getRequest(),
-                subscriptionId -> {
-                    SubscriptionOperation.this.subscriptionId = subscriptionId;
-                    onSubscriptionStart.accept(subscriptionId);
-                },
+                onSubscriptionStart,
                 onNextItem,
                 onSubscriptionError,
                 onSubscriptionComplete
@@ -95,6 +96,9 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     public synchronized void cancel() {
         if (subscriptionId != null && !canceled) {
             canceled = true;
+            if (subscriptionFuture.cancel(true)) {
+                LOG.debug("Canceled subscription future");
+            }
             try {
                 subscriptionEndpoint.releaseSubscription(subscriptionId);
             } catch (ApiException exception) {

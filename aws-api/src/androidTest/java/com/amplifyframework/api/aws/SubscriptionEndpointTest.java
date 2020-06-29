@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -103,13 +104,13 @@ public final class SubscriptionEndpointTest {
     @Test
     public void twoSubscriptionsToTheSameThing() throws ApiException {
         // Okay, request a first subscription.
-        String firstSubscriptionId = subscribeToEventComments(eventId);
+        String firstSubscriptionId = subscribeToEventComments(eventId, UUID.randomUUID().toString());
         assertNotNull(firstSubscriptionId);
         subscriptionIdsForRelease.add(firstSubscriptionId);
 
         // Now, request a second subscription, with the same request data.
         // This is around where the test fails.
-        String secondSubscriptionId = subscribeToEventComments(eventId);
+        String secondSubscriptionId = subscribeToEventComments(eventId, UUID.randomUUID().toString());
         assertNotNull(secondSubscriptionId);
         subscriptionIdsForRelease.add(secondSubscriptionId);
 
@@ -124,7 +125,7 @@ public final class SubscriptionEndpointTest {
      * @return Subscription ID received from subscription_ack message payload
      * @throws ApiException If outcome of subscription request is anything other than an ACK w/ new ID
      */
-    private String subscribeToEventComments(String eventId) throws ApiException {
+    private String subscribeToEventComments(String eventId, String subscriptionId) throws ApiException {
         // Arrange a request to start a subscription.
         String document = Assets.readAsString("subscribe-event-comments.graphql");
 
@@ -135,6 +136,7 @@ public final class SubscriptionEndpointTest {
         return Await.<String, ApiException>result((onResult, onError) ->
             executor.execute(() ->
                 subscriptionEndpoint.requestSubscription(
+                    subscriptionId,
                     request,
                     onResult,
                     item -> {
