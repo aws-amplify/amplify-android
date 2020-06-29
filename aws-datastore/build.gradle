@@ -19,6 +19,8 @@ apply from: rootProject.file("configuration/publishing.gradle")
 
 dependencies {
     implementation project(':core')
+    implementation project(':aws-api-appsync')
+
     implementation dependency.androidx.appcompat
     implementation dependency.androidx.multidex
     implementation dependency.gson
@@ -28,6 +30,7 @@ dependencies {
 
     testImplementation project(path: ':testmodels')
     testImplementation project(path: ':testutils')
+    testImplementation dependency.jsonassert
     testImplementation dependency.junit
     testImplementation dependency.mockito
     testImplementation (dependency.robolectric) {
