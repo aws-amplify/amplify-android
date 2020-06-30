@@ -17,6 +17,7 @@ package com.amplifyframework.core;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
@@ -135,12 +136,13 @@ public final class Amplify {
                     beginInitialization(category, context);
                 }
             }
-
-            // Start activity for developer menu
-            Intent mainIntent = new Intent(context, DeveloperMenuActivity.class);
-            mainIntent.setAction(Intent.ACTION_MAIN);
-            mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(mainIntent);
+            if ((context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+                // Start activity for developer menu
+                Intent mainIntent = new Intent(context, DeveloperMenuActivity.class);
+                mainIntent.setAction(Intent.ACTION_MAIN);
+                mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(mainIntent);
+            }
 
             CONFIGURATION_LOCK.set(true);
         }

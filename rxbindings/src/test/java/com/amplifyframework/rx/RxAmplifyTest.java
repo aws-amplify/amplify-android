@@ -16,6 +16,7 @@
 package com.amplifyframework.rx;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.AmplifyConfiguration;
@@ -75,7 +76,9 @@ public final class RxAmplifyTest {
                 .put(pluginKey, pluginJson)));
         categoryConfigs.put(categoryName, categoryConfig);
         AmplifyConfiguration config = new AmplifyConfiguration(categoryConfigs);
-        RxAmplify.configure(config, mock(Context.class));
+        Context mockContext = mock(Context.class);
+        when(mockContext.getApplicationInfo()).thenReturn(mock(ApplicationInfo.class));
+        RxAmplify.configure(config, mockContext);
 
         // Validate that the plugin gets configured with the provided JSON
         ArgumentCaptor<JSONObject> configJsonCapture = ArgumentCaptor.forClass(JSONObject.class);
