@@ -93,7 +93,6 @@ final class SubscriptionProcessor {
         }
         ongoingOperationsDisposable.add(Observable.merge(subscriptions)
             .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
             .doOnSubscribe(disposable ->
                 LOG.info(String.format(Locale.US,
                     "Began buffering subscription events for remote mutations %s to Cloud models of types %s.",
@@ -125,7 +124,10 @@ final class SubscriptionProcessor {
             // this means means closing the underlying network connection.
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
             try {
-                latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                if (!latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                    emitter.onError(new DataStoreException("Subscription failed to start due to a timeout",
+                                                            AmplifyException.TODO_RECOVERY_SUGGESTION));
+                }
             } catch (InterruptedException exception) {
                 LOG.warn("Subscription operation interrupted. " +
                     (emitter.isDisposed() ? " Emitter already disposed." : ""));

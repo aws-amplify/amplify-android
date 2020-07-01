@@ -98,7 +98,6 @@ final class SyncProcessor {
         return Observable.fromIterable(modelProvider.models())
             // Heavy network traffic, we require this to be done on IO scheduler.
             .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
             // For each model class, find the last time it was sync'd.
             .flatMapCompletable(modelClass ->
                 syncTimeRegistry.lookupLastSyncTime(modelClass)
