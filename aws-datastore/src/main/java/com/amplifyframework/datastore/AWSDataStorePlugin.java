@@ -426,7 +426,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public void clear(@NonNull Action onComplete,
                       @NonNull Consumer<DataStoreException> onError) {
-        // We shouldn't call call beforeOperation when clearing the DataStore. The
+        // We shouldn't call beforeOperation when clearing the DataStore. The
         // only thing we have to wait for is the category initialization latch.
         try {
             categoryInitializationsPending.await();
@@ -435,8 +435,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         }
         orchestrator.stop();
         sqliteStorageAdapter.clear(() -> {
-            initializeOrchestrator().subscribe();
-            onComplete.call();
+            initializeOrchestrator().subscribe(onComplete::call);
         }, onError);
     }
 

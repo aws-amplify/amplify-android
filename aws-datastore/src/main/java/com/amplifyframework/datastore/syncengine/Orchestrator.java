@@ -120,7 +120,7 @@ public final class Orchestrator {
      */
     @NonNull
     public synchronized Completable start() {
-        if (!performAction(OrchestratorAction.START)) {
+        if (!transitionToState(OrchestratorStatus.STARTED)) {
             return Completable.complete();
         }
         return mutationOutbox.load().andThen(
@@ -158,7 +158,7 @@ public final class Orchestrator {
      * Stop all model synchronization.
      */
     public synchronized void stop() {
-        if (!performAction(OrchestratorAction.STOP)) {
+        if (!transitionToState(OrchestratorStatus.STOPPED)) {
             return;
         }
         try {
@@ -173,21 +173,31 @@ public final class Orchestrator {
         }
     }
 
-    private boolean performAction(OrchestratorAction intendedAction) {
-        OrchestratorStatus expectedCurrentStatus = OrchestratorAction.START.equals(intendedAction) ?
-            OrchestratorStatus.STOPPED : OrchestratorStatus.STARTED;
+    private boolean transitionToState(OrchestratorStatus targetStatus) {
+        OrchestratorStatus expectedCurrentStatus;
+        switch (targetStatus) {
+            case STARTED:
+                expectedCurrentStatus = OrchestratorStatus.STOPPED;
+                break;
+            case STOPPED:
+                expectedCurrentStatus = OrchestratorStatus.STARTED;
+                break;
+            default:
+                LOG.warn("Invalid attempt to transition orchestrator to " + targetStatus.name());
+                return false;
+        }
         try {
-            LOG.debug(String.format("Trying to %s the orchestrator.", intendedAction.name()));
+            LOG.debug("Requesting permit to set the orchestrator status to:" + targetStatus.name());
             boolean permitAcquired = startStopSemaphore.tryAcquire(ACQUIRE_PERMIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             if (!permitAcquired) {
-                LOG.warn(String.format("Unable to acquire permit to %s the orchestrator. ", intendedAction.name()));
+                LOG.warn("Unable to acquire permit to set the orchestrator status to:" + targetStatus.name());
                 return false;
             }
-            boolean statusSet = status.compareAndSet(intendedAction.expectedCurrentStatus, intendedAction.targetStatus);
+            boolean statusSet = status.compareAndSet(expectedCurrentStatus, targetStatus);
             // only stop if it's started AND if we can get a permit.
             if (!statusSet) {
-                LOG.warn(String.format("Failed %s orchestrator. Current status: %s",
-                    intendedAction.name(),
+                LOG.warn(String.format("Failed to set orchestrator status to: %s. Current status: %s",
+                    targetStatus.name(),
                     status.get())
                 );
                 // Since we acquired the permit but failed to set the status, let's release the permit.
@@ -195,7 +205,7 @@ public final class Orchestrator {
                 return false;
             }
         } catch (InterruptedException exception) {
-            LOG.warn(String.format("Orchestrator %s attempt interrupted.", intendedAction.name()));
+            LOG.warn("Orchestrator was interrupted while setting status to " + targetStatus.name());
             return false;
         }
         return true;
@@ -230,27 +240,5 @@ public final class Orchestrator {
          * which happens by invoking {@link #stop()}
          */
         STARTED
-    }
-
-    enum OrchestratorAction {
-        /**
-         * Indicates intent to start the orchestrator and the fact that it
-         * can only do so if it's {@link OrchestratorStatus#STOPPED}.
-         */
-        START(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTED),
-
-        /**
-         * Indicates intent to stop the orchestrator and the fact that it
-         * can only do so if it's {@link OrchestratorStatus#STARTED}.
-         */
-        STOP(OrchestratorStatus.STARTED, OrchestratorStatus.STOPPED);
-
-        private final OrchestratorStatus expectedCurrentStatus;
-        private final OrchestratorStatus targetStatus;
-
-        OrchestratorAction(OrchestratorStatus expectedCurrentStatus, OrchestratorStatus targetStatus) {
-            this.expectedCurrentStatus = expectedCurrentStatus;
-            this.targetStatus = targetStatus;
-        }
     }
 }

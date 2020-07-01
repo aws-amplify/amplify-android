@@ -1,0 +1,58 @@
+apply plugin: 'com.android.library'
+apply plugin: 'jacoco'
+
+afterEvaluate { project ->
+    def variant = 'Debug'
+    project.plugins.apply('jacoco')
+
+    final capVariant = variant.capitalize()
+    StringBuilder folderSb = new StringBuilder(variant.length() + 1)
+    for (int i = 0; i < variant.length(); i++) {
+        char c = variant.charAt(i)
+        if (Character.isUpperCase(c)) {
+            folderSb.append('/')
+            folderSb.append(Character.toLowerCase(c))
+        } else {
+            folderSb.append(c)
+        }
+    }
+    final folder = folderSb.toString()
+
+    project.android.buildTypes.debug.testCoverageEnabled = true
+    project.android.testOptions.unitTests {
+        all {
+            jacoco {
+                includeNoLocationClasses = true
+            }
+        }
+    }
+
+    project.jacoco.toolVersion = '0.8.5'
+
+    project.tasks.create(
+            name: 'jacocoTestReport',
+            type: JacocoReport,
+            dependsOn: "test${capVariant}UnitTest") {
+        group = "Reporting"
+        description = "Generate Jacoco coverage reports for the ${project.name} with the $variant variant."
+        classDirectories.from(fileTree(
+            dir: "${project.buildDir}/intermediates/javac/debug/classes",
+            excludes: [
+                '**/R.class',
+                '**/R$*.class',
+                '**/*$ViewInjector*.*',
+                '**/*$ViewBinder*.*',
+                '**/BuildConfig.*',
+                '**/Manifest*.*'
+            ]
+        ))
+        sourceDirectories.from(fileTree(dir: "src/main/java"))
+        executionData.from(files("${project.buildDir}/jacoco/test${capVariant}UnitTest.exec"))
+
+        reports {
+            xml.enabled = true
+            html.enabled = true
+        }
+    }
+}
+
