@@ -93,7 +93,6 @@ final class SubscriptionProcessor {
         }
         ongoingOperationsDisposable.add(Observable.merge(subscriptions)
             .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
             .doOnSubscribe(disposable ->
                 LOG.info(String.format(Locale.US,
                     "Began buffering subscription events for remote mutations %s to Cloud models of types %s.",
