@@ -33,7 +33,7 @@ import com.amplifyframework.util.Time;
 public final class DeveloperMenuActivity extends Activity {
     // A device movement is classified as a shake if the acceleration
     // is above this threshold.
-    private static final int SHAKE_THRESHOLD = 12;
+    private static final double SHAKE_THRESHOLD = 11.7;
     // The minimum duration (in milliseconds) that the device needs to
     // be shaken in order to make the developer menu appear or disappear.
     private static final int SHAKE_TIME = 500;
