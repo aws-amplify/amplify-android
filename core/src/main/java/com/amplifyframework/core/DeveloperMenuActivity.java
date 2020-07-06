@@ -16,16 +16,65 @@
 package com.amplifyframework.core;
 
 import android.app.Activity;
+import android.content.Context;
+import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.view.KeyEvent;
+import android.view.View;
 
 /**
  * This is the activity to display the developer menu.
  */
 public final class DeveloperMenuActivity extends Activity {
+    // The parent layout for the developer menu.
+    private View devMenuLayout;
+    // Detect and handle shake events.
+    private ShakeDetector detector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dev_menu);
+        devMenuLayout = findViewById(R.id.devLayout);
+        devMenuLayout.setFocusable(true);
+        devMenuLayout.setVisibility(View.GONE);
+        detector = new ShakeDetector((SensorManager) getSystemService(Context.SENSOR_SERVICE),
+                this::changeVisibility);
+    }
+
+    @Override
+    protected void onResume() {
+        detector.startDetecting();
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        detector.stopDetecting();
+        super.onPause();
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        // KEYCODE_MENU is the code for pressing ctrl
+        // (or command) + m
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            changeVisibility();
+            return true;
+        } else {
+            return super.onKeyUp(keyCode, event);
+        }
+    }
+
+    /**
+     * If the developer menu is visible, hide the developer menu. Otherwise,
+     * make the developer menu visible.
+     */
+    private void changeVisibility() {
+        if (devMenuLayout.getVisibility() == View.VISIBLE) {
+            devMenuLayout.setVisibility(View.GONE);
+        } else {
+            devMenuLayout.setVisibility(View.VISIBLE);
+        }
     }
 }
