@@ -25,13 +25,46 @@
         android:layout_height="wrap_content"
         android:background="@android:color/background_light"
         android:orientation="vertical"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:padding="15dp">
 
         <TextView
             android:id="@+id/textView2"
             android:layout_width="match_parent"
-            android:layout_height="179dp"
+            android:layout_height="wrap_content"
             android:text="@string/menuTitle"
-            android:textColor="@android:color/black"/>
+            android:textColor="@android:color/black"
+            android:background="@android:color/darker_gray"
+            android:gravity="center"
+            android:padding="10dp"
+            android:layout_marginBottom="20dp" />
+
+        <Button
+            android:id="@+id/env"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/envButtonTitle"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/device"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/deviceButtonTitle"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/logs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/logsButtonTitle"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/fileIssue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fileIssueButtonTitle"
+            android:textAllCaps="false" />
     </LinearLayout>
 </RelativeLayout>

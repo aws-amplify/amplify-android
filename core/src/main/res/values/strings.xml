@@ -16,4 +16,8 @@
 
 <resources >
     <string name="menuTitle">Amplify Developer Menu</string>
+    <string name="envButtonTitle">View Environment Information</string>
+    <string name="deviceButtonTitle">View Device Information</string>
+    <string name="logsButtonTitle">View Logs</string>
+    <string name="fileIssueButtonTitle">File Issue</string>
 </resources>
