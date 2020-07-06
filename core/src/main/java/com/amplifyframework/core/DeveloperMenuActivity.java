@@ -35,7 +35,7 @@ public final class DeveloperMenuActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dev_menu);
-        devMenuLayout = findViewById(R.id.devLayout);
+        devMenuLayout = findViewById(R.id.dev_layout);
         devMenuLayout.setFocusable(true);
         devMenuLayout.setVisibility(View.GONE);
         detector = new ShakeDetector((SensorManager) getSystemService(Context.SENSOR_SERVICE),
