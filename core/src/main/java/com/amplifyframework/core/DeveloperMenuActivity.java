@@ -38,6 +38,16 @@ public final class DeveloperMenuActivity extends Activity {
     // be shaken in order to make the developer menu appear or disappear.
     private static final int SHAKE_TIME = 500;
 
+    // Manager for the device's sensors.
+    private SensorManager sensorManager;
+    // The accelerometer sensor associated with the device.
+    private Sensor accelerometer;
+    // The time (in milliseconds) that the device started shaking
+    // (or 0 if the device is not shaking).
+    private long shakeStart;
+    // The parent layout for the developer menu.
+    private View devMenuLayout;
+
     // Listen to accelerometer sensor events.
     private final SensorEventListener sensorEventListener = new SensorEventListener() {
         @Override
@@ -60,16 +70,6 @@ public final class DeveloperMenuActivity extends Activity {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) { }
     };
-
-    // Manager for the device's sensors.
-    private SensorManager sensorManager;
-    // The accelerometer sensor associated with the device.
-    private Sensor accelerometer;
-    // The time (in milliseconds) that the device started shaking
-    // (or 0 if the device is not shaking).
-    private long shakeStart;
-    // The parent layout for the developer menu.
-    private View devMenuLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
