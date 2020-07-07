@@ -29,8 +29,8 @@ import java.util.Map;
  * @param <R> The type of data contained in the GraphQLResponse expected from this request.
  */
 public abstract class GraphQLRequest<R> {
-    private final Type responseType;
-    private final VariablesSerializer variablesSerializer;
+    protected final Type responseType;
+    protected final VariablesSerializer variablesSerializer;
 
     /**
      * Constructor for GraphQLRequest with specification for type of API call.

@@ -235,7 +235,8 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
                 ", selectionSet=" + selectionSet +
                 ", variables=" + variables +
                 ", variableTypes=" + variableTypes +
-                super.toString() +
+                ", responseType=" + responseType +
+                ", variablesSerializer=" + variablesSerializer +
                 '}';
     }
 
