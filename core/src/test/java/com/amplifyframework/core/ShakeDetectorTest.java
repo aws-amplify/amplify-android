@@ -160,7 +160,7 @@ public class ShakeDetectorTest {
      */
     private Thread createStreamingThread(List<float[]> sensorValues, SensorEventListener listener) {
         return new Thread(() -> {
-            for (float[] accelValues: sensorValues) {
+            for (float[] accelValues : sensorValues) {
                 SensorEvent mockEvent = mock(SensorEvent.class);
                 try {
                     Field sensorValuesField = SensorEvent.class.getField("values");
@@ -168,8 +168,8 @@ public class ShakeDetectorTest {
                     sensorValuesField.set(mockEvent, accelValues);
                     listener.onSensorChanged(mockEvent);
                     Sleep.milliseconds(SENSOR_DATA_DELAY);
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
+                } catch (NoSuchFieldException | IllegalAccessException error) {
+                    error.printStackTrace();
                 }
             }
         });
