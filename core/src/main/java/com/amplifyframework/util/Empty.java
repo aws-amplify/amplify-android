@@ -43,4 +43,19 @@ public final class Empty {
     public static boolean check(@Nullable Map<?, ?> map) {
         return map == null || map.isEmpty();
     }
+
+    /**
+     * Returns true if str is null or empty.
+     *
+     * TextUtils.isEmpty() provides the same behavior, but throws an exception when called from a unit test, since the
+     *  Android library is not available in unit tests.  Empty.check() is preferred to allow for unit testing.
+     *
+     * @see http://tools.android.com/tech-docs/unit-testing-support#TOC-Method-...-not-mocked.- for more details.
+     *
+     * @param str instance of String to check
+     * @return true if str is null or empty
+     */
+    public static boolean check(@Nullable String str) {
+        return str == null || str.length() == 0;
+    }
 }
