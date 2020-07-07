@@ -28,6 +28,7 @@ import com.amplifyframework.api.graphql.OperationType;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthRule;
+import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
@@ -112,7 +113,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      */
     public void setOwner(CognitoUserPoolsAuthProvider authProvider) throws ApiException {
         for (AuthRule authRule : modelSchema.getAuthRules()) {
-            if (isOwnerArgumentRequired(authRule.getOperationsOrDefault())) {
+            if (isOwnerArgumentRequired(authRule)) {
                 setVariable(authRule.getOwnerFieldOrDefault(), "String!", getUsername(authProvider));
             }
         }
@@ -135,7 +136,11 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         return username;
     }
 
-    private boolean isOwnerArgumentRequired(List<ModelOperation> operations) {
+    private boolean isOwnerArgumentRequired(AuthRule authRule) {
+        if (!AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+            return false;
+        }
+        List<ModelOperation> operations = authRule.getOperationsOrDefault();
         if (SubscriptionType.ON_CREATE.equals(operationType) && operations.contains(ModelOperation.CREATE)) {
             return true;
         }
