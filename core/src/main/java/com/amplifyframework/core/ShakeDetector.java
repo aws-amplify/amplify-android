@@ -15,6 +15,7 @@
 
 package com.amplifyframework.core;
 
+import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -67,13 +68,13 @@ public final class ShakeDetector {
     };
 
     /**
-     * Initialize accelerometer sensor using SensorManager object.
-     * @param sensorManager SensorManager object
+     * Gain access to the accelerometer sensor.
+     * @param context An Android Context
      * @param listener ShakeDetector.Listener object
      */
-    public ShakeDetector(SensorManager sensorManager, ShakeDetector.Listener listener) {
+    public ShakeDetector(Context context, ShakeDetector.Listener listener) {
+        sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager != null) {
-            this.sensorManager = sensorManager;
             accelerometer = this.sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         }
         this.listener = listener;
