@@ -51,7 +51,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
 
     private final ModelSchema modelSchema;
     private final OperationType operationType;
-    private final SelectionSet.Node selectionSet;
+    private final SelectionSet selectionSet;
     private final Map<String, Object> variables;
     private final Map<String, String> variableTypes;
 
@@ -62,7 +62,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     private AppSyncGraphQLRequest(Builder builder) throws AmplifyException {
         super(builder.responseType, new GsonVariablesSerializer());
         this.modelSchema = ModelSchema.fromModelClass(builder.modelClass);
-        SelectionSet.Node set = SelectionSet.fromModelClass(builder.modelClass, builder.operationType, DEFAULT_DEPTH);
+        SelectionSet set = SelectionSet.Factory.fromModelClass(builder.modelClass, builder.operationType, DEFAULT_DEPTH);
         this.selectionSet = set;
         this.operationType = builder.operationType;
         this.variables = builder.variables;
@@ -78,7 +78,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         super(request);
         this.modelSchema = request.modelSchema;
         this.operationType = request.operationType;
-        this.selectionSet = new SelectionSet.Node(request.selectionSet);
+        this.selectionSet = new SelectionSet(request.selectionSet);
         this.variables = new HashMap<>(request.variables);
         this.variableTypes = new HashMap<>(request.variableTypes);
     }

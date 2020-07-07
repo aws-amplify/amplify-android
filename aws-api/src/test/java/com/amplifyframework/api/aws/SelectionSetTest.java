@@ -35,7 +35,7 @@ public class SelectionSetTest {
      */
     @Test
     public void selectionSetSerializesToExpectedValue() throws AmplifyException {
-        SelectionSet.Node selectionSet = SelectionSet.fromModelClass(Post.class, QueryType.GET, 2);
+        SelectionSet selectionSet = SelectionSet.Factory.fromModelClass(Post.class, QueryType.GET, 2);
         assertEquals(Resources.readAsString("selection-set-post.txt").trim(), selectionSet.toString().trim());
     }
 
@@ -45,7 +45,7 @@ public class SelectionSetTest {
      */
     @Test
     public void ownerFieldAddedToSelectionSet() throws AmplifyException {
-        SelectionSet.Node selectionSet = SelectionSet.fromModelClass(OwnerAuth.class, QueryType.GET, 2);
+        SelectionSet selectionSet = SelectionSet.Factory.fromModelClass(OwnerAuth.class, QueryType.GET, 2);
         assertEquals(" {id owner title}", selectionSet.toString());
     }
 }
