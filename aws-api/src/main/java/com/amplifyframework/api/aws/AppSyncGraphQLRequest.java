@@ -251,41 +251,41 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         private Class<? extends Model> modelClass;
         private OperationType operationType;
         private Type responseType;
-        private Map<String, Object> variables;
-        private Map<String, String> variableTypes;
+        private final Map<String, Object> variables;
+        private final Map<String, String> variableTypes;
 
         Builder() {
-            Builder.this.variables = new HashMap<>();
-            Builder.this.variableTypes = new HashMap<>();
+            this.variables = new HashMap<>();
+            this.variableTypes = new HashMap<>();
         }
 
         Builder modelClass(@NonNull Class<? extends Model> modelClass) {
-            Builder.this.modelClass = Objects.requireNonNull(modelClass);
+            this.modelClass = Objects.requireNonNull(modelClass);
             return Builder.this;
         }
 
         Builder operationType(@NonNull OperationType operationType) {
-            Builder.this.operationType = Objects.requireNonNull(operationType);
+            this.operationType = Objects.requireNonNull(operationType);
             return Builder.this;
         }
 
         Builder responseType(@NonNull Type responseType) {
-            Builder.this.responseType = Objects.requireNonNull(responseType);
+            this.responseType = Objects.requireNonNull(responseType);
             return Builder.this;
         }
 
         Builder setVariable(@NonNull String key, String type, Object value) {
             Objects.requireNonNull(key);
             Objects.requireNonNull(type);
-            Builder.this.variables.put(key, value);
-            Builder.this.variableTypes.put(key, type);
-            return Builder.this;
+            this.variables.put(key, value);
+            this.variableTypes.put(key, type);
+            return this;
         }
 
         <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
-            Objects.requireNonNull(Builder.this.operationType);
-            Objects.requireNonNull(Builder.this.modelClass);
-            Objects.requireNonNull(Builder.this.responseType);
+            Objects.requireNonNull(this.operationType);
+            Objects.requireNonNull(this.modelClass);
+            Objects.requireNonNull(this.responseType);
             return new AppSyncGraphQLRequest<>(this);
         }
     }
