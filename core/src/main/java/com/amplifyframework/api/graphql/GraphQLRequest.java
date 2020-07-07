@@ -97,6 +97,10 @@ public abstract class GraphQLRequest<R> {
         return responseType;
     }
 
+    /**
+     * Returns the VariablesSerializer for serializing variables on the GraphQLRequest.
+     * @return the VariablesSerializer for serializing variables on the GraphQLRequest.
+     */
     protected VariablesSerializer getVariablesSerializer() {
         return variablesSerializer;
     }
