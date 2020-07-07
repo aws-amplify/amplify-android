@@ -91,15 +91,22 @@ final class AppSyncRequestFactory {
             throws DataStoreException {
 
         final StringBuilder doc = new StringBuilder();
-        final String capitalizedModelName = Casing.capitalizeFirst(modelClass.getSimpleName());
+
+        ModelSchema schema;
+        try {
+            schema = ModelSchema.fromModelClass(modelClass);
+        } catch (AmplifyException amplifyException) {
+            throw new DataStoreException("Failed to get fields for model.",
+                    amplifyException, "Validate your model file.");
+        }
+        final String capitalizedPluralName = Casing.capitalizeFirst(schema.getPluralName());
 
         int indent = 0;
         // Outer container, e.g. query SyncBlogPost {
-        doc.append("query Sync").append(capitalizedModelName).append("s {\n");
+        doc.append("query Sync").append(capitalizedPluralName).append(" {\n");
 
         // Inner directive, e.g. syncBlogPosts(
-        doc.append(padBy(++indent))
-            .append("sync").append(capitalizedModelName).append("s");
+        doc.append(padBy(++indent)).append("sync").append(capitalizedPluralName);
 
         // Optional param for inner directive, i.e. (lastSync: 123123)
         // (lastSync:11123123, nextToken: "asdfasdfaS")
