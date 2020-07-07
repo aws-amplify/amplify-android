@@ -15,7 +15,6 @@
 
 package com.amplifyframework.core.model;
 
-import android.text.TextUtils;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.Empty;
@@ -68,7 +67,7 @@ public final class AuthRule {
      * @return name of a {@link ModelField} of type String which specifies the user which should have access
      */
     public String getOwnerFieldOrDefault() {
-        return TextUtils.isEmpty(this.ownerField) ? "owner" : this.ownerField;
+        return Empty.check(this.ownerField) ? "owner" : this.ownerField;
     }
 
     /**
@@ -105,7 +104,7 @@ public final class AuthRule {
      * which should have access.
      */
     public String getGroupsFieldOrDefault() {
-        return TextUtils.isEmpty(this.groupsField) ? "groups" : this.groupsField;
+        return Empty.check(this.groupsField) ? "groups" : this.groupsField;
     }
 
     /**
