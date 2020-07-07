@@ -21,8 +21,6 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.OperationType;
 import com.amplifyframework.api.graphql.QueryType;
-import com.amplifyframework.core.model.AuthRule;
-import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.util.FieldFinder;
@@ -195,12 +193,6 @@ public final class SelectionSet {
                     }
                 } else {
                     result.add(new SelectionSet(fieldName, null));
-                }
-                for (AuthRule authRule : schema.getAuthRules()) {
-                    if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
-                        result.add(new SelectionSet(authRule.getOwnerFieldOrDefault(), null));
-                        break;
-                    }
                 }
             }
             return result;

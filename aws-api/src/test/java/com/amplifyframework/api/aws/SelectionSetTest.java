@@ -18,7 +18,6 @@ package com.amplifyframework.api.aws;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.testmodels.commentsblog.Post;
-import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testutils.Resources;
 
 import org.junit.Test;
@@ -37,15 +36,5 @@ public class SelectionSetTest {
     public void selectionSetSerializesToExpectedValue() throws AmplifyException {
         SelectionSet selectionSet = SelectionSet.Factory.fromModelClass(Post.class, QueryType.GET, 2);
         assertEquals(Resources.readAsString("selection-set-post.txt").trim(), selectionSet.toString().trim());
-    }
-
-    /**
-     * Test that owner field is added to selection set when a model has an @{link AuthStrategy.OWNER} auth strategy.
-     * @throws AmplifyException  if a ModelSchema can't be derived from OwnerAuth.class
-     */
-    @Test
-    public void ownerFieldAddedToSelectionSet() throws AmplifyException {
-        SelectionSet selectionSet = SelectionSet.Factory.fromModelClass(OwnerAuth.class, QueryType.GET, 2);
-        assertEquals(" {id owner title}", selectionSet.toString());
     }
 }
