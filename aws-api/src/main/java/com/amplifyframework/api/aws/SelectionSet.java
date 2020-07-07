@@ -36,6 +36,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Class representing a node of a SelectionSet for use in a GraphQLDocument.
+ * A root SelectionSet node will have a null value.
+ */
 public final class SelectionSet {
     private final String value;
     private final Set<SelectionSet> nodes;
@@ -48,11 +52,20 @@ public final class SelectionSet {
         this(selectionSet.value, new HashSet<>(selectionSet.nodes));
     }
 
+    /**
+     * Default constructor.
+     * @param value String value of the field
+     * @param nodes Set of child nodes
+     */
     public SelectionSet(String value, Set<SelectionSet> nodes) {
         this.value = value;
         this.nodes = nodes;
     }
 
+    /**
+     * Returns child nodes.
+     * @return child nodes
+     */
     public Set<SelectionSet> getNodes() {
         return nodes;
     }
@@ -113,9 +126,9 @@ public final class SelectionSet {
     }
 
     /**
-     * Class for creating and serializing a selection set within a GraphQL document.
+     * Factory class for creating and serializing a selection set within a GraphQL document.
      */
-    final static class Factory {
+    static final class Factory {
         private static final String ITEMS_KEY = "items";
         private static final String NEXT_TOKEN_KEY = "nextToken";
 
@@ -124,13 +137,13 @@ public final class SelectionSet {
 
         /**
          * Returns selection set containing the fields of the provided model class, as well as nested models.
-         * @param modelClass model class
+         * @param clazz model class
          * @return selection set containing all of the fields of the provided model class
          * @throws AmplifyException if a ModelSchema cannot be created from the provided model class.
          */
-        public static SelectionSet fromModelClass(Class<? extends Model> modelClass, OperationType operationType, int depth)
+        public static SelectionSet fromModelClass(Class<? extends Model> clazz, OperationType operationType, int depth)
                 throws AmplifyException {
-            SelectionSet node = new SelectionSet(null, getModelFields(modelClass, depth));
+            SelectionSet node = new SelectionSet(null, getModelFields(clazz, depth));
             if (QueryType.LIST.equals(operationType)) {
                 node = wrapPagination(node);
             }
@@ -138,7 +151,8 @@ public final class SelectionSet {
         }
 
         /**
-         * Expects a {@link SelectionSet} containing {@link Model} fields as nodes, and returns a new root node with two children:
+         * Expects a {@link SelectionSet} containing {@link Model} fields as nodes, and returns a new root node with two
+         * children:
          *  - "items" with nodes being the children of the provided node.
          *  - "nextToken"
          *
