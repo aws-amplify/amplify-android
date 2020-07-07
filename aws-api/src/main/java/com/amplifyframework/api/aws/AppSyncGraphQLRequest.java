@@ -112,7 +112,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      * @param authProvider CognitoUserPoolsAuthProvider for obtaining the username to set as the owner field.
      * @throws ApiException if request requires owner argument and authProvider or authProvider.getUsername() is null.
      */
-    public void setAuthProvider(CognitoUserPoolsAuthProvider authProvider) throws ApiException {
+    public void setOwner(CognitoUserPoolsAuthProvider authProvider) throws ApiException {
         for (AuthRule authRule : modelSchema.getAuthRules()) {
             if (isOwnerArgumentRequired(authRule.getOperationsOrDefault())) {
                 setVariable(authRule.getOwnerFieldOrDefault(), "String!", getUsername(authProvider));
