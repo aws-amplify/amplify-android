@@ -42,6 +42,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.amplifyframework.util.Casing.CaseType.CAMEL_CASE;
+import static com.amplifyframework.util.Casing.CaseType.PASCAL_CASE;
+import static com.amplifyframework.util.Casing.CaseType.SCREAMING_SNAKE_CASE;
+
 /**
  * A request against an AppSync GraphQL endpoint.
  * @param <R> The type of data contained in the GraphQLResponse expected from this request.
@@ -180,8 +184,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
 
         String modelName = modelSchema.getName();
         String operationString = new StringBuilder()
-                .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.CAMEL_CASE)
-                        .convert(operationType.toString()))
+                .append(Casing.from(SCREAMING_SNAKE_CASE).to(CAMEL_CASE).convert(operationType.toString()))
                 .append(modelName)
                 .append(QueryType.LIST.equals(operationType) ? "s" : "")
                 .append(inputParameterString)
@@ -191,8 +194,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         String queryString = new StringBuilder()
                 .append(operationType.getOperationName())
                 .append(" ")
-                .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.PASCAL_CASE)
-                        .convert(operationType.toString()))
+                .append(Casing.from(SCREAMING_SNAKE_CASE).to(PASCAL_CASE).convert(operationType.toString()))
                 .append(modelName)
                 .append(inputTypeString)
                 .append(" ")
