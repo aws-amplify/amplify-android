@@ -125,8 +125,7 @@ final class SelectionSet {
          * @param node node to copy
          */
         Node(Node node) {
-            this.value = node.value;
-            this.nodes = new HashSet<>(node.nodes);
+            this(node.value, new HashSet<>(node.nodes));
         }
 
         private Node(String value, Set<Node> nodes) {
