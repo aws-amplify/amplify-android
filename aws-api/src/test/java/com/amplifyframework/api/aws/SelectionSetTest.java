@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testutils.Resources;
@@ -34,7 +35,7 @@ public class SelectionSetTest {
      */
     @Test
     public void selectionSetSerializesToExpectedValue() throws AmplifyException {
-        SelectionSet.Node selectionSet = SelectionSet.fromModelClass(Post.class, 2);
+        SelectionSet.Node selectionSet = SelectionSet.fromModelClass(Post.class, QueryType.GET,2);
         assertEquals(Resources.readAsString("selection-set-post.txt").trim(), selectionSet.toString().trim());
     }
 
@@ -44,7 +45,7 @@ public class SelectionSetTest {
      */
     @Test
     public void ownerFieldAddedToSelectionSet() throws AmplifyException {
-        SelectionSet.Node selectionSet = SelectionSet.fromModelClass(OwnerAuth.class, 2);
+        SelectionSet.Node selectionSet = SelectionSet.fromModelClass(OwnerAuth.class, QueryType.GET,2);
         assertEquals(" {id owner title}", selectionSet.toString());
     }
 }
