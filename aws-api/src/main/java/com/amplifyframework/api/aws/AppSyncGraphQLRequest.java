@@ -47,7 +47,7 @@ import java.util.Objects;
  * @param <R> The type of data contained in the GraphQLResponse expected from this request.
  */
 public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
-    private static final int DEFAULT_LEVEL_DEPTH = 2;
+    private static final int DEFAULT_DEPTH = 2;
 
     private final ModelSchema modelSchema;
     private final OperationType operationType;
@@ -62,10 +62,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     private AppSyncGraphQLRequest(Builder builder) throws AmplifyException {
         super(builder.responseType, new GsonVariablesSerializer());
         this.modelSchema = ModelSchema.fromModelClass(builder.modelClass);
-        SelectionSet.Node set = SelectionSet.fromModelClass(builder.modelClass, DEFAULT_LEVEL_DEPTH);
-        if (QueryType.LIST.equals(builder.operationType)) {
-            set = SelectionSet.wrapPagination(set);
-        }
+        SelectionSet.Node set = SelectionSet.fromModelClass(builder.modelClass, builder.operationType, DEFAULT_DEPTH);
         this.selectionSet = set;
         this.operationType = builder.operationType;
         this.variables = builder.variables;

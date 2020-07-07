@@ -19,6 +19,8 @@ import android.text.TextUtils;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.graphql.OperationType;
+import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
@@ -50,8 +52,13 @@ final class SelectionSet {
      * @return selection set containing all of the fields of the provided model class
      * @throws AmplifyException if a ModelSchema cannot be created from the provided model class.
      */
-    public static Node fromModelClass(Class<? extends Model> modelClass, int depth) throws AmplifyException {
-        return new Node(null, getModelFields(modelClass, depth));
+    public static Node fromModelClass(Class<? extends Model> modelClass, OperationType operationType, int depth)
+            throws AmplifyException {
+        Node node = new Node(null, getModelFields(modelClass, depth));
+        if (QueryType.LIST.equals(operationType)) {
+            node = wrapPagination(node);
+        }
+        return node;
     }
 
     /**
@@ -62,7 +69,7 @@ final class SelectionSet {
      * @param node a root node, with a value of null, and pagination fields
      * @return
      */
-    public static Node wrapPagination(Node node) {
+    private static Node wrapPagination(Node node) {
         return new Node(null, wrapPagination(node.nodes));
     }
 
