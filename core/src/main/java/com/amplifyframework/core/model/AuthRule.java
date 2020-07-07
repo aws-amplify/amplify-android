@@ -18,6 +18,8 @@ package com.amplifyframework.core.model;
 import android.text.TextUtils;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.util.Empty;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -112,7 +114,7 @@ public final class AuthRule {
      * @return list of {@link ModelOperation}s for which this {@link AuthRule} should apply.
      */
     public List<ModelOperation> getOperationsOrDefault() {
-        if (this.operations == null || this.operations.isEmpty()) {
+        if (Empty.check(this.operations)) {
             return Arrays.asList(
                     ModelOperation.CREATE,
                     ModelOperation.UPDATE,
