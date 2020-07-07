@@ -267,6 +267,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 request.setOwner(cognitoProvider);
             } catch (ApiException exception) {
                 onSubscriptionFailure.accept(exception);
+                return null;
             }
         }
 
