@@ -15,7 +15,7 @@
 -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/devLayout"
+    android:id="@+id/dev_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
@@ -25,13 +25,46 @@
         android:layout_height="wrap_content"
         android:background="@android:color/background_light"
         android:orientation="vertical"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:padding="15dp">
 
         <TextView
-            android:id="@+id/textView2"
+            android:id="@+id/title_text_view"
             android:layout_width="match_parent"
-            android:layout_height="179dp"
-            android:text="@string/menuTitle"
-            android:textColor="@android:color/black"/>
+            android:layout_height="wrap_content"
+            android:text="@string/menu_title"
+            android:textColor="@android:color/black"
+            android:background="@android:color/darker_gray"
+            android:gravity="center"
+            android:padding="10dp"
+            android:layout_marginBottom="20dp" />
+
+        <Button
+            android:id="@+id/env"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/env_button_title"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/device"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/device_button_title"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/logs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/logs_button_title"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/file_issue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/file_issue_button_title"
+            android:textAllCaps="false" />
     </LinearLayout>
 </RelativeLayout>

@@ -14,6 +14,10 @@
    permissions and limitations under the License.
 -->
 
-<resources >
-    <string name="menuTitle">Amplify Developer Menu</string>
+<resources>
+    <string name="menu_title">Amplify Developer Menu</string>
+    <string name="env_button_title">View Environment Information</string>
+    <string name="device_button_title">View Device Information</string>
+    <string name="logs_button_title">View Logs</string>
+    <string name="file_issue_button_title">File Issue</string>
 </resources>
