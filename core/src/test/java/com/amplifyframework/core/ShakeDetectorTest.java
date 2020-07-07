@@ -50,10 +50,10 @@ import static org.mockito.Mockito.when;
 public class ShakeDetectorTest {
     // Amount of time in milliseconds between sending sensor
     // events to the sensor listener.
-    private static final int SENSOR_DATA_DELAY = 65;
+    private static final int SENSOR_DATA_POLLING_INTERVAL_MS = 65;
     // Maximum amount of time in seconds before a test times out if the callback
     // method has not been called.
-    private static final int TIMEOUT = 5;
+    private static final int SHAKE_RESULT_TIMEOUT_SECS = 5;
 
     /**
      * Test that the callback method is called when a shake
@@ -83,7 +83,7 @@ public class ShakeDetectorTest {
             ShakeDetector sd = new ShakeDetector(mock(Context.class), emitter::onComplete);
         }).observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
-                .timeout(TIMEOUT, TimeUnit.SECONDS)
+                .timeout(SHAKE_RESULT_TIMEOUT_SECS, TimeUnit.SECONDS)
                 .blockingAwait();
     }
 
@@ -99,7 +99,7 @@ public class ShakeDetectorTest {
             sd.stopDetecting();
         }).observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
-                .timeout(TIMEOUT, TimeUnit.SECONDS)
+                .timeout(SHAKE_RESULT_TIMEOUT_SECS, TimeUnit.SECONDS)
                 .blockingAwait();
     }
 
@@ -128,7 +128,7 @@ public class ShakeDetectorTest {
             sd.startDetecting();
         }).observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
-                .timeout(TIMEOUT, TimeUnit.SECONDS)
+                .timeout(SHAKE_RESULT_TIMEOUT_SECS, TimeUnit.SECONDS)
                 .blockingAwait();
     }
 
@@ -167,9 +167,9 @@ public class ShakeDetectorTest {
                     sensorValuesField.setAccessible(true);
                     sensorValuesField.set(mockEvent, accelValues);
                     listener.onSensorChanged(mockEvent);
-                    Sleep.milliseconds(SENSOR_DATA_DELAY);
-                } catch (NoSuchFieldException | IllegalAccessException error) {
-                    error.printStackTrace();
+                    Sleep.milliseconds(SENSOR_DATA_POLLING_INTERVAL_MS);
+                } catch (NoSuchFieldException | IllegalAccessException reflectionFailure) {
+                    throw new RuntimeException(reflectionFailure);
                 }
             }
         });
