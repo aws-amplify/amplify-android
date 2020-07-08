@@ -30,7 +30,7 @@ public enum QueryType implements OperationType {
     LIST;
 
     @Override
-    public String getOperationName() {
-        return "query";
+    public Operation getOperation() {
+        return Operation.QUERY;
     }
 }

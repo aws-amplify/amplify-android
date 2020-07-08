@@ -20,9 +20,8 @@ package com.amplifyframework.api.graphql;
  */
 public interface OperationType {
     /**
-     * Returns the name of the operation to be used in the GraphQL document (i.e. query, subscription, or mutation).
-     *
-     * @return the name of the operation to be used in the GraphQL document (i.e. query, subscription, or mutation).
+     * Returns the Operation to be used in the GraphQL document (i.e. query, subscription, or mutation).
+     * @return the Operation to be used in the GraphQL document (i.e. query, subscription, or mutation).
      */
-    String getOperationName();
+    Operation getOperation();
 }

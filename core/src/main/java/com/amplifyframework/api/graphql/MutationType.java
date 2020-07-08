@@ -29,7 +29,7 @@ public enum MutationType implements OperationType {
     DELETE;
 
     @Override
-    public String getOperationName() {
-        return "mutation";
+    public Operation getOperation() {
+        return Operation.MUTATION;
     }
 }

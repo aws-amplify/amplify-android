@@ -195,7 +195,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
                 .toString();
 
         String queryString = new StringBuilder()
-                .append(operationType.getOperationName())
+                .append(operationType.getOperation().getName())
                 .append(" ")
                 .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.PASCAL_CASE)
                         .convert(operationType.toString()))
