@@ -27,6 +27,7 @@ import com.amplifyframework.api.graphql.model.ModelPagination;
 import com.amplifyframework.api.graphql.model.ModelQuery;
 import com.amplifyframework.api.graphql.model.ModelSubscription;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuthCustomField;
@@ -245,10 +246,10 @@ public final class AWSApiPluginTest {
     public void graphQlSubscriptionAddsOwnerVariable() throws JSONException {
         GraphQLRequest<OwnerAuth> request = ModelSubscription.onCreate(OwnerAuth.class);
         plugin.subscribe(request,
-            subscriptionId -> { },
-            response -> { },
-            exception -> { },
-            EmptyAction.instance());
+            NoOpConsumer.create(),
+            NoOpConsumer.create(),
+            NoOpConsumer.create(),
+            EmptyAction.create());
 
         JSONAssert.assertEquals(Resources.readAsString("request-owner-auth.json"),
                 request.getContent(),
@@ -263,10 +264,10 @@ public final class AWSApiPluginTest {
     public void graphQLSubscriptionAddsCustomOwnerField() throws JSONException {
         GraphQLRequest<OwnerAuthCustomField> request = ModelSubscription.onUpdate(OwnerAuthCustomField.class);
         plugin.subscribe(request,
-            subscriptionId -> { },
-            response -> { },
-            exception -> { },
-            EmptyAction.instance());
+            NoOpConsumer.create(),
+            NoOpConsumer.create(),
+            NoOpConsumer.create(),
+            EmptyAction.create());
 
         JSONAssert.assertEquals(Resources.readAsString("request-owner-auth-custom-field.json"),
                 request.getContent(),
@@ -284,10 +285,10 @@ public final class AWSApiPluginTest {
     public void graphQLSubscriptionDoesntAddOwnerFieldIfTypeIsNotProtected() throws JSONException {
         GraphQLRequest<OwnerAuthReadUpdateOnly> request = ModelSubscription.onUpdate(OwnerAuthReadUpdateOnly.class);
         plugin.subscribe(request,
-            subscriptionId -> { },
-            response -> { },
-            exception -> { },
-            EmptyAction.instance());
+            NoOpConsumer.create(),
+            NoOpConsumer.create(),
+            NoOpConsumer.create(),
+            EmptyAction.create());
 
         JSONAssert.assertEquals(Resources.readAsString("request-owner-auth-read-update-only.json"),
                 request.getContent(),
