@@ -15,7 +15,11 @@
 
 package com.amplifyframework.core.model;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 
@@ -106,4 +110,72 @@ public final class ModelSchemaTest {
         // showed that the object was already in the collection.
         assertSame(actualModelSchema, modelSchemaSet.iterator().next());
     }
+
+    /**
+     * Verify that the owner field is removed if the value is null
+     * @throws AmplifyException if ModelSchema can't be derived from class.
+     */
+    @Test
+    public void ownerFieldIsRemovedIfNull() throws AmplifyException {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "111");
+        expected.put("description", "Mop the floor");
+
+        // Act
+        ModelSchema modelSchema = ModelSchema.fromModelClass(Todo.class);
+        Todo todo = new Todo("111", "Mop the floor", null);
+        Map<String, Object> actual = modelSchema.getMapOfFieldNameAndValues(todo);
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+    /**
+     * Verify that the owner field is NOT removed if the value is set
+     * @throws AmplifyException if ModelSchema can't be derived from class.
+     */
+    @Test
+    public void ownerFieldIsNotRemovedIfSet() throws AmplifyException {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "111");
+        expected.put("description", "Mop the floor");
+        expected.put("owner", "johndoe");
+
+        // Act
+        ModelSchema modelSchema = ModelSchema.fromModelClass(Todo.class);
+        Todo todo = new Todo("111", "Mop the floor", "johndoe");
+        Map<String, Object> actual = modelSchema.getMapOfFieldNameAndValues(todo);
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
+    class Todo implements Model {
+        @com.amplifyframework.core.model.annotations.ModelField(targetType = "ID", isRequired = true)
+        private final String id;
+
+        @com.amplifyframework.core.model.annotations.ModelField(isRequired = true)
+        private final String description;
+
+        @com.amplifyframework.core.model.annotations.ModelField()
+        private final String owner;
+
+        Todo(String id, String description, String owner) {
+            this.id = id;
+            this.description = description;
+            this.owner = owner;
+        }
+
+
+        @NonNull
+        @Override
+        public String getId() {
+            return "111";
+        }
+    }
+
 }

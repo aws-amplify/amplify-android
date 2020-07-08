@@ -348,6 +348,21 @@ public final class ModelSchema {
                         "Check if this model schema is a correct representation of the fields in the provided Object");
             }
         }
+
+        /**
+         * If the owner field is exists on the model, and the value is null, it should be omitted when performing a
+         * mutation because the AppSync server will automatically populate it using the authentication token provided
+         * in the request header.  The logic below filters out the owner field if null for this scenario.
+         */
+        for(AuthRule authRule : getAuthRules()) {
+            if(AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+                String ownerField = authRule.getOwnerFieldOrDefault();
+                if (result.containsKey(ownerField) && result.get(ownerField) == null) {
+                    result.remove(ownerField);
+                }
+            }
+        }
+
         return result;
     }
 
