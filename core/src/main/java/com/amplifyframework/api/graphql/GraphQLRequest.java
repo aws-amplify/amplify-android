@@ -84,9 +84,11 @@ public abstract class GraphQLRequest<R> {
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n");
 
+        String variables = getVariables().isEmpty() ? null : variablesSerializer.serialize(getVariables());
+
         return Wrap.inBraces(TextUtils.join(", ", Arrays.asList(
-            "\"query\": \"" + query + "\"",
-            "\"variables\": " + (getVariables().isEmpty() ? null : variablesSerializer.serialize(getVariables())))));
+            Wrap.inDoubleQuotes("query") + ": " + Wrap.inDoubleQuotes(query),
+            Wrap.inDoubleQuotes("variables") + ": " + variables)));
     }
 
     /**
