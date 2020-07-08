@@ -112,7 +112,7 @@ public final class ModelSchemaTest {
     }
 
     /**
-     * Verify that the owner field is removed if the value is null
+     * Verify that the owner field is removed if the value is null.
      * @throws AmplifyException if ModelSchema can't be derived from class.
      */
     @Test
@@ -132,7 +132,7 @@ public final class ModelSchemaTest {
     }
 
     /**
-     * Verify that the owner field is NOT removed if the value is set
+     * Verify that the owner field is NOT removed if the value is set..
      * @throws AmplifyException if ModelSchema can't be derived from class.
      */
     @Test
@@ -152,7 +152,6 @@ public final class ModelSchemaTest {
         assertEquals(expected, actual);
     }
 
-
     @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
     class Todo implements Model {
         @com.amplifyframework.core.model.annotations.ModelField(targetType = "ID", isRequired = true)
@@ -161,15 +160,15 @@ public final class ModelSchemaTest {
         @com.amplifyframework.core.model.annotations.ModelField(isRequired = true)
         private final String description;
 
-        @com.amplifyframework.core.model.annotations.ModelField()
+        @com.amplifyframework.core.model.annotations.ModelField
         private final String owner;
 
+        @SuppressWarnings("ParameterName") // checkstyle wants variable names to be >2 chars, but id is only 2.
         Todo(String id, String description, String owner) {
             this.id = id;
             this.description = description;
             this.owner = owner;
         }
-
 
         @NonNull
         @Override

@@ -354,8 +354,8 @@ public final class ModelSchema {
          * mutation because the AppSync server will automatically populate it using the authentication token provided
          * in the request header.  The logic below filters out the owner field if null for this scenario.
          */
-        for(AuthRule authRule : getAuthRules()) {
-            if(AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+        for (AuthRule authRule : getAuthRules()) {
+            if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
                 String ownerField = authRule.getOwnerFieldOrDefault();
                 if (result.containsKey(ownerField) && result.get(ownerField) == null) {
                     result.remove(ownerField);

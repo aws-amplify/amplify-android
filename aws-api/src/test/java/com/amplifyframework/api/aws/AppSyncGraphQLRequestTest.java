@@ -24,6 +24,7 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelOperation;
+import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 
 import org.junit.Before;
@@ -37,6 +38,9 @@ import static org.mockito.Mockito.when;
 public class AppSyncGraphQLRequestTest {
     private CognitoUserPoolsAuthProvider authProvider;
 
+    /**
+     * Setup mocks.
+     */
     @Before
     public void setup() {
         authProvider = mock(CognitoUserPoolsAuthProvider.class);
@@ -44,7 +48,7 @@ public class AppSyncGraphQLRequestTest {
     }
 
     /**
-     * Verify that owner argument is required for ON_CREATE subscription if ModelOperation.CREATE is specified
+     * Verify that owner argument is required for ON_CREATE subscription if ModelOperation.CREATE is specified.
      * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
      */
     @Test
@@ -54,7 +58,7 @@ public class AppSyncGraphQLRequestTest {
     }
 
     /**
-     * Verify that owner argument is required for ON_UPDATE subscription if ModelOperation.UPDATE is specified
+     * Verify that owner argument is required for ON_UPDATE subscription if ModelOperation.UPDATE is specified.
      * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
      */
     @Test
@@ -64,7 +68,7 @@ public class AppSyncGraphQLRequestTest {
     }
 
     /**
-     * Verify that owner argument is required for ON_DELETE subscription if ModelOperation.DELETE is specified
+     * Verify that owner argument is required for ON_DELETE subscription if ModelOperation.DELETE is specified.
      * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
      */
     @Test
@@ -74,7 +78,7 @@ public class AppSyncGraphQLRequestTest {
     }
 
     /**
-     * Verify owner argument is NOT required if the subscription type is not one of the restricted operations
+     * Verify owner argument is NOT required if the subscription type is not one of the restricted operations.
      * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
      */
     @Test
@@ -111,7 +115,8 @@ public class AppSyncGraphQLRequestTest {
         assertFalse(isOwnerArgumentAdded(Owner.class, MutationType.CREATE));
     }
 
-    private boolean isOwnerArgumentAdded(Class<? extends Model> clazz, OperationType operationType) throws AmplifyException {
+    private boolean isOwnerArgumentAdded(Class<? extends Model> clazz, OperationType operationType)
+            throws AmplifyException {
         AppSyncGraphQLRequest<Model> request = AppSyncGraphQLRequest.builder()
                 .modelClass(clazz)
                 .operationType(operationType)
@@ -121,21 +126,21 @@ public class AppSyncGraphQLRequestTest {
         return "johndoe".equals(request.getVariables().get("owner"));
     }
 
-    @ModelConfig(authRules= { @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.OWNER) })
-    private static abstract class Owner implements Model { }
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
+    private abstract class Owner implements Model { }
 
-    @ModelConfig(authRules= { @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.OWNER, operations = { ModelOperation.CREATE }) })
-    private static abstract class OwnerCreate implements Model { }
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, operations = ModelOperation.CREATE)})
+    private abstract class OwnerCreate implements Model { }
 
-    @ModelConfig(authRules= { @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.OWNER, operations = { ModelOperation.READ }) })
-    private static abstract class OwnerRead implements Model { }
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, operations = ModelOperation.READ)})
+    private abstract class OwnerRead implements Model { }
 
-    @ModelConfig(authRules= { @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.OWNER, operations = { ModelOperation.UPDATE }) })
-    private static abstract class OwnerUpdate implements Model { }
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, operations = ModelOperation.UPDATE)})
+    private abstract class OwnerUpdate implements Model { }
 
-    @ModelConfig(authRules= { @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.OWNER, operations = { ModelOperation.DELETE }) })
-    private static abstract class OwnerDelete implements Model { }
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, operations = ModelOperation.DELETE)})
+    private abstract class OwnerDelete implements Model { }
 
-    @ModelConfig(authRules= { @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.GROUPS) })
-    private static abstract class Group implements Model { }
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.GROUPS)})
+    private abstract class Group implements Model { }
 }

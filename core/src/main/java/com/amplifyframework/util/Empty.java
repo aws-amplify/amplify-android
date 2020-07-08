@@ -23,6 +23,7 @@ import java.util.Map;
 /**
  * Utility for common Collection operations which are not otherwise available.
  */
+@SuppressWarnings("LineLength")
 public final class Empty {
     private Empty() {}
 
@@ -50,7 +51,7 @@ public final class Empty {
      * TextUtils.isEmpty() provides the same behavior, but throws an exception when called from a unit test, since the
      *  Android library is not available in unit tests.  Empty.check() is preferred to allow for unit testing.
      *
-     * @see http://tools.android.com/tech-docs/unit-testing-support#TOC-Method-...-not-mocked.- for more details.
+     * @see <a href="http://tools.android.com/tech-docs/unit-testing-support#TOC-Method-...-not-mocked.">documentation</a> for more details.
      *
      * @param str instance of String to check
      * @return true if str is null or empty
