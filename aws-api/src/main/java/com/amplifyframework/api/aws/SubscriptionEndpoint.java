@@ -68,7 +68,7 @@ final class SubscriptionEndpoint {
     private final Map<String, Subscription<?>> subscriptions;
     private final GraphQLResponse.Factory responseFactory;
     private final TimeoutWatchdog timeoutWatchdog;
-    private final Set<String> pendingSubscriptions;
+    private final Set<String> pendingSubscriptionIds;
     private final Request websocketInitRequest;
     private final String subscriptionUrl;
     private CountDownLatch connectionResponse;
@@ -87,7 +87,7 @@ final class SubscriptionEndpoint {
         this.responseFactory = Objects.requireNonNull(responseFactory);
         this.authorizer = Objects.requireNonNull(authorizer);
         this.timeoutWatchdog = new TimeoutWatchdog();
-        this.pendingSubscriptions = Collections.synchronizedSet(new HashSet<>());
+        this.pendingSubscriptionIds = Collections.synchronizedSet(new HashSet<>());
         this.subscriptionUrl = buildConnectionRequestUrl();
         this.websocketInitRequest = new Request.Builder()
             .url(subscriptionUrl)
@@ -118,11 +118,11 @@ final class SubscriptionEndpoint {
             webSocket = okHttpClient.newWebSocket(websocketInitRequest, webSocketListener);
         }
         final String subscriptionId = UUID.randomUUID().toString();
-        pendingSubscriptions.add(subscriptionId);
+        pendingSubscriptionIds.add(subscriptionId);
         // Every request waits here for the connection to be ready.
         if (!webSocketListener.waitForConnectionReady()) {
             // If the latch didn't count all the way down
-            if (pendingSubscriptions.remove(subscriptionId)) {
+            if (pendingSubscriptionIds.remove(subscriptionId)) {
                 // The subscription was pending, so we need to emit an error.
                 onSubscriptionError.accept(
                     new ApiException(webSocketListener.getFailureDetail(), AmplifyException.TODO_RECOVERY_SUGGESTION));
@@ -142,7 +142,7 @@ final class SubscriptionEndpoint {
             );
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
-            if (pendingSubscriptions.remove(subscriptionId)) {
+            if (pendingSubscriptionIds.remove(subscriptionId)) {
                 onSubscriptionError.accept(new ApiException(
                     "Failed to construct subscription registration message.",
                     exception,
@@ -159,7 +159,7 @@ final class SubscriptionEndpoint {
         );
         subscriptions.put(subscriptionId, subscription);
         if (subscription.awaitSubscriptionReady()) {
-            pendingSubscriptions.remove(subscriptionId);
+            pendingSubscriptionIds.remove(subscriptionId);
             onSubscriptionStarted.accept(subscriptionId);
         }
     }
@@ -168,7 +168,7 @@ final class SubscriptionEndpoint {
         Subscription<?> subscription = subscriptions.get(subscriptionId);
         // If the subscription is still present (and it should also be pending if it hasn't been canceled),
         // then invoke the callback
-        if (subscription != null && pendingSubscriptions.remove(subscriptionId)) {
+        if (subscription != null && pendingSubscriptionIds.remove(subscriptionId)) {
             subscription.acknowledgeSubscriptionReady();
         } else {
             throw new ApiException(
@@ -224,7 +224,7 @@ final class SubscriptionEndpoint {
         // First thing we should do is remove it from the pending subscription collection so
         // the other methods can't grab a hold of the subscription.
         final Subscription<?> subscription = subscriptions.get(subscriptionId);
-        boolean wasSubscriptionPending = pendingSubscriptions.remove(subscriptionId);
+        boolean wasSubscriptionPending = pendingSubscriptionIds.remove(subscriptionId);
         // If the subscription was not in the either of the subscriptions collections.
         if (subscription == null && !wasSubscriptionPending) {
             throw new ApiException(
