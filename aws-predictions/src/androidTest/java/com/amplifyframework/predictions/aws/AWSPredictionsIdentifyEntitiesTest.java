@@ -89,6 +89,16 @@ public final class AWSPredictionsIdentifyEntitiesTest {
         FeatureAssert.assertMatches(GenderBinaryType.MALE, entity.getGender());
         FeatureAssert.assertMatches(EmotionType.HAPPY, Collections.max(entity.getEmotions()));
         assertNotNull(entity.getAgeRange());
-        assertTrue(entity.getAgeRange().contains(56));
+
+        int jeffAge = 56;
+
+        // When this test was created, Rekognition returned an age range containing Jeff's age.  The algorithm
+        // recently changed to predict an age range of 37-55.  The goal of this test is to verify a sane response,
+        // not verify the accurate of Rekognition, so we will add a 20 year buffer to the age range (e.g. if age range
+        // is 37 to 55, the test will pass because 56 is still between 37-20 (17) and 55+20 (75)).
+        int buffer = 20;
+
+        assertTrue(jeffAge <= entity.getAgeRange().getHigh() + buffer);
+        assertTrue(jeffAge >= entity.getAgeRange().getLow() - buffer);
     }
 }
