@@ -23,6 +23,7 @@ import com.amplifyframework.api.graphql.OperationType;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Wrap;
 
@@ -93,7 +94,7 @@ public final class SelectionSet {
             builder.append(value);
         }
 
-        if (nodes != null && nodes.size() > 0) {
+        if (!Empty.check(nodes)) {
             for (SelectionSet node : nodes) {
                 fieldsList.add(node.toString());
             }
