@@ -250,7 +250,7 @@ public final class AWSApiPluginTest {
             exception -> { },
             EmptyAction.instance());
 
-        JSONAssert.assertEquals(Resources.readAsString("request-ownerauth.json"),
+        JSONAssert.assertEquals(Resources.readAsString("request-owner-auth.json"),
                 request.getContent(),
                 true);
     }
@@ -268,7 +268,7 @@ public final class AWSApiPluginTest {
             exception -> { },
             EmptyAction.instance());
 
-        JSONAssert.assertEquals(Resources.readAsString("request-ownerauthcustomfield.json"),
+        JSONAssert.assertEquals(Resources.readAsString("request-owner-auth-custom-field.json"),
                 request.getContent(),
                 true);
     }
@@ -289,7 +289,7 @@ public final class AWSApiPluginTest {
             exception -> { },
             EmptyAction.instance());
 
-        JSONAssert.assertEquals(Resources.readAsString("request-ownerauthreadupdateonly.json"),
+        JSONAssert.assertEquals(Resources.readAsString("request-owner-auth-read-update-only.json"),
                 request.getContent(),
                 true);
     }
