@@ -1,5 +1,5 @@
 {
-  "query": "subscription OnCreateOwnerAuth($owner: String!) {onCreateOwnerAuth(owner: $owner) {id owner title}}",
+  "query": "subscription OnCreateOwnerAuth($owner: String!) {onCreateOwnerAuth(owner: $owner) {id title}}",
   "variables": {
     "owner": "johndoe"
   }
