@@ -30,6 +30,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.UserAgent;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -45,6 +46,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -57,7 +59,7 @@ import okhttp3.WebSocketListener;
  * and multiple GraphQL subscriptions that work on top of it.
  */
 final class SubscriptionEndpoint {
-    private static final Logger LOG = Amplify.Logging.forNamespace("aws-api:websocket");
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final int CONNECTION_ACKNOWLEDGEMENT_TIMEOUT = 30 /* seconds */;
     private static final int NORMAL_CLOSURE_STATUS = 1000;
 
@@ -66,11 +68,14 @@ final class SubscriptionEndpoint {
     private final Map<String, Subscription<?>> subscriptions;
     private final GraphQLResponse.Factory responseFactory;
     private final TimeoutWatchdog timeoutWatchdog;
-    private final CountDownLatch connectionResponse;
     private final Set<String> pendingSubscriptions;
-    private String subscriptionUrl;
+    private final Request websocketInitRequest;
+    private final String subscriptionUrl;
+    private CountDownLatch connectionResponse;
     private String connectionFailure;
     private WebSocket webSocket;
+    private AmplifyWebSocketListener webSocketListener;
+    private OkHttpClient okHttpClient;
 
     SubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
@@ -79,70 +84,48 @@ final class SubscriptionEndpoint {
     ) throws ApiException {
         this.apiConfiguration = Objects.requireNonNull(apiConfiguration);
         this.subscriptions = new ConcurrentHashMap<>();
-        this.pendingSubscriptions = Collections.synchronizedSet(new HashSet<>());
         this.responseFactory = Objects.requireNonNull(responseFactory);
         this.authorizer = Objects.requireNonNull(authorizer);
         this.timeoutWatchdog = new TimeoutWatchdog();
-        this.connectionResponse = new CountDownLatch(1);
+        this.pendingSubscriptions = Collections.synchronizedSet(new HashSet<>());
         this.subscriptionUrl = buildConnectionRequestUrl();
+        this.websocketInitRequest = new Request.Builder()
+            .url(subscriptionUrl)
+            .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
+            .build();
+        this.okHttpClient = new OkHttpClient.Builder()
+            .addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string))
+            .retryOnConnectionFailure(true)
+            .build();
     }
 
     synchronized <T> void requestSubscription(
-            @NonNull String subscriptionId,
             @NonNull GraphQLRequest<T> request,
             @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<T>> onNextItem,
             @NonNull Consumer<ApiException> onSubscriptionError,
             @NonNull Action onSubscriptionComplete) {
-        Objects.requireNonNull(subscriptionId);
         Objects.requireNonNull(request);
         Objects.requireNonNull(onSubscriptionStarted);
         Objects.requireNonNull(onNextItem);
         Objects.requireNonNull(onSubscriptionError);
         Objects.requireNonNull(onSubscriptionComplete);
-        LOG.debug("Subscription request method called.");
 
-        // If the subscriptions already exists OR we can't add to the pendingSubscriptions set,
-        // then it is a duplicate subscriptionId.
-        if (subscriptions.containsKey(subscriptionId) || !pendingSubscriptions.add(subscriptionId)) {
-            onSubscriptionError.accept(
-                new ApiException(
-                        "A subscription with id " + subscriptionId + " already exists.",
-                        null,
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                ));
-            return;
+        // The first call to subscribe OR a disconnected websocket listener will
+        // force a new connection to be created.
+        if (webSocketListener == null || webSocketListener.isDisconnectedState()) {
+            webSocketListener = new AmplifyWebSocketListener(new CountDownLatch(1));
+            webSocket = okHttpClient.newWebSocket(websocketInitRequest, webSocketListener);
         }
-
-        // The first call to subscribe will trigger the websocket to be setup.
-        if (webSocket == null) {
-            connectionFailure = null;
-            webSocket = createWebSocket();
-            try {
-                connectionResponse.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS);
-            } catch (InterruptedException interruptedException) {
-                // If it was interrupted, we just want to bail since it was probably triggered
-                // by the Future being cancelled in SubscriptionOperation
-                return;
-            }
-            if (connectionResponse.getCount() != 0) {
-                // Only try to call the handlers if the call is still pending, otherwise
-                // you'll probably be invoking a callback that was already diposed.
-                if (pendingSubscriptions.remove(subscriptionId)){
-                    onSubscriptionError.accept(new ApiException(
-                        "Subscription timed out waiting for acknowledgement",
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                }
-                return;
-            } else if (connectionFailure != null) {
-                // Only try to call the handlers if the call is still pending, otherwise
-                // you'll probably be invoking a callback that was already diposed.
-                if (pendingSubscriptions.remove(subscriptionId)) {
-                    onSubscriptionError.accept(new ApiException(
-                        connectionFailure, "Check if you are authorized to make this subscription"
-                    ));
-                }
+        final String subscriptionId = UUID.randomUUID().toString();
+        pendingSubscriptions.add(subscriptionId);
+        // Every request waits here for the connection to be ready.
+        if (!webSocketListener.waitForConnectionReady()) {
+            // If the latch didn't count all the way down
+            if (pendingSubscriptions.remove(subscriptionId)) {
+                // The subscription was pending, so we need to emit an error.
+                onSubscriptionError.accept(
+                    new ApiException(webSocketListener.getFailureDetail(), AmplifyException.TODO_RECOVERY_SUGGESTION));
                 return;
             }
         }
@@ -159,7 +142,7 @@ final class SubscriptionEndpoint {
             );
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
-            if (pendingSubscriptions.remove(subscriptionId)){
+            if (pendingSubscriptions.remove(subscriptionId)) {
                 onSubscriptionError.accept(new ApiException(
                     "Failed to construct subscription registration message.",
                     exception,
@@ -176,105 +159,8 @@ final class SubscriptionEndpoint {
         );
         subscriptions.put(subscriptionId, subscription);
         if (subscription.awaitSubscriptionReady()) {
+            pendingSubscriptions.remove(subscriptionId);
             onSubscriptionStarted.accept(subscriptionId);
-        }
-    }
-
-    private WebSocket createWebSocket() {
-        Request request = new Request.Builder()
-            .url(subscriptionUrl)
-            .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
-            .build();
-
-        return new OkHttpClient.Builder()
-            .addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string))
-            .retryOnConnectionFailure(true)
-            .build()
-            .newWebSocket(request, new WebSocketListener() {
-                @Override
-                public void onOpen(@NonNull final WebSocket webSocket, @NonNull final Response response) {
-                    sendConnectionInit(webSocket);
-                }
-
-                @Override
-                public void onMessage(@NonNull final WebSocket webSocket, @NonNull final String message) {
-                    try {
-                        processJsonMessage(webSocket, message);
-                    } catch (ApiException exception) {
-                        notifyError(exception);
-                    }
-                }
-
-                @Override
-                public void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
-                    webSocket.close(NORMAL_CLOSURE_STATUS, null);
-                    notifyAllSubscriptionsCompleted();
-                }
-
-                @Override
-                public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable failure, Response response) {
-                    notifyError(failure);
-                }
-            });
-    }
-
-    private void sendConnectionInit(WebSocket webSocket) {
-        try {
-            webSocket.send(new JSONObject()
-                .put("type", "connection_init")
-                .toString());
-        } catch (JSONException jsonException) {
-            notifyError(jsonException);
-        }
-    }
-
-    private void processJsonMessage(WebSocket webSocket, String message) throws ApiException {
-        try {
-            final JSONObject jsonMessage = new JSONObject(message);
-            final SubscriptionMessageType subscriptionMessageType =
-                    SubscriptionMessageType.from(jsonMessage.getString("type"));
-
-            switch (subscriptionMessageType) {
-                case CONNECTION_ACK:
-                    timeoutWatchdog.start(() -> webSocket.close(
-                            NORMAL_CLOSURE_STATUS,
-                            "WebSocket closed due to timeout."
-                        ),
-                        Integer.parseInt(
-                            jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")
-                        )
-                    );
-                    connectionResponse.countDown();
-                    break;
-                case CONNECTION_ERROR:
-                    connectionFailure = message;
-                    connectionResponse.countDown();
-                    break;
-                case SUBSCRIPTION_ACK:
-                    notifySubscriptionAcknowledged(jsonMessage.getString("id"));
-                    break;
-                case SUBSCRIPTION_COMPLETE:
-                    notifySubscriptionCompleted(jsonMessage.getString("id"));
-                    break;
-                case CONNECTION_KEEP_ALIVE:
-                    timeoutWatchdog.reset();
-                    break;
-                case SUBSCRIPTION_ERROR:
-                case SUBSCRIPTION_DATA:
-                    notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
-                    break;
-                default:
-                    notifyError(new ApiException(
-                            "Got unknown message type: " + subscriptionMessageType,
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-            }
-        } catch (JSONException exception) {
-            throw new ApiException(
-                    "Error processing Json message in subscription endpoint.",
-                    exception,
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
-            );
         }
     }
 
@@ -335,12 +221,11 @@ final class SubscriptionEndpoint {
     }
 
     synchronized void releaseSubscription(String subscriptionId) throws ApiException {
-        // First thing we should do is remove it from the subscriptions collections so
+        // First thing we should do is remove it from the pending subscription collection so
         // the other methods can't grab a hold of the subscription.
-        final Subscription<?> subscription = subscriptions.remove(subscriptionId);
+        final Subscription<?> subscription = subscriptions.get(subscriptionId);
         boolean wasSubscriptionPending = pendingSubscriptions.remove(subscriptionId);
-        // If the subscription was not in the subscriptions collections AND was also
-        // not in the pending collection.
+        // If the subscription was not in the either of the subscriptions collections.
         if (subscription == null && !wasSubscriptionPending) {
             throw new ApiException(
                 "No existing subscription with the given id.",
@@ -370,7 +255,6 @@ final class SubscriptionEndpoint {
         if (subscriptions.size() == 0) {
             timeoutWatchdog.stop();
             webSocket.close(NORMAL_CLOSURE_STATUS, "No active subscriptions");
-            webSocket = null; //force creation of a new websocket
         }
     }
 
@@ -542,6 +426,153 @@ final class SubscriptionEndpoint {
             result = 31 * result + subscriptionReadyAcknowledgment.hashCode();
             result = 31 * result + subscriptionCompletionAcknowledgement.hashCode();
             return result;
+        }
+    }
+
+    final class AmplifyWebSocketListener extends WebSocketListener {
+        private final CountDownLatch connectionResponse;
+        private final AtomicReference<EndpointStatus> endpointStatus;
+        private OkHttpClient okHttpClient;
+        private String connectionFailure;
+
+        AmplifyWebSocketListener(CountDownLatch latch) {
+            this.connectionResponse = latch;
+            this.connectionFailure = null;
+            this.endpointStatus = new AtomicReference<>(EndpointStatus.DISCONNECTED);
+        }
+
+        @Override
+        public void onOpen(@NonNull final WebSocket webSocket, @NonNull final Response response) {
+            sendConnectionInit(webSocket);
+        }
+
+        @Override
+        public void onMessage(@NonNull final WebSocket webSocket, @NonNull final String message) {
+            try {
+                processJsonMessage(webSocket, message);
+            } catch (ApiException exception) {
+                notifyError(exception);
+            }
+        }
+
+        @Override
+        public void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
+            notifyAllSubscriptionsCompleted();
+        }
+
+        @Override
+        public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable failure, Response response) {
+            connectionFailure = failure.getMessage();
+            endpointStatus.set(EndpointStatus.CONNECTION_FAILED);
+            webSocket.cancel();
+            // This will free up any pending subscriptions that haven't been established yet.
+            connectionResponse.countDown();
+            // This will broadcast the error to all subscriptions
+            notifyError(failure);
+        }
+
+        @Override
+        public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+            super.onClosed(webSocket, code, reason);
+            endpointStatus.set(EndpointStatus.DISCONNECTED);
+        }
+
+        public String getFailureDetail() {
+            return connectionFailure;
+        }
+
+        public boolean isDisconnectedState() {
+            return endpointStatus.get().isDisconnectedState();
+        }
+
+        public boolean waitForConnectionReady() {
+            try {
+                if (!connectionResponse.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
+                    LOG.warn("Timed out waiting for connection.");
+                    connectionFailure = "Timed out waiting for connection.";
+                    return false;
+                }
+            } catch (InterruptedException exception) {
+                // If the thread where the request was running was killed.
+                LOG.warn("Connection attempt interrupted.");
+                connectionFailure = "Subscription was terminated.";
+                return false;
+            }
+            LOG.debug("Current endpoint status: " + endpointStatus.get());
+            return EndpointStatus.CONNECTED.equals(endpointStatus.get());
+        }
+
+        private void sendConnectionInit(WebSocket webSocket) {
+            try {
+                webSocket.send(new JSONObject()
+                    .put("type", "connection_init")
+                    .toString());
+            } catch (JSONException jsonException) {
+                notifyError(jsonException);
+            }
+        }
+
+        private void processJsonMessage(WebSocket webSocket, String message) throws ApiException {
+            try {
+                final JSONObject jsonMessage = new JSONObject(message);
+                final SubscriptionMessageType subscriptionMessageType =
+                    SubscriptionMessageType.from(jsonMessage.getString("type"));
+
+                switch (subscriptionMessageType) {
+                    case CONNECTION_ACK:
+                        timeoutWatchdog.start(() -> webSocket.close(
+                                NORMAL_CLOSURE_STATUS,
+                                "WebSocket closed due to timeout."
+                            ),
+                            Integer.parseInt(
+                                jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")
+                            )
+                        );
+                        endpointStatus.set(EndpointStatus.CONNECTED);
+                        connectionResponse.countDown();
+                        break;
+                    case CONNECTION_ERROR:
+                        endpointStatus.set(EndpointStatus.CONNECTION_FAILED);
+                        connectionFailure = message;
+                        connectionResponse.countDown();
+                        break;
+                    case SUBSCRIPTION_ACK:
+                        notifySubscriptionAcknowledged(jsonMessage.getString("id"));
+                        break;
+                    case SUBSCRIPTION_COMPLETE:
+                        notifySubscriptionCompleted(jsonMessage.getString("id"));
+                        break;
+                    case CONNECTION_KEEP_ALIVE:
+                        timeoutWatchdog.reset();
+                        break;
+                    case SUBSCRIPTION_ERROR:
+                    case SUBSCRIPTION_DATA:
+                        notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
+                        break;
+                    default:
+                        notifyError(new ApiException(
+                            "Got unknown message type: " + subscriptionMessageType,
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                        ));
+                }
+            } catch (JSONException exception) {
+                throw new ApiException(
+                    "Error processing Json message in subscription endpoint.",
+                    exception,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                );
+            }
+        }
+    }
+
+    enum EndpointStatus {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED,
+        CONNECTION_FAILED;
+
+        boolean isDisconnectedState() {
+            return this.equals(DISCONNECTED) || this.equals(CONNECTION_FAILED);
         }
     }
 }

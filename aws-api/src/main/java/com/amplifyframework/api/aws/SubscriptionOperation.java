@@ -27,9 +27,9 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
@@ -42,7 +42,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private final Action onSubscriptionComplete;
 
     private String subscriptionId;
-    private boolean canceled;
+    private AtomicBoolean canceled;
     private Future<?> subscriptionFuture;
 
     @SuppressWarnings("ParameterNumber")
@@ -62,8 +62,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         this.onSubscriptionError = onSubscriptionError;
         this.onSubscriptionComplete = onSubscriptionComplete;
         this.executorService = executorService;
-        this.subscriptionId = UUID.randomUUID().toString();
-        this.canceled = false;
+        this.canceled = new AtomicBoolean(false);
     }
 
     @NonNull
@@ -73,7 +72,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     @Override
     public synchronized void start() {
-        if (canceled) {
+        if (canceled.get()) {
             onSubscriptionError.accept(new ApiException(
                 "Operation already canceled.", "Don't cancel the subscription before starting it!"
             ));
@@ -82,11 +81,19 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         subscriptionFuture = executorService.submit(() -> {
             LOG.debug("Requesting subscription: " + getRequest().getContent());
             subscriptionEndpoint.requestSubscription(
-                subscriptionId,
                 getRequest(),
-                onSubscriptionStart,
+                subscriptionId -> {
+                    SubscriptionOperation.this.subscriptionId = subscriptionId;
+                    onSubscriptionStart.accept(subscriptionId);
+                },
                 onNextItem,
-                onSubscriptionError,
+                apiException -> {
+                    // Guard against calling something that's been cancelled already.
+                    if (!canceled.get()) {
+                        canceled.set(true);
+                        onSubscriptionError.accept(apiException);
+                    }
+                },
                 onSubscriptionComplete
             );
         });
@@ -94,16 +101,17 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     @Override
     public synchronized void cancel() {
-        if (subscriptionId != null && !canceled) {
-            canceled = true;
-            if (subscriptionFuture.cancel(true)) {
-                LOG.debug("Canceled subscription future");
-            }
+        if (subscriptionId != null && !canceled.get()) {
+            canceled.set(true);
             try {
                 subscriptionEndpoint.releaseSubscription(subscriptionId);
             } catch (ApiException exception) {
                 onSubscriptionError.accept(exception);
             }
+        } else if (subscriptionFuture != null && subscriptionFuture.cancel(true)) {
+            LOG.debug("Subscription attempt was canceled.");
+        } else {
+            LOG.debug("Nothing to cancel. Subscription not yet created.");
         }
     }
 
