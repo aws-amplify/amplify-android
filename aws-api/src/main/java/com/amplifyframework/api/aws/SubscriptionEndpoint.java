@@ -71,7 +71,6 @@ final class SubscriptionEndpoint {
     private final Set<String> pendingSubscriptionIds;
     private final Request websocketInitRequest;
     private final String subscriptionUrl;
-    private CountDownLatch connectionResponse;
     private String connectionFailure;
     private WebSocket webSocket;
     private AmplifyWebSocketListener webSocketListener;
