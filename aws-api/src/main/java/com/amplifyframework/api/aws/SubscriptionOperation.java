@@ -40,9 +40,9 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private final Consumer<GraphQLResponse<T>> onNextItem;
     private final Consumer<ApiException> onSubscriptionError;
     private final Action onSubscriptionComplete;
+    private final AtomicBoolean canceled;
 
     private String subscriptionId;
-    private AtomicBoolean canceled;
     private Future<?> subscriptionFuture;
 
     @SuppressWarnings("ParameterNumber")

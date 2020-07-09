@@ -30,7 +30,6 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.UserAgent;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -69,12 +68,10 @@ final class SubscriptionEndpoint {
     private final GraphQLResponse.Factory responseFactory;
     private final TimeoutWatchdog timeoutWatchdog;
     private final Set<String> pendingSubscriptionIds;
-    private final Request websocketInitRequest;
     private final String subscriptionUrl;
-    private String connectionFailure;
+    private final OkHttpClient okHttpClient;
     private WebSocket webSocket;
     private AmplifyWebSocketListener webSocketListener;
-    private OkHttpClient okHttpClient;
 
     SubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
@@ -88,10 +85,6 @@ final class SubscriptionEndpoint {
         this.timeoutWatchdog = new TimeoutWatchdog();
         this.pendingSubscriptionIds = Collections.synchronizedSet(new HashSet<>());
         this.subscriptionUrl = buildConnectionRequestUrl();
-        this.websocketInitRequest = new Request.Builder()
-            .url(subscriptionUrl)
-            .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
-            .build();
         this.okHttpClient = new OkHttpClient.Builder()
             .addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string))
             .retryOnConnectionFailure(true)
@@ -113,18 +106,22 @@ final class SubscriptionEndpoint {
         // The first call to subscribe OR a disconnected websocket listener will
         // force a new connection to be created.
         if (webSocketListener == null || webSocketListener.isDisconnectedState()) {
-            webSocketListener = new AmplifyWebSocketListener(new CountDownLatch(1));
-            webSocket = okHttpClient.newWebSocket(websocketInitRequest, webSocketListener);
+            webSocketListener = new AmplifyWebSocketListener();
+            webSocket = okHttpClient.newWebSocket(new Request.Builder()
+                .url(subscriptionUrl)
+                .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
+                .build(), webSocketListener);
         }
         final String subscriptionId = UUID.randomUUID().toString();
         pendingSubscriptionIds.add(subscriptionId);
         // Every request waits here for the connection to be ready.
-        if (!webSocketListener.waitForConnectionReady()) {
+        Connection connection = webSocketListener.waitForConnectionReady();
+        if (connection.hasFailure()) {
             // If the latch didn't count all the way down
             if (pendingSubscriptionIds.remove(subscriptionId)) {
                 // The subscription was pending, so we need to emit an error.
                 onSubscriptionError.accept(
-                    new ApiException(webSocketListener.getFailureDetail(), AmplifyException.TODO_RECOVERY_SUGGESTION));
+                    new ApiException(connection.getFailureReason(), AmplifyException.TODO_RECOVERY_SUGGESTION));
                 return;
             }
         }
@@ -432,11 +429,13 @@ final class SubscriptionEndpoint {
         private final CountDownLatch connectionResponse;
         private final AtomicReference<EndpointStatus> endpointStatus;
         private OkHttpClient okHttpClient;
-        private String connectionFailure;
+
+        AmplifyWebSocketListener() {
+            this(new CountDownLatch(1));
+        }
 
         AmplifyWebSocketListener(CountDownLatch latch) {
             this.connectionResponse = latch;
-            this.connectionFailure = null;
             this.endpointStatus = new AtomicReference<>(EndpointStatus.DISCONNECTED);
         }
 
@@ -461,7 +460,7 @@ final class SubscriptionEndpoint {
 
         @Override
         public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable failure, Response response) {
-            connectionFailure = failure.getMessage();
+            LOG.warn("Websocket connection failed.", failure);
             endpointStatus.set(EndpointStatus.CONNECTION_FAILED);
             webSocket.cancel();
             // This will free up any pending subscriptions that haven't been established yet.
@@ -471,34 +470,28 @@ final class SubscriptionEndpoint {
         }
 
         @Override
-        public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+        public void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
             super.onClosed(webSocket, code, reason);
             endpointStatus.set(EndpointStatus.DISCONNECTED);
-        }
-
-        public String getFailureDetail() {
-            return connectionFailure;
         }
 
         public boolean isDisconnectedState() {
             return endpointStatus.get().isDisconnectedState();
         }
 
-        public boolean waitForConnectionReady() {
+        public Connection waitForConnectionReady() {
             try {
                 if (!connectionResponse.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
                     LOG.warn("Timed out waiting for connection.");
-                    connectionFailure = "Timed out waiting for connection.";
-                    return false;
+                    return new Connection("Timed out waiting for connection.");
                 }
             } catch (InterruptedException exception) {
                 // If the thread where the request was running was killed.
                 LOG.warn("Connection attempt interrupted.");
-                connectionFailure = "Subscription was terminated.";
-                return false;
+                return new Connection("Subscription was terminated.");
             }
             LOG.debug("Current endpoint status: " + endpointStatus.get());
-            return EndpointStatus.CONNECTED.equals(endpointStatus.get());
+            return new Connection();
         }
 
         private void sendConnectionInit(WebSocket webSocket) {
@@ -532,7 +525,7 @@ final class SubscriptionEndpoint {
                         break;
                     case CONNECTION_ERROR:
                         endpointStatus.set(EndpointStatus.CONNECTION_FAILED);
-                        connectionFailure = message;
+                        LOG.warn("Websocket listener received a CONNECTION_ERROR event. " + message);
                         connectionResponse.countDown();
                         break;
                     case SUBSCRIPTION_ACK:
@@ -561,6 +554,26 @@ final class SubscriptionEndpoint {
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 );
             }
+        }
+    }
+
+    static final class Connection {
+        private final String failureReason;
+
+        Connection() {
+            this.failureReason = null;
+        }
+
+        Connection(String failureReason) {
+            this.failureReason = failureReason;
+        }
+
+        public String getFailureReason() {
+            return failureReason;
+        }
+
+        public boolean hasFailure() {
+            return failureReason != null;
         }
     }
 
