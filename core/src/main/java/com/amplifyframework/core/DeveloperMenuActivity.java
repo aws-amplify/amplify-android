@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 /**
  * This is the activity to display the developer menu.
@@ -42,6 +43,8 @@ public final class DeveloperMenuActivity extends Activity {
     private View fileIssueView;
     // Back button.
     private ImageButton backButton;
+    // Text displayed in the action bar.
+    private TextView titleText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,15 +60,20 @@ public final class DeveloperMenuActivity extends Activity {
         deviceInfoView = findViewById(R.id.device_layout);
         logsView = findViewById(R.id.logs_layout);
         fileIssueView = findViewById(R.id.file_issue_layout);
+        titleText = findViewById(R.id.title_text_view);
 
         backButton = findViewById(R.id.back_button);
         backButton.setOnClickListener(view -> displayMainView());
 
         // Set on-click listeners for each button on the main view of the developer menu.
-        findViewById(R.id.env_button).setOnClickListener(view -> leaveMainView(envInfoView));
-        findViewById(R.id.device_button).setOnClickListener(view -> leaveMainView(deviceInfoView));
-        findViewById(R.id.logs_button).setOnClickListener(view -> leaveMainView(logsView));
-        findViewById(R.id.file_issue_button).setOnClickListener(view -> leaveMainView(fileIssueView));
+        findViewById(R.id.env_button).setOnClickListener(view -> leaveMainView(envInfoView,
+                R.string.env_view_title));
+        findViewById(R.id.device_button).setOnClickListener(view -> leaveMainView(deviceInfoView,
+                R.string.device_view_title));
+        findViewById(R.id.logs_button).setOnClickListener(view -> leaveMainView(logsView,
+                R.string.logs_view_title));
+        findViewById(R.id.file_issue_button).setOnClickListener(view -> leaveMainView(fileIssueView,
+                R.string.file_issue_view_title));
     }
 
     @Override
@@ -116,13 +124,16 @@ public final class DeveloperMenuActivity extends Activity {
     }
 
     /**
-     * Hides the main developer menu view and displays the given View.
+     * Hides the main developer menu view, displays the given View, and
+     * changes the title text on the action bar.
      * @param newView View to display.
+     * @param titleTextId ID of the string resource for the action bar title text.
      */
-    private void leaveMainView(View newView) {
+    private void leaveMainView(View newView, int titleTextId) {
         buttons.setVisibility(View.GONE);
         newView.setVisibility(View.VISIBLE);
         backButton.setVisibility(View.VISIBLE);
+        titleText.setText(titleTextId);
     }
 
     /**
@@ -135,5 +146,6 @@ public final class DeveloperMenuActivity extends Activity {
         logsView.setVisibility(View.GONE);
         fileIssueView.setVisibility(View.GONE);
         buttons.setVisibility(View.VISIBLE);
+        titleText.setText(R.string.menu_title);
     }
 }
