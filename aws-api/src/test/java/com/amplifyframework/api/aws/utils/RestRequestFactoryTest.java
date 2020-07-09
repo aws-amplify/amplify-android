@@ -40,7 +40,7 @@ public final class RestRequestFactoryTest {
     @Test
     public void createValidURL() throws MalformedURLException {
         URL url = RestRequestFactory.createURL("http://amplify-android.com",
-                "path/to/path",
+                "/path/to/path",
                 null);
         assertEquals("The url generated should match",
                 "http://amplify-android.com/path/to/path",
@@ -54,10 +54,24 @@ public final class RestRequestFactoryTest {
     @Test
     public void createValidURLWithPath() throws MalformedURLException {
         URL url = RestRequestFactory.createURL("http://amplify-android.com/beta",
-                "path/to/path",
+                "/path/to/path",
                 null);
         assertEquals("The url generated should match",
                 "http://amplify-android.com/beta/path/to/path",
+                url.toString());
+    }
+
+    /**
+     * Test if path without leading slash is still valid.
+     * @throws MalformedURLException Throws if the URL is invalid.
+     */
+    @Test
+    public void createValidURLWithPathWithoutLeadingSlash() throws MalformedURLException {
+        URL url = RestRequestFactory.createURL("http://amplify-android.com/beta",
+                "path",
+                null);
+        assertEquals("The url generated should match",
+                "http://amplify-android.com/beta/path",
                 url.toString());
     }
 
@@ -71,7 +85,7 @@ public final class RestRequestFactoryTest {
         queries.put("key1", "value1");
         queries.put("key2", "value2");
         URL url = RestRequestFactory.createURL("http://amplify-android.com",
-                "path/to/path",
+                "/path/to/path",
                 queries);
         assertEquals("The url generated should match",
                 "http://amplify-android.com/path/to/path?key1=value1&key2=value2",
@@ -83,9 +97,9 @@ public final class RestRequestFactoryTest {
      * @throws MalformedURLException Should throw since the URL is invalid.
      */
     @Test(expected = MalformedURLException.class)
-    public void createInValidURL() throws MalformedURLException {
+    public void createInvalidURL() throws MalformedURLException {
         RestRequestFactory.createURL("asd.com",
-                "path/to/path",
+                "/path/to/path",
                 null);
     }
 
@@ -96,7 +110,7 @@ public final class RestRequestFactoryTest {
     @Test
     public void createGetRequest() throws MalformedURLException {
         URL url = RestRequestFactory.createURL("http://amplify-android.com",
-                "path/to/path",
+                "/path/to/path",
                 null);
         Request request = RestRequestFactory.createRequest(url,
                 null,
@@ -112,7 +126,7 @@ public final class RestRequestFactoryTest {
     @Test
     public void createPostRequest() throws MalformedURLException {
         URL url = RestRequestFactory.createURL("http://amplify-android.com",
-                "path/to/path",
+                "/path/to/path",
                 null);
         Request request = RestRequestFactory.createRequest(url,
                 null,
@@ -128,7 +142,7 @@ public final class RestRequestFactoryTest {
     @Test
     public void createPostRequestWithBody() throws MalformedURLException {
         URL url = RestRequestFactory.createURL("http://amplify-android.com",
-                "path/to/path",
+                "/path/to/path",
                 null);
         Request request = RestRequestFactory.createRequest(url,
                 "{}".getBytes(),
@@ -144,7 +158,7 @@ public final class RestRequestFactoryTest {
     @Test
     public void createPostRequestWithHeaders() throws MalformedURLException {
         URL url = RestRequestFactory.createURL("http://amplify-android.com",
-                "path/to/path",
+                "/path/to/path",
                 null);
 
         Map<String, String> headers = new HashMap<>();
