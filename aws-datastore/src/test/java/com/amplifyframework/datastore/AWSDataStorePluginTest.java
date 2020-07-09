@@ -49,7 +49,10 @@ import org.mockito.ArgumentMatcher;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import io.reactivex.Single;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
@@ -70,7 +73,7 @@ import static org.mockito.Mockito.when;
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
-    private static final int ASSERTION_TIMEOUT_MS = 1000;
+    private static final long ASSERTION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
     private Context context;
     private ModelProvider modelProvider;
     private AtomicInteger subscriptionStartedCounter;
@@ -225,6 +228,8 @@ public final class AWSDataStorePluginTest {
         synchronousDataStore.clear();
         assertRemoteSubscriptionsCancelled();
 
+        assertRemoteSubscriptionsStarted();
+
         // Save person 2
         synchronousDataStore.save(person2);
         Person result2 = synchronousDataStore.get(Person.class, person2.getId());
@@ -242,6 +247,8 @@ public final class AWSDataStorePluginTest {
     }
 
     private void assertRemoteSubscriptionsStarted() {
+        // Introduce a delay to allow the orchestrator to start since this is done in a non-blocking manner now.
+        Single.just(true).delay(ASSERTION_TIMEOUT_MS, TimeUnit.MILLISECONDS).blockingGet();
         // For each model, there should be 3 subscriptions setup.
         // If subscriptions are active, the active counters should be:
         // activeCount - cancelledCount = modelCount * 3
