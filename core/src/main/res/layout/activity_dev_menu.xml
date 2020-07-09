@@ -25,46 +25,101 @@
         android:layout_height="wrap_content"
         android:background="@android:color/background_light"
         android:orientation="vertical"
-        android:layout_alignParentBottom="true"
-        android:padding="15dp">
+        android:layout_alignParentBottom="true">
 
-        <TextView
-            android:id="@+id/title_text_view"
+        <RelativeLayout
+            android:id="@+id/action_bar"
+            android:layout_width="match_parent"
+            android:layout_height="?android:attr/actionBarSize"
+            android:theme="@android:style/Widget.DeviceDefault.ActionBar.Solid"
+            android:layout_marginBottom="15dp">
+
+            <ImageButton
+                android:id="@+id/back_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_baseline_arrow_back_24"
+                android:layout_marginStart="20dp"
+                android:layout_marginLeft="20dp"
+                android:layout_centerVertical="true"
+                android:contentDescription="@string/back_button"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/title_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/menu_title"
+                android:textColor="@android:color/white"
+                android:gravity="center"
+                android:background="@android:color/transparent"
+                android:textSize="17sp" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/menu_title"
-            android:textColor="@android:color/black"
-            android:background="@android:color/darker_gray"
-            android:gravity="center"
-            android:padding="10dp"
-            android:layout_marginBottom="20dp" />
+            android:orientation="vertical"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:paddingBottom="15dp">
 
-        <Button
-            android:id="@+id/env"
+            <Button
+                android:id="@+id/env_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/env_button_title"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/device_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/device_button_title"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/logs_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/logs_button_title"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/file_issue_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/file_issue_button_title"
+                android:textAllCaps="false" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/env_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/env_button_title"
-            android:textAllCaps="false" />
+            android:orientation="vertical"
+            android:visibility="gone" />
 
-        <Button
-            android:id="@+id/device"
+        <LinearLayout
+            android:id="@+id/device_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/device_button_title"
-            android:textAllCaps="false" />
+            android:orientation="vertical"
+            android:visibility="gone" />
 
-        <Button
-            android:id="@+id/logs"
+        <LinearLayout
+            android:id="@+id/logs_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/logs_button_title"
-            android:textAllCaps="false" />
+            android:orientation="vertical"
+            android:visibility="gone" />
 
-        <Button
-            android:id="@+id/file_issue"
+        <LinearLayout
+            android:id="@+id/file_issue_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/file_issue_button_title"
-            android:textAllCaps="false" />
+            android:orientation="vertical"
+            android:visibility="gone" />
     </LinearLayout>
 </RelativeLayout>
