@@ -54,7 +54,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -455,7 +454,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 onComplete.call();
                 // Kick off the orchestrator asynchronously.
                 initializeOrchestrator()
-                    .doOnError(throwable -> LOG.warn("Failed to restart orchestrator after clear operation.", throwable))
+                    .doOnError(throwable -> LOG.warn("Failed to restart orchestrator after clearing.", throwable))
                     .doOnComplete(() -> LOG.info("Orchestrator restarted after clear operation."))
                     .subscribe();
             }, onError)))
