@@ -16,8 +16,6 @@
 package com.amplifyframework.core;
 
 import android.app.Activity;
-import android.content.Context;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -38,8 +36,7 @@ public final class DeveloperMenuActivity extends Activity {
         devMenuLayout = findViewById(R.id.dev_layout);
         devMenuLayout.setFocusable(true);
         devMenuLayout.setVisibility(View.GONE);
-        detector = new ShakeDetector((SensorManager) getSystemService(Context.SENSOR_SERVICE),
-                this::changeVisibility);
+        detector = new ShakeDetector(getApplicationContext(), this::changeVisibility);
     }
 
     @Override
