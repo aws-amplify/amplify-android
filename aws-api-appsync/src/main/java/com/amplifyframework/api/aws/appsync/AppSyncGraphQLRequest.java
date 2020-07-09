@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
+package com.amplifyframework.api.aws.appsync;
 
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
@@ -21,8 +21,6 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.appsync.GsonVariablesSerializer;
-import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.OperationType;
 import com.amplifyframework.api.graphql.QueryType;
@@ -107,33 +105,29 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     }
 
     /**
-     * Used to add owner argument from authProvider if needed.
-     * @param authProvider CognitoUserPoolsAuthProvider for obtaining the username to set as the owner field.
-     * @throws ApiException if request requires owner argument and authProvider or authProvider.getUsername() is null.
+     * Returns whether owner argument is required for this request based on the model's {@link AuthRule}s and
+     * @return
      */
-    public void setOwner(CognitoUserPoolsAuthProvider authProvider) throws ApiException {
+    public boolean isOwnerArgumentRequired() {
         for (AuthRule authRule : modelSchema.getAuthRules()) {
-            if (isOwnerArgumentRequired(authRule)) {
-                setVariable(authRule.getOwnerFieldOrDefault(), "String!", getUsername(authProvider));
+            if(isOwnerArgumentRequired(authRule)) {
+                return true;
             }
         }
+        return false;
     }
 
-    private String getUsername(CognitoUserPoolsAuthProvider authProvider) throws ApiException {
-        if (authProvider == null) {
-            throw new ApiException(
-                    "Attempted to subscribe to a model with owner based authorization without a Cognito provider",
-                    "Did you add the AWSCognitoAuthPlugin to Amplify before configuring it?"
-            );
+    /**
+     * Used to add owner argument from authProvider if needed.
+     * @param owner username from CognitoUserPoolsAuthProvider to set as the owner field.
+     * @throws ApiException if request requires owner argument and authProvider or authProvider.getUsername() is null.
+     */
+    public void setOwner(String owner) {
+        for (AuthRule authRule : modelSchema.getAuthRules()) {
+            if (isOwnerArgumentRequired(authRule)) {
+                setVariable(authRule.getOwnerFieldOrDefault(), "String!", owner);
+            }
         }
-        String username = authProvider.getUsername();
-        if (username == null) {
-            throw new ApiException(
-                    "Attempted to subscribe to a model with owner based authorization without a username",
-                    "Make sure that a user is logged in before subscribing to a model with owner based auth"
-            );
-        }
-        return username;
     }
 
     private boolean isOwnerArgumentRequired(AuthRule authRule) {
@@ -254,7 +248,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         return new Builder();
     }
 
-    static final class Builder {
+    public static final class Builder {
         private Class<? extends Model> modelClass;
         private OperationType operationType;
         private Type responseType;
@@ -266,22 +260,22 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             this.variableTypes = new HashMap<>();
         }
 
-        Builder modelClass(@NonNull Class<? extends Model> modelClass) {
+        public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
             this.modelClass = Objects.requireNonNull(modelClass);
             return Builder.this;
         }
 
-        Builder operationType(@NonNull OperationType operationType) {
+        public Builder operationType(@NonNull OperationType operationType) {
             this.operationType = Objects.requireNonNull(operationType);
             return Builder.this;
         }
 
-        Builder responseType(@NonNull Type responseType) {
+        public Builder responseType(@NonNull Type responseType) {
             this.responseType = Objects.requireNonNull(responseType);
             return Builder.this;
         }
 
-        Builder setVariable(@NonNull String key, String type, Object value) {
+        public Builder setVariable(@NonNull String key, String type, Object value) {
             Objects.requireNonNull(key);
             Objects.requireNonNull(type);
             this.variables.put(key, value);
@@ -289,7 +283,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             return this;
         }
 
-        <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
+        public <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
             Objects.requireNonNull(this.operationType);
             Objects.requireNonNull(this.modelClass);
             Objects.requireNonNull(this.responseType);

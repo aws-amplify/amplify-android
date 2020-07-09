@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
+package com.amplifyframework.api.aws.appsync;
 
 import android.text.TextUtils;
 import androidx.core.util.ObjectsCompat;

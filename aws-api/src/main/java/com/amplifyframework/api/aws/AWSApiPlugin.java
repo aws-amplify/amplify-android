@@ -23,6 +23,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.aws.appsync.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
@@ -260,11 +261,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         if (graphQLRequest instanceof AppSyncGraphQLRequest) {
             try {
                 AppSyncGraphQLRequest<R> request = (AppSyncGraphQLRequest<R>) graphQLRequest;
-                CognitoUserPoolsAuthProvider cognitoProvider = authProvider.getCognitoUserPoolsAuthProvider();
-                if (cognitoProvider == null) {
-                    cognitoProvider = new DefaultCognitoUserPoolsAuthProvider();
+                if(request.isOwnerArgumentRequired()) {
+                    request.setOwner(getUsername());
                 }
-                request.setOwner(cognitoProvider);
             } catch (ApiException exception) {
                 onSubscriptionFailure.accept(exception);
                 return null;
@@ -283,6 +282,28 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             .build();
         operation.start();
         return operation;
+    }
+
+    private String getUsername() throws ApiException {
+        CognitoUserPoolsAuthProvider cognitoProvider = authProvider.getCognitoUserPoolsAuthProvider();
+        if (cognitoProvider == null) {
+            try {
+                cognitoProvider = new DefaultCognitoUserPoolsAuthProvider();
+            } catch (ApiException exception) {
+                throw new ApiException(
+                        "Attempted to subscribe to a model with owner based authorization without a Cognito provider",
+                        "Did you add the AWSCognitoAuthPlugin to Amplify before configuring it?"
+                );
+            }
+        }
+        String username = cognitoProvider.getUsername();
+        if (username == null) {
+            throw new ApiException(
+                    "Attempted to subscribe to a model with owner based authorization without a username",
+                    "Make sure that a user is logged in before subscribing to a model with owner based auth"
+            );
+        }
+        return username;
     }
 
     @Nullable

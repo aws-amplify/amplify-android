@@ -16,7 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.appsync.AppSyncGraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.OperationType;
 import com.amplifyframework.api.graphql.QueryType;
@@ -27,26 +27,12 @@ import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class AppSyncGraphQLRequestTest {
-    private CognitoUserPoolsAuthProvider authProvider;
-
-    /**
-     * Setup mocks.
-     */
-    @Before
-    public void setup() {
-        authProvider = mock(CognitoUserPoolsAuthProvider.class);
-        when(authProvider.getUsername()).thenReturn("johndoe");
-    }
-
     /**
      * Verify that owner argument is required for ON_CREATE subscription if ModelOperation.CREATE is specified.
      * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
@@ -122,7 +108,9 @@ public class AppSyncGraphQLRequestTest {
                 .operationType(operationType)
                 .responseType(clazz)
                 .build();
-        request.setOwner(authProvider);
+        if(request.isOwnerArgumentRequired()) {
+            request.setOwner("johndoe");
+        }
         return "johndoe".equals(request.getVariables().get("owner"));
     }
 
