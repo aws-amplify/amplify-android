@@ -62,6 +62,7 @@ import io.reactivex.schedulers.Schedulers;
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final long PLUGIN_INIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long PLUGIN_TERMINATE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -193,13 +194,16 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public void initialize(@NonNull Context context) throws AmplifyException {
         Throwable initError = initializeStorageAdapter(context)
-            .andThen(initializeOrchestrator())
             .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         if (initError != null) {
             throw new AmplifyException("Failed to initialize the local storage adapter for the DataStore plugin.",
                                         initError,
                                         AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
+        // Kick off orchestrator asynchronously.
+        initializeOrchestrator()
+            .subscribeOn(Schedulers.io())
+            .subscribe();
     }
 
     /**
@@ -220,8 +224,10 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @SuppressWarnings("unused")
     synchronized void terminate() throws AmplifyException {
-        orchestrator.stop();
-        sqliteStorageAdapter.terminate();
+        orchestrator.stop()
+            .andThen(
+                Completable.fromAction(sqliteStorageAdapter::terminate)
+            ).blockingGet(PLUGIN_TERMINATE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -433,10 +439,22 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         } catch (InterruptedException exception) {
             LOG.warn("Execution interrupted while waiting for DataStore to be initialized.");
         }
-        orchestrator.stop();
-        sqliteStorageAdapter.clear(() -> {
-            initializeOrchestrator().subscribe(onComplete::call);
-        }, onError);
+        orchestrator.stop()
+            .subscribeOn(Schedulers.io())
+            .andThen(Completable.fromAction(() -> sqliteStorageAdapter.clear(() -> {
+                // Invoke the consumer's callback once the clear operation is finished.
+                onComplete.call();
+                // Kick off the orchestrator asynchronously.
+                initializeOrchestrator()
+                    .subscribe(
+                        () -> LOG.info("Orchestrator restarted after clear operation."),
+                        throwable -> LOG.warn("Failed to restart orchestrator after clear operation.", throwable)
+                    );
+            }, onError)))
+            .subscribe(
+                () -> LOG.debug("Clear operation completed."),
+                throwable -> LOG.warn("Clear operation failed", throwable)
+            );
     }
 
     private void beforeOperation(@NonNull final Runnable runnable) {

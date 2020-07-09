@@ -40,10 +40,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Observer;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.ReplaySubject;
@@ -62,7 +61,7 @@ final class SubscriptionProcessor {
     private final ModelProvider modelProvider;
     private final Merger merger;
     private final CompositeDisposable ongoingOperationsDisposable;
-    private final ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
+    private ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
 
     /**
      * Constructs a new SubscriptionProcessor.
@@ -78,68 +77,103 @@ final class SubscriptionProcessor {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.merger = Objects.requireNonNull(merger);
         this.ongoingOperationsDisposable = new CompositeDisposable();
-        this.buffer = ReplaySubject.create();
     }
 
     /**
      * Start subscribing to model mutations.
      */
-    void startSubscriptions() {
+    synchronized void startSubscriptions() throws DataStoreException {
+        int subscriptionCount = modelProvider.models().size() * SubscriptionType.values().length;
+        // Create a latch with the number of subscriptions are requesting. Each of these will be
+        // counted down when each subscription's onStarted event is called.
+        CountDownLatch latch = new CountDownLatch(subscriptionCount);
+        // Need to create a new buffer so we can properly handle retries and stop/start scenarios.
+        // Re-using the same buffer has some unexpected results due to the replay aspect of the subject.
+        buffer = ReplaySubject.create();
+
         Set<Observable<SubscriptionEvent<? extends Model>>> subscriptions = new HashSet<>();
         for (Class<? extends Model> clazz : modelProvider.models()) {
             for (SubscriptionType subscriptionType : SubscriptionType.values()) {
-                subscriptions.add(subscriptionObservable(appSync, subscriptionType, clazz));
+                subscriptions.add(subscriptionObservable(appSync, subscriptionType, latch, clazz));
             }
         }
         ongoingOperationsDisposable.add(Observable.merge(subscriptions)
             .subscribeOn(Schedulers.io())
-            .doOnSubscribe(disposable ->
-                LOG.info(String.format(Locale.US,
-                    "Began buffering subscription events for remote mutations %s to Cloud models of types %s.",
-                    modelProvider.models(), Arrays.toString(SubscriptionType.values())
-                ))
-            )
             .subscribe(
                 buffer::onNext,
-                buffer::onError,
+                exception -> {
+                    // If the downstream buffer already has an error, don't invoke it again.
+                    if (!buffer.hasThrowable()) {
+                        buffer.onError(exception);
+                    }
+                },
                 buffer::onComplete
             ));
+        boolean subscriptionsStarted = false;
+        try {
+            LOG.debug("Waiting for subscriptions to start.");
+            subscriptionsStarted = latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException exception) {
+            LOG.warn("Subscription operations were interrupted during setup.");
+            return;
+        }
+        if (subscriptionsStarted) {
+            LOG.info(String.format(Locale.US,
+                "Began buffering subscription events for remote mutations %s to Cloud models of types %s.",
+                modelProvider.models(), Arrays.toString(SubscriptionType.values())
+            ));
+        } else {
+            LOG.warn("Subscription processor failed to start within the expected timeout.");
+        }
     }
 
     @SuppressWarnings("unchecked") // (Class<T>) modelWithMetadata.getModel().getClass()
     private static <T extends Model> Observable<SubscriptionEvent<? extends Model>>
-            subscriptionObservable(AppSync appSync, SubscriptionType subscriptionType, Class<T> clazz) {
+            subscriptionObservable(AppSync appSync,
+                                   SubscriptionType subscriptionType,
+                                   CountDownLatch latch,
+                                   Class<T> clazz) {
         return Observable.<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
-            CountDownLatch latch = new CountDownLatch(1);
             SubscriptionMethod method = subscriptionMethodFor(appSync, subscriptionType);
+            AtomicReference<String> subscriptionId = new AtomicReference<>();
             Cancelable cancelable = method.subscribe(
                 clazz,
-                token -> latch.countDown(),
+                token -> {
+                    LOG.debug("Subscription started for " + token);
+                    subscriptionId.set(token);
+                    latch.countDown();
+                },
                 emitter::onNext,
-                AmplifyDisposables.onErrorConsumerWrapperFor(emitter),
-                emitter::onComplete
+                throwable -> {
+                    // Only call onError if the Observable hasn't been disposed and if
+                    // the subscription was actually started at one point (which we determine by whether
+                    // the subscriptionId is null or not.)
+                    if (!emitter.isDisposed()) {
+                        LOG.debug("Invoking subscription onError emitter.");
+                        emitter.onError(throwable);
+                    }
+                    if (latch.getCount() != 0) {
+                        LOG.debug("Releasing latch due to an error.");
+                        latch.countDown();
+                    }
+                },
+                () -> {
+                    LOG.debug("Subscription completed:" + subscriptionId.get());
+                    emitter.onComplete();
+                }
             );
             // When the observable is disposed, we need to call cancel() on the subscription
             // so it can properly dispose of resources if necessary. For the AWS API plugin,
             // this means means closing the underlying network connection.
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
-            try {
-                if (!latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                    emitter.onError(new DataStoreException("Subscription failed to start due to a timeout",
-                                                            AmplifyException.TODO_RECOVERY_SUGGESTION));
-                }
-            } catch (InterruptedException exception) {
-                LOG.warn("Subscription operation interrupted. " +
-                    (emitter.isDisposed() ? " Emitter already disposed." : ""));
-            }
         })
+        .retry(RetryStrategy.RX_INTERRUPTIBLE_WITH_BACKOFF::retryHandler)
         .doOnError(subscriptionError ->
             LOG.warn(String.format(Locale.US,
                 "An error occurred on the remote %s subscription for model %s.",
                 clazz.getSimpleName(), subscriptionType.name()
             ), subscriptionError)
         )
-        .onErrorResumeNext((ObservableSource<GraphQLResponse<ModelWithMetadata<T>>>) Observer::onComplete)
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
         .map(SubscriptionProcessor::unwrapResponse)
@@ -190,7 +224,7 @@ final class SubscriptionProcessor {
     /**
      * Stop any active subscriptions, and stop draining the mutation buffer.
      */
-    void stopAllSubscriptionActivity() {
+    synchronized void stopAllSubscriptionActivity() {
         LOG.info("Stopping subscription processor.");
         ongoingOperationsDisposable.clear();
         LOG.info("Stopped subscription processor.");

@@ -44,7 +44,10 @@ import io.reactivex.Completable;
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final long SYNC_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
-    private static final long ACQUIRE_PERMIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+    // This timeout has to be somewhat generous to account for situations where a request to
+    // stop is made immediately after starting things up. This should only be the case
+    // when the clear API is invoked right after the plugin starts.
+    private static final long ACQUIRE_PERMIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(30);
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
@@ -121,7 +124,10 @@ public final class Orchestrator {
     @NonNull
     public synchronized Completable start() {
         if (!transitionToState(OrchestratorStatus.STARTED)) {
-            return Completable.complete();
+            return Completable.error(new DataStoreException(
+                "Unable to start the orchestrator because an operation is already in progress.",
+                AmplifyException.TODO_RECOVERY_SUGGESTION)
+            );
         }
         return mutationOutbox.load().andThen(
             Completable.fromAction(() -> {
@@ -156,24 +162,27 @@ public final class Orchestrator {
 
     /**
      * Stop all model synchronization.
+     * @return A completable with the activities
      */
-    public synchronized void stop() {
+    public synchronized Completable stop() {
         if (!transitionToState(OrchestratorStatus.STOPPED)) {
-            return;
+            return Completable.error(new DataStoreException(
+                "Unable to stop the orchestrator because an operation is already in progress.",
+                AmplifyException.TODO_RECOVERY_SUGGESTION)
+            );
         }
-        try {
+        return Completable.fromAction(() -> {
             LOG.info("Intentionally stopping cloud synchronization, now.");
             subscriptionProcessor.stopAllSubscriptionActivity();
             storageObserver.stopObservingStorageChanges();
             mutationProcessor.stopDrainingMutationOutbox();
             status.compareAndSet(OrchestratorStatus.STOPPING, OrchestratorStatus.STOPPED);
             LOG.debug("Stopped remote synchronization.");
-        } finally {
-            startStopSemaphore.release();
-        }
+        })
+        .doFinally(startStopSemaphore::release);
     }
 
-    private boolean transitionToState(OrchestratorStatus targetStatus) {
+    private synchronized boolean transitionToState(OrchestratorStatus targetStatus) {
         OrchestratorStatus expectedCurrentStatus;
         switch (targetStatus) {
             case STARTED:
