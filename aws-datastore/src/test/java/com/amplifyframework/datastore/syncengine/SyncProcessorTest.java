@@ -75,6 +75,7 @@ public final class SyncProcessorTest {
     private SynchronousStorageAdapter storageAdapter;
 
     private SyncProcessor syncProcessor;
+    private int errorHandlerCallCount;
 
     /**
      * Wire up dependencies for the SyncProcessor, and build one for testing.
@@ -90,7 +91,7 @@ public final class SyncProcessorTest {
         modelSchemaRegistry.load(modelProvider.models());
 
         this.appSync = mock(AppSync.class);
-
+        this.errorHandlerCallCount = 0;
         InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
         this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
 
@@ -102,6 +103,7 @@ public final class SyncProcessorTest {
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration
             .builder()
             .syncIntervalInMinutes(BASE_SYNC_INTERVAL_MINUTES)
+            .dataStoreErrorHandler(dataStoreException -> errorHandlerCallCount++)
             .build();
 
         this.syncProcessor = SyncProcessor.builder()
@@ -376,6 +378,21 @@ public final class SyncProcessorTest {
         for (long capturedValue : capturedValues) {
             assertEquals(recentTimeMs, capturedValue);
         }
+    }
+
+    /**
+     * Verify that the user-provided onError callback (if specified) is invoked if initial sync fails.
+     */
+    @Test
+    public void userProvidedErrorCallbackInvokedOnFailure() {
+        // Arrange: mock failure when invoking hydrate on the mock object.
+        AppSyncMocking.onSync(appSync).mockFailure();
+
+        // Act: call hydrate.
+        assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+        // Assert: one error per model.
+        assertEquals(modelProvider.models().size(), errorHandlerCallCount);
     }
 
     static final class RecentTimeWindow {

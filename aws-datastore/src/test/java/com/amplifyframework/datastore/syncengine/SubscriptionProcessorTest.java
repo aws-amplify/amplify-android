@@ -104,9 +104,10 @@ public final class SubscriptionProcessorTest {
     /**
      * When {@link SubscriptionProcessor#startSubscriptions()} is invoked,
      * the {@link AppSync} client receives subscription requests.
+     * @throws DataStoreException Not expected.
      */
     @Test
-    public void appSyncInvokedWhenSubscriptionsStarted() {
+    public void appSyncInvokedWhenSubscriptionsStarted() throws DataStoreException {
         // For every Class-SubscriptionType pairing, use a CountDownLatch
         // to tell whether or not we've "seen" a subscription event for it.
         Map<Pair<Class<? extends Model>, SubscriptionType>, CountDownLatch> seen = new HashMap<>();
