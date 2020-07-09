@@ -20,6 +20,8 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
+import java.util.Arrays;
+
 /**
  * Query DSL for query predicates.
  */
@@ -42,7 +44,7 @@ public final class Where {
      * @return options with a given predicate.
      */
     public static QueryOptions matches(@NonNull final QueryPredicate queryPredicate) {
-        return new QueryOptions(queryPredicate, null);
+        return new QueryOptions(queryPredicate, null, null);
     }
 
     /**
@@ -54,5 +56,25 @@ public final class Where {
      */
     public static QueryOptions id(@NonNull final String modelId) {
         return matches(QueryField.field("id").eq(modelId)).paginated(Page.firstResult());
+    }
+
+    /**
+     * Factory method that builds the options with the given {@link QueryPaginationInput}.
+     *
+     * @param paginationInput the pagination details
+     * @return options with the given sortBy fields.
+     */
+    public static QueryOptions paginated(@NonNull final QueryPaginationInput paginationInput) {
+        return new QueryOptions(null, paginationInput, null);
+    }
+
+    /**
+     * Factory method that builds the options with the given {@link QuerySortBy} arguments.
+     *
+     * @param sortBy a varargs list of QuerySortBy options, in the order in which they are to be applied.
+     * @return options with the given sortBy fields.
+     */
+    public static QueryOptions sorted(@NonNull final QuerySortBy... sortBy) {
+        return new QueryOptions(null, null, Arrays.asList(sortBy));
     }
 }
