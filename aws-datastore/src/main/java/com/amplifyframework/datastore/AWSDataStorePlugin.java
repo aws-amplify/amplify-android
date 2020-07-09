@@ -54,6 +54,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -224,10 +225,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @SuppressWarnings("unused")
     synchronized void terminate() throws AmplifyException {
-        orchestrator.stop()
+        Throwable throwable = orchestrator.stop()
             .andThen(
                 Completable.fromAction(sqliteStorageAdapter::terminate)
             ).blockingGet(PLUGIN_TERMINATE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        if (throwable != null) {
+            LOG.warn("An error occurred while terminating the DataStore plugin.", throwable);
+        }
     }
 
     /**
@@ -434,10 +438,15 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                       @NonNull Consumer<DataStoreException> onError) {
         // We shouldn't call beforeOperation when clearing the DataStore. The
         // only thing we have to wait for is the category initialization latch.
+        boolean isCategoryInitialized = false;
         try {
-            categoryInitializationsPending.await();
+            isCategoryInitialized = categoryInitializationsPending.await(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException exception) {
             LOG.warn("Execution interrupted while waiting for DataStore to be initialized.");
+        }
+        if (!isCategoryInitialized) {
+            onError.accept(new DataStoreException("DataStore not ready to be cleared.", "Retry your request."));
+            return;
         }
         orchestrator.stop()
             .subscribeOn(Schedulers.io())
@@ -446,15 +455,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 onComplete.call();
                 // Kick off the orchestrator asynchronously.
                 initializeOrchestrator()
-                    .subscribe(
-                        () -> LOG.info("Orchestrator restarted after clear operation."),
-                        throwable -> LOG.warn("Failed to restart orchestrator after clear operation.", throwable)
-                    );
+                    .doOnError(throwable -> LOG.warn("Failed to restart orchestrator after clear operation.", throwable))
+                    .doOnComplete(() -> LOG.info("Orchestrator restarted after clear operation."))
+                    .subscribe();
             }, onError)))
-            .subscribe(
-                () -> LOG.debug("Clear operation completed."),
-                throwable -> LOG.warn("Clear operation failed", throwable)
-            );
+            .doOnError(throwable -> LOG.warn("Clear operation failed", throwable))
+            .doOnComplete(() -> LOG.debug("Clear operation completed."))
+            .subscribe();
     }
 
     private void beforeOperation(@NonNull final Runnable runnable) {

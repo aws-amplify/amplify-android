@@ -70,7 +70,7 @@ public final class RetryStrategy {
                 // If it's part of the skip list, don't retry.
                 return false;
             } else {
-                final long waitTimeSeconds = new Double(Math.pow(2, attemptNumber % maxExponent)).longValue();
+                final long waitTimeSeconds = Double.valueOf(Math.pow(2, attemptNumber % maxExponent)).longValue();
                 LOG.debug("Waiting " + waitTimeSeconds + " seconds before retrying");
                 Completable.timer(TimeUnit.SECONDS.toMillis(waitTimeSeconds), TimeUnit.MILLISECONDS).blockingAwait();
                 return true;
