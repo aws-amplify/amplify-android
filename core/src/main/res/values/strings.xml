@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
    Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
    Licensed under the Apache License, Version 2.0 (the "License").
@@ -20,7 +19,6 @@
     <string name="device_button_title">View Device Information</string>
     <string name="logs_button_title">View Logs</string>
     <string name="file_issue_button_title">File Issue</string>
-    <string name="back_button">Back Button</string>
     <string name="env_view_title">Environment Information</string>
     <string name="device_view_title">Device Information</string>
     <string name="logs_view_title">Logs</string>

@@ -15,36 +15,26 @@
 
 package com.amplifyframework.core;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.TextView;
+import androidx.fragment.app.FragmentActivity;
+import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
 
 /**
  * This is the activity to display the developer menu.
  */
-public final class DeveloperMenuActivity extends Activity {
+public final class DeveloperMenuActivity extends FragmentActivity {
     // Parent layout for the developer menu.
     private View devMenuLayout;
     // Detect and handle shake events.
     private ShakeDetector detector;
-    // View containing the buttons on the main
-    // developer menu view.
-    private View buttons;
-    // Environment information view.
-    private View envInfoView;
-    // Device information view.
-    private View deviceInfoView;
-    // Logs view.
-    private View logsView;
-    // File issue view.
-    private View fileIssueView;
-    // Back button.
-    private ImageButton backButton;
-    // Text displayed in the action bar.
-    private TextView titleText;
+    // Manages app navigation.
+    private NavController navController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,25 +45,9 @@ public final class DeveloperMenuActivity extends Activity {
         devMenuLayout.setVisibility(View.GONE);
         detector = new ShakeDetector(getApplicationContext(), this::changeVisibility);
 
-        buttons = findViewById(R.id.buttons);
-        envInfoView = findViewById(R.id.env_layout);
-        deviceInfoView = findViewById(R.id.device_layout);
-        logsView = findViewById(R.id.logs_layout);
-        fileIssueView = findViewById(R.id.file_issue_layout);
-        titleText = findViewById(R.id.title_text_view);
-
-        backButton = findViewById(R.id.back_button);
-        backButton.setOnClickListener(view -> displayMainView());
-
-        // Set on-click listeners for each button on the main view of the developer menu.
-        findViewById(R.id.env_button).setOnClickListener(view -> leaveMainView(envInfoView,
-                R.string.env_view_title));
-        findViewById(R.id.device_button).setOnClickListener(view -> leaveMainView(deviceInfoView,
-                R.string.device_view_title));
-        findViewById(R.id.logs_button).setOnClickListener(view -> leaveMainView(logsView,
-                R.string.logs_view_title));
-        findViewById(R.id.file_issue_button).setOnClickListener(view -> leaveMainView(fileIssueView,
-                R.string.file_issue_view_title));
+        navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        NavigationUI.setupWithNavController(findViewById(R.id.toolbar), navController,
+                new AppBarConfiguration.Builder(navController.getGraph()).build());
     }
 
     @Override
@@ -102,12 +76,11 @@ public final class DeveloperMenuActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (devMenuLayout.getVisibility() != View.VISIBLE) {
-            super.onBackPressed();
-        } else if (backButton.getVisibility() == View.VISIBLE) {
-            displayMainView();
-        } else {
+        NavDestination currentDestination = navController.getCurrentDestination();
+        if (currentDestination != null && currentDestination.getId() == R.id.main_view) {
             devMenuLayout.setVisibility(View.GONE);
+        } else {
+            super.onBackPressed();
         }
     }
 
@@ -121,31 +94,5 @@ public final class DeveloperMenuActivity extends Activity {
         } else {
             devMenuLayout.setVisibility(View.VISIBLE);
         }
-    }
-
-    /**
-     * Hides the main developer menu view, displays the given View, and
-     * changes the title text on the action bar.
-     * @param newView View to display.
-     * @param titleTextId ID of the string resource for the action bar title text.
-     */
-    private void leaveMainView(View newView, int titleTextId) {
-        buttons.setVisibility(View.GONE);
-        newView.setVisibility(View.VISIBLE);
-        backButton.setVisibility(View.VISIBLE);
-        titleText.setText(titleTextId);
-    }
-
-    /**
-     * Hide the current view and display the main developer menu view.
-     */
-    private void displayMainView() {
-        backButton.setVisibility(View.GONE);
-        envInfoView.setVisibility(View.GONE);
-        deviceInfoView.setVisibility(View.GONE);
-        logsView.setVisibility(View.GONE);
-        fileIssueView.setVisibility(View.GONE);
-        buttons.setVisibility(View.VISIBLE);
-        titleText.setText(R.string.menu_title);
     }
 }

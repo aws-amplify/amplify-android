@@ -18,8 +18,16 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
 dependencies {
+    def nav_version = "2.3.0"
+
     implementation dependency.androidx.v4support
     implementation dependency.androidx.annotation
+    implementation "androidx.navigation:navigation-fragment:$nav_version"
+    implementation "androidx.navigation:navigation-ui:$nav_version"
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-dynamic-features-fragment:$nav_version"
+
     testImplementation project(path: ':testmodels')
     testImplementation(project(path: ':testutils')) {
         transitive = false
@@ -41,4 +49,5 @@ dependencies {
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
+    androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
 }

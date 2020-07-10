@@ -15,6 +15,8 @@
 -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/dev_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -27,99 +29,38 @@
         android:orientation="vertical"
         android:layout_alignParentBottom="true">
 
-        <RelativeLayout
-            android:id="@+id/action_bar"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?android:attr/actionBarSize"
+            android:minHeight="?android:attr/actionBarSize"
+            android:layout_marginBottom="15dp"
             android:theme="@android:style/Widget.DeviceDefault.ActionBar.Solid"
-            android:layout_marginBottom="15dp">
-
-            <ImageButton
-                android:id="@+id/back_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/ic_baseline_arrow_back_24"
-                android:layout_marginStart="20dp"
-                android:layout_marginLeft="20dp"
-                android:layout_centerVertical="true"
-                android:contentDescription="@string/back_button"
-                android:visibility="gone" />
+            android:paddingStart="20dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="0dp"
+            android:paddingEnd="0dp">
 
             <TextView
-                android:id="@+id/title_text_view"
-                android:layout_width="match_parent"
+                android:id="@+id/toolbar_title"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/menu_title"
+                android:layout_gravity="center"
                 android:textColor="@android:color/white"
-                android:gravity="center"
-                android:background="@android:color/transparent"
-                android:textSize="17sp" />
-        </RelativeLayout>
+                android:textSize="17sp"
+                android:paddingRight="20dp"
+                android:paddingEnd="20dp"
+                android:paddingLeft="0dp"
+                android:paddingStart="0dp" />
+        </androidx.appcompat.widget.Toolbar>
 
-        <LinearLayout
-            android:id="@+id/buttons"
+        <fragment
+            android:id="@+id/nav_host_fragment"
+            android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingLeft="15dp"
-            android:paddingRight="15dp"
-            android:paddingBottom="15dp">
-
-            <Button
-                android:id="@+id/env_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/env_button_title"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/device_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/device_button_title"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/logs_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/logs_button_title"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/file_issue_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/file_issue_button_title"
-                android:textAllCaps="false" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/env_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone" />
-
-        <LinearLayout
-            android:id="@+id/device_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone" />
-
-        <LinearLayout
-            android:id="@+id/logs_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone" />
-
-        <LinearLayout
-            android:id="@+id/file_issue_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone" />
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/dev_menu_nav_graph"
+            tools:ignore="FragmentTagUsage" />
     </LinearLayout>
 </RelativeLayout>
