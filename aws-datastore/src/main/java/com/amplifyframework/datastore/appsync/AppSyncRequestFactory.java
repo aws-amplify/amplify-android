@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.aws.appsync.AppSyncGraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
@@ -150,49 +151,19 @@ final class AppSyncRequestFactory {
         return doc.toString();
     }
 
-    static <T extends Model> String buildSubscriptionDoc(
-            Class<T> modelClass, SubscriptionType subscriptionType) throws DataStoreException {
-
-        final String capitalizedModelName = Casing.capitalizeFirst(modelClass.getSimpleName());
-        String verb;
-        switch (subscriptionType) {
-            case ON_CREATE:
-                verb = "Create";
-                break;
-            case ON_DELETE:
-                verb = "Delete";
-                break;
-            case ON_UPDATE:
-                verb = "Update";
-                break;
-            default:
-                throw new DataStoreException(
-                    "Unknown subscription type.", "Check if a new subcription type has been added?"
-                );
+    static <T, M extends Model> AppSyncGraphQLRequest<T> buildSubscriptionRequest(
+            Class<M> modelClass, SubscriptionType subscriptionType) throws DataStoreException {
+        try {
+            return AppSyncGraphQLRequest.builder()
+                    .modelClass(modelClass)
+                    .operationType(subscriptionType)
+                    .requestOptions(new DataStoreGraphQLRequestOptions())
+                    .responseType(String.class)
+                    .build();
+        } catch (AmplifyException amplifyException) {
+            throw new DataStoreException("Failed to get fields for model.",
+                    amplifyException, "Validate your model file.");
         }
-        StringBuilder builder = new StringBuilder();
-        int indent = 0;
-
-        // subscription OnCreatePost {
-        builder.append("subscription On").append(verb).append(capitalizedModelName).append(" {\n");
-
-        //  onCreatePost {
-        builder.append(padBy(++indent)).append("on").append(verb).append(capitalizedModelName).append(" {\n");
-
-        ++indent;
-        builder.append(buildSelectionPortion(modelClass, indent, WALK_DEPTH));
-        for (final String itemSyncKey : ITEM_SYNC_KEYS) {
-            builder.append(padBy(indent)).append(itemSyncKey).append("\n");
-        }
-        --indent;
-        
-        // end the the inner subscription directive
-        builder.append(padBy(indent)).append("}\n");
-
-        // End the container (that started as `subscription OnWhatever {`
-        builder.append(padBy(--indent)).append("}\n");
-
-        return builder.toString();
     }
 
     static <T extends Model> String buildDeletionDoc(Class<T> modelClass, boolean includePredicate)

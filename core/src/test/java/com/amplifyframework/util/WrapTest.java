@@ -76,6 +76,24 @@ public final class WrapTest {
     }
 
     /**
+     * Validate wrapping a string in pretty braces.
+     */
+    @Test
+    public void wrapInPrettyBracesReturnsBracedString() {
+        assertEquals(" {\n      Tomato\n    }",
+                Wrap.inPrettyBraces("Tomato", "    ", "  "));
+    }
+
+    /**
+     * Don't try wrapping null in pretty braces, just let it pass through.
+     */
+    @Test
+    public void passThroughNullWithoutPrettyBraces() {
+        //noinspection ConstantConditions
+        assertNull(Wrap.inPrettyBraces(null, "  ", "  "));
+    }
+
+    /**
      * Validate wrapping a string in parentheses.
      */
     @Test

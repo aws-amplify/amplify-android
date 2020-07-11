@@ -13,10 +13,9 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
+package com.amplifyframework.api.aws.appsync;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.aws.appsync.AppSyncGraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.OperationType;
 import com.amplifyframework.api.graphql.QueryType;
@@ -106,9 +105,10 @@ public class AppSyncGraphQLRequestTest {
         AppSyncGraphQLRequest<Model> request = AppSyncGraphQLRequest.builder()
                 .modelClass(clazz)
                 .operationType(operationType)
+                .requestOptions(new DefaultGraphQLRequestOptions())
                 .responseType(clazz)
                 .build();
-        if(request.isOwnerArgumentRequired()) {
+        if (request.isOwnerArgumentRequired()) {
             request.setOwner("johndoe");
         }
         return "johndoe".equals(request.getVariables().get("owner"));

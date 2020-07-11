@@ -442,6 +442,7 @@ public final class GsonGraphQLResponseFactoryTest {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(Todo.class)
                     .operationType(QueryType.LIST)
+                    .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(responseType)
                     .build();
         } catch (AmplifyException exception) {

@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws.appsync;
 
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -40,6 +42,8 @@ import java.util.Set;
  * A root SelectionSet node will have a null value.
  */
 public final class SelectionSet {
+    private static final String INDENT = "  ";
+
     private final String value;
     private final Set<SelectionSet> nodes;
 
@@ -70,7 +74,7 @@ public final class SelectionSet {
     }
 
     /**
-     * Generate the String value of the SelectionSet used in the GraphQL query document.
+     * Generate the String value of the SelectionSet used in the GraphQL query document, with no margin.
      *
      * Sample return value:
      *   items {
@@ -87,6 +91,15 @@ public final class SelectionSet {
      */
     @Override
     public String toString() {
+        return toString("");
+    }
+
+    /**
+     * Generates the String value of the SelectionSet for a GraphQL query document.
+     * @param margin a margin with which to prefix each field of the selection set.
+     * @return String value of the SelectionSet for a GraphQL query document.
+     */
+    public String toString(String margin) {
         List<String> fieldsList = new ArrayList<>();
         StringBuilder builder = new StringBuilder();
 
@@ -96,10 +109,11 @@ public final class SelectionSet {
 
         if (!Empty.check(nodes)) {
             for (SelectionSet node : nodes) {
-                fieldsList.add(node.toString());
+                fieldsList.add(node.toString(margin + INDENT));
             }
             Collections.sort(fieldsList);
-            builder.append(" " + Wrap.inBraces(TextUtils.join(" ", fieldsList)));
+            String delimiter = "\n" + margin + INDENT;
+            builder.append(Wrap.inPrettyBraces(TextUtils.join(delimiter, fieldsList), margin, INDENT));
         }
 
         return builder.toString();
@@ -125,24 +139,47 @@ public final class SelectionSet {
     }
 
     /**
+     * Create a new SelectionSet builder.
+     * @return a new SelectionSet builder.
+     */
+    public static SelectionSet.Builder builder() {
+        return new Builder();
+    }
+
+    /**
      * Factory class for creating and serializing a selection set within a GraphQL document.
      */
-    static final class Factory {
-        private static final String ITEMS_KEY = "items";
-        private static final String NEXT_TOKEN_KEY = "nextToken";
+    static final class Builder {
+        private Class<? extends Model> modelClass;
+        private OperationType operationType;
+        private GraphQLRequestOptions requestOptions;
 
-        // This class should not be instantiated
-        private Factory() {}
+        Builder() { }
+
+        public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
+            this.modelClass = Objects.requireNonNull(modelClass);
+            return Builder.this;
+        }
+
+        public Builder operationType(@NonNull OperationType operationType) {
+            this.operationType = Objects.requireNonNull(operationType);
+            return Builder.this;
+        }
+
+        public Builder requestOptions(@NonNull GraphQLRequestOptions requestOptions) {
+            this.requestOptions = Objects.requireNonNull(requestOptions);
+            return Builder.this;
+        }
 
         /**
-         * Returns selection set containing the fields of the provided model class, as well as nested models.
-         * @param clazz model class
-         * @return selection set containing all of the fields of the provided model class
+         * Builds the SelectionSet containing all of the fields of the provided model class.
+         * @return selection set
          * @throws AmplifyException if a ModelSchema cannot be created from the provided model class.
          */
-        public static SelectionSet fromModelClass(Class<? extends Model> clazz, OperationType operationType, int depth)
-                throws AmplifyException {
-            SelectionSet node = new SelectionSet(null, getModelFields(clazz, depth));
+        public SelectionSet build() throws AmplifyException {
+            Objects.requireNonNull(this.modelClass);
+            Objects.requireNonNull(this.operationType);
+            SelectionSet node = new SelectionSet(null, getModelFields(modelClass, requestOptions.maxDepth()));
             if (QueryType.LIST.equals(operationType)) {
                 node = wrapPagination(node);
             }
@@ -158,25 +195,33 @@ public final class SelectionSet {
          * @param node a root node, with a value of null, and pagination fields
          * @return
          */
-        private static SelectionSet wrapPagination(SelectionSet node) {
+        private SelectionSet wrapPagination(SelectionSet node) {
             return new SelectionSet(null, wrapPagination(node.getNodes()));
         }
 
-        private static Set<SelectionSet> wrapPagination(Set<SelectionSet> nodes) {
+        private Set<SelectionSet> wrapPagination(Set<SelectionSet> nodes) {
             Set<SelectionSet> paginatedSet = new HashSet<>();
-            paginatedSet.add(new SelectionSet(ITEMS_KEY, nodes));
-            paginatedSet.add(new SelectionSet(NEXT_TOKEN_KEY, null));
+            paginatedSet.add(new SelectionSet(requestOptions.listField(), nodes));
+            for (String metaField : requestOptions.paginationFields()) {
+                paginatedSet.add(new SelectionSet(metaField, null));
+            }
             return paginatedSet;
         }
 
         @SuppressWarnings("unchecked") // Cast to Class<Model>
-        private static Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth)
+        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth)
                 throws AmplifyException {
             if (depth < 0) {
                 return new HashSet<>();
             }
 
             Set<SelectionSet> result = new HashSet<>();
+
+            if (depth == 0 && requestOptions.onlyRequestIdForLeafSelectionSetNodes()) {
+                result.add(new SelectionSet("id", null));
+                return result;
+            }
+
             ModelSchema schema = ModelSchema.fromModelClass(clazz);
             for (Field field : FieldFinder.findFieldsIn(clazz)) {
                 String fieldName = field.getName();
@@ -195,6 +240,9 @@ public final class SelectionSet {
                 } else {
                     result.add(new SelectionSet(fieldName, null));
                 }
+            }
+            for (String fieldName : requestOptions.modelMetaFields()) {
+                result.add(new SelectionSet(fieldName, null));
             }
             return result;
         }

@@ -261,7 +261,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         if (graphQLRequest instanceof AppSyncGraphQLRequest) {
             try {
                 AppSyncGraphQLRequest<R> request = (AppSyncGraphQLRequest<R>) graphQLRequest;
-                if(request.isOwnerArgumentRequired()) {
+                if (request.isOwnerArgumentRequired()) {
                     request.setOwner(getUsername());
                 }
             } catch (ApiException exception) {

@@ -1,5 +1,8 @@
 subscription OnCreateBlog {
   onCreateBlog {
+    _deleted
+    _lastChangedAt
+    _version
     id
     name
     owner {
@@ -12,8 +15,5 @@ subscription OnCreateBlog {
       nextToken
       startedAt
     }
-    _version
-    _deleted
-    _lastChangedAt
   }
 }

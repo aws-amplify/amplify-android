@@ -79,6 +79,7 @@ public final class AppSyncGraphQLRequestFactory {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(modelClass)
                     .operationType(QueryType.GET)
+                    .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(modelClass)
                     .setVariable("id", "ID!", objectId)
                     .build();
@@ -144,6 +145,7 @@ public final class AppSyncGraphQLRequestFactory {
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
                     .modelClass(modelClass)
                     .operationType(QueryType.LIST)
+                    .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(responseType);
 
             if (!QueryPredicates.all().equals(predicate)) {
@@ -187,6 +189,7 @@ public final class AppSyncGraphQLRequestFactory {
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
                     .operationType(type)
                     .modelClass(modelClass)
+                    .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(modelClass);
 
             String inputType = new StringBuilder()
@@ -234,6 +237,7 @@ public final class AppSyncGraphQLRequestFactory {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(modelClass)
                     .operationType(subscriptionType)
+                    .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(modelClass)
                     .build();
         } catch (AmplifyException exception) {
