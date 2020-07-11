@@ -184,7 +184,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             inputParameterString = Wrap.inParentheses(TextUtils.join(", ", inputParameters));
         }
 
-        String modelName = modelSchema.getName();
+        String modelName = Casing.capitalizeFirst(modelSchema.getName());
         String operationString = new StringBuilder()
                 .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.CAMEL_CASE)
                         .convert(operationType.toString()))
