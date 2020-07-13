@@ -71,9 +71,9 @@ public final class Wrap {
      * Returns original string wrapped with new lines and braces, and appropriate margin.
      *
      * Returned value is composed as:
-     *  <space>{
-     *  <margin><indent><original>
-     *  <margin>}
+     *  &lt;space&gt;{
+     *  &lt;margin&gt;&lt;indent&gt;&lt;original&gt;
+     *  &lt;margin&gt;}
      *
      * @param original Original string to modify
      * @param margin String representing the current margin to indent.

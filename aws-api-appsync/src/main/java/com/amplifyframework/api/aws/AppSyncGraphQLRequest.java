@@ -232,7 +232,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     public String toString() {
         return "AppSyncGraphQLRequest{" +
                 "modelSchema=" + modelSchema +
-                ", operationType=" + operation +
+                ", operation=" + operation +
                 ", selectionSet=" + selectionSet +
                 ", variables=" + variables +
                 ", variableTypes=" + variableTypes +
