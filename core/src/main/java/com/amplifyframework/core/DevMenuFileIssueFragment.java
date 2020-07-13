@@ -25,17 +25,17 @@ import androidx.fragment.app.Fragment;
  * A {@link Fragment} subclass corresponding to the
  * file issue view for the developer menu.
  */
-public final class DevMenuFileIssueView extends Fragment {
+public final class DevMenuFileIssueFragment extends Fragment {
 
     /**
      * Required empty public constructor.
      */
-    public DevMenuFileIssueView() { }
+    public DevMenuFileIssueFragment() { }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_file_issue_view, container, false);
+        return inflater.inflate(R.layout.fragment_file_issue, container, false);
     }
 }

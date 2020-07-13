@@ -22,7 +22,7 @@
     android:paddingLeft="15dp"
     android:paddingRight="15dp"
     android:paddingBottom="15dp"
-    tools:context=".DevMenuMainView">
+    tools:context=".DevMenuMainFragment">
 
     <Button
         android:id="@+id/env_button"

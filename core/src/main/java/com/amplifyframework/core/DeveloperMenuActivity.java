@@ -77,7 +77,7 @@ public final class DeveloperMenuActivity extends FragmentActivity {
     @Override
     public void onBackPressed() {
         NavDestination currentDestination = navController.getCurrentDestination();
-        if (currentDestination != null && currentDestination.getId() == R.id.main_view) {
+        if (currentDestination != null && currentDestination.getId() == R.id.main_fragment) {
             devMenuLayout.setVisibility(View.GONE);
         } else {
             super.onBackPressed();

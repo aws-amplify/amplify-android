@@ -27,20 +27,20 @@ import androidx.navigation.Navigation;
  * A {@link Fragment} subclass representing the main view for
  * the developer menu.
  */
-public final class DevMenuMainView extends Fragment {
+public final class DevMenuMainFragment extends Fragment {
     // Text displayed in the action bar.
     private TextView titleText;
 
     /**
      * Required empty public constructor.
      */
-    public DevMenuMainView() { }
+    public DevMenuMainFragment() { }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View mainView = inflater.inflate(R.layout.fragment_main_view, container, false);
+        View mainView = inflater.inflate(R.layout.fragment_main, container, false);
 
         titleText = getActivity().findViewById(R.id.toolbar_title);
         titleText.setText(R.string.menu_title);
