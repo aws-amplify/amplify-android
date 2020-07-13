@@ -19,7 +19,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
@@ -28,8 +27,6 @@ import androidx.navigation.Navigation;
  * the developer menu.
  */
 public final class DevMenuMainFragment extends Fragment {
-    // Text displayed in the action bar.
-    private TextView titleText;
 
     /**
      * Required empty public constructor.
@@ -42,31 +39,16 @@ public final class DevMenuMainFragment extends Fragment {
         // Inflate the layout for this fragment
         View mainView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        titleText = getActivity().findViewById(R.id.toolbar_title);
-        titleText.setText(R.string.menu_title);
-
         // Set on-click listeners for each button on the main view of the developer menu.
-        mainView.findViewById(R.id.env_button).setOnClickListener(view -> hideMainView(view,
-                R.id.show_env_info, R.string.env_view_title));
-        mainView.findViewById(R.id.device_button).setOnClickListener(view -> hideMainView(view,
-                R.id.show_device_info, R.string.device_view_title));
-        mainView.findViewById(R.id.logs_button).setOnClickListener(view -> hideMainView(view,
-                R.id.show_logs, R.string.logs_view_title));
-        mainView.findViewById(R.id.file_issue_button).setOnClickListener(view -> hideMainView(view,
-                R.id.show_file_issue, R.string.file_issue_view_title));
+        mainView.findViewById(R.id.env_button).setOnClickListener(view ->
+                Navigation.findNavController(view).navigate(R.id.show_env_info));
+        mainView.findViewById(R.id.device_button).setOnClickListener(view ->
+                Navigation.findNavController(view).navigate(R.id.show_device_info));
+        mainView.findViewById(R.id.logs_button).setOnClickListener(view ->
+                Navigation.findNavController(view).navigate(R.id.show_logs));
+        mainView.findViewById(R.id.file_issue_button).setOnClickListener(view ->
+                Navigation.findNavController(view).navigate(R.id.show_file_issue));
 
         return mainView;
-    }
-
-    /**
-     * Hides the main developer menu view, displays the view with the given
-     * ID, and changes the title text on the action bar.
-     * @param view View to navigate away from.
-     * @param newViewId ID of the new view to display.
-     * @param titleTextId ID of the string resource for the action bar title text.
-     */
-    private void hideMainView(View view, int newViewId, int titleTextId) {
-        Navigation.findNavController(view).navigate(newViewId);
-        titleText.setText(titleTextId);
     }
 }

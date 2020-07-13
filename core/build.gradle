@@ -20,11 +20,11 @@ apply from: rootProject.file("configuration/publishing.gradle")
 dependencies {
     implementation dependency.androidx.v4support
     implementation dependency.androidx.annotation
-    implementation dependency.androidx.navfragment
-    implementation dependency.androidx.navui
-    implementation dependency.androidx.navfragmentktx
-    implementation dependency.androidx.navuiktx
-    implementation dependency.androidx.navfeatfragment
+    implementation dependency.androidx.nav.fragment
+    implementation dependency.androidx.nav.fragmentktx
+    implementation dependency.androidx.nav.ui
+    implementation dependency.androidx.nav.uiktx
+    implementation dependency.androidx.nav.dynamicfeatures
 
     testImplementation project(path: ':testmodels')
     testImplementation(project(path: ':testutils')) {

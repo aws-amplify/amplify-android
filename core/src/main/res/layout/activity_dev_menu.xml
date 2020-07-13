@@ -36,22 +36,7 @@
             android:minHeight="?android:attr/actionBarSize"
             android:layout_marginBottom="15dp"
             android:theme="@android:style/Widget.DeviceDefault.ActionBar.Solid"
-            android:paddingStart="20dp"
-            android:paddingLeft="20dp"
-            android:paddingRight="0dp"
-            android:paddingEnd="0dp">
-
-            <TextView
-                android:id="@+id/toolbar_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:textColor="@android:color/white"
-                android:textSize="17sp"
-                android:paddingRight="20dp"
-                android:paddingEnd="20dp"
-                android:paddingLeft="0dp"
-                android:paddingStart="0dp" />
+            app:titleTextAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
         </androidx.appcompat.widget.Toolbar>
 
         <fragment

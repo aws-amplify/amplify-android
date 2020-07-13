@@ -45,10 +45,10 @@ ext {
     buildToolsVersion = "29.0.2"
     compileSdkVersion = 29
     minSdkVersion = 16
-    nav_version = "2.3.0"
     targetSdkVersion = 29
 
     awsSdkVersion = '2.16.12'
+    navigationversion = "2.3.0"
     dependency = [
         android: [
             desugartools: 'com.android.tools:desugar_jdk_libs:1.0.5',
@@ -58,11 +58,13 @@ ext {
             annotation: 'androidx.annotation:annotation:1.1.0',
             appcompat: 'androidx.appcompat:appcompat:1.1.0',
             core: 'androidx.core:core:1.3.0',
-            navfragment: "androidx.navigation:navigation-fragment:$nav_version",
-            navfragmentktx: "androidx.navigation:navigation-fragment-ktx:$nav_version",
-            navui: "androidx.navigation:navigation-ui:$nav_version",
-            navuiktx: "androidx.navigation:navigation-fragment-ktx:$nav_version",
-            navfeatfragment: "androidx.navigation:navigation-dynamic-features-fragment:$nav_version",
+            nav: [
+                    fragment: "androidx.navigation:navigation-fragment:$navigationversion",
+                    fragmentktx: "androidx.navigation:navigation-fragment-ktx:$navigationversion",
+                    ui: "androidx.navigation:navigation-ui:$navigationversion",
+                    uiktx: "androidx.navigation:navigation-ui-ktx:$navigationversion",
+                    dynamicfeatures: "androidx.navigation:navigation-dynamic-features-fragment:$navigationversion"
+            ],
             multidex: 'androidx.multidex:multidex:2.0.1',
             test: [
                 core: 'androidx.test:core:1.2.0',
