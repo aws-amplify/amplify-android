@@ -217,7 +217,7 @@ public final class SelectionSet {
 
             Set<SelectionSet> result = new HashSet<>();
 
-            if (depth == 0 && requestOptions.onlyRequestIdForLeafSelectionSetNodes()) {
+            if (depth == 0 && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())) {
                 result.add(new SelectionSet("id", null));
                 return result;
             }

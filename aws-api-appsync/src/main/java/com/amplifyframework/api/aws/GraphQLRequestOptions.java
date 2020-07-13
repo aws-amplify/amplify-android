@@ -59,8 +59,8 @@ public interface GraphQLRequestOptions {
     int maxDepth();
 
     /**
-     * Returns whether to request all fields or only the id field for leaf nodes when building the {@link SelectionSet}.
-     * @return whether to request all fields or only the id field for leaf nodes when building the {@link SelectionSet}.
+     * Returns LeafSelectionBehavior, which defines how to serialize leaf nodes when building the {@link SelectionSet}.
+     * @return LeafSelectionBehavior, which defines how to serialize leaf nodes when building the {@link SelectionSet}.
      */
-    boolean onlyRequestIdForLeafSelectionSetNodes();
+    LeafSerializationBehavior leafSerializationBehavior();
 }

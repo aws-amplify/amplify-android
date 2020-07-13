@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.api.aws.GraphQLRequestOptions;
+import com.amplifyframework.api.aws.LeafSerializationBehavior;
 
 import java.util.Arrays;
 import java.util.List;
@@ -52,7 +53,7 @@ public final class DataStoreGraphQLRequestOptions implements GraphQLRequestOptio
     }
 
     @Override
-    public boolean onlyRequestIdForLeafSelectionSetNodes() {
-        return true;
+    public LeafSerializationBehavior leafSerializationBehavior() {
+        return LeafSerializationBehavior.JUST_ID;
     }
 }

@@ -47,7 +47,7 @@ public final class ApiGraphQLRequestOptions implements GraphQLRequestOptions {
     }
 
     @Override
-    public boolean onlyRequestIdForLeafSelectionSetNodes() {
-        return false;
+    public LeafSerializationBehavior leafSerializationBehavior() {
+        return LeafSerializationBehavior.ALL_FIELDS;
     }
 }

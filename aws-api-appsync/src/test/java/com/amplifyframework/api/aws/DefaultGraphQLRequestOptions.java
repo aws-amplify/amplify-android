@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.api.aws.GraphQLRequestOptions;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -46,7 +44,7 @@ public final class DefaultGraphQLRequestOptions implements GraphQLRequestOptions
     }
 
     @Override
-    public boolean onlyRequestIdForLeafSelectionSetNodes() {
-        return false;
+    public LeafSerializationBehavior leafSerializationBehavior() {
+        return LeafSerializationBehavior.ALL_FIELDS;
     }
 }
