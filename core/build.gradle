@@ -18,6 +18,7 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
 dependencies {
+    def fragment_version = "1.2.5"
     def nav_version = "2.3.0"
 
     implementation dependency.androidx.v4support
@@ -40,6 +41,7 @@ dependencies {
     }
     testImplementation dependency.rxjava
     testImplementation dependency.androidx.test.core
+    testImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     testImplementation dependency.jsonassert
 
     androidTestImplementation (project(path: ':testutils')) {
@@ -49,5 +51,8 @@ dependencies {
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
+
+    debugImplementation "androidx.fragment:fragment-testing:$fragment_version"
 }
