@@ -23,7 +23,6 @@ import com.amplifyframework.testutils.Resources;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
 import static org.junit.Assert.assertEquals;
 
@@ -34,7 +33,6 @@ public class SelectionSetTest {
      * @throws AmplifyException if a ModelSchema can't be derived from Post.class
      */
     @Test
-    @Config(sdk = 28)
     public void selectionSetSerializesToExpectedValue() throws AmplifyException {
         SelectionSet selectionSet = SelectionSet.builder()
                 .modelClass(Post.class)
