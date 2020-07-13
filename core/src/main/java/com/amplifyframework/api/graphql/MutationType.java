@@ -18,7 +18,7 @@ package com.amplifyframework.api.graphql;
 /**
  * Enum of GraphQL operation types.
  */
-public enum MutationType {
+public enum MutationType implements OperationType {
     /** GraphQL mutation create. */
     CREATE,
 
@@ -26,5 +26,10 @@ public enum MutationType {
     UPDATE,
 
     /** GraphQL mutation delete. */
-    DELETE
+    DELETE;
+
+    @Override
+    public Operation getOperation() {
+        return Operation.MUTATION;
+    }
 }

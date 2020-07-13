@@ -15,9 +15,10 @@
 
 package com.amplifyframework.logging;
 
-import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+
+import com.amplifyframework.util.Empty;
 
 import org.json.JSONObject;
 import org.junit.After;
@@ -137,7 +138,7 @@ public class AndroidLoggingPluginTest {
         List<String> getLines() {
             final List<String> lines = new ArrayList<>();
             for (String line : toString().split("[\\r\\n]+")) {
-                if (!TextUtils.isEmpty(line)) {
+                if (!Empty.check(line)) {
                     lines.add(line);
                 }
             }

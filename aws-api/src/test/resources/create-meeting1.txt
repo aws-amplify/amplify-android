@@ -1,5 +1,5 @@
 {
-  "query": "mutation CreateMeeting($input: CreateMeetingInput!){ createMeeting(input: $input) { date dateTime id name time timestamp }}",
+  "query": "mutation CreateMeeting($input: CreateMeetingInput!) {createMeeting(input: $input) {date dateTime id name time timestamp}}",
   "variables": {
     "input": {
       "date": "2001-02-03",
