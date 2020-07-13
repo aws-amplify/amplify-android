@@ -312,7 +312,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
          * @param value the variable value.
          * @return this builder instance.
          */
-        public Builder setVariable(@NonNull String key, String type, Object value) {
+        Builder variable(@NonNull String key, String type, Object value) {
             Objects.requireNonNull(key);
             Objects.requireNonNull(type);
             this.variables.put(key, value);

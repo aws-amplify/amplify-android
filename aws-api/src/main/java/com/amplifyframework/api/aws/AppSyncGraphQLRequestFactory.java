@@ -80,7 +80,7 @@ public final class AppSyncGraphQLRequestFactory {
                     .operation(QueryType.GET)
                     .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(modelClass)
-                    .setVariable("id", "ID!", objectId)
+                    .variable("id", "ID!", objectId)
                     .build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
@@ -149,10 +149,10 @@ public final class AppSyncGraphQLRequestFactory {
 
             if (!QueryPredicates.all().equals(predicate)) {
                 String filterType = "Model" + Casing.capitalizeFirst(modelName) + "FilterInput";
-                builder.setVariable("filter", filterType, parsePredicate(predicate));
+                builder.variable("filter", filterType, parsePredicate(predicate));
             }
 
-            builder.setVariable("limit", "Int", limit);
+            builder.variable("limit", "Int", limit);
             return builder.build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
@@ -198,14 +198,14 @@ public final class AppSyncGraphQLRequestFactory {
                 .toString(); // CreateTodoInput
 
             if (MutationType.DELETE.equals(type)) {
-                builder.setVariable("input", inputType, Collections.singletonMap("id", model.getId()));
+                builder.variable("input", inputType, Collections.singletonMap("id", model.getId()));
             } else {
-                builder.setVariable("input", inputType, schema.getMapOfFieldNameAndValues(model));
+                builder.variable("input", inputType, schema.getMapOfFieldNameAndValues(model));
             }
 
             if (!QueryPredicates.all().equals(predicate)) {
                 String conditionType = "Model" + graphQlTypeName + "ConditionInput";
-                builder.setVariable("condition", conditionType, parsePredicate(predicate));
+                builder.variable("condition", conditionType, parsePredicate(predicate));
             }
 
             return builder.build();
