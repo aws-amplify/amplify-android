@@ -48,7 +48,7 @@ ext {
     targetSdkVersion = 29
 
     awsSdkVersion = '2.16.12'
-    navigationversion = "2.3.0"
+    navigationversion = '2.3.0'
     dependency = [
         android: [
             desugartools: 'com.android.tools:desugar_jdk_libs:1.0.5',
