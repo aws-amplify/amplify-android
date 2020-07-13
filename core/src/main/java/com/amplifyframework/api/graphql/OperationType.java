@@ -16,12 +16,35 @@
 package com.amplifyframework.api.graphql;
 
 /**
- * Represents a GraphQL operation type.
+ * Represents a GraphQL operation.
  */
-public interface OperationType {
+public enum OperationType {
     /**
-     * Returns the Operation to be used in the GraphQL document (i.e. query, subscription, or mutation).
-     * @return the Operation to be used in the GraphQL document (i.e. query, subscription, or mutation).
+     * GraphQL query operation.
      */
-    Operation getOperation();
+    QUERY("query"),
+
+    /**
+     * GraphQL mutation operation.
+     */
+    MUTATION("mutation"),
+
+    /**
+     * GraphQL subscription operation.
+     */
+    SUBSCRIPTION("subscription");
+
+    private final String name;
+
+    OperationType(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Returns the name of the operation.
+     * @return the name of the operation.
+     */
+    public String getName() {
+        return name;
+    }
 }

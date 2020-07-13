@@ -18,7 +18,7 @@ package com.amplifyframework.api.graphql;
 /**
  * Enum of GraphQL operation types.
  */
-public enum SubscriptionType implements OperationType {
+public enum SubscriptionType implements Operation {
     /**
      * GraphQL subscription onCreate.
      */
@@ -35,7 +35,7 @@ public enum SubscriptionType implements OperationType {
     ON_DELETE;
 
     @Override
-    public Operation getOperation() {
-        return Operation.SUBSCRIPTION;
+    public OperationType getOperationType() {
+        return OperationType.SUBSCRIPTION;
     }
 }

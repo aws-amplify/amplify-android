@@ -440,7 +440,7 @@ public final class GsonGraphQLResponseFactoryTest {
         try {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(Todo.class)
-                    .operationType(QueryType.LIST)
+                    .operation(QueryType.LIST)
                     .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(responseType)
                     .build();

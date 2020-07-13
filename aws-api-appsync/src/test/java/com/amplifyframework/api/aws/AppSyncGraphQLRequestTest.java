@@ -17,7 +17,7 @@ package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.OperationType;
+import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthStrategy;
@@ -100,11 +100,11 @@ public class AppSyncGraphQLRequestTest {
         assertFalse(isOwnerArgumentAdded(Owner.class, MutationType.CREATE));
     }
 
-    private boolean isOwnerArgumentAdded(Class<? extends Model> clazz, OperationType operationType)
+    private boolean isOwnerArgumentAdded(Class<? extends Model> clazz, Operation operation)
             throws AmplifyException {
         AppSyncGraphQLRequest<Model> request = AppSyncGraphQLRequest.builder()
                 .modelClass(clazz)
-                .operationType(operationType)
+                .operation(operation)
                 .requestOptions(new DefaultGraphQLRequestOptions())
                 .responseType(clazz)
                 .build();

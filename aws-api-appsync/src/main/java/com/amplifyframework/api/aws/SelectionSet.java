@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.graphql.OperationType;
+import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
@@ -151,7 +151,7 @@ public final class SelectionSet {
      */
     static final class Builder {
         private Class<? extends Model> modelClass;
-        private OperationType operationType;
+        private Operation operation;
         private GraphQLRequestOptions requestOptions;
 
         Builder() { }
@@ -161,8 +161,8 @@ public final class SelectionSet {
             return Builder.this;
         }
 
-        public Builder operationType(@NonNull OperationType operationType) {
-            this.operationType = Objects.requireNonNull(operationType);
+        public Builder operation(@NonNull Operation operation) {
+            this.operation = Objects.requireNonNull(operation);
             return Builder.this;
         }
 
@@ -178,9 +178,9 @@ public final class SelectionSet {
          */
         public SelectionSet build() throws AmplifyException {
             Objects.requireNonNull(this.modelClass);
-            Objects.requireNonNull(this.operationType);
+            Objects.requireNonNull(this.operation);
             SelectionSet node = new SelectionSet(null, getModelFields(modelClass, requestOptions.maxDepth()));
-            if (QueryType.LIST.equals(operationType)) {
+            if (QueryType.LIST.equals(operation)) {
                 node = wrapPagination(node);
             }
             return node;

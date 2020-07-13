@@ -77,7 +77,7 @@ public final class AppSyncGraphQLRequestFactory {
         try {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(modelClass)
-                    .operationType(QueryType.GET)
+                    .operation(QueryType.GET)
                     .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(modelClass)
                     .setVariable("id", "ID!", objectId)
@@ -143,7 +143,7 @@ public final class AppSyncGraphQLRequestFactory {
             String modelName = ModelSchema.fromModelClass(modelClass).getName();
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
                     .modelClass(modelClass)
-                    .operationType(QueryType.LIST)
+                    .operation(QueryType.LIST)
                     .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(responseType);
 
@@ -186,7 +186,7 @@ public final class AppSyncGraphQLRequestFactory {
             String graphQlTypeName = schema.getName();
 
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
-                    .operationType(type)
+                    .operation(type)
                     .modelClass(modelClass)
                     .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(modelClass);
@@ -235,7 +235,7 @@ public final class AppSyncGraphQLRequestFactory {
         try {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(modelClass)
-                    .operationType(subscriptionType)
+                    .operation(subscriptionType)
                     .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(modelClass)
                     .build();

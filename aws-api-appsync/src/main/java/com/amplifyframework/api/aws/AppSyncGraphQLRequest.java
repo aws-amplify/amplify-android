@@ -22,7 +22,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.graphql.OperationType;
+import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthRule;
@@ -47,7 +47,7 @@ import java.util.Objects;
  */
 public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     private final ModelSchema modelSchema;
-    private final OperationType operationType;
+    private final Operation operation;
     private final SelectionSet selectionSet;
     private final Map<String, Object> variables;
     private final Map<String, String> variableTypes;
@@ -61,10 +61,10 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         this.modelSchema = ModelSchema.fromModelClass(builder.modelClass);
         this.selectionSet = SelectionSet.builder()
                 .modelClass(builder.modelClass)
-                .operationType(builder.operationType)
+                .operation(builder.operation)
                 .requestOptions(builder.requestOptions)
                 .build();
-        this.operationType = builder.operationType;
+        this.operation = builder.operation;
         this.variables = builder.variables;
         this.variableTypes = builder.variableTypes;
     }
@@ -77,7 +77,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     public <R> AppSyncGraphQLRequest(AppSyncGraphQLRequest<R> request) {
         super(request);
         this.modelSchema = request.modelSchema;
-        this.operationType = request.operationType;
+        this.operation = request.operation;
         this.selectionSet = new SelectionSet(request.selectionSet);
         this.variables = new HashMap<>(request.variables);
         this.variableTypes = new HashMap<>(request.variableTypes);
@@ -135,13 +135,13 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             return false;
         }
         List<ModelOperation> operations = authRule.getOperationsOrDefault();
-        if (SubscriptionType.ON_CREATE.equals(operationType) && operations.contains(ModelOperation.CREATE)) {
+        if (SubscriptionType.ON_CREATE.equals(operation) && operations.contains(ModelOperation.CREATE)) {
             return true;
         }
-        if (SubscriptionType.ON_UPDATE.equals(operationType) && operations.contains(ModelOperation.UPDATE)) {
+        if (SubscriptionType.ON_UPDATE.equals(operation) && operations.contains(ModelOperation.UPDATE)) {
             return true;
         }
-        if (SubscriptionType.ON_DELETE.equals(operationType) && operations.contains(ModelOperation.DELETE)) {
+        if (SubscriptionType.ON_DELETE.equals(operation) && operations.contains(ModelOperation.DELETE)) {
             return true;
         }
         return false;
@@ -182,18 +182,18 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
 
         String operationString = new StringBuilder()
                 .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.CAMEL_CASE)
-                        .convert(operationType.toString()))
+                        .convert(operation.toString()))
                 .append(modelName)
-                .append(QueryType.LIST.equals(operationType) ? "s" : "")
+                .append(QueryType.LIST.equals(operation) ? "s" : "")
                 .append(inputParameterString)
                 .append(selectionSet.toString("  "))
                 .toString();
 
         String queryString = new StringBuilder()
-                .append(operationType.getOperation().getName())
+                .append(operation.getOperationType().getName())
                 .append(" ")
                 .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.PASCAL_CASE)
-                        .convert(operationType.toString()))
+                        .convert(operation.toString()))
                 .append(modelName)
                 .append(inputTypeString)
                 .append(Wrap.inPrettyBraces(operationString, "", "  "))
@@ -217,7 +217,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
         AppSyncGraphQLRequest<?> that = (AppSyncGraphQLRequest<?>) object;
         return ObjectsCompat.equals(modelSchema, that.modelSchema) &&
-                ObjectsCompat.equals(operationType, that.operationType) &&
+                ObjectsCompat.equals(operation, that.operation) &&
                 ObjectsCompat.equals(selectionSet, that.selectionSet) &&
                 ObjectsCompat.equals(variables, that.variables) &&
                 ObjectsCompat.equals(variableTypes, that.variableTypes);
@@ -225,14 +225,14 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(super.hashCode(), modelSchema, operationType, selectionSet, variables, variableTypes);
+        return ObjectsCompat.hash(super.hashCode(), modelSchema, operation, selectionSet, variables, variableTypes);
     }
 
     @Override
     public String toString() {
         return "AppSyncGraphQLRequest{" +
                 "modelSchema=" + modelSchema +
-                ", operationType=" + operationType +
+                ", operationType=" + operation +
                 ", selectionSet=" + selectionSet +
                 ", variables=" + variables +
                 ", variableTypes=" + variableTypes +
@@ -254,8 +254,8 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      */
     public static final class Builder {
         private Class<? extends Model> modelClass;
-        private OperationType operationType;
         private GraphQLRequestOptions requestOptions;
+        private Operation operation;
         private Type responseType;
         private final Map<String, Object> variables;
         private final Map<String, String> variableTypes;
@@ -276,12 +276,12 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
 
         /**
-         * Sets the operationType and returns this builder.
-         * @param operationType the OperationType.
+         * Sets the operation and returns this builder.
+         * @param operation the Operation.
          * @return this builder instance.
          */
-        public Builder operationType(@NonNull OperationType operationType) {
-            this.operationType = Objects.requireNonNull(operationType);
+        Builder operation(@NonNull Operation operation) {
+            this.operation = Objects.requireNonNull(operation);
             return Builder.this;
         }
 
@@ -326,8 +326,8 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
          * @return the AppSyncGraphQLRequest
          * @throws AmplifyException if a ModelSchema cannot be created from the provided model class.
          */
-        public <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
-            Objects.requireNonNull(this.operationType);
+        <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
+            Objects.requireNonNull(this.operation);
             Objects.requireNonNull(this.modelClass);
             Objects.requireNonNull(this.responseType);
             Objects.requireNonNull(this.requestOptions);
