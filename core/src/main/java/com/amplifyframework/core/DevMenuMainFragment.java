@@ -47,13 +47,13 @@ public final class DevMenuMainFragment extends Fragment {
 
         // Set on-click listeners for each button on the main view of the developer menu.
         mainView.findViewById(R.id.env_button).setOnClickListener(view -> hideMainView(view,
-                R.id.show_env_info_view, R.string.env_view_title));
+                R.id.show_env_info, R.string.env_view_title));
         mainView.findViewById(R.id.device_button).setOnClickListener(view -> hideMainView(view,
-                R.id.show_device_info_view, R.string.device_view_title));
+                R.id.show_device_info, R.string.device_view_title));
         mainView.findViewById(R.id.logs_button).setOnClickListener(view -> hideMainView(view,
-                R.id.show_logs_view, R.string.logs_view_title));
+                R.id.show_logs, R.string.logs_view_title));
         mainView.findViewById(R.id.file_issue_button).setOnClickListener(view -> hideMainView(view,
-                R.id.show_file_issue_view, R.string.file_issue_view_title));
+                R.id.show_file_issue, R.string.file_issue_view_title));
 
         return mainView;
     }

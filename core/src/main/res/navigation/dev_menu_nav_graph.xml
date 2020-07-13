@@ -25,48 +25,32 @@
         android:name="com.amplifyframework.core.DevMenuMainFragment"
         tools:layout="@layout/fragment_main" >
         <action
-            android:id="@+id/show_file_issue_view"
+            android:id="@+id/show_file_issue"
             app:destination="@id/file_issue_fragment" />
         <action
-            android:id="@+id/show_env_info_view"
+            android:id="@+id/show_env_info"
             app:destination="@id/environment_fragment" />
         <action
-            android:id="@+id/show_device_info_view"
+            android:id="@+id/show_device_info"
             app:destination="@id/device_fragment" />
         <action
-            android:id="@+id/show_logs_view"
+            android:id="@+id/show_logs"
             app:destination="@id/logs_fragment" />
     </fragment>
     <fragment
         android:id="@+id/environment_fragment"
         android:name="com.amplifyframework.core.DevMenuEnvironmentFragment"
-        tools:layout="@layout/fragment_environment" >
-        <action
-            android:id="@+id/env_view_to_main_view"
-            app:destination="@id/main_fragment" />
-    </fragment>
+        tools:layout="@layout/fragment_environment" />
     <fragment
         android:id="@+id/device_fragment"
         android:name="com.amplifyframework.core.DevMenuDeviceFragment"
-        tools:layout="@layout/fragment_device" >
-        <action
-            android:id="@+id/device_view_to_main_view"
-            app:destination="@id/main_fragment" />
-    </fragment>
+        tools:layout="@layout/fragment_device" />
     <fragment
         android:id="@+id/logs_fragment"
         android:name="com.amplifyframework.core.DevMenuLogsFragment"
-        tools:layout="@layout/fragment_logs" >
-        <action
-            android:id="@+id/logs_view_to_main_view"
-            app:destination="@id/main_fragment" />
-    </fragment>
+        tools:layout="@layout/fragment_logs" />
     <fragment
         android:id="@+id/file_issue_fragment"
         android:name="com.amplifyframework.core.DevMenuFileIssueFragment"
-        tools:layout="@layout/fragment_file_issue" >
-        <action
-            android:id="@+id/file_issue_view_to_main_view"
-            app:destination="@id/main_fragment" />
-    </fragment>
+        tools:layout="@layout/fragment_file_issue" />
 </navigation>
