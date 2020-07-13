@@ -15,7 +15,7 @@
 
 package com.amplifyframework.datastore.appsync;
 
-import com.amplifyframework.api.aws.appsync.GraphQLRequestOptions;
+import com.amplifyframework.api.aws.GraphQLRequestOptions;
 
 import java.util.Arrays;
 import java.util.List;

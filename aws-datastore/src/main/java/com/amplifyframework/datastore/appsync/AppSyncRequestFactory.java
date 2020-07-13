@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.aws.appsync.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;

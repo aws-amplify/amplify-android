@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws.appsync;
+package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.MutationType;

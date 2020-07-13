@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.api.aws.appsync.GraphQLRequestOptions;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

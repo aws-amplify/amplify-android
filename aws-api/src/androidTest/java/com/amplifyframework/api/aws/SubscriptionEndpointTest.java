@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.appsync.GsonVariablesSerializer;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
