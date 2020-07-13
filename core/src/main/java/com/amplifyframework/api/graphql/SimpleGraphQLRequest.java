@@ -18,6 +18,7 @@ package com.amplifyframework.api.graphql;
 import androidx.core.util.ObjectsCompat;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public final class SimpleGraphQLRequest<R> extends GraphQLRequest<R> {
             Type responseType,
             VariablesSerializer variablesSerializer
     ) {
-        this(document, new HashMap<>(), responseType, variablesSerializer);
+        this(document, Collections.emptyMap(), responseType, variablesSerializer);
     }
 
     /**
