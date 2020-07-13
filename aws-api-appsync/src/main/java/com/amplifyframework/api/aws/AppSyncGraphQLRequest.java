@@ -280,7 +280,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
          * @param operation the Operation.
          * @return this builder instance.
          */
-        Builder operation(@NonNull Operation operation) {
+        public Builder operation(@NonNull Operation operation) {
             this.operation = Objects.requireNonNull(operation);
             return Builder.this;
         }
@@ -312,7 +312,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
          * @param value the variable value.
          * @return this builder instance.
          */
-        Builder variable(@NonNull String key, String type, Object value) {
+        public Builder variable(@NonNull String key, String type, Object value) {
             Objects.requireNonNull(key);
             Objects.requireNonNull(type);
             this.variables.put(key, value);
@@ -326,7 +326,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
          * @return the AppSyncGraphQLRequest
          * @throws AmplifyException if a ModelSchema cannot be created from the provided model class.
          */
-        <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
+        public <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
             Objects.requireNonNull(this.operation);
             Objects.requireNonNull(this.modelClass);
             Objects.requireNonNull(this.responseType);

@@ -36,7 +36,7 @@ public class SelectionSetTest {
     public void selectionSetSerializesToExpectedValue() throws AmplifyException {
         SelectionSet selectionSet = SelectionSet.builder()
                 .modelClass(Post.class)
-                .operationType(QueryType.GET)
+                .operation(QueryType.GET)
                 .requestOptions(new DefaultGraphQLRequestOptions())
                 .build();
         assertEquals(Resources.readAsString("selection-set-post.txt"), selectionSet.toString() + "\n");

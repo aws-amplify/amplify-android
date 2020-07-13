@@ -156,7 +156,7 @@ final class AppSyncRequestFactory {
         try {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(modelClass)
-                    .operationType(subscriptionType)
+                    .operation(subscriptionType)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
                     .responseType(String.class)
                     .build();
