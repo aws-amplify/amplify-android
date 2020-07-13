@@ -25,6 +25,7 @@ import com.amplifyframework.api.aws.appsync.GsonVariablesSerializer;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
@@ -98,7 +99,7 @@ public final class AppSyncClient implements AppSync {
 
         Type responseType = new TypeToken<Iterable<String>>(){}.getType();
         final GraphQLRequest<Iterable<String>> request =
-            new GraphQLRequest<>(queryDoc, Collections.emptyMap(), responseType, variablesSerializer);
+            new SimpleGraphQLRequest<>(queryDoc, Collections.emptyMap(), responseType, variablesSerializer);
 
         final Consumer<GraphQLResponse<Iterable<String>>> responseConsumer = apiQueryResponse -> {
             if (apiQueryResponse.hasErrors()) {
@@ -325,7 +326,7 @@ public final class AppSyncClient implements AppSync {
         }
 
         final GraphQLRequest<String> request =
-            new GraphQLRequest<>(document, Collections.emptyMap(), String.class, variablesSerializer);
+            new SimpleGraphQLRequest<>(document, Collections.emptyMap(), String.class, variablesSerializer);
 
         final Consumer<GraphQLResponse<String>> stringResponseConsumer = stringResponse -> {
             if (stringResponse.hasErrors()) {
@@ -362,7 +363,7 @@ public final class AppSyncClient implements AppSync {
             final Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             final Consumer<DataStoreException> onFailure) {
         final GraphQLRequest<String> request =
-            new GraphQLRequest<>(document, variables, String.class, variablesSerializer);
+            new SimpleGraphQLRequest<>(document, variables, String.class, variablesSerializer);
 
         final Consumer<GraphQLResponse<String>> responseConsumer = response -> {
             if (response.hasErrors()) {

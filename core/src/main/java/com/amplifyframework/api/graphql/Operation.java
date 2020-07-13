@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,26 +16,35 @@
 package com.amplifyframework.api.graphql;
 
 /**
- * Enum of GraphQL operation types.
+ * Represents a GraphQL operation.
  */
-public enum SubscriptionType implements OperationType {
+public enum Operation {
     /**
-     * GraphQL subscription onCreate.
+     * GraphQL query operation.
      */
-    ON_CREATE,
+    QUERY("query"),
 
     /**
-     * GraphQL subscription onUpdate.
+     * GraphQL mutation operation.
      */
-    ON_UPDATE,
+    MUTATION("mutation"),
 
     /**
-     * GraphQL subscription onDelete.
+     * GraphQL subscription operation.
      */
-    ON_DELETE;
+    SUBSCRIPTION("subscription");
 
-    @Override
-    public Operation getOperation() {
-        return Operation.SUBSCRIPTION;
+    private final String name;
+
+    Operation(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Returns the name of the operation.
+     * @return the name of the operation.
+     */
+    public String getName() {
+        return name;
     }
 }

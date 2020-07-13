@@ -15,7 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 
@@ -45,9 +44,9 @@ final class AppSyncPaginatedResultDeserializer implements JsonDeserializer<Pagin
     private static final String ITEMS_KEY = "items";
     private static final String NEXT_TOKEN_KEY = "nextToken";
 
-    private final GraphQLRequest<PaginatedResult<Model>> request;
+    private final AppSyncGraphQLRequest<PaginatedResult<Model>> request;
 
-    AppSyncPaginatedResultDeserializer(GraphQLRequest<PaginatedResult<Model>> request) {
+    AppSyncPaginatedResultDeserializer(AppSyncGraphQLRequest<PaginatedResult<Model>> request) {
         this.request = request;
     }
 
@@ -71,11 +70,11 @@ final class AppSyncPaginatedResultDeserializer implements JsonDeserializer<Pagin
         Iterable<Model> items = context.deserialize(jsonObject.get(ITEMS_KEY), dataType);
 
         JsonElement nextTokenElement = jsonObject.get(NEXT_TOKEN_KEY);
-        GraphQLRequest<PaginatedResult<Model>> requestForNextPage = null;
+        AppSyncGraphQLRequest<PaginatedResult<Model>> requestForNextPage = null;
         if (nextTokenElement.isJsonPrimitive()) {
             String nextToken = nextTokenElement.getAsJsonPrimitive().getAsString();
             requestForNextPage = request.copy();
-            requestForNextPage.putVariable(NEXT_TOKEN_KEY, nextToken);
+            requestForNextPage.setVariable(NEXT_TOKEN_KEY, "String", nextToken);
         }
 
         return new AppSyncPaginatedResult<>(items, requestForNextPage);

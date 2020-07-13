@@ -264,20 +264,6 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns true if this model has owner based authorization which changes the parameters for subscriptions.
-     * @return true if owner authorization is present on this model and false if not or if not explicitly annotated
-     */
-
-    public boolean hasOwnerAuthorization() {
-        for (AuthRule rule : getAuthRules()) {
-            if (AuthStrategy.OWNER.equals(rule.getAuthStrategy())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Returns the map of fieldName and the fieldObject
      * of all the fields of the model.
      *
@@ -362,6 +348,21 @@ public final class ModelSchema {
                         "Check if this model schema is a correct representation of the fields in the provided Object");
             }
         }
+
+        /**
+         * If the owner field is exists on the model, and the value is null, it should be omitted when performing a
+         * mutation because the AppSync server will automatically populate it using the authentication token provided
+         * in the request header.  The logic below filters out the owner field if null for this scenario.
+         */
+        for (AuthRule authRule : getAuthRules()) {
+            if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+                String ownerField = authRule.getOwnerFieldOrDefault();
+                if (result.containsKey(ownerField) && result.get(ownerField) == null) {
+                    result.remove(ownerField);
+                }
+            }
+        }
+
         return result;
     }
 
