@@ -20,7 +20,7 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amazonaws.amplify.core.BuildConfig;
+import com.amplifyframework.core.BuildConfig;
 
 /**
  * A utility to construct a User-Agent header, to be sent with all network operations.

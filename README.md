@@ -1,8 +1,12 @@
 <img src="https://s3.amazonaws.com/aws-mobile-hub-images/aws-amplify-logo.png" alt="AWS Amplify" width="550">
 
  <a href="https://discord.gg/jWVbPfC" target="_blank">
-   <img src="https://img.shields.io/discord/308323056592486420?logo=discord"" alt="Discord Chat" />  
+   <img src="https://img.shields.io/discord/308323056592486420?logo=discord" alt="Discord Chat" />  
  </a>
+ <a href="https://codecov.io/gh/aws-amplify/amplify-android">
+   <img src="https://codecov.io/gh/aws-amplify/amplify-android/branch/main/graph/badge.svg" />
+ </a>
+
 
 AWS Amplify provides a high-level interface to perform different categories of
 cloud operations. Each category is fulfilled by a _plugin_. You specify which

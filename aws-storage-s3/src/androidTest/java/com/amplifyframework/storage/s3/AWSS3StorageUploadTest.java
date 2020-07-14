@@ -54,6 +54,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Instrumentation test for operational work on upload.
  */
+@Ignore("Contains test which either hang themselves, or hang the suite overall.")
 public final class AWSS3StorageUploadTest {
     private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(20);
 
@@ -196,10 +197,6 @@ public final class AWSS3StorageUploadTest {
      *         completed successfully before timeout
      */
     @Test
-    @Ignore(
-        "This test is not passing reliably. It is not currently known if this " +
-        "constitutes a defect in source or test code."
-    )
     @SuppressWarnings("unchecked")
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);

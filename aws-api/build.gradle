@@ -19,6 +19,7 @@ apply from: rootProject.file("configuration/publishing.gradle")
 
 dependencies {
     api project(':core')
+    implementation project(':aws-api-appsync')
 
     implementation dependency.androidx.appcompat
     implementation dependency.aws.authcore

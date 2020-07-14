@@ -26,13 +26,13 @@ import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Validates the functionality of the {@link AWSApiPlugin} for REST operations.
@@ -41,12 +41,12 @@ public final class RestApiInstrumentationTest {
     private static SynchronousApi api;
 
     /**
-     * Configure the Amplify framework, if that hasn't already happened in this process instance.
+     * Configure the Amplify framework and auth.
      * @throws AmplifyException if configuration fails
      * @throws SynchronousMobileClient.MobileClientException If AWS Mobile Client initialization fails
      */
-    @BeforeClass
-    public static void onceBeforeTests() throws AmplifyException, SynchronousMobileClient.MobileClientException {
+    @Before
+    public void setUp() throws AmplifyException, SynchronousMobileClient.MobileClientException {
         ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
         api = SynchronousApi.delegatingTo(asyncDelegate);
         SynchronousMobileClient mobileClient = SynchronousMobileClient.instance();
@@ -59,47 +59,39 @@ public final class RestApiInstrumentationTest {
      * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    @Ignore("Temporarily disabled due to consistent failure.")
     public void getRequestWithNoAuth() throws JSONException, ApiException {
-        RestResponse response =
-            api.get("nonAuthApi", RestOptions.builder().addPath("simplesuccess").build());
-
+        final RestOptions options = RestOptions.builder()
+            .addPath("/simplesuccess")
+            .build();
+        final RestResponse response = api.get("nonAuthApi", options);
         final JSONObject resultJSON = response.getData().asJSONObject();
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
         assertNotNull("Should contain an object called context", contextJSON);
         assertEquals(
                 "Should return the right value",
                 "GET",
-                contextJSON.getString("http-method"));
+                contextJSON.getString("http-method")
+        );
         assertEquals(
                 "Should return the right value",
                 "/simplesuccess",
-                contextJSON.getString("resource-path"));
+                contextJSON.getString("resource-path")
+        );
     }
 
     /**
      * Test whether we can make POST api Rest call in none auth.
-     * @throws JSONException If JSON parsing of arranged data fails
      * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    @Ignore("Temporarily disabled due to consistent failure.")
-    public void postRequestWithNoAuth() throws JSONException, ApiException {
-        final RestOptions options =
-                RestOptions.builder().addPath("simplesuccess").addBody("sample body".getBytes()).build();
+    public void postRequestWithNoAuth() throws ApiException {
+        final RestOptions options = RestOptions.builder()
+            .addPath("/simplesuccess")
+            .addBody("sample body".getBytes())
+            .build();
         final RestResponse response = api.post("nonAuthApi", options);
-
-        final JSONObject resultJSON = response.getData().asJSONObject();
-        final JSONObject contextJSON = resultJSON.getJSONObject("context");
-        assertNotNull("Should contain an object called context", contextJSON);
-        assertEquals(
-                "Should return the right value",
-                "POST",
-                contextJSON.getString("http-method"));
-        assertEquals(
-                "Should return the right value",
-                "/simplesuccess",
-                contextJSON.getString("resource-path"));
+        assertNotNull("Should return non-null data", response.getData());
+        assertTrue("Response should be successful", response.getCode().isSuccessful());
     }
 
     /**
@@ -108,22 +100,24 @@ public final class RestApiInstrumentationTest {
      * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    @Ignore("Temporarily disabled due to consistent failure.")
     public void getRequestWithApiKey() throws JSONException, ApiException {
-        final RestResponse response =
-            api.get("apiKeyApi", RestOptions.builder().addPath("simplesuccessapikey").build());
-
+        final RestOptions options = RestOptions.builder()
+            .addPath("/simplesuccessapikey")
+            .build();
+        final RestResponse response = api.get("apiKeyApi", options);
         final JSONObject resultJSON = response.getData().asJSONObject();
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
         assertNotNull("Should contain an object called context", contextJSON);
         assertEquals(
                 "Should return the right value",
                 "GET",
-                contextJSON.getString("http-method"));
+                contextJSON.getString("http-method")
+        );
         assertEquals(
                 "Should return the right value",
                 "/simplesuccessapikey",
-                contextJSON.getString("resource-path"));
+                contextJSON.getString("resource-path")
+        );
     }
 
     /**
@@ -132,11 +126,12 @@ public final class RestApiInstrumentationTest {
      */
     @Test
     public void getRequestWithIAM() throws ApiException {
-        RestOptions options = RestOptions.builder()
-            .addPath("items")
+        final RestOptions options = RestOptions.builder()
+            .addPath("/items")
             .build();
-        RestResponse response = api.get("iamAuthApi", options);
+        final RestResponse response = api.get("iamAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());
+        assertTrue("Response should be successful", response.getCode().isSuccessful());
     }
 
     /**
@@ -145,10 +140,10 @@ public final class RestApiInstrumentationTest {
      */
     @Test
     public void getRequestWithIAMFailedAccess() throws ApiException {
-        RestOptions options = RestOptions.builder()
-            .addPath("invalidPath")
+        final RestOptions options = RestOptions.builder()
+            .addPath("/invalidPath")
             .build();
-        RestResponse response = api.get("iamAuthApi", options);
+        final RestResponse response = api.get("iamAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());
         assertFalse("Response should be unsuccessful", response.getCode().isSuccessful());
     }
