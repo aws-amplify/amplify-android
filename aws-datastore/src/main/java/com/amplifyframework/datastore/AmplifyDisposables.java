@@ -18,10 +18,18 @@ package com.amplifyframework.datastore;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.logging.Logger;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.reactivex.ObservableEmitter;
 import io.reactivex.disposables.Disposable;
 
 /**
@@ -29,6 +37,8 @@ import io.reactivex.disposables.Disposable;
  * e.g. the {@link Cancelable}.
  */
 public final class AmplifyDisposables {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private AmplifyDisposables() {}
 
     /**
@@ -58,6 +68,49 @@ public final class AmplifyDisposables {
                 synchronized (isCanceled) {
                     return isCanceled.get();
                 }
+            }
+        };
+    }
+
+    /**
+     * This function that creates a {@link Consumer} which wraps the {@link ObservableEmitter#onError(Throwable)}
+     * to prevent it from calling observers that have already been disposed.
+     *
+     * <p>
+     * The scenario is that we have multiple event sources (1 AppSync subscription
+     * for each model+operation type combination) being consumed by a single downstream
+     * oberserver. Once the first subscription emits an error, the downstream subscriber
+     * is placed in a disposed state and will not receive any further notifications.
+     * In a situation such as loss of connectivity, it's innevitable that multiple subscriptions will fail.
+     * With that said, after the first failure, the other events sources (AppSync subscriptions)
+     * will attempt to invoke the downstream onError handler which then results in an
+     * {@link io.reactivex.exceptions.UndeliverableException} being thrown.
+     * </p>
+     *
+     * <p>
+     * This method takes a reference of the observable that represents the AppSync subscription,
+     * wraps it and returns a {@link Consumer} that is used as the onError parameter. The returned
+     * {@link Consumer} function will delegate the onError call to the downstream observers if it's
+     * still available, otherwise it logs a warning.
+     * </p>
+     *
+     * @param realEmitter The emitter which will have it's onError function proxied by the return
+     *                    value of this function.
+     * @param <T> The type of model handled by the emitter.
+     * @param <E> The type of exception for the onError consumer
+     * @return A {@link Consumer} that proxies the {@link ObservableEmitter#onError(Throwable)} call
+     * to the {@code realEmitter} if it's not disposed or logs a warning.
+     * @see <a href="https://github.com/aws-amplify/amplify-android/issues/541">GitHub issue #541</a>
+     *
+     */
+    @NonNull
+    public static <T extends Model, E extends AmplifyException> Consumer<E> onErrorConsumerWrapperFor(
+        @NonNull ObservableEmitter<GraphQLResponse<ModelWithMetadata<T>>> realEmitter) {
+        return dataStoreException -> {
+            if (realEmitter.isDisposed()) {
+                LOG.warn("Attempted to invoke an emitter that is already disposed", dataStoreException);
+            } else {
+                realEmitter.onError(dataStoreException);
             }
         };
     }

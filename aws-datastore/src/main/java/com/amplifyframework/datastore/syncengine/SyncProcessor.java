@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -113,9 +114,18 @@ final class SyncProcessor {
                         .flatMapCompletable(merger::merge)
                     )
                     .andThen(syncTimeRegistry.saveLastSyncTime(modelClass, SyncTime.now()))
-                    .doOnError(failureToSync ->
-                        LOG.warn("Initial cloud sync failed.", failureToSync)
-                    )
+                    .doOnError(failureToSync -> {
+                        LOG.warn("Initial cloud sync failed.", failureToSync);
+                        DataStoreErrorHandler dataStoreErrorHandler =
+                            dataStoreConfigurationProvider.getConfiguration().getDataStoreErrorHandler();
+                        if (dataStoreErrorHandler != null) {
+                            dataStoreErrorHandler.accept(
+                                new DataStoreException(
+                                    "Initial cloud sync failed.",
+                                    failureToSync,
+                                    "Check your internet connection."));
+                        }
+                    })
                     .doOnComplete(() ->
                         LOG.info("Successfully sync'd down model state from cloud.")
                     )

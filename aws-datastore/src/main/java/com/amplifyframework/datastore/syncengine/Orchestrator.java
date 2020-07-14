@@ -31,6 +31,7 @@ import com.amplifyframework.logging.Logger;
 import org.json.JSONObject;
 
 import java.util.Objects;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -43,6 +44,10 @@ import io.reactivex.Completable;
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final long SYNC_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
+    // This timeout has to be somewhat generous to account for situations where a request to
+    // stop is made immediately after starting things up. This should only be the case
+    // when the clear API is invoked right after the plugin starts.
+    private static final long ACQUIRE_PERMIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(30);
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
@@ -50,6 +55,7 @@ public final class Orchestrator {
     private final MutationProcessor mutationProcessor;
     private final StorageObserver storageObserver;
     private final AtomicReference<OrchestratorStatus> status;
+    private final Semaphore startStopSemaphore;
     private Completable initializationCompletable;
 
     /**
@@ -99,6 +105,7 @@ public final class Orchestrator {
             .build();
         this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
+        this.startStopSemaphore = new Semaphore(1);
     }
 
     /**
@@ -115,15 +122,16 @@ public final class Orchestrator {
      * @return A Completable operation to start the sync engine orchestrator
      */
     @NonNull
-    public Completable start() {
-        // Only start if it's stopped.
-        if (!OrchestratorStatus.STOPPED.equals(status.get())) {
-            return initializationCompletable;
+    public synchronized Completable start() {
+        if (!transitionToState(OrchestratorStatus.STARTED)) {
+            return Completable.error(new DataStoreException(
+                "Unable to start the orchestrator because an operation is already in progress.",
+                AmplifyException.TODO_RECOVERY_SUGGESTION)
+            );
         }
-        LOG.debug("Starting the orchestrator.");
-        status.compareAndSet(OrchestratorStatus.STOPPED, OrchestratorStatus.STARTING);
-        initializationCompletable = mutationOutbox.load().andThen(
+        return mutationOutbox.load().andThen(
             Completable.fromAction(() -> {
+                LOG.debug("Starting the orchestrator.");
                 if (!storageObserver.isObservingStorageChanges()) {
                     LOG.debug("Starting local storage observer.");
                     storageObserver.startObservingStorageChanges();
@@ -147,25 +155,69 @@ public final class Orchestrator {
                     subscriptionProcessor.startDrainingMutationBuffer();
                 }
                 status.compareAndSet(OrchestratorStatus.STARTING, OrchestratorStatus.STARTED);
+                LOG.debug("Orchestrator started.");
             })
-        );
-        return initializationCompletable;
+        ).doFinally(startStopSemaphore::release);
     }
 
     /**
      * Stop all model synchronization.
+     * @return A completable with the activities
      */
-    public void stop() {
-        if (isStarted()) {
+    public synchronized Completable stop() {
+        if (!transitionToState(OrchestratorStatus.STOPPED)) {
+            return Completable.error(new DataStoreException(
+                "Unable to stop the orchestrator because an operation is already in progress.",
+                AmplifyException.TODO_RECOVERY_SUGGESTION)
+            );
+        }
+        return Completable.fromAction(() -> {
             LOG.info("Intentionally stopping cloud synchronization, now.");
-            status.compareAndSet(OrchestratorStatus.STARTED, OrchestratorStatus.STOPPING);
             subscriptionProcessor.stopAllSubscriptionActivity();
             storageObserver.stopObservingStorageChanges();
             mutationProcessor.stopDrainingMutationOutbox();
             status.compareAndSet(OrchestratorStatus.STOPPING, OrchestratorStatus.STOPPED);
             LOG.debug("Stopped remote synchronization.");
-        }
+        })
+        .doFinally(startStopSemaphore::release);
+    }
 
+    private synchronized boolean transitionToState(OrchestratorStatus targetStatus) {
+        OrchestratorStatus expectedCurrentStatus;
+        switch (targetStatus) {
+            case STARTED:
+                expectedCurrentStatus = OrchestratorStatus.STOPPED;
+                break;
+            case STOPPED:
+                expectedCurrentStatus = OrchestratorStatus.STARTED;
+                break;
+            default:
+                LOG.warn("Invalid attempt to transition orchestrator to " + targetStatus.name());
+                return false;
+        }
+        try {
+            LOG.debug("Requesting permit to set the orchestrator status to:" + targetStatus.name());
+            boolean permitAcquired = startStopSemaphore.tryAcquire(ACQUIRE_PERMIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (!permitAcquired) {
+                LOG.warn("Unable to acquire permit to set the orchestrator status to:" + targetStatus.name());
+                return false;
+            }
+            boolean statusSet = status.compareAndSet(expectedCurrentStatus, targetStatus);
+            // only stop if it's started AND if we can get a permit.
+            if (!statusSet) {
+                LOG.warn(String.format("Failed to set orchestrator status to: %s. Current status: %s",
+                    targetStatus.name(),
+                    status.get())
+                );
+                // Since we acquired the permit but failed to set the status, let's release the permit.
+                startStopSemaphore.release();
+                return false;
+            }
+        } catch (InterruptedException exception) {
+            LOG.warn("Orchestrator was interrupted while setting status to " + targetStatus.name());
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -199,4 +251,3 @@ public final class Orchestrator {
         STARTED
     }
 }
-

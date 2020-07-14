@@ -35,6 +35,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 
@@ -47,6 +48,8 @@ import static org.mockito.Mockito.mock;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
+    private static final long ORCHESTRATOR_TEST_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+
     /**
      * When an item is placed into storage, a cascade of
      * things happen which should ultimately result in a mutation call
@@ -99,6 +102,6 @@ public final class OrchestratorTest {
                 .blockingGet()
         );
 
-        orchestrator.stop();
+        orchestrator.stop().blockingGet(ORCHESTRATOR_TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 }
