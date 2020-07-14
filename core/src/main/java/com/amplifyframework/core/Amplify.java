@@ -136,17 +136,8 @@ public final class Amplify {
                     beginInitialization(category, context);
                 }
             }
-            if ((context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
-                // Start activity for developer menu on device shake
-                Intent mainIntent = new Intent(context, DeveloperMenuActivity.class);
-                mainIntent.setAction(Intent.ACTION_MAIN);
-                mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ShakeDetector shakeDetector = new ShakeDetector(context, () -> {
-                    if (!DeveloperMenuActivity.isActivityStarted()) {
-                        context.startActivity(mainIntent);
-                    }
-                });
-                shakeDetector.startDetecting();
+            if (isDebuggableApplication(context)) {
+                enableDeveloperMenu(context);
             }
 
             CONFIGURATION_LOCK.set(true);
@@ -177,6 +168,20 @@ public final class Amplify {
      */
     public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws AmplifyException {
         updatePluginRegistry(plugin, RegistryUpdateType.REMOVE);
+    }
+
+    /**
+     * Starts listening for a shake event and shows the developer menu on device shake.
+     * @param context an Android Context
+     */
+    public static void enableDeveloperMenu(Context context) {
+        // Start activity for developer menu on device shake
+        Intent mainIntent = new Intent(context, DeveloperMenuActivity.class);
+        mainIntent.setAction(Intent.ACTION_MAIN);
+        mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ShakeDetector shakeDetector = new ShakeDetector(context, () -> context.startActivity(mainIntent),
+                true);
+        shakeDetector.startDetecting();
     }
 
     @SuppressWarnings("unchecked") // Wants Category<P> from CATEGORIES.get(...), but it has Category<?>
@@ -217,6 +222,15 @@ public final class Amplify {
     private enum RegistryUpdateType {
         ADD,
         REMOVE
+    }
+
+    /**
+     * Returns true if the application is in a debuggable build, false otherwise.
+     * @param context an Android Context
+     * @return a boolean indicating whether the application is in a debuggable build
+     */
+    private static boolean isDebuggableApplication(Context context) {
+        return (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
 
 }

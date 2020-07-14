@@ -27,11 +27,6 @@ import androidx.navigation.ui.NavigationUI;
  * This is the activity to display the developer menu.
  */
 public final class DeveloperMenuActivity extends FragmentActivity {
-
-    // Indicates whether this activity has started.
-    private static boolean activityStarted;
-    // Parent layout for the developer menu.
-    private View devMenuLayout;
     // Detect and handle shake events.
     private ShakeDetector detector;
 
@@ -39,9 +34,9 @@ public final class DeveloperMenuActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dev_menu);
-        devMenuLayout = findViewById(R.id.dev_layout);
+        View devMenuLayout = findViewById(R.id.dev_layout);
         devMenuLayout.setFocusable(true);
-        detector = new ShakeDetector(getApplicationContext(), this::finish);
+        detector = new ShakeDetector(getApplicationContext(), this::finish, true);
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(findViewById(R.id.toolbar), navController,
@@ -50,7 +45,6 @@ public final class DeveloperMenuActivity extends FragmentActivity {
 
     @Override
     protected void onStart() {
-        activityStarted = true;
         detector.startDetecting();
         super.onStart();
     }
@@ -69,16 +63,8 @@ public final class DeveloperMenuActivity extends FragmentActivity {
 
     @Override
     protected void onStop() {
-        activityStarted = false;
         detector.stopDetecting();
+        Amplify.enableDeveloperMenu(getApplicationContext());
         super.onStop();
-    }
-
-    /**
-     * Returns a boolean indicating whether this activity has started.
-     * @return true if this activity is started, false otherwise
-     */
-    public static boolean isActivityStarted() {
-        return activityStarted;
     }
 }
