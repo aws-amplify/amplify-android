@@ -15,7 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,7 +27,7 @@ public final class ApiGraphQLRequestOptions implements GraphQLRequestOptions {
 
     @Override
     public List<String> paginationFields() {
-        return Arrays.asList(NEXT_TOKEN_KEY);
+        return Collections.singletonList(NEXT_TOKEN_KEY);
     }
 
     @Override
