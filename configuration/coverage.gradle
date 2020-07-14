@@ -23,14 +23,7 @@ configure(coveredProjects) { prj ->
         toolVersion = '0.8.5'
     }
 
-    def dependencies = [
-        'testDebugUnitTest',
-    ]
-    if (prj.tasks.findByName('createDebugCoverageReport')) {
-        dependencies += 'createDebugCoverageReport'
-    }
-
-    task jacocoReport(type: JacocoReport, dependsOn: dependencies) {
+    task jacocoReport(type: JacocoReport, dependsOn: 'testDebugUnitTest') {
         group = 'Reporting'
         description = 'Generate Jacoco coverage'
 
@@ -49,13 +42,13 @@ configure(coveredProjects) { prj ->
         ]
         final javacTree = fileTree(dir: "${prj.buildDir}/intermediates/javac/debug", excludes: fileFilter)
         final mainSrc = "${prj.projectDir}/src/main/java"
+        final unitTestExecFiles = [
+            'jacoco/testDebugUnitTest.exec'
+        ]
 
         sourceDirectories.setFrom files([mainSrc])
         classDirectories.setFrom files([javacTree])
-        executionData.setFrom fileTree(dir: prj.buildDir, includes: [
-            'jacoco/testDebugUnitTest.exec',
-            'outputs/code_coverage/debugAndroidTest/connected/**/*.ec'
-        ])
+        executionData.setFrom fileTree(dir: prj.buildDir, includes: unitTestExecFiles)
     }
 }
 
