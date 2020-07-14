@@ -137,11 +137,16 @@ public final class Amplify {
                 }
             }
             if ((context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
-                // Start activity for developer menu
+                // Start activity for developer menu on device shake
                 Intent mainIntent = new Intent(context, DeveloperMenuActivity.class);
                 mainIntent.setAction(Intent.ACTION_MAIN);
                 mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(mainIntent);
+                ShakeDetector shakeDetector = new ShakeDetector(context, () -> {
+                    if (!DeveloperMenuActivity.isActivityStarted()) {
+                        context.startActivity(mainIntent);
+                    }
+                });
+                shakeDetector.startDetecting();
             }
 
             CONFIGURATION_LOCK.set(true);

@@ -16,11 +16,9 @@
 package com.amplifyframework.core;
 
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
 import androidx.fragment.app.FragmentActivity;
 import androidx.navigation.NavController;
-import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
@@ -29,12 +27,13 @@ import androidx.navigation.ui.NavigationUI;
  * This is the activity to display the developer menu.
  */
 public final class DeveloperMenuActivity extends FragmentActivity {
+
+    // Indicates whether this activity has started.
+    private static boolean activityStarted;
     // Parent layout for the developer menu.
     private View devMenuLayout;
     // Detect and handle shake events.
     private ShakeDetector detector;
-    // Manages app navigation.
-    private NavController navController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,12 +41,18 @@ public final class DeveloperMenuActivity extends FragmentActivity {
         setContentView(R.layout.activity_dev_menu);
         devMenuLayout = findViewById(R.id.dev_layout);
         devMenuLayout.setFocusable(true);
-        devMenuLayout.setVisibility(View.GONE);
-        detector = new ShakeDetector(getApplicationContext(), this::changeVisibility);
+        detector = new ShakeDetector(getApplicationContext(), this::finish);
 
-        navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(findViewById(R.id.toolbar), navController,
                 new AppBarConfiguration.Builder(navController.getGraph()).build());
+    }
+
+    @Override
+    protected void onStart() {
+        activityStarted = true;
+        detector.startDetecting();
+        super.onStart();
     }
 
     @Override
@@ -63,36 +68,17 @@ public final class DeveloperMenuActivity extends FragmentActivity {
     }
 
     @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        // KEYCODE_MENU is the code for pressing ctrl
-        // (or command) + m
-        if (keyCode == KeyEvent.KEYCODE_MENU) {
-            changeVisibility();
-            return true;
-        } else {
-            return super.onKeyUp(keyCode, event);
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        NavDestination currentDestination = navController.getCurrentDestination();
-        if (currentDestination != null && currentDestination.getId() == R.id.main_fragment) {
-            devMenuLayout.setVisibility(View.GONE);
-        } else {
-            super.onBackPressed();
-        }
+    protected void onStop() {
+        activityStarted = false;
+        detector.stopDetecting();
+        super.onStop();
     }
 
     /**
-     * If the developer menu is visible, hide the developer menu. Otherwise,
-     * make the developer menu visible.
+     * Returns a boolean indicating whether this activity has started.
+     * @return true if this activity is started, false otherwise
      */
-    private void changeVisibility() {
-        if (devMenuLayout.getVisibility() == View.VISIBLE) {
-            devMenuLayout.setVisibility(View.GONE);
-        } else {
-            devMenuLayout.setVisibility(View.VISIBLE);
-        }
+    public static boolean isActivityStarted() {
+        return activityStarted;
     }
 }
