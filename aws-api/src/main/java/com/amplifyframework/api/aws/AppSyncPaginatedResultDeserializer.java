@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 
@@ -73,8 +74,14 @@ final class AppSyncPaginatedResultDeserializer implements JsonDeserializer<Pagin
         AppSyncGraphQLRequest<PaginatedResult<Model>> requestForNextPage = null;
         if (nextTokenElement.isJsonPrimitive()) {
             String nextToken = nextTokenElement.getAsJsonPrimitive().getAsString();
-            requestForNextPage = request.copy();
-            requestForNextPage.setVariable(NEXT_TOKEN_KEY, "String", nextToken);
+
+            try {
+                requestForNextPage = request.newBuilder()
+                    .variable(NEXT_TOKEN_KEY, "String", nextToken)
+                    .build();
+            } catch (AmplifyException exception) {
+                throw new JsonParseException("Failed to create requestForNextPage with nextToken variable", exception);
+            }
         }
 
         return new AppSyncPaginatedResult<>(items, requestForNextPage);

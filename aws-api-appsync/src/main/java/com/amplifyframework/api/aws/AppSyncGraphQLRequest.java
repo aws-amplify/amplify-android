@@ -20,15 +20,10 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
-import com.amplifyframework.api.graphql.SubscriptionType;
-import com.amplifyframework.core.model.AuthRule;
-import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.Wrap;
@@ -56,95 +51,34 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      * Constructor for AppSyncGraphQLRequest.
      * @throw AmplifyException if a ModelSchema can't be derived from the provided model class
      */
-    private AppSyncGraphQLRequest(Builder builder) throws AmplifyException {
+    private AppSyncGraphQLRequest(Builder builder) {
         super(builder.responseType, new GsonVariablesSerializer());
-        this.modelSchema = ModelSchema.fromModelClass(builder.modelClass);
-        this.selectionSet = SelectionSet.builder()
-                .modelClass(builder.modelClass)
-                .operation(builder.operation)
-                .requestOptions(builder.requestOptions)
-                .build();
+        this.modelSchema = builder.modelSchema;
         this.operation = builder.operation;
+        this.selectionSet = builder.selectionSet;
         this.variables = builder.variables;
         this.variableTypes = builder.variableTypes;
     }
 
     /**
-     * Copy constructor for an AppSyncGraphQLRequest.
-     * @param request request to copy.
-     * @param <R> response type.
+     * Returns the {@link ModelSchema} for this request.
+     * @return the {@link ModelSchema} for this request.
      */
-    public <R> AppSyncGraphQLRequest(AppSyncGraphQLRequest<R> request) {
-        super(request);
-        this.modelSchema = request.modelSchema;
-        this.operation = request.operation;
-        this.selectionSet = new SelectionSet(request.selectionSet);
-        this.variables = new HashMap<>(request.variables);
-        this.variableTypes = new HashMap<>(request.variableTypes);
+    public ModelSchema getModelSchema() {
+        return modelSchema;
     }
 
-    @Override
-    public <R> AppSyncGraphQLRequest<R> copy() {
-        return new AppSyncGraphQLRequest<R>(this);
+    /**
+     * Returns the {@link Operation} for this request.
+     * @return the {@link Operation} for this request.
+     */
+    public Operation getOperation() {
+        return operation;
     }
 
     @Override
     public Map<String, Object> getVariables() {
-        return this.variables;
-    }
-
-    /**
-     * Used for setting a variable on the request.
-     * @param key variable name
-     * @param type type of variable value
-     * @param value variable value
-     */
-    public void setVariable(String key, String type, String value) {
-        this.variables.put(key, value);
-        this.variableTypes.put(key, type);
-    }
-
-    /**
-     * Returns whether owner argument is required for this request based on the model's {@link AuthRule}s.
-     * @return whether owner argument is required for this request based on the model's {@link AuthRule}s.
-     */
-    public boolean isOwnerArgumentRequired() {
-        for (AuthRule authRule : modelSchema.getAuthRules()) {
-            if (isOwnerArgumentRequired(authRule)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Used to add owner argument from authProvider if needed.
-     * @param owner username from CognitoUserPoolsAuthProvider to set as the owner field.
-     * @throws ApiException if request requires owner argument and authProvider or authProvider.getUsername() is null.
-     */
-    public void setOwner(String owner) {
-        for (AuthRule authRule : modelSchema.getAuthRules()) {
-            if (isOwnerArgumentRequired(authRule)) {
-                setVariable(authRule.getOwnerFieldOrDefault(), "String!", owner);
-            }
-        }
-    }
-
-    private boolean isOwnerArgumentRequired(AuthRule authRule) {
-        if (!AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
-            return false;
-        }
-        List<ModelOperation> operations = authRule.getOperationsOrDefault();
-        if (SubscriptionType.ON_CREATE.equals(operation) && operations.contains(ModelOperation.CREATE)) {
-            return true;
-        }
-        if (SubscriptionType.ON_UPDATE.equals(operation) && operations.contains(ModelOperation.UPDATE)) {
-            return true;
-        }
-        if (SubscriptionType.ON_DELETE.equals(operation) && operations.contains(ModelOperation.DELETE)) {
-            return true;
-        }
-        return false;
+        return variables;
     }
 
     /**
@@ -250,19 +184,38 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     }
 
     /**
+     * Creates an AppSyncGraphQLRequest builder from the current AppSyncGraphQLRequest instance.
+     * @return an AppSyncGraphQLRequest builder from the current AppSyncGraphQLRequest instance.
+     */
+    public AppSyncGraphQLRequest.Builder newBuilder() {
+        return new Builder(this);
+    }
+
+    /**
      * Builder for a AppSyncGraphQLRequest.
      */
     public static final class Builder {
         private Class<? extends Model> modelClass;
-        private GraphQLRequestOptions requestOptions;
+        private ModelSchema modelSchema;
         private Operation operation;
+        private GraphQLRequestOptions requestOptions;
         private Type responseType;
+        private SelectionSet selectionSet;
         private final Map<String, Object> variables;
         private final Map<String, String> variableTypes;
 
         Builder() {
             this.variables = new HashMap<>();
             this.variableTypes = new HashMap<>();
+        }
+
+        <R> Builder(AppSyncGraphQLRequest<R> request) {
+            this.modelSchema = request.modelSchema;
+            this.operation = request.operation;
+            this.responseType = request.getResponseType();
+            this.selectionSet = new SelectionSet(request.selectionSet);
+            this.variables = new HashMap<>(request.variables);
+            this.variableTypes = new HashMap<>(request.variableTypes);
         }
 
         /**
@@ -286,22 +239,22 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
 
         /**
+         * Sets the requestOptions and returns this builder.
+         * @param requestOptions options defining how the request should be built.
+         * @return this builder instance.
+         */
+        public Builder requestOptions(@NonNull GraphQLRequestOptions requestOptions) {
+            this.requestOptions = Objects.requireNonNull(requestOptions);
+            return Builder.this;
+        }
+
+        /**
          * Sets the responseType and returns this builder.
          * @param responseType the expected object Type of the response generated by this request.
          * @return this builder instance.
          */
         public Builder responseType(@NonNull Type responseType) {
             this.responseType = Objects.requireNonNull(responseType);
-            return Builder.this;
-        }
-
-        /**
-         * Sets the requestOptions and returns this builder.
-         * @param requestOptions the requestOptions describing how to build the {@link AppSyncGraphQLRequest}.
-         * @return this builder instance.
-         */
-        public Builder requestOptions(@NonNull GraphQLRequestOptions requestOptions) {
-            this.requestOptions = Objects.requireNonNull(requestOptions);
             return Builder.this;
         }
 
@@ -321,16 +274,30 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
 
         /**
-         * Builds the {@link AppSyncGraphQLRequest} containing all of the fields of the provided model class.
+         * Builds an {@link AppSyncGraphQLRequest}.
+         *
          * @param <R> The type of data contained in the GraphQLResponse expected from this request.
          * @return the AppSyncGraphQLRequest
          * @throws AmplifyException if a ModelSchema cannot be created from the provided model class.
          */
         public <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
             Objects.requireNonNull(this.operation);
-            Objects.requireNonNull(this.modelClass);
             Objects.requireNonNull(this.responseType);
-            Objects.requireNonNull(this.requestOptions);
+
+            if (modelClass != null) {
+                // Derive modelSchema and selectionSet from modelClass.
+                modelSchema = ModelSchema.fromModelClass(this.modelClass);
+                selectionSet = SelectionSet.builder()
+                        .modelClass(this.modelClass)
+                        .operation(this.operation)
+                        .requestOptions(Objects.requireNonNull(this.requestOptions))
+                        .build();
+            } else {
+                // If modelClass is null, we can't derive modelSchema and selectionSet.  However, if this Builder was
+                // created via newBuilder(), those fields will already be set, so we can continue on.
+                Objects.requireNonNull(modelSchema, "modelClass must not be null");
+                Objects.requireNonNull(selectionSet, "modelClass must not be null");
+            }
             return new AppSyncGraphQLRequest<>(this);
         }
     }
