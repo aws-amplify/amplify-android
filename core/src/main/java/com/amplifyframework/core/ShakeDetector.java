@@ -43,9 +43,6 @@ public final class ShakeDetector {
     // The time (in milliseconds) that the device started shaking
     // (or 0 if the device is not shaking).
     private long shakeStart;
-    // Indicates whether to stop listening for a shake event
-    // after a shake event is detected.
-    private boolean stopAfterShake;
 
     // Listen to accelerometer sensor events.
     private final SensorEventListener sensorEventListener = new SensorEventListener() {
@@ -60,10 +57,7 @@ public final class ShakeDetector {
                 if (shakeStart == 0) {
                     shakeStart = currentTime;
                 } else if (currentTime - shakeStart > SHAKE_TIME) {
-                    listener.onShakeDetected();
-                    if (stopAfterShake) {
-                        stopDetecting();
-                    }
+                    listener.onShakeDetected(ShakeDetector.this);
                     shakeStart = 0;
                 }
             }
@@ -77,16 +71,13 @@ public final class ShakeDetector {
      * Gain access to the accelerometer sensor.
      * @param context An Android Context
      * @param listener ShakeDetector.Listener object
-     * @param stopAfterShake boolean that indicates whether to stop listening for
-     *                       a shake event after a shake event is detected
      */
-    public ShakeDetector(Context context, ShakeDetector.Listener listener, boolean stopAfterShake) {
+    public ShakeDetector(Context context, ShakeDetector.Listener listener) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager != null) {
             accelerometer = this.sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         }
         this.listener = listener;
-        this.stopAfterShake = stopAfterShake;
         shakeStart = 0;
     }
 
@@ -111,10 +102,12 @@ public final class ShakeDetector {
     /**
      * Interface to handle shake events when they occur.
      */
+    @FunctionalInterface
     public interface Listener {
         /**
          * Called when a shake event is detected.
+         * @param source ShakeDetector that detected the shake.
          */
-        void onShakeDetected();
+        void onShakeDetected(ShakeDetector source);
     }
 }

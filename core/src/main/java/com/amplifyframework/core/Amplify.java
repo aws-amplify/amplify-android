@@ -179,8 +179,10 @@ public final class Amplify {
         Intent mainIntent = new Intent(context, DeveloperMenuActivity.class);
         mainIntent.setAction(Intent.ACTION_MAIN);
         mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        ShakeDetector shakeDetector = new ShakeDetector(context, () -> context.startActivity(mainIntent),
-                true);
+        ShakeDetector shakeDetector = new ShakeDetector(context, it -> {
+            context.startActivity(mainIntent);
+            it.stopDetecting();
+        });
         shakeDetector.startDetecting();
     }
 

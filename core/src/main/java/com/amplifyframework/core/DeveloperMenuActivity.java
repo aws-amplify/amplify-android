@@ -36,7 +36,7 @@ public final class DeveloperMenuActivity extends FragmentActivity {
         setContentView(R.layout.activity_dev_menu);
         View devMenuLayout = findViewById(R.id.dev_layout);
         devMenuLayout.setFocusable(true);
-        detector = new ShakeDetector(getApplicationContext(), this::finish, true);
+        detector = new ShakeDetector(getApplicationContext(), it -> finish());
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(findViewById(R.id.toolbar), navController,
