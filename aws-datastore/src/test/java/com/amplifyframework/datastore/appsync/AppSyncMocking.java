@@ -252,14 +252,15 @@ public final class AppSyncMocking {
 
         /**
          * Triggers an exception when invoking the sync method.
+         * @param dataStoreException The exception that will be used for the mock.
          * @param <T> Type of models for which a response is mocked
          * @return The same Configurator instance, to enable chaining of calls
          */
-        public <T extends Model> SyncConfigurator mockFailure() {
+        public <T extends Model> SyncConfigurator mockFailure(DataStoreException dataStoreException) {
             doAnswer(invocation -> {
                 final int errorConsumerPosition = 3;
                 final Consumer<DataStoreException> consumer = invocation.getArgument(errorConsumerPosition);
-                consumer.accept(new DataStoreException("Something timed out during sync.", "Nothing to do."));
+                consumer.accept(dataStoreException);
                 return new NoOpCancelable();
             }).when(appSync).sync(
                 any(), // Item class to sync

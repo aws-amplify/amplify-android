@@ -22,10 +22,13 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
@@ -156,6 +159,7 @@ public final class Orchestrator {
                 }
                 status.compareAndSet(OrchestratorStatus.STARTING, OrchestratorStatus.STARTED);
                 LOG.debug("Orchestrator started.");
+                announceRemoteSyncStarted();
             })
         ).doFinally(startStopSemaphore::release);
     }
@@ -178,6 +182,7 @@ public final class Orchestrator {
             mutationProcessor.stopDrainingMutationOutbox();
             status.compareAndSet(OrchestratorStatus.STOPPING, OrchestratorStatus.STOPPED);
             LOG.debug("Stopped remote synchronization.");
+            announceRemoteSyncStopped();
         })
         .doFinally(startStopSemaphore::release);
     }
@@ -218,6 +223,20 @@ public final class Orchestrator {
             return false;
         }
         return true;
+    }
+
+    private void announceRemoteSyncStarted() {
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            HubEvent.create(DataStoreChannelEventName.REMOTE_SYNC_STARTED)
+        );
+    }
+
+    private void announceRemoteSyncStopped() {
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            HubEvent.create(DataStoreChannelEventName.REMOTE_SYNC_STOPPED)
+        );
     }
 
     /**
