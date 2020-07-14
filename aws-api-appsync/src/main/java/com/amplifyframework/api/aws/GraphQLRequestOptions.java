@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.model.Model;
 
 import java.util.List;
@@ -34,6 +36,7 @@ public interface GraphQLRequestOptions {
      *
      * @return list of pagination fields.
      */
+    @NonNull
     List<String> paginationFields();
 
     /**
@@ -42,6 +45,7 @@ public interface GraphQLRequestOptions {
      *
      * @return list of metadata fields
      */
+    @NonNull
     List<String> modelMetaFields();
 
     /**
@@ -50,6 +54,7 @@ public interface GraphQLRequestOptions {
      *
      * @return name of field that should wrap {@link Model} fields.
      */
+    @NonNull
     String listField();
 
     /**
@@ -62,5 +67,6 @@ public interface GraphQLRequestOptions {
      * Returns LeafSelectionBehavior, which defines how to serialize leaf nodes when building the {@link SelectionSet}.
      * @return LeafSelectionBehavior, which defines how to serialize leaf nodes when building the {@link SelectionSet}.
      */
+    @NonNull
     LeafSerializationBehavior leafSerializationBehavior();
 }
