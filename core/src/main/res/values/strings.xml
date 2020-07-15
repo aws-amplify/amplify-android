@@ -20,4 +20,8 @@
     <string name="device_button_title">View Device Information</string>
     <string name="logs_button_title">View Logs</string>
     <string name="file_issue_button_title">File Issue</string>
+    <string name="env_view_title">Environment Information</string>
+    <string name="device_view_title">Device Information</string>
+    <string name="logs_view_title">Logs</string>
+    <string name="file_issue_view_title">File Issue</string>
 </resources>
