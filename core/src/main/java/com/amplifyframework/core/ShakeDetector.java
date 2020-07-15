@@ -36,6 +36,8 @@ public final class ShakeDetector {
 
     // Listener to handle shake events.
     private final ShakeDetector.Listener listener;
+    // Android Context associated with the listener for this shake detector.
+    private final Context context;
     // Manager for the device's sensors.
     private SensorManager sensorManager;
     // The accelerometer sensor associated with the device.
@@ -57,7 +59,7 @@ public final class ShakeDetector {
                 if (shakeStart == 0) {
                     shakeStart = currentTime;
                 } else if (currentTime - shakeStart > SHAKE_TIME) {
-                    listener.onShakeDetected(ShakeDetector.this);
+                    listener.onShakeDetected();
                     shakeStart = 0;
                 }
             }
@@ -73,6 +75,7 @@ public final class ShakeDetector {
      * @param listener ShakeDetector.Listener object
      */
     public ShakeDetector(Context context, ShakeDetector.Listener listener) {
+        this.context = context;
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager != null) {
             accelerometer = this.sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -100,14 +103,20 @@ public final class ShakeDetector {
     }
 
     /**
+     * Returns the Android Context associated with the listener for this shake detector.
+     * @return an Android Context
+     */
+    public Context getContext() {
+        return context;
+    }
+
+    /**
      * Interface to handle shake events when they occur.
      */
-    @FunctionalInterface
     public interface Listener {
         /**
          * Called when a shake event is detected.
-         * @param source ShakeDetector that detected the shake.
          */
-        void onShakeDetected(ShakeDetector source);
+        void onShakeDetected();
     }
 }

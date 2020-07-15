@@ -80,7 +80,7 @@ public class ShakeDetectorTest {
     @Test(expected = RuntimeException.class)
     public void beforeSensorListenerRegistered() {
         Completable.create(emitter -> {
-            ShakeDetector sd = new ShakeDetector(mock(Context.class), it -> emitter.onComplete());
+            ShakeDetector sd = new ShakeDetector(mock(Context.class), emitter::onComplete);
         }).observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
                 .timeout(SHAKE_RESULT_TIMEOUT_SECS, TimeUnit.SECONDS)
@@ -94,7 +94,7 @@ public class ShakeDetectorTest {
     @Test(expected = RuntimeException.class)
     public void afterSensorListenerUnregistered() {
         Completable.create(emitter -> {
-            ShakeDetector sd = new ShakeDetector(mock(Context.class), it -> emitter.onComplete());
+            ShakeDetector sd = new ShakeDetector(mock(Context.class), emitter::onComplete);
             sd.startDetecting();
             sd.stopDetecting();
         }).observeOn(Schedulers.io())
@@ -124,7 +124,7 @@ public class ShakeDetectorTest {
         }).when(mockSensorManager).registerListener(any(SensorEventListener.class), any(Sensor.class), anyInt());
 
         Completable.create(emitter -> {
-            ShakeDetector sd = new ShakeDetector(mockContext, it -> emitter.onComplete());
+            ShakeDetector sd = new ShakeDetector(mockContext, emitter::onComplete);
             sd.startDetecting();
         }).observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())

@@ -16,7 +16,6 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
@@ -137,7 +136,7 @@ public final class Amplify {
                 }
             }
             if (isDebuggableApplication(context)) {
-                enableDeveloperMenu(context);
+                DeveloperMenuManager.sharedInstance().startListening(context);
             }
 
             CONFIGURATION_LOCK.set(true);
@@ -168,22 +167,6 @@ public final class Amplify {
      */
     public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws AmplifyException {
         updatePluginRegistry(plugin, RegistryUpdateType.REMOVE);
-    }
-
-    /**
-     * Starts listening for a shake event and shows the developer menu on device shake.
-     * @param context an Android Context
-     */
-    public static void enableDeveloperMenu(Context context) {
-        // Start activity for developer menu on device shake
-        Intent mainIntent = new Intent(context, DeveloperMenuActivity.class);
-        mainIntent.setAction(Intent.ACTION_MAIN);
-        mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        ShakeDetector shakeDetector = new ShakeDetector(context, it -> {
-            context.startActivity(mainIntent);
-            it.stopDetecting();
-        });
-        shakeDetector.startDetecting();
     }
 
     @SuppressWarnings("unchecked") // Wants Category<P> from CATEGORIES.get(...), but it has Category<?>

@@ -27,8 +27,6 @@ import androidx.navigation.ui.NavigationUI;
  * This is the activity to display the developer menu.
  */
 public final class DeveloperMenuActivity extends FragmentActivity {
-    // Detect and handle shake events.
-    private ShakeDetector detector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,35 +34,23 @@ public final class DeveloperMenuActivity extends FragmentActivity {
         setContentView(R.layout.activity_dev_menu);
         View devMenuLayout = findViewById(R.id.dev_layout);
         devMenuLayout.setFocusable(true);
-        detector = new ShakeDetector(getApplicationContext(), it -> finish());
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(findViewById(R.id.toolbar), navController,
                 new AppBarConfiguration.Builder(navController.getGraph()).build());
+
+        DeveloperMenuManager.sharedInstance().setOnHideAction(this::finish);
     }
 
     @Override
     protected void onStart() {
-        detector.startDetecting();
+        DeveloperMenuManager.sharedInstance().setVisibility(true);
         super.onStart();
     }
 
     @Override
-    protected void onResume() {
-        detector.startDetecting();
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        detector.stopDetecting();
-        super.onPause();
-    }
-
-    @Override
     protected void onStop() {
-        detector.stopDetecting();
-        Amplify.enableDeveloperMenu(getApplicationContext());
+        DeveloperMenuManager.sharedInstance().setVisibility(false);
         super.onStop();
     }
 }
