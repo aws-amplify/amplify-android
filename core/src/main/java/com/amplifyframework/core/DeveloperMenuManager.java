@@ -24,7 +24,7 @@ import android.content.Intent;
  */
 public final class DeveloperMenuManager implements ShakeDetector.Listener {
     // An instance of DeveloperMenuManager.
-    private static DeveloperMenuManager sInstance = new DeveloperMenuManager();
+    private static DeveloperMenuManager sInstance;
     // Indicates whether the developer menu is visible.
     private boolean visible;
     // Listens for shake events.
@@ -42,6 +42,9 @@ public final class DeveloperMenuManager implements ShakeDetector.Listener {
      * @return a DeveloperMenuManager
      */
     public static DeveloperMenuManager sharedInstance() {
+        if (sInstance == null) {
+            sInstance = new DeveloperMenuManager();
+        }
         return sInstance;
     }
 
@@ -75,7 +78,7 @@ public final class DeveloperMenuManager implements ShakeDetector.Listener {
      * Set the visibility of the developer menu.
      * @param visible boolean indicating whether the developer menu is visible.
      */
-    public void setVisibility(boolean visible) {
+    public void setVisible(boolean visible) {
         this.visible = visible;
     }
 

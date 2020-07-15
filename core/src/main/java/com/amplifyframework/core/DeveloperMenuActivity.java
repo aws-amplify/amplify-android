@@ -44,13 +44,13 @@ public final class DeveloperMenuActivity extends FragmentActivity {
 
     @Override
     protected void onStart() {
-        DeveloperMenuManager.sharedInstance().setVisibility(true);
+        DeveloperMenuManager.sharedInstance().setVisible(true);
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        DeveloperMenuManager.sharedInstance().setVisibility(false);
+        DeveloperMenuManager.sharedInstance().setVisible(false);
         super.onStop();
     }
 }
