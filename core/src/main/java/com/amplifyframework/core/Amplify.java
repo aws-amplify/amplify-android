@@ -136,7 +136,7 @@ public final class Amplify {
                 }
             }
             if (isDebuggableApplication(context)) {
-                DeveloperMenuManager.sharedInstance().startListening(context);
+                DeveloperMenuManager.sharedInstance(context).startListening();
             }
 
             CONFIGURATION_LOCK.set(true);

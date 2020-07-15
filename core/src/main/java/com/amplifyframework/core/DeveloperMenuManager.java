@@ -27,33 +27,36 @@ public final class DeveloperMenuManager implements ShakeDetector.Listener {
     private static DeveloperMenuManager sInstance;
     // Indicates whether the developer menu is visible.
     private boolean visible;
-    // Listens for shake events.
-    private ShakeDetector shakeDetector;
     // Action to take when the developer menu should be hidden.
     private HideAction hideAction;
+    // Android Context associated with the application.
+    private Context context;
 
     /**
      * Constructs a new DeveloperMenuManager.
+     * @param context Android Context
      */
-    private DeveloperMenuManager() { }
+    private DeveloperMenuManager(Context context) {
+        this.context = context.getApplicationContext();
+    }
 
     /**
      * Returns an instance of DeveloperMenuManager.
+     * @param context Android Context
      * @return a DeveloperMenuManager
      */
-    public static DeveloperMenuManager sharedInstance() {
+    public static DeveloperMenuManager sharedInstance(Context context) {
         if (sInstance == null) {
-            sInstance = new DeveloperMenuManager();
+            sInstance = new DeveloperMenuManager(context);
         }
         return sInstance;
     }
 
     /**
      * Start listening for a shake event.
-     * @param context an Android Context
      */
-    public void startListening(Context context) {
-        shakeDetector = new ShakeDetector(context, this);
+    public void startListening() {
+        ShakeDetector shakeDetector = new ShakeDetector(context, this);
         shakeDetector.startDetecting();
     }
 
@@ -65,7 +68,6 @@ public final class DeveloperMenuManager implements ShakeDetector.Listener {
             }
             visible = false;
         } else {
-            Context context = shakeDetector.getContext();
             Intent mainIntent = new Intent(context, DeveloperMenuActivity.class);
             mainIntent.setAction(Intent.ACTION_MAIN);
             mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

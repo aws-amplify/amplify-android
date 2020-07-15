@@ -39,18 +39,18 @@ public final class DeveloperMenuActivity extends FragmentActivity {
         NavigationUI.setupWithNavController(findViewById(R.id.toolbar), navController,
                 new AppBarConfiguration.Builder(navController.getGraph()).build());
 
-        DeveloperMenuManager.sharedInstance().setOnHideAction(this::finish);
+        DeveloperMenuManager.sharedInstance(getApplicationContext()).setOnHideAction(this::finish);
     }
 
     @Override
     protected void onStart() {
-        DeveloperMenuManager.sharedInstance().setVisible(true);
+        DeveloperMenuManager.sharedInstance(getApplicationContext()).setVisible(true);
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        DeveloperMenuManager.sharedInstance().setVisible(false);
+        DeveloperMenuManager.sharedInstance(getApplicationContext()).setVisible(false);
         super.onStop();
     }
 }
