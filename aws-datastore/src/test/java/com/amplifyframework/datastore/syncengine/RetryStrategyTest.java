@@ -15,21 +15,19 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import com.amplifyframework.datastore.DataStoreException;
-
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import io.reactivex.Observable;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class RetryStrategyTest {
 
+    /**
+     * Retry handler should return true (meaning will retry)
+     * if the exception is not an {@link InterruptedException}.
+     */
     @Test
     public void retryOnRetryableException() {
         boolean shouldRetry =
@@ -37,6 +35,10 @@ public class RetryStrategyTest {
         assertTrue(shouldRetry);
     }
 
+    /**
+     * Retry handler should return false (meaning will not retry)
+     * if the exception is an {@link InterruptedException}.
+     */
     @Test
     public void dontRetryOnInterruptedException() {
         boolean shouldRetry =
