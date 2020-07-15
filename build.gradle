@@ -44,13 +44,13 @@ task clean(type: Delete) {
 ext {
     buildToolsVersion = "29.0.2"
     compileSdkVersion = 29
-    minSdkVersion = 16
+    minSdkVersion = 21
     targetSdkVersion = 29
 
     awsSdkVersion = '2.16.12'
     dependency = [
         android: [
-            desugartools: 'com.android.tools:desugar_jdk_libs:1.0.5',
+            desugartools: 'com.android.tools:desugar_jdk_libs:1.0.9',
         ],
         androidx: [
             v4support: 'androidx.legacy:legacy-support-v4:1.0.0',

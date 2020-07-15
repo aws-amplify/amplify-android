@@ -49,7 +49,7 @@ Guide](https://docs.amplify.aws/start/q/integration/android).
 
 ## Platform Support
 
-The Amplify Framework supports Android API level 16 (Android 4.1) and above.
+The Amplify Framework supports Android API level 21 (Android 5.0) and above.
 
 ## Using Amplify from Your App
 

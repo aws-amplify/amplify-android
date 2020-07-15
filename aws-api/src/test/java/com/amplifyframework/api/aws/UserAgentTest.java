@@ -95,8 +95,8 @@ public final class UserAgentTest {
      *          waiting for request
      */
     @Test
-    @Config(sdk = 16)
-    public void testUserAgentWithApi16() throws Exception {
+    @Config(sdk = 21)
+    public void testUserAgentWithApi21() throws Exception {
         String userAgent = checkUserAgent();
 
         // Assert the correct format and content
@@ -105,7 +105,7 @@ public final class UserAgentTest {
         assertTrue(regexMatcher.matches());
         assertEquals("amplify-android", regexMatcher.group("libraryName"));
         assertEquals("Android", regexMatcher.group("systemName"));
-        assertEquals("4.1.2", regexMatcher.group("systemVersion"));
+        assertEquals("5.0.2", regexMatcher.group("systemVersion"));
     }
 
     /**

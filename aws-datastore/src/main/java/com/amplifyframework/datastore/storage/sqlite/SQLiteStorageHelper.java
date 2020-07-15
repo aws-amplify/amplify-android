@@ -19,7 +19,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
@@ -80,9 +79,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
     @Override
     public void onConfigure(SQLiteDatabase sqliteDatabase) {
         super.onConfigure(sqliteDatabase);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            sqliteDatabase.setForeignKeyConstraintsEnabled(true);
-        }
+        sqliteDatabase.setForeignKeyConstraintsEnabled(true);
     }
 
     /**
