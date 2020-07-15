@@ -52,6 +52,7 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Completable;
 import io.reactivex.schedulers.Schedulers;
@@ -74,6 +75,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // Keeps track of whether of not the category is initialized yet
     private final CountDownLatch categoryInitializationsPending;
 
+    private final AtomicBoolean isOrchestratorReady;
+
     // Used to interrogate plugins, to understand if sync should be automatically turned on
     private final ApiCategory api;
 
@@ -92,6 +95,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @Nullable DataStoreConfiguration userProvidedConfiguration) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
+        this.isOrchestratorReady = new AtomicBoolean(false);
         this.api = api;
         this.orchestrator = new Orchestrator(
             modelProvider,
@@ -201,9 +205,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                                         AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
         // Kick off orchestrator asynchronously.
-        initializeOrchestrator()
-            .subscribeOn(Schedulers.io())
-            .subscribe();
+        synchronized (isOrchestratorReady) {
+            initializeOrchestrator()
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+        }
     }
 
     /**
@@ -447,6 +453,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             onError.accept(new DataStoreException("DataStore not ready to be cleared.", "Retry your request."));
             return;
         }
+        isOrchestratorReady.set(false);
         orchestrator.stop()
             .subscribeOn(Schedulers.io())
             .andThen(Completable.fromAction(() -> sqliteStorageAdapter.clear(() -> {
@@ -465,10 +472,20 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private void beforeOperation(@NonNull final Runnable runnable) {
         Throwable throwable = Completable.fromAction(categoryInitializationsPending::await)
+            .repeatUntil(() -> {
+                // Repeat until this is true or the blockingGet call times out.
+                synchronized (isOrchestratorReady) {
+                    return isOrchestratorReady.get();
+                }
+            })
             .andThen(Completable.fromRunnable(runnable))
             .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (throwable != null) {
-            LOG.warn("Failed to execute request due to an unexpected error.", throwable);
+        if (!(throwable == null && isOrchestratorReady.get())) {
+            if (!isOrchestratorReady.get()) {
+                LOG.warn("Failed to execute request because DataStore is not fully initialized.");
+            } else {
+                LOG.warn("Failed to execute request due to an unexpected error.", throwable);
+            }
         }
     }
 
@@ -477,9 +494,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             return Completable.complete();
         } else {
             // Let's prevent the orchestrator startup from possibly running in main.
-            return orchestrator.start()
-                .observeOn(Schedulers.io())
-                .subscribeOn(Schedulers.io());
+            return orchestrator.start(() -> {
+                // This callback is invoked when the local storage observer gets initialized.
+                isOrchestratorReady.set(true);
+            })
+            .repeatUntil(() -> isOrchestratorReady.get())
+            .observeOn(Schedulers.io())
+            .subscribeOn(Schedulers.io());
         }
     }
 

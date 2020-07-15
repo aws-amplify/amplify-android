@@ -28,6 +28,7 @@ import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.HubAccumulator;
 
 import org.junit.Test;
@@ -87,7 +88,7 @@ public final class OrchestratorTest {
             );
 
         // Arrange: storage engine is running
-        orchestrator.start().blockingAwait();
+        orchestrator.start(EmptyAction.instance()).blockingAwait();
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         SynchronousStorageAdapter.delegatingTo(localStorageAdapter).save(susan);

@@ -19,6 +19,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
@@ -122,10 +123,11 @@ public final class Orchestrator {
     /**
      * Start performing sync operations between the local storage adapter
      * and the remote GraphQL endpoint.
-     * @return A Completable operation to start the sync engine orchestrator
+     * @param onLocalStorageReady Callback to signal that it is safe to start interacting with the DataStore.
+     * @return A Completable operation to start the sync engine orchestrator.
      */
     @NonNull
-    public synchronized Completable start() {
+    public synchronized Completable start(Action onLocalStorageReady) {
         if (!transitionToState(OrchestratorStatus.STARTED)) {
             return Completable.error(new DataStoreException(
                 "Unable to start the orchestrator because an operation is already in progress.",
@@ -137,7 +139,9 @@ public final class Orchestrator {
                 LOG.debug("Starting the orchestrator.");
                 if (!storageObserver.isObservingStorageChanges()) {
                     LOG.debug("Starting local storage observer.");
-                    storageObserver.startObservingStorageChanges();
+                    // At the very least, we need the local storage observer running. Don't need to block
+                    // for the others. The onLocalStorageReady is invoked to indicate that.
+                    storageObserver.startObservingStorageChanges(onLocalStorageReady);
                 }
                 if (!subscriptionProcessor.isObservingSubscriptionEvents()) {
                     LOG.debug("Starting subscription processor.");
