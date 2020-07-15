@@ -1,0 +1,53 @@
+ {
+  authors {
+    items {
+      author {
+        id
+        name
+      }
+      id
+      post {
+        id
+        rating
+        status
+        title
+      }
+    }
+    nextToken
+  }
+  blog {
+    id
+    name
+    owner {
+      id
+      name
+      wea
+    }
+    posts {
+      items {
+        id
+        rating
+        status
+        title
+      }
+      nextToken
+    }
+  }
+  comments {
+    items {
+      content
+      id
+      post {
+        id
+        rating
+        status
+        title
+      }
+    }
+    nextToken
+  }
+  id
+  rating
+  status
+  title
+}

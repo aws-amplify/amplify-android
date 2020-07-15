@@ -25,6 +25,8 @@ import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.Resources;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.Map;
 
@@ -33,6 +35,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests the {@link AppSyncRequestFactory}.
  */
+@RunWith(RobolectricTestRunner.class) // Adds Android library to make TextUtils.join available for tests.
 public final class AppSyncRequestFactoryTest {
 
     /**
@@ -122,7 +125,7 @@ public final class AppSyncRequestFactoryTest {
     public void validateSubscriptionGenerationOnCreateBlog() throws DataStoreException {
         assertEquals(
             Resources.readAsString("on-create-request-for-blog.txt"),
-            AppSyncRequestFactory.buildSubscriptionDoc(Blog.class, SubscriptionType.ON_CREATE)
+            AppSyncRequestFactory.buildSubscriptionRequest(Blog.class, SubscriptionType.ON_CREATE).getQuery()
         );
     }
 
@@ -135,7 +138,7 @@ public final class AppSyncRequestFactoryTest {
     public void validateSubscriptionGenerationOnUpdatePost() throws DataStoreException {
         assertEquals(
             Resources.readAsString("on-update-request-for-post.txt"),
-            AppSyncRequestFactory.buildSubscriptionDoc(Post.class, SubscriptionType.ON_UPDATE)
+            AppSyncRequestFactory.buildSubscriptionRequest(Post.class, SubscriptionType.ON_UPDATE).getQuery()
         );
     }
 
@@ -148,7 +151,7 @@ public final class AppSyncRequestFactoryTest {
     public void validateSubscriptionGenerationOnDeleteBlogOwner() throws DataStoreException {
         assertEquals(
             Resources.readAsString("on-delete-request-for-blog-owner.txt"),
-            AppSyncRequestFactory.buildSubscriptionDoc(BlogOwner.class, SubscriptionType.ON_DELETE)
+            AppSyncRequestFactory.buildSubscriptionRequest(BlogOwner.class, SubscriptionType.ON_DELETE).getQuery()
         );
     }
 

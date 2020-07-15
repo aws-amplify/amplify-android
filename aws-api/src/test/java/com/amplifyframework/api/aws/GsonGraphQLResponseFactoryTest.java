@@ -164,10 +164,10 @@ public final class GsonGraphQLResponseFactoryTest {
      * Validates that the converter is able to parse a partial GraphQL
      * response into a result. In this case, the result contains some
      * data, but also a list of errors.
-     * @throws ApiException From API configuration
+     * @throws AmplifyException From API configuration
      */
     @Test
-    public void responseRendersAsPaginatedResult() throws ApiException {
+    public void responseRendersAsPaginatedResult() throws AmplifyException {
         // Expect
         final List<Todo> expectedTodos = Arrays.asList(
                 Todo.builder()
@@ -190,7 +190,7 @@ public final class GsonGraphQLResponseFactoryTest {
         String nextToken = "eyJ2ZXJzaW9uIjoyLCJ0b2tlbiI6IkFRSUNBSGg5OUIvN3BjWU41eE96NDZJMW5GeGM4";
         Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
         AppSyncGraphQLRequest<PaginatedResult<Todo>> expectedRequest = buildDummyRequest(responseType);
-        expectedRequest.setVariable("nextToken", "String", nextToken);
+        expectedRequest = expectedRequest.newBuilder().variable("nextToken", "String", nextToken).build();
         final PaginatedResult<Todo> expectedPaginatedResult =
                 new AppSyncPaginatedResult<>(expectedTodos, expectedRequest);
 
@@ -440,7 +440,8 @@ public final class GsonGraphQLResponseFactoryTest {
         try {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(Todo.class)
-                    .operationType(QueryType.LIST)
+                    .operation(QueryType.LIST)
+                    .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(responseType)
                     .build();
         } catch (AmplifyException exception) {

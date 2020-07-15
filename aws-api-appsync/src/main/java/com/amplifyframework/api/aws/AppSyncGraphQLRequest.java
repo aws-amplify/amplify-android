@@ -20,19 +20,13 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.appsync.GsonVariablesSerializer;
-import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.graphql.OperationType;
+import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
-import com.amplifyframework.api.graphql.SubscriptionType;
-import com.amplifyframework.core.model.AuthRule;
-import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.util.Casing;
+import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;
 
 import java.lang.reflect.Type;
@@ -48,10 +42,8 @@ import java.util.Objects;
  * @param <R> The type of data contained in the GraphQLResponse expected from this request.
  */
 public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
-    private static final int DEFAULT_DEPTH = 2;
-
     private final ModelSchema modelSchema;
-    private final OperationType operationType;
+    private final Operation operation;
     private final SelectionSet selectionSet;
     private final Map<String, Object> variables;
     private final Map<String, String> variableTypes;
@@ -60,97 +52,34 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      * Constructor for AppSyncGraphQLRequest.
      * @throw AmplifyException if a ModelSchema can't be derived from the provided model class
      */
-    private AppSyncGraphQLRequest(Builder builder) throws AmplifyException {
+    private AppSyncGraphQLRequest(Builder builder) {
         super(builder.responseType, new GsonVariablesSerializer());
-        this.modelSchema = ModelSchema.fromModelClass(builder.modelClass);
-        this.selectionSet = SelectionSet.Factory.fromModelClass(builder.modelClass,
-                builder.operationType,
-                DEFAULT_DEPTH);
-        this.operationType = builder.operationType;
-        this.variables = builder.variables;
-        this.variableTypes = builder.variableTypes;
+        this.modelSchema = builder.modelSchema;
+        this.operation = builder.operation;
+        this.selectionSet = builder.selectionSet;
+        this.variables = Immutable.of(builder.variables);
+        this.variableTypes = Immutable.of(builder.variableTypes);
     }
 
     /**
-     * Copy constructor for an AppSyncGraphQLRequest.
-     * @param request request to copy.
-     * @param <R> response type.
+     * Returns the {@link ModelSchema} for this request.
+     * @return the {@link ModelSchema} for this request.
      */
-    public <R> AppSyncGraphQLRequest(AppSyncGraphQLRequest<R> request) {
-        super(request);
-        this.modelSchema = request.modelSchema;
-        this.operationType = request.operationType;
-        this.selectionSet = new SelectionSet(request.selectionSet);
-        this.variables = new HashMap<>(request.variables);
-        this.variableTypes = new HashMap<>(request.variableTypes);
+    public ModelSchema getModelSchema() {
+        return modelSchema;
     }
 
-    @Override
-    public <R> AppSyncGraphQLRequest<R> copy() {
-        return new AppSyncGraphQLRequest<R>(this);
+    /**
+     * Returns the {@link Operation} for this request.
+     * @return the {@link Operation} for this request.
+     */
+    public Operation getOperation() {
+        return operation;
     }
 
     @Override
     public Map<String, Object> getVariables() {
-        return this.variables;
-    }
-
-    /**
-     * Used for setting a variable on the request.
-     * @param key variable name
-     * @param type type of variable value
-     * @param value variable value
-     */
-    public void setVariable(String key, String type, String value) {
-        this.variables.put(key, value);
-        this.variableTypes.put(key, type);
-    }
-
-    /**
-     * Used to add owner argument from authProvider if needed.
-     * @param authProvider CognitoUserPoolsAuthProvider for obtaining the username to set as the owner field.
-     * @throws ApiException if request requires owner argument and authProvider or authProvider.getUsername() is null.
-     */
-    public void setOwner(CognitoUserPoolsAuthProvider authProvider) throws ApiException {
-        for (AuthRule authRule : modelSchema.getAuthRules()) {
-            if (isOwnerArgumentRequired(authRule)) {
-                setVariable(authRule.getOwnerFieldOrDefault(), "String!", getUsername(authProvider));
-            }
-        }
-    }
-
-    private String getUsername(CognitoUserPoolsAuthProvider authProvider) throws ApiException {
-        if (authProvider == null) {
-            throw new ApiException(
-                    "Attempted to subscribe to a model with owner based authorization without a Cognito provider",
-                    "Did you add the AWSCognitoAuthPlugin to Amplify before configuring it?"
-            );
-        }
-        String username = authProvider.getUsername();
-        if (username == null) {
-            throw new ApiException(
-                    "Attempted to subscribe to a model with owner based authorization without a username",
-                    "Make sure that a user is logged in before subscribing to a model with owner based auth"
-            );
-        }
-        return username;
-    }
-
-    private boolean isOwnerArgumentRequired(AuthRule authRule) {
-        if (!AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
-            return false;
-        }
-        List<ModelOperation> operations = authRule.getOperationsOrDefault();
-        if (SubscriptionType.ON_CREATE.equals(operationType) && operations.contains(ModelOperation.CREATE)) {
-            return true;
-        }
-        if (SubscriptionType.ON_UPDATE.equals(operationType) && operations.contains(ModelOperation.UPDATE)) {
-            return true;
-        }
-        if (SubscriptionType.ON_DELETE.equals(operationType) && operations.contains(ModelOperation.DELETE)) {
-            return true;
-        }
-        return false;
+        return Immutable.of(variables);
     }
 
     /**
@@ -185,24 +114,25 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
 
         String modelName = Casing.capitalizeFirst(modelSchema.getName());
+
         String operationString = new StringBuilder()
                 .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.CAMEL_CASE)
-                        .convert(operationType.toString()))
+                        .convert(operation.toString()))
                 .append(modelName)
-                .append(QueryType.LIST.equals(operationType) ? "s" : "")
+                .append(QueryType.LIST.equals(operation) ? "s" : "")
                 .append(inputParameterString)
-                .append(selectionSet.toString())
+                .append(selectionSet.toString("  "))
                 .toString();
 
         String queryString = new StringBuilder()
-                .append(operationType.getOperation().getName())
+                .append(operation.getOperationType().getName())
                 .append(" ")
                 .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.PASCAL_CASE)
-                        .convert(operationType.toString()))
+                        .convert(operation.toString()))
                 .append(modelName)
                 .append(inputTypeString)
-                .append(" ")
-                .append(Wrap.inBraces(operationString))
+                .append(Wrap.inPrettyBraces(operationString, "", "  "))
+                .append("\n")
                 .toString();
 
         return queryString;
@@ -222,7 +152,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
         AppSyncGraphQLRequest<?> that = (AppSyncGraphQLRequest<?>) object;
         return ObjectsCompat.equals(modelSchema, that.modelSchema) &&
-                ObjectsCompat.equals(operationType, that.operationType) &&
+                ObjectsCompat.equals(operation, that.operation) &&
                 ObjectsCompat.equals(selectionSet, that.selectionSet) &&
                 ObjectsCompat.equals(variables, that.variables) &&
                 ObjectsCompat.equals(variableTypes, that.variableTypes);
@@ -230,14 +160,14 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(super.hashCode(), modelSchema, operationType, selectionSet, variables, variableTypes);
+        return ObjectsCompat.hash(super.hashCode(), modelSchema, operation, selectionSet, variables, variableTypes);
     }
 
     @Override
     public String toString() {
         return "AppSyncGraphQLRequest{" +
                 "modelSchema=" + modelSchema +
-                ", operationType=" + operationType +
+                ", operation=" + operation +
                 ", selectionSet=" + selectionSet +
                 ", variables=" + variables +
                 ", variableTypes=" + variableTypes +
@@ -254,10 +184,24 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         return new Builder();
     }
 
-    static final class Builder {
+    /**
+     * Creates an AppSyncGraphQLRequest builder from the current AppSyncGraphQLRequest instance.
+     * @return an AppSyncGraphQLRequest builder from the current AppSyncGraphQLRequest instance.
+     */
+    public AppSyncGraphQLRequest.Builder newBuilder() {
+        return new Builder(this);
+    }
+
+    /**
+     * Builder for a AppSyncGraphQLRequest.
+     */
+    public static final class Builder {
         private Class<? extends Model> modelClass;
-        private OperationType operationType;
+        private ModelSchema modelSchema;
+        private Operation operation;
+        private GraphQLRequestOptions requestOptions;
         private Type responseType;
+        private SelectionSet selectionSet;
         private final Map<String, Object> variables;
         private final Map<String, String> variableTypes;
 
@@ -266,22 +210,63 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             this.variableTypes = new HashMap<>();
         }
 
-        Builder modelClass(@NonNull Class<? extends Model> modelClass) {
+        <R> Builder(AppSyncGraphQLRequest<R> request) {
+            this.modelSchema = request.modelSchema;
+            this.operation = request.operation;
+            this.responseType = request.getResponseType();
+            this.selectionSet = new SelectionSet(request.selectionSet);
+            this.variables = new HashMap<>(request.variables);
+            this.variableTypes = new HashMap<>(request.variableTypes);
+        }
+
+        /**
+         * Sets the {@link Model} Class and returns this builder.
+         * @param modelClass the {@link Model} Class.
+         * @return this builder instance.
+         */
+        public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
             this.modelClass = Objects.requireNonNull(modelClass);
             return Builder.this;
         }
 
-        Builder operationType(@NonNull OperationType operationType) {
-            this.operationType = Objects.requireNonNull(operationType);
+        /**
+         * Sets the operation and returns this builder.
+         * @param operation the Operation.
+         * @return this builder instance.
+         */
+        public Builder operation(@NonNull Operation operation) {
+            this.operation = Objects.requireNonNull(operation);
             return Builder.this;
         }
 
-        Builder responseType(@NonNull Type responseType) {
+        /**
+         * Sets the requestOptions and returns this builder.
+         * @param requestOptions options defining how the request should be built.
+         * @return this builder instance.
+         */
+        public Builder requestOptions(@NonNull GraphQLRequestOptions requestOptions) {
+            this.requestOptions = Objects.requireNonNull(requestOptions);
+            return Builder.this;
+        }
+
+        /**
+         * Sets the responseType and returns this builder.
+         * @param responseType the expected object Type of the response generated by this request.
+         * @return this builder instance.
+         */
+        public Builder responseType(@NonNull Type responseType) {
             this.responseType = Objects.requireNonNull(responseType);
             return Builder.this;
         }
 
-        Builder setVariable(@NonNull String key, String type, Object value) {
+        /**
+         * Sets a variable and returns this builder.
+         * @param key the variable key.
+         * @param type the variable type (e.g. ID! or String!).
+         * @param value the variable value.
+         * @return this builder instance.
+         */
+        public Builder variable(@NonNull String key, String type, Object value) {
             Objects.requireNonNull(key);
             Objects.requireNonNull(type);
             this.variables.put(key, value);
@@ -289,10 +274,31 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             return this;
         }
 
-        <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
-            Objects.requireNonNull(this.operationType);
-            Objects.requireNonNull(this.modelClass);
+        /**
+         * Builds an {@link AppSyncGraphQLRequest}.
+         *
+         * @param <R> The type of data contained in the GraphQLResponse expected from this request.
+         * @return the AppSyncGraphQLRequest
+         * @throws AmplifyException if a ModelSchema cannot be created from the provided model class.
+         */
+        public <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
+            Objects.requireNonNull(this.operation);
             Objects.requireNonNull(this.responseType);
+
+            if (modelClass != null) {
+                // Derive modelSchema and selectionSet from modelClass.
+                modelSchema = ModelSchema.fromModelClass(this.modelClass);
+                selectionSet = SelectionSet.builder()
+                        .modelClass(this.modelClass)
+                        .operation(this.operation)
+                        .requestOptions(Objects.requireNonNull(this.requestOptions))
+                        .build();
+            } else {
+                // If modelClass is null, we can't derive modelSchema and selectionSet.  However, if this Builder was
+                // created via newBuilder(), those fields will already be set, so we can continue on.
+                Objects.requireNonNull(modelSchema, "modelClass must not be null");
+                Objects.requireNonNull(selectionSet, "modelClass must not be null");
+            }
             return new AppSyncGraphQLRequest<>(this);
         }
     }
