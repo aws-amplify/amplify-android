@@ -42,7 +42,17 @@ public enum DataStoreChannelEventName {
      * An event that uses this value for {@link HubEvent#getName()} will contain a model object
      * in the {@link HubEvent#getData()}.
      */
-    RECEIVED_FROM_CLOUD("received_from_cloud");
+    RECEIVED_FROM_CLOUD("received_from_cloud"),
+
+    /**
+     * The remote synchonization processes started.
+     */
+    REMOTE_SYNC_STARTED("remote_sync_started"),
+
+    /**
+     * The remote synchonization processes stopped.
+     */
+    REMOTE_SYNC_STOPPED("remote_sync_stopped");
 
     private final String hubEventName;
 

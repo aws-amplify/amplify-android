@@ -1,0 +1,111 @@
+/*
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+def coveredProjects = subprojects
+
+apply plugin: 'jacoco'
+
+configure(coveredProjects) { prj ->
+    apply plugin: 'jacoco'
+    jacoco {
+        toolVersion = '0.8.5'
+    }
+
+    def dependencies = [
+        'testDebugUnitTest',
+    ]
+    if (prj.tasks.findByName('createDebugCoverageReport')) {
+        dependencies += 'createDebugCoverageReport'
+    }
+
+    task jacocoReport(type: JacocoReport, dependsOn: dependencies) {
+        group = 'Reporting'
+        description = 'Generate Jacoco coverage'
+
+        reports {
+            csv.enabled = true
+            xml.enabled = false
+            html.enabled = true
+        }
+
+        final fileFilter = [
+            '**/R.class',
+            '**/R$*.class',
+            '**/BuildConfig.*',
+            '**/Manifest*.*',
+            'android/**/*.*',
+        ]
+        final javacTree = fileTree(dir: "${prj.buildDir}/intermediates/javac/debug", excludes: fileFilter)
+        final mainSrc = "${prj.projectDir}/src/main/java"
+
+        sourceDirectories.setFrom files([mainSrc])
+        classDirectories.setFrom files([javacTree])
+        executionData.setFrom fileTree(dir: prj.buildDir, includes: [
+            'jacoco/testDebugUnitTest.exec',
+            'outputs/code_coverage/debugAndroidTest/connected/**/*.ec'
+        ])
+    }
+}
+
+/**
+ *  Root task that generates an aggregated Jacoco test coverage report
+ *  for all sub-projects
+ */
+task jacocoFullReport(type: JacocoReport, group: 'Coverage reports') {
+    group = 'Reporting'
+    description = 'Generates an aggregate report from all subprojects'
+
+    tasks.withType(Test) {
+        ignoreFailures true
+    }
+
+    def projects = coveredProjects
+
+    //noinspection GrUnresolvedAccess
+    dependsOn(projects.jacocoReport)
+
+    final source = files(projects.jacocoReport.sourceDirectories)
+
+    additionalSourceDirs.setFrom source
+    sourceDirectories.setFrom source
+
+    classDirectories.setFrom files(projects.jacocoReport.classDirectories)
+    executionData.setFrom files(projects.jacocoReport.executionData)
+
+    reports {
+        html {
+            enabled true
+            destination file('build/reports/jacoco/html')
+        }
+        csv {
+            enabled true
+            destination file('build/reports/jacoco/jacocoFullReport.csv')
+        }
+        xml {
+            enabled true
+            destination file('build/reports/jacoco/jacocoFullReport.xml')
+        }
+    }
+
+    doFirst {
+        //noinspection GroovyAssignabilityCheck
+        executionData.setFrom files(executionData.findAll { it.exists() })
+    }
+}
+
+tasks.withType(Test) {
+    jacoco.includeNoLocationClasses = true
+}
+

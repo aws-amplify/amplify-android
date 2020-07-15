@@ -49,14 +49,18 @@ public final class RestRequestFactory {
     public static URL createURL(
             @NonNull String endpoint,
             @Nullable String path,
-            @Nullable Map<String, String> queryParameters)
-            throws MalformedURLException {
+            @Nullable Map<String, String> queryParameters
+    ) throws MalformedURLException {
+
         URL url = new URL(endpoint);
         HttpUrl.Builder builder = new HttpUrl.Builder()
             .scheme(url.getProtocol())
             .host(url.getHost())
-            .addPathSegment(url.getPath().replaceFirst("/", ""))
-            .addPathSegments(path == null ? "" : path);
+            .addPathSegment(stripLeadingSlashes(url.getPath()));
+
+        if (path != null) {
+            builder.addPathSegments(stripLeadingSlashes(path));
+        }
 
         if (queryParameters != null) {
             for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
@@ -125,10 +129,18 @@ public final class RestRequestFactory {
     private static void populateBody(
             Request.Builder builder,
             byte[] data,
-            BodyCreationStrategy strategy) {
+            BodyCreationStrategy strategy
+    ) {
         if (data != null) {
             strategy.buildRequest(builder, data);
         }
+    }
+
+    // Segment separator can be either '/' or '\'.
+    // HttpUrl.Builder assumes an empty URL if path segments
+    // begin with either character. Strip them before appending.
+    private static String stripLeadingSlashes(final String path) {
+        return path.replaceAll("^[\\\\/]+", "");
     }
 
     /**

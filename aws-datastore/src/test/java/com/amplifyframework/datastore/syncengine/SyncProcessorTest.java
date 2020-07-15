@@ -386,7 +386,8 @@ public final class SyncProcessorTest {
     @Test
     public void userProvidedErrorCallbackInvokedOnFailure() {
         // Arrange: mock failure when invoking hydrate on the mock object.
-        AppSyncMocking.onSync(appSync).mockFailure();
+        AppSyncMocking.onSync(appSync)
+            .mockFailure(new DataStoreException("Something timed out during sync.", "Nothing to do."));
 
         // Act: call hydrate.
         assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));

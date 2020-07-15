@@ -13,12 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
+package com.amplifyframework.api.aws.appsync;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.model.temporal.Temporal;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
@@ -34,11 +35,20 @@ import java.util.Map;
 /**
  * Implementation of a GraphQL Request serializer for the variables map using Gson.
  */
-final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerializer {
+public final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerializer {
     private final Gson gson;
 
-    GsonVariablesSerializer() {
-        gson = GsonFactory.create();
+    /**
+     * Creates new instance of GsonVariablesSerializer.
+     */
+    public GsonVariablesSerializer() {
+        gson = new GsonBuilder()
+            .registerTypeAdapter(Date.class, new DateSerializer())
+            .registerTypeAdapter(Temporal.Timestamp.class, new TemporalTimestampSerializer())
+            .registerTypeAdapter(Temporal.Date.class, new TemporalDateSerializer())
+            .registerTypeAdapter(Temporal.DateTime.class, new TemporalDateTimeSerializer())
+            .registerTypeAdapter(Temporal.Time.class, new TemporalTimeSerializer())
+            .create();
     }
 
     @Override

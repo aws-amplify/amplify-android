@@ -6,7 +6,7 @@ commands:
     parameters:
       gradle_version:
         description: "The version of Gradle to install"
-        default: "6.5"
+        default: "6.5.1"
         type: string
 
     steps:
@@ -91,7 +91,7 @@ jobs:
       - run:
           name: Build the project
           command: |
-            .circleci/retry.sh 3 ./gradlew build
+            .circleci/retry.sh 3 "./gradlew build"
             .circleci/aggregate-test-results.sh ~/amplify-android-home
             .circleci/aggregate-build-artifacts.sh
       - store_test_results:
@@ -118,7 +118,12 @@ jobs:
             .circleci/copy-configs
       - run:
           name: Run integration test
-          command: .circleci/retry.sh 3 ./gradlew cAT --no-daemon
+          command: .circleci/run-integration-tests.sh
+      - run:
+          name: Store coverage data
+          command: |
+              .circleci/retry.sh 3 "./gradlew jacocoFullReport --no-daemon"
+              .circleci/codecov.sh  # From https://codecov.io/bash
       - store_artifacts:
           path: logcat.log
 workflows:
