@@ -65,7 +65,7 @@ public final class RetryStrategy {
 
         @Override
         public boolean retryHandler(int attemptNumber, Throwable throwable) {
-            LOG.debug("Should retry: " + attemptNumber + " " + throwable.getClass());
+            LOG.verbose("Should retry? attempt number:" + attemptNumber + " exception type:" + throwable.getClass());
             if (skipExceptionTypes.contains(throwable.getClass())) {
                 // If it's part of the skip list, don't retry.
                 return false;
