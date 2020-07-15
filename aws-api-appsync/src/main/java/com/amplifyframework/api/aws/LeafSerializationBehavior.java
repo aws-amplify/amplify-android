@@ -13,38 +13,19 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.graphql;
+package com.amplifyframework.api.aws;
 
 /**
- * Represents a GraphQL operation.
+ * Enum representing the different ways to serialize leaf nodes of a {@link SelectionSet}.
  */
-public enum OperationType {
+public enum LeafSerializationBehavior {
     /**
-     * GraphQL query operation.
+     * Leaf nodes will only serialize the "id" field.
      */
-    QUERY("query"),
-
-    /**
-     * GraphQL mutation operation.
-     */
-    MUTATION("mutation"),
+    JUST_ID,
 
     /**
-     * GraphQL subscription operation.
+     * Leaf nodes will serialize all fields.
      */
-    SUBSCRIPTION("subscription");
-
-    private final String name;
-
-    OperationType(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Returns the name of the operation.
-     * @return the name of the operation.
-     */
-    public String getName() {
-        return name;
-    }
+    ALL_FIELDS
 }

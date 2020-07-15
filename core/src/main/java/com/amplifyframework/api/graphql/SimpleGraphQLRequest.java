@@ -19,7 +19,6 @@ import androidx.core.util.ObjectsCompat;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -60,27 +59,6 @@ public final class SimpleGraphQLRequest<R> extends GraphQLRequest<R> {
         super(responseType, variablesSerializer);
         this.variables = variables;
         this.document = document;
-    }
-
-    /**
-     * Copy constructor for a SimpleGraphQLRequest.
-     * @param request SimpleGraphQLRequest to be copied
-     * @param <R> The type of data contained in the GraphQLResponse expected from this request.
-     */
-    public <R> SimpleGraphQLRequest(SimpleGraphQLRequest<R> request) {
-        super(request);
-        this.variables = new HashMap<>(request.variables);
-        this.document = request.document;
-    }
-
-    /**
-     * Returns a copy of the SimpleGraphQLRequest instance.
-     * @param <R> The type of data contained in the GraphQLResponse expected from this request.
-     * @return Copy of the SimpleGraphQLRequest object
-     */
-    @Override
-    public <R> SimpleGraphQLRequest<R> copy() {
-        return new SimpleGraphQLRequest<R>(this);
     }
 
     @Override

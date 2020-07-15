@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.appsync.GsonVariablesSerializer;
+import com.amplifyframework.api.aws.GsonVariablesSerializer;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -317,16 +317,13 @@ public final class AppSyncClient implements AppSync {
             Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             Consumer<DataStoreException> onSubscriptionFailure,
             Action onSubscriptionCompleted) {
-        final String document;
+        final GraphQLRequest<String> request;
         try {
-            document = AppSyncRequestFactory.buildSubscriptionDoc(clazz, subscriptionType);
-        } catch (DataStoreException docGenerationException) {
-            onSubscriptionFailure.accept(docGenerationException);
+            request = AppSyncRequestFactory.buildSubscriptionRequest(clazz, subscriptionType);
+        } catch (DataStoreException requestGenerationException) {
+            onSubscriptionFailure.accept(requestGenerationException);
             return new NoOpCancelable();
         }
-
-        final GraphQLRequest<String> request =
-            new SimpleGraphQLRequest<>(document, Collections.emptyMap(), String.class, variablesSerializer);
 
         final Consumer<GraphQLResponse<String>> stringResponseConsumer = stringResponse -> {
             if (stringResponse.hasErrors()) {

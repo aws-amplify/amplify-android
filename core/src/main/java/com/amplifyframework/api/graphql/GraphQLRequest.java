@@ -46,23 +46,6 @@ public abstract class GraphQLRequest<R> {
     }
 
     /**
-     * Copy constructor for a GraphQLRequest.
-     * @param request GraphQLRequest to be copied
-     * @param <R> The type of data contained in the GraphQLResponse expected from this request.
-     */
-    public <R> GraphQLRequest(GraphQLRequest<R> request) {
-        this.responseType = request.responseType;
-        this.variablesSerializer = request.variablesSerializer;
-    }
-
-    /**
-     * Returns a copy of the GraphQLRequest instance.
-     * @param <R> The type of data contained in the GraphQLResponse expected from this request.
-     * @return Copy of the GraphQLRequest object
-     */
-    public abstract <R> GraphQLRequest<R> copy();
-
-    /**
      * Returns the GraphQL document which is set as "query" in the request.
      * @return the GraphQL document which is set as "query" in the request.
      */

@@ -1,4 +1,14 @@
 {
-  "query": "subscription OnCreatePerson {onCreatePerson {age dob first_name id last_name relationship}}",
+  "query": "subscription OnCreatePerson {
+  onCreatePerson {
+    age
+    dob
+    first_name
+    id
+    last_name
+    relationship
+  }
+}
+",
   "variables": null
 }

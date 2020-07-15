@@ -15,6 +15,7 @@
 
 package com.amplifyframework.util;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -64,6 +65,26 @@ public final class Wrap {
             return null;
         }
         return "{" + original + "}";
+    }
+
+    /**
+     * Returns original string wrapped with new lines and braces, and appropriate margin.
+     *
+     * Returned value is composed as:
+     *  &lt;space&gt;{
+     *  &lt;margin&gt;&lt;indent&gt;&lt;original&gt;
+     *  &lt;margin&gt;}
+     *
+     * @param original Original string to modify
+     * @param margin String representing the current margin to indent.
+     * @param indent String representing how much to indent original in addition to margin.
+     * @return Original string wrapped in new lines, then braces, and appropriate indents.
+     */
+    public static String inPrettyBraces(@Nullable String original, @NonNull String margin, @NonNull String indent) {
+        if (original == null) {
+            return null;
+        }
+        return " " + Wrap.inBraces("\n" + margin + indent + original + "\n" + margin);
     }
 
     /**

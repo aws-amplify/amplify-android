@@ -1,5 +1,8 @@
 subscription OnUpdatePost {
   onUpdatePost {
+    _deleted
+    _lastChangedAt
+    _version
     authors {
       items {
         id
@@ -21,8 +24,5 @@ subscription OnUpdatePost {
     rating
     status
     title
-    _version
-    _deleted
-    _lastChangedAt
   }
 }
