@@ -88,7 +88,7 @@ public final class OrchestratorTest {
             );
 
         // Arrange: storage engine is running
-        orchestrator.start(EmptyAction.instance()).blockingAwait();
+        orchestrator.start(EmptyAction.create()).blockingAwait();
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         SynchronousStorageAdapter.delegatingTo(localStorageAdapter).save(susan);
