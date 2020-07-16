@@ -69,7 +69,6 @@ final class SubscriptionEndpoint {
     private final TimeoutWatchdog timeoutWatchdog;
     private final Set<String> pendingSubscriptionIds;
     private final OkHttpClient okHttpClient;
-    private String subscriptionUrl;
     private WebSocket webSocket;
     private AmplifyWebSocketListener webSocketListener;
 
@@ -102,22 +101,20 @@ final class SubscriptionEndpoint {
         Objects.requireNonNull(onSubscriptionError);
         Objects.requireNonNull(onSubscriptionComplete);
 
-        if (subscriptionUrl == null) {
-            try {
-                subscriptionUrl = buildConnectionRequestUrl();
-            } catch (ApiException apiException) {
-                onSubscriptionError.accept(apiException);
-            }
-        }
-
         // The first call to subscribe OR a disconnected websocket listener will
         // force a new connection to be created.
         if (webSocketListener == null || webSocketListener.isDisconnectedState()) {
             webSocketListener = new AmplifyWebSocketListener();
-            webSocket = okHttpClient.newWebSocket(new Request.Builder()
-                .url(subscriptionUrl)
-                .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
-                .build(), webSocketListener);
+            try {
+                webSocket = okHttpClient.newWebSocket(new Request.Builder()
+                    .url(buildConnectionRequestUrl())
+                    .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
+                    .build(), webSocketListener);
+            } catch (ApiException apiException) {
+                onSubscriptionError.accept(apiException);
+                return;
+            }
+
         }
         final String subscriptionId = UUID.randomUUID().toString();
         pendingSubscriptionIds.add(subscriptionId);
