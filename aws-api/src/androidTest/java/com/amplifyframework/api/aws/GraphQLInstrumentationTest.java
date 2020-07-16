@@ -18,10 +18,9 @@ package com.amplifyframework.api.aws;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.appsync.GsonVariablesSerializer;
 import com.amplifyframework.api.aws.test.R;
-import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
@@ -158,7 +157,7 @@ public final class GraphQLInstrumentationTest {
         // Start listening for comments on that event
         TestObserver<GraphQLResponse<Comment>> observer = api.onCreate(
             currentApiName,
-            new GraphQLRequest<Comment>(
+            new SimpleGraphQLRequest<Comment>(
                 Assets.readAsString("subscribe-event-comments.graphql"),
                 Collections.singletonMap("eventId", eventId),
                 Comment.class,
@@ -193,7 +192,7 @@ public final class GraphQLInstrumentationTest {
 
         Comment createdComment = api.create(
             currentApiName,
-            new GraphQLRequest<>(
+            new SimpleGraphQLRequest<>(
                 Assets.readAsString("create-comment.graphql"),
                 variables,
                 Comment.class,
@@ -220,7 +219,7 @@ public final class GraphQLInstrumentationTest {
 
         Event createdEvent = api.create(
             currentApiName,
-            new GraphQLRequest<>(
+            new SimpleGraphQLRequest<>(
                 Assets.readAsString("create-event.graphql"),
                 variables,
                 Event.class,

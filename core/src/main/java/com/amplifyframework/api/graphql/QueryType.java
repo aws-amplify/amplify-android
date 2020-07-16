@@ -18,7 +18,7 @@ package com.amplifyframework.api.graphql;
 /**
  * Enum of GraphQL operation types.
  */
-public enum QueryType {
+public enum QueryType implements Operation {
     /**
      * GraphQL query get.
      */
@@ -27,5 +27,10 @@ public enum QueryType {
     /**
      * GraphQL query list.
      */
-    LIST
+    LIST;
+
+    @Override
+    public OperationType getOperationType() {
+        return OperationType.QUERY;
+    }
 }

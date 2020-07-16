@@ -25,14 +25,18 @@ import com.google.gson.JsonParseException;
 import java.lang.reflect.Type;
 import java.util.concurrent.TimeUnit;
 
-final class TemporalDeserializers {
+/**
+ * Collection of deserializers for <a href="https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html">AWS
+ * AppSync temporal scalars</a>.
+ */
+public final class TemporalDeserializers {
     /**
      * Deserializer of Temporal.Date, an extended ISO-8601 Date string, with an optional timezone offset.
      *
      * Based on the <a href=https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html> AWS AppSync AWSDate
      * scalar.</a>
      */
-    static class DateDeserializer implements JsonDeserializer<Temporal.Date> {
+    public static final class DateDeserializer implements JsonDeserializer<Temporal.Date> {
         @Override
         public Temporal.Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
@@ -46,7 +50,7 @@ final class TemporalDeserializers {
      * Based on the <a href=https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html>AWS AppSync AWSDateTime
      * scalar.</a>
      */
-    static class DateTimeDeserializer implements JsonDeserializer<Temporal.DateTime> {
+    public static final class DateTimeDeserializer implements JsonDeserializer<Temporal.DateTime> {
         @Override
         public Temporal.DateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
@@ -60,7 +64,7 @@ final class TemporalDeserializers {
      * Based on the <a href=https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html>AWS AppSync AWSTime
      * scalar.</a>
      */
-    static class TimeDeserializer implements JsonDeserializer<Temporal.Time> {
+    public static final class TimeDeserializer implements JsonDeserializer<Temporal.Time> {
         @Override
         public Temporal.Time deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
@@ -76,7 +80,7 @@ final class TemporalDeserializers {
      * Based on the <a href=https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html>AWS AppSync AWSTemporal
      * scalar.</a>
      */
-    static class TimestampDeserializer implements JsonDeserializer<Temporal.Timestamp> {
+    public static final class TimestampDeserializer implements JsonDeserializer<Temporal.Timestamp> {
         @Override
         public Temporal.Timestamp deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {

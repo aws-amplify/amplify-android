@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -53,11 +54,12 @@ final class StorageObserver {
      * When a change is observed on the storage adapter, and that change wasn't caused
      * by the sync engine, then place that change into the mutation outbox.
      */
-    void startObservingStorageChanges() {
+    void startObservingStorageChanges(Action onStarted) {
         ongoingOperationsDisposable.add(
-            Observable.<StorageItemChange<? extends Model>>create(emitter ->
-                localStorageAdapter.observe(emitter::onNext, emitter::onError, emitter::onComplete)
-            )
+            Observable.<StorageItemChange<? extends Model>>create(emitter -> {
+                localStorageAdapter.observe(emitter::onNext, emitter::onError, emitter::onComplete);
+                onStarted.call();
+            })
             .subscribeOn(Schedulers.single())
             .observeOn(Schedulers.single())
             .doOnSubscribe(disposable ->

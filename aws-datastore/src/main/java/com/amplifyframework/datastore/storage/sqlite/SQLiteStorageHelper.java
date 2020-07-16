@@ -20,12 +20,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
-import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.Empty;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -133,7 +133,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
             sqliteDatabase.beginTransaction();
             try {
                 for (final SqlCommand sqlCommand : createSqlCommands.getCreateTableCommands()) {
-                    if (!TextUtils.isEmpty(sqlCommand.tableName())) {
+                    if (!Empty.check(sqlCommand.tableName())) {
                         sqliteDatabase.execSQL("drop table if exists " +
                                 sqlCommand.tableName());
                     }

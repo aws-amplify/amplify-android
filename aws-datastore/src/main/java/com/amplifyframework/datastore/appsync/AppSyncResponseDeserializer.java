@@ -19,8 +19,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
+import com.amplifyframework.api.aws.TemporalDeserializers;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -53,6 +55,10 @@ final class AppSyncResponseDeserializer implements AppSyncClient.ResponseDeseria
     AppSyncResponseDeserializer() {
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(List.class, new GsonListDeserializer())
+                .registerTypeAdapter(Temporal.Date.class, new TemporalDeserializers.DateDeserializer())
+                .registerTypeAdapter(Temporal.Time.class, new TemporalDeserializers.TimeDeserializer())
+                .registerTypeAdapter(Temporal.Timestamp.class, new TemporalDeserializers.TimestampDeserializer())
+                .registerTypeAdapter(Temporal.DateTime.class, new TemporalDeserializers.DateTimeDeserializer())
                 .create();
     }
 

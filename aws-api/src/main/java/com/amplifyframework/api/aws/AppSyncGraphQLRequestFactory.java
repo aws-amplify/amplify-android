@@ -16,12 +16,10 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.appsync.GsonVariablesSerializer;
-import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
+import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
@@ -40,16 +38,11 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.util.Casing;
-import com.amplifyframework.util.FieldFinder;
-import com.amplifyframework.util.Immutable;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -61,7 +54,6 @@ import java.util.Map;
  */
 public final class AppSyncGraphQLRequestFactory {
     private static final int DEFAULT_QUERY_LIMIT = 1000;
-    private static final int DEFAULT_LEVEL_DEPTH = 2;
 
     // This class should not be instantiated
     private AppSyncGraphQLRequestFactory() { }
@@ -83,29 +75,13 @@ public final class AppSyncGraphQLRequestFactory {
             String objectId
     ) {
         try {
-            StringBuilder doc = new StringBuilder();
-            Map<String, Object> variables = new HashMap<>();
-            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-            String graphQlTypeName = schema.getName();
-
-            doc.append("query ")
-                    .append("Get")
-                    .append(Casing.capitalizeFirst(graphQlTypeName))
-                    .append("(")
-                    .append("$id: ID!) { get")
-                    .append(Casing.capitalizeFirst(graphQlTypeName))
-                    .append("(id: $id) { ")
-                    .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
-                    .append("}}");
-
-            variables.put("id", objectId);
-
-            return new GraphQLRequest<>(
-                    doc.toString(),
-                    variables,
-                    modelClass,
-                    new GsonVariablesSerializer()
-            );
+            return AppSyncGraphQLRequest.builder()
+                    .modelClass(modelClass)
+                    .operation(QueryType.GET)
+                    .requestOptions(new ApiGraphQLRequestOptions())
+                    .responseType(modelClass)
+                    .variable("id", "ID!", objectId)
+                    .build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
@@ -153,8 +129,8 @@ public final class AppSyncGraphQLRequestFactory {
             QueryPredicate predicate,
             int limit
     ) {
-        Type dataType = TypeMaker.getParameterizedType(PaginatedResult.class, modelClass);
-        return buildQuery(modelClass, predicate, limit, dataType);
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, modelClass);
+        return buildQuery(modelClass, predicate, limit, responseType);
     }
 
     static <R, T extends Model> GraphQLRequest<R> buildQuery(
@@ -164,37 +140,20 @@ public final class AppSyncGraphQLRequestFactory {
             Type responseType
     ) {
         try {
-            StringBuilder doc = new StringBuilder();
-            Map<String, Object> variables = new HashMap<>();
-            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-            String graphQlTypeName = schema.getName();
+            String modelName = ModelSchema.fromModelClass(modelClass).getName();
+            AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
+                    .modelClass(modelClass)
+                    .operation(QueryType.LIST)
+                    .requestOptions(new ApiGraphQLRequestOptions())
+                    .responseType(responseType);
 
-            boolean includePredicate = !QueryPredicates.all().equals(predicate);
-
-            doc.append("query ")
-                    .append("List")
-                    .append(Casing.capitalizeFirst(graphQlTypeName))
-                    .append("(")
-                    .append("$filter: Model")
-                    .append(graphQlTypeName)
-                    .append("FilterInput ")
-                    .append("$limit: Int $nextToken: String) { list")
-                    .append(Casing.capitalizeFirst(graphQlTypeName))
-                    .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
-                    .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
-                    .append("} nextToken }}");
-
-            if (includePredicate) {
-                variables.put("filter", parsePredicate(predicate));
+            if (!QueryPredicates.all().equals(predicate)) {
+                String filterType = "Model" + Casing.capitalizeFirst(modelName) + "FilterInput";
+                builder.variable("filter", filterType, parsePredicate(predicate));
             }
-            variables.put("limit", limit);
 
-            return new GraphQLRequest<>(
-                    doc.toString(),
-                    variables,
-                    responseType,
-                    new GsonVariablesSerializer()
-            );
+            builder.variable("limit", "Int", limit);
+            return builder.build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
@@ -223,66 +182,33 @@ public final class AppSyncGraphQLRequestFactory {
         try {
             // model is of type T so this is a safe cast - hence the warning suppression
             Class<T> modelClass = (Class<T>) model.getClass();
-
-            StringBuilder doc = new StringBuilder();
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-            String typeStr = type.toString();
             String graphQlTypeName = schema.getName();
 
-            boolean includePredicate = !QueryPredicates.all().equals(predicate);
+            AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
+                    .operation(type)
+                    .modelClass(modelClass)
+                    .requestOptions(new ApiGraphQLRequestOptions())
+                    .responseType(modelClass);
 
-            doc.append("mutation ")
-                    .append(Casing.capitalize(typeStr))
-                    .append(Casing.capitalizeFirst(graphQlTypeName))
-                    .append("($input: ")
-                    .append(Casing.capitalize(typeStr))
-                    .append(Casing.capitalizeFirst(graphQlTypeName))
-                    .append("Input!");
-
-            if (includePredicate) {
-                doc.append(", $condition: Model")
-                        .append(graphQlTypeName)
-                        .append("ConditionInput");
-            }
-
-            doc.append("){ ")
-                    .append(typeStr.toLowerCase(Locale.getDefault()))
-                    .append(Casing.capitalizeFirst(graphQlTypeName))
-                    .append("(input: $input");
-
-            if (includePredicate) {
-                doc.append(", condition: $condition");
-            }
-
-            doc.append(") { ")
-                    .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
-                    .append("}}");
-
-            Map<String, Object> variables = new HashMap<>();
+            String inputType = new StringBuilder()
+                .append(Casing.capitalize(type.toString()))
+                .append(Casing.capitalizeFirst(graphQlTypeName))
+                .append("Input!")
+                .toString(); // CreateTodoInput
 
             if (MutationType.DELETE.equals(type)) {
-                variables.put("input", Collections.singletonMap("id", model.getId()));
+                builder.variable("input", inputType, Collections.singletonMap("id", model.getId()));
             } else {
-                try {
-                    variables.put("input", schema.getMapOfFieldNameAndValues(model));
-                } catch (AmplifyException exception) {
-                    throw new IllegalStateException(
-                            "Failed to build the map of variables for this mutation.",
-                            exception
-                    );
-                }
+                builder.variable("input", inputType, schema.getMapOfFieldNameAndValues(model));
             }
 
-            if (includePredicate) {
-                variables.put("condition", parsePredicate(predicate));
+            if (!QueryPredicates.all().equals(predicate)) {
+                String conditionType = "Model" + graphQlTypeName + "ConditionInput";
+                builder.variable("condition", conditionType, parsePredicate(predicate));
             }
 
-            return new GraphQLRequest<>(
-                    doc.toString(),
-                    variables,
-                    modelClass,
-                    new GsonVariablesSerializer()
-            );
+            return builder.build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
@@ -295,7 +221,7 @@ public final class AppSyncGraphQLRequestFactory {
      * Creates a {@link GraphQLRequest} that represents a subscription of a given type.
      *
      * @param modelClass the model type.
-     * @param type the subscription type.
+     * @param subscriptionType the subscription type.
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @return a valid {@link GraphQLRequest} instance.
@@ -304,83 +230,18 @@ public final class AppSyncGraphQLRequestFactory {
     @SuppressWarnings("SameParameterValue")
     public static <R, T extends Model> GraphQLRequest<R> buildSubscription(
             Class<T> modelClass,
-            SubscriptionType type
-    ) {
-        return buildSubscription(modelClass, type, null);
-    }
-
-    static <R, T extends Model> GraphQLRequest<R> buildSubscription(
-            Class<T> modelClass,
-            SubscriptionType type,
-            CognitoUserPoolsAuthProvider cognitoAuth
+            SubscriptionType subscriptionType
     ) {
         try {
-            StringBuilder doc = new StringBuilder();
-            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-            String typeStr = type.toString();
-            String graphQlTypeName = schema.getName();
-
-            doc.append("subscription ")
-                    .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE)
-                        .to(Casing.CaseType.PASCAL_CASE)
-                        .convert(typeStr))
-                    .append(Casing.capitalizeFirst(graphQlTypeName));
-
-            if (schema.hasOwnerAuthorization()) {
-                doc.append("($owner: String!) ");
-            }
-
-            doc.append("{")
-                    .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE)
-                        .to(Casing.CaseType.CAMEL_CASE)
-                        .convert(typeStr))
-                    .append(Casing.capitalizeFirst(graphQlTypeName));
-
-            if (schema.hasOwnerAuthorization()) {
-                doc.append("(owner: $owner) ");
-            }
-
-            doc.append("{").append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH));
-
-            if (schema.hasOwnerAuthorization()) {
-                doc.append(" owner ");
-            }
-
-            doc.append("}}");
-
-            if (schema.hasOwnerAuthorization()) {
-                if (cognitoAuth == null) {
-                    throw new ApiException(
-                        "Attempted to subscribe to a model with owner based authorization without a Cognito provider",
-                        "Did you add the AWSCognitoAuthPlugin to Amplify before configuring it?"
-                    );
-                }
-
-                String username = cognitoAuth.getUsername();
-
-                if (username == null) {
-                    throw new ApiException(
-                            "Attempted to subscribe to a model with owner based authorization without a username",
-                            "Make sure that a user is logged in before subscribing to a model with owner based auth"
-                    );
-                }
-
-                return new GraphQLRequest<>(
-                        doc.toString(),
-                        Immutable.of(Collections.singletonMap("owner", username)),
-                        modelClass,
-                        new GsonVariablesSerializer()
-                );
-            } else {
-                return new GraphQLRequest<>(
-                        doc.toString(),
-                        modelClass,
-                        new GsonVariablesSerializer()
-                );
-            }
+            return AppSyncGraphQLRequest.builder()
+                    .modelClass(modelClass)
+                    .operation(subscriptionType)
+                    .requestOptions(new ApiGraphQLRequestOptions())
+                    .responseType(modelClass)
+                    .build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
-                    "Could not generate a schema for the specified class",
+                    "Failed to build GraphQLRequest",
                     exception
             );
         }
@@ -477,44 +338,5 @@ public final class AppSyncGraphQLRequestFactory {
                     "has been created which is not implemented yet."
                 );
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static String getModelFields(Class<? extends Model> clazz, int levelsDeepToGo) throws AmplifyException {
-        if (levelsDeepToGo < 0) {
-            return "";
-        }
-
-        StringBuilder result = new StringBuilder();
-        ModelSchema schema = ModelSchema.fromModelClass(clazz);
-
-        for (Field field : FieldFinder.findFieldsIn(clazz)) {
-            String fieldName = field.getName();
-
-            if (schema.getAssociations().containsKey(fieldName)) {
-                if (List.class.isAssignableFrom(field.getType())) {
-                    if (levelsDeepToGo >= 1) {
-                        result.append(fieldName).append(" ");
-
-                        ParameterizedType listType = (ParameterizedType) field.getGenericType();
-                        Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
-
-                        result.append("{ items {")
-                            .append(getModelFields(listTypeClass, levelsDeepToGo - 1)) // cast checked above
-                            .append("} nextToken }");
-                    }
-                } else if (levelsDeepToGo >= 1) {
-                    result.append(fieldName).append(" ");
-
-                    result.append("{")
-                        .append(getModelFields((Class<Model>) field.getType(), levelsDeepToGo - 1))
-                        .append("}");
-                }
-            } else {
-                result.append(fieldName).append(" ");
-            }
-        }
-
-        return result.toString();
     }
 }

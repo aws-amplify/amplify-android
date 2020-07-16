@@ -25,4 +25,10 @@ dependencies {
     implementation dependency.gson
 
     testImplementation dependency.junit
+    testImplementation (dependency.robolectric) {
+        // https://github.com/robolectric/robolectric/issues/5245
+        exclude group: 'com.google.auto.service', module: 'auto-service'
+    }
+    testImplementation project(path: ':testmodels')
+    testImplementation project(path: ':testutils')
 }

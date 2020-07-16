@@ -17,7 +17,6 @@ package com.amplifyframework.core;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
-import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -33,6 +32,7 @@ import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.storage.StorageCategory;
+import com.amplifyframework.util.Empty;
 
 import java.util.LinkedHashMap;
 import java.util.Objects;
@@ -174,7 +174,7 @@ public final class Amplify {
             final P plugin, final RegistryUpdateType registryUpdateType) throws AmplifyException {
 
         synchronized (CONFIGURATION_LOCK) {
-            if (TextUtils.isEmpty(plugin.getPluginKey())) {
+            if (Empty.check(plugin.getPluginKey())) {
                 throw new AmplifyException(
                         "Plugin key was missing for + " + plugin.getClass().getSimpleName(),
                         "This should never happen - contact the plugin developers to find out why this is."
