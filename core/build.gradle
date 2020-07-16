@@ -55,3 +55,20 @@ dependencies {
 
     debugImplementation "androidx.fragment:fragment-testing:$fragment_version"
 }
+
+afterEvaluate {
+    // This reduces the amount of desugaring warnings.
+    // See https://issuetracker.google.com/issues/157681341
+    // This will be fixed in AGP 4.1.0+.
+    it.android.buildTypes.debug.debuggable = false
+
+    // Disables this warning:
+    // warning: [classfile] MethodParameters attribute
+    // introduced in version 52.0 class files is ignored in
+    // version 51.0 class files
+    // Root project has -Werror, so this warning
+    // would fail the build, otherwise.
+    it.tasks.withType(JavaCompile) {
+        options.compilerArgs << '-Xlint:-classfile'
+    }
+}
