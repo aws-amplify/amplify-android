@@ -21,6 +21,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Time;
 
 import java.util.Arrays;
@@ -247,6 +248,27 @@ public final class AppSyncMocking {
                 any() // Consumer<DataStoreException>
             );
             return SyncConfigurator.this;
+        }
+
+        /**
+         * Triggers an exception when invoking the sync method.
+         * @param dataStoreException The exception that will be used for the mock.
+         * @param <T> Type of models for which a response is mocked
+         * @return The same Configurator instance, to enable chaining of calls
+         */
+        public <T extends Model> SyncConfigurator mockFailure(DataStoreException dataStoreException) {
+            doAnswer(invocation -> {
+                final int errorConsumerPosition = 3;
+                final Consumer<DataStoreException> consumer = invocation.getArgument(errorConsumerPosition);
+                consumer.accept(dataStoreException);
+                return new NoOpCancelable();
+            }).when(appSync).sync(
+                any(), // Item class to sync
+                any(), // last sync time
+                any(), // Consumer<Iterable<ModelWithMetadata<T>>>
+                any() // Consumer<DataStoreException>
+            );
+            return this;
         }
     }
 }

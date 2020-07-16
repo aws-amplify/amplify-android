@@ -1,5 +1,15 @@
 {
-  "query": "mutation DeletePerson($input: DeletePersonInput!, $condition: ModelPersonConditionInput){ deletePerson(input: $input, condition: $condition) { age dob first_name id last_name relationship }}",
+  "query": "mutation DeletePerson($condition: ModelPersonConditionInput, $input: DeletePersonInput!) {
+  deletePerson(condition: $condition, input: $input) {
+    age
+    dob
+    first_name
+    id
+    last_name
+    relationship
+  }
+}
+",
   "variables": {
     "input": {
       "id": "dfcdac69-0662-41df-a67b-48c62a023f97"

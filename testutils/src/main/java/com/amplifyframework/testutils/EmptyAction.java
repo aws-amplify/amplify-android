@@ -34,7 +34,7 @@ public final class EmptyAction implements Action {
      * @return A new {@link EmptyAction}
      */
     @NonNull
-    public static EmptyAction instance() {
+    public static EmptyAction create() {
         return new EmptyAction();
     }
 }

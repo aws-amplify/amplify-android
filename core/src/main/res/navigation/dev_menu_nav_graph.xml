@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
    Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
    Licensed under the Apache License, Version 2.0 (the "License").
    You may not use this file except in compliance with the License.
    A copy of the License is located at
-
     http://aws.amazon.com/apache2.0
-
    or in the "license" file accompanying this file. This file is distributed
    on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
    express or implied. See the License for the specific language governing
@@ -16,57 +13,40 @@
 
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/dev_menu_nav_graph"
-    app:startDestination="@id/main_view">
+    app:startDestination="@id/main_fragment">
 
     <fragment
-        android:id="@+id/main_view"
-        android:name="com.amplifyframework.core.DevMenuMainView"
-        tools:layout="@layout/fragment_main_view" >
+        android:id="@+id/main_fragment"
+        android:name="com.amplifyframework.core.DevMenuMainFragment"
+        android:label="@string/menu_title">
         <action
-            android:id="@+id/show_file_issue_view"
-            app:destination="@id/file_issue_view" />
+            android:id="@+id/show_file_issue"
+            app:destination="@id/file_issue_fragment" />
         <action
-            android:id="@+id/show_env_info_view"
-            app:destination="@id/environment_view" />
+            android:id="@+id/show_env_info"
+            app:destination="@id/environment_fragment" />
         <action
-            android:id="@+id/show_device_info_view"
-            app:destination="@id/device_view" />
+            android:id="@+id/show_device_info"
+            app:destination="@id/device_fragment" />
         <action
-            android:id="@+id/show_logs_view"
-            app:destination="@id/logs_view" />
+            android:id="@+id/show_logs"
+            app:destination="@id/logs_fragment" />
     </fragment>
     <fragment
-        android:id="@+id/environment_view"
-        android:name="com.amplifyframework.core.DevMenuEnvironmentView"
-        tools:layout="@layout/fragment_environment_view" >
-        <action
-            android:id="@+id/env_view_to_main_view"
-            app:destination="@id/main_view" />
-    </fragment>
+        android:id="@+id/environment_fragment"
+        android:name="com.amplifyframework.core.DevMenuEnvironmentFragment"
+        android:label="@string/env_view_title" />
     <fragment
-        android:id="@+id/device_view"
-        android:name="com.amplifyframework.core.DevMenuDeviceView"
-        tools:layout="@layout/fragment_device_view" >
-        <action
-            android:id="@+id/device_view_to_main_view"
-            app:destination="@id/main_view" />
-    </fragment>
+        android:id="@+id/device_fragment"
+        android:name="com.amplifyframework.core.DevMenuDeviceFragment"
+        android:label="@string/device_view_title" />
     <fragment
-        android:id="@+id/logs_view"
-        android:name="com.amplifyframework.core.DevMenuLogsView"
-        tools:layout="@layout/fragment_logs_view" >
-        <action
-            android:id="@+id/logs_view_to_main_view"
-            app:destination="@id/main_view" />
-    </fragment>
+        android:id="@+id/logs_fragment"
+        android:name="com.amplifyframework.core.DevMenuLogsFragment"
+        android:label="@string/logs_view_title" />
     <fragment
-        android:id="@+id/file_issue_view"
-        android:name="com.amplifyframework.core.DevMenuFileIssueView"
-        tools:layout="@layout/fragment_file_issue_view" >
-        <action
-            android:id="@+id/file_issue_view_to_main_view"
-            app:destination="@id/main_view" />
-    </fragment>
+        android:id="@+id/file_issue_fragment"
+        android:name="com.amplifyframework.core.DevMenuFileIssueFragment"
+        android:label="@string/file_issue_view_title" />
 </navigation>

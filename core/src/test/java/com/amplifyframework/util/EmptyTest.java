@@ -63,4 +63,21 @@ public final class EmptyTest {
         //noinspection ConstantConditions
         assertTrue(Empty.check(nullMap));
     }
+
+    /**
+     * An empty String should evaluated as empty.
+     */
+    @Test
+    public void emptyStringIsEmpty() {
+        assertTrue(Empty.check(""));
+    }
+
+    /**
+     * A null String should evaluate as empty.
+     */
+    @Test
+    public void nullStringIsEmpty() {
+        String nullString = null;
+        assertTrue(Empty.check(nullString));
+    }
 }

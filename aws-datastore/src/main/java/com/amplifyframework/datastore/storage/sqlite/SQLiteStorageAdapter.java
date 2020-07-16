@@ -49,7 +49,7 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Immutable;
-import com.amplifyframework.util.Quotes;
+import com.amplifyframework.util.Wrap;
 
 import com.google.gson.Gson;
 
@@ -776,9 +776,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         // SELECT 1 FROM '{tableName}' WHERE {columnName} = '{columnValue}'
         final String queryString = "" +
             SqlKeyword.SELECT + SqlKeyword.DELIMITER + "1" + SqlKeyword.DELIMITER +
-            SqlKeyword.FROM + SqlKeyword.DELIMITER + Quotes.wrapInSingle(tableName) + SqlKeyword.DELIMITER +
+            SqlKeyword.FROM + SqlKeyword.DELIMITER + Wrap.inSingleQuotes(tableName) + SqlKeyword.DELIMITER +
             SqlKeyword.WHERE + SqlKeyword.DELIMITER + columnName + SqlKeyword.DELIMITER +
-            SqlKeyword.EQUAL + SqlKeyword.DELIMITER + Quotes.wrapInSingle(columnValue);
+            SqlKeyword.EQUAL + SqlKeyword.DELIMITER + Wrap.inSingleQuotes(columnValue);
         try (Cursor cursor = databaseConnectionHandle.rawQuery(queryString, null)) {
             return cursor.getCount() > 0;
         }

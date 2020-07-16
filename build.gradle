@@ -48,6 +48,7 @@ ext {
     targetSdkVersion = 29
 
     awsSdkVersion = '2.16.12'
+    navigationVersion = '2.3.0'
     dependency = [
         android: [
             desugartools: 'com.android.tools:desugar_jdk_libs:1.0.5',
@@ -57,11 +58,20 @@ ext {
             annotation: 'androidx.annotation:annotation:1.1.0',
             appcompat: 'androidx.appcompat:appcompat:1.1.0',
             core: 'androidx.core:core:1.3.0',
+            nav: [
+                fragment: "androidx.navigation:navigation-fragment:$navigationVersion",
+                fragmentktx: "androidx.navigation:navigation-fragment-ktx:$navigationVersion",
+                ui: "androidx.navigation:navigation-ui:$navigationVersion",
+                uiktx: "androidx.navigation:navigation-ui-ktx:$navigationVersion",
+                dynamicfeatures: "androidx.navigation:navigation-dynamic-features-fragment:$navigationVersion",
+                navtesting: "androidx.navigation:navigation-testing:$navigationVersion"
+            ],
             multidex: 'androidx.multidex:multidex:2.0.1',
             test: [
                 core: 'androidx.test:core:1.2.0',
                 runner: 'androidx.test:runner:1.2.0',
-                junit: 'androidx.test.ext:junit:1.1.1'
+                junit: 'androidx.test.ext:junit:1.1.1',
+                espresso: 'androidx.test.espresso:espresso-core:3.2.0'
             ]
         ],
 
