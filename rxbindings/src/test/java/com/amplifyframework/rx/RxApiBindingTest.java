@@ -24,6 +24,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
@@ -380,14 +381,14 @@ public final class RxApiBindingTest {
     }
 
     private static <T> GraphQLRequest<T> createMockMutationRequest(Class<T> responseType) {
-        return new GraphQLRequest<>("", responseType, null);
+        return new SimpleGraphQLRequest<>("", responseType, null);
     }
 
     private static <T> GraphQLRequest<Iterable<T>> createMockListRequest(Class<T> responseType) {
-        return new GraphQLRequest<>("", responseType, null);
+        return new SimpleGraphQLRequest<>("", responseType, null);
     }
 
     private static <T> GraphQLRequest<T> createMockSubscriptionRequest(Class<T> responseType) {
-        return new GraphQLRequest<>("", responseType, null);
+        return new SimpleGraphQLRequest<>("", responseType, null);
     }
 }

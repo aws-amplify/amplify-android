@@ -1,0 +1,24 @@
+type OwnerAuth @model
+@auth(rules: [{ allow: owner }])
+{
+  id: ID!
+  title: String!
+}
+
+
+type OwnerAuthReadUpdateOnly @model
+@auth(rules: [{ allow: owner, operations: [create, delete] }])
+{
+  id: ID!
+  title: String!
+}
+
+type OwnerAuthCustomField @model
+@auth(rules: [
+  { allow: owner }, # Defaults to use the "owner" field.
+  { allow: owner, ownerField: "editors", operations: [create, update, read] } # Authorize the update mutation and both queries.
+])
+{
+  id: ID!
+  title: String!
+}

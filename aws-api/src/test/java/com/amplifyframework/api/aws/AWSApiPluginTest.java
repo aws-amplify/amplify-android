@@ -17,16 +17,32 @@ package com.amplifyframework.api.aws;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.PaginatedResult;
+import com.amplifyframework.api.graphql.QueryType;
+import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelPagination;
 import com.amplifyframework.api.graphql.model.ModelQuery;
+import com.amplifyframework.api.graphql.model.ModelSubscription;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.NoOpConsumer;
+import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelOperation;
+import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -37,6 +53,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -52,8 +69,11 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link AWSApiPlugin}.
@@ -63,6 +83,7 @@ public final class AWSApiPluginTest {
     private MockWebServer webServer;
     private HttpUrl baseUrl;
     private AWSApiPlugin plugin;
+    private CognitoUserPoolsAuthProvider authProvider;
 
     /**
      * Sets up the test.
@@ -75,6 +96,8 @@ public final class AWSApiPluginTest {
         webServer = new MockWebServer();
         webServer.start(8080);
         baseUrl = webServer.url("/");
+        authProvider = mock(CognitoUserPoolsAuthProvider.class);
+        when(authProvider.getUsername()).thenReturn("johndoe");
 
         JSONObject configuration = new JSONObject()
             .put("graphQlApi", new JSONObject()
@@ -84,7 +107,10 @@ public final class AWSApiPluginTest {
                 .put("authorizationType", "API_KEY")
                 .put("apiKey", "api-key")
             );
-        this.plugin = new AWSApiPlugin();
+
+        this.plugin = new AWSApiPlugin(ApiAuthProviders.builder()
+                .cognitoUserPoolsAuthProvider(authProvider)
+                .build());
         this.plugin.configure(configuration, ApplicationProvider.getApplicationContext());
     }
 
@@ -233,4 +259,126 @@ public final class AWSApiPluginTest {
         String selectedApi = plugin.getSelectedApiName(EndpointType.GRAPHQL);
         assertEquals("graphQlApi", selectedApi);
     }
+
+    /**
+     * Test that request is serialized as expected, with owner variable.
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void ownerArgumentIsAddedAndSerializedInRequest() throws JSONException {
+        GraphQLRequest<OwnerAuth> request = ModelSubscription.onCreate(OwnerAuth.class);
+        GraphQLOperation<OwnerAuth> operation = plugin.subscribe(request,
+                NoOpConsumer.create(),
+                NoOpConsumer.create(),
+                NoOpConsumer.create(),
+                EmptyAction.create());
+
+        JSONAssert.assertEquals(Resources.readAsString("request-owner-auth.json"),
+                operation.getRequest().getContent(),
+                true);
+    }
+
+    /**
+     * Verify that owner argument is required for ON_CREATE subscription if ModelOperation.CREATE is specified.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
+    @Test
+    public void ownerArgumentAddedForOnCreate() throws AmplifyException {
+        assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_CREATE));
+        assertTrue(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_CREATE));
+    }
+
+    /**
+     * Verify that owner argument is required for ON_UPDATE subscription if ModelOperation.UPDATE is specified.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
+    @Test
+    public void ownerArgumentAddedForOnUpdate() throws AmplifyException {
+        assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_UPDATE));
+        assertTrue(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_UPDATE));
+    }
+
+    /**
+     * Verify that owner argument is required for ON_DELETE subscription if ModelOperation.DELETE is specified.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
+    @Test
+    public void ownerArgumentAddedForOnDelete() throws AmplifyException {
+        assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_DELETE));
+        assertTrue(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_DELETE));
+    }
+
+    /**
+     * Verify owner argument is NOT required if the subscription type is not one of the restricted operations.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
+    @Test
+    public void ownerArgumentNotAddedIfOperationNotRestricted() throws AmplifyException {
+        assertFalse(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_UPDATE));
+        assertFalse(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_UPDATE));
+        assertFalse(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_UPDATE));
+
+        assertFalse(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_DELETE));
+        assertFalse(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_DELETE));
+        assertFalse(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_DELETE));
+
+        assertFalse(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_CREATE));
+        assertFalse(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_CREATE));
+        assertFalse(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_CREATE));
+    }
+
+    /**
+     * Verify owner argument is NOT added if authStrategy is not OWNER.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
+    @Test
+    public void ownerArgumentNotAddedIfNotOwnerStrategy() throws AmplifyException {
+        assertFalse(isOwnerArgumentAdded(Group.class, SubscriptionType.ON_CREATE));
+    }
+
+    /**
+     * Verify owner argument NOT added for Query or Mutation operations.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
+    @Test
+    public void verifyOwnerArgumentNotAddedIfNotSubscriptionOperation() throws AmplifyException {
+        assertFalse(isOwnerArgumentAdded(Owner.class, QueryType.GET));
+        assertFalse(isOwnerArgumentAdded(Owner.class, MutationType.CREATE));
+    }
+
+    private boolean isOwnerArgumentAdded(Class<? extends Model> clazz, Operation operation)
+            throws AmplifyException {
+        AppSyncGraphQLRequest<Model> request = AppSyncGraphQLRequest.builder()
+                .modelClass(clazz)
+                .operation(operation)
+                .requestOptions(new ApiGraphQLRequestOptions())
+                .responseType(clazz)
+                .build();
+
+        GraphQLOperation<Model> graphQLOperation = plugin.subscribe(request,
+                NoOpConsumer.create(),
+                NoOpConsumer.create(),
+                NoOpConsumer.create(),
+                EmptyAction.create());
+
+        return "johndoe".equals(graphQLOperation.getRequest().getVariables().get("owner"));
+    }
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
+    private abstract class Owner implements Model { }
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, operations = ModelOperation.CREATE)})
+    private abstract class OwnerCreate implements Model { }
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, operations = ModelOperation.READ)})
+    private abstract class OwnerRead implements Model { }
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, operations = ModelOperation.UPDATE)})
+    private abstract class OwnerUpdate implements Model { }
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, operations = ModelOperation.DELETE)})
+    private abstract class OwnerDelete implements Model { }
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.GROUPS)})
+    private abstract class Group implements Model { }
 }

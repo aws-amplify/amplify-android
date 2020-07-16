@@ -21,12 +21,17 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
+import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.Operation;
+import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.HttpMethod;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
@@ -34,6 +39,9 @@ import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.AuthRule;
+import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONObject;
@@ -41,6 +49,7 @@ import org.json.JSONObject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -193,13 +202,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> mutate(
+    public <R> GraphQLOperation<R> mutate(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull GraphQLRequest<R> graphQLRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         try {
-            final GraphQLOperation<T> operation =
+            final GraphQLOperation<R> operation =
                     buildAppSyncGraphQLOperation(apiName, graphQLRequest, onResponse, onFailure);
             operation.start();
             return operation;
@@ -236,11 +245,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> subscribe(
+    public <R> GraphQLOperation<R> subscribe(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull GraphQLRequest<R> graphQLRequest,
             @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
+            @NonNull Consumer<GraphQLResponse<R>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete) {
         final ClientDetails clientDetails = apiDetails.get(apiName);
@@ -255,9 +264,27 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             return null;
         }
 
-        SubscriptionOperation<T> operation = SubscriptionOperation.<T>builder()
+        GraphQLRequest<R> request = graphQLRequest;
+        if (request instanceof AppSyncGraphQLRequest) {
+            try {
+                AppSyncGraphQLRequest<R> appSyncRequest = (AppSyncGraphQLRequest<R>) request;
+                for (AuthRule authRule : appSyncRequest.getModelSchema().getAuthRules()) {
+                    if (isOwnerArgumentRequired(authRule, appSyncRequest.getOperation())) {
+                        request = appSyncRequest.newBuilder()
+                                .variable(authRule.getOwnerFieldOrDefault(), "String!", getUsername())
+                                .build();
+                    }
+                }
+            } catch (AmplifyException exception) {
+                onSubscriptionFailure.accept(new ApiException("Failed to set owner field on AppSyncGraphQLRequest",
+                        exception, "See attached exception for details."));
+                return null;
+            }
+        }
+
+        SubscriptionOperation<R> operation = SubscriptionOperation.<R>builder()
             .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
-            .graphQlRequest(graphQLRequest)
+            .graphQlRequest(request)
             .responseFactory(gqlResponseFactory)
             .executorService(executorService)
             .onSubscriptionStart(onSubscriptionEstablished)
@@ -267,6 +294,45 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             .build();
         operation.start();
         return operation;
+    }
+
+    private boolean isOwnerArgumentRequired(AuthRule authRule, Operation operation) {
+        if (!AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+            return false;
+        }
+        List<ModelOperation> operations = authRule.getOperationsOrDefault();
+        if (SubscriptionType.ON_CREATE.equals(operation) && operations.contains(ModelOperation.CREATE)) {
+            return true;
+        }
+        if (SubscriptionType.ON_UPDATE.equals(operation) && operations.contains(ModelOperation.UPDATE)) {
+            return true;
+        }
+        if (SubscriptionType.ON_DELETE.equals(operation) && operations.contains(ModelOperation.DELETE)) {
+            return true;
+        }
+        return false;
+    }
+
+    private String getUsername() throws ApiException {
+        CognitoUserPoolsAuthProvider cognitoProvider = authProvider.getCognitoUserPoolsAuthProvider();
+        if (cognitoProvider == null) {
+            try {
+                cognitoProvider = new DefaultCognitoUserPoolsAuthProvider();
+            } catch (ApiException exception) {
+                throw new ApiException(
+                        "Attempted to subscribe to a model with owner based authorization without a Cognito provider",
+                        "Did you add the AWSCognitoAuthPlugin to Amplify before configuring it?"
+                );
+            }
+        }
+        String username = cognitoProvider.getUsername();
+        if (username == null) {
+            throw new ApiException(
+                    "Attempted to subscribe to a model with owner based authorization without a username",
+                    "Make sure that a user is logged in before subscribing to a model with owner based auth"
+            );
+        }
+        return username;
     }
 
     @Nullable

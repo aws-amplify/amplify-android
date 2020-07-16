@@ -54,7 +54,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
             if (typeOfR instanceof ParameterizedType
                     && ((ParameterizedType) typeOfR).getRawType().equals(PaginatedResult.class)) {
                 AppSyncPaginatedResultDeserializer paginatedResultDeserializer =
-                        new AppSyncPaginatedResultDeserializer((GraphQLRequest<PaginatedResult<Model>>) request);
+                        new AppSyncPaginatedResultDeserializer((AppSyncGraphQLRequest<PaginatedResult<Model>>) request);
                 Gson paginatedResultGson = gson
                         .newBuilder()
                         .registerTypeAdapter(PaginatedResult.class, paginatedResultDeserializer)
