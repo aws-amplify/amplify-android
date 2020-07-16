@@ -68,7 +68,6 @@ final class SubscriptionEndpoint {
     private final GraphQLResponse.Factory responseFactory;
     private final TimeoutWatchdog timeoutWatchdog;
     private final Set<String> pendingSubscriptionIds;
-    private final String subscriptionUrl;
     private final OkHttpClient okHttpClient;
     private WebSocket webSocket;
     private AmplifyWebSocketListener webSocketListener;
@@ -84,7 +83,6 @@ final class SubscriptionEndpoint {
         this.authorizer = Objects.requireNonNull(authorizer);
         this.timeoutWatchdog = new TimeoutWatchdog();
         this.pendingSubscriptionIds = Collections.synchronizedSet(new HashSet<>());
-        this.subscriptionUrl = buildConnectionRequestUrl();
         this.okHttpClient = new OkHttpClient.Builder()
             .addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string))
             .retryOnConnectionFailure(true)
@@ -107,10 +105,16 @@ final class SubscriptionEndpoint {
         // force a new connection to be created.
         if (webSocketListener == null || webSocketListener.isDisconnectedState()) {
             webSocketListener = new AmplifyWebSocketListener();
-            webSocket = okHttpClient.newWebSocket(new Request.Builder()
-                .url(subscriptionUrl)
-                .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
-                .build(), webSocketListener);
+            try {
+                webSocket = okHttpClient.newWebSocket(new Request.Builder()
+                    .url(buildConnectionRequestUrl())
+                    .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
+                    .build(), webSocketListener);
+            } catch (ApiException apiException) {
+                onSubscriptionError.accept(apiException);
+                return;
+            }
+
         }
         final String subscriptionId = UUID.randomUUID().toString();
         pendingSubscriptionIds.add(subscriptionId);
