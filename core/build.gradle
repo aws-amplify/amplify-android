@@ -40,7 +40,6 @@ dependencies {
     }
     testImplementation dependency.rxjava
     testImplementation dependency.androidx.test.core
-    testImplementation dependency.androidx.test.espresso
     testImplementation dependency.jsonassert
 
     androidTestImplementation (project(path: ':testutils')) {

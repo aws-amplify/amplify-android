@@ -23,9 +23,10 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.espresso.matcher.ViewMatchers;
 
+import com.amplifyframework.testutils.Sleep;
+
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -34,23 +35,19 @@ import static androidx.test.espresso.Espresso.onView;
  * Tests the navigation behavior for {@link DevMenuMainFragment}.
  */
 public final class DevMenuMainViewInstrumentationTest {
+    // Amount of time (in milliseconds) to wait before starting
+    // a test, to allow any animations to complete.
+    private static final int START_TEST_DELAY_MS = 500;
     // A navigation host controller for testing.
     private static TestNavHostController navHostController;
 
     /**
-     * Initialize the mock NavController.
-     */
-    @BeforeClass
-    public static void initialize() {
-        navHostController = new TestNavHostController(ApplicationProvider.getApplicationContext());
-        navHostController.setGraph(R.navigation.dev_menu_nav_graph);
-    }
-
-    /**
-     * Go to the main view of the developer menu.
+     * Go to the main screen of the developer menu.
      */
     @Before
     public void resetView() {
+        navHostController = new TestNavHostController(ApplicationProvider.getApplicationContext());
+        navHostController.setGraph(R.navigation.dev_menu_nav_graph);
         FragmentScenario<DevMenuMainFragment> mainMenuScenario =
                 FragmentScenario.launchInContainer(DevMenuMainFragment.class);
         mainMenuScenario.onFragment(fragment -> Navigation.setViewNavController(fragment.requireView(),
@@ -64,10 +61,7 @@ public final class DevMenuMainViewInstrumentationTest {
      */
     @Test
     public void testNavigationToEnvInfoScreen() {
-        onView(ViewMatchers.withId(R.id.env_button)).perform(ViewActions.click());
-        NavDestination curDestination = navHostController.getCurrentDestination();
-        Assert.assertNotNull(curDestination);
-        Assert.assertEquals(curDestination.getId(), R.id.environment_fragment);
+        testNavigationOnButtonPress(R.id.env_button, R.id.environment_fragment);
     }
 
     /**
@@ -76,10 +70,7 @@ public final class DevMenuMainViewInstrumentationTest {
      */
     @Test
     public void testNavigationToDeviceInfoScreen() {
-        onView(ViewMatchers.withId(R.id.device_button)).perform(ViewActions.click());
-        NavDestination curDestination = navHostController.getCurrentDestination();
-        Assert.assertNotNull(curDestination);
-        Assert.assertEquals(curDestination.getId(), R.id.device_fragment);
+        testNavigationOnButtonPress(R.id.device_button, R.id.device_fragment);
     }
 
     /**
@@ -88,10 +79,7 @@ public final class DevMenuMainViewInstrumentationTest {
      */
     @Test
     public void testNavigationToLogsScreen() {
-        onView(ViewMatchers.withId(R.id.logs_button)).perform(ViewActions.click());
-        NavDestination curDestination = navHostController.getCurrentDestination();
-        Assert.assertNotNull(curDestination);
-        Assert.assertEquals(curDestination.getId(), R.id.logs_fragment);
+        testNavigationOnButtonPress(R.id.logs_button, R.id.logs_fragment);
     }
 
     /**
@@ -100,9 +88,20 @@ public final class DevMenuMainViewInstrumentationTest {
      */
     @Test
     public void testNavigationToFileIssueScreen() {
-        onView(ViewMatchers.withId(R.id.file_issue_button)).perform(ViewActions.click());
+        testNavigationOnButtonPress(R.id.file_issue_button, R.id.file_issue_fragment);
+    }
+
+    /**
+     * Test that the app is navigated to the destination with the given ID when
+     * the button with the given ID is pressed.
+     * @param buttonId ID of the button pressed
+     * @param destinationId ID of the navigation destination
+     */
+    private void testNavigationOnButtonPress(int buttonId, int destinationId) {
+        Sleep.milliseconds(START_TEST_DELAY_MS);
+        onView(ViewMatchers.withId(buttonId)).perform(ViewActions.click());
         NavDestination curDestination = navHostController.getCurrentDestination();
         Assert.assertNotNull(curDestination);
-        Assert.assertEquals(curDestination.getId(), R.id.file_issue_fragment);
+        Assert.assertEquals(curDestination.getId(), destinationId);
     }
 }
