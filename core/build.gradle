@@ -18,8 +18,6 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
 dependencies {
-    def fragment_version = "1.2.5"
-
     implementation dependency.androidx.v4support
     implementation dependency.androidx.annotation
     implementation dependency.androidx.nav.fragment
@@ -52,7 +50,7 @@ dependencies {
     androidTestImplementation dependency.androidx.test.espresso
     androidTestImplementation dependency.androidx.nav.navtesting
 
-    debugImplementation "androidx.fragment:fragment-testing:$fragment_version"
+    debugImplementation dependency.androidx.nav.fragmenttesting
 }
 
 afterEvaluate {

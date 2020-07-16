@@ -48,6 +48,7 @@ ext {
     targetSdkVersion = 29
 
     awsSdkVersion = '2.16.12'
+    fragmentVersion = '1.2.5'
     navigationVersion = '2.3.0'
     dependency = [
         android: [
@@ -64,7 +65,8 @@ ext {
                 ui: "androidx.navigation:navigation-ui:$navigationVersion",
                 uiktx: "androidx.navigation:navigation-ui-ktx:$navigationVersion",
                 dynamicfeatures: "androidx.navigation:navigation-dynamic-features-fragment:$navigationVersion",
-                navtesting: "androidx.navigation:navigation-testing:$navigationVersion"
+                navtesting: "androidx.navigation:navigation-testing:$navigationVersion",
+                fragmenttesting: "androidx.fragment:fragment-testing:$fragmentVersion"
             ],
             multidex: 'androidx.multidex:multidex:2.0.1',
             test: [
