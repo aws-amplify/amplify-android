@@ -34,7 +34,6 @@
             android:layout_width="match_parent"
             android:layout_height="?android:attr/actionBarSize"
             android:minHeight="?android:attr/actionBarSize"
-            android:layout_marginBottom="15dp"
             android:theme="@android:style/Widget.DeviceDefault.ActionBar.Solid"
             app:titleTextAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
         </androidx.appcompat.widget.Toolbar>
