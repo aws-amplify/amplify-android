@@ -36,6 +36,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import com.amplifyframework.util.Time;
@@ -58,11 +59,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -70,7 +71,6 @@ import static org.mockito.Mockito.when;
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
-    private static final int ASSERTION_TIMEOUT_MS = 1000;
     private Context context;
     private ModelProvider modelProvider;
     private AtomicInteger subscriptionStartedCounter;
@@ -115,12 +115,17 @@ public final class AWSDataStorePluginTest {
      */
     @Test
     public void configureAndInitializeInApiMode() throws JSONException, AmplifyException {
+        HubAccumulator orchestratorInitObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.REMOTE_SYNC_STARTED, 1)
+                .start();
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
         AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
+
+        orchestratorInitObserver.await();
         assertRemoteSubscriptionsStarted();
     }
 
@@ -174,6 +179,10 @@ public final class AWSDataStorePluginTest {
         // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
+        HubAccumulator orchestratorInitObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.REMOTE_SYNC_STARTED, 1)
+                .start();
+        orchestratorInitObserver.await();
         assertRemoteSubscriptionsStarted();
 
         // Setup objects
@@ -203,7 +212,11 @@ public final class AWSDataStorePluginTest {
         Person result1 = synchronousDataStore.get(Person.class, person1.getId());
         assertEquals(person1, result1);
 
-        verify(mockApiCategory, timeout(ASSERTION_TIMEOUT_MS).atLeastOnce())
+        HubAccumulator apiInteractionObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD, 1)
+                .start();
+        apiInteractionObserver.await();
+        verify(mockApiCategory, atLeastOnce())
             .mutate(argThat(person1Matcher), any(), any());
 
         // Mock responses for person 2
@@ -222,15 +235,27 @@ public final class AWSDataStorePluginTest {
             return mock(GraphQLOperation.class);
         }).when(mockApiPlugin).mutate(any(), any(), any());
 
+        orchestratorInitObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.REMOTE_SYNC_STARTED, 1)
+                .start();
+
         synchronousDataStore.clear();
         assertRemoteSubscriptionsCancelled();
+
+        orchestratorInitObserver.await();
+        assertRemoteSubscriptionsStarted();
 
         // Save person 2
         synchronousDataStore.save(person2);
         Person result2 = synchronousDataStore.get(Person.class, person2.getId());
         assertEquals(person2, result2);
 
-        verify(mockApiCategory, timeout(ASSERTION_TIMEOUT_MS).atLeastOnce())
+        apiInteractionObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD, 1)
+                .start();
+        apiInteractionObserver.await();
+
+        verify(mockApiCategory, atLeastOnce())
             .mutate(argThat(person2Matcher), any(), any());
     }
 

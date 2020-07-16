@@ -20,5 +20,5 @@ import com.amplifyframework.core.Consumer;
 /**
  * Just a ~type-alias for a consumer of DataStoreException.
  */
-interface DataStoreErrorHandler extends Consumer<DataStoreException> {
+public interface DataStoreErrorHandler extends Consumer<DataStoreException> {
 }
