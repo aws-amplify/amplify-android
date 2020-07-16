@@ -1,0 +1,11 @@
+{
+  "date": "2001-02-03",
+  "dateTime": "2001-02-03T01:30:00Z",
+  "id": "45a5f600-8aa8-41ac-a529-aed75036f5be",
+  "name": "meeting0",
+  "time": "01:22:00",
+  "timestamp": 1234567890,
+  "_deleted": false,
+  "_version": 42,
+  "_lastChangedAt": 1594858827
+}
