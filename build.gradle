@@ -48,6 +48,7 @@ ext {
     targetSdkVersion = 29
 
     awsSdkVersion = '2.16.12'
+    fragmentVersion = '1.2.5'
     navigationVersion = '2.3.0'
     dependency = [
         android: [
@@ -69,7 +70,10 @@ ext {
             test: [
                 core: 'androidx.test:core:1.2.0',
                 runner: 'androidx.test:runner:1.2.0',
-                junit: 'androidx.test.ext:junit:1.1.1'
+                junit: 'androidx.test.ext:junit:1.1.1',
+                espresso: 'androidx.test.espresso:espresso-core:3.2.0',
+                navigation: "androidx.navigation:navigation-testing:$navigationVersion",
+                fragment: "androidx.fragment:fragment-testing:$fragmentVersion"
             ]
         ],
 
@@ -122,6 +126,7 @@ private void configureAndroidLibrary(Project project) {
             consumerProguardFiles rootProject.file('configuration/consumer-rules.pro')
 
             testOptions {
+                animationsDisabled = true
                 unitTests {
                     includeAndroidResources = true
                 }
