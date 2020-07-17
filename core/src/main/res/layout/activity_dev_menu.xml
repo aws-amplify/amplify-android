@@ -34,7 +34,6 @@
             android:layout_width="match_parent"
             android:layout_height="?android:attr/actionBarSize"
             android:minHeight="?android:attr/actionBarSize"
-            android:layout_marginBottom="15dp"
             android:theme="@android:style/Widget.DeviceDefault.ActionBar.Solid"
             app:titleTextAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
         </androidx.appcompat.widget.Toolbar>
@@ -43,7 +42,7 @@
             android:id="@+id/nav_host_fragment"
             android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="220dp"
             app:defaultNavHost="true"
             app:navGraph="@navigation/dev_menu_nav_graph"
             tools:ignore="FragmentTagUsage" />
