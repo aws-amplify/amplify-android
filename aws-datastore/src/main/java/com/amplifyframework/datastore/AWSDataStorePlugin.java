@@ -491,6 +491,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private Completable initializeOrchestrator() {
         if (api.getPlugins().isEmpty()) {
+            isOrchestratorReady.set(true);
             return Completable.complete();
         } else {
             // Let's prevent the orchestrator startup from possibly running in main.
