@@ -102,9 +102,20 @@ public final class AWSDataStorePluginTest {
         //Configure DataStore with an empty config (All defaults)
         ApiCategory emptyApiCategory = spy(ApiCategory.class);
         AWSDataStorePlugin standAloneDataStorePlugin = new AWSDataStorePlugin(modelProvider, emptyApiCategory);
+        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(standAloneDataStorePlugin);
         standAloneDataStorePlugin.configure(new JSONObject(), context);
         standAloneDataStorePlugin.initialize(context);
+
+        // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
+        Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
+
         assertSyncProcessorNotStarted();
+
+        Person person1 = createPerson("Test", "Dummy I");
+        synchronousDataStore.save(person1);
+        assertNotNull(person1.getId());
+        Person person1FromDb = synchronousDataStore.get(Person.class, person1.getId());
+        assertEquals(person1, person1FromDb);
     }
 
     /**
