@@ -48,9 +48,8 @@ dependencies {
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
     androidTestImplementation dependency.androidx.test.espresso
-    androidTestImplementation dependency.androidx.nav.navtesting
-
-    debugImplementation dependency.androidx.nav.fragmenttesting
+    androidTestImplementation dependency.androidx.test.navigation
+    androidTestImplementation dependency.androidx.test.fragment
 }
 
 afterEvaluate {

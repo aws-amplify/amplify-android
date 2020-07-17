@@ -24,21 +24,17 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.espresso.matcher.ViewMatchers;
 
-import com.amplifyframework.testutils.Sleep;
-
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import static androidx.test.espresso.Espresso.onView;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests the navigation behavior for {@link DevMenuMainFragment}.
  */
 public final class DevMenuMainViewInstrumentationTest {
-    // Amount of time (in milliseconds) to wait before starting
-    // a test, to allow any animations to complete.
-    private static final int START_TEST_DELAY_MS = 500;
     // A navigation host controller for testing.
     private TestNavHostController navHostController;
 
@@ -51,8 +47,8 @@ public final class DevMenuMainViewInstrumentationTest {
         navHostController.setGraph(R.navigation.dev_menu_nav_graph);
         FragmentScenario<DevMenuMainFragment> mainMenuScenario =
                 FragmentScenario.launchInContainer(DevMenuMainFragment.class);
-        mainMenuScenario.onFragment(fragment -> Navigation.setViewNavController(fragment.requireView(),
-                navHostController));
+        mainMenuScenario.onFragment(fragment ->
+                Navigation.setViewNavController(fragment.requireView(), navHostController));
     }
 
 
@@ -99,10 +95,9 @@ public final class DevMenuMainViewInstrumentationTest {
      * @param destinationId ID of the navigation destination
      */
     private void testNavigationOnButtonPress(@RawRes int buttonId, @RawRes int destinationId) {
-        Sleep.milliseconds(START_TEST_DELAY_MS);
         onView(ViewMatchers.withId(buttonId)).perform(ViewActions.click());
         NavDestination curDestination = navHostController.getCurrentDestination();
-        Assert.assertNotNull(curDestination);
-        Assert.assertEquals(curDestination.getId(), destinationId);
+        assertNotNull(curDestination);
+        assertEquals(curDestination.getId(), destinationId);
     }
 }
