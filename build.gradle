@@ -64,7 +64,7 @@ ext {
                 fragmentktx: "androidx.navigation:navigation-fragment-ktx:$navigationVersion",
                 ui: "androidx.navigation:navigation-ui:$navigationVersion",
                 uiktx: "androidx.navigation:navigation-ui-ktx:$navigationVersion",
-                dynamicfeatures: "androidx.navigation:navigation-dynamic-features-fragment:$navigationVersion",
+                dynamicfeatures: "androidx.navigation:navigation-dynamic-features-fragment:$navigationVersion"
             ],
             multidex: 'androidx.multidex:multidex:2.0.1',
             test: [
