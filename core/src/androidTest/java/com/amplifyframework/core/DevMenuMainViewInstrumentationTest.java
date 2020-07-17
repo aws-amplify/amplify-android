@@ -15,6 +15,7 @@
 
 package com.amplifyframework.core;
 
+import androidx.annotation.RawRes;
 import androidx.fragment.app.testing.FragmentScenario;
 import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
@@ -39,7 +40,7 @@ public final class DevMenuMainViewInstrumentationTest {
     // a test, to allow any animations to complete.
     private static final int START_TEST_DELAY_MS = 500;
     // A navigation host controller for testing.
-    private static TestNavHostController navHostController;
+    private TestNavHostController navHostController;
 
     /**
      * Go to the main screen of the developer menu.
@@ -97,7 +98,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * @param buttonId ID of the button pressed
      * @param destinationId ID of the navigation destination
      */
-    private void testNavigationOnButtonPress(int buttonId, int destinationId) {
+    private void testNavigationOnButtonPress(@RawRes int buttonId, @RawRes int destinationId) {
         Sleep.milliseconds(START_TEST_DELAY_MS);
         onView(ViewMatchers.withId(buttonId)).perform(ViewActions.click());
         NavDestination curDestination = navHostController.getCurrentDestination();
