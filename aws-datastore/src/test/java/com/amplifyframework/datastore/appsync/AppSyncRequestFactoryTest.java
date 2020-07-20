@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
@@ -29,6 +30,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Map;
+
+import edu.emory.mathcs.backport.java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 
@@ -46,7 +49,7 @@ public final class AppSyncRequestFactoryTest {
     public void validateRequestGenerationForBaseSync() throws DataStoreException {
         assertEquals(
             Resources.readAsString("base-sync-request-document-for-blog-owner.txt"),
-            AppSyncRequestFactory.buildSyncDoc(BlogOwner.class, null, null)
+            AppSyncRequestFactory.buildSyncRequest(BlogOwner.class, null, null).getQuery()
         );
     }
 
@@ -56,10 +59,11 @@ public final class AppSyncRequestFactoryTest {
      */
     @Test
     public void validateRequestGenerationForDeltaSync() throws DataStoreException {
-        assertEquals(
-            Resources.readAsString("delta-sync-request-document-for-post.txt"),
-            AppSyncRequestFactory.buildSyncDoc(Post.class, 123123123L, null)
-        );
+        final GraphQLRequest<Iterable<Post>> request = AppSyncRequestFactory
+                .buildSyncRequest(Post.class, 123123123L, null);
+
+        assertEquals(Resources.readAsString("delta-sync-request-document-for-post.txt"), request.getQuery());
+        assertEquals(Collections.singletonMap("lastSync", 123123123L), request.getVariables());
     }
 
     /**
@@ -69,10 +73,10 @@ public final class AppSyncRequestFactoryTest {
     @Test
     public void validateRequestGenerationForPagination() throws DataStoreException {
         final String nextToken = Resources.readAsString("base-sync-request-next-token-value.txt").trim();
-        assertEquals(
-            Resources.readAsString("base-sync-request-paginating-blog-owners.txt"),
-            AppSyncRequestFactory.buildSyncDoc(BlogOwner.class, null, nextToken)
-        );
+        final GraphQLRequest<Iterable<Post>> request = AppSyncRequestFactory
+                .buildSyncRequest(BlogOwner.class, null, nextToken);
+        assertEquals(Resources.readAsString("base-sync-request-paginating-blog-owners.txt"), request.getQuery());
+        assertEquals(Collections.singletonMap("nextToken", nextToken), request.getVariables());
     }
 
     /**
