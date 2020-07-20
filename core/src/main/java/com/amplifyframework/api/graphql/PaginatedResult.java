@@ -15,15 +15,13 @@
 
 package com.amplifyframework.api.graphql;
 
-import com.amplifyframework.core.model.Model;
-
 /**
  * Represents a page of results returned from an API.  Specifically, contains the list of items in the page, as well as
  * a GraphQLRequest which can be used to obtain the next page.
  *
- * @param <T> Type of the items in the list.  Must extend Model.
+ * @param <T> Type of the items in the list.
  */
-public abstract class PaginatedResult<T extends Model> {
+public abstract class PaginatedResult<T> {
 
     /**
      * Returns the list of items obtained from an API query.

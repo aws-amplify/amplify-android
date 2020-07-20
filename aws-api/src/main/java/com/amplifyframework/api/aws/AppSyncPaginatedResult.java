@@ -21,9 +21,8 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.core.model.Model;
 
-final class AppSyncPaginatedResult<T extends Model> extends PaginatedResult<T> {
+final class AppSyncPaginatedResult<T> extends PaginatedResult<T> {
     private final GraphQLRequest<PaginatedResult<T>> requestForNextResult;
     private final Iterable<T> items;
 

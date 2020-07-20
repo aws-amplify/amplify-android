@@ -1,4 +1,5 @@
-subscription OnDeleteBlogOwner {
+{
+  "query": "subscription OnDeleteBlogOwner {
   onDeleteBlogOwner {
     _deleted
     _lastChangedAt
@@ -10,4 +11,7 @@ subscription OnDeleteBlogOwner {
     name
     wea
   }
+}
+",
+  "variables": null
 }
