@@ -20,8 +20,10 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.rest.HttpMethod;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.Map;
 import java.util.Objects;
 
@@ -68,7 +70,11 @@ public final class RestRequestFactory {
             }
         }
 
-        return builder.build().url();
+        try {
+            return new URL(URLDecoder.decode(builder.build().url().toString(), "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new MalformedURLException(e.getMessage());
+        }
     }
 
     /**
