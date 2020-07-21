@@ -141,7 +141,7 @@ public final class QueryOptions {
         return "QueryOptions{" +
                 "queryPredicate=" + queryPredicate +
                 ", paginationInput=" + paginationInput +
-                ", sortInput=" + sortBy +
+                ", sortBy=" + sortBy +
                 '}';
     }
 }
