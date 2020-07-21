@@ -25,7 +25,6 @@
         android:id="@+id/search_logs_field"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
         android:hint="@string/search_logs_hint"
         android:inputType="text"
         android:autofillHints="no"
@@ -47,13 +46,13 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="15dp"
         android:layout_below="@+id/search_logs_field">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/placeholder_text"
+            android:text="@string/placeholder_logs"
             android:textColor="@android:color/black"
             android:textSize="15sp"/>
     </ScrollView>

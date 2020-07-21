@@ -26,6 +26,6 @@
     <string name="file_issue_view_title">File Issue</string>
     <string name="search_logs_hint">Search the Logs</string>
     <string name="search_logs_button_text">Search</string>
-    <string name="placeholder_text">Placeholder text to be replaced by logs</string>
+    <string name="placeholder_logs">Temporary text to be replaced by logs</string>
     <string name="placeholder_device_info">Temporary text to be replaced by device info</string>
 </resources>
