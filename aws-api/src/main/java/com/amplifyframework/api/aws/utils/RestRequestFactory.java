@@ -72,8 +72,8 @@ public final class RestRequestFactory {
 
         try {
             return new URL(URLDecoder.decode(builder.build().url().toString(), "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new MalformedURLException(e.getMessage());
+        } catch (UnsupportedEncodingException error) {
+            throw new MalformedURLException(error.getMessage());
         }
     }
 
