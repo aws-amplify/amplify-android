@@ -36,6 +36,10 @@ public final class DeviceInfo {
      * SDK version running on the device.
      */
     public static final int SDK_VERSION = Build.VERSION.SDK_INT;
+    /**
+     * Android system version running on the device.
+     */
+    public static final String SYSTEM_VERSION = Build.VERSION.RELEASE;
 
     /**
      * Returns true if the device is an emulator and false if not.
@@ -52,7 +56,8 @@ public final class DeviceInfo {
      */
     public String toString() {
         String result = "Device Manufacturer: " + MANUFACTURER + "\nDevice Model: " + MODEL
-                + "\nSDK Version: " + SDK_VERSION + "\nDevice is an Emulator: ";
+                + "\nAndroid System Version: " + SYSTEM_VERSION + "\nSDK Version: " + SDK_VERSION
+                + "\nDevice is an Emulator: ";
         if (isEmulator()) {
             return result + "Yes";
         } else {
