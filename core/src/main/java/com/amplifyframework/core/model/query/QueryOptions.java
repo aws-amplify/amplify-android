@@ -108,8 +108,8 @@ public final class QueryOptions {
     }
 
     /**
-     * Returns the {@code sortInput} property.
-     * @return the {@code sortInput} property.
+     * Returns the {@code sortBy} property.
+     * @return the {@code sortBy} property.
      */
     @Nullable
     public List<QuerySortBy> getSortBy() {
