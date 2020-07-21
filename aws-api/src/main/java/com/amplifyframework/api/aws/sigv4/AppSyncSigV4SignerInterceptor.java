@@ -46,7 +46,8 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
     private static final String CONTENT_TYPE = "application/json";
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(CONTENT_TYPE);
-    private static final String SERVICE_NAME = "appsync";
+    private static final String APP_SYNC_SERVICE_NAME = "appsync";
+    private static final String API_GATEWAY_SERVICE_NAME = "apigateway";
     private static final String X_API_KEY = "x-api-key";
     private static final String AUTHORIZATION = "authorization";
 
@@ -148,7 +149,12 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         Request req = chain.request();
 
         //Clone the request into a new DefaultRequest object and populate it with credentials
-        DefaultRequest<?> dr = new DefaultRequest<>(SERVICE_NAME);
+        final DefaultRequest<?> dr;
+        if (endpointType == EndpointType.GRAPHQL) {
+            dr = new DefaultRequest<>(APP_SYNC_SERVICE_NAME);
+        } else {
+            dr = new DefaultRequest<>(API_GATEWAY_SERVICE_NAME);
+        }
         //set the endpoint
         dr.setEndpoint(req.url().uri());
         //copy all the headers
@@ -219,25 +225,5 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
         //continue with chain.
         return chain.proceed(okReqBuilder.build());
-    }
-
-    // Utility method to convert string to human-readable format
-    private String toHumanReadableAscii(String str) {
-        for (int i = 0, length = str.length(), c; i < length; i += Character.charCount(c)) {
-            c = str.codePointAt(i);
-            if (c > '\u001f' && c < '\u007f') {
-                continue;
-            }
-            Buffer buffer = new Buffer();
-            buffer.writeUtf8(str, 0, i);
-            for (int j = i; j < length; j += Character.charCount(c)) {
-                c = str.codePointAt(j);
-                if (c > '\u001f' && c < '\u007f') {
-                    buffer.writeUtf8CodePoint(c);
-                }
-            }
-            return buffer.readUtf8();
-        }
-        return str;
     }
 }
