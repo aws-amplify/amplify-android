@@ -28,6 +28,10 @@ import com.amazonaws.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -164,6 +168,7 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         //set the http method
         dr.setHttpMethod(HttpMethodName.valueOf(req.method()));
 
+        //set the request body
         final byte[] bodyBytes;
         RequestBody body = req.body();
         if (body != null) {
@@ -174,8 +179,10 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         } else {
             bodyBytes = "".getBytes();
         }
-
         dr.setContent(new ByteArrayInputStream(bodyBytes));
+
+        //set the query string parameters
+        dr.setParameters(splitQuery(req.url().url()));
 
         //Sign or Decorate request with the required headers
         if (AuthorizationType.AWS_IAM.equals(authType)) {
@@ -225,5 +232,21 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
         //continue with chain.
         return chain.proceed(okReqBuilder.build());
+    }
+
+    // Extracts query string parameters from a URL.
+    // Source: https://stackoverflow.com/questions/13592236/parse-a-uri-string-into-name-value-collection
+    private static Map<String, String> splitQuery(URL url) throws UnsupportedEncodingException {
+        Map<String, String> queryPairs = new LinkedHashMap<>();
+        String query = url.getQuery();
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            int index = pair.indexOf("=");
+            queryPairs.put(
+                    URLDecoder.decode(pair.substring(0, index), "UTF-8"),
+                    URLDecoder.decode(pair.substring(index + 1), "UTF-8")
+            );
+        }
+        return queryPairs;
     }
 }
