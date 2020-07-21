@@ -14,10 +14,47 @@
    permissions and limitations under the License.
 -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="20dp"
     tools:context=".DevMenuLogsFragment">
 
-</FrameLayout>
+    <EditText
+        android:id="@+id/search_logs_field"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:hint="@string/search_logs_hint"
+        android:inputType="text"
+        android:autofillHints="no"
+        android:layout_toLeftOf="@+id/search_logs_button"
+        android:layout_toStartOf="@+id/search_logs_button"
+        android:layout_marginRight="20dp"
+        android:layout_marginEnd="20dp"
+        android:textSize="15sp"
+        android:textIsSelectable="true" />
+
+    <Button
+        android:id="@+id/search_logs_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/search_logs_button_text"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/search_logs_field">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/placeholder_text"
+            android:textColor="@android:color/black"
+            android:textSize="15sp"/>
+    </ScrollView>
+</RelativeLayout>
