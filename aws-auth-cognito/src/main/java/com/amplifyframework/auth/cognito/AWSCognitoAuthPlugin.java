@@ -124,10 +124,12 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     ) throws AuthException {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Exception> asyncException = new AtomicReference<>();
+        JSONObject mobileClientConfig;
         LogFactory.setLevel(LogFactory.Level.OFF);
 
         try {
-            pluginConfiguration.put("UserAgentOverride", UserAgent.string());
+            mobileClientConfig = new JSONObject(pluginConfiguration.toString());
+            mobileClientConfig.put("UserAgentOverride", UserAgent.string());
         } catch (JSONException exception) {
             throw new AuthException("Failed to set user agent string",
                     exception,
@@ -136,7 +138,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
         awsMobileClient.initialize(
             context,
-            new AWSConfiguration(pluginConfiguration),
+            new AWSConfiguration(mobileClientConfig),
             new Callback<UserStateDetails>() {
                 @Override
                 public void onResult(UserStateDetails result) {
