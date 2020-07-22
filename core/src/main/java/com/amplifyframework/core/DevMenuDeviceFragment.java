@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
 /**
@@ -36,6 +37,10 @@ public final class DevMenuDeviceFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_device, container, false);
+        View deviceInfoView = inflater.inflate(R.layout.fragment_device, container, false);
+        // Set the device information text.
+        TextView deviceInfoText = deviceInfoView.findViewById(R.id.device_info_text);
+        deviceInfoText.setText(new DeviceInfo().toString());
+        return deviceInfoView;
     }
 }

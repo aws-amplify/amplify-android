@@ -22,9 +22,10 @@
     tools:context=".DevMenuDeviceFragment">
 
     <TextView
+        android:id="@+id/device_info_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/placeholder_device_info"
         android:textColor="?android:attr/textColorPrimaryInverse"
-        android:textSize="15sp"/>
+        android:textSize="16sp"/>
 </ScrollView>
