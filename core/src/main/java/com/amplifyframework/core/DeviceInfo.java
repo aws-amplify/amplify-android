@@ -40,7 +40,7 @@ public final class DeviceInfo {
      * @return a String containing device information.
      */
     public String toString() {
-        return String.format(Locale.getDefault(), "Device Manufacturer: %s\nDevice Model: %s\nAndroid System Version: "
+        return String.format(Locale.US, "Device Manufacturer: %s\nDevice Model: %s\nAndroid System Version: "
                 + "%s\nSDK Version: %d\nDevice is an Emulator: %s", Build.MANUFACTURER, Build.MODEL,
                 Build.VERSION.RELEASE, Build.VERSION.SDK_INT, isEmulator() ? "Yes" : "No");
     }
