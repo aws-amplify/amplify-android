@@ -27,7 +27,12 @@ public enum QueryType implements Operation {
     /**
      * GraphQL query list.
      */
-    LIST;
+    LIST,
+
+    /**
+     * GraphQL query sync.
+     */
+    SYNC;
 
     @Override
     public OperationType getOperationType() {

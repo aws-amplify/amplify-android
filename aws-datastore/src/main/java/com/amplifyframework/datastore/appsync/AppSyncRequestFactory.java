@@ -20,7 +20,9 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.TypeMaker;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
@@ -65,10 +67,6 @@ final class AppSyncRequestFactory {
         "_deleted",
         "_lastChangedAt"
     );
-    private static final List<String> PAGINATION_KEYS = Arrays.asList(
-        "nextToken",
-        "startedAt"
-    );
 
     private AppSyncRequestFactory() {}
 
@@ -85,70 +83,32 @@ final class AppSyncRequestFactory {
      * @throws DataStoreException On Failure to inspect
      */
     @NonNull
-    static <T extends Model> String buildSyncDoc(
-            @NonNull final Class<T> modelClass,
+    static <T, M extends Model> AppSyncGraphQLRequest<T> buildSyncRequest(
+            @NonNull final Class<M> modelClass,
             @Nullable final Long lastSync,
             @SuppressWarnings("SameParameterValue") @Nullable final String nextToken)
             throws DataStoreException {
 
-        final StringBuilder doc = new StringBuilder();
-
-        ModelSchema schema;
         try {
-            schema = ModelSchema.fromModelClass(modelClass);
+            AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
+                    .modelClass(modelClass)
+                    .operation(QueryType.SYNC)
+                    .requestOptions(new DataStoreGraphQLRequestOptions())
+                    .responseType(TypeMaker.getParameterizedType(Iterable.class, String.class));
+
+            if (lastSync != null) {
+                builder.variable("lastSync", "AWSTimestamp", lastSync);
+            }
+
+            if (nextToken != null) {
+                builder.variable("nextToken", "String", nextToken);
+            }
+
+            return builder.build();
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
         }
-        final String capitalizedPluralName = Casing.capitalizeFirst(schema.getPluralName());
-
-        int indent = 0;
-        // Outer container, e.g. query SyncBlogPost {
-        doc.append("query Sync").append(capitalizedPluralName).append(" {\n");
-
-        // Inner directive, e.g. syncBlogPosts(
-        doc.append(padBy(++indent)).append("sync").append(capitalizedPluralName);
-
-        // Optional param for inner directive, i.e. (lastSync: 123123)
-        // (lastSync:11123123, nextToken: "asdfasdfaS")
-        if (lastSync != null || nextToken != null) {
-            doc.append("(");
-            if (lastSync != null) {
-                doc.append("lastSync: ").append(lastSync);
-                if (nextToken != null) {
-                    doc.append(", ");
-                }
-            }
-            if (nextToken != null) {
-                doc.append("nextToken: \"").append(nextToken).append("\"");
-            }
-            doc.append(")");
-        }
-
-        // Opening clause for selection set
-        doc.append(" {\n");
-        doc.append(padBy(++indent)).append("items {\n");
-
-        ++indent;
-        doc.append(buildSelectionPortion(modelClass, indent, WALK_DEPTH));
-        for (final String itemSyncKey : ITEM_SYNC_KEYS) {
-            doc.append(padBy(indent)).append(itemSyncKey).append("\n");
-        }
-        --indent;
-
-        // end the selection set for the items of modelClass
-        doc.append(padBy(indent)).append("}\n");
-
-        // end the top-level of selection set (for query)
-        for (String paginationKey : PAGINATION_KEYS) {
-            doc.append(padBy(indent)).append(paginationKey).append("\n");
-        }
-        doc.append(padBy(--indent)).append("}\n");
-
-        // End the container (that started as `query SyncBlogPost {`)
-        doc.append("}\n");
-
-        return doc.toString();
     }
 
     static <T, M extends Model> AppSyncGraphQLRequest<T> buildSubscriptionRequest(
