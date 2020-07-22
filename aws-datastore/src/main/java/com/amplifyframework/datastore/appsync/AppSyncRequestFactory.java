@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.TypeMaker;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
@@ -41,8 +42,6 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.FieldFinder;
-
-import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -95,7 +94,7 @@ final class AppSyncRequestFactory {
                     .modelClass(modelClass)
                     .operation(QueryType.SYNC)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
-                    .responseType(new TypeToken<Iterable<String>>(){}.getType());
+                    .responseType(TypeMaker.getParameterizedType(Iterable.class, String.class));
 
             if (lastSync != null) {
                 builder.variable("lastSync", "AWSTimestamp", lastSync);

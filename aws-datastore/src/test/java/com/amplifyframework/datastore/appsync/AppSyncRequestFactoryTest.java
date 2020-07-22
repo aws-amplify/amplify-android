@@ -29,9 +29,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Collections;
 import java.util.Map;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 
@@ -59,8 +58,8 @@ public final class AppSyncRequestFactoryTest {
      */
     @Test
     public void validateRequestGenerationForDeltaSync() throws DataStoreException {
-        final GraphQLRequest<Iterable<Post>> request = AppSyncRequestFactory
-                .buildSyncRequest(Post.class, 123123123L, null);
+        final GraphQLRequest<Iterable<Post>> request =
+                AppSyncRequestFactory.buildSyncRequest(Post.class, 123123123L, null);
 
         assertEquals(Resources.readAsString("delta-sync-request-document-for-post.txt"), request.getQuery());
         assertEquals(Collections.singletonMap("lastSync", 123123123L), request.getVariables());
@@ -73,8 +72,8 @@ public final class AppSyncRequestFactoryTest {
     @Test
     public void validateRequestGenerationForPagination() throws DataStoreException {
         final String nextToken = Resources.readAsString("base-sync-request-next-token-value.txt").trim();
-        final GraphQLRequest<Iterable<Post>> request = AppSyncRequestFactory
-                .buildSyncRequest(BlogOwner.class, null, nextToken);
+        final GraphQLRequest<Iterable<Post>> request =
+                AppSyncRequestFactory.buildSyncRequest(BlogOwner.class, null, nextToken);
         assertEquals(Resources.readAsString("base-sync-request-paginating-blog-owners.txt"), request.getQuery());
         assertEquals(Collections.singletonMap("nextToken", nextToken), request.getVariables());
     }
