@@ -25,29 +25,14 @@ import java.util.Locale;
  */
 public final class DeviceInfo {
     /**
-     * Device manufacturer.
-     */
-    public static final String MANUFACTURER = Build.MANUFACTURER;
-    /**
-     * Name of the product/device.
-     */
-    public static final String MODEL = Build.MODEL;
-    /**
-     * SDK version running on the device.
-     */
-    public static final int SDK_VERSION = Build.VERSION.SDK_INT;
-    /**
-     * Android system version running on the device.
-     */
-    public static final String SYSTEM_VERSION = Build.VERSION.RELEASE;
-
-    /**
-     * Returns true if the device is an emulator and false if not.
+     * Returns true if the device is an emulator and false if not. Based on answers from
+     * https://stackoverflow.com/questions/2799097/how-can-i-detect-when-an-android-application
+     * -is-running-in-the-emulator
      * @return a boolean indicating whether the device is an emulator or not
      */
     public boolean isEmulator() {
         return Build.DEVICE.toLowerCase(Locale.getDefault()).contains("generic")
-                && MODEL.toLowerCase(Locale.getDefault()).contains("sdk");
+                && Build.MODEL.toLowerCase(Locale.getDefault()).contains("sdk");
     }
 
     /**
@@ -55,13 +40,8 @@ public final class DeviceInfo {
      * @return a String containing device information.
      */
     public String toString() {
-        String result = "Device Manufacturer: " + MANUFACTURER + "\nDevice Model: " + MODEL
-                + "\nAndroid System Version: " + SYSTEM_VERSION + "\nSDK Version: " + SDK_VERSION
-                + "\nDevice is an Emulator: ";
-        if (isEmulator()) {
-            return result + "Yes";
-        } else {
-            return result + "No";
-        }
+        return String.format(Locale.getDefault(), "Device Manufacturer: %s\nDevice Model: %s\nAndroid System Version: "
+                + "%s\nSDK Version: %d\nDevice is an Emulator: %s", Build.MANUFACTURER, Build.MODEL,
+                Build.VERSION.RELEASE, Build.VERSION.SDK_INT, isEmulator() ? "Yes" : "No");
     }
 }
