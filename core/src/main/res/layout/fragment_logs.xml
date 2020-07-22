@@ -53,7 +53,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/placeholder_logs"
-            android:textColor="@android:color/black"
+            android:textColor="?android:attr/textColorPrimaryInverse"
             android:textSize="15sp"/>
     </ScrollView>
 </RelativeLayout>
