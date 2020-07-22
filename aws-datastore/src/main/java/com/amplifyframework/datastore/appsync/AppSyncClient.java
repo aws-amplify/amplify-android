@@ -37,9 +37,6 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -89,17 +86,13 @@ public final class AppSyncClient implements AppSync {
             @Nullable Long lastSync,
             @NonNull Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
-        final String queryDoc;
+        final GraphQLRequest<Iterable<String>> request;
         try {
-            queryDoc = AppSyncRequestFactory.buildSyncDoc(modelClass, lastSync, null);
+            request = AppSyncRequestFactory.buildSyncRequest(modelClass, lastSync, null);
         } catch (DataStoreException queryDocConstructionError) {
             onFailure.accept(queryDocConstructionError);
             return new NoOpCancelable();
         }
-
-        Type responseType = new TypeToken<Iterable<String>>(){}.getType();
-        final GraphQLRequest<Iterable<String>> request =
-            new SimpleGraphQLRequest<>(queryDoc, Collections.emptyMap(), responseType, variablesSerializer);
 
         final Consumer<GraphQLResponse<Iterable<String>>> responseConsumer = apiQueryResponse -> {
             if (apiQueryResponse.hasErrors()) {

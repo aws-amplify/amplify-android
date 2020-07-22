@@ -36,7 +36,7 @@ public final class TypeMaker {
      * @return Type, as a parameterized representation of the provided types array.
      * @throws IllegalArgumentException if no types are passed.
      */
-    static Type getParameterizedType(Type... types) throws IllegalArgumentException {
+    public static Type getParameterizedType(Type... types) throws IllegalArgumentException {
         if (types.length == 0) {
             throw new IllegalArgumentException("At least one Type must be passed as an argument");
         } else if (types.length == 1) {

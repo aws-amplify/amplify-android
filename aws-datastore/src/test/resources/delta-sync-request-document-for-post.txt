@@ -1,6 +1,9 @@
-query SyncPosts {
-  syncPosts(lastSync: 123123123) {
+query SyncPosts($lastSync: AWSTimestamp) {
+  syncPosts(lastSync: $lastSync) {
     items {
+      _deleted
+      _lastChangedAt
+      _version
       authors {
         items {
           id
@@ -22,9 +25,6 @@ query SyncPosts {
       rating
       status
       title
-      _version
-      _deleted
-      _lastChangedAt
     }
     nextToken
     startedAt

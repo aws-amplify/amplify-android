@@ -180,7 +180,7 @@ public final class SelectionSet {
             Objects.requireNonNull(this.modelClass);
             Objects.requireNonNull(this.operation);
             SelectionSet node = new SelectionSet(null, getModelFields(modelClass, requestOptions.maxDepth()));
-            if (QueryType.LIST.equals(operation)) {
+            if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
                 node = wrapPagination(node);
             }
             return node;
