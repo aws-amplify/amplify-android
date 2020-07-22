@@ -35,8 +35,8 @@
             android:layout_height="?android:attr/actionBarSize"
             android:minHeight="?android:attr/actionBarSize"
             android:theme="@android:style/Widget.DeviceDefault.ActionBar.Solid"
-            app:titleTextAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
-        </androidx.appcompat.widget.Toolbar>
+            app:titleTextAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+            app:contentInsetLeft="10dp" />
 
         <fragment
             android:id="@+id/nav_host_fragment"

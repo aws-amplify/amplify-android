@@ -24,5 +24,4 @@
     <string name="device_view_title">Device Information</string>
     <string name="logs_view_title">Logs</string>
     <string name="file_issue_view_title">File Issue</string>
-    <string name="placeholder_device_info">Temporary text to be replaced by device info</string>
 </resources>
