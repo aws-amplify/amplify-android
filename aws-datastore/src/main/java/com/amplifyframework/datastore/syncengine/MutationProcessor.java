@@ -109,14 +109,6 @@ final class MutationProcessor {
     }
 
     /**
-     * Checks if the mutation processor is actively observing the mutation outbox.
-     * @return True if the mutation processor is subscribed the mutation outbox.
-     */
-    boolean isDrainingMutationOutbox() {
-        return ongoingOperationsDisposable.size() > 0;
-    }
-
-    /**
      * Process an item in the mutation outbox.
      * @param mutationOutboxItem An item in the mutation outbox
      * @param <T> Type of model

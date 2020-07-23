@@ -18,10 +18,12 @@ package com.amplifyframework.datastore.appsync;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.util.Time;
 
 import java.util.Arrays;
@@ -36,7 +38,7 @@ import static org.mockito.Mockito.eq;
 /**
  * A utility to mock behaviors of an {@link AppSync} from test code.
  */
-@SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
+@SuppressWarnings({"UnusedReturnValue", "WeakerAccess", "unused"})
 public final class AppSyncMocking {
     private AppSyncMocking() {}
 
@@ -46,7 +48,7 @@ public final class AppSyncMocking {
      * @return A configurator for the sync() behavior.
      */
     @NonNull
-    public static SyncConfigurator onSync(AppSync mock) {
+    public static SyncConfigurator sync(AppSync mock) {
         return new SyncConfigurator(mock);
     }
 
@@ -56,7 +58,7 @@ public final class AppSyncMocking {
      * @return A configurator for the delete() behavior.
      */
     @NonNull
-    public static DeleteConfigurator onDelete(AppSync mock) {
+    public static DeleteConfigurator delete(AppSync mock) {
         return new DeleteConfigurator(mock);
     }
 
@@ -66,15 +68,45 @@ public final class AppSyncMocking {
      * @return A configurator for the create() behavior.
      */
     @NonNull
-    public static CreateConfigurator onCreate(AppSync mock) {
+    public static CreateConfigurator create(AppSync mock) {
         return new CreateConfigurator(mock);
+    }
+
+    /**
+     * Prepares mocks on AppSync, to occur when an onCreate() subscription
+     * request is made.
+     * @param mock A mock of the AppSync interface
+     * @return A configurator for the onCreate() subscription
+     */
+    public static OnCreateConfigurator onCreate(AppSync mock) {
+        return new OnCreateConfigurator(mock);
+    }
+
+    /**
+     * Prepares mocks on AppSync, to occur when an onUpdate() subscription
+     * request is made.
+     * @param mock A mock of the AppSync interface
+     * @return A configurator for the onUpdate() subscription
+     */
+    public static OnUpdateConfigurator onUpdate(AppSync mock) {
+        return new OnUpdateConfigurator(mock);
+    }
+
+    /**
+     * Prepares mocks on AppSync, to occur when an onDelete() subscription
+     * request is made.
+     * @param mock A mock of the AppSync interface
+     * @return A configurator for the onDelete() subscription
+     */
+    public static OnDeleteConfigurator onDelete(AppSync mock) {
+        return new OnDeleteConfigurator(mock);
     }
 
     /**
      * Configures mock behaviors to occur when create() is invoked.
      */
     public static final class CreateConfigurator {
-        private AppSync appSync;
+        private final AppSync appSync;
 
         /**
          * Constructs a CreateConfigurator, bound to a mock AppSync instance.
@@ -122,7 +154,7 @@ public final class AppSyncMocking {
      * Configures mocked behavior when the AppSync delete() API is exercised.
      */
     public static final class DeleteConfigurator {
-        private AppSync appSync;
+        private final AppSync appSync;
 
         /**
          * Constructs a DeleteConfigurator.
@@ -176,7 +208,7 @@ public final class AppSyncMocking {
      * Configures mocking for a particular {@link AppSync} mock.
      */
     public static final class SyncConfigurator {
-        private AppSync appSync;
+        private final AppSync appSync;
 
         /**
          * Constructs a new SyncConfigurator.
@@ -215,7 +247,7 @@ public final class AppSyncMocking {
         }
 
         /**
-         * Creates an instance of an {@link AppSync}, which will provide a fake response when asked to
+         * Configures an instance of an {@link AppSync} to provide a fake response when asked to
          * to {@link AppSync#sync(Class, Long, Consumer, Consumer)}. The response callback will
          * be invoked, and will contain the provided ModelWithMetadata in its response.
          * @param modelClass Class of models for which the endpoint should respond
@@ -267,6 +299,106 @@ public final class AppSyncMocking {
                 any(), // last sync time
                 any(), // Consumer<Iterable<ModelWithMetadata<T>>>
                 any() // Consumer<DataStoreException>
+            );
+            return this;
+        }
+    }
+
+    /**
+     * Configures mock behaviors on an {@link AppSync} instance, to occur when
+     * {@link AppSync#onCreate(Class, Consumer, Consumer, Consumer, Action)} is invoked.
+     */
+    public static final class OnCreateConfigurator {
+        private final AppSync appSync;
+
+        OnCreateConfigurator(AppSync appSync) {
+            this.appSync = appSync;
+        }
+
+        /**
+         * In response to {@link AppSync#onCreate(Class, Consumer, Consumer, Consumer, Action)} being
+         * called, the onStart consumer will be called back immediately.
+         * @return The current configurator instance, for fluent method chaining
+         */
+        public OnCreateConfigurator callOnStart() {
+            doAnswer(invocation -> {
+                final int indexOfOnStart = 1;
+                Consumer<String> onStart = invocation.getArgument(indexOfOnStart);
+                onStart.accept(RandomString.string());
+                return null;
+            }).when(appSync).onCreate(
+                any(), // Class<T>
+                any(), // Consumer<String>, onStart
+                any(), // Consumer<GraphQLResponse<ModelWithMetadata<T>>>, onNextResponse
+                any(), // Consumer<DataStoreException>, onSubscriptionFailure
+                any() // Action, onSubscriptionCompleted
+            );
+            return this;
+        }
+    }
+
+    /**
+     * Configured mocked behaviors on an {@link AppSync} instance,
+     * to be invoked when {@link AppSync#onUpdate(Class, Consumer, Consumer, Consumer, Action)}
+     * is called.
+     */
+    public static final class OnUpdateConfigurator {
+        private final AppSync appSync;
+
+        OnUpdateConfigurator(AppSync appSync) {
+            this.appSync = appSync;
+        }
+
+        /**
+         * In response to {@link AppSync#onUpdate(Class, Consumer, Consumer, Consumer, Action)} being
+         * called, the onStart consumer will be called back immediately.
+         * @return The current configurator instance, for fluent method chaining
+         */
+        public OnUpdateConfigurator callOnStart() {
+            doAnswer(invocation -> {
+                final int indexOfOnStart = 1;
+                Consumer<String> onStart = invocation.getArgument(indexOfOnStart);
+                onStart.accept(RandomString.string());
+                return null;
+            }).when(appSync).onUpdate(
+                any(), // Class<T>
+                any(), // Consumer<String>, onStart
+                any(), // Consumer<GraphQLResponse<ModelWithMetadata<T>>>, onNextResponse
+                any(), // Consumer<DataStoreException>, onSubscriptionFailure
+                any() // Action, onSubscriptionCompleted
+            );
+            return this;
+        }
+    }
+
+    /**
+     * Configures mock behaviors for when {@link AppSync#onDelete(Class, Consumer, Consumer, Consumer, Action)}
+     * is called.
+     */
+    public static final class OnDeleteConfigurator {
+        private final AppSync appSync;
+
+        OnDeleteConfigurator(AppSync appSync) {
+            this.appSync = appSync;
+        }
+
+        /**
+         * In response to {@link AppSync#onDelete(Class, Consumer, Consumer, Consumer, Action)} being
+         * called, the onStart consumer will be called back immediately.
+         * @return The current configurator instance, for fluent method chaining
+         */
+        public OnDeleteConfigurator callOnStart() {
+            doAnswer(invocation -> {
+                final int indexOfOnStart = 1;
+                Consumer<String> onStart = invocation.getArgument(indexOfOnStart);
+                onStart.accept(RandomString.string());
+                return null;
+            }).when(appSync).onDelete(
+                any(), // Class<T>
+                any(), // Consumer<String>, onStart
+                any(), // Consumer<GraphQLResponse<ModelWithMetadata<T>>>, onNextResponse
+                any(), // Consumer<DataStoreException>, onSubscriptionFailure
+                any() // Action, onSubscriptionCompleted
             );
             return this;
         }
