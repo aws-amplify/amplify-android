@@ -82,7 +82,7 @@ public final class MutationProcessorTest {
         synchronousStorageAdapter.save(tony);
 
         // Arrange a cooked response from AppSync.
-        AppSyncMocking.onCreate(appSync).mockResponse(tony);
+        AppSyncMocking.create(appSync).mockResponse(tony);
 
         // Start listening for publication events.
         HubAccumulator accumulator =

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -141,6 +142,23 @@ public final class HubAccumulator {
     @NonNull
     public List<HubEvent<?>> await() {
         Latch.await(latch);
+        return Immutable.of(events);
+    }
+
+    /**
+     * Wait for the desired quantity of events to be accumulated.
+     * Waits for a specified amount of time.
+     * If there are fewer than the desired amount of events right now, this method will
+     * block until the rest show up. If there are enough, they will
+     * be returned immediately.
+     * @param amount Amount of time, e.g. 5 seconds
+     * @param unit Unit attached to the amount, e.g. {@link TimeUnit#SECONDS}
+     * @return A list of as many items as requested when the accumulator was created
+     * @throws RuntimeException On failure to attain the requested number of events
+     *                          within a reasonable waiting period
+     */
+    public List<HubEvent<?>> await(int amount, TimeUnit unit) {
+        Latch.await(latch, unit.toMillis(amount));
         return Immutable.of(events);
     }
 }

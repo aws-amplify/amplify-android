@@ -131,7 +131,7 @@ public final class SyncProcessorTest {
         // We expect to see content here as a result of the SyncProcessor applying updates.
         final TestObserver<StorageItemChange<? extends Model>> adapterObserver = storageAdapter.observe().test();
         // Arrange: return some responses for the sync() call on the RemoteModelState
-        AppSyncMocking.onSync(appSync)
+        AppSyncMocking.sync(appSync)
             .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
             .mockSuccessResponse(BlogOwner.class, BLOGGER_ISLA, BLOGGER_JAMESON);
 
@@ -229,7 +229,7 @@ public final class SyncProcessorTest {
         // inMemoryStorageAdapter.items().add(DRUM_POST.getModel());
 
         // Arrange some responses from AppSync
-        AppSyncMocking.onSync(appSync)
+        AppSyncMocking.sync(appSync)
             .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
             .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
 
@@ -320,7 +320,7 @@ public final class SyncProcessorTest {
             .blockingForEach(storageAdapter::save);
 
         // Arrange: return some content from the fake AppSync endpoint
-        AppSyncMocking.onSync(appSync)
+        AppSyncMocking.sync(appSync)
             .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
 
         // Act: hydrate the store.
@@ -358,7 +358,7 @@ public final class SyncProcessorTest {
             .blockingForEach(storageAdapter::save);
 
         // Arrange: return some content from the fake AppSync endpoint
-        AppSyncMocking.onSync(appSync)
+        AppSyncMocking.sync(appSync)
             .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
 
         // Act: hydrate the store.
@@ -386,14 +386,18 @@ public final class SyncProcessorTest {
     @Test
     public void userProvidedErrorCallbackInvokedOnFailure() {
         // Arrange: mock failure when invoking hydrate on the mock object.
-        AppSyncMocking.onSync(appSync)
+        AppSyncMocking.sync(appSync)
             .mockFailure(new DataStoreException("Something timed out during sync.", "Nothing to do."));
 
         // Act: call hydrate.
-        assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(
+            syncProcessor.hydrate()
+                .onErrorComplete()
+                .blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        );
 
-        // Assert: one error per model.
-        assertEquals(modelProvider.models().size(), errorHandlerCallCount);
+        // Assert: sync process failed the first time the api threw an error
+        assertEquals(1, errorHandlerCallCount);
     }
 
     static final class RecentTimeWindow {
