@@ -20,7 +20,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.0'
+        classpath 'com.android.tools.build:gradle:4.0.1'
     }
 }
 
@@ -42,15 +42,15 @@ task clean(type: Delete) {
 }
 
 ext {
-    buildToolsVersion = "29.0.2"
-    compileSdkVersion = 29
+    buildToolsVersion = "29.0.3"
+    compileSdkVersion = 30
     minSdkVersion = 16
-    targetSdkVersion = 29
+    targetSdkVersion = 30
 
-    awsSdkVersion = '2.16.12'
+    awsSdkVersion = '2.16.13'
     dependency = [
         android: [
-            desugartools: 'com.android.tools:desugar_jdk_libs:1.0.5',
+            desugartools: 'com.android.tools:desugar_jdk_libs:1.0.9',
         ],
         androidx: [
             v4support: 'androidx.legacy:legacy-support-v4:1.0.0',
@@ -78,7 +78,7 @@ ext {
             translate: "com.amazonaws:aws-android-sdk-translate:$awsSdkVersion"
         ],
 
-        okhttp: 'com.squareup.okhttp3:okhttp:4.7.2',
+        okhttp: 'com.squareup.okhttp3:okhttp:4.8.0',
         gson: 'com.google.code.gson:gson:2.8.6',
         rxandroid: 'io.reactivex.rxjava2:rxandroid:2.1.1',
         rxjava: 'io.reactivex.rxjava2:rxjava:2.2.13',
@@ -87,7 +87,7 @@ ext {
 
         junit: 'junit:junit:4.13',
         mockito: 'org.mockito:mockito-core:3.1.0',
-        mockwebserver: 'com.squareup.okhttp3:mockwebserver:4.7.2',
+        mockwebserver: 'com.squareup.okhttp3:mockwebserver:4.8.0',
         robolectric: 'org.robolectric:robolectric:4.3.1',
         jsonassert: 'org.skyscreamer:jsonassert:1.5.0'
     ]
