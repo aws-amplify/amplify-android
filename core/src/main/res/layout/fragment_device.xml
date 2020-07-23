@@ -25,6 +25,7 @@
         android:id="@+id/device_info_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
+        android:text="@string/placeholder_device_info"
+        android:textColor="?android:attr/textColorPrimaryInverse"
         android:textSize="16sp"/>
 </ScrollView>
