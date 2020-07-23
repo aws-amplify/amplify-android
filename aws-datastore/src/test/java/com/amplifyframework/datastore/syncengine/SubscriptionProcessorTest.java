@@ -34,6 +34,7 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.util.Time;
 
@@ -104,10 +105,9 @@ public final class SubscriptionProcessorTest {
     /**
      * When {@link SubscriptionProcessor#startSubscriptions()} is invoked,
      * the {@link AppSync} client receives subscription requests.
-     * @throws DataStoreException Not expected.
      */
     @Test
-    public void appSyncInvokedWhenSubscriptionsStarted() throws DataStoreException {
+    public void appSyncInvokedWhenSubscriptionsStarted() {
         // For every Class-SubscriptionType pairing, use a CountDownLatch
         // to tell whether or not we've "seen" a subscription event for it.
         Map<Pair<Class<? extends Model>, SubscriptionType>, CountDownLatch> seen = new HashMap<>();
@@ -139,7 +139,7 @@ public final class SubscriptionProcessorTest {
     }
 
     /**
-     * When {@link SubscriptionProcessor#startDrainingMutationBuffer()} is called, then the
+     * When {@link SubscriptionProcessor#startDrainingMutationBuffer(Action)} is called, then the
      * {@link Merger} is invoked to begin merging whatever content has shown up on the subscriptions.
      * @throws DataStoreException On failure to arrange mocking
      * @throws InterruptedException On failure to await latch
@@ -167,7 +167,7 @@ public final class SubscriptionProcessorTest {
 
         // Start draining....
         subscriptionProcessor.startSubscriptions();
-        subscriptionProcessor.startDrainingMutationBuffer();
+        subscriptionProcessor.startDrainingMutationBuffer(EmptyAction.create());
 
         // Was the data merged?
         assertTrue(latch.await(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS));
