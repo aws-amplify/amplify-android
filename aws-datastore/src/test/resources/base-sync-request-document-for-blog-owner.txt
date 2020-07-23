@@ -1,15 +1,15 @@
 query SyncBlogOwners {
   syncBlogOwners {
     items {
+      _deleted
+      _lastChangedAt
+      _version
       blog {
         id
       }
       id
       name
       wea
-      _version
-      _deleted
-      _lastChangedAt
     }
     nextToken
     startedAt

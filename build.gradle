@@ -137,6 +137,7 @@ private void configureAndroidLibrary(Project project) {
             warningsAsErrors true
             abortOnError true
             enable 'UnusedResources'
+            enable 'NewerVersionAvailable'
         }
 
         compileOptions {

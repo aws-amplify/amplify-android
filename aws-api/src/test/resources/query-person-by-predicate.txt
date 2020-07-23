@@ -1,5 +1,5 @@
 {
-  "query": "query ListPerson($filter: ModelPersonFilterInput, $limit: Int) {
+  "query": "query ListPersons($filter: ModelPersonFilterInput, $limit: Int) {
   listPersons(filter: $filter, limit: $limit) {
     items {
       age
