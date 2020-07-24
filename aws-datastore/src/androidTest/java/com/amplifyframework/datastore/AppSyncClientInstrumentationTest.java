@@ -30,6 +30,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -41,14 +42,12 @@ import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Date;
 import java.util.List;
 
 import io.reactivex.Observable;
-import io.reactivex.observers.TestObserver;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
@@ -59,7 +58,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests the DataStore API Interface.
  */
-@Ignore("Subscription issues")
 public final class AppSyncClientInstrumentationTest {
     private static AppSync api;
 
@@ -124,13 +122,13 @@ public final class AppSyncClientInstrumentationTest {
         assertTrue(createdBlogLastChangedAt > startTime);
         assertEquals(blog.getId(), blogCreateResult.getSyncMetadata().getId());
 
-        // Validate that subscription picked up the mutation
-        // & End the subscription since we're done with.
-        TestObserver<ModelWithMetadata<Blog>> blogCreationSubscriber = TestObserver.create();
-        blogCreations
-            .map(GraphQLResponse::getData)
-            .subscribe(blogCreationSubscriber);
-        blogCreationSubscriber.assertValue(blogCreateResult);
+        // TODO: Subscriptions are currently failing.  More investigation required to fix this part of the test.
+        // Validate that subscription picked up the mutation and end the subscription since we're done with.
+//        TestObserver<ModelWithMetadata<Blog>> blogCreationSubscriber = TestObserver.create();
+//        blogCreations
+//            .map(GraphQLResponse::getData)
+//            .subscribe(blogCreationSubscriber);
+//        blogCreationSubscriber.assertValue(blogCreateResult);
 
         // Create Posts which Blog hasMany of
         Post post1 = Post.builder()
@@ -234,11 +232,12 @@ public final class AppSyncClientInstrumentationTest {
     @NonNull
     private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version)
         throws DataStoreException {
-        return update(model, version, null);
+        return update(model, version, QueryPredicates.all());
     }
 
     @NonNull
-    private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version, QueryPredicate predicate)
+    private <T extends Model> ModelWithMetadata<T> update(
+            @NonNull T model, int version, @NonNull QueryPredicate predicate)
             throws DataStoreException {
         return awaitResponseData((onResult, onError) ->
             api.update(model, version, predicate, onResult, onError));
@@ -257,7 +256,7 @@ public final class AppSyncClientInstrumentationTest {
     private <T extends Model> ModelWithMetadata<T> delete(
         @NonNull Class<T> clazz, String modelId, int version)
         throws DataStoreException {
-        return delete(clazz, modelId, version, null);
+        return delete(clazz, modelId, version, QueryPredicates.all());
     }
 
     @NonNull
