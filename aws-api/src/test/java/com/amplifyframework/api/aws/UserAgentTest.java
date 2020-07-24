@@ -46,7 +46,8 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class UserAgentTest {
-    private static final long REQUEST_TIMEOUT_MS = 200;
+    // This was previously 200ms, but resulted in flaky tests because server.takeRequest would sometimes return null.
+    private static final long REQUEST_TIMEOUT_MS = 5_000;
     private static final String USER_AGENT_REGEX = "^(?<libraryName>.*?)\\/(?<libraryVersion>.*?) " +
             "\\((?<systemName>.*?) (?<systemVersion>.*?); " +
             "(?<deviceManufacturer>.*?) (?<deviceName>.*?); " +
