@@ -31,13 +31,11 @@ final class IterableDeserializer implements JsonDeserializer<Iterable<Object>> {
     private static final String APP_SYNC_ITEMS_KEY = "items";
 
     @Override
-    @SuppressWarnings("unchecked") // Cast from Type to Class<Object>
     public Iterable<Object> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context
     ) throws JsonParseException {
-        final Class<Object> templateClassType;
+        final Type templateClassType;
         if (typeOfT instanceof ParameterizedType) {
-            // Because this is an Iterable and typeOfT is ParameterizedType we can be sure this is a safe cast.
-            templateClassType = (Class<Object>) ((ParameterizedType) typeOfT).getActualTypeArguments()[0];
+            templateClassType = ((ParameterizedType) typeOfT).getActualTypeArguments()[0];
         } else {
             throw new JsonParseException("Expected a parameterized type during list deserialization.");
         }

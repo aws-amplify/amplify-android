@@ -1,4 +1,5 @@
-subscription OnCreateBlog {
+{
+  "query": "subscription OnCreateBlog {
   onCreateBlog {
     _deleted
     _lastChangedAt
@@ -16,4 +17,7 @@ subscription OnCreateBlog {
       startedAt
     }
   }
+}
+",
+  "variables": null
 }

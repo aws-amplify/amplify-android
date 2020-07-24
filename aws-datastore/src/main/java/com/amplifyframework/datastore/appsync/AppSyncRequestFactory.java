@@ -39,14 +39,14 @@ import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Casing;
-import com.amplifyframework.util.FieldFinder;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -61,12 +61,6 @@ import java.util.Map;
  * and AppSync-specific field names (`_version`, `_deleted`, etc.)
  */
 final class AppSyncRequestFactory {
-    private static final int WALK_DEPTH = 1;
-    private static final List<String> ITEM_SYNC_KEYS = Arrays.asList(
-        "_version",
-        "_deleted",
-        "_lastChangedAt"
-    );
 
     private AppSyncRequestFactory() {}
 
@@ -94,8 +88,7 @@ final class AppSyncRequestFactory {
                     .modelClass(modelClass)
                     .operation(QueryType.SYNC)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
-                    .responseType(TypeMaker.getParameterizedType(Iterable.class, String.class));
-
+                    .responseType(TypeMaker.getParameterizedType(Iterable.class, ModelWithMetadata.class, modelClass));
             if (lastSync != null) {
                 builder.variable("lastSync", "AWSTimestamp", lastSync);
             }
@@ -118,7 +111,7 @@ final class AppSyncRequestFactory {
                     .modelClass(modelClass)
                     .operation(subscriptionType)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
-                    .responseType(String.class)
+                    .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, modelClass))
                     .build();
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
@@ -126,18 +119,44 @@ final class AppSyncRequestFactory {
         }
     }
 
-    static <T extends Model> String buildDeletionDoc(Class<T> modelClass, boolean includePredicate)
-        throws DataStoreException {
-        return buildMutation(modelClass, includePredicate, MutationType.DELETE);
+    static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildDeletionRequest(
+            Class<M> modelClass, String objectId, Integer version, QueryPredicate predicate) throws DataStoreException {
+        Map<String, Object> inputMap = new HashMap<>();
+        inputMap.put("id", objectId);
+        inputMap.put("_version", version);
+        return buildMutation(modelClass, inputMap, predicate, MutationType.DELETE);
     }
 
-    static <T extends Model> String buildUpdateDoc(Class<T> modelClass, boolean includePredicate)
-        throws DataStoreException {
-        return buildMutation(modelClass, includePredicate, MutationType.UPDATE);
+    @SuppressWarnings("unchecked") // cast to (Class<M>)
+    static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildUpdateRequest(
+            M model, Integer version, QueryPredicate predicate) throws DataStoreException {
+        Class<M> modelClass = (Class<M>) model.getClass();
+        Map<String, Object> inputMap = new HashMap<>();
+        try {
+            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+            inputMap.putAll(schema.getMapOfFieldNameAndValues(model));
+            inputMap.put("_version", version);
+            return buildMutation(modelClass, inputMap, predicate, MutationType.UPDATE);
+
+        } catch (AmplifyException amplifyException) {
+            throw new DataStoreException("Failed to get fields for model.",
+                    amplifyException, "Validate your model file.");
+        }
     }
 
-    static <T extends Model> String buildCreationDoc(Class<T> modelClass) throws DataStoreException {
-        return buildMutation(modelClass, false, MutationType.CREATE);
+    @SuppressWarnings("unchecked") // cast to (Class<M>)
+    static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildCreationRequest(M model)
+            throws DataStoreException {
+        Class<M> modelClass = (Class<M>) model.getClass();
+        try {
+            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+            Map<String, Object> inputMap = schema.getMapOfFieldNameAndValues(model);
+            return buildMutation(modelClass, inputMap, QueryPredicates.all(), MutationType.CREATE);
+        } catch (AmplifyException amplifyException) {
+            throw new DataStoreException("Failed to get fields for model.",
+                    amplifyException, "Validate your model file.");
+        }
+
     }
 
     static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
@@ -239,125 +258,47 @@ final class AppSyncRequestFactory {
 
     /**
      * Builds a mutation.
-     * @param modelClass class of the model
+     * @param modelClass the model instance type
      * @param mutationType Type of mutation, e.g. {@link MutationType#CREATE}
-     * @param <T> Type of model being mutated
+     * @param <M> Type of model being mutated
      * @return Mutation doc
      */
-    private static <T extends Model> String buildMutation(Class<T> modelClass,
-                                                          boolean includePredicate,
-                                                          MutationType mutationType) throws DataStoreException {
-        final String capitalizedModelName = Casing.capitalizeFirst(modelClass.getSimpleName());
-        int indent = 0;
-        StringBuilder doc = new StringBuilder();
-
-        final String verb;
-        switch (mutationType) {
-            case CREATE:
-                verb = "Create";
-                break;
-            case UPDATE:
-                verb = "Update";
-                break;
-            case DELETE:
-                verb = "Delete";
-                break;
-            default:
-                throw new DataStoreException(
-                    "Unknown mutation type = " + mutationType,
-                    "Check if support has been added in the sync engine."
-                );
-        }
-
-        // mutation CreateBlogOwner($input:CreateBlogOwnerInput!) {
-        doc.append("mutation ").append(verb).append(capitalizedModelName)
-            .append("($input:").append(verb).append(capitalizedModelName).append("Input!");
-
-        if (includePredicate) {
-            doc.append(", $condition:Model")
-                .append(capitalizedModelName)
-                .append("ConditionInput");
-        }
-
-        //   createBlogOwner(input:$input)
-        doc.append(") {\n")
-            .append(padBy(++indent)).append(verb.toLowerCase(Locale.US)).append(capitalizedModelName)
-            .append("(input:$input");
-
-        if (includePredicate) {
-            doc.append(", condition:$condition");
-        }
-
-        doc.append(") {\n");
-
-        ++indent;
-        doc.append(buildSelectionPortion(modelClass, indent, WALK_DEPTH));
-        for (final String itemSyncKey : ITEM_SYNC_KEYS) {
-            doc.append(padBy(indent)).append(itemSyncKey).append("\n");
-        }
-        --indent;
-
-        // end the the inner createWhatever directive
-        doc.append(padBy(indent)).append("}\n");
-
-        // End the container (that started as `mutation CreateBlogOwner(` etc.
-        doc.append(padBy(--indent)).append("}\n");
-
-        return doc.toString();
-    }
-
-    private static String padBy(int indent) {
-        if (indent <= 0) {
-            return "";
-        }
-        StringBuilder builder = new StringBuilder();
-        for (int index = 0; index < indent; index++) {
-            builder.append("  "); // 2 spaces per level
-        }
-        return builder.toString();
-    }
-
-    private static <T extends Model> String buildSelectionPortion(
-            final Class<T> modelClass,
-            final int indentationLevel,
-            @SuppressWarnings("SameParameterValue") final int levelsToGo)
-            throws DataStoreException {
-
-        if (levelsToGo < 0) {
-            return "\n";
-        }
-
-        int indents = indentationLevel;
-        final StringBuilder result = new StringBuilder();
-        ModelSchema schema;
+    private static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildMutation(Class<M> modelClass,
+                                                               Map<String, Object> inputMap,
+                                                               QueryPredicate predicate,
+                                                               MutationType mutationType) throws DataStoreException {
         try {
-            schema = ModelSchema.fromModelClass(modelClass);
+            // model is of type T so this is a safe cast - hence the warning suppression
+            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+            String graphQlTypeName = schema.getName();
+
+            AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
+                    .modelClass(modelClass)
+                    .operation(mutationType)
+                    .requestOptions(new DataStoreGraphQLRequestOptions())
+                    .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, modelClass));
+
+            String inputType = new StringBuilder()
+                    .append(Casing.capitalize(mutationType.toString()))
+                    .append(Casing.capitalizeFirst(graphQlTypeName))
+                    .append("Input!")
+                    .toString(); // CreateTodoInput
+
+            builder.variable("input", inputType, inputMap);
+
+            if (!QueryPredicates.all().equals(predicate)) {
+                String conditionType = new StringBuilder()
+                        .append("Model")
+                        .append(Casing.capitalizeFirst(graphQlTypeName))
+                        .append("ConditionInput")
+                        .toString();
+                builder.variable("condition", conditionType, parsePredicate(predicate));
+            }
+            return builder.build();
+
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
-                amplifyException, "Validate your model file.");
+                    amplifyException, "Validate your model file.");
         }
-
-        for (Field field : FieldFinder.findFieldsIn(modelClass)) {
-            if (schema.getAssociations().containsKey(field.getName())) {
-                if (List.class.isAssignableFrom(field.getType()) && levelsToGo > 0) {
-                    result
-                        .append(padBy(indents)).append(field.getName()).append(" {\n")
-                        .append(padBy(++indents)).append("items {\n")
-                        .append(padBy(++indents)).append("id\n")
-                        .append(padBy(--indents)).append("}\n")
-                        .append(padBy(indents)).append("nextToken\n")
-                        .append(padBy(indents)).append("startedAt\n")
-                        .append(padBy(--indents)).append("}\n");
-                } else if (levelsToGo > 0) {
-                    result
-                        .append(padBy(indents)).append(field.getName()).append(" {\n")
-                        .append(padBy(++indents)).append("id\n")
-                        .append(padBy(--indents)).append("}\n");
-                }
-            } else {
-                result.append(padBy(indents)).append(field.getName()).append("\n");
-            }
-        }
-        return result.toString();
     }
 }

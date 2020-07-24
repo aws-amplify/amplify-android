@@ -1,4 +1,5 @@
-query SyncPosts($lastSync: AWSTimestamp) {
+{
+  "query": "query SyncPosts($lastSync: AWSTimestamp) {
   syncPosts(lastSync: $lastSync) {
     items {
       _deleted
@@ -28,5 +29,10 @@ query SyncPosts($lastSync: AWSTimestamp) {
     }
     nextToken
     startedAt
+  }
+}
+",
+  "variables": {
+    "lastSync": 123123123
   }
 }

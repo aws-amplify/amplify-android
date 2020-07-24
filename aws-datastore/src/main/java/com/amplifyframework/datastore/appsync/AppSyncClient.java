@@ -21,25 +21,18 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.GsonVariablesSerializer;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * An implementation of the {@link AppSync} client interface.
@@ -54,8 +47,6 @@ import java.util.Map;
  */
 public final class AppSyncClient implements AppSync {
     private final GraphQLBehavior api;
-    private final GraphQLRequest.VariablesSerializer variablesSerializer;
-    private final ResponseDeserializer responseDeserializer;
 
     /**
      * Constructs a new AppSyncClient.
@@ -63,8 +54,6 @@ public final class AppSyncClient implements AppSync {
      */
     private AppSyncClient(GraphQLBehavior api) {
         this.api = api;
-        this.variablesSerializer = new GsonVariablesSerializer();
-        this.responseDeserializer = new AppSyncResponseDeserializer();
     }
 
     /**
@@ -86,7 +75,7 @@ public final class AppSyncClient implements AppSync {
             @Nullable Long lastSync,
             @NonNull Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
-        final GraphQLRequest<Iterable<String>> request;
+        final GraphQLRequest<Iterable<ModelWithMetadata<T>>> request;
         try {
             request = AppSyncRequestFactory.buildSyncRequest(modelClass, lastSync, null);
         } catch (DataStoreException queryDocConstructionError) {
@@ -94,14 +83,14 @@ public final class AppSyncClient implements AppSync {
             return new NoOpCancelable();
         }
 
-        final Consumer<GraphQLResponse<Iterable<String>>> responseConsumer = apiQueryResponse -> {
+        final Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> responseConsumer = apiQueryResponse -> {
             if (apiQueryResponse.hasErrors()) {
                 onFailure.accept(new DataStoreException(
                     "Failure performing sync query to AppSync: " + apiQueryResponse.getErrors().toString(),
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
             } else {
-                onResponse.accept(responseDeserializer.deserialize(apiQueryResponse.getData(), modelClass));
+                onResponse.accept(apiQueryResponse);
             }
         };
         final Consumer<ApiException> failureConsumer =
@@ -125,15 +114,8 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final String doc = AppSyncRequestFactory.buildCreationDoc(model.getClass());
-
-            Class<T> modelClass = (Class<T>) model.getClass();
-            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-
-            final Map<String, Object> variables =
-                Collections.singletonMap("input", schema.getMapOfFieldNameAndValues(model));
-
-            return mutation(doc, variables, modelClass, onResponse, onFailure);
+            final GraphQLRequest<ModelWithMetadata<T>> request = AppSyncRequestFactory.buildCreationRequest(model);
+            return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(
                 "Error encountered while creating model schema",
@@ -173,21 +155,9 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final boolean includePredicate = !QueryPredicates.all().equals(predicate);
-            final String doc = AppSyncRequestFactory.buildUpdateDoc(model.getClass(), includePredicate);
-
-            Class<T> modelClass = (Class<T>) model.getClass();
-            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-
-            final Map<String, Object> updateInput = schema.getMapOfFieldNameAndValues(model);
-            updateInput.put("_version", version);
-
-            final Map<String, Object> variables = Collections.singletonMap("input", updateInput);
-            if (includePredicate) {
-                variables.put("condition", AppSyncRequestFactory.parsePredicate(predicate));
-            }
-
-            return mutation(doc, variables, (Class<T>) model.getClass(), onResponse, onFailure);
+            final GraphQLRequest<ModelWithMetadata<T>> request =
+                    AppSyncRequestFactory.buildUpdateRequest(model, version, predicate);
+            return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(
                 "Error encountered while creating model schema",
@@ -229,19 +199,9 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final boolean includePredicate = !QueryPredicates.all().equals(predicate);
-            final String doc = AppSyncRequestFactory.buildDeletionDoc(clazz, includePredicate);
-
-            final Map<String, Object> deleteInput = new HashMap<>();
-            deleteInput.put("id", objectId);
-            deleteInput.put("_version", version);
-
-            final Map<String, Object> variables = Collections.singletonMap("input", deleteInput);
-            if (includePredicate) {
-                variables.put("condition", AppSyncRequestFactory.parsePredicate(predicate));
-            }
-
-            return mutation(doc, variables, clazz, onResponse, onFailure);
+            final GraphQLRequest<ModelWithMetadata<T>> request =
+                    AppSyncRequestFactory.buildDeletionRequest(clazz, objectId, version, predicate);
+            return mutation(request, onResponse, onFailure);
         } catch (DataStoreException dataStoreException) {
             onFailure.accept(dataStoreException);
         }
@@ -310,7 +270,7 @@ public final class AppSyncClient implements AppSync {
             Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             Consumer<DataStoreException> onSubscriptionFailure,
             Action onSubscriptionCompleted) {
-        final GraphQLRequest<String> request;
+        final GraphQLRequest<ModelWithMetadata<T>> request;
         try {
             request = AppSyncRequestFactory.buildSubscriptionRequest(clazz, subscriptionType);
         } catch (DataStoreException requestGenerationException) {
@@ -318,14 +278,14 @@ public final class AppSyncClient implements AppSync {
             return new NoOpCancelable();
         }
 
-        final Consumer<GraphQLResponse<String>> stringResponseConsumer = stringResponse -> {
-            if (stringResponse.hasErrors()) {
+        final Consumer<GraphQLResponse<ModelWithMetadata<T>>> responseConsumer = response -> {
+            if (response.hasErrors()) {
                 onSubscriptionFailure.accept(new DataStoreException(
-                    "Bad subscription data for " + clazz.getSimpleName() + ": " + stringResponse.getErrors(),
+                    "Bad subscription data for " + clazz.getSimpleName() + ": " + response.getErrors(),
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
             } else {
-                onNextResponse.accept(responseDeserializer.deserialize(stringResponse.getData(), clazz));
+                onNextResponse.accept(response);
             }
         };
         final Consumer<ApiException> failureConsumer = failure ->
@@ -336,7 +296,7 @@ public final class AppSyncClient implements AppSync {
         final Cancelable cancelable = api.subscribe(
             request,
             onSubscriptionStarted,
-            stringResponseConsumer,
+            responseConsumer,
             failureConsumer,
             onSubscriptionCompleted
         );
@@ -347,19 +307,15 @@ public final class AppSyncClient implements AppSync {
     }
 
     private <T extends Model> Cancelable mutation(
-            final String document,
-            final Map<String, Object> variables,
-            final Class<T> itemClass,
+            final GraphQLRequest<ModelWithMetadata<T>> request,
             final Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             final Consumer<DataStoreException> onFailure) {
-        final GraphQLRequest<String> request =
-            new SimpleGraphQLRequest<>(document, variables, String.class, variablesSerializer);
 
-        final Consumer<GraphQLResponse<String>> responseConsumer = response -> {
+        final Consumer<GraphQLResponse<ModelWithMetadata<T>>> responseConsumer = response -> {
             if (response.hasErrors()) {
                 onResponse.accept(new GraphQLResponse<>(null, response.getErrors()));
             } else {
-                onResponse.accept(responseDeserializer.deserialize(response.getData(), itemClass));
+                onResponse.accept(response);
             }
         };
         final Consumer<ApiException> failureConsumer =
@@ -371,15 +327,5 @@ public final class AppSyncClient implements AppSync {
             return cancelable;
         }
         return new NoOpCancelable();
-    }
-
-    interface ResponseDeserializer {
-        <T extends Model> GraphQLResponse<ModelWithMetadata<T>> deserialize(
-            String json,
-            Class<T> intoClazz);
-
-        <T extends Model> GraphQLResponse<Iterable<ModelWithMetadata<T>>> deserialize(
-            Iterable<String> json,
-            Class<T> memberClazz);
     }
 }

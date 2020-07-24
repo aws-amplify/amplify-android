@@ -1,4 +1,5 @@
-query SyncBlogOwners {
+{
+  "query": "query SyncBlogOwners {
   syncBlogOwners {
     items {
       _deleted
@@ -14,4 +15,7 @@ query SyncBlogOwners {
     nextToken
     startedAt
   }
+}
+",
+  "variables": null
 }

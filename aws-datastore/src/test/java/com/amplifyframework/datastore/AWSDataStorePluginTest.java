@@ -31,6 +31,8 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.appsync.ModelMetadata;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -199,22 +201,17 @@ public final class AWSDataStorePluginTest {
         // Setup objects
         Person person1 = createPerson("Test", "Dummy I");
         Person person2 = createPerson("Test", "Dummy II");
-        ArgumentMatcher<GraphQLRequest<String>> person1Matcher = getMatcherFor(person1);
-        ArgumentMatcher<GraphQLRequest<String>> person2Matcher = getMatcherFor(person2);
+        ArgumentMatcher<GraphQLRequest<ModelWithMetadata<Person>>> person1Matcher = getMatcherFor(person1);
+        ArgumentMatcher<GraphQLRequest<ModelWithMetadata<Person>>> person2Matcher = getMatcherFor(person2);
 
         // Mock responses for person 1
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfResponseConsumer);
-            String data = new JSONObject()
-                .put("id", person1.getId())
-                .put("first_name", person1.getFirstName())
-                .put("last_name", person1.getLastName())
-                .put("_deleted", false)
-                .put("_version", 1)
-                .put("_lastSyncedAt", Time.now())
-                .toString();
-            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
+            Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
+                    invocation.getArgument(indexOfResponseConsumer);
+            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Time.now());
+            ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
+            onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             return mock(GraphQLOperation.class);
         }).when(mockApiPlugin).mutate(any(), any(), any());
 
@@ -233,16 +230,11 @@ public final class AWSDataStorePluginTest {
         // Mock responses for person 2
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfResponseConsumer);
-            String data = new JSONObject()
-                .put("id", person2.getId())
-                .put("first_name", person2.getFirstName())
-                .put("last_name", person2.getLastName())
-                .put("_deleted", false)
-                .put("_version", 1)
-                .put("_lastSyncedAt", Time.now())
-                .toString();
-            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
+            Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
+                    invocation.getArgument(indexOfResponseConsumer);
+            ModelMetadata modelMetadata = new ModelMetadata(person2.getId(), false, 1, Time.now());
+            ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person2, modelMetadata);
+            onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             return mock(GraphQLOperation.class);
         }).when(mockApiPlugin).mutate(any(), any(), any());
 
@@ -312,7 +304,8 @@ public final class AWSDataStorePluginTest {
         // Make believe that queries return response immediately
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<Iterable<String>>> onResponse = invocation.getArgument(indexOfResponseConsumer);
+            Consumer<GraphQLResponse<Iterable<ModelWithMetadata<Person>>>> onResponse =
+                    invocation.getArgument(indexOfResponseConsumer);
             onResponse.accept(new GraphQLResponse<>(Collections.emptyList(), Collections.emptyList()));
             return null;
         }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
@@ -393,7 +386,7 @@ public final class AWSDataStorePluginTest {
             .build();
     }
 
-    private static ArgumentMatcher<GraphQLRequest<String>> getMatcherFor(Person person) {
+    private static ArgumentMatcher<GraphQLRequest<ModelWithMetadata<Person>>> getMatcherFor(Person person) {
         return graphQLRequest -> {
             try {
                 JSONObject payload = new JSONObject(graphQLRequest.getContent());
