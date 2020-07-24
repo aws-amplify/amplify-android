@@ -61,7 +61,7 @@ public class AppSyncResponseDeserializerTest {
                 .build();
         Boolean deleted = false;
         Integer version = 42;
-        Long lastChangedAt = Long.valueOf(1594858827);
+        Temporal.Timestamp lastChangedAt = new Temporal.Timestamp(1594858827, TimeUnit.SECONDS);
         ModelMetadata modelMetadata = new ModelMetadata(meetingId, deleted, version, lastChangedAt);
         ModelWithMetadata<Meeting> modelWithMetadata = new ModelWithMetadata<>(meeting, modelMetadata);
         GraphQLResponse<ModelWithMetadata<Meeting>> expected = new GraphQLResponse<>(modelWithMetadata, null);

@@ -435,6 +435,14 @@ public final class Temporal {
         }
 
         /**
+         * Returns a new Timestamp instance that represents the current system time.
+         * @return a new Timestamp instance that represents the current system time.
+         */
+        public static Timestamp now() {
+            return new Timestamp();
+        }
+
+        /**
          * Gets the number of seconds that have elapsed since the UNIX epoch.
          *
          * @return Seconds since UNIX epoch

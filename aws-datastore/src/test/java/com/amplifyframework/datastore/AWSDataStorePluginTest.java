@@ -31,6 +31,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -212,7 +213,7 @@ public final class AWSDataStorePluginTest {
                 .put("last_name", person1.getLastName())
                 .put("_deleted", false)
                 .put("_version", 1)
-                .put("_lastSyncedAt", Time.now())
+                .put("_lastSyncedAt", Temporal.Timestamp.now())
                 .toString();
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             return mock(GraphQLOperation.class);

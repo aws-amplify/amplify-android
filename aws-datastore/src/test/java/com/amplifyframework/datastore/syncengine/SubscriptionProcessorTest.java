@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
@@ -35,7 +36,6 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.random.RandomString;
-import com.amplifyframework.util.Time;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -153,7 +153,7 @@ public final class SubscriptionProcessorTest {
         BlogOwner model = BlogOwner.builder()
             .name("John P. Stetson, Jr.")
             .build();
-        ModelMetadata modelMetadata = new ModelMetadata(model.getId(), false, 1, Time.now());
+        ModelMetadata modelMetadata = new ModelMetadata(model.getId(), false, 1, Temporal.Timestamp.now());
         ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(model, modelMetadata);
         GraphQLResponse<ModelWithMetadata<BlogOwner>> response = new GraphQLResponse<>(modelWithMetadata, null);
         arrangeDataEmittingSubscription(appSync, BlogOwner.class, SubscriptionType.ON_CREATE, response);

@@ -30,6 +30,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -46,6 +47,7 @@ import org.junit.Test;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
@@ -88,7 +90,7 @@ public final class AppSyncClientInstrumentationTest {
     @Test
     @SuppressWarnings("MethodLength")
     public void testAllOperations() throws DataStoreException {
-        Long startTime = new Date().getTime();
+        Long startTimeSeconds = TimeUnit.MILLISECONDS.toSeconds(new Date().getTime());
 
         // Create simple model with no relationship
         BlogOwner owner = BlogOwner.builder()
@@ -119,9 +121,9 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(blog.getOwner().getId(), blogCreateResult.getModel().getOwner().getId());
         assertEquals(new Integer(1), blogCreateResult.getSyncMetadata().getVersion());
         assertNull(blogCreateResult.getSyncMetadata().isDeleted());
-        Long createdBlogLastChangedAt = blogCreateResult.getSyncMetadata().getLastChangedAt();
+        Temporal.Timestamp createdBlogLastChangedAt = blogCreateResult.getSyncMetadata().getLastChangedAt();
         assertNotNull(createdBlogLastChangedAt);
-        assertTrue(createdBlogLastChangedAt > startTime);
+        assertTrue(createdBlogLastChangedAt.getSecondsSinceEpoch() > startTimeSeconds);
         assertEquals(blog.getId(), blogCreateResult.getSyncMetadata().getId());
 
         // Validate that subscription picked up the mutation
@@ -166,7 +168,7 @@ public final class AppSyncClientInstrumentationTest {
         Blog updatedBlog = blog.copyOfBuilder()
             .name("Updated blog")
             .build();
-        Long updateBlogStartTime = new Date().getTime();
+        Long updateBlogStartTimeSeconds = TimeUnit.MILLISECONDS.toSeconds(new Date().getTime());
 
         ModelWithMetadata<Blog> blogUpdateResult = update(updatedBlog, 1);
 
@@ -176,9 +178,9 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(2, blogUpdateResult.getModel().getPosts().size());
         assertEquals(new Integer(2), blogUpdateResult.getSyncMetadata().getVersion());
         assertNull(blogUpdateResult.getSyncMetadata().isDeleted());
-        Long updatedBlogLastChangedAt = blogUpdateResult.getSyncMetadata().getLastChangedAt();
+        Temporal.Timestamp updatedBlogLastChangedAt = blogUpdateResult.getSyncMetadata().getLastChangedAt();
         assertNotNull(updatedBlogLastChangedAt);
-        assertTrue(updatedBlogLastChangedAt > updateBlogStartTime);
+        assertTrue(updatedBlogLastChangedAt.getSecondsSinceEpoch() > updateBlogStartTimeSeconds);
 
         // Delete one of the posts
         ModelWithMetadata<Post> post1DeleteResult = delete(Post.class, post1.getId(), 1);
@@ -205,7 +207,7 @@ public final class AppSyncClientInstrumentationTest {
         // TODO: This is currently a pretty worthless test - mainly for setting a debug point and manually inspecting
         // When you call sync with a lastSyncTime it gives you one entry per version of that object which was created
         // since that time.
-        Iterable<ModelWithMetadata<Post>> postSyncResult = sync(Post.class, startTime);
+        Iterable<ModelWithMetadata<Post>> postSyncResult = sync(Post.class, startTimeSeconds);
         assertTrue(postSyncResult.iterator().hasNext());
     }
 
