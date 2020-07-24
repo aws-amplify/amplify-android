@@ -29,6 +29,8 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -128,6 +130,7 @@ public final class RestApiInstrumentationTest {
     public void getRequestWithIAM() throws ApiException {
         final RestOptions options = RestOptions.builder()
             .addPath("/items")
+            .addQueryParameters(Collections.singletonMap("key", "value"))
             .build();
         final RestResponse response = api.get("iamAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());

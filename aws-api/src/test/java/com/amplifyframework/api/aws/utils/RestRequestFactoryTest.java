@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -90,6 +91,20 @@ public final class RestRequestFactoryTest {
         assertEquals("The url generated should match",
                 "http://amplify-android.com/path/to/path?key1=value1&key2=value2",
                 url.toString());
+    }
+
+    /**
+     * Test creating a valid URL with queries containing special chars.
+     * @throws MalformedURLException Throws if the URL is invalid.
+     */
+    @Test
+    public void createValidURLWithQueryEncoded() throws MalformedURLException {
+        URL url = RestRequestFactory.createURL("http://amplify-android.com/beta",
+                "/path",
+                Collections.singletonMap("phone_number", "+1234567890"));
+        assertEquals("The url generated should match",
+                new URL("http://amplify-android.com/beta/path?phone_number=+1234567890"),
+                url);
     }
 
     /**
