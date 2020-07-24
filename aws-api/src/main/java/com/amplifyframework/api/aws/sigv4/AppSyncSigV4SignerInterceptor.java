@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.EndpointType;
+import com.amplifyframework.util.Empty;
 
 import com.amazonaws.DefaultRequest;
 import com.amazonaws.auth.AWSCredentials;
@@ -28,6 +29,11 @@ import com.amazonaws.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -46,7 +52,8 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
     private static final String CONTENT_TYPE = "application/json";
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(CONTENT_TYPE);
-    private static final String SERVICE_NAME = "appsync";
+    private static final String APP_SYNC_SERVICE_NAME = "appsync";
+    private static final String API_GATEWAY_SERVICE_NAME = "apigateway";
     private static final String X_API_KEY = "x-api-key";
     private static final String AUTHORIZATION = "authorization";
 
@@ -148,7 +155,12 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         Request req = chain.request();
 
         //Clone the request into a new DefaultRequest object and populate it with credentials
-        DefaultRequest<?> dr = new DefaultRequest<>(SERVICE_NAME);
+        final DefaultRequest<?> dr;
+        if (endpointType == EndpointType.GRAPHQL) {
+            dr = new DefaultRequest<>(APP_SYNC_SERVICE_NAME);
+        } else {
+            dr = new DefaultRequest<>(API_GATEWAY_SERVICE_NAME);
+        }
         //set the endpoint
         dr.setEndpoint(req.url().uri());
         //copy all the headers
@@ -158,6 +170,7 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         //set the http method
         dr.setHttpMethod(HttpMethodName.valueOf(req.method()));
 
+        //set the request body
         final byte[] bodyBytes;
         RequestBody body = req.body();
         if (body != null) {
@@ -168,8 +181,10 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         } else {
             bodyBytes = "".getBytes();
         }
-
         dr.setContent(new ByteArrayInputStream(bodyBytes));
+
+        //set the query string parameters
+        dr.setParameters(splitQuery(req.url().url()));
 
         //Sign or Decorate request with the required headers
         if (AuthorizationType.AWS_IAM.equals(authType)) {
@@ -221,23 +236,26 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         return chain.proceed(okReqBuilder.build());
     }
 
-    // Utility method to convert string to human-readable format
-    private String toHumanReadableAscii(String str) {
-        for (int i = 0, length = str.length(), c; i < length; i += Character.charCount(c)) {
-            c = str.codePointAt(i);
-            if (c > '\u001f' && c < '\u007f') {
-                continue;
-            }
-            Buffer buffer = new Buffer();
-            buffer.writeUtf8(str, 0, i);
-            for (int j = i; j < length; j += Character.charCount(c)) {
-                c = str.codePointAt(j);
-                if (c > '\u001f' && c < '\u007f') {
-                    buffer.writeUtf8CodePoint(c);
-                }
-            }
-            return buffer.readUtf8();
+    // Extracts query string parameters from a URL.
+    // Source: https://stackoverflow.com/questions/13592236/parse-a-uri-string-into-name-value-collection
+    @NonNull
+    private static Map<String, String> splitQuery(URL url) throws IOException {
+        Map<String, String> queryPairs = new LinkedHashMap<>();
+        String query = url.getQuery();
+        if (Empty.check(query)) {
+            return Collections.emptyMap();
         }
-        return str;
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            int index = pair.indexOf("=");
+            if (index < 0) {
+                throw new MalformedURLException("URL query parameters are malformed.");
+            }
+            queryPairs.put(
+                    URLDecoder.decode(pair.substring(0, index), "UTF-8"),
+                    URLDecoder.decode(pair.substring(index + 1), "UTF-8")
+            );
+        }
+        return queryPairs;
     }
 }
