@@ -90,11 +90,10 @@ public final class AppSyncRequestFactoryTest {
     @Test
     public void validateUpdateWithPredicateGeneration() throws DataStoreException, JSONException {
         String blogOwnerId = "926d7ee8-4ea5-40c0-8e62-3fb80b2a2edd";
-        BlogOwner blogOwner = BlogOwner.builder().name("John Doe").id(blogOwnerId).build();
+        BlogOwner owner = BlogOwner.builder().name("John Doe").id(blogOwnerId).build();
         JSONAssert.assertEquals(
             Resources.readAsString("update-blog-owner-with-predicate.txt"),
-            AppSyncRequestFactory.buildUpdateRequest(
-                    blogOwner, 42, BlogOwner.WEA.contains("ther")).getContent(),
+                AppSyncRequestFactory.buildUpdateRequest(owner, 42, BlogOwner.WEA.contains("ther")).getContent(),
             true
         );
     }
@@ -108,8 +107,7 @@ public final class AppSyncRequestFactoryTest {
     public void validateDeleteWithPredicateGeneration() throws DataStoreException, JSONException {
         JSONAssert.assertEquals(
             Resources.readAsString("delete-person-with-predicate.txt"),
-            AppSyncRequestFactory.buildDeletionRequest(
-                    Person.class, "123", 456, Person.AGE.gt(40)).getContent(),
+            AppSyncRequestFactory.buildDeletionRequest(Person.class, "123", 456, Person.AGE.gt(40)).getContent(),
             true
         );
     }

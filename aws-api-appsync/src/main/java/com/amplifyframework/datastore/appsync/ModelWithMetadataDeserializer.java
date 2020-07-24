@@ -28,15 +28,15 @@ import java.lang.reflect.Type;
 /**
  * Deserializer for ModelWithMetadata.
  */
-public final class ModelWithMetadataDeserializer implements JsonDeserializer<ModelWithMetadata<Model>> {
+public final class ModelWithMetadataDeserializer implements JsonDeserializer<ModelWithMetadata<? extends Model>> {
     @Override
-    @SuppressWarnings("unchecked") // Cast Type to Class<Model>
-    public ModelWithMetadata<Model> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-            throws JsonParseException {
-        final Class<Model> modelClassType;
+    @SuppressWarnings("unchecked") // Cast Type to Class<? extends Model>
+    public ModelWithMetadata<? extends Model> deserialize(
+            JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        final Class<? extends Model> modelClassType;
         if (typeOfT instanceof ParameterizedType) {
             // Because typeOfT is ParameterizedType we can be sure this is a safe cast.
-            modelClassType = (Class<Model>) ((ParameterizedType) typeOfT).getActualTypeArguments()[0];
+            modelClassType = (Class<? extends Model>) ((ParameterizedType) typeOfT).getActualTypeArguments()[0];
         } else {
             throw new JsonParseException("Expected a parameterized type during ModelWithMetadata deserialization.");
         }
