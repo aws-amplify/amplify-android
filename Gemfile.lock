@@ -1,3 +1,11 @@
+GIT
+  remote: https://github.com/aws-amplify/amplify-ci-support
+  revision: c1687ac33bc2d5420a29cd1dc4c5e90aeb36b701
+  branch: master
+  glob: src/fastlane/release_actions/*.gemspec
+  specs:
+    fastlane-plugin-release_actions (1.0.4)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -173,6 +181,7 @@ PLATFORMS
 
 DEPENDENCIES
   fastlane
+  fastlane-plugin-release_actions!
 
 BUNDLED WITH
    2.1.2
