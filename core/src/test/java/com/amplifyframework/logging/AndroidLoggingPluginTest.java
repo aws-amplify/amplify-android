@@ -15,6 +15,8 @@
 
 package com.amplifyframework.logging;
 
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
@@ -35,7 +37,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link AndroidLoggingPlugin}.
@@ -129,6 +135,39 @@ public class AndroidLoggingPluginTest {
         logger.warn("Uh oh, not great...");
 
         assertTrue(systemLog.getLines().isEmpty());
+    }
+
+    /**
+     * When the application is not in a debuggable build, logs are not stored.
+     */
+    @Test
+    public void noLogsStored() {
+        Context mockContext = mock(Context.class);
+        ApplicationInfo mockAppInfo = mock(ApplicationInfo.class);
+        mockAppInfo.flags = 0;
+        when(mockContext.getApplicationInfo()).thenReturn(mockAppInfo);
+        AndroidLoggingPlugin plugin = new AndroidLoggingPlugin();
+        plugin.configure(new JSONObject(), mockContext);
+        Logger logger = plugin.forNamespace("logging-test");
+        logger.info("Info log");
+        assertNull(plugin.getLogs());
+    }
+
+    /**
+     * When the application is in a debuggable build, logs are stored.
+     */
+    @Test
+    public void logsAreStored() {
+        Context mockContext = mock(Context.class);
+        ApplicationInfo mockAppInfo = mock(ApplicationInfo.class);
+        mockAppInfo.flags = ApplicationInfo.FLAG_DEBUGGABLE;
+        when(mockContext.getApplicationInfo()).thenReturn(mockAppInfo);
+        AndroidLoggingPlugin plugin = new AndroidLoggingPlugin();
+        plugin.configure(new JSONObject(), mockContext);
+        Logger logger = plugin.forNamespace("logging-test");
+        logger.info("Info log");
+        assertNotNull(plugin.getLogs());
+        assertEquals(plugin.getLogs().size(), 1);
     }
 
     static final class LogOutputStream extends ByteArrayOutputStream {
