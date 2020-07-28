@@ -16,15 +16,13 @@
 package com.amplifyframework.logging;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import org.json.JSONObject;
+import com.amplifyframework.core.Amplify;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.json.JSONObject;
 
 /**
  * AWS' default implementation of the {@link LoggingCategoryBehavior},
@@ -33,10 +31,6 @@ import java.util.List;
 public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     private static final String AMPLIFY_NAMESPACE = "amplify";
     private final LogLevel defaultLoggerThreshold;
-    // Indicates whether logs emitted by AndroidLogger should be stored.
-    private boolean storeLogs;
-    // The loggers created by this plugin.
-    private List<AndroidLogger> loggers;
 
     /**
      * Creates a logging plugin using {@link LogLevel#INFO} as the default
@@ -55,16 +49,14 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @SuppressWarnings("WeakerAccess") // This is a a public API
     public AndroidLoggingPlugin(@NonNull LogLevel defaultLoggerThreshold) {
         this.defaultLoggerThreshold = defaultLoggerThreshold;
-        loggers = new ArrayList<>();
     }
 
     @NonNull
     @Override
     public Logger forNamespace(@Nullable String namespace) {
         String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
-        AndroidLogger newLogger = new AndroidLogger(usedNamespace, defaultLoggerThreshold, storeLogs);
-        loggers.add(newLogger);
-        return newLogger;
+        AndroidLogger androidLogger = new AndroidLogger(usedNamespace, defaultLoggerThreshold);
+        return Amplify.Logging.createBroadcastLogger(androidLogger);
     }
 
     @NonNull
@@ -77,7 +69,6 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     public void configure(
             JSONObject pluginConfiguration,
             @NonNull Context context) {
-        storeLogs = (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         // In the future, accept a log level configuration from JSON?
     }
 
@@ -85,21 +76,5 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @Override
     public Void getEscapeHatch() {
         return null;
-    }
-
-    /**
-     * Returns the logs stored by all of the {@link AndroidLogger}s, or null
-     * if no logs were stored.
-     * @return a list of LogEntry.
-     */
-    public List<LogEntry> getLogs() {
-        if (!storeLogs) {
-            return null;
-        }
-        List<LogEntry> logs = new ArrayList<>();
-        for (AndroidLogger logger : loggers) {
-            logs.addAll(logger.getLogs());
-        }
-        return logs;
     }
 }

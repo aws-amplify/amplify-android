@@ -16,7 +16,6 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -29,7 +28,6 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.hub.HubCategory;
-import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.storage.StorageCategory;
@@ -128,11 +126,6 @@ public final class Amplify {
                 );
             }
 
-            boolean debuggableApp = isDebuggableApplication(context);
-            if (debuggableApp && Logging.getPlugins().isEmpty()) {
-                addPlugin(new AndroidLoggingPlugin());
-            }
-
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
                 if (category.getPlugins().size() > 0) {
                     CategoryConfiguration categoryConfiguration =
@@ -142,9 +135,7 @@ public final class Amplify {
                 }
             }
 
-            if (debuggableApp) {
-                DeveloperMenuManager.sharedInstance(context).startListening();
-            }
+            DeveloperMenuManager.sharedInstance(context).enableDeveloperMenu();
 
             CONFIGURATION_LOCK.set(true);
         }
@@ -214,15 +205,6 @@ public final class Amplify {
     private enum RegistryUpdateType {
         ADD,
         REMOVE
-    }
-
-    /**
-     * Returns true if the application is in a debuggable build, false otherwise.
-     * @param context an Android Context
-     * @return a boolean indicating whether the application is in a debuggable build
-     */
-    private static boolean isDebuggableApplication(Context context) {
-        return (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
 
 }

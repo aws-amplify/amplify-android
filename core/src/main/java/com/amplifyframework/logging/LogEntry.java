@@ -16,9 +16,12 @@
 package com.amplifyframework.logging;
 
 import android.util.Log;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 /**
  * A representation of a log.
@@ -26,16 +29,11 @@ import java.time.format.DateTimeFormatter;
 public final class LogEntry {
     // The format for the log's date and time.
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
-    // The date and time of the log.
-    private LocalDateTime dateTime;
-    // The namespace of the logger that emitted the log.
-    private String namespace;
-    // The message for the log.
-    private String message;
-    // The Throwable (if any) associated with the log.
-    private Throwable throwable;
-    // The level the log was logged at.
-    private LogLevel logLevel;
+    private final LocalDateTime dateTime;
+    private final String namespace;
+    private final String message;
+    private final Throwable throwable;
+    private final LogLevel logLevel;
 
     /**
      * Creates a new LogEntry representing a log with the given time, tag,
@@ -45,7 +43,8 @@ public final class LogEntry {
      * @param message the message for the log.
      * @param logLevel the level the log was logged at.
      */
-    public LogEntry(LocalDateTime dateTime, String namespace, String message, LogLevel logLevel) {
+    public LogEntry(@NonNull LocalDateTime dateTime, @Nullable String namespace, @Nullable String message,
+                    @NonNull LogLevel logLevel) {
         this(dateTime, namespace, message, null, logLevel);
     }
 
@@ -58,12 +57,53 @@ public final class LogEntry {
      * @param throwable the Throwable associated with the log.
      * @param logLevel the level the log was logged at.
      */
-    public LogEntry(LocalDateTime dateTime, String namespace, String message, Throwable throwable, LogLevel logLevel) {
-        this.dateTime = dateTime;
+    public LogEntry(@NonNull LocalDateTime dateTime, @Nullable String namespace, @Nullable String message,
+                    @Nullable Throwable throwable, @NonNull LogLevel logLevel) {
+        this.dateTime = Objects.requireNonNull(dateTime);
+        this.logLevel = Objects.requireNonNull(logLevel);
         this.namespace = namespace;
         this.message = message;
         this.throwable = throwable;
-        this.logLevel = logLevel;
+    }
+
+    /**
+     * Gets the date and time of the log.
+     * @return the date and time of the log.
+     */
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    /**
+     * Gets the namespace of the logger that emitted the log.
+     * @return the namespace of the logger that emitted the log.
+     */
+    public String getNamespace() {
+        return namespace;
+    }
+
+    /**
+     * Gets the message for the log.
+     * @return the message for the log.
+     */
+    public String getMessage() {
+        return message;
+    }
+
+    /**
+     * Gets the throwable for the log.
+     * @return the throwable for the log, or null if there is no throwable for the log.
+     */
+    public Throwable getThrowable() {
+        return throwable;
+    }
+
+    /**
+     * Gets the level the log was logged at.
+     * @return the level the log was logged at.
+     */
+    public LogLevel getLogLevel() {
+        return logLevel;
     }
 
     /**

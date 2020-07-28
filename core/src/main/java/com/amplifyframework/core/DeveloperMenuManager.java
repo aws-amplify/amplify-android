@@ -17,6 +17,7 @@ package com.amplifyframework.core;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 
 /**
  * Manage the display and shake detection behavior for the
@@ -50,6 +51,16 @@ public final class DeveloperMenuManager implements ShakeDetector.Listener {
             sInstance = new DeveloperMenuManager(context);
         }
         return sInstance;
+    }
+
+    /**
+     * Allows the developer menu to be activated if the app is in a debuggable build.
+     */
+    public void enableDeveloperMenu() {
+        if ((context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+            Amplify.Logging.shouldStoreLogs(true);
+            startListening();
+        }
     }
 
     /**

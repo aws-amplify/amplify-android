@@ -22,6 +22,10 @@ import androidx.annotation.VisibleForTesting;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 /**
  * The LoggingCategory is a collection of zero or more plugin
  * implementations which implement the logging category behavior. The
@@ -30,6 +34,10 @@ import com.amplifyframework.core.category.CategoryType;
  */
 public final class LoggingCategory extends Category<LoggingPlugin<?>> implements LoggingCategoryBehavior {
     private final LoggingPlugin<?> defaultPlugin;
+    // List of BroadcastLoggers created.
+    private final List<BroadcastLogger> loggers;
+    // Indicates whether the logs from all loggers should be stored.
+    private boolean storeLogs;
 
     /**
      * Constructs a logging category.
@@ -42,6 +50,7 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     LoggingCategory(LoggingPlugin<?> defaultPlugin) {
         super();
         this.defaultPlugin = defaultPlugin;
+        loggers = new ArrayList<>();
     }
 
     @NonNull
@@ -53,7 +62,46 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     @NonNull
     @Override
     public Logger forNamespace(@Nullable String namespace) {
-        return getLoggingPlugin().forNamespace(namespace);
+        Logger logger = getLoggingPlugin().forNamespace(namespace);
+        if (!(logger instanceof BroadcastLogger)) {
+            return createBroadcastLogger(logger);
+        } else {
+            return logger;
+        }
+    }
+
+    /**
+     * Creates a new BroadcastLogger that uses the given logger to emit logs.
+     * @param logger the Logger used to emit logs.
+     * @return a new BroadcastLogger.
+     */
+    protected Logger createBroadcastLogger(@NonNull Logger logger) {
+        Objects.requireNonNull(logger);
+        BroadcastLogger broadcastLogger = new BroadcastLogger(logger, storeLogs);
+        loggers.add(broadcastLogger);
+        return broadcastLogger;
+    }
+
+    /**
+     * Set whether the logs from all loggers should be stored.
+     * @param storeLogs boolean indicating whether to store the logs.
+     */
+    public void shouldStoreLogs(boolean storeLogs) {
+        this.storeLogs = storeLogs;
+    }
+
+    /**
+     * Returns the logs stored by all of the {@link BroadcastLogger}s.
+     * @return a list of LogEntry.
+     */
+    public List<LogEntry> getLogs() {
+        List<LogEntry> logs = new ArrayList<>();
+        if (storeLogs) {
+            for (BroadcastLogger logger : loggers) {
+                logs.addAll(logger.getLogs());
+            }
+        }
+        return logs;
     }
 
     @NonNull
