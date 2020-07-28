@@ -16,23 +16,42 @@
 default_platform(:android)
 
 platform :android do
-  desc "Runs all the tests"
-  lane :test do
-    gradle(task: "test")
+  desc "Create a pre-release version by pushing a tag to GitHub, and pushing pods to CocoaPods"
+  lane :unstable do 
+    next_version = calculate_next_canary_version
+
+    UI.message("Releasing unstable version: #{next_version}")
+
+    # # Increment all specs and plists
+    # increment_versions(version: next_version)
+
+    # # Create tag and push to origin
+    # add_tag(version: next_version)
+
+    # # Push to maven
+    # UI.message("Pushing unstable to maven")
   end
 
-  desc "Submit a new Beta Build to Crashlytics Beta"
-  lane :beta do
-    gradle(task: "clean assembleRelease")
-    crashlytics
-  
-    # sh "your_script.sh"
-    # You can also use other beta testing services here
-  end
+  desc "Create a release version by building and committing a changelog, pushing a tag to GitHub, and pushing pods to CocoaPods"  
+  lane :release do
+    next_version, commits = calculate_next_release_version
 
-  desc "Deploy a new version to the Google Play"
-  lane :deploy do
-    gradle(task: "clean assembleRelease")
-    upload_to_play_store
+    UI.message("Releasing version: #{next_version}")
+
+    # Increment all specs and plists
+    # increment_versions(version: next_version)
+
+    # changelog = build_changelog(version: next_version, commits: commits)
+
+    # write_changelog(changelog: changelog, path: 'CHANGELOG.md')
+
+    # Commit and push 
+    # release_commit(version: next_version)
+
+    # Create tag and push to origin
+    # add_tag(version: next_version)
+
+    # Push to maven
+    # UI.message("Pushing release to maven")
   end
 end
