@@ -103,4 +103,3 @@ amplifyconfiguration.json
 test-results/
 build-artifacts/
 build-artifacts.tar.gz
-jacoco.exec
