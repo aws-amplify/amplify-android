@@ -67,9 +67,7 @@ public final class PersistentLogStoragePlugin extends LoggingPlugin<Void> {
     }
 
     @Override
-    public void configure(
-            JSONObject pluginConfiguration,
-            @NonNull Context context) {
+    public void configure(JSONObject pluginConfiguration, @NonNull Context context) {
     }
 
     @Nullable
@@ -88,7 +86,7 @@ public final class PersistentLogStoragePlugin extends LoggingPlugin<Void> {
         for (PersistentLogger logger : loggers.values()) {
             logs.addAll(logger.getLogs());
         }
-        Collections.sort(logs, (left, right) -> left.getDateTime().compareTo(right.getDateTime()));
+        Collections.sort(logs);
         return logs;
     }
 }

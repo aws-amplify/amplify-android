@@ -18,7 +18,6 @@ package com.amplifyframework.devmenu;
 import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -45,10 +44,8 @@ public final class PersistentLogStoragePluginTest {
         logger.error(message, throwable);
         List<LogEntry> logs = plugin.getLogs();
         assertEquals(1, logs.size());
-        LogEntry log = logs.get(0);
-        assertEquals(logger.getNamespace(), log.getNamespace());
-        assertEquals(message, log.getMessage());
-        Assert.assertEquals(LogLevel.ERROR, log.getLogLevel());
-        assertEquals(throwable, log.getThrowable());
+        LogEntry expectedLog = new LogEntry(logs.get(0).getDateTime(), logger.getNamespace(), message,
+                throwable, LogLevel.ERROR);
+        assertEquals(expectedLog, logs.get(0));
     }
 }

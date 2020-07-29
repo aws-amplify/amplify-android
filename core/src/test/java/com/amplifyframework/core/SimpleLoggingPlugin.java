@@ -18,7 +18,6 @@ package com.amplifyframework.core;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.logging.Logger;
@@ -47,25 +46,6 @@ public final class SimpleLoggingPlugin extends LoggingPlugin<Void> {
      */
     public static SimpleLoggingPlugin instance() {
         return new SimpleLoggingPlugin();
-    }
-
-    @Override
-    public boolean equals(Object thatObject) {
-        if (this == thatObject) {
-            return true;
-        }
-        if (thatObject == null || getClass() != thatObject.getClass()) {
-            return false;
-        }
-
-        SimpleLoggingPlugin that = (SimpleLoggingPlugin) thatObject;
-
-        return ObjectsCompat.equals(uuid, that.uuid);
-    }
-
-    @Override
-    public int hashCode() {
-        return uuid != null ? uuid.hashCode() : 0;
     }
 
     @NonNull

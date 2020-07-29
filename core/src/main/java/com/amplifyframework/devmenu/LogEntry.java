@@ -23,12 +23,13 @@ import com.amplifyframework.logging.LogLevel;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
  * A representation of a log.
  */
-public final class LogEntry {
+public final class LogEntry implements Comparable<LogEntry> {
     // The format for the log's date and time.
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     private final LocalDateTime dateTime;
@@ -95,13 +96,36 @@ public final class LogEntry {
         return logLevel;
     }
 
+    @Override
+    public int compareTo(LogEntry logEntry) {
+        return getDateTime().compareTo(logEntry.getDateTime());
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof LogEntry)) {
+            return false;
+        }
+        LogEntry otherEntry = (LogEntry) object;
+        return dateTime.equals(otherEntry.getDateTime()) && logLevel.equals(otherEntry.getLogLevel())
+                && namespace.equals(otherEntry.getNamespace()) && message.equals(otherEntry.getMessage())
+                && throwable.equals(otherEntry.getThrowable());
+    }
+
+    @Override
+    public int hashCode() {
+        return dateTime.hashCode() + logLevel.hashCode() + namespace.hashCode() + message.hashCode()
+                + throwable.hashCode();
+    }
+
     /**
      * Returns a String representation of this log.
      * @return a String representing this log.
      */
     public String toString() {
-        return String.format("[%s] %s %s: %s \n%s", logLevel.name(),
-                dateTime.format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)), namespace, message,
-                throwable == null ? "" : Log.getStackTraceString(throwable));
+        String dateString = dateTime.format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+        String exceptionTrace = throwable == null ? "" : Log.getStackTraceString(throwable);
+        return String.format(Locale.US, "[%s] %s %s: %s \n%s",
+                logLevel.name(), dateString, namespace, message, exceptionTrace);
     }
 }

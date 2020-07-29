@@ -23,7 +23,9 @@ import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The LoggingCategory is a collection of zero or more plugin
@@ -56,16 +58,11 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     @NonNull
     @Override
     public Logger forNamespace(@Nullable String namespace) {
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
         List<Logger> delegates = new ArrayList<>();
-        boolean defaultPluginAdded = false;
-        for (LoggingPlugin<?> plugin : getPlugins()) {
-            if (plugin.getPluginKey().equals(defaultPlugin.getPluginKey())) {
-                defaultPluginAdded = true;
-            }
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
             delegates.add(plugin.forNamespace(namespace));
-        }
-        if (!defaultPluginAdded) {
-            delegates.add(defaultPlugin.forNamespace(namespace));
         }
         return new BroadcastLogger(delegates);
     }

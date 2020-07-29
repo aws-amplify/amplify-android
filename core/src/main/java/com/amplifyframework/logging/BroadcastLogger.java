@@ -33,11 +33,8 @@ public final class BroadcastLogger implements Logger {
      * Creates a new BroadcastLogger.
      * @param delegates the list of loggers to emit logs to
      */
-    public BroadcastLogger(@Nullable List<Logger> delegates) {
-        this.delegates = new ArrayList<>();
-        if (delegates != null) {
-            this.delegates.addAll(delegates);
-        }
+    public BroadcastLogger(List<Logger> delegates) {
+        this.delegates = new ArrayList<>(delegates);
     }
 
     @NonNull
