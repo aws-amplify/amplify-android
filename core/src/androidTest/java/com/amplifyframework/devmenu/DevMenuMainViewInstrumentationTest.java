@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core;
+package com.amplifyframework.devmenu;
 
 import androidx.annotation.RawRes;
 import androidx.fragment.app.testing.FragmentScenario;
@@ -24,7 +24,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.espresso.matcher.ViewMatchers;
 
-import com.amplifyframework.devmenu.DevMenuMainFragment;
+import com.amplifyframework.core.R;
 
 import org.junit.Before;
 import org.junit.Test;
