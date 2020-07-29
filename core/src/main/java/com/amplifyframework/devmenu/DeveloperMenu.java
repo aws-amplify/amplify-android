@@ -21,7 +21,6 @@ import android.content.pm.ApplicationInfo;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.logging.PersistentLogStoragePlugin;
 
 /**
  * Manage the display and shake detection behavior for the

@@ -13,13 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.logging;
+package com.amplifyframework.devmenu;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.devmenu.LogEntry;
+import com.amplifyframework.logging.LogLevel;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Immutable;
 
 import java.time.LocalDateTime;

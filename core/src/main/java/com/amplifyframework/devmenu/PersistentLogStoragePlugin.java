@@ -13,47 +13,57 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.logging;
+package com.amplifyframework.devmenu;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.devmenu.LogEntry;
+import com.amplifyframework.logging.Logger;
+import com.amplifyframework.logging.LoggingCategoryBehavior;
+import com.amplifyframework.logging.LoggingPlugin;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of the {@link LoggingCategoryBehavior} that stores logs.
  */
 public final class PersistentLogStoragePlugin extends LoggingPlugin<Void> {
     private static final String AMPLIFY_NAMESPACE = "amplify";
-    // List of PersistentLoggers created.
-    private final List<PersistentLogger> loggers;
+    // Map from namespace to the PersistentLogger for that namespace.
+    private final Map<String, PersistentLogger> loggers;
 
     /**
      * Creates a new PersistentLogStoragePlugin.
      */
     public PersistentLogStoragePlugin() {
-        loggers = new ArrayList<>();
+        loggers = new HashMap<>();
     }
 
     @NonNull
     @Override
     public Logger forNamespace(@Nullable String namespace) {
         String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
-        PersistentLogger logger = new PersistentLogger(usedNamespace);
-        loggers.add(logger);
-        return logger;
+        PersistentLogger preExistingLogger = loggers.get(usedNamespace);
+        if (preExistingLogger != null) {
+            return preExistingLogger;
+        } else {
+            PersistentLogger newLogger = new PersistentLogger(usedNamespace);
+            loggers.put(usedNamespace, newLogger);
+            return newLogger;
+        }
     }
 
     @NonNull
     @Override
     public String getPluginKey() {
-        return "PersistentLogStoragePlugin";
+        return PersistentLogStoragePlugin.class.getSimpleName();
     }
 
     @Override
@@ -69,14 +79,16 @@ public final class PersistentLogStoragePlugin extends LoggingPlugin<Void> {
     }
 
     /**
-     * Returns the logs stored by all of the {@link PersistentLogger}s.
-     * @return a list of LogEntry.
+     * Returns the logs stored by all of the {@link PersistentLogger}s
+     * in order from oldest to newest in terms of timestamp.
+     * @return a sorted list of LogEntry.
      */
     public List<LogEntry> getLogs() {
         List<LogEntry> logs = new ArrayList<>();
-        for (PersistentLogger logger : loggers) {
+        for (PersistentLogger logger : loggers.values()) {
             logs.addAll(logger.getLogs());
         }
+        Collections.sort(logs, (left, right) -> left.getDateTime().compareTo(right.getDateTime()));
         return logs;
     }
 }

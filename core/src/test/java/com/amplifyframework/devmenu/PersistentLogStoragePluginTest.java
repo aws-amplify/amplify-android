@@ -13,10 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.logging;
+package com.amplifyframework.devmenu;
 
-import com.amplifyframework.devmenu.LogEntry;
+import com.amplifyframework.logging.LogLevel;
+import com.amplifyframework.logging.Logger;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -46,7 +48,7 @@ public final class PersistentLogStoragePluginTest {
         LogEntry log = logs.get(0);
         assertEquals(logger.getNamespace(), log.getNamespace());
         assertEquals(message, log.getMessage());
-        assertEquals(LogLevel.ERROR, log.getLogLevel());
+        Assert.assertEquals(LogLevel.ERROR, log.getLogLevel());
         assertEquals(throwable, log.getThrowable());
     }
 }

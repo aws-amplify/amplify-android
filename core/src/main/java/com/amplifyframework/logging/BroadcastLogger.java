@@ -43,7 +43,12 @@ public final class BroadcastLogger implements Logger {
     @NonNull
     @Override
     public LogLevel getThresholdLevel() {
-        throw new UnsupportedOperationException("Cannot get threshold level for BroadcastLogger.");
+        if (delegates.isEmpty()) {
+            throw new IllegalStateException("Cannot get threshold level for BroadcastLogger" +
+                    " with no registered loggers.");
+        } else {
+            return delegates.get(0).getThresholdLevel();
+        }
     }
 
     @NonNull
