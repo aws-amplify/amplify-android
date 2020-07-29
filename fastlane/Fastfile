@@ -18,12 +18,21 @@ default_platform(:android)
 platform :android do
   desc "Create a pre-release version by pushing a tag to GitHub, and pushing pods to CocoaPods"
   lane :unstable do 
-    next_version = calculate_next_canary_version
+    next_version = calculate_next_canary_version({
+        :release_tag_prefix => 'release_v',
+        :release_tag_type => 'annotated'
+      }
+    )
 
     UI.message("Releasing unstable version: #{next_version}")
 
     # # Increment all specs and plists
-    # increment_versions(version: next_version)
+    increment_versions(version: next_version)
+
+    gradle(
+      task: "assemble",
+      build_type: "Release"
+    )
 
     # # Create tag and push to origin
     # add_tag(version: next_version)
@@ -53,5 +62,21 @@ platform :android do
 
     # Push to maven
     # UI.message("Pushing release to maven")
+  end
+
+  desc "Increment versions"
+  private_lane :increment_versions do |options|
+    version = options[:version].to_s
+    segments = options[:version].segments
+    prerelease = options[:version].prerelease.nil? ? 0 : options[:version].prerelease.to_i
+
+    # Derive the version code from version segements and pre-release number (if applicable)
+    version_code = segments[0] * 100000 + segments[1] * 1000 + segments[2] * 10 + prerelease
+
+    UI.message("Updating versionName and versionCode in gradle.properties")
+
+    set_key_value(file: 'gradle.properties', key: 'VERSION_NAME', value: version)
+    set_key_value(file: 'gradle.properties', key: 'VERSION_CODE', value: version_code.to_s)
+
   end
 end
