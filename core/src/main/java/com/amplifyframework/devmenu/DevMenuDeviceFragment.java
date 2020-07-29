@@ -13,29 +13,36 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core;
+package com.amplifyframework.devmenu;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import androidx.fragment.app.Fragment;
+
+import com.amplifyframework.core.R;
 
 /**
  * A {@link Fragment} subclass representing the view
- * to display the environment information on the developer menu.
+ * to display the device information on the developer menu.
  */
-public final class DevMenuEnvironmentFragment extends Fragment {
+public final class DevMenuDeviceFragment extends Fragment {
 
     /**
      * Required empty public constructor.
      */
-    public DevMenuEnvironmentFragment() { }
+    public DevMenuDeviceFragment() { }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_environment, container, false);
+        View deviceInfoView = inflater.inflate(R.layout.fragment_device, container, false);
+        // Set the device information text.
+        TextView deviceInfoText = deviceInfoView.findViewById(R.id.device_info_text);
+        deviceInfoText.setText(new DeviceInfo().toString());
+        return deviceInfoView;
     }
 }

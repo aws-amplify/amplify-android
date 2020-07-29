@@ -19,7 +19,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="30dp"
-    tools:context=".DevMenuDeviceFragment">
+    tools:context="com.amplifyframework.devmenu.DevMenuDeviceFragment">
 
     <TextView
         android:id="@+id/device_info_text"

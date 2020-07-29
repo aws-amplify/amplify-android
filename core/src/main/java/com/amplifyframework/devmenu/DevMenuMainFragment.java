@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core;
+package com.amplifyframework.devmenu;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -21,6 +21,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+
+import com.amplifyframework.core.R;
 
 /**
  * A {@link Fragment} subclass representing the main view for

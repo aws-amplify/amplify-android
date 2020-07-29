@@ -19,130 +19,92 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.util.Immutable;
-
-import java.time.LocalDateTime;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
- * An implementation of {@link Logger} that can store logs and
- * uses a provided logger to emit logs.
+ * An implementation of {@link Logger} that emits logs to all loggers.
  */
-final class BroadcastLogger implements Logger {
-    // Maximum number of logs to store.
-    private static final int MAX_NUM_LOGS = 500;
-    // Logger used to emit the logs.
-    private final Logger logger;
-    // Indicates whether to store the logs emitted by this logger.
-    private final boolean shouldStoreLogs;
-    // The logs stored by this logger.
-    private final List<LogEntry> logs;
+public final class BroadcastLogger implements Logger {
+    // List of loggers to emit logs to.
+    private final List<Logger> delegates;
 
-    BroadcastLogger(@NonNull Logger logger, boolean shouldStoreLogs) {
-        this.logger = Objects.requireNonNull(logger);
-        this.shouldStoreLogs = shouldStoreLogs;
-        logs = new LinkedList<>();
+    /**
+     * Creates a new BroadcastLogger.
+     * @param delegates the list of loggers to emit logs to
+     */
+    public BroadcastLogger(@Nullable List<Logger> delegates) {
+        this.delegates = new ArrayList<>();
+        if (delegates != null) {
+            this.delegates.addAll(delegates);
+        }
     }
 
     @NonNull
     @Override
     public LogLevel getThresholdLevel() {
-        return logger.getThresholdLevel();
+        throw new UnsupportedOperationException("Cannot get threshold level for BroadcastLogger.");
     }
 
     @NonNull
     @Override
     public String getNamespace() {
-        return logger.getNamespace();
+        if (delegates.isEmpty()) {
+            return "";
+        } else {
+            return delegates.get(0).getNamespace();
+        }
     }
 
     @Override
     public void error(@Nullable String message) {
-        if (getThresholdLevel().above(LogLevel.ERROR)) {
-            return;
+        for (Logger delegate : delegates) {
+            delegate.error(message);
         }
-        addToLogs(new LogEntry(LocalDateTime.now(), getNamespace(), message, LogLevel.ERROR));
-        logger.error(message);
     }
 
     @Override
     public void error(@Nullable String message, @Nullable Throwable error) {
-        if (getThresholdLevel().above(LogLevel.ERROR)) {
-            return;
+        for (Logger delegate : delegates) {
+            delegate.error(message, error);
         }
-        addToLogs(new LogEntry(LocalDateTime.now(), getNamespace(), message, error, LogLevel.ERROR));
-        logger.error(message, error);
     }
 
     @Override
     public void warn(@Nullable String message) {
-        if (getThresholdLevel().above(LogLevel.WARN)) {
-            return;
+        for (Logger delegate : delegates) {
+            delegate.warn(message);
         }
-        addToLogs(new LogEntry(LocalDateTime.now(), getNamespace(), message, LogLevel.WARN));
-        logger.warn(message);
     }
 
     @Override
     public void warn(@Nullable String message, @Nullable Throwable issue) {
-        if (getThresholdLevel().above(LogLevel.WARN)) {
-            return;
+        for (Logger delegate : delegates) {
+            delegate.warn(message, issue);
         }
-        addToLogs(new LogEntry(LocalDateTime.now(), getNamespace(), message, issue, LogLevel.WARN));
-        logger.warn(message, issue);
     }
 
     @SuppressLint("LogConditional") // We guard with our own LogLevel.
     @Override
     public void info(@Nullable String message) {
-        if (getThresholdLevel().above(LogLevel.INFO)) {
-            return;
+        for (Logger delegate : delegates) {
+            delegate.info(message);
         }
-        addToLogs(new LogEntry(LocalDateTime.now(), getNamespace(), message, LogLevel.INFO));
-        logger.info(message);
     }
 
     @SuppressLint("LogConditional") // We guard with our own LogLevel.
     @Override
     public void debug(@Nullable String message) {
-        if (getThresholdLevel().above(LogLevel.DEBUG)) {
-            return;
+        for (Logger delegate : delegates) {
+            delegate.debug(message);
         }
-        addToLogs(new LogEntry(LocalDateTime.now(), getNamespace(), message, LogLevel.DEBUG));
-        logger.debug(message);
     }
 
     @SuppressLint("LogConditional") // We guard with our own LogLevel.
     @Override
     public void verbose(@Nullable String message) {
-        if (getThresholdLevel().above(LogLevel.VERBOSE)) {
-            return;
-        }
-        addToLogs(new LogEntry(LocalDateTime.now(), getNamespace(), message, LogLevel.VERBOSE));
-        logger.verbose(message);
-    }
-
-    /**
-     * Returns the logs stored by this logger.
-     * @return the list of logs stored by this logger.
-     */
-    public List<LogEntry> getLogs() {
-        return Immutable.of(logs);
-    }
-
-    /**
-     * If the logs should be stored, then stores the given log and removes the
-     * first log currently stored if there would be more than MAX_NUM_LOGS stored.
-     * @param logEntry the log to be stored.
-     */
-    private void addToLogs(LogEntry logEntry) {
-        if (shouldStoreLogs) {
-            if (logs.size() == MAX_NUM_LOGS) {
-                logs.remove(0);
-            }
-            logs.add(logEntry);
+        for (Logger delegate : delegates) {
+            delegate.verbose(message);
         }
     }
 }

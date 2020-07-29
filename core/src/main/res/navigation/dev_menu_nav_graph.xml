@@ -21,7 +21,7 @@
 
     <fragment
         android:id="@+id/main_fragment"
-        android:name="com.amplifyframework.core.DevMenuMainFragment"
+        android:name="com.amplifyframework.devmenu.DevMenuMainFragment"
         android:label="@string/menu_title">
         <action
             android:id="@+id/show_file_issue"
@@ -38,18 +38,18 @@
     </fragment>
     <fragment
         android:id="@+id/environment_fragment"
-        android:name="com.amplifyframework.core.DevMenuEnvironmentFragment"
+        android:name="com.amplifyframework.devmenu.DevMenuEnvironmentFragment"
         android:label="@string/env_view_title" />
     <fragment
         android:id="@+id/device_fragment"
-        android:name="com.amplifyframework.core.DevMenuDeviceFragment"
+        android:name="com.amplifyframework.devmenu.DevMenuDeviceFragment"
         android:label="@string/device_view_title" />
     <fragment
         android:id="@+id/logs_fragment"
-        android:name="com.amplifyframework.core.DevMenuLogsFragment"
+        android:name="com.amplifyframework.devmenu.DevMenuLogsFragment"
         android:label="@string/logs_view_title" />
     <fragment
         android:id="@+id/file_issue_fragment"
-        android:name="com.amplifyframework.core.DevMenuFileIssueFragment"
+        android:name="com.amplifyframework.devmenu.DevMenuFileIssueFragment"
         android:label="@string/file_issue_view_title" />
 </navigation>

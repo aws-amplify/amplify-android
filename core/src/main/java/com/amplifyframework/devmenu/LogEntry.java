@@ -13,11 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.logging;
+package com.amplifyframework.devmenu;
 
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.amplifyframework.logging.LogLevel;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,19 +36,6 @@ public final class LogEntry {
     private final String message;
     private final Throwable throwable;
     private final LogLevel logLevel;
-
-    /**
-     * Creates a new LogEntry representing a log with the given time, tag,
-     * and message that was logged at the given level.
-     * @param dateTime the date and time of the log.
-     * @param namespace the namespace of the logger that emitted the log.
-     * @param message the message for the log.
-     * @param logLevel the level the log was logged at.
-     */
-    public LogEntry(@NonNull LocalDateTime dateTime, @Nullable String namespace, @Nullable String message,
-                    @NonNull LogLevel logLevel) {
-        this(dateTime, namespace, message, null, logLevel);
-    }
 
     /**
      * Creates a new LogEntry representing a log with the given time, tag, message,

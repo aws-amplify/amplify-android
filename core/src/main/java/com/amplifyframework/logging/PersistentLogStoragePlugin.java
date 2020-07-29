@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,62 +16,67 @@
 package com.amplifyframework.logging;
 
 import android.content.Context;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.devmenu.LogEntry;
+
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * AWS' default implementation of the {@link LoggingCategoryBehavior},
- * which emits logs to Android's {@link Log} class.
+ * Implementation of the {@link LoggingCategoryBehavior} that stores logs.
  */
-public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
+public final class PersistentLogStoragePlugin extends LoggingPlugin<Void> {
     private static final String AMPLIFY_NAMESPACE = "amplify";
-    private final LogLevel defaultLoggerThreshold;
+    // List of PersistentLoggers created.
+    private final List<PersistentLogger> loggers;
 
     /**
-     * Creates a logging plugin using {@link LogLevel#INFO} as the default
-     * logging threshold.
+     * Creates a new PersistentLogStoragePlugin.
      */
-    @SuppressWarnings("WeakerAccess") // This is a a public API
-    public AndroidLoggingPlugin() {
-        this(LogLevel.INFO);
-    }
-
-    /**
-     * Constructs a logging plugin that used the provided threshold by default,
-     * when creating loggers.
-     * @param defaultLoggerThreshold default threshold to use when creating loggers.
-     */
-    @SuppressWarnings("WeakerAccess") // This is a a public API
-    public AndroidLoggingPlugin(@NonNull LogLevel defaultLoggerThreshold) {
-        this.defaultLoggerThreshold = defaultLoggerThreshold;
+    public PersistentLogStoragePlugin() {
+        loggers = new ArrayList<>();
     }
 
     @NonNull
     @Override
     public Logger forNamespace(@Nullable String namespace) {
         String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
-        return new AndroidLogger(usedNamespace, defaultLoggerThreshold);
+        PersistentLogger logger = new PersistentLogger(usedNamespace);
+        loggers.add(logger);
+        return logger;
     }
 
     @NonNull
     @Override
     public String getPluginKey() {
-        return "AndroidLoggingPlugin";
+        return "PersistentLogStoragePlugin";
     }
 
     @Override
     public void configure(
             JSONObject pluginConfiguration,
             @NonNull Context context) {
-        // In the future, accept a log level configuration from JSON?
     }
 
     @Nullable
     @Override
     public Void getEscapeHatch() {
         return null;
+    }
+
+    /**
+     * Returns the logs stored by all of the {@link PersistentLogger}s.
+     * @return a list of LogEntry.
+     */
+    public List<LogEntry> getLogs() {
+        List<LogEntry> logs = new ArrayList<>();
+        for (PersistentLogger logger : loggers) {
+            logs.addAll(logger.getLogs());
+        }
+        return logs;
     }
 }

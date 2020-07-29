@@ -21,7 +21,7 @@
     android:orientation="vertical"
     android:layout_margin="15dp"
     android:gravity="center"
-    tools:context=".DevMenuMainFragment">
+    tools:context="com.amplifyframework.devmenu.DevMenuMainFragment">
 
     <Button
         android:id="@+id/env_button"

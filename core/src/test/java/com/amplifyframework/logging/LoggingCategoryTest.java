@@ -19,7 +19,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -34,7 +33,6 @@ import java.util.List;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -135,35 +133,6 @@ public final class LoggingCategoryTest {
         assertEquals(1, capturedLogs.size());
         FakeLogger.Log firstLog = capturedLogs.get(0);
         firstLog.assertEquals(LogLevel.WARN, message, issue);
-    }
-
-    /**
-     * By default, no logs are stored by LoggingCategory.
-     */
-    @Test
-    public void noLogsStored() {
-        LoggingCategory loggingCategory = Amplify.Logging;
-        Logger logger = loggingCategory.forNamespace("logging-test");
-        logger.info("Info log");
-        assertTrue(loggingCategory.getLogs().isEmpty());
-    }
-
-    /**
-     * Logs are stored when the LoggingCategory is set to store logs.
-     */
-    @Test
-    public void logsAreStored() {
-        LoggingCategory loggingCategory = Amplify.Logging;
-        loggingCategory.shouldStoreLogs(true);
-        Logger logger = loggingCategory.forNamespace("logging-test");
-        String message = "Info log";
-        logger.info(message);
-        assertEquals(1, loggingCategory.getLogs().size());
-        LogEntry log = loggingCategory.getLogs().get(0);
-        assertEquals(logger.getNamespace(), log.getNamespace());
-        assertEquals(message, log.getMessage());
-        assertEquals(LogLevel.INFO, log.getLogLevel());
-        assertNull(log.getThrowable());
     }
 
     private static LoggingCategoryConfiguration loggingConfiguration() {

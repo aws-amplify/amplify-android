@@ -19,7 +19,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="20dp"
-    tools:context=".DevMenuLogsFragment">
+    tools:context="com.amplifyframework.devmenu.DevMenuLogsFragment">
 
     <EditText
         android:id="@+id/search_logs_field"

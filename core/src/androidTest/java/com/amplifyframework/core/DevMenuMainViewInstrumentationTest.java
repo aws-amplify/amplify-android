@@ -24,6 +24,8 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.espresso.matcher.ViewMatchers;
 
+import com.amplifyframework.devmenu.DevMenuMainFragment;
+
 import org.junit.Before;
 import org.junit.Test;
 

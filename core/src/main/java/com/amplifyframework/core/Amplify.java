@@ -27,6 +27,7 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategory;
+import com.amplifyframework.devmenu.DeveloperMenu;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
@@ -126,6 +127,8 @@ public final class Amplify {
                 );
             }
 
+            DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
+
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
                 if (category.getPlugins().size() > 0) {
                     CategoryConfiguration categoryConfiguration =
@@ -134,8 +137,6 @@ public final class Amplify {
                     beginInitialization(category, context);
                 }
             }
-
-            DeveloperMenuManager.sharedInstance(context).enableDeveloperMenu();
 
             CONFIGURATION_LOCK.set(true);
         }

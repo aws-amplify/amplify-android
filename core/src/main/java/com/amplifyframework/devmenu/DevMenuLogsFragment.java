@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core;
+package com.amplifyframework.devmenu;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -21,21 +21,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.fragment.app.Fragment;
 
+import com.amplifyframework.core.R;
+
 /**
- * A {@link Fragment} subclass corresponding to the
- * file issue view for the developer menu.
+ * A {@link Fragment} subclass representing the view
+ * to display the logs on the developer menu.
  */
-public final class DevMenuFileIssueFragment extends Fragment {
+public final class DevMenuLogsFragment extends Fragment {
 
     /**
      * Required empty public constructor.
      */
-    public DevMenuFileIssueFragment() { }
+    public DevMenuLogsFragment() { }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_file_issue, container, false);
+        return inflater.inflate(R.layout.fragment_logs, container, false);
     }
 }
