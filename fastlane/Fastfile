@@ -1,32 +1,18 @@
-# This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
-#
-# For a list of all available actions, check out
-#
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
-
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
-
+RELEASE_TAG_PREFIX = 'release_v'
 default_platform(:android)
 
 platform :android do
-  desc "Create a pre-release version by pushing a tag to GitHub, and pushing pods to CocoaPods"
+  desc "Create a pre-release version by pushing a tag to GitHub, and publishing to Maven"
   lane :unstable do 
     next_version = calculate_next_canary_version({
-        :release_tag_prefix => 'release_v',
+        :release_tag_prefix => RELEASE_TAG_PREFIX,
         :release_tag_type => 'annotated'
       }
     )
 
     UI.message("Releasing unstable version: #{next_version}")
 
-    # # Increment all specs and plists
+    # Update version information in gradle.properties
     increment_versions(version: next_version)
 
     gradle(
@@ -35,17 +21,18 @@ platform :android do
     )
 
     # # Create tag and push to origin
-    # add_tag(version: next_version)
+    add_tag(version: RELEASE_TAG_PREFIX + next_version.to_s)
 
     # # Push to maven
-    # UI.message("Pushing unstable to maven")
+    UI.message("Pushing #{next_version.to_s} to maven")
+    publish_to_maven
   end
 
-  desc "Create a release version by building and committing a changelog, pushing a tag to GitHub, and pushing pods to CocoaPods"  
+  desc "Create a release version by building and committing a changelog, pushing a tag to GitHub, and publishing to Maven"  
   lane :release do
-    next_version, commits = calculate_next_release_version
+    # next_version, commits = calculate_next_release_version
 
-    UI.message("Releasing version: #{next_version}")
+    # UI.message("Releasing version: #{next_version}")
 
     # Increment all specs and plists
     # increment_versions(version: next_version)
@@ -78,5 +65,21 @@ platform :android do
     set_key_value(file: 'gradle.properties', key: 'VERSION_NAME', value: version)
     set_key_value(file: 'gradle.properties', key: 'VERSION_CODE', value: version_code.to_s)
 
+  end
+
+  desc "Tag in git and push to GitHub"
+  private_lane :add_tag do |options|
+    next_version = options[:version]
+
+    add_git_tag(tag: next_version)
+    # push_git_tags(tag: next_version)
+  end
+
+  desc "Publish release to maven"
+  private_lane :publish_to_maven do |options|
+    # Publishing to mavenLocal to test
+    gradle(
+      task: "publishToMavenLocal"
+    )
   end
 end
