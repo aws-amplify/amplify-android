@@ -30,7 +30,6 @@ import java.util.Objects;
  * {@link HubChannel#DATASTORE} channel.
  */
 public enum StorageChannelEventName {
-
     /**
      * An error occurred while uploading a file.
      */
@@ -42,11 +41,6 @@ public enum StorageChannelEventName {
     UPLOAD_STATE("upload_state"),
 
     /**
-     * Progress has been made on an upload.
-     */
-    UPLOAD_PROGRESS("upload_progress"),
-
-    /**
      * A download has erred out.
      */
     DOWNLOAD_ERROR("download_error"),
@@ -54,12 +48,7 @@ public enum StorageChannelEventName {
     /**
      * A download has undergone a state change.
      */
-    DOWNLOAD_STATE("download_state"),
-
-    /**
-     * A download has made some progress.
-     */
-    DOWNLOAD_PROGRESS("download_progress");
+    DOWNLOAD_STATE("download_state");
 
     private final String hubEventName;
 
