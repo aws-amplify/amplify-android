@@ -18,6 +18,7 @@ package com.amplifyframework.devmenu;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.logging.LogLevel;
 
@@ -103,19 +104,26 @@ public final class LogEntry implements Comparable<LogEntry> {
 
     @Override
     public boolean equals(Object object) {
-        if (!(object instanceof LogEntry)) {
+        if (this == object) {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass()) {
             return false;
         }
-        LogEntry otherEntry = (LogEntry) object;
-        return dateTime.equals(otherEntry.getDateTime()) && logLevel.equals(otherEntry.getLogLevel())
-                && namespace.equals(otherEntry.getNamespace()) && message.equals(otherEntry.getMessage())
-                && throwable.equals(otherEntry.getThrowable());
+        LogEntry logEntry = (LogEntry) object;
+        return dateTime.equals(logEntry.getDateTime()) && ObjectsCompat.equals(namespace, logEntry.getNamespace())
+                && ObjectsCompat.equals(message, logEntry.getMessage()) && logLevel == logEntry.getLogLevel()
+                && ObjectsCompat.equals(throwable, logEntry.getThrowable());
     }
 
     @Override
     public int hashCode() {
-        return dateTime.hashCode() + logLevel.hashCode() + namespace.hashCode() + message.hashCode()
-                + throwable.hashCode();
+        int result = getDateTime().hashCode();
+        result = 31 * result + (getNamespace() != null ? getNamespace().hashCode() : 0);
+        result = 31 * result + (getMessage() != null ? getMessage().hashCode() : 0);
+        result = 31 * result + (getThrowable() != null ? getThrowable().hashCode() : 0);
+        result = 31 * result + getLogLevel().hashCode();
+        return result;
     }
 
     /**

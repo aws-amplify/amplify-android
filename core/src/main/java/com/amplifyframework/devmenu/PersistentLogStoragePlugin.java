@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.logging.LoggingCategoryBehavior;
 import com.amplifyframework.logging.LoggingPlugin;
+import com.amplifyframework.util.Immutable;
 
 import org.json.JSONObject;
 
@@ -87,6 +88,6 @@ public final class PersistentLogStoragePlugin extends LoggingPlugin<Void> {
             logs.addAll(logger.getLogs());
         }
         Collections.sort(logs);
-        return logs;
+        return Immutable.of(logs);
     }
 }

@@ -44,6 +44,9 @@ public abstract class LoggingPlugin<E> implements LoggingCategoryBehavior, Plugi
 
     @Override
     public final boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
         if (!(object instanceof LoggingPlugin)) {
             return false;
         }

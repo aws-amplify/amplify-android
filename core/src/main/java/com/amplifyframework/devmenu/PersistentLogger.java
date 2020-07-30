@@ -41,7 +41,7 @@ final class PersistentLogger implements Logger {
 
     PersistentLogger(@NonNull String namespace) {
         this.namespace = Objects.requireNonNull(namespace);
-        logs = new LinkedList<>();
+        this.logs = new LinkedList<>();
     }
 
     @NonNull
