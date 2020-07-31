@@ -1,4 +1,5 @@
-subscription OnUpdatePost {
+{
+  "query": "subscription OnUpdatePost {
   onUpdatePost {
     _deleted
     _lastChangedAt
@@ -25,4 +26,7 @@ subscription OnUpdatePost {
     status
     title
   }
+}
+",
+  "variables": null
 }

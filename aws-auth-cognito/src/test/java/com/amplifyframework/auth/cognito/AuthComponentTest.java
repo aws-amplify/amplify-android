@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito;
 
 import android.app.Activity;
 import android.content.Context;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCategory;
@@ -63,6 +64,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
@@ -218,7 +220,8 @@ public final class AuthComponentTest {
             Callback<SignUpResult> callback = invocation.getArgument(4);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).signUp(any(), any(), any(), any(), any());
+        }).when(mobileClient)
+            .signUp(any(), any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
 
         AWSCognitoAuthSignUpOptions options = AWSCognitoAuthSignUpOptions.builder()
                 .userAttribute(AuthUserAttributeKey.email(), ATTRIBUTE_VAL)
@@ -233,7 +236,13 @@ public final class AuthComponentTest {
 
         validateSignUpResult(result, AuthSignUpStep.CONFIRM_SIGN_UP_STEP);
         Map<String, String> expectedAttributeMap = Collections.singletonMap(ATTRIBUTE_KEY, ATTRIBUTE_VAL);
-        verify(mobileClient).signUp(eq(USERNAME), eq(PASSWORD), eq(expectedAttributeMap), eq(METADATA), any());
+        verify(mobileClient).signUp(
+            eq(USERNAME),
+            eq(PASSWORD),
+            eq(expectedAttributeMap),
+            eq(METADATA),
+            Mockito.<Callback<SignUpResult>>any()
+        );
     }
 
     /**
@@ -258,11 +267,12 @@ public final class AuthComponentTest {
             Callback<SignUpResult> callback = invocation.getArgument(2);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignUp(any(), any(), any());
+        }).when(mobileClient).confirmSignUp(any(), any(), Mockito.<Callback<SignUpResult>>any());
 
         AuthSignUpResult result = synchronousAuth.confirmSignUp(USERNAME, CONFIRMATION_CODE);
         validateSignUpResult(result, AuthSignUpStep.DONE);
-        verify(mobileClient).confirmSignUp(eq(USERNAME), eq(CONFIRMATION_CODE), any());
+        verify(mobileClient)
+            .confirmSignUp(eq(USERNAME), eq(CONFIRMATION_CODE), Mockito.<Callback<SignUpResult>>any());
     }
 
     /**
@@ -493,7 +503,7 @@ public final class AuthComponentTest {
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-            .forgotPassword(any(), any());
+            .forgotPassword(any(), Mockito.<Callback<ForgotPasswordResult>>any());
 
         AuthResetPasswordResult result = synchronousAuth.resetPassword(USERNAME);
         assertFalse(result.isPasswordReset());
@@ -502,7 +512,7 @@ public final class AuthComponentTest {
                 result.getNextStep().getResetPasswordStep()
         );
         validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
-        verify(mobileClient).forgotPassword(eq(USERNAME), any());
+        verify(mobileClient).forgotPassword(eq(USERNAME), Mockito.<Callback<ForgotPasswordResult>>any());
     }
 
     /**
@@ -521,7 +531,7 @@ public final class AuthComponentTest {
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-            .confirmForgotPassword(any(), any(), any());
+            .confirmForgotPassword(any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
 
         synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE);
         verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), any());
@@ -881,7 +891,8 @@ public final class AuthComponentTest {
         assertEquals(targetStep, nextStep.getSignInStep());
     }
 
-    private void validateCodeDeliveryDetails(AuthCodeDeliveryDetails codeDetails) {
+    private void validateCodeDeliveryDetails(@Nullable AuthCodeDeliveryDetails codeDetails) {
+        assertNotNull(codeDetails);
         assertEquals(DESTINATION, codeDetails.getDestination());
         assertEquals(AuthCodeDeliveryDetails.DeliveryMedium.fromString(DELIVERY_MEDIUM),
                 codeDetails.getDeliveryMedium());

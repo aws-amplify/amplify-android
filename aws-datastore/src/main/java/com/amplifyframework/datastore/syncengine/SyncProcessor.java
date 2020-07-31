@@ -42,7 +42,6 @@ import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
-import io.reactivex.schedulers.Schedulers;
 
 /**
  * "Hydrates" the local DataStore, using model metadata receive from the
@@ -94,42 +93,39 @@ final class SyncProcessor {
         ModelWithMetadataComparator modelWithMetadataComparator =
             new ModelWithMetadataComparator(modelProvider, modelSchemaRegistry);
 
-        // Observe the remote model states,
-        // Get an observable stream of the set of model classes.
-        return Observable.fromIterable(modelProvider.models())
-            // Heavy network traffic, we require this to be done on IO scheduler.
-            .subscribeOn(Schedulers.io())
-            // For each model class, find the last time it was sync'd.
-            .flatMapCompletable(modelClass ->
-                syncTimeRegistry.lookupLastSyncTime(modelClass)
-                    .map(this::filterOutOldSyncTimes)
-                    // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
-                    .flatMapCompletable(lastSyncTime -> syncModel(modelClass, lastSyncTime)
-                        // Okay, but we want to flatten the Iterable elements back into an Observable stream.
-                        .flatMapObservable(Observable::fromIterable)
-                        // And sort them all, according to their model's topological order,
-                        // So that when we save them, the references will exist.
-                        .sorted(modelWithMetadataComparator::compare)
-                        // For each ModelWithMetadata, merge it into the local store.
-                        .flatMapCompletable(merger::merge)
-                    )
-                    .andThen(syncTimeRegistry.saveLastSyncTime(modelClass, SyncTime.now()))
-                    .doOnError(failureToSync -> {
-                        LOG.warn("Initial cloud sync failed.", failureToSync);
-                        DataStoreErrorHandler dataStoreErrorHandler =
-                            dataStoreConfigurationProvider.getConfiguration().getDataStoreErrorHandler();
-                        if (dataStoreErrorHandler != null) {
-                            dataStoreErrorHandler.accept(
-                                new DataStoreException(
-                                    "Initial cloud sync failed.",
-                                    failureToSync,
-                                    "Check your internet connection."));
-                        }
-                    })
-                    .doOnComplete(() ->
-                        LOG.info("Successfully sync'd down model state from cloud.")
-                    )
-                    .onErrorComplete()
+        final Set<Completable> hydrationTasks = new HashSet<>();
+        for (Class<? extends Model> clazz : modelProvider.models()) {
+            hydrationTasks.add(createHydrationTask(modelWithMetadataComparator, clazz));
+        }
+        return Completable.concat(hydrationTasks);
+    }
+
+    private Completable createHydrationTask(
+            ModelWithMetadataComparator modelWithMetadataComparator, Class<? extends Model> modelClass) {
+        return syncTimeRegistry.lookupLastSyncTime(modelClass)
+            .map(this::filterOutOldSyncTimes)
+            // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
+            .flatMapCompletable(lastSyncTime -> syncModel(modelClass, lastSyncTime)
+                // Okay, but we want to flatten the Iterable elements back into an Observable stream.
+                .flatMapObservable(Observable::fromIterable)
+                // And sort them all, according to their model's topological order,
+                // So that when we save them, the references will exist.
+                .sorted(modelWithMetadataComparator::compare)
+                // For each ModelWithMetadata, merge it into the local store.
+                .flatMapCompletable(merger::merge)
+            )
+            .andThen(syncTimeRegistry.saveLastSyncTime(modelClass, SyncTime.now()))
+            .doOnError(failureToSync -> {
+                LOG.warn("Initial cloud sync failed.", failureToSync);
+                DataStoreErrorHandler dataStoreErrorHandler =
+                    dataStoreConfigurationProvider.getConfiguration().getDataStoreErrorHandler();
+                dataStoreErrorHandler.accept(new DataStoreException(
+                    "Initial cloud sync failed.", failureToSync,
+                    "Check your internet connection."
+                ));
+            })
+            .doOnComplete(() ->
+                LOG.info("Successfully sync'd down model state from cloud.")
             );
     }
 

@@ -204,7 +204,11 @@ public final class AppSyncGraphQLRequestFactory {
             }
 
             if (!QueryPredicates.all().equals(predicate)) {
-                String conditionType = "Model" + graphQlTypeName + "ConditionInput";
+                String conditionType = new StringBuilder()
+                    .append("Model")
+                    .append(Casing.capitalizeFirst(graphQlTypeName))
+                    .append("ConditionInput")
+                    .toString();
                 builder.variable("condition", conditionType, parsePredicate(predicate));
             }
 
