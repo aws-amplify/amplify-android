@@ -133,7 +133,10 @@ public final class LogEntry implements Comparable<LogEntry> {
     public String toString() {
         String dateString = dateTime.format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
         String exceptionTrace = throwable == null ? "" : Log.getStackTraceString(throwable);
-        return String.format(Locale.US, "[%s] %s %s: %s \n%s",
+        if (!exceptionTrace.endsWith("\n")) {
+            exceptionTrace += "\n";
+        }
+        return String.format(Locale.US, "[%s] %s %s: %s%s",
                 logLevel.name(), dateString, namespace, message, exceptionTrace);
     }
 }
