@@ -16,7 +16,6 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -28,6 +27,7 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategory;
+import com.amplifyframework.devmenu.DeveloperMenu;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
@@ -127,6 +127,8 @@ public final class Amplify {
                 );
             }
 
+            DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
+
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
                 if (category.getPlugins().size() > 0) {
                     CategoryConfiguration categoryConfiguration =
@@ -134,9 +136,6 @@ public final class Amplify {
                     category.configure(categoryConfiguration, context);
                     beginInitialization(category, context);
                 }
-            }
-            if (isDebuggableApplication(context)) {
-                DeveloperMenuManager.sharedInstance(context).startListening();
             }
 
             CONFIGURATION_LOCK.set(true);
@@ -207,15 +206,6 @@ public final class Amplify {
     private enum RegistryUpdateType {
         ADD,
         REMOVE
-    }
-
-    /**
-     * Returns true if the application is in a debuggable build, false otherwise.
-     * @param context an Android Context
-     * @return a boolean indicating whether the application is in a debuggable build
-     */
-    private static boolean isDebuggableApplication(Context context) {
-        return (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
 
 }

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core;
+package com.amplifyframework.devmenu;
 
 import android.os.Bundle;
 import android.view.View;
@@ -22,6 +22,8 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+
+import com.amplifyframework.core.R;
 
 /**
  * This is the activity to display the developer menu.
@@ -39,18 +41,18 @@ public final class DeveloperMenuActivity extends FragmentActivity {
         NavigationUI.setupWithNavController(findViewById(R.id.toolbar), navController,
                 new AppBarConfiguration.Builder(navController.getGraph()).build());
 
-        DeveloperMenuManager.sharedInstance(getApplicationContext()).setOnHideAction(this::finish);
+        DeveloperMenu.singletonInstance(getApplicationContext()).setOnHideAction(this::finish);
     }
 
     @Override
     protected void onStart() {
-        DeveloperMenuManager.sharedInstance(getApplicationContext()).setVisible(true);
+        DeveloperMenu.singletonInstance(getApplicationContext()).setVisible(true);
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        DeveloperMenuManager.sharedInstance(getApplicationContext()).setVisible(false);
+        DeveloperMenu.singletonInstance(getApplicationContext()).setVisible(false);
         super.onStop();
     }
 }

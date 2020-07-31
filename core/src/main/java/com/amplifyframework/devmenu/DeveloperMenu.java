@@ -13,18 +13,22 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core;
+package com.amplifyframework.devmenu;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Amplify;
 
 /**
  * Manage the display and shake detection behavior for the
  * developer menu.
  */
-public final class DeveloperMenuManager implements ShakeDetector.Listener {
-    // An instance of DeveloperMenuManager.
-    private static DeveloperMenuManager sInstance;
+public final class DeveloperMenu implements ShakeDetector.Listener {
+    // An instance of DeveloperMenu.
+    private static DeveloperMenu sInstance;
     // Indicates whether the developer menu is visible.
     private boolean visible;
     // Action to take when the developer menu should be hidden.
@@ -33,23 +37,34 @@ public final class DeveloperMenuManager implements ShakeDetector.Listener {
     private Context context;
 
     /**
-     * Constructs a new DeveloperMenuManager.
+     * Constructs a new DeveloperMenu.
      * @param context Android Context
      */
-    private DeveloperMenuManager(Context context) {
+    private DeveloperMenu(Context context) {
         this.context = context.getApplicationContext();
     }
 
     /**
-     * Returns an instance of DeveloperMenuManager.
+     * Returns an instance of DeveloperMenu.
      * @param context Android Context
-     * @return a DeveloperMenuManager
+     * @return a DeveloperMenu
      */
-    public static DeveloperMenuManager sharedInstance(Context context) {
+    public static DeveloperMenu singletonInstance(Context context) {
         if (sInstance == null) {
-            sInstance = new DeveloperMenuManager(context);
+            sInstance = new DeveloperMenu(context);
         }
         return sInstance;
+    }
+
+    /**
+     * Allows the developer menu to be activated if the app is in a debuggable build.
+     * @throws AmplifyException if attempting to enable the developer menu fails
+     */
+    public void enableDeveloperMenu() throws AmplifyException {
+        if ((context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+            Amplify.addPlugin(new PersistentLogStoragePlugin());
+            startListening();
+        }
     }
 
     /**

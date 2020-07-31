@@ -77,7 +77,8 @@ public final class RxAmplifyTest {
         categoryConfigs.put(categoryName, categoryConfig);
         AmplifyConfiguration config = new AmplifyConfiguration(categoryConfigs);
         Context mockContext = mock(Context.class);
-        when(mockContext.getApplicationInfo()).thenReturn(mock(ApplicationInfo.class));
+        when(mockContext.getApplicationContext()).thenReturn(mockContext);
+        when(mockContext.getApplicationInfo()).thenReturn(new ApplicationInfo());
         RxAmplify.configure(config, mockContext);
 
         // Validate that the plugin gets configured with the provided JSON
