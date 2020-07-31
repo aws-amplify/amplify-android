@@ -22,18 +22,21 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
+import com.amplifyframework.datastore.appsync.ModelMetadata;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.HubAccumulator;
+import com.amplifyframework.util.Time;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.shadows.ShadowLog;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +45,7 @@ import io.reactivex.Observable;
 
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -49,8 +53,6 @@ import static org.mockito.Mockito.mock;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
-    private static final long ORCHESTRATOR_TEST_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
-
     /**
      * When an item is placed into storage, a cascade of
      * things happen which should ultimately result in a mutation call
@@ -61,6 +63,8 @@ public final class OrchestratorTest {
     @SuppressWarnings("unchecked") // Casting ? in HubEvent<?> to PendingMutation<? extends Model>
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
+        ShadowLog.stream = System.out;
+
         // Arrange: create a BlogOwner
         final BlogOwner susan = BlogOwner.builder()
             .name("Susan Quimby")
@@ -70,11 +74,18 @@ public final class OrchestratorTest {
             HubAccumulator.create(HubChannel.DATASTORE, publicationOf(susan), 1)
                 .start();
 
+        // Mock behaviors from AppSync
         AppSync appSync = mock(AppSync.class);
-        AppSyncMocking.onCreate(appSync).mockResponse(susan);
+        ModelMetadata metadata = new ModelMetadata(susan.getId(), false, 1, Time.now());
+        ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(susan, metadata);
+        AppSyncMocking.create(appSync).mockResponse(susan);
+        AppSyncMocking.sync(appSync).mockSuccessResponse(BlogOwner.class, modelWithMetadata);
+        AppSyncMocking.onCreate(appSync).callOnStart();
+        AppSyncMocking.onDelete(appSync).callOnStart();
+        AppSyncMocking.onUpdate(appSync).callOnStart();
 
         InMemoryStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
-        ModelProvider modelProvider = SimpleModelProvider.withRandomVersion();
+        ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();
         modelSchemaRegistry.load(modelProvider.models());
@@ -84,18 +95,20 @@ public final class OrchestratorTest {
                 modelSchemaRegistry,
                 localStorageAdapter,
                 appSync,
-                DataStoreConfiguration::defaults
+                DataStoreConfiguration::defaults,
+                () -> Orchestrator.Mode.SYNC_VIA_API
             );
 
-        // Arrange: storage engine is running
-        orchestrator.start(EmptyAction.create()).blockingAwait();
+        // Arrange: orchestrator is running
+        orchestrator.start();
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         SynchronousStorageAdapter.delegatingTo(localStorageAdapter).save(susan);
 
+        // Assert that the event is published out to the API
         assertEquals(
             Collections.singletonList(susan),
-            Observable.fromIterable(accumulator.await())
+            Observable.fromIterable(accumulator.await(10, TimeUnit.SECONDS))
                 .map(HubEvent::getData)
                 .map(data -> (PendingMutation<BlogOwner>) data)
                 .map(PendingMutation::getMutatedItem)
@@ -103,6 +116,6 @@ public final class OrchestratorTest {
                 .blockingGet()
         );
 
-        orchestrator.stop().blockingGet(ORCHESTRATOR_TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        assertTrue(orchestrator.stop().blockingAwait(5, TimeUnit.SECONDS));
     }
 }

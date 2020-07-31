@@ -78,15 +78,6 @@ final class StorageObserver {
         );
     }
 
-    /**
-     * Checks if the storage observer is listening
-     * for events emitted by the local DataStore.
-     * @return true if there are listeners. False otherwise.
-     */
-    boolean isObservingStorageChanges() {
-        return ongoingOperationsDisposable.size() > 0;
-    }
-
     private <T extends Model> PendingMutation<T> toPendingMutation(StorageItemChange<T> change) {
         switch (change.type()) {
             case CREATE:
