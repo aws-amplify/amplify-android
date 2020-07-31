@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/aws-amplify/amplify-ci-support
-  revision: c1687ac33bc2d5420a29cd1dc4c5e90aeb36b701
-  branch: master
+  revision: bea40e79f1c871f1fb5ceb86aeb6b1f2a284ed87
+  branch: rjuliano/android-deploy
   glob: src/fastlane/release_actions/*.gemspec
   specs:
     fastlane-plugin-release_actions (1.0.4)
@@ -14,7 +14,7 @@ GEM
       public_suffix (>= 2.0.2, < 5.0)
     atomos (0.1.3)
     aws-eventstream (1.1.0)
-    aws-partitions (1.345.0)
+    aws-partitions (1.348.0)
     aws-sdk-core (3.104.3)
       aws-eventstream (~> 1, >= 1.0.2)
       aws-partitions (~> 1, >= 1.239.0)
@@ -52,7 +52,7 @@ GEM
     faraday_middleware (1.0.0)
       faraday (~> 1.0)
     fastimage (2.2.0)
-    fastlane (2.153.1)
+    fastlane (2.154.0)
       CFPropertyList (>= 2.3, < 4.0.0)
       addressable (>= 2.3, < 3.0.0)
       aws-sdk-s3 (~> 1.0)
@@ -103,14 +103,14 @@ GEM
     google-cloud-env (1.3.3)
       faraday (>= 0.17.3, < 2.0)
     google-cloud-errors (1.0.1)
-    google-cloud-storage (1.26.2)
+    google-cloud-storage (1.27.0)
       addressable (~> 2.5)
       digest-crc (~> 0.4)
       google-api-client (~> 0.33)
       google-cloud-core (~> 1.2)
       googleauth (~> 0.9)
       mini_mime (~> 1.0)
-    googleauth (0.13.0)
+    googleauth (0.13.1)
       faraday (>= 0.17.3, < 2.0)
       jwt (>= 1.4, < 3.0)
       memoist (~> 0.16)

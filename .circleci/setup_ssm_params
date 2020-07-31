@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+aws ssm put-parameter --name "SONATYPE_NEXUS_USERNAME" --type SecureString --key-id "alias/aws/ssm" --value youdummy1 --region us-east-1
+aws ssm put-parameter --name "SONATYPE_NEXUS_PASSWORD" --type SecureString --key-id "alias/aws/ssm" --value youdummy2 --region us-east-1
+aws ssm put-parameter --name "signing.inMemoryKey" --type SecureString --tier Advanced --key-id "alias/aws/ssm" --value advanceddummy3 --region us-east-1
+aws ssm put-parameter --name "signing.keyId" --type SecureString --key-id "alias/aws/ssm" --value youdummy3 --region us-east-1
+aws ssm put-parameter --name "signing.password" --type SecureString --key-id "alias/aws/ssm" --value youdummy4 --region us-east-1
+aws ssm put-parameter --name "signing.secretKeyRingFile" --type SecureString --key-id "alias/aws/ssm" --value youdummy5 --region us-east-1
