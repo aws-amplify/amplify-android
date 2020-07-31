@@ -36,7 +36,6 @@ import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
