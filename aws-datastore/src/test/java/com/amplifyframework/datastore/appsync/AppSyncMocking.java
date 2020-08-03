@@ -153,7 +153,7 @@ public final class AppSyncMocking {
 
                 String modelId = invocation.getArgument(indexOfModelId);
                 int version = invocation.getArgument(indexOfVersion);
-                ModelMetadata metadata = new ModelMetadata(modelId, true, version, new Temporal.Timestamp());
+                ModelMetadata metadata = new ModelMetadata(modelId, true, version, Temporal.Timestamp.now());
                 ModelWithMetadata<? extends Model> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
 
                 onResult.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
