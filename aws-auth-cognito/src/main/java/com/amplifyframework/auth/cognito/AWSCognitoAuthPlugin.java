@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthChannelEventName;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthException;
@@ -54,6 +55,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.logging.LogFactory;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -122,11 +124,21 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     ) throws AuthException {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Exception> asyncException = new AtomicReference<>();
+        JSONObject mobileClientConfig;
         LogFactory.setLevel(LogFactory.Level.OFF);
+
+        try {
+            mobileClientConfig = new JSONObject(pluginConfiguration.toString());
+            mobileClientConfig.put("UserAgentOverride", UserAgent.string());
+        } catch (JSONException exception) {
+            throw new AuthException("Failed to set user agent string",
+                    exception,
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
+        }
 
         awsMobileClient.initialize(
             context,
-            new AWSConfiguration(pluginConfiguration),
+            new AWSConfiguration(mobileClientConfig),
             new Callback<UserStateDetails>() {
                 @Override
                 public void onResult(UserStateDetails result) {
