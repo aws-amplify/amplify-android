@@ -42,7 +42,7 @@ public final class DevMenuLogsFragment extends Fragment {
         View logsView = inflater.inflate(R.layout.fragment_logs, container, false);
         // Display the logs (if any).
         TextView logsText = logsView.findViewById(R.id.logs_text);
-        logsText.setText(new RetrieveLogs().getLogs());
+        logsText.setText(DeveloperMenu.singletonInstance(getContext()).getLogs());
         return logsView;
     }
 }
