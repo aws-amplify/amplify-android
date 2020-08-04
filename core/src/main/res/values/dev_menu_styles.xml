@@ -14,11 +14,16 @@
    permissions and limitations under the License.
 -->
 
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-        android:shape="rectangle">
-    <corners android:radius="10dp" />
-    <size
-        android:height="10dp"
-        android:width="30dp" />
-    <solid android:color="@color/switch_state_colors" />
-</shape>
+<resources >
+    <style name="OverlayActivity" parent="@android:style/Theme.Translucent">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+    <style name="SwitchStyle" parent="Widget.AppCompat.CompoundButton.Switch">
+        <item name="android:track">@drawable/dev_menu_switch_track</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:checked">false</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:switchMinWidth">50dp</item>
+    </style>
+</resources>
