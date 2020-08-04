@@ -14,11 +14,11 @@
    permissions and limitations under the License.
 -->
 
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-        android:shape="rectangle">
-    <corners android:radius="10dp" />
-    <size
-        android:height="10dp"
-        android:width="30dp" />
-    <solid android:color="@color/switch_state_colors" />
-</shape>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:state_checked="false"
+        android:color="@android:color/darker_gray" />
+    <item
+        android:state_checked="true"
+        android:color="@android:color/holo_green_light" />
+</selector>

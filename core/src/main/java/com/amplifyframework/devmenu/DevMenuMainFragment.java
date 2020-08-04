@@ -39,7 +39,7 @@ public final class DevMenuMainFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View mainView = inflater.inflate(R.layout.fragment_main, container, false);
+        View mainView = inflater.inflate(R.layout.dev_menu_fragment_main, container, false);
 
         // Set on-click listeners for each button on the main view of the developer menu.
         mainView.findViewById(R.id.env_button).setOnClickListener(view ->

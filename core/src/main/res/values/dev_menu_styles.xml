@@ -20,7 +20,7 @@
         <item name="android:windowActionBar">false</item>
     </style>
     <style name="SwitchStyle" parent="Widget.AppCompat.CompoundButton.Switch">
-        <item name="android:track">@drawable/switch_track</item>
+        <item name="android:track">@drawable/dev_menu_switch_track</item>
         <item name="android:textSize">15sp</item>
         <item name="android:checked">false</item>
         <item name="android:layout_centerVertical">true</item>

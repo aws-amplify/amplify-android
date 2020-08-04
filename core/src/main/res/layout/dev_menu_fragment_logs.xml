@@ -49,11 +49,20 @@
         android:layout_marginTop="15dp"
         android:layout_below="@+id/search_logs_field">
 
-        <TextView
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/placeholder_logs"
-            android:textColor="?android:attr/textColorPrimaryInverse"
-            android:textSize="15sp"/>
+            android:requiresFadingEdge="horizontal"
+            android:fadingEdgeLength="70dp">
+
+            <TextView
+                android:id="@+id/logs_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/placeholder_logs"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:textSize="15sp"
+                android:lineSpacingExtra="3dp" />
+        </HorizontalScrollView>
     </ScrollView>
 </RelativeLayout>

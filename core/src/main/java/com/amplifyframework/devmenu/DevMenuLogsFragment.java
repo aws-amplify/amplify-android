@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
 import com.amplifyframework.core.R;
@@ -38,6 +39,10 @@ public final class DevMenuLogsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_logs, container, false);
+        View logsView = inflater.inflate(R.layout.dev_menu_fragment_logs, container, false);
+        // Display the logs (if any).
+        TextView logsText = logsView.findViewById(R.id.logs_text);
+        logsText.setText(DeveloperMenu.singletonInstance(getContext()).getLogs());
+        return logsView;
     }
 }

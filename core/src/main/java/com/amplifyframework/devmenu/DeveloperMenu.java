@@ -18,9 +18,12 @@ package com.amplifyframework.devmenu;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.text.TextUtils;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+
+import java.util.List;
 
 /**
  * Manage the display and shake detection behavior for the
@@ -35,6 +38,8 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
     private HideAction hideAction;
     // Android Context associated with the application.
     private Context context;
+    // Used to store the logs to be displayed on the developer menu.
+    private PersistentLogStoragePlugin loggingPlugin;
 
     /**
      * Constructs a new DeveloperMenu.
@@ -62,7 +67,8 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
      */
     public void enableDeveloperMenu() throws AmplifyException {
         if ((context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
-            Amplify.addPlugin(new PersistentLogStoragePlugin());
+            loggingPlugin = new PersistentLogStoragePlugin();
+            Amplify.addPlugin(loggingPlugin);
             startListening();
         }
     }
@@ -105,6 +111,19 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
      */
     public void setOnHideAction(HideAction action) {
         hideAction = action;
+    }
+
+    /**
+     * Returns a String representation of all of the stored logs.
+     * @return the stored logs as a String.
+     */
+    public String getLogs() {
+        List<LogEntry> logs = loggingPlugin.getLogs();
+        if (logs.isEmpty()) {
+            return "No logs to display.";
+        } else {
+            return TextUtils.join("", logs);
+        }
     }
 
     /**
