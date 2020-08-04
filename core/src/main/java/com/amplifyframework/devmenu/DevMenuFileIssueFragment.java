@@ -38,6 +38,6 @@ public final class DevMenuFileIssueFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_file_issue, container, false);
+        return inflater.inflate(R.layout.dev_menu_fragment_file_issue, container, false);
     }
 }

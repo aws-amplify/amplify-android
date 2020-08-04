@@ -39,7 +39,7 @@ public final class DevMenuLogsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View logsView = inflater.inflate(R.layout.fragment_logs, container, false);
+        View logsView = inflater.inflate(R.layout.dev_menu_fragment_logs, container, false);
         // Display the logs (if any).
         TextView logsText = logsView.findViewById(R.id.logs_text);
         logsText.setText(DeveloperMenu.singletonInstance(getContext()).getLogs());

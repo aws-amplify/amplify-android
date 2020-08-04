@@ -39,7 +39,7 @@ public final class DevMenuDeviceFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View deviceInfoView = inflater.inflate(R.layout.fragment_device, container, false);
+        View deviceInfoView = inflater.inflate(R.layout.dev_menu_fragment_device, container, false);
         // Set the device information text.
         TextView deviceInfoText = deviceInfoView.findViewById(R.id.device_info_text);
         deviceInfoText.setText(new DeviceInfo().toString());
