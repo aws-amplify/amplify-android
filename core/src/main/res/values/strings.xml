@@ -32,4 +32,5 @@
     <string name="env_switch_text">Include Environment Information</string>
     <string name="device_switch_text">Include Device Information</string>
     <string name="logs_switch_text">Include Logs</string>
+    <string name="empty" />
 </resources>
