@@ -167,7 +167,11 @@ public final class AuthComponentTest {
 
         ArgumentCaptor<AWSConfiguration> awsConfigCaptor = ArgumentCaptor.forClass(AWSConfiguration.class);
         verify(mobileClient).initialize(eq(context), awsConfigCaptor.capture(), any());
-        assertEquals(pluginConfig.toString(), awsConfigCaptor.getValue().toString());
+        String returnedConfig = awsConfigCaptor.getValue().toString();
+        String inputConfig = pluginConfig.toString();
+        // Strip the opening and closing braces from the test input and ensure that the key/value pair is included
+        // in the returned aws config.
+        assertTrue(returnedConfig.contains(inputConfig.substring(1, inputConfig.length() - 1)));
     }
 
     /**
