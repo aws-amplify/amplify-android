@@ -15,6 +15,8 @@
 
 package com.amplifyframework.devmenu;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -24,6 +26,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Manage the display and shake detection behavior for the
@@ -124,6 +127,35 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
         } else {
             return TextUtils.join("", logs);
         }
+    }
+
+    /**
+     * Creates and returns the issue body containing the issue description,
+     * environment information, device information, and (optionally) logs.
+     * @param description the description of the issue
+     * @param includeLogs whether to include logs in the issue body
+     * @return the issue body
+     */
+    public String createIssueBody(String description, boolean includeLogs) {
+        // TODO: add environment information to issue body
+        String envInfo = "";
+        String deviceInfo = new DeviceInfo().toString();
+        String logsText = "";
+        if (includeLogs && !loggingPlugin.getLogs().isEmpty()) {
+            logsText = "**Logs**\n```\n" + getLogs() + "```";
+        }
+        return String.format(Locale.US, "**Issue Description**\n%s\n\n**Environment Information**\n%s\n\n" +
+                "**Device Information**\n%s\n\n%s", description, envInfo, deviceInfo, logsText);
+    }
+
+    /**
+     * Copies the given String to the clipboard.
+     * @param textToCopy the text to copy to the clipboard
+     */
+    public void copyToClipboard(String textToCopy) {
+        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clipData = ClipData.newPlainText("Copied Text", textToCopy);
+        clipboard.setPrimaryClip(clipData);
     }
 
     /**

@@ -22,6 +22,9 @@
     android:layout_marginRight="20dp"
     android:layout_marginTop="10dp"
     android:layout_marginBottom="10dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:clickable="true"
     tools:context="com.amplifyframework.devmenu.DevMenuFileIssueFragment">
 
     <EditText
@@ -30,50 +33,61 @@
         android:layout_height="fill_parent"
         android:autofillHints="no"
         android:hint="@string/file_issue_hint"
-        android:inputType="textMultiLine"
-        android:layout_above="@+id/env_info_switch"
-        android:textSize="16sp" />
-
-    <Switch
-        android:id="@+id/env_info_switch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/env_switch_text"
-        android:layout_above="@+id/device_info_switch"
-        android:textColor="?android:attr/textColorPrimaryInverse"
-        android:textOff="@string/empty"
-        android:textOn="@string/empty"
-        android:theme="@style/SwitchStyle" />
-
-    <Switch
-        android:id="@+id/device_info_switch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/logs_switch"
-        android:text="@string/device_switch_text"
-        android:textColor="?android:attr/textColorPrimaryInverse"
-        android:textOff="@string/empty"
-        android:textOn="@string/empty"
-        android:theme="@style/SwitchStyle" />
+        android:inputType="textMultiLine|textNoSuggestions"
+        android:layout_above="@id/logs_switch"
+        android:textSize="15sp" />
 
     <Switch
         android:id="@+id/logs_switch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/file_issue"
+        android:layout_above="@id/file_issue_warning"
         android:text="@string/logs_switch_text"
         android:textColor="?android:attr/textColorPrimaryInverse"
         android:textOff="@string/empty"
         android:textOn="@string/empty"
-        android:theme="@style/SwitchStyle" />
+        android:theme="@style/SwitchStyle"
+        android:layout_marginTop="5dp" />
 
-    <Button
-        android:id="@+id/file_issue"
+    <TextView
+        android:id="@+id/file_issue_warning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/file_issue_warning_text"
+        android:textSize="15sp"
+        android:textColor="?android:attr/textColorPrimaryInverse"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_above="@id/issue_buttons" />
+
+    <LinearLayout
+        android:id="@+id/issue_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/file_issue_button_title"
-        android:textAllCaps="false"
-        android:textSize="14sp"
+        android:orientation="horizontal"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true">
+
+        <Button
+            android:id="@+id/copy_issue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/copy_issue_text"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            android:layout_marginRight="10dp"
+            android:layout_marginEnd="10dp"
+            style="?android:attr/buttonBarButtonStyle" />
+
+        <Button
+            android:id="@+id/file_issue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/file_issue_button_title"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            style="?android:attr/buttonBarButtonStyle" />
+    </LinearLayout>
 </RelativeLayout>
