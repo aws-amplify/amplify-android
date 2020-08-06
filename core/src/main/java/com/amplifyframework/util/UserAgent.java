@@ -22,8 +22,10 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.Platform;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.BuildConfig;
+import com.amplifyframework.logging.Logger;
 
 import java.util.Map;
 
@@ -31,7 +33,9 @@ import java.util.Map;
  * A utility to construct a User-Agent header, to be sent with all network operations.
  */
 public final class UserAgent {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:core");
     private static final int SIZE_LIMIT = 254; // VARCHAR(254)
+
     private static String instance = null;
 
     private UserAgent() {}
@@ -83,11 +87,8 @@ public final class UserAgent {
     @NonNull
     public static String string() {
         if (instance == null) {
-            throw new RuntimeException(
-                    "User-Agent is not yet configured. User-Agent is configured " +
-                            "during Amplify.configure(). Please configure Amplify " +
-                            "first before accessing this utility."
-            );
+            LOG.debug("User-Agent is not yet configured. Returning default Android user-agent.");
+            return androidUserAgent();
         }
 
         return instance;
