@@ -40,6 +40,7 @@ import com.amplifyframework.auth.result.step.AuthResetPasswordStep;
 import com.amplifyframework.auth.result.step.AuthSignInStep;
 import com.amplifyframework.auth.result.step.AuthSignUpStep;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
+import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -147,7 +148,9 @@ public final class AuthComponentTest {
     public void testConfigure() throws AmplifyException, JSONException {
         UserStateDetails userStateDetails = new UserStateDetails(UserState.SIGNED_OUT, null);
         Context context = getApplicationContext();
-        JSONObject pluginConfig = new JSONObject().put("TestKey", "TestVal");
+        JSONObject pluginConfig = new JSONObject()
+                .put("TestKey", "TestVal")
+                .put("UserAgentOverride", UserAgent.string());
         JSONObject json = new JSONObject().put("plugins",
                 new JSONObject().put(
                     PLUGIN_KEY,

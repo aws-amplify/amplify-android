@@ -24,6 +24,7 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.testutils.random.RandomString;
+import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,7 +75,7 @@ public final class RxAmplifyTest {
             .put("plugins", new JSONObject()
                 .put(pluginKey, pluginJson)));
         categoryConfigs.put(categoryName, categoryConfig);
-        AmplifyConfiguration config = new AmplifyConfiguration(categoryConfigs);
+        AmplifyConfiguration config = AmplifyConfiguration.loadCategoryConfigs(categoryConfigs).build();
         RxAmplify.configure(config, mock(Context.class));
 
         // Validate that the plugin gets configured with the provided JSON

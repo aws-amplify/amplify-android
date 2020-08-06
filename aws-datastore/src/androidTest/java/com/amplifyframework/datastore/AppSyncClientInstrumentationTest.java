@@ -72,7 +72,7 @@ public final class AppSyncClientInstrumentationTest {
 
         ApiCategory asyncDelegate = new ApiCategory();
         asyncDelegate.addPlugin(new AWSApiPlugin());
-        asyncDelegate.configure(AmplifyConfiguration.fromConfigFile(context, resourceId)
+        asyncDelegate.configure(AmplifyConfiguration.loadConfigFile(context, resourceId).build()
             .forCategoryType(CategoryType.API), context);
         asyncDelegate.initialize(context);
 

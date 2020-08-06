@@ -32,6 +32,7 @@ import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.util.Empty;
+import com.amplifyframework.util.UserAgent;
 
 import java.util.LinkedHashMap;
 import java.util.Objects;
@@ -104,7 +105,7 @@ public final class Amplify {
      * @throws AmplifyException thrown when already configured or there is no plugin found for a configuration
      */
     public static void configure(@NonNull Context context) throws AmplifyException {
-        configure(AmplifyConfiguration.fromConfigFile(context), context);
+        configure(AmplifyConfiguration.loadConfigFile(context).build(), context);
     }
 
     /**
@@ -125,6 +126,9 @@ public final class Amplify {
                         "Be sure to only call Amplify.configure once"
                 );
             }
+
+            // Configure User-Agent utility
+            UserAgent.configure(configuration);
 
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
                 if (category.getPlugins().size() > 0) {

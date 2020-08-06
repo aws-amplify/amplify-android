@@ -20,26 +20,82 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.Platform;
+import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.BuildConfig;
+
+import java.util.Map;
 
 /**
  * A utility to construct a User-Agent header, to be sent with all network operations.
  */
 public final class UserAgent {
+    private static final int SIZE_LIMIT = 254; // VARCHAR(254)
     private static String instance = null;
 
     private UserAgent() {}
 
     /**
+     * Configure User-Agent singleton with Amplify configuration instance.
+     * @param configuration An Amplify configuration instance.
+     * @throws AmplifyException If called twice or user-agent exceeds size limit.
+     */
+    public static synchronized void configure(@NonNull AmplifyConfiguration configuration)
+            throws AmplifyException {
+        // Block any sub-sequent configuration call.
+        if (instance != null) {
+            throw new AmplifyException(
+                    "User-Agent was already configured successfully.",
+                    "User-Agent is configured internally during Amplify configuration. " +
+                            "This method should not be called externally."
+            );
+        }
+
+        // Pre-pend the additional platforms before Android user-agent
+        final StringBuilder userAgent = new StringBuilder();
+        for (Map.Entry<Platform, String> platform : configuration.getAdditionalPlatforms().entrySet()) {
+            userAgent.append(String.format("%s/%s ",
+                    platform.getKey().getLibraryName(),
+                    platform.getValue()));
+        }
+        userAgent.append(androidUserAgent());
+
+        // The character limit for our User-Agent header is 254 characters.
+        // HTTP does not impose a maximum, but the AWS SDKs & Tools database
+        // that stores metrics records declares user-agent as a VARCHAR(254)
+        if (userAgent.length() > SIZE_LIMIT) {
+            throw new AmplifyException(
+                    "User-Agent exceeds the size limit of VARCHAR(254).",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+            );
+        }
+
+        instance = userAgent.toString();
+    }
+
+    /**
      * Gets a String to use as the value of a User-Agent header.
      * @return A value for a User-Agent header.
+     * @throws RuntimeException If called before {@link #configure(AmplifyConfiguration)}.
      */
     @SuppressLint("SyntheticAccessor")
     @NonNull
     public static String string() {
         if (instance == null) {
-            instance = new UserAgent.Builder()
-                .libraryName("amplify-android")
+            throw new RuntimeException(
+                    "User-Agent is not yet configured. User-Agent is configured " +
+                            "during Amplify.configure(). Please configure Amplify " +
+                            "first before accessing this utility."
+            );
+        }
+
+        return instance;
+    }
+
+    private static String androidUserAgent() {
+        return new UserAgent.Builder()
+                .libraryName(Platform.ANDROID.getLibraryName())
                 .libraryVersion(BuildConfig.VERSION_NAME)
                 .systemName("Android")
                 .systemVersion(Build.VERSION.RELEASE)
@@ -48,9 +104,6 @@ public final class UserAgent {
                 .userLanguage(System.getProperty("user.language"))
                 .userRegion(System.getProperty("user.region"))
                 .toString();
-        }
-
-        return instance;
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -118,11 +171,7 @@ public final class UserAgent {
 
         @NonNull
         private static String sanitize(@Nullable String string) {
-            if (string == null) {
-                return "UNKNOWN";
-            }
-
-            return string;
+            return string != null ? string : "UNKNOWN";
         }
     }
 }
