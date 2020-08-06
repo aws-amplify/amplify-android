@@ -45,26 +45,32 @@ public final class DevMenuEnvironmentFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View envInfoView = inflater.inflate(R.layout.dev_menu_fragment_environment, container, false);
-        displayEnvironmentInfo((TextView) envInfoView.findViewById(R.id.env_info_text));
+        ((TextView) envInfoView.findViewById(R.id.env_info_text)).setText(displayEnvironmentInfo());
         return envInfoView;
     }
 
     /**
-     * Displays the environment information on the given TextView.
-     * @param envInfoTextView the TextView that will contain the environment information text
+     * Returns the environment information to be displayed.
+     * @return a SpannableStringBuilder containing the formatted environment information
      */
-    private void displayEnvironmentInfo(TextView envInfoTextView) {
+    private SpannableStringBuilder displayEnvironmentInfo() {
         SpannableStringBuilder stringBuilder = new SpannableStringBuilder();
-        SpannableString pluginInfoTitle = new SpannableString("Amplify Plugins Information");
-        pluginInfoTitle.setSpan(new StyleSpan(Typeface.BOLD), 0, pluginInfoTitle.length(),
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        stringBuilder.append(pluginInfoTitle);
+        stringBuilder.append(setBold("Amplify Plugins Information"));
         stringBuilder.append("\nPlugin versions will be added here...\n\n");
-        SpannableString devEnvInfoTitle = new SpannableString("Developer Environment Information");
-        devEnvInfoTitle.setSpan(new StyleSpan(Typeface.BOLD), 0, devEnvInfoTitle.length(),
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        stringBuilder.append(devEnvInfoTitle);
+        stringBuilder.append(setBold("Developer Environment Information"));
         stringBuilder.append("\nDeveloper environment information will be added here...");
-        envInfoTextView.setText(stringBuilder);
+        return stringBuilder;
+    }
+
+    /**
+     * Returns the given text in bold.
+     * @param text the text to make bold
+     * @return a SpannableString representing bold text
+     */
+    private SpannableString setBold(String text) {
+        SpannableString boldText = new SpannableString(text);
+        boldText.setSpan(new StyleSpan(Typeface.BOLD), 0, boldText.length(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return boldText;
     }
 }
