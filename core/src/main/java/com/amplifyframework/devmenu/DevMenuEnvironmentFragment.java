@@ -45,7 +45,7 @@ public final class DevMenuEnvironmentFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View envInfoView = inflater.inflate(R.layout.dev_menu_fragment_environment, container, false);
-        ((TextView) envInfoView.findViewById(R.id.env_info_text)).setText(displayEnvironmentInfo());
+        ((TextView) envInfoView.findViewById(R.id.env_info_text)).setText(getEnvironmentInfo());
         return envInfoView;
     }
 
@@ -53,7 +53,7 @@ public final class DevMenuEnvironmentFragment extends Fragment {
      * Returns the environment information to be displayed.
      * @return a SpannableStringBuilder containing the formatted environment information
      */
-    private SpannableStringBuilder displayEnvironmentInfo() {
+    private SpannableStringBuilder getEnvironmentInfo() {
         SpannableStringBuilder stringBuilder = new SpannableStringBuilder();
         stringBuilder.append(setBold("Amplify Plugins Information"));
         stringBuilder.append("\nPlugin versions will be added here...\n\n");
