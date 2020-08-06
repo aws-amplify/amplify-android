@@ -17,7 +17,8 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
@@ -48,7 +49,7 @@ import io.reactivex.SingleEmitter;
 
 /**
  * "Hydrates" the local DataStore, using model metadata receive from the
- * {@link AppSync#sync(Class, Long, Consumer, Consumer)}.
+ * {@link AppSync#sync(GraphQLRequest, Consumer, Consumer)}.
  * Hydration refers to populating the local storage with values from a remote system.
  *
  * For all items returned by the sync, merge them back into local storage through
@@ -56,6 +57,7 @@ import io.reactivex.SingleEmitter;
  */
 final class SyncProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final int DEFAULT_SYNC_MAX_RECORDS = 10_000;
 
     private final ModelProvider modelProvider;
     private final ModelSchemaRegistry modelSchemaRegistry;
@@ -172,18 +174,19 @@ final class SyncProcessor {
      *  2. Make a request to the AppSync endpoint. If the last sync time is within a recent window
      *     of time, then request a *delta* sync. If the last sync time is outside a recent window of time,
      *     perform a *base* sync. A base sync is preformed by passing null.
-     *  3. Update the
+     *  3. Continue fetching paged results until !hasNextPage() or we have synced the max records.
      * @param modelClass The model class to sync
-     * @param <T> The type of model to sync
+     * @param <T> The type of model to sync.
      * @return An {@link Single} which emits sync content, on success, {@link DataStoreException} on failure
      */
     private <T extends Model> Single<Iterable<ModelWithMetadata<T>>> syncModel(
             Class<T> modelClass, SyncTime syncTime) {
         final Long lastSyncTimeAsLong = syncTime.exists() ? syncTime.toLong() : null;
         return Single.<Iterable<ModelWithMetadata<T>>>create(emitter -> {
-            final Cancelable cancelable =
-                appSync.sync(modelClass, lastSyncTimeAsLong, metadataEmitter(emitter), emitter::onError);
-            emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
+            final Integer syncPageSize = dataStoreConfigurationProvider.getConfiguration().getSyncPageSize();
+            GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request =
+                    appSync.buildSyncRequest(modelClass, lastSyncTimeAsLong, syncPageSize);
+            syncPage(request, emitter, new HashSet<>());
         }).doOnSuccess(results ->
             LOG.debug("Successfully sync'd down cloud state for model type = " + modelClass.getSimpleName())
         ).doOnError(failureToSync ->
@@ -191,9 +194,21 @@ final class SyncProcessor {
         );
     }
 
-    private static <T extends Model> Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> metadataEmitter(
-        SingleEmitter<Iterable<ModelWithMetadata<T>>> singleEmitter) {
-        return resultFromEndpoint -> {
+    /**
+     * Recursively fetches each page for a sync, until there are no more pages available, or we have fetched the maximum
+     * configured number of records to sync (syncMaxRecords).
+     * @param request GraphQLRequest object for the sync, obtained from appsync.buildFirstPageSyncRequest, or from
+     *                response.getData().getRequestForNextResult() for subsequent requests.
+     * @param singleEmitter A SingleEmitter which emits an Iterable&lt;ModelWithMetadata&gt;, a concatenation of the
+     *                      results from all pages.
+     * @param emittedValue a Set&lt;ModelWithMetadata&lt;T&gt;&gt; containing the concatenated results of all requests.
+     * @param <T> The type of model to sync.
+     */
+    private <T extends Model> void syncPage(
+        GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request,
+        SingleEmitter<Iterable<ModelWithMetadata<T>>> singleEmitter,
+        Set<ModelWithMetadata<T>> emittedValue) {
+        Cancelable cancelable = appSync.sync(request, resultFromEndpoint -> {
             if (resultFromEndpoint.hasErrors()) {
                 singleEmitter.onError(new DataStoreException(
                     String.format("A model sync failed: %s", resultFromEndpoint.getErrors()),
@@ -204,13 +219,26 @@ final class SyncProcessor {
                     "Empty response from AppSync.", "Report to AWS team."
                 ));
             } else {
-                final Set<ModelWithMetadata<T>> emittedValue = new HashSet<>();
-                for (ModelWithMetadata<T> modelWithMetadata : resultFromEndpoint.getData()) {
+                for (ModelWithMetadata<T> modelWithMetadata : resultFromEndpoint.getData().getItems()) {
                     emittedValue.add(modelWithMetadata);
                 }
-                singleEmitter.onSuccess(emittedValue);
+                if (resultFromEndpoint.getData().hasNextResult() && emittedValue.size() < syncMaxRecords()) {
+                    syncPage(resultFromEndpoint.getData().getRequestForNextResult(), singleEmitter, emittedValue);
+                } else {
+                    singleEmitter.onSuccess(emittedValue);
+                }
             }
-        };
+        }, singleEmitter::onError);
+        singleEmitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
+    }
+
+    private Integer syncMaxRecords() {
+        try {
+            return dataStoreConfigurationProvider.getConfiguration().getSyncMaxRecords();
+        } catch (DataStoreException exception) {
+            LOG.warn("Failed to retrieve datastore configuration, using default syncMaxRecords value.", exception);
+            return DEFAULT_SYNC_MAX_RECORDS;
+        }
     }
 
     /**

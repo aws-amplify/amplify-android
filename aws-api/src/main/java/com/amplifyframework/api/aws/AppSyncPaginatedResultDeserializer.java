@@ -29,7 +29,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * Takes an input such as the following and deserializes to an AppSyncPage.
+ * Takes an input such as the following and deserializes to a PaginatedResult.
  * {
  *   "items": [
  *     {
@@ -84,6 +84,6 @@ final class AppSyncPaginatedResultDeserializer implements JsonDeserializer<Pagin
             }
         }
 
-        return new AppSyncPaginatedResult<>(items, requestForNextPage);
+        return new PaginatedResult<>(items, requestForNextPage);
     }
 }

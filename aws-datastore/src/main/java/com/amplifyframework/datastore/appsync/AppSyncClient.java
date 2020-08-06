@@ -24,6 +24,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
@@ -70,20 +71,21 @@ public final class AppSyncClient implements AppSync {
     @SuppressWarnings("checkstyle:LineLength")
     @NonNull
     @Override
-    public <T extends Model> Cancelable sync(
+    public <T extends Model> GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> buildSyncRequest(
             @NonNull Class<T> modelClass,
             @Nullable Long lastSync,
-            @NonNull Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> onResponse,
-            @NonNull Consumer<DataStoreException> onFailure) {
-        final GraphQLRequest<Iterable<ModelWithMetadata<T>>> request;
-        try {
-            request = AppSyncRequestFactory.buildSyncRequest(modelClass, lastSync, null);
-        } catch (DataStoreException queryDocConstructionError) {
-            onFailure.accept(queryDocConstructionError);
-            return new NoOpCancelable();
-        }
+            @Nullable Integer syncPageSize) throws DataStoreException {
+        return AppSyncRequestFactory.buildSyncRequest(modelClass, lastSync, syncPageSize);
+    }
 
-        final Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> responseConsumer = apiQueryResponse -> {
+    @NonNull
+    @Override
+    public <T extends Model> Cancelable sync(
+            @NonNull GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request,
+            @NonNull Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure
+    ) {
+        final Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>> responseConsumer = apiQueryResponse -> {
             if (apiQueryResponse.hasErrors()) {
                 onFailure.accept(new DataStoreException(
                     "Failure performing sync query to AppSync: " + apiQueryResponse.getErrors().toString(),

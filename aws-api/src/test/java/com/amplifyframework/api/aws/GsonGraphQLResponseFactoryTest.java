@@ -191,8 +191,7 @@ public final class GsonGraphQLResponseFactoryTest {
         Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
         AppSyncGraphQLRequest<PaginatedResult<Todo>> expectedRequest = buildDummyRequest(responseType);
         expectedRequest = expectedRequest.newBuilder().variable("nextToken", "String", nextToken).build();
-        final PaginatedResult<Todo> expectedPaginatedResult =
-                new AppSyncPaginatedResult<>(expectedTodos, expectedRequest);
+        final PaginatedResult<Todo> expectedPaginatedResult = new PaginatedResult<>(expectedTodos, expectedRequest);
 
         final List<GraphQLResponse.Error> expectedErrors = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
