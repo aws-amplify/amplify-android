@@ -16,11 +16,13 @@
 package com.amplifyframework.datastore.syncengine;
 
 import android.util.Range;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
@@ -31,9 +33,15 @@ import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.datastore.syncengine.events.ModelSyncedEvent;
+import com.amplifyframework.datastore.syncengine.events.SyncQueriesStartedEvent;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.hub.HubEventFilter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.util.Time;
 
 import org.junit.Before;
@@ -42,6 +50,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -55,6 +64,7 @@ import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstan
 import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.DELETED_DRUM_POST;
 import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.DRUM_POST;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
@@ -69,6 +79,9 @@ import static org.mockito.Mockito.verify;
 public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
+    private static final List<String> SYSTEM_MODEL_NAMES =
+        Observable.fromIterable(SystemModelsProviderFactory.create().models())
+            .map(m -> m.getSimpleName()).toList().blockingGet();
 
     private AppSync appSync;
     private ModelProvider modelProvider;
@@ -76,6 +89,7 @@ public final class SyncProcessorTest {
 
     private SyncProcessor syncProcessor;
     private int errorHandlerCallCount;
+    private int modelCount;
 
     /**
      * Wire up dependencies for the SyncProcessor, and build one for testing.
@@ -85,6 +99,7 @@ public final class SyncProcessorTest {
     public void setup() throws AmplifyException {
         this.modelProvider =
             CompoundModelProvider.of(SystemModelsProviderFactory.create(), AmplifyModelProvider.getInstance());
+        modelCount = modelProvider.models().size();
 
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();
@@ -113,8 +128,92 @@ public final class SyncProcessorTest {
             .appSync(appSync)
             .merger(merger)
             .dataStoreConfigurationProvider(() -> dataStoreConfiguration)
+            .localStorageAdapter(inMemoryStorageAdapter)
             .build();
     }
+
+    /**
+     * During a base sync, there are a series of events that should be emitted.
+     * This test verifies that these events are published via Amplify Hub depending
+     * on actions takes for each available model.
+     * @throws DataStoreException Not expected.
+     */
+    @Test
+    public void dataStoreHubEventsTriggered() throws DataStoreException {
+        // Arrange - BEGIN
+        // Collects one syncQueriesStarted event.
+        HubAccumulator syncStartAccumulator =
+            createAccumulator(syncQueryStartedForModels(modelCount), 1);
+        // Collects one syncQueriesReady event.
+        HubAccumulator syncQueryReadyAccumulator =
+            createAccumulator(forEvent(DataStoreChannelEventName.SYNC_QUERIES_READY), 1);
+        // Collects one modelSynced event for each model.
+        HubAccumulator modelSyncedAccumulator =
+            createAccumulator(forEvent(DataStoreChannelEventName.MODEL_SYNCED), modelCount);
+
+        // Add a couple of seed records so they can be deleted/updated.
+        storageAdapter.save(DRUM_POST.getModel());
+        storageAdapter.save(BLOGGER_ISLA.getModel());
+
+        // Mock sync query results for a couple of models.
+        AppSyncMocking.sync(appSync)
+            .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
+            .mockSuccessResponse(BlogOwner.class, BLOGGER_ISLA, BLOGGER_JAMESON);
+
+        // Start the accumulators.
+        syncQueryReadyAccumulator.start();
+        syncStartAccumulator.start();
+        modelSyncedAccumulator.start();
+
+        TestObserver<ModelWithMetadata<? extends Model>> hydrationObserver = TestObserver.create();
+        // Arrange - END
+
+        // Act: kickoff sync.
+        syncProcessor.hydrate().subscribe(hydrationObserver);
+
+        // Check - BEGIN
+        // Verify that sync completes.
+        assertTrue(hydrationObserver.awaitTerminalEvent(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        hydrationObserver.assertNoErrors();
+        hydrationObserver.assertComplete();
+
+        // Verify that syncQueriesStarted was emitted once.
+        assertEquals(1, syncStartAccumulator.await((int) OP_TIMEOUT_MS, TimeUnit.MILLISECONDS).size());
+        // Verify that syncQueriesReady was emitted once.
+        assertEquals(1, syncQueryReadyAccumulator.await((int) OP_TIMEOUT_MS, TimeUnit.MILLISECONDS).size());
+
+        // Get the list of modelSynced events captured.
+        List<HubEvent<?>> hubEvents = modelSyncedAccumulator.await((int) OP_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        // Verify that [number of events] = [number of models]
+        assertEquals(modelCount, hubEvents.size());
+
+        // For each event (excluding system models), verify the desired count.
+        for (HubEvent<?> event : hubEvents) {
+            ModelSyncedEvent eventData = (ModelSyncedEvent) event.getData();
+            assertTrue(eventData.isFullSync());
+            assertFalse(eventData.isDeltaSync());
+            String eventModel = eventData.getModel();
+            switch (eventModel) {
+                case "BlogOwner":
+                    // One BlogOwner added and one updated.
+                    assertOperationTypeCounts(eventData, 1, 1, 0);
+                    break;
+                case "Post":
+                    // One post deleted.
+                    assertOperationTypeCounts(eventData, 0, 0, 1);
+                    break;
+                default:
+                    // Exclude system models
+                    if (!SYSTEM_MODEL_NAMES.contains(eventModel)) {
+                        // Verify there were no unexpected events for any other models.
+                        assertOperationTypeCounts(eventData, 0, 0, 0);
+                    }
+            }
+        }
+        // Check - END
+    }
+
+
 
     /**
      * When {@link SyncProcessor#hydrate()}'s {@link Completable} completes,
@@ -398,6 +497,60 @@ public final class SyncProcessorTest {
 
         // Assert: sync process failed the first time the api threw an error
         assertEquals(1, errorHandlerCallCount);
+    }
+
+    private void assertOperationTypeCounts(ModelSyncedEvent event,
+                                           int expectedAdd,
+                                           int expectedUpdate,
+                                           int expectedDelete) {
+        assertEquals(expectedAdd, event.getAdded());
+        assertEquals(expectedUpdate, event.getUpdated());
+        assertEquals(expectedDelete, event.getDeleted());
+    }
+
+    private static HubAccumulator createAccumulator(HubEventFilter eventFilter, int times) {
+        return HubAccumulator.create(HubChannel.DATASTORE, eventFilter, times);
+    }
+
+    private static HubEventFilter forEvent(DataStoreChannelEventName eventName) {
+        return new HubEventFilter() {
+            @Override
+            public boolean filter(@NonNull HubEvent<?> hubEvent) {
+                return eventName.toString().equals(hubEvent.getName());
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    private HubEventFilter syncMetricsEmittedFor(Class<? extends Model>... models) {
+        List<String> modelNames = Observable.fromIterable(Arrays.asList(models))
+            .map(model -> model.getSimpleName())
+            .toList()
+            .blockingGet();
+
+        return new HubEventFilter() {
+            @Override
+            public boolean filter(@NonNull HubEvent<?> hubEvent) {
+                if (!(hubEvent.getData() instanceof ModelSyncedEvent)) {
+                    return false;
+                }
+                ModelSyncedEvent hubEventData = (ModelSyncedEvent) hubEvent.getData();
+                return forEvent(DataStoreChannelEventName.MODEL_SYNCED).filter(hubEvent) &&
+                    modelNames.contains(hubEventData.getModel());
+            }
+        };
+    }
+
+    private static HubEventFilter syncQueryStartedForModels(int modelCount) {
+        return new HubEventFilter() {
+            @Override
+            public boolean filter(@NonNull HubEvent<?> hubEvent) {
+
+                return forEvent(DataStoreChannelEventName.SYNC_QUERIES_STARTED).filter(hubEvent) &&
+                    hubEvent.getData() instanceof SyncQueriesStartedEvent &&
+                    ((SyncQueriesStartedEvent) hubEvent.getData()).getModels().length == modelCount;
+            }
+        };
     }
 
     static final class RecentTimeWindow {

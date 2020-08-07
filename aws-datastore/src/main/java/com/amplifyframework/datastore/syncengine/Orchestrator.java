@@ -105,6 +105,7 @@ public final class Orchestrator {
             .appSync(appSync)
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
+            .localStorageAdapter(localStorageAdapter)
             .build();
         this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);

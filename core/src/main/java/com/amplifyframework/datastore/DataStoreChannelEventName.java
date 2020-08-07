@@ -52,7 +52,22 @@ public enum DataStoreChannelEventName {
     /**
      * The remote synchonization processes stopped.
      */
-    REMOTE_SYNC_STOPPED("remote_sync_stopped");
+    REMOTE_SYNC_STOPPED("remote_sync_stopped"),
+
+    /**
+     * The DataStore is about to start the Sync Queries.
+     */
+    SYNC_QUERIES_STARTED("syncQueriesStarted"),
+
+    /**
+     * All models have been synced.
+     */
+    SYNC_QUERIES_READY("syncQueriesReady"),
+
+    /**
+     * All models have been synced.
+     */
+    MODEL_SYNCED("modelSynced");
 
     private final String hubEventName;
 
