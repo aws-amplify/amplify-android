@@ -63,15 +63,15 @@ dependencies section:
 
 ```groovy
 dependencies {
-    implementation 'com.amplifyframework:core:1.0.0'
+    implementation 'com.amplifyframework:core:1.1.2'
 
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:1.0.0'
-    implementation 'com.amplifyframework:aws-api:1.0.0'
-    implementation 'com.amplifyframework:aws-auth-cognito:1.0.0'
-    implementation 'com.amplifyframework:aws-datastore:1.0.0'
-    implementation 'com.amplifyframework:aws-predictions:1.0.0'
-    implementation 'com.amplifyframework:aws-storage-s3:1.0.0'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:1.1.2'
+    implementation 'com.amplifyframework:aws-api:1.1.2'
+    implementation 'com.amplifyframework:aws-auth-cognito:1.1.2'
+    implementation 'com.amplifyframework:aws-datastore:1.1.2'
+    implementation 'com.amplifyframework:aws-predictions:1.1.2'
+    implementation 'com.amplifyframework:aws-storage-s3:1.1.2'
 }
 ```
 
