@@ -32,13 +32,13 @@ public class AmplifyConfigurationTest {
     private Context context = ApplicationProvider.getApplicationContext();
 
     /**
-     * Attempting to call {@link AmplifyConfiguration#loadConfigFile(Context)}
+     * Attempting to call {@link AmplifyConfiguration#builder(Context)}
      * without a generated configuration file throws an AmplifyException.
      *
      * @throws Exception if the premise of the test is incorrect
      */
     @Test(expected = AmplifyException.class)
     public void testMissingConfigurationFileThrowsAmplifyException() throws Exception {
-        AmplifyConfiguration.loadConfigFile(context);
+        AmplifyConfiguration.builder(context);
     }
 }

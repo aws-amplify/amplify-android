@@ -74,7 +74,7 @@ public final class RxAmplifyTest {
             .put("plugins", new JSONObject()
                 .put(pluginKey, pluginJson)));
         categoryConfigs.put(categoryName, categoryConfig);
-        AmplifyConfiguration config = AmplifyConfiguration.loadCategoryConfigs(categoryConfigs).build();
+        AmplifyConfiguration config = AmplifyConfiguration.builder(categoryConfigs).build();
         RxAmplify.configure(config, mock(Context.class));
 
         // Validate that the plugin gets configured with the provided JSON

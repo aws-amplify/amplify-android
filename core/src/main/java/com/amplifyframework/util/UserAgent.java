@@ -23,7 +23,6 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.Platform;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.BuildConfig;
 import com.amplifyframework.logging.Logger;
 
@@ -42,10 +41,11 @@ public final class UserAgent {
 
     /**
      * Configure User-Agent singleton with Amplify configuration instance.
-     * @param configuration An Amplify configuration instance.
+     * @param platformVersions A map of additional platforms that are calling this library
+     *                         and their respective versions.
      * @throws AmplifyException If called twice or user-agent exceeds size limit.
      */
-    public static synchronized void configure(@NonNull AmplifyConfiguration configuration)
+    public static synchronized void configure(@NonNull Map<Platform, String> platformVersions)
             throws AmplifyException {
         // Block any sub-sequent configuration call.
         if (instance != null) {
@@ -58,12 +58,12 @@ public final class UserAgent {
 
         // Pre-pend the additional platforms before Android user-agent
         final StringBuilder userAgent = new StringBuilder();
-        for (Map.Entry<Platform, String> platform : configuration.getAdditionalPlatforms().entrySet()) {
+        for (Map.Entry<Platform, String> platform : platformVersions.entrySet()) {
             userAgent.append(String.format("%s/%s ",
                     platform.getKey().getLibraryName(),
                     platform.getValue()));
         }
-        userAgent.append(androidUserAgent());
+        userAgent.append(forAndroid());
 
         // The character limit for our User-Agent header is 254 characters.
         // HTTP does not impose a maximum, but the AWS SDKs & Tools database
@@ -80,21 +80,21 @@ public final class UserAgent {
 
     /**
      * Gets a String to use as the value of a User-Agent header.
+     * Uses default android user-agent if {@link #configure(Map)} was not called yet.
      * @return A value for a User-Agent header.
-     * @throws RuntimeException If called before {@link #configure(AmplifyConfiguration)}.
      */
     @SuppressLint("SyntheticAccessor")
     @NonNull
     public static String string() {
         if (instance == null) {
             LOG.debug("User-Agent is not yet configured. Returning default Android user-agent.");
-            return androidUserAgent();
+            return forAndroid();
         }
 
         return instance;
     }
 
-    private static String androidUserAgent() {
+    private static String forAndroid() {
         return new UserAgent.Builder()
                 .libraryName(Platform.ANDROID.getLibraryName())
                 .libraryVersion(BuildConfig.VERSION_NAME)

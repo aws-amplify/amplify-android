@@ -57,7 +57,7 @@ public final class AmplifyConfiguration {
     private static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
 
     private final Map<String, CategoryConfiguration> categoryConfigurations;
-    private final Map<Platform, String> additionalPlatforms;
+    private final Map<Platform, String> platformVersions;
 
     /**
      * Constructs a new AmplifyConfiguration object.
@@ -72,11 +72,11 @@ public final class AmplifyConfiguration {
 
     private AmplifyConfiguration(
             Map<String, CategoryConfiguration> configs,
-            Map<Platform, String> additionalPlatforms
+            Map<Platform, String> platformVersions
     ) {
         this.categoryConfigurations = new HashMap<>();
         this.categoryConfigurations.putAll(configs);
-        this.additionalPlatforms = additionalPlatforms;
+        this.platformVersions = platformVersions;
     }
 
     /**
@@ -85,12 +85,12 @@ public final class AmplifyConfiguration {
      * @param json A JSON object
      * @return An AmplifyConfiguration
      * @throws AmplifyException If the JSON does not represent a valid AmplifyConfiguration
-     * @deprecated This method is now deprecated in favor of {@link #loadJson(JSONObject)}.
+     * @deprecated This method is now deprecated in favor of {@link #builder(JSONObject)}.
      */
     @Deprecated
     @NonNull
     public static AmplifyConfiguration fromJson(@NonNull JSONObject json) throws AmplifyException {
-        return loadJson(json).build();
+        return builder(json).build();
     }
 
     /**
@@ -100,13 +100,13 @@ public final class AmplifyConfiguration {
      * @return An Amplify configuration instance
      * @throws AmplifyException If there is a problem in the config file
      * @deprecated This method is now deprecated in favor of
-     *          {@link AmplifyConfiguration#loadConfigFile(Context)}.
+     *          {@link AmplifyConfiguration#builder(Context)}.
      */
     @SuppressWarnings("WeakerAccess")
     @Deprecated
     @NonNull
     public static AmplifyConfiguration fromConfigFile(@NonNull Context context) throws AmplifyException {
-        return loadConfigFile(context, getConfigResourceId(context)).build();
+        return builder(context, getConfigResourceId(context)).build();
     }
 
     /**
@@ -119,13 +119,13 @@ public final class AmplifyConfiguration {
      * @return An Amplify configuration instance
      * @throws AmplifyException If there is a problem in the config file
      * @deprecated This method is now deprecated in favor of
-     *          {@link AmplifyConfiguration#loadConfigFile(Context, int)}.
+     *          {@link AmplifyConfiguration#builder(Context, int)}.
      */
     @Deprecated
     @NonNull
     public static AmplifyConfiguration fromConfigFile(
             @NonNull Context context, @RawRes int configFileResourceId) throws AmplifyException {
-        return loadConfigFile(context, configFileResourceId).build();
+        return builder(context, configFileResourceId).build();
     }
 
     /**
@@ -134,8 +134,8 @@ public final class AmplifyConfiguration {
      * @return A map of additional platforms and their versions.
      */
     @NonNull
-    public Map<Platform, String> getAdditionalPlatforms() {
-        return Immutable.of(additionalPlatforms);
+    public Map<Platform, String> getPlatformVersions() {
+        return Immutable.of(platformVersions);
     }
 
     private static Map<String, CategoryConfiguration> configsFromJson(JSONObject json) throws AmplifyException {
@@ -236,8 +236,8 @@ public final class AmplifyConfiguration {
      * @throws AmplifyException If there is a problem in the config file
      */
     @NonNull
-    public static Builder loadConfigFile(@NonNull Context context) throws AmplifyException {
-        return loadConfigFile(context, getConfigResourceId(context));
+    public static Builder builder(@NonNull Context context) throws AmplifyException {
+        return builder(context, getConfigResourceId(context));
     }
 
     /**
@@ -250,35 +250,35 @@ public final class AmplifyConfiguration {
      * @throws AmplifyException If there is a problem in the config file
      */
     @NonNull
-    public static Builder loadConfigFile(
+    public static Builder builder(
             @NonNull Context context,
             @RawRes int configFileResourceId
     ) throws AmplifyException {
-        return loadJson(readInputJson(Objects.requireNonNull(context), configFileResourceId));
+        return builder(readInputJson(Objects.requireNonNull(context), configFileResourceId));
     }
 
     /**
      * Loads a builder for {@link AmplifyConfiguration} directly from an {@link JSONObject}.
-     * Users should prefer loading from resources files via {@link #loadConfigFile(Context)},
-     * or {@link #loadConfigFile(Context, int)}.
+     * Users should prefer loading from resources files via {@link #builder(Context)},
+     * or {@link #builder(Context, int)}.
      * @param json A JSON object
      * @return An Amplify configuration builder instance
      * @throws AmplifyException If the JSON does not represent a valid AmplifyConfiguration
      */
     @NonNull
-    public static Builder loadJson(@NonNull JSONObject json) throws AmplifyException {
-        return loadCategoryConfigs(configsFromJson(Objects.requireNonNull(json)));
+    public static Builder builder(@NonNull JSONObject json) throws AmplifyException {
+        return builder(configsFromJson(Objects.requireNonNull(json)));
     }
 
     /**
      * Loads a builder for {@link AmplifyConfiguration} directly from a map of
      * {@link CategoryConfiguration}.
      * @param configs A map of category configurations by category name.
-     * @return An Amplify configuration builder instance
+     * @return An Amplify configuration builder instance.
      */
     @VisibleForTesting
     @NonNull
-    public static Builder loadCategoryConfigs(Map<String, CategoryConfiguration> configs) {
+    public static Builder builder(Map<String, CategoryConfiguration> configs) {
         return new Builder(configs);
     }
 
@@ -287,11 +287,11 @@ public final class AmplifyConfiguration {
      */
     public static final class Builder {
         private final Map<String, CategoryConfiguration> categoryConfiguration;
-        private final Map<Platform, String> additionalPlatforms;
+        private final Map<Platform, String> platformVersions;
 
         private Builder(Map<String, CategoryConfiguration> categoryConfiguration) {
             this.categoryConfiguration = categoryConfiguration;
-            this.additionalPlatforms = new LinkedHashMap<>();
+            this.platformVersions = new LinkedHashMap<>();
         }
 
         /**
@@ -303,8 +303,8 @@ public final class AmplifyConfiguration {
          * @return this builder instance.
          */
         @NonNull
-        public Builder withAdditionalPlatform(@NonNull Platform platform, @NonNull String version) {
-            this.additionalPlatforms.put(
+        public Builder addPlatform(@NonNull Platform platform, @NonNull String version) {
+            this.platformVersions.put(
                     Objects.requireNonNull(platform),
                     Objects.requireNonNull(version)
             );
@@ -319,7 +319,7 @@ public final class AmplifyConfiguration {
         public AmplifyConfiguration build() {
             return new AmplifyConfiguration(
                     categoryConfiguration,
-                    additionalPlatforms
+                    platformVersions
             );
         }
     }

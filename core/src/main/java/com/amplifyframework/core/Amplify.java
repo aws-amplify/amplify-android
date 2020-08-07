@@ -105,7 +105,7 @@ public final class Amplify {
      * @throws AmplifyException thrown when already configured or there is no plugin found for a configuration
      */
     public static void configure(@NonNull Context context) throws AmplifyException {
-        configure(AmplifyConfiguration.loadConfigFile(context).build(), context);
+        configure(AmplifyConfiguration.builder(context).build(), context);
     }
 
     /**
@@ -128,7 +128,7 @@ public final class Amplify {
             }
 
             // Configure User-Agent utility
-            UserAgent.configure(configuration);
+            UserAgent.configure(configuration.getPlatformVersions());
 
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
                 if (category.getPlugins().size() > 0) {

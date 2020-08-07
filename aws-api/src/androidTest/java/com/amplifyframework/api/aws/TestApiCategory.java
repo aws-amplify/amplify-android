@@ -61,7 +61,7 @@ final class TestApiCategory {
                 )
         );
         CategoryConfiguration apiConfiguration =
-            AmplifyConfiguration.loadConfigFile(context, resourceId)
+            AmplifyConfiguration.builder(context, resourceId)
                 .build()
                 .forCategoryType(CategoryType.API);
         apiCategory.configure(apiConfiguration, context);
