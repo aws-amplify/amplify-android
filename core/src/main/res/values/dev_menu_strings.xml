@@ -30,8 +30,11 @@
     <string name="placeholder_device_info">Waiting for device info…</string>
     <string name="placeholder_env_info">Waiting for environment info…</string>
     <string name="file_issue_hint">Please enter a brief description…</string>
-    <string name="env_switch_text">Include Environment Information</string>
-    <string name="device_switch_text">Include Device Information</string>
     <string name="logs_switch_text">Include Logs</string>
     <string name="empty" />
+    <string name="copy_issue_text">Copy to Clipboard</string>
+    <string name="file_issue_warning_text">
+        Device and environment information will be included in the issue description.
+        You can preview this information before it is submitted by pressing \"File Issue\".
+    </string>
 </resources>
