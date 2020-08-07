@@ -15,10 +15,16 @@
 
 package com.amplifyframework.devmenu;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
 import com.amplifyframework.core.R;
@@ -38,6 +44,33 @@ public final class DevMenuEnvironmentFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.dev_menu_fragment_environment, container, false);
+        View envInfoView = inflater.inflate(R.layout.dev_menu_fragment_environment, container, false);
+        ((TextView) envInfoView.findViewById(R.id.env_info_text)).setText(getEnvironmentInfo());
+        return envInfoView;
+    }
+
+    /**
+     * Returns the environment information to be displayed.
+     * @return a SpannableStringBuilder containing the formatted environment information
+     */
+    private SpannableStringBuilder getEnvironmentInfo() {
+        SpannableStringBuilder stringBuilder = new SpannableStringBuilder();
+        stringBuilder.append(setBold("Amplify Plugins Information"));
+        stringBuilder.append("\nPlugin versions will be added here...\n\n");
+        stringBuilder.append(setBold("Developer Environment Information"));
+        stringBuilder.append("\nDeveloper environment information will be added here...");
+        return stringBuilder;
+    }
+
+    /**
+     * Returns the given text in bold.
+     * @param text the text to make bold
+     * @return a SpannableString representing bold text
+     */
+    private SpannableString setBold(String text) {
+        SpannableString boldText = new SpannableString(text);
+        boldText.setSpan(new StyleSpan(Typeface.BOLD), 0, boldText.length(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return boldText;
     }
 }

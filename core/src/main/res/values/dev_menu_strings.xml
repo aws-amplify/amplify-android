@@ -28,6 +28,7 @@
     <string name="search_logs_button_text">Search</string>
     <string name="placeholder_logs">Search results will appear here…</string>
     <string name="placeholder_device_info">Waiting for device info…</string>
+    <string name="placeholder_env_info">Waiting for environment info…</string>
     <string name="file_issue_hint">Please enter a brief description…</string>
     <string name="logs_switch_text">Include Logs</string>
     <string name="empty" />
