@@ -34,7 +34,7 @@
     <string name="empty" />
     <string name="copy_issue_text">Copy to Clipboard</string>
     <string name="file_issue_warning_text">
-        Warning: device and environment information will be included in the issue description.
+        Device and environment information will be included in the issue description.
         You can preview this information before it is submitted by pressing \"File Issue\".
     </string>
 </resources>
