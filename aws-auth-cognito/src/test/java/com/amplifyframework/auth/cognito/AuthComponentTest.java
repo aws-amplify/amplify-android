@@ -286,6 +286,7 @@ public final class AuthComponentTest {
      * @throws AuthException test fails if this gets thrown since method should succeed
      */
     @Test
+    @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
     public void resendSignUpCode() throws AuthException {
         SignUpResult amcResult = new SignUpResult(
                 false,
@@ -301,11 +302,11 @@ public final class AuthComponentTest {
             Callback<SignUpResult> callback = invocation.getArgument(1);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).resendSignUp(any(), any());
+        }).when(mobileClient).resendSignUp(any(), (Callback<SignUpResult>) any());
 
         AuthSignUpResult result = synchronousAuth.resendSignUpCode(USERNAME);
         validateSignUpResult(result, AuthSignUpStep.CONFIRM_SIGN_UP_STEP);
-        verify(mobileClient).resendSignUp(eq(USERNAME), any());
+        verify(mobileClient).resendSignUp(eq(USERNAME), (Callback<SignUpResult>) any());
     }
 
     /**
@@ -315,6 +316,7 @@ public final class AuthComponentTest {
      * @throws AuthException test fails if this gets thrown since method should succeed
      */
     @Test
+    @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
     public void signIn() throws AuthException {
         SignInResult amcResult = new SignInResult(
             SignInState.SMS_MFA,
@@ -336,7 +338,7 @@ public final class AuthComponentTest {
             Callback<SignInResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).signIn(any(), any(), any(), any());
+        }).when(mobileClient).signIn(any(), any(), any(), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.signIn(
                 USERNAME,
@@ -350,7 +352,7 @@ public final class AuthComponentTest {
                 AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
         );
 
-        verify(mobileClient).signIn(eq(USERNAME), eq(PASSWORD), eq(METADATA), any());
+        verify(mobileClient).signIn(eq(USERNAME), eq(PASSWORD), eq(METADATA), (Callback<SignInResult>) any());
     }
 
     /**
@@ -359,6 +361,7 @@ public final class AuthComponentTest {
      * @throws AuthException test fails if this gets thrown since method should succeed
      */
     @Test
+    @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
     public void confirmSignIn() throws AuthException {
         SignInResult amcResult = new SignInResult(
                 SignInState.DONE,
@@ -380,11 +383,11 @@ public final class AuthComponentTest {
             Callback<SignInResult> callback = invocation.getArgument(1);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignIn(any(String.class), any());
+        }).when(mobileClient).confirmSignIn(any(String.class), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE);
         validateSignInResult(result, true, AuthSignInStep.DONE);
-        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), any());
+        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), (Callback<SignInResult>) any());
     }
 
     /**
