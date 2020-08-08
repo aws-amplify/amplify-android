@@ -30,11 +30,6 @@ import java.util.Objects;
  */
 public enum SqlKeyword {
     /**
-     * SQL keyword quote.
-     */
-    QUOTE("`"),
-
-    /**
      * Acts as a delimiter between commands in SQL.
      */
     DELIMITER(" "),
