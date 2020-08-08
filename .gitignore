@@ -103,3 +103,6 @@ amplifyconfiguration.json
 test-results/
 build-artifacts/
 build-artifacts.tar.gz
+
+# add ignore for jenv
+.java-version
