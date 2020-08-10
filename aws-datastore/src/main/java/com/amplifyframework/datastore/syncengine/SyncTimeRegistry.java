@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
@@ -55,9 +56,11 @@ final class SyncTimeRegistry {
         });
     }
 
-    <T extends Model> Completable saveLastSyncTime(@NonNull Class<T> modelClazz, SyncTime syncTime) {
+    <T extends Model> Completable saveLastSyncTime(@NonNull Class<T> modelClazz,
+                                                   @Nullable SyncTime syncTime,
+                                                   @NonNull SyncType syncType) {
         LastSyncMetadata metadata = syncTime.exists() ?
-            LastSyncMetadata.lastSyncedAt(modelClazz, syncTime.toLong()) :
+            LastSyncMetadata.lastSyncedAt(modelClazz, syncTime.toLong(), syncType) :
             LastSyncMetadata.neverSynced(modelClazz);
 
         return Completable.create(emitter ->

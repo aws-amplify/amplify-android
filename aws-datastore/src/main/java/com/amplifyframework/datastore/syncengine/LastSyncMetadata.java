@@ -38,12 +38,14 @@ public final class LastSyncMetadata implements Model {
     private final @ModelField(targetType = "ID", isRequired = true) String id;
     private final @ModelField(targetType = "String", isRequired = true) String modelClassName;
     private final @ModelField(targetType = "AWSTimestamp", isRequired = true) Long lastSyncTime;
+    private final @ModelField(targetType = "String", isRequired = true) String lastSyncType;
 
     @SuppressWarnings("checkstyle:ParameterName") // The field is named "id" in the model; keep it consistent
-    private LastSyncMetadata(String id, String modelClassName, Long lastSyncTime) {
+    private LastSyncMetadata(String id, String modelClassName, Long lastSyncTime, SyncType syncType) {
         this.id = id;
         this.modelClassName = modelClassName;
         this.lastSyncTime = lastSyncTime;
+        this.lastSyncType = syncType.name();
     }
 
     /**
@@ -53,9 +55,11 @@ public final class LastSyncMetadata implements Model {
      * @param lastSyncTime Last time it was synced
      * @return {@link LastSyncMetadata} for the model class
      */
-    static <T extends Model> LastSyncMetadata lastSyncedAt(@NonNull Class<T> modelClass, long lastSyncTime) {
+    static <T extends Model> LastSyncMetadata lastSyncedAt(@NonNull Class<T> modelClass,
+                                                           @Nullable long lastSyncTime,
+                                                           @NonNull SyncType syncType) {
         Objects.requireNonNull(modelClass);
-        return create(modelClass, lastSyncTime);
+        return create(modelClass, lastSyncTime, syncType);
     }
 
     /**
@@ -67,22 +71,23 @@ public final class LastSyncMetadata implements Model {
      */
     static <T extends Model> LastSyncMetadata neverSynced(@NonNull Class<T> modelClass) {
         Objects.requireNonNull(modelClass);
-        return create(modelClass, null);
+        return create(modelClass, null, SyncType.BASE);
     }
 
     /**
      * Creates an {@link LastSyncMetadata} for the provided model class.
      * @param modelClass Class of model for which metadata pertains
      * @param lastSyncTime Time of last sync; null, if never.
+     * @param syncType The type of sync (FULL or DELTA).
      * @param <T> Type of model
      * @return {@link LastSyncMetadata}
      */
     @SuppressWarnings("WeakerAccess")
     static <T extends Model> LastSyncMetadata create(
-            @NonNull Class<T> modelClass, @Nullable Long lastSyncTime) {
+            @NonNull Class<T> modelClass, @Nullable Long lastSyncTime, @NonNull SyncType syncType) {
         Objects.requireNonNull(modelClass);
         String modelClassName = modelClass.getSimpleName();
-        return new LastSyncMetadata(hash(modelClassName), modelClassName, lastSyncTime);
+        return new LastSyncMetadata(hash(modelClassName), modelClassName, lastSyncTime, syncType);
     }
 
     @NonNull
@@ -107,6 +112,14 @@ public final class LastSyncMetadata implements Model {
      */
     Long getLastSyncTime() {
         return this.lastSyncTime;
+    }
+
+    /**
+     * Returns the type of sync that was last performed.
+     * @return Either BASE or FULL.
+     */
+    public String getLastSyncType() {
+        return lastSyncType;
     }
 
     /**
