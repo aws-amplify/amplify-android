@@ -59,9 +59,14 @@ final class SyncTimeRegistry {
     <T extends Model> Completable saveLastSyncTime(@NonNull Class<T> modelClazz,
                                                    @Nullable SyncTime syncTime,
                                                    @NonNull SyncType syncType) {
-        LastSyncMetadata metadata = syncTime.exists() ?
-            LastSyncMetadata.lastSyncedAt(modelClazz, syncTime.toLong(), syncType) :
-            LastSyncMetadata.neverSynced(modelClazz);
+        LastSyncMetadata metadata;
+        if (!syncTime.exists()) {
+            metadata = LastSyncMetadata.neverSynced(modelClazz);
+        } else {
+            metadata = SyncType.BASE.equals(syncType) ?
+                LastSyncMetadata.baseSyncedAt(modelClazz, syncTime.toLong()) :
+                LastSyncMetadata.deltaSyncedAt(modelClazz, syncTime.toLong());
+        }
 
         return Completable.create(emitter ->
             localStorageAdapter.save(

@@ -50,16 +50,28 @@ public final class LastSyncMetadata implements Model {
 
     /**
      * Creates an instance of an {@link LastSyncMetadata}, indicating that the provided
-     * model has been sync'd, and that the last sync occurred at the given time.
+     * model has been base sync'd, and that the last sync occurred at the given time.
      * @param modelClass Class of model
      * @param lastSyncTime Last time it was synced
      * @return {@link LastSyncMetadata} for the model class
      */
-    static <T extends Model> LastSyncMetadata lastSyncedAt(@NonNull Class<T> modelClass,
-                                                           @Nullable long lastSyncTime,
-                                                           @NonNull SyncType syncType) {
+    static <T extends Model> LastSyncMetadata baseSyncedAt(@NonNull Class<T> modelClass,
+                                                           @Nullable long lastSyncTime) {
         Objects.requireNonNull(modelClass);
-        return create(modelClass, lastSyncTime, syncType);
+        return create(modelClass, lastSyncTime, SyncType.BASE);
+    }
+
+    /**
+     * Creates an instance of an {@link LastSyncMetadata}, indicating that the provided
+     * model has been base delta sync'd, and that the last sync occurred at the given time.
+     * @param modelClass Class of model
+     * @param lastSyncTime Last time it was synced
+     * @return {@link LastSyncMetadata} for the model class
+     */
+    static <T extends Model> LastSyncMetadata deltaSyncedAt(@NonNull Class<T> modelClass,
+                                                           @Nullable long lastSyncTime) {
+        Objects.requireNonNull(modelClass);
+        return create(modelClass, lastSyncTime, SyncType.DELTA);
     }
 
     /**
