@@ -103,6 +103,9 @@ public final class AWSDataStorePluginTest {
     @Test
     public void configureAndInitializeInLocalMode() throws AmplifyException {
         //Configure DataStore with an empty config (All defaults)
+        HubAccumulator dataStoreReadyObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
+                .start();
         ApiCategory emptyApiCategory = spy(ApiCategory.class);
         AWSDataStorePlugin standAloneDataStorePlugin = new AWSDataStorePlugin(modelProvider, emptyApiCategory);
         SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(standAloneDataStorePlugin);
@@ -119,6 +122,8 @@ public final class AWSDataStorePluginTest {
         assertNotNull(person1.getId());
         Person person1FromDb = synchronousDataStore.get(Person.class, person1.getId());
         assertEquals(person1, person1FromDb);
+
+        dataStoreReadyObserver.await();
     }
 
     /**
@@ -132,6 +137,12 @@ public final class AWSDataStorePluginTest {
         HubAccumulator orchestratorInitObserver =
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.REMOTE_SYNC_STARTED, 1)
                 .start();
+        HubAccumulator dataStoreReadyObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
+                .start();
+        HubAccumulator subscriptionsEstablishedObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED, 1)
+                .start();
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
@@ -139,7 +150,9 @@ public final class AWSDataStorePluginTest {
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
 
+        dataStoreReadyObserver.await();
         orchestratorInitObserver.await();
+        subscriptionsEstablishedObserver.await();
         assertRemoteSubscriptionsStarted();
     }
 

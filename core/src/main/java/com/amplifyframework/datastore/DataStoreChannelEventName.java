@@ -52,7 +52,23 @@ public enum DataStoreChannelEventName {
     /**
      * The remote synchonization processes stopped.
      */
-    REMOTE_SYNC_STOPPED("remote_sync_stopped");
+    REMOTE_SYNC_STOPPED("remote_sync_stopped"),
+
+    /**
+     * Notifies if the network is active or not.
+     * It is triggered on DataStore start and also every time the network status changes.
+     */
+    NETWORK_STATUS("networkStatus"),
+
+    /**
+     * The websocket connection has been established and all the graphql subscriptions too.
+     */
+    SUBSCRIPTIONS_ESTABLISHED("subscriptionsEstablished"),
+
+    /**
+     * The DataStore as a whole (not just the sync piece) is ready. At this point all data is available.
+     */
+    READY("ready");
 
     private final String hubEventName;
 
