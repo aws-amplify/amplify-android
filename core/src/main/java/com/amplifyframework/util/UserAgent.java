@@ -19,6 +19,7 @@ import android.annotation.SuppressLint;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
@@ -75,6 +76,15 @@ public final class UserAgent {
         }
 
         instance = userAgent.toString();
+    }
+
+    /**
+     * Reset User-Agent configuration for testing purposes.
+     * No-op if User-Agent was not configured yet.
+     */
+    @VisibleForTesting
+    public static synchronized void reset() {
+        instance = null;
     }
 
     /**

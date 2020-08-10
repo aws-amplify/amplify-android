@@ -276,16 +276,20 @@ public final class AmplifyConfiguration {
          * Add an additional platform and its version to be used for tracking
          * usage metrics and return the builder.
          * Note: Do not add "amplify-android", as it is already accounted for.
+         * Adding {@link UserAgent.Platform#ANDROID} as platform is a no-op.
          * @param platform Additional platform that uses this library.
          * @param version Version number associated with the additional platform.
          * @return this builder instance.
          */
         @NonNull
         public Builder addPlatform(@NonNull UserAgent.Platform platform, @NonNull String version) {
-            this.platformVersions.put(
-                    Objects.requireNonNull(platform),
-                    Objects.requireNonNull(version)
-            );
+            // Do not allow user to specify Android platform to prevent redundancy.
+            if (!UserAgent.Platform.ANDROID.equals(platform)) {
+                this.platformVersions.put(
+                        Objects.requireNonNull(platform),
+                        Objects.requireNonNull(version)
+                );
+            }
             return this;
         }
 
