@@ -105,7 +105,7 @@ public final class Amplify {
      * @throws AmplifyException thrown when already configured or there is no plugin found for a configuration
      */
     public static void configure(@NonNull Context context) throws AmplifyException {
-        configure(AmplifyConfiguration.builder(context).build(), context);
+        configure(AmplifyConfiguration.fromConfigFile(context), context);
     }
 
     /**

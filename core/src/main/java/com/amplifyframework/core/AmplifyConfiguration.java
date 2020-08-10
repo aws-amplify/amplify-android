@@ -80,7 +80,8 @@ public final class AmplifyConfiguration {
 
     /**
      * Build an {@link AmplifyConfiguration} directly from an {@link JSONObject}.
-     *
+     * Users should prefer loading from resources files via {@link #fromConfigFile(Context)},
+     * or {@link #fromConfigFile(Context, int)}.
      * @param json A JSON object
      * @return An AmplifyConfiguration
      * @throws AmplifyException If the JSON does not represent a valid AmplifyConfiguration
@@ -92,7 +93,6 @@ public final class AmplifyConfiguration {
 
     /**
      * Creates an AmplifyConfiguration from an amplifyconfiguration.json file.
-     *
      * @param context Context needed for reading JSON file
      * @return An Amplify configuration instance
      * @throws AmplifyException If there is a problem in the config file
@@ -105,7 +105,6 @@ public final class AmplifyConfiguration {
 
     /**
      * Creates an AmplifyConfiguration from a particular configuration file.
-     *
      * @param context Android Context
      * @param configFileResourceId
      *        The Android resource ID of a raw resource which contains
