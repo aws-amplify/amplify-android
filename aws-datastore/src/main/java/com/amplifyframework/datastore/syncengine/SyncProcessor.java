@@ -37,7 +37,6 @@ import com.amplifyframework.util.Time;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -103,28 +102,25 @@ final class SyncProcessor {
 
     private Completable createHydrationTask(
             ModelWithMetadataComparator modelWithMetadataComparator, Class<? extends Model> modelClass) {
-        // Default this to BASE since if there is no LastSyncMetadata record for this
-        // model, a BASE sync will be performed.
-        AtomicReference<SyncType> syncType = new AtomicReference<>(SyncType.BASE);
-
         return syncTimeRegistry.lookupLastSyncTime(modelClass)
             .map(this::filterOutOldSyncTimes)
-            .map(lastSyncTime -> {
-                long syncIntervalMs = dataStoreConfigurationProvider.getConfiguration().getSyncIntervalMs();
-                syncType.set(SyncType.fromSyncTimeAndThreshold(lastSyncTime, syncIntervalMs));
-                return lastSyncTime;
-            })
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
-            .flatMapCompletable(lastSyncTime -> syncModel(modelClass, lastSyncTime)
-                // Okay, but we want to flatten the Iterable elements back into an Observable stream.
-                .flatMapObservable(Observable::fromIterable)
-                // And sort them all, according to their model's topological order,
-                // So that when we save them, the references will exist.
-                .sorted(modelWithMetadataComparator::compare)
-                // For each ModelWithMetadata, merge it into the local store.
-                .flatMapCompletable(merger::merge)
-            )
-            .andThen(syncTimeRegistry.saveLastSyncTime(modelClass, SyncTime.now(), syncType.get()))
+            .flatMap(lastSyncTime -> {
+                return syncModel(modelClass, lastSyncTime)
+                    // Okay, but we want to flatten the Iterable elements back into an Observable stream.
+                    .flatMapObservable(Observable::fromIterable)
+                    // And sort them all, according to their model's topological order,
+                    // So that when we save them, the references will exist.
+                    .sorted(modelWithMetadataComparator::compare)
+                    // For each ModelWithMetadata, merge it into the local store.
+                    .flatMapCompletable(merger::merge)
+                    .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
+            })
+            .flatMapCompletable(syncType -> {
+                return SyncType.DELTA.equals(syncType) ?
+                    syncTimeRegistry.saveLastDeltaSyncTime(modelClass, SyncTime.now()) :
+                    syncTimeRegistry.saveLastBaseSyncTime(modelClass, SyncTime.now());
+            })
             .doOnError(failureToSync -> {
                 LOG.warn("Initial cloud sync failed.", failureToSync);
                 DataStoreErrorHandler dataStoreErrorHandler =

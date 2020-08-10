@@ -56,17 +56,27 @@ final class SyncTimeRegistry {
         });
     }
 
-    <T extends Model> Completable saveLastSyncTime(@NonNull Class<T> modelClazz,
-                                                   @Nullable SyncTime syncTime,
-                                                   @NonNull SyncType syncType) {
-        LastSyncMetadata metadata;
-        if (!syncTime.exists()) {
-            metadata = LastSyncMetadata.neverSynced(modelClazz);
-        } else {
-            metadata = SyncType.BASE.equals(syncType) ?
-                LastSyncMetadata.baseSyncedAt(modelClazz, syncTime.toLong()) :
-                LastSyncMetadata.deltaSyncedAt(modelClazz, syncTime.toLong());
-        }
+    <T extends Model> Completable saveLastDeltaSyncTime(@NonNull Class<T> modelClazz,
+                                                   @Nullable SyncTime syncTime) {
+        LastSyncMetadata metadata = syncTime.exists() ?
+            LastSyncMetadata.deltaSyncedAt(modelClazz, syncTime.toLong()) :
+            LastSyncMetadata.neverSynced(modelClazz);
+
+        return Completable.create(emitter ->
+            localStorageAdapter.save(
+                metadata,
+                Initiator.SYNC_ENGINE,
+                saveResult -> emitter.onComplete(),
+                emitter::onError
+            )
+        );
+    }
+
+    <T extends Model> Completable saveLastBaseSyncTime(@NonNull Class<T> modelClazz,
+                                                   @Nullable SyncTime syncTime) {
+        LastSyncMetadata metadata = syncTime.exists() ?
+            LastSyncMetadata.baseSyncedAt(modelClazz, syncTime.toLong()) :
+            LastSyncMetadata.neverSynced(modelClazz);
 
         return Completable.create(emitter ->
             localStorageAdapter.save(
