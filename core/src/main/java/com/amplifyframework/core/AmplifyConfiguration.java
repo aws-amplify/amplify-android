@@ -22,7 +22,6 @@ import androidx.annotation.RawRes;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.Platform;
 import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
 import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.auth.AuthCategoryConfiguration;
@@ -35,6 +34,7 @@ import com.amplifyframework.logging.LoggingCategoryConfiguration;
 import com.amplifyframework.predictions.PredictionsCategoryConfiguration;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.util.Immutable;
+import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,14 +57,14 @@ public final class AmplifyConfiguration {
     private static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
 
     private final Map<String, CategoryConfiguration> categoryConfigurations;
-    private final Map<Platform, String> platformVersions;
+    private final Map<UserAgent.Platform, String> platformVersions;
 
     /**
      * Constructs a new AmplifyConfiguration object.
      * @param configs Category configurations
      * @deprecated Construction should be done with a builder.
      */
-    @Deprecated
+    @VisibleForTesting
     @SuppressWarnings("WeakerAccess") // These are created and accessed as public API
     public AmplifyConfiguration(@NonNull Map<String, CategoryConfiguration> configs) {
         this(configs, new LinkedHashMap<>());
@@ -72,7 +72,7 @@ public final class AmplifyConfiguration {
 
     private AmplifyConfiguration(
             Map<String, CategoryConfiguration> configs,
-            Map<Platform, String> platformVersions
+            Map<UserAgent.Platform, String> platformVersions
     ) {
         this.categoryConfigurations = new HashMap<>();
         this.categoryConfigurations.putAll(configs);
@@ -134,7 +134,7 @@ public final class AmplifyConfiguration {
      * @return A map of additional platforms and their versions.
      */
     @NonNull
-    public Map<Platform, String> getPlatformVersions() {
+    public Map<UserAgent.Platform, String> getPlatformVersions() {
         return Immutable.of(platformVersions);
     }
 
@@ -267,19 +267,7 @@ public final class AmplifyConfiguration {
      */
     @NonNull
     public static Builder builder(@NonNull JSONObject json) throws AmplifyException {
-        return builder(configsFromJson(Objects.requireNonNull(json)));
-    }
-
-    /**
-     * Loads a builder for {@link AmplifyConfiguration} directly from a map of
-     * {@link CategoryConfiguration}.
-     * @param configs A map of category configurations by category name.
-     * @return An Amplify configuration builder instance.
-     */
-    @VisibleForTesting
-    @NonNull
-    public static Builder builder(Map<String, CategoryConfiguration> configs) {
-        return new Builder(configs);
+        return new Builder(configsFromJson(Objects.requireNonNull(json)));
     }
 
     /**
@@ -287,7 +275,7 @@ public final class AmplifyConfiguration {
      */
     public static final class Builder {
         private final Map<String, CategoryConfiguration> categoryConfiguration;
-        private final Map<Platform, String> platformVersions;
+        private final Map<UserAgent.Platform, String> platformVersions;
 
         private Builder(Map<String, CategoryConfiguration> categoryConfiguration) {
             this.categoryConfiguration = categoryConfiguration;
@@ -303,7 +291,7 @@ public final class AmplifyConfiguration {
          * @return this builder instance.
          */
         @NonNull
-        public Builder addPlatform(@NonNull Platform platform, @NonNull String version) {
+        public Builder addPlatform(@NonNull UserAgent.Platform platform, @NonNull String version) {
             this.platformVersions.put(
                     Objects.requireNonNull(platform),
                     Objects.requireNonNull(version)
