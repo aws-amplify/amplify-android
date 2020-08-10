@@ -150,6 +150,9 @@ public final class LastSyncMetadata implements Model {
         if (!ObjectsCompat.equals(modelClassName, that.modelClassName)) {
             return false;
         }
+        if (!ObjectsCompat.equals(lastSyncType, that.lastSyncType)) {
+            return false;
+        }
         return ObjectsCompat.equals(lastSyncTime, that.lastSyncTime);
     }
 
@@ -158,6 +161,7 @@ public final class LastSyncMetadata implements Model {
         int result = id.hashCode();
         result = 31 * result + modelClassName.hashCode();
         result = 31 * result + lastSyncTime.hashCode();
+        result = 31 * result + lastSyncType.hashCode();
         return result;
     }
 
@@ -167,6 +171,7 @@ public final class LastSyncMetadata implements Model {
             "id='" + id + '\'' +
             ", modelClassName='" + modelClassName + '\'' +
             ", lastSyncTime=" + lastSyncTime +
+            ", lastSyncType=" + lastSyncType +
             '}';
     }
 }
