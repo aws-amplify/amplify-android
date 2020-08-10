@@ -91,6 +91,20 @@ public final class UserAgentTest {
     }
 
     /**
+     * Tests that user-agent enforces size-limit at configure time.
+     * This test should fail. AWS SDK stores user-agents as VARCHAR(254),
+     * so it must be smaller than that.
+     * @throws AmplifyException if User-Agent configuration fails.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test(expected = AmplifyException.class)
+    public void testSizeLimit() throws AmplifyException {
+        final String longVersion = new String(new byte[254]);
+        platforms.put(UserAgent.Platform.FLUTTER, longVersion);
+        UserAgent.configure(platforms);
+    }
+
+    /**
      * Tests that the order of platforms being prepended is reserved.
      * @throws AmplifyException if User-Agent configuration fails.
      */
