@@ -97,7 +97,7 @@ final class DataStoreCategoryConfigurator {
                 .start();
 
         CategoryConfiguration dataStoreConfiguration =
-            AmplifyConfiguration.builder(context, resourceId).build()
+            AmplifyConfiguration.fromConfigFile(context, resourceId)
                 .forCategoryType(CategoryType.DATASTORE);
 
         AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, api);

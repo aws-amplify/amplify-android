@@ -83,7 +83,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         // Setup an API
         ApiCategory apiCategory = new ApiCategory();
         apiCategory.addPlugin(new AWSApiPlugin());
-        apiCategory.configure(AmplifyConfiguration.builder(context, configResourceId).build()
+        apiCategory.configure(AmplifyConfiguration.fromConfigFile(context, configResourceId)
             .forCategoryType(CategoryType.API), context);
 
         api = SynchronousApi.delegatingTo(apiCategory);

@@ -48,8 +48,7 @@ final class TestPredictionsCategory {
         final PredictionsCategory predictionsCategory = new PredictionsCategory();
         try {
             predictionsCategory.addPlugin(new AWSPredictionsPlugin(AWSMobileClient.getInstance()));
-            CategoryConfiguration predictionsConfiguration = AmplifyConfiguration.builder(context, resourceId)
-                    .build()
+            CategoryConfiguration predictionsConfiguration = AmplifyConfiguration.fromConfigFile(context, resourceId)
                     .forCategoryType(CategoryType.PREDICTIONS);
             predictionsCategory.configure(predictionsConfiguration, context);
             predictionsCategory.initialize(context);

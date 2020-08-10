@@ -45,8 +45,7 @@ final class TestStorageCategory {
         final StorageCategory storageCategory = new StorageCategory();
         try {
             storageCategory.addPlugin(new AWSS3StoragePlugin(new TestCognitoAuthProvider()));
-            CategoryConfiguration storageConfiguration = AmplifyConfiguration.builder(context, resourceId)
-                .build()
+            CategoryConfiguration storageConfiguration = AmplifyConfiguration.fromConfigFile(context, resourceId)
                 .forCategoryType(CategoryType.STORAGE);
             storageCategory.configure(storageConfiguration, context);
             // storageCategory.initialize(context); // Doesn't do anything right now.
