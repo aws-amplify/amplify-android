@@ -62,7 +62,6 @@ public final class AmplifyConfiguration {
     /**
      * Constructs a new AmplifyConfiguration object.
      * @param configs Category configurations
-     * @deprecated Construction should be done with a builder.
      */
     @VisibleForTesting
     @SuppressWarnings("WeakerAccess") // These are created and accessed as public API
@@ -85,9 +84,7 @@ public final class AmplifyConfiguration {
      * @param json A JSON object
      * @return An AmplifyConfiguration
      * @throws AmplifyException If the JSON does not represent a valid AmplifyConfiguration
-     * @deprecated This method is now deprecated in favor of {@link #builder(JSONObject)}.
      */
-    @Deprecated
     @NonNull
     public static AmplifyConfiguration fromJson(@NonNull JSONObject json) throws AmplifyException {
         return builder(json).build();
@@ -99,11 +96,8 @@ public final class AmplifyConfiguration {
      * @param context Context needed for reading JSON file
      * @return An Amplify configuration instance
      * @throws AmplifyException If there is a problem in the config file
-     * @deprecated This method is now deprecated in favor of
-     *          {@link AmplifyConfiguration#builder(Context)}.
      */
     @SuppressWarnings("WeakerAccess")
-    @Deprecated
     @NonNull
     public static AmplifyConfiguration fromConfigFile(@NonNull Context context) throws AmplifyException {
         return builder(context, getConfigResourceId(context)).build();
@@ -118,10 +112,7 @@ public final class AmplifyConfiguration {
      *        an amplify configuration as JSON
      * @return An Amplify configuration instance
      * @throws AmplifyException If there is a problem in the config file
-     * @deprecated This method is now deprecated in favor of
-     *          {@link AmplifyConfiguration#builder(Context, int)}.
      */
-    @Deprecated
     @NonNull
     public static AmplifyConfiguration fromConfigFile(
             @NonNull Context context, @RawRes int configFileResourceId) throws AmplifyException {
