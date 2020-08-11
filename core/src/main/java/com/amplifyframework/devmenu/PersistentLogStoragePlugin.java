@@ -19,6 +19,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.BuildConfig;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.logging.LoggingCategoryBehavior;
 import com.amplifyframework.logging.LoggingPlugin;
@@ -75,6 +76,12 @@ public final class PersistentLogStoragePlugin extends LoggingPlugin<Void> {
     @Override
     public Void getEscapeHatch() {
         return null;
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 
     /**

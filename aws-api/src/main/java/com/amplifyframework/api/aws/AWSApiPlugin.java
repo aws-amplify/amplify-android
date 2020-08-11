@@ -150,6 +150,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return Collections.unmodifiableMap(apiClientsByName);
     }
 
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
+    }
+
     @Nullable
     @Override
     public <R> GraphQLOperation<R> query(

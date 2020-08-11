@@ -25,6 +25,8 @@ import android.text.TextUtils;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 
+import org.json.JSONException;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -137,8 +139,18 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
      * @return the issue body
      */
     public String createIssueBody(String description, boolean includeLogs) {
-        // TODO: add environment information to issue body
-        String envInfo = "";
+        EnvironmentInfo environmentInfo = new EnvironmentInfo();
+        String envInfo = "Amplify Plugins Information:\n" + environmentInfo.getPluginVersions();
+        String devEnvInfo = "";
+        try {
+            devEnvInfo = environmentInfo.getDeveloperEnvironmentInfo(context);
+        } catch (JSONException jsonError) {
+            Amplify.Logging.forNamespace("amplify").error("Error reading developer environment information.",
+                    jsonError);
+        }
+        if (!devEnvInfo.isEmpty()) {
+            envInfo += "\n\nDeveloper Environment Information:\n" + devEnvInfo;
+        }
         String deviceInfo = new DeviceInfo().toString();
         String logsText = "";
         if (includeLogs && !loggingPlugin.getLogs().isEmpty()) {
