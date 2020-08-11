@@ -32,8 +32,8 @@ public final class Wrap {
      */
     @Nullable
     public static String inBackticks(@Nullable String original) {
-        if (original == null) {
-            return null;
+        if (Empty.check(original)) {
+            return original;
         }
         return "`" + original + "`";
     }
