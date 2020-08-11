@@ -69,6 +69,12 @@ public final class SimpleLoggingPlugin extends LoggingPlugin<Void> {
 
     @NonNull
     @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
+    }
+
+    @NonNull
+    @Override
     public Logger forNamespace(@Nullable String namespace) {
         return null;
     }

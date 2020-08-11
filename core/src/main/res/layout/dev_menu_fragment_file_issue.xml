@@ -54,7 +54,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/file_issue_warning_text"
-        android:textSize="14sp"
+        android:textSize="15sp"
         android:textColor="?android:attr/textColorPrimaryInverse"
         android:textStyle="bold"
         android:gravity="center"

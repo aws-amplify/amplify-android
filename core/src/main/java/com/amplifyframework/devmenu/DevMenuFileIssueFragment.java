@@ -33,7 +33,7 @@ import com.amplifyframework.core.R;
  */
 public final class DevMenuFileIssueFragment extends Fragment {
     // Minimum number of characters required for the issue description.
-    private static final int MIN_DESCRIPTION_LENGTH = 140;
+    private static final int MIN_DESCRIPTION_LENGTH = 20;
     // Error message to display when the description does not satisfy the
     // minimum character count requirement.
     private static final String DESCRIPTION_LENGTH_ERROR = "Issue description must be at least "

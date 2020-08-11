@@ -234,6 +234,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         return null;
     }
 
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
+    }
+
     /**
      * {@inheritDoc}
      */

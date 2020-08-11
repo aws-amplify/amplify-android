@@ -389,6 +389,12 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         return analyticsClient;
     }
 
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
+    }
+
     /**
      * Pinpoint Analytics configuration in amplifyconfiguration.json contains following values.
      */

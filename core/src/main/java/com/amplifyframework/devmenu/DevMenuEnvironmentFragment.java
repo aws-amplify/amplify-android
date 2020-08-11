@@ -27,7 +27,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.R;
+
+import org.json.JSONException;
 
 /**
  * A {@link Fragment} subclass representing the view
@@ -55,10 +58,27 @@ public final class DevMenuEnvironmentFragment extends Fragment {
      */
     private SpannableStringBuilder getEnvironmentInfo() {
         SpannableStringBuilder stringBuilder = new SpannableStringBuilder();
+        EnvironmentInfo envInfo = new EnvironmentInfo();
+        // Append the amplify plugin versions to stringBuilder
         stringBuilder.append(setBold("Amplify Plugins Information"));
-        stringBuilder.append("\nPlugin versions will be added here...\n\n");
+        String pluginVersions = "\n" + envInfo.getPluginVersions() + "\n";
+        stringBuilder.append(pluginVersions);
+
+        // Append the developer environment information to stringBuilder
         stringBuilder.append(setBold("Developer Environment Information"));
-        stringBuilder.append("\nDeveloper environment information will be added here...");
+        String devEnvInfo = "";
+        try {
+            devEnvInfo = envInfo.getDeveloperEnvironmentInfo(requireContext());
+        } catch (JSONException jsonError) {
+            Amplify.Logging.forNamespace("amplify").error("Error reading developer environment information.",
+                    jsonError);
+        }
+        if (devEnvInfo.isEmpty()) {
+            stringBuilder.append("\nUnable to retrieve developer environment information.");
+        } else {
+            devEnvInfo = "\n" + devEnvInfo;
+            stringBuilder.append(devEnvInfo);
+        }
         return stringBuilder;
     }
 
