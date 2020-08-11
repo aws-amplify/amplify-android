@@ -55,7 +55,6 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -104,9 +103,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Used to publish events to the observables subscribed.
     private final Subject<StorageItemChange<? extends Model>> itemChangeSubject;
 
-    // Map of tableName => Insert Prepared statement.
-    private Map<String, SqlCommand> insertSqlPreparedStatements;
-
     // Represents a connection to the SQLite database. This database reference
     // can be used to do all SQL operations against the underlying database
     // that this handle represents.
@@ -138,7 +134,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             ModelProvider systemModelsProvider) {
         this.modelSchemaRegistry = modelSchemaRegistry;
         this.modelsProvider = CompoundModelProvider.of(systemModelsProvider, userModelsProvider);
-        this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();
         this.itemChangeSubject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         this.toBeDisposed = new CompositeDisposable();
@@ -216,17 +211,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 databaseConnectionHandle = sqliteStorageHelper.getWritableDatabase();
                 this.sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry, databaseConnectionHandle);
-
-                /*
-                 * Create INSERT INTO TABLE_NAME statements for all SQL tables
-                 * and compile them and store in an in-memory map. Later, when a
-                 * {@link #save(T, Consumer, Consumer)} operation needs to insert
-                 * an object (sql rows) into the database, it can bind the input
-                 * values with the prepared insert statement.
-                 *
-                 * This is done to improve performance of database write operations.
-                 */
-                this.insertSqlPreparedStatements = getInsertSqlPreparedStatements();
 
                 /*
                  * Detect if the version of the models stored in SQLite is different
@@ -317,8 +301,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     // insert model in SQLite
                     type = StorageItemChange.Type.CREATE;
 
-                    sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
-                    if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
+                    sqlCommand = sqlCommandFactory.insertFor(modelSchema);
+                    if (!sqlCommand.hasCompiledSqlStatement()) {
                         onError.accept(new DataStoreException(
                             "No insert statement found for the Model: " + modelSchema.getName(),
                             AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -551,8 +535,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public synchronized void terminate() throws DataStoreException {
         try {
-            insertSqlPreparedStatements = null;
-
             if (toBeDisposed != null) {
                 toBeDisposed.clear();
             }
