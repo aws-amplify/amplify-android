@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.syncengine.events;
+package com.amplifyframework.datastore.events;
 
 /**
  * Event payload emitted when the sync process starts.

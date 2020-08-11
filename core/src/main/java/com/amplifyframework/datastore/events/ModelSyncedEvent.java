@@ -13,11 +13,9 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.syncengine.events;
+package com.amplifyframework.datastore.events;
 
 import androidx.annotation.NonNull;
-
-import com.amplifyframework.datastore.syncengine.SyncType;
 
 /**
  * Hub event payload emitted when the initial sync completes for a given model.
@@ -39,7 +37,7 @@ public final class ModelSyncedEvent {
      * @param deleted Number of records deleted during the sync attempt.
      */
     public ModelSyncedEvent(String model,
-                            SyncType syncType,
+                            boolean isFullSync,
                             int added,
                             int updated,
                             int deleted) {
@@ -47,8 +45,8 @@ public final class ModelSyncedEvent {
         this.updated = updated;
         this.deleted = deleted;
         this.model = model;
-        this.isFullSync = SyncType.FULL.equals(syncType);
-        this.isDeltaSync = SyncType.DELTA.equals(syncType);
+        this.isFullSync = isFullSync;
+        this.isDeltaSync = !isFullSync;
     }
 
     /**

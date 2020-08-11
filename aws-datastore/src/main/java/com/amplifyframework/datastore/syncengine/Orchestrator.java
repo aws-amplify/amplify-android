@@ -22,6 +22,7 @@ import androidx.core.util.Supplier;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
@@ -36,12 +37,14 @@ import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Completable;
+import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -62,6 +65,9 @@ public final class Orchestrator {
     private final MutationOutbox mutationOutbox;
     private final CompositeDisposable disposables;
     private final Scheduler startStopScheduler;
+    private final LocalStorageAdapter localStorageAdapter;
+    private final List<Class<? extends Model>> syncableModels;
+    private final SyncMetricsObserver syncObserver;
 
     /**
      * Constructs a new Orchestrator.
@@ -97,6 +103,11 @@ public final class Orchestrator {
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
 
+        this.localStorageAdapter = localStorageAdapter;
+        syncableModels = Observable.fromIterable(modelProvider.models())
+            .toList()
+            .blockingGet();
+
         this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
@@ -105,8 +116,10 @@ public final class Orchestrator {
             .appSync(appSync)
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
-            .localStorageAdapter(localStorageAdapter)
             .build();
+        this.syncObserver = new SyncMetricsObserver(localStorageAdapter,
+                                                    syncableModels,
+                                                    dataStoreConfigurationProvider);
         this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
         this.currentMode = new AtomicReference<>(Mode.STOPPED);

@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import android.util.Range;
+
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -28,13 +29,13 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.events.ModelSyncedEvent;
+import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
-import com.amplifyframework.datastore.syncengine.events.ModelSyncedEvent;
-import com.amplifyframework.datastore.syncengine.events.SyncQueriesStartedEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.HubEventFilter;
@@ -88,6 +89,7 @@ public final class SyncProcessorTest {
     private SynchronousStorageAdapter storageAdapter;
 
     private SyncProcessor syncProcessor;
+    private SyncMetricsObserver syncMetricsObserver;
     private int errorHandlerCallCount;
     private int modelCount;
 
@@ -121,6 +123,14 @@ public final class SyncProcessorTest {
             .dataStoreErrorHandler(dataStoreException -> errorHandlerCallCount++)
             .build();
 
+        List<Class<? extends Model>> syncableModels = Observable.fromIterable(modelProvider.models())
+            .toList()
+            .blockingGet();
+
+        this.syncMetricsObserver = new SyncMetricsObserver(inMemoryStorageAdapter,
+                                                            syncableModels,
+                                                            () -> dataStoreConfiguration);
+
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
             .modelSchemaRegistry(modelSchemaRegistry)
@@ -128,7 +138,6 @@ public final class SyncProcessorTest {
             .appSync(appSync)
             .merger(merger)
             .dataStoreConfigurationProvider(() -> dataStoreConfiguration)
-            .localStorageAdapter(inMemoryStorageAdapter)
             .build();
     }
 
@@ -141,6 +150,8 @@ public final class SyncProcessorTest {
     @Test
     public void dataStoreHubEventsTriggered() throws DataStoreException {
         // Arrange - BEGIN
+        // We're only emitting events for Post and Blogger
+        int expectedModelCount = 2;
         // Collects one syncQueriesStarted event.
         HubAccumulator syncStartAccumulator =
             createAccumulator(syncQueryStartedForModels(modelCount), 1);
@@ -149,7 +160,9 @@ public final class SyncProcessorTest {
             createAccumulator(forEvent(DataStoreChannelEventName.SYNC_QUERIES_READY), 1);
         // Collects one modelSynced event for each model.
         HubAccumulator modelSyncedAccumulator =
-            createAccumulator(forEvent(DataStoreChannelEventName.MODEL_SYNCED), modelCount);
+            createAccumulator(forEvent(DataStoreChannelEventName.MODEL_SYNCED), expectedModelCount);
+
+
 
         // Add a couple of seed records so they can be deleted/updated.
         storageAdapter.save(DRUM_POST.getModel());
@@ -185,7 +198,7 @@ public final class SyncProcessorTest {
         // Get the list of modelSynced events captured.
         List<HubEvent<?>> hubEvents = modelSyncedAccumulator.await((int) OP_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         // Verify that [number of events] = [number of models]
-        assertEquals(modelCount, hubEvents.size());
+        assertEquals(expectedModelCount, hubEvents.size());
 
         // For each event (excluding system models), verify the desired count.
         for (HubEvent<?> event : hubEvents) {

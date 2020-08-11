@@ -33,10 +33,8 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.datastore.syncengine.events.ModelSyncedEvent;
-import com.amplifyframework.datastore.syncengine.events.SyncQueriesStartedEvent;
+import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -71,10 +69,9 @@ final class SyncProcessor {
     private final AppSync appSync;
     private final Merger merger;
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
-    private final LocalStorageAdapter localStorageAdapter;
+    private final String[] modelNames;
 
     private SyncProcessor(
-            LocalStorageAdapter localStorageAdapter,
             ModelProvider modelProvider,
             ModelSchemaRegistry modelSchemaRegistry,
             SyncTimeRegistry syncTimeRegistry,
@@ -87,7 +84,11 @@ final class SyncProcessor {
         this.appSync = Objects.requireNonNull(appSync);
         this.merger = Objects.requireNonNull(merger);
         this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
-        this.localStorageAdapter = localStorageAdapter;
+        this.modelNames = Observable.fromIterable(modelProvider.models())
+                                        .map(m -> m.getSimpleName())
+                                        .toList()
+                                        .blockingGet()
+                                        .toArray(new String[0]);
     }
 
     /**
@@ -106,50 +107,10 @@ final class SyncProcessor {
     Completable hydrate() {
         ModelWithMetadataComparator modelWithMetadataComparator =
             new ModelWithMetadataComparator(modelProvider, modelSchemaRegistry);
-        final Map<String, ModelSyncMetrics> metricsByModel = new ConcurrentHashMap<>();
         final Set<Completable> hydrationTasks = new HashSet<>();
         for (Class<? extends Model> clazz : modelProvider.models()) {
-            SyncTime lastSyncTime = syncTimeRegistry.lookupLastSyncTime(clazz)
-                .map(this::filterOutOldSyncTimes)
-                .blockingGet();
-            metricsByModel.put(clazz.getSimpleName(), new ModelSyncMetrics(lastSyncTime));
             hydrationTasks.add(createHydrationTask(modelWithMetadataComparator, clazz));
         }
-
-        // We'll collect metrics for the initial sync by observing changes to the local DataStore.
-        Cancelable metricsObserver =
-            localStorageAdapter.observe(itemChange -> {
-                boolean isSyncProcessChange = StorageItemChange.Initiator.SYNC_ENGINE.equals(itemChange.initiator());
-                if (isSyncProcessChange) {
-                    if (itemChange.item() instanceof LastSyncMetadata) {
-                        // If the item emitted is a LastSyncMetadata, that means the lastSyncDate has been
-                        // updated for a given model. This means that the sync process has completed.
-                        // This is where we trigger the metrics for the associated model.
-                        String modelClassName = ((LastSyncMetadata) itemChange.item()).getModelClassName();
-                        ModelSyncMetrics metricsToEmit = metricsByModel.remove(modelClassName);
-                        ModelSyncedEvent modelSyncedEvent = new ModelSyncedEvent(modelClassName,
-                            metricsToEmit.getSyncType(),
-                            metricsToEmit.getCountFor(StorageItemChange.Type.CREATE),
-                            metricsToEmit.getCountFor(StorageItemChange.Type.UPDATE),
-                            metricsToEmit.getCountFor(StorageItemChange.Type.DELETE));
-                        LOG.debug("Sync completed: " + modelSyncedEvent);
-                        Amplify.Hub.publish(HubChannel.DATASTORE,
-                            HubEvent.create(DataStoreChannelEventName.MODEL_SYNCED, modelSyncedEvent));
-                    } else {
-                        // If it's not LastSyncMetadata, then get the model name and increment
-                        // the counter for the operation type.
-                        if (metricsByModel.get(itemChange.itemClass().getSimpleName()) != null) {
-                            metricsByModel.get(itemChange.itemClass().getSimpleName()).increment(itemChange.type());
-                        }
-                    }
-                }
-            },
-                exception -> {
-                    LOG.warn("Unable to gather metrics for initial sync.", exception);
-                },
-                () -> {
-                    LOG.debug("Initial sync metrics observer completed.");
-                });
 
         return Completable.concat(hydrationTasks)
             .doOnSubscribe(ignore -> {
@@ -158,7 +119,7 @@ final class SyncProcessor {
                 // have started.
                 Amplify.Hub.publish(HubChannel.DATASTORE,
                     HubEvent.create(DataStoreChannelEventName.SYNC_QUERIES_STARTED,
-                        new SyncQueriesStartedEvent(metricsByModel.keySet().toArray(new String[0]))
+                        new SyncQueriesStartedEvent(modelNames)
                     )
                 );
             })
@@ -279,9 +240,8 @@ final class SyncProcessor {
     /**
      * Builds instances of {@link SyncProcessor}s.
      */
-    public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep, LocalStorageAdapterStep,
+    public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep,
             SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep, BuildStep {
-        private LocalStorageAdapter localStorageAdapter;
         private ModelProvider modelProvider;
         private ModelSchemaRegistry modelSchemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
@@ -326,7 +286,7 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public LocalStorageAdapterStep dataStoreConfigurationProvider(
+        public BuildStep dataStoreConfigurationProvider(
             DataStoreConfigurationProvider dataStoreConfigurationProvider) {
             this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
             return Builder.this;
@@ -334,16 +294,8 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BuildStep localStorageAdapter(LocalStorageAdapter localStorageAdapter) {
-            this.localStorageAdapter = localStorageAdapter;
-            return Builder.this;
-        }
-
-        @NonNull
-        @Override
         public SyncProcessor build() {
             return new SyncProcessor(
-                localStorageAdapter,
                 modelProvider,
                 modelSchemaRegistry,
                 syncTimeRegistry,
@@ -381,12 +333,7 @@ final class SyncProcessor {
 
     interface DataStoreConfigurationProviderStep {
         @NonNull
-        LocalStorageAdapterStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfiguration);
-    }
-
-    interface LocalStorageAdapterStep {
-        @NonNull
-        BuildStep localStorageAdapter(LocalStorageAdapter localStorageAdapter);
+        BuildStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfiguration);
     }
 
     interface BuildStep {
@@ -443,10 +390,6 @@ final class SyncProcessor {
 
         public int getCountFor(StorageItemChange.Type changeType) {
             return syncMetrics.get(changeType.name()).get();
-        }
-
-        public SyncType getSyncType() {
-            return SyncTime.never().equals(lastSyncTime) ? SyncType.FULL : SyncType.DELTA;
         }
     }
 }
