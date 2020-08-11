@@ -15,11 +15,15 @@
 
 package com.amplifyframework.api.events;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
+
 /**
  * This class represents the hub event payload for
  * {@link com.amplifyframework.api.ApiChannelEventName#API_ENDPOINT_STATUS_CHANGED}.
  */
-public class ApiEndpointStatusChangeEvent {
+public final class ApiEndpointStatusChangeEvent {
     private final ApiEndpointStatus currentStatus;
     private final ApiEndpointStatus previousStatus;
 
@@ -47,6 +51,39 @@ public class ApiEndpointStatusChangeEvent {
      */
     public ApiEndpointStatus getPreviousStatus() {
         return previousStatus;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = currentStatus != null ? currentStatus.hashCode() : 0;
+        result = 31 * result + (previousStatus != null ? previousStatus.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        ApiEndpointStatusChangeEvent that = (ApiEndpointStatusChangeEvent) thatObject;
+
+        if (!ObjectsCompat.equals(currentStatus, that.currentStatus)) {
+            return false;
+        }
+        return ObjectsCompat.equals(previousStatus, that.previousStatus);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "ApiEndpointStatusChangeEvent{" +
+            "currentStatus=" + currentStatus +
+            ", previousStatus=" + previousStatus +
+            "}";
     }
 
     /**

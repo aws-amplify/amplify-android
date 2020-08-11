@@ -40,7 +40,7 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
-import com.amplifyframework.datastore.events.NetworkStatus;
+import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -113,7 +113,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                     ApiEndpointStatusChangeEvent eventData = (ApiEndpointStatusChangeEvent) hubEvent.getData();
                     boolean isActive = ApiEndpointStatus.REACHABLE.equals(eventData.getCurrentStatus());
                     Amplify.Hub.publish(HubChannel.DATASTORE,
-                        HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatus(isActive))
+                        HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatusEvent(isActive))
                     );
                 }
             });
