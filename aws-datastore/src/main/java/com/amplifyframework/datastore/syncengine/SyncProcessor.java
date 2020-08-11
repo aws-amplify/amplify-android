@@ -105,16 +105,22 @@ final class SyncProcessor {
         return syncTimeRegistry.lookupLastSyncTime(modelClass)
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
-            .flatMapCompletable(lastSyncTime -> syncModel(modelClass, lastSyncTime)
-                // Okay, but we want to flatten the Iterable elements back into an Observable stream.
-                .flatMapObservable(Observable::fromIterable)
-                // And sort them all, according to their model's topological order,
-                // So that when we save them, the references will exist.
-                .sorted(modelWithMetadataComparator::compare)
-                // For each ModelWithMetadata, merge it into the local store.
-                .flatMapCompletable(merger::merge)
-            )
-            .andThen(syncTimeRegistry.saveLastSyncTime(modelClass, SyncTime.now()))
+            .flatMap(lastSyncTime -> {
+                return syncModel(modelClass, lastSyncTime)
+                    // Okay, but we want to flatten the Iterable elements back into an Observable stream.
+                    .flatMapObservable(Observable::fromIterable)
+                    // And sort them all, according to their model's topological order,
+                    // So that when we save them, the references will exist.
+                    .sorted(modelWithMetadataComparator::compare)
+                    // For each ModelWithMetadata, merge it into the local store.
+                    .flatMapCompletable(merger::merge)
+                    .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
+            })
+            .flatMapCompletable(syncType -> {
+                return SyncType.DELTA.equals(syncType) ?
+                    syncTimeRegistry.saveLastDeltaSyncTime(modelClass, SyncTime.now()) :
+                    syncTimeRegistry.saveLastBaseSyncTime(modelClass, SyncTime.now());
+            })
             .doOnError(failureToSync -> {
                 LOG.warn("Initial cloud sync failed.", failureToSync);
                 DataStoreErrorHandler dataStoreErrorHandler =
