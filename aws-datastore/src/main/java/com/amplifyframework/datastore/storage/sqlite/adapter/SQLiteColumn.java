@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage.sqlite.adapter;
 
 import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteDataType;
+import com.amplifyframework.util.Wrap;
 
 /**
  * Adapts a {@link com.amplifyframework.core.model.ModelField}
@@ -85,10 +86,18 @@ public final class SQLiteColumn {
 
     /**
      * Returns the aliased name of column.
-     * @return the aliased name of column
+     * @return the aliased name of column.
      */
     public String getAliasedName() {
         return tableName + CUSTOM_ALIAS_DELIMITER + name;
+    }
+
+    /**
+     * Returns the unambiguous name of column with table and column name quoted.
+     * @return the unambiguous name of column with table and column name quoted
+     */
+    public String getQuotedColumnName() {
+        return Wrap.inBackticks(tableName) + SQLITE_NAME_DELIMITER + Wrap.inBackticks(name);
     }
 
     /**
