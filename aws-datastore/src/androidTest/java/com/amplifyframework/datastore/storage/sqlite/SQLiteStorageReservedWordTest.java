@@ -54,7 +54,7 @@ public final class SQLiteStorageReservedWordTest {
     private SynchronousStorageAdapter adapter;
 
     /**
-     * Enables Android Strict Mode, to help catch common errors while using.
+     * Enables Android Strict Mode, to help catch common errors while using
      * SQLite, such as forgetting to close the database.
      */
     @BeforeClass
