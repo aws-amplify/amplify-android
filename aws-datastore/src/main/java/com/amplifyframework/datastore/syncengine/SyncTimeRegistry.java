@@ -57,7 +57,7 @@ final class SyncTimeRegistry {
     }
 
     <T extends Model> Completable saveLastDeltaSyncTime(@NonNull Class<T> modelClazz,
-                                                   @Nullable SyncTime syncTime) {
+                                                        @Nullable SyncTime syncTime) {
         LastSyncMetadata metadata = syncTime.exists() ?
             LastSyncMetadata.deltaSyncedAt(modelClazz, syncTime.toLong()) :
             LastSyncMetadata.neverSynced(modelClazz);
