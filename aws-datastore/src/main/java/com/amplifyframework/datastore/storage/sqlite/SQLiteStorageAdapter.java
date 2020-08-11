@@ -605,21 +605,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return new CreateSqlCommands(createTableCommands, createIndexCommands);
     }
 
-    private Map<String, SqlCommand> getInsertSqlPreparedStatements() {
-        final Map<String, SqlCommand> modifiableMap = new HashMap<>();
-        final Set<Map.Entry<String, ModelSchema>> modelSchemaEntrySet =
-                modelSchemaRegistry.getModelSchemaMap().entrySet();
-        for (final Map.Entry<String, ModelSchema> entry : modelSchemaEntrySet) {
-            final String tableName = entry.getKey();
-            final ModelSchema modelSchema = entry.getValue();
-            modifiableMap.put(
-                    tableName,
-                    sqlCommandFactory.insertFor(modelSchema)
-            );
-        }
-        return Immutable.of(modifiableMap);
-    }
-
     // Binds each value inside list onto compiled statement in order
     private void bindStatementToValues(
             @NonNull SqlCommand sqlCommand,
