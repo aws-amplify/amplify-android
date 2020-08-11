@@ -181,7 +181,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.ON)
                     .append(SqlKeyword.DELIMITER)
-                    .append(foreignKey.getColumnName())
+                    .append(foreignKey.getQuotedColumnName())
                     .append(SqlKeyword.EQUAL)
                     .append(ownedTable.getPrimaryKeyColumnName());
 
@@ -194,13 +194,13 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         Iterator<SQLiteColumn> columnsIterator = columns.iterator();
         while (columnsIterator.hasNext()) {
             final SQLiteColumn column = columnsIterator.next();
-            selectColumns.append(column.getColumnName());
+            selectColumns.append(column.getQuotedColumnName());
 
             // Alias primary keys to avoid duplicate column names
             selectColumns.append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.AS)
                     .append(SqlKeyword.DELIMITER)
-                    .append(column.getAliasedName());
+                    .append(Wrap.inBackticks(column.getAliasedName()));
 
             if (columnsIterator.hasNext()) {
                 selectColumns.append(",").append(SqlKeyword.DELIMITER);

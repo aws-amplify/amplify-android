@@ -54,8 +54,8 @@ import static org.junit.Assert.assertTrue;
 public class SqlCommandTest {
 
     private static final String PERSON_BASE_QUERY =
-            "SELECT Person.id AS Person_id, Person.age AS Person_age, Person.firstName AS Person_firstName, " +
-                    "Person.lastName AS Person_lastName FROM `Person`";
+            "SELECT `Person`.`id` AS `Person_id`, `Person`.`age` AS `Person_age`, `Person`.`firstName` AS " +
+                    "`Person_firstName`, `Person`.`lastName` AS `Person_lastName` FROM `Person`";
 
     private SQLCommandFactory sqlCommandFactory;
 
