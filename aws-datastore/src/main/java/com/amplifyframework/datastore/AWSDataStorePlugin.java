@@ -23,6 +23,9 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.ApiChannelEventName;
+import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
+import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
@@ -37,12 +40,14 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
+import com.amplifyframework.datastore.events.NetworkStatus;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
@@ -98,6 +103,20 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             () -> api.getPlugins().isEmpty() ? Orchestrator.Mode.LOCAL_ONLY : Orchestrator.Mode.SYNC_VIA_API
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
+
+        // Listen for API_ENDPOINT_STATUS_CHANGED to be emitted by the API and trigger
+        // the DataStore NETWORK_STATUS event accordingly.
+        Amplify.Hub.subscribe(HubChannel.API, hubEvent -> {
+            return ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED.name().equals(hubEvent.getName());
+        }, hubEvent -> {
+                if (hubEvent.getData() instanceof ApiEndpointStatusChangeEvent) {
+                    ApiEndpointStatusChangeEvent eventData = (ApiEndpointStatusChangeEvent) hubEvent.getData();
+                    boolean isActive = ApiEndpointStatus.REACHABLE.equals(eventData.getCurrentStatus());
+                    Amplify.Hub.publish(HubChannel.DATASTORE,
+                        HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatus(isActive))
+                    );
+                }
+            });
     }
 
     /**

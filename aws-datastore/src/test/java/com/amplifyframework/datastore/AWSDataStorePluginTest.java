@@ -19,8 +19,10 @@ import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.ApiChannelEventName;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -143,6 +145,9 @@ public final class AWSDataStorePluginTest {
         HubAccumulator subscriptionsEstablishedObserver =
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED, 1)
                 .start();
+        HubAccumulator networkStatusObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.NETWORK_STATUS, 1)
+                .start();
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
@@ -153,6 +158,8 @@ public final class AWSDataStorePluginTest {
         dataStoreReadyObserver.await();
         orchestratorInitObserver.await();
         subscriptionsEstablishedObserver.await();
+        networkStatusObserver.await();
+
         assertRemoteSubscriptionsStarted();
     }
 
@@ -319,8 +326,16 @@ public final class AWSDataStorePluginTest {
         when(mockApiPlugin.getPluginKey()).thenReturn(MOCK_API_PLUGIN_NAME);
         when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
+        ApiEndpointStatusChangeEvent eventData =
+            new ApiEndpointStatusChangeEvent(ApiEndpointStatusChangeEvent.ApiEndpointStatus.REACHABLE,
+                                               ApiEndpointStatusChangeEvent.ApiEndpointStatus.UNKOWN);
+        HubEvent<ApiEndpointStatusChangeEvent> hubEvent =
+            HubEvent.create(ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED, eventData);
+
         // Make believe that queries return response immediately
         doAnswer(invocation -> {
+            // Mock the API emitting an ApiEndpointStatusChangeEvent event.
+            Amplify.Hub.publish(HubChannel.API, hubEvent);
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<Iterable<ModelWithMetadata<Person>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);

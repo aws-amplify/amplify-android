@@ -18,8 +18,10 @@ package com.amplifyframework.api.aws;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiChannelEventName;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -39,10 +41,13 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.EmptyAction;
+import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -57,6 +62,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import io.reactivex.Observable;
@@ -224,6 +230,9 @@ public final class AWSApiPluginTest {
      */
     @Test
     public void graphQlMutationGetsResponse() throws JSONException, ApiException {
+        HubAccumulator networkStatusObserver =
+            HubAccumulator.create(HubChannel.API, ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED, 1)
+                .start();
         // Arrange a response from the "server"
         String expectedName = RandomString.string();
         webServer.enqueue(new MockResponse().setBody(new JSONObject()
@@ -246,6 +255,13 @@ public final class AWSApiPluginTest {
 
         // Assert that the expected response was received
         assertEquals(expectedName, actualResponse.getData().getName());
+
+        // Verify that the expected hub event fired.
+        List<HubEvent<?>> events = networkStatusObserver.await();
+        assertTrue(events.size() > 0);
+        assertTrue(events.get(0).getData() instanceof ApiEndpointStatusChangeEvent);
+        ApiEndpointStatusChangeEvent eventData = (ApiEndpointStatusChangeEvent) events.get(0).getData();
+        assertEquals(ApiEndpointStatusChangeEvent.ApiEndpointStatus.REACHABLE, eventData.getCurrentStatus());
     }
 
     /**
