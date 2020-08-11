@@ -140,7 +140,7 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
      */
     public String createIssueBody(String description, boolean includeLogs) {
         EnvironmentInfo environmentInfo = new EnvironmentInfo();
-        String envInfo = "Amplify Plugins Information:\n" + environmentInfo.getPluginVersions();
+        String envInfo = "*Amplify Plugins Information:*\n" + environmentInfo.getPluginVersions();
         String devEnvInfo = "";
         try {
             devEnvInfo = environmentInfo.getDeveloperEnvironmentInfo(context);
@@ -149,7 +149,7 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
                     jsonError);
         }
         if (!devEnvInfo.isEmpty()) {
-            envInfo += "\n\nDeveloper Environment Information:\n" + devEnvInfo;
+            envInfo += "\n\n*Developer Environment Information:*\n" + devEnvInfo;
         }
         String deviceInfo = new DeviceInfo().toString();
         String logsText = "";
