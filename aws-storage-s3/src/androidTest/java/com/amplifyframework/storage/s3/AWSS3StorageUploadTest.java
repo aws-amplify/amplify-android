@@ -150,18 +150,6 @@ public final class AWSS3StorageUploadTest {
         // Create a file large enough that transfer won't finish before being canceled
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
 
-        // Listen to Hub events to cancel when progress has been made
-        SubscriptionToken progressToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
-            if (StorageChannelEventName.UPLOAD_PROGRESS.toString().equals(hubEvent.getName())) {
-                HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
-                Float progress = progressEvent.getData();
-                if (progress != null && progress > 0) {
-                    opContainer.get().cancel();
-                }
-            }
-        });
-        subscriptions.add(progressToken);
-
         // Listen to Hub events for cancel
         SubscriptionToken cancelToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if (StorageChannelEventName.UPLOAD_STATE.toString().equals(hubEvent.getName())) {
@@ -179,7 +167,12 @@ public final class AWSS3StorageUploadTest {
             uploadFile.getName(),
             uploadFile,
             options,
-            onResult -> errorContainer.set(new RuntimeException("Upload completed without canceling.")),
+            progress -> {
+                if (progress.getCurrentBytes() > 0) {
+                    opContainer.get().cancel();
+                }
+            },
+            result -> errorContainer.set(new RuntimeException("Upload completed without canceling.")),
             errorContainer::set
         );
         opContainer.set(op);
@@ -207,26 +200,12 @@ public final class AWSS3StorageUploadTest {
         // Create a file large enough that transfer won't finish before being paused
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
 
-        // Listen to Hub events to pause when progress has been made
-        SubscriptionToken pauseToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
-            if (StorageChannelEventName.UPLOAD_PROGRESS.toString().equals(hubEvent.getName())) {
-                HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
-                Float progress = progressEvent.getData();
-                if (progress != null && progress > 0) {
-                    opContainer.get().pause();
-                }
-            }
-        });
-        subscriptions.add(pauseToken);
-
         // Listen to Hub events to resume when operation has been paused
         SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if (StorageChannelEventName.UPLOAD_STATE.toString().equals(hubEvent.getName())) {
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
                 if (TransferState.PAUSED.equals(state)) {
-                    // So it doesn't pause on each progress report
-                    Amplify.Hub.unsubscribe(pauseToken);
                     opContainer.get().resume();
                     resumed.countDown();
                 }
@@ -239,7 +218,12 @@ public final class AWSS3StorageUploadTest {
             uploadFile.getName(),
             uploadFile,
             options,
-            onResult -> completed.countDown(),
+            progress -> {
+                if (progress.getCurrentBytes() > 0 && resumed.getCount() > 0) {
+                    opContainer.get().pause();
+                }
+            },
+            result -> completed.countDown(),
             errorContainer::set
         );
         opContainer.set(op);
