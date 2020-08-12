@@ -26,7 +26,13 @@ import com.amplifyframework.hub.HubEvent;
  */
 public enum ApiChannelEventName {
     /**
-     * The status of the remote API endpoint has changed.
+     * Indicates that the HTTP client's ability to reach the backend API has changed. This
+     * event will be triggered when/if the HTTP client used to communicate with the
+     * API endpoint receives an event that affects its current status. For example,
+     * if the backend API becomes unreachable due to network error OR if it's currently
+     * unreachable, and the client is suddenly able to communicate with the backend.
+     * @see com.amplifyframework.api.events.ApiEndpointStatusChangeEvent
+     * @see com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus
      */
     API_ENDPOINT_STATUS_CHANGED
 }
