@@ -62,7 +62,6 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import io.reactivex.Observable;
@@ -257,10 +256,10 @@ public final class AWSApiPluginTest {
         assertEquals(expectedName, actualResponse.getData().getName());
 
         // Verify that the expected hub event fired.
-        List<HubEvent<?>> events = networkStatusObserver.await();
-        assertTrue(events.size() > 0);
-        assertTrue(events.get(0).getData() instanceof ApiEndpointStatusChangeEvent);
-        ApiEndpointStatusChangeEvent eventData = (ApiEndpointStatusChangeEvent) events.get(0).getData();
+        HubEvent<?> event = networkStatusObserver.awaitFirst();
+        assertNotNull(event);
+        assertTrue(event.getData() instanceof ApiEndpointStatusChangeEvent);
+        ApiEndpointStatusChangeEvent eventData = (ApiEndpointStatusChangeEvent) event.getData();
         assertEquals(ApiEndpointStatusChangeEvent.ApiEndpointStatus.REACHABLE, eventData.getCurrentStatus());
     }
 

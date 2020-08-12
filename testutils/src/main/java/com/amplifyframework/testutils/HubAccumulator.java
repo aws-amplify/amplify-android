@@ -44,12 +44,14 @@ public final class HubAccumulator {
     private final long quantity;
     private final CopyOnWriteArrayList<HubEvent<?>> events;
     private final AtomicReference<SubscriptionToken> token;
+    private final CountDownLatch firstItemLatch;
 
     private HubAccumulator(
             @NonNull HubChannel channel, @NonNull HubEventFilter filter, int quantity) {
         this.channel = channel;
         this.filter = filter;
         this.latch = new CountDownLatch(quantity);
+        this.firstItemLatch = new CountDownLatch(1);
         this.quantity = quantity;
         this.events = new CopyOnWriteArrayList<>();
         this.token = new AtomicReference<>();
@@ -120,6 +122,9 @@ public final class HubAccumulator {
             synchronized (events) {
                 if (events.size() < quantity) {
                     events.add(event);
+                    if (firstItemLatch.getCount() > 0) {
+                        firstItemLatch.countDown();
+                    }
                     latch.countDown();
                     if (latch.getCount() == 0) {
                         Amplify.Hub.unsubscribe(this.token.get());
@@ -160,5 +165,39 @@ public final class HubAccumulator {
     public List<HubEvent<?>> await(int amount, TimeUnit unit) {
         Latch.await(latch, unit.toMillis(amount));
         return Immutable.of(events);
+    }
+
+    /**
+     * Returns the first event from the event list. If there's at least
+     * one event available, this function returns that event without waiting.
+     * If there are no events in the list yet, it will block and
+     * wait for the first items to become available.
+     * @return The first event received by the accumulator.
+     */
+    @NonNull
+    public HubEvent<?> awaitFirst() {
+        // If the event list is empty, then wait.
+        if (events.size() == 0) {
+            Latch.await(firstItemLatch);
+        }
+        return events.size() > 0 ? events.get(0) : null;
+    }
+
+    /**
+     * Returns the first event from the event list. If there's at least
+     * one event available, this function returns that event without waiting.
+     * If there are no events in the list yet, it will block and
+     * wait for the first items to become available.
+     * @param amount Amount of time, e.g. 5 seconds
+     * @param unit Unit attached to the amount, e.g. {@link TimeUnit#SECONDS}
+     * @return The first event received by the accumulator.
+     */
+    @NonNull
+    public HubEvent<?> awaitFirst(int amount, TimeUnit unit) {
+        // If the event list is empty, then wait.
+        if (events.size() == 0) {
+            Latch.await(firstItemLatch, unit.toMillis(amount));
+        }
+        return events.size() > 0 ? events.get(0) : null;
     }
 }
