@@ -18,12 +18,11 @@ package com.amplifyframework.hub;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.datastore.events.NetworkStatusEvent;
+import com.amplifyframework.testutils.EqualsToStringHashValidator;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-
-import static com.amplifyframework.testutils.ObjectValidatorUtils.assertCoreObjectBehavior;
 
 /**
  * Test basic operations of objects used as Hub event payloads.
@@ -40,7 +39,7 @@ public class HubEventDataObjectsTest {
         NetworkStatusEvent status2 = new NetworkStatusEvent(false);
         NetworkStatusEvent status3 = new NetworkStatusEvent(true);
 
-        assertCoreObjectBehavior(status1, status2, status3);
+        EqualsToStringHashValidator.validate(status1, status2, status3);
     }
 
     /**
@@ -54,6 +53,6 @@ public class HubEventDataObjectsTest {
             new ApiEndpointStatusChangeEvent(ApiEndpointStatus.NOT_REACHABLE, ApiEndpointStatus.REACHABLE);
         ApiEndpointStatusChangeEvent status3 =
             new ApiEndpointStatusChangeEvent(ApiEndpointStatus.REACHABLE, ApiEndpointStatus.NOT_REACHABLE);
-        assertCoreObjectBehavior(status1, status2, status3);
+        EqualsToStringHashValidator.validate(status1, status2, status3);
     }
 }
