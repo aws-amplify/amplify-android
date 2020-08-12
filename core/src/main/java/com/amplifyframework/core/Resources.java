@@ -70,7 +70,7 @@ public final class Resources {
      * @return JSON Object equivalent of the raw resource
      * @throws AmplifyException If resource with given ID does not exist or cannot be read
      */
-    public static JSONObject readJsonResourceFromId(Context context, int resourceId) throws AmplifyException {
+    public static JSONObject readJsonResourceFromId(Context context, @RawRes int resourceId) throws AmplifyException {
         InputStream inputStream;
 
         try {
