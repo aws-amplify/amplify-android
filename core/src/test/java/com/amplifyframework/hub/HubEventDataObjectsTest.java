@@ -23,9 +23,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test basic operations of objects used as Hub event payloads.
@@ -42,15 +46,7 @@ public class HubEventDataObjectsTest {
         NetworkStatusEvent status2 = new NetworkStatusEvent(false);
         NetworkStatusEvent status3 = new NetworkStatusEvent(true);
 
-        assertNotEquals(status1, status2);
-        assertEquals(status1, status3);
-
-        assertNotEquals(status1.hashCode(), status2.hashCode());
-        assertEquals(status1.hashCode(), status3.hashCode());
-        assertFalse(status1 == status3);
-
-        assertNotEquals(status1.toString(), status2.toString());
-        assertEquals(status1.toString(), status3.toString());
+        assertCoreObjectBehavior(status1, status2, status3);
     }
 
     /**
@@ -64,15 +60,39 @@ public class HubEventDataObjectsTest {
             new ApiEndpointStatusChangeEvent(ApiEndpointStatus.NOT_REACHABLE, ApiEndpointStatus.REACHABLE);
         ApiEndpointStatusChangeEvent status3 =
             new ApiEndpointStatusChangeEvent(ApiEndpointStatus.REACHABLE, ApiEndpointStatus.NOT_REACHABLE);
+        assertCoreObjectBehavior(status1, status2, status3);
+    }
 
-        assertNotEquals(status1, status2);
-        assertEquals(status1, status3);
+    /**
+     * Function to make some basic assertions as it related to the
+     * proper implementation of equals, hashCode and toString.
+     * @param subject1 An instance of T
+     * @param suject2 An instance of T that is not equal to subject1.
+     * @param subject3ThatEqualsSubject1 An instance of T such that when passed as
+     *                                   a parameter to subject1.equals, will return true.
+     * @param <T> The type being tested.
+     */
+    private <T> void assertCoreObjectBehavior(T subject1, T suject2, T subject3ThatEqualsSubject1) {
+        Set<T> set = new HashSet<>();
+        set.add(subject1);
+        set.add(suject2);
+        set.add(subject3ThatEqualsSubject1);
 
-        assertNotEquals(status1.hashCode(), status2.hashCode());
-        assertEquals(status1.hashCode(), status3.hashCode());
-        assertFalse(status1 == status3);
+        assertNotEquals(subject1, suject2);
+        // Check that subject1 and subject3ThatEqualsSubject1 are equivalent
+        // as far as the equals method is concerned.
+        assertEquals(subject1, subject3ThatEqualsSubject1);
+        // Check that subject1 and subject3ThatEqualsSubject1 are not the same instance.
+        assertFalse(subject1 == subject3ThatEqualsSubject1);
 
-        assertNotEquals(status1.toString(), status2.toString());
-        assertEquals(status1.toString(), status3.toString());
+        // Since subject1 and subject3ThatEqualsSubject1 are equals,
+        // we should only have two items in the set.
+        assertEquals(2, set.size());
+        assertTrue(set.contains(subject1));
+        assertTrue(set.contains(suject2));
+        assertTrue(set.contains(subject3ThatEqualsSubject1));
+
+        assertNotEquals(subject1.toString(), suject2.toString());
+        assertEquals(subject1.toString(), subject3ThatEqualsSubject1.toString());
     }
 }
