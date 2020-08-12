@@ -72,8 +72,7 @@ public final class EnvironmentInfo {
     }
 
     /**
-     * Returns a String representation of information about the developer's environment, or
-     * an empty string if the developer environment information could not be found.
+     * Returns a String representation of information about the developer's environment.
      * @param context an Android Context
      * @return developer environment information
      * @throws AmplifyException if the developer environment information could not be read
