@@ -122,7 +122,7 @@ public final class SQLiteStorageReservedWordTest {
         // Get the Group from the database
         final List<Group> groups = adapter.query(
                 Group.class,
-                Where.matches(field("abort").eq("aborting"))
+                Where.matches(Group.ABORT.eq("aborting"))
         );
         assertEquals(1, groups.size());
         assertTrue(groups.contains(group));
@@ -147,9 +147,9 @@ public final class SQLiteStorageReservedWordTest {
 
         final List<Alter> altersByGroup = adapter.query(
                 Alter.class,
-                Where.matches(field("group").eq(group.id))
+                Where.matches(field("Group_id").eq(group.id))
         );
-        assertTrue(altersByGroup.contains(altersByGroup));
+        assertTrue(altersByGroup.contains(alter));
     }
 
     /**
@@ -171,9 +171,9 @@ public final class SQLiteStorageReservedWordTest {
 
         final List<Alter> altersByGroup = adapter.query(
                 Alter.class,
-                Where.matches(field("Group.abort").eq("aborting"))
+                Where.matches(Group.ABORT.eq("aborting"))
         );
-        assertTrue(altersByGroup.contains(altersByGroup));
+        assertTrue(altersByGroup.contains(alter));
     }
 
     @SuppressWarnings("all")

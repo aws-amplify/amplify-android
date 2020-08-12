@@ -77,14 +77,6 @@ public final class SQLiteColumn {
     }
 
     /**
-     * Returns the unambiguous name of column.
-     * @return the unambiguous name of column
-     */
-    public String getColumnName() {
-        return tableName + SQLITE_NAME_DELIMITER + name;
-    }
-
-    /**
      * Returns the aliased name of column.
      * @return the aliased name of column.
      */
@@ -93,8 +85,8 @@ public final class SQLiteColumn {
     }
 
     /**
-     * Returns the unambiguous name of column with table and column name quoted.
-     * @return the unambiguous name of column with table and column name quoted
+     * Returns the unambiguous name of column.
+     * @return the unambiguous name of column
      */
     public String getQuotedColumnName() {
         return Wrap.inBackticks(tableName) + SQLITE_NAME_DELIMITER + Wrap.inBackticks(name);
