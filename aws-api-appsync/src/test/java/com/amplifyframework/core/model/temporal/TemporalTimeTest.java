@@ -101,4 +101,24 @@ public final class TemporalTimeTest {
         assertEquals(date, temporalTime.toDate());
         assertEquals(offsetInSeconds, temporalTime.getOffsetTotalSeconds());
     }
+
+    /**
+     * A {@link Temporal.Time} implements {@link java.lang.Comparable} correctly.
+     */
+
+    @Test
+    public void temporalTimeIsComparable() {
+        Temporal.Time sixAmPST = new Temporal.Time("06:00:00.000-08:00:00");
+        Temporal.Time sevenAmPST = new Temporal.Time("07:00:00.000-08:00:00");
+        Temporal.Time eightAmPST = new Temporal.Time("08:00:00.000-08:00:00");
+        Temporal.Time eightAmCST = new Temporal.Time("08:00:00.000-06:00:00");
+
+        // Verify comparison of DateTimes with same TimeZone
+        assertEquals(1, sevenAmPST.compareTo(sixAmPST));
+        assertEquals(0, sevenAmPST.compareTo(sevenAmPST));
+        assertEquals(-1, sevenAmPST.compareTo(eightAmPST));
+
+        // Verify comparison of DateTimes with different TimeZones
+        assertEquals(1, sevenAmPST.compareTo(eightAmCST));
+    }
 }

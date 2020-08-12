@@ -83,4 +83,18 @@ public final class TemporalTimestampTest {
         assertEquals(1, times.size());
         assertEquals(first, second);
     }
+
+    /**
+     * A {@link Temporal.Timestamp} implements {@link java.lang.Comparable} correctly.
+     */
+    @Test
+    public void testCompare() {
+        Temporal.Timestamp first = new Temporal.Timestamp(5_000, TimeUnit.SECONDS);
+        Temporal.Timestamp second = new Temporal.Timestamp(6_000, TimeUnit.SECONDS);
+        Temporal.Timestamp third = new Temporal.Timestamp(7_000, TimeUnit.SECONDS);
+
+        assertEquals(1, second.compareTo(first));
+        assertEquals(0, second.compareTo(second));
+        assertEquals(-1, second.compareTo(third));
+    }
 }
