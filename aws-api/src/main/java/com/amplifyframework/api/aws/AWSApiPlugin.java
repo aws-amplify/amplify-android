@@ -754,8 +754,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      * is to listen to network-related events reported by the http client and trigger
      * a Hub event if necessary.
      */
-    private final class ApiConnectionEventListener extends EventListener {
-        private AtomicReference<ApiEndpointStatus> currentNetworkStatus;
+    private static final class ApiConnectionEventListener extends EventListener {
+        private final AtomicReference<ApiEndpointStatus> currentNetworkStatus;
 
         ApiConnectionEventListener() {
             currentNetworkStatus = new AtomicReference<>(ApiEndpointStatus.UNKOWN);

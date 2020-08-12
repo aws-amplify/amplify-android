@@ -43,8 +43,7 @@ public final class NetworkStatusEvent {
 
     @Override
     public int hashCode() {
-        int result = Boolean.valueOf(active).hashCode();
-        return result;
+        return Boolean.valueOf(active).hashCode();
     }
 
     @Override

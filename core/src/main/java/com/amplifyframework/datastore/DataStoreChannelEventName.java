@@ -55,7 +55,7 @@ public enum DataStoreChannelEventName {
     REMOTE_SYNC_STOPPED("remote_sync_stopped"),
 
     /**
-     * Notifies if the network is active or not.
+     * Indicates that the network is active or not.
      * It is triggered on DataStore start and also every time the network status changes.
      */
     NETWORK_STATUS("networkStatus"),
