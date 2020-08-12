@@ -22,13 +22,11 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiChannelEventName;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
-import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -41,13 +39,10 @@ import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.ModelOperation;
-import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.util.UserAgent;
 
 import org.jetbrains.annotations.NotNull;
@@ -768,22 +763,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                                   @Nullable Protocol protocol,
                                   @NotNull IOException ioe) {
             super.connectFailed(call, inetSocketAddress, proxy, protocol, ioe);
-            triggerEventIfStatusChanged(currentNetworkStatus.getAndSet(ApiEndpointStatus.NOT_REACHABLE));
+            transitionTo(ApiEndpointStatus.NOT_REACHABLE);
         }
 
         @Override
         public void connectionAcquired(@NotNull Call call, @NotNull Connection connection) {
             super.connectionAcquired(call, connection);
-            triggerEventIfStatusChanged(currentNetworkStatus.getAndSet(ApiEndpointStatus.REACHABLE));
+            transitionTo(ApiEndpointStatus.REACHABLE);
         }
 
-        private void triggerEventIfStatusChanged(@NonNull ApiEndpointStatus previousStatus) {
-            if (!previousStatus.equals(currentNetworkStatus.get())) {
-                ApiEndpointStatusChangeEvent eventData =
-                    new ApiEndpointStatusChangeEvent(currentNetworkStatus.get(), previousStatus);
-                Amplify.Hub.publish(HubChannel.API,
-                    HubEvent.create(ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED, eventData)
-                );
+        private void transitionTo(ApiEndpointStatus newStatus) {
+            ApiEndpointStatus previousStatus = currentNetworkStatus.getAndSet(ApiEndpointStatus.NOT_REACHABLE);
+            if (previousStatus != newStatus) {
+                newStatus.announceTransitionFrom(previousStatus);
             }
         }
     }
