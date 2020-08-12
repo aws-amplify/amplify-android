@@ -16,22 +16,20 @@
 package com.amplifyframework.devmenu;
 
 import android.content.Context;
-import android.content.res.Resources;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Resources;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.plugin.Plugin;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Scanner;
 
 /**
  * Contains information about the plugin versions added to the application
@@ -82,26 +80,7 @@ public final class EnvironmentInfo {
      */
     public String getDeveloperEnvironmentInfo(@NonNull Context context) throws AmplifyException {
         Context appContext = Objects.requireNonNull(context).getApplicationContext();
-        Resources resources = appContext.getApplicationContext().getResources();
-        int resourceId = resources.getIdentifier(DEV_ENV_INFO_FILE_NAME, "raw", appContext.getPackageName());
-        if (resourceId == 0) {
-            throw new AmplifyException("Error reading the developer environment information.",
-                    "Check that the resource " + DEV_ENV_INFO_FILE_NAME + ".json exists.");
-        }
-        InputStream inputStream = resources.openRawResource(resourceId);
-        Scanner in = new Scanner(inputStream);
-        StringBuilder stringBuilder = new StringBuilder();
-        while (in.hasNextLine()) {
-            stringBuilder.append(in.nextLine());
-        }
-        in.close();
-        JSONObject envInfo;
-        try {
-            envInfo = new JSONObject(stringBuilder.toString());
-        } catch (JSONException jsonError) {
-            throw new AmplifyException("Error reading the developer environment information.", jsonError,
-                    "Check that " + DEV_ENV_INFO_FILE_NAME + ".json is properly formatted");
-        }
+        JSONObject envInfo = Resources.readJsonResource(appContext, DEV_ENV_INFO_FILE_NAME);
         StringBuilder formattedEnvInfo = new StringBuilder();
         for (String envItem : devEnvironmentItems.keySet()) {
             if (envInfo.has(envItem)) {
@@ -109,8 +88,10 @@ public final class EnvironmentInfo {
                 try {
                     envValue = envInfo.getString(envItem);
                 } catch (JSONException jsonError) {
-                    throw new AmplifyException("Error reading the developer environment information.", jsonError,
-                            "Check that " + DEV_ENV_INFO_FILE_NAME + ".json is properly formatted");
+                    throw new AmplifyException(
+                            "Error reading the developer environment information.", jsonError,
+                            "Check that " + DEV_ENV_INFO_FILE_NAME + ".json is properly formatted"
+                    );
                 }
                 String devEnvInfoItem = devEnvironmentItems.get(envItem) + ": " + envValue + "\n";
                 formattedEnvInfo.append(devEnvInfoItem);
