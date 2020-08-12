@@ -27,10 +27,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
-import com.amplifyframework.core.Amplify;
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.R;
-
-import org.json.JSONException;
 
 /**
  * A {@link Fragment} subclass representing the view
@@ -69,9 +67,8 @@ public final class DevMenuEnvironmentFragment extends Fragment {
         String devEnvInfo = "";
         try {
             devEnvInfo = envInfo.getDeveloperEnvironmentInfo(requireContext());
-        } catch (JSONException jsonError) {
-            Amplify.Logging.forNamespace("amplify").error("Error reading developer environment information.",
-                    jsonError);
+        } catch (AmplifyException error) {
+            DeveloperMenu.LOG.warn("Error reading developer environment information.");
         }
         if (devEnvInfo.isEmpty()) {
             stringBuilder.append("\nUnable to retrieve developer environment information.");

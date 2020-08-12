@@ -24,8 +24,7 @@ import android.text.TextUtils;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-
-import org.json.JSONException;
+import com.amplifyframework.logging.Logger;
 
 import java.util.List;
 import java.util.Locale;
@@ -35,6 +34,10 @@ import java.util.Locale;
  * developer menu.
  */
 public final class DeveloperMenu implements ShakeDetector.Listener {
+    /**
+     * Logger for the developer menu.
+     */
+    protected static final Logger LOG = Amplify.Logging.forNamespace("amplify:devmenu");
     // An instance of DeveloperMenu.
     private static DeveloperMenu sInstance;
     // Indicates whether the developer menu is visible.
@@ -144,9 +147,8 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
         String devEnvInfo = "";
         try {
             devEnvInfo = environmentInfo.getDeveloperEnvironmentInfo(context);
-        } catch (JSONException jsonError) {
-            Amplify.Logging.forNamespace("amplify").error("Error reading developer environment information.",
-                    jsonError);
+        } catch (AmplifyException error) {
+            LOG.warn("Error reading developer environment information.");
         }
         if (!devEnvInfo.isEmpty()) {
             envInfo += "\n\n*Developer Environment Information:*\n" + devEnvInfo;
