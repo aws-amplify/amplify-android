@@ -34,6 +34,7 @@ import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 
 import java.io.File;
@@ -95,6 +96,19 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    public StorageDownloadFileOperation<?> downloadFile(
+            @NonNull String key,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return getSelectedPlugin().downloadFile(key, local, options, onProgress, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull File local,
@@ -114,6 +128,19 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull Consumer<StorageException> onError
     ) {
         return getSelectedPlugin().uploadFile(key, local, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadFileOperation<?> uploadFile(
+            @NonNull String key,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return getSelectedPlugin().uploadFile(key, local, options, onProgress, onSuccess, onError);
     }
 
     @NonNull

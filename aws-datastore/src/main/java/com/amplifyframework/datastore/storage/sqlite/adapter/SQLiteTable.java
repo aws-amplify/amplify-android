@@ -155,7 +155,7 @@ public final class SQLiteTable {
         if (getPrimaryKey() == null) {
             return PrimaryKey.fieldName();
         }
-        return getPrimaryKey().getColumnName();
+        return getPrimaryKey().getQuotedColumnName();
     }
 
     /**

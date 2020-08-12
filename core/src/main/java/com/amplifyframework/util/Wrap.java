@@ -25,6 +25,20 @@ public final class Wrap {
     private Wrap() {}
 
     /**
+     * Returns original string wrapped with in backticks.
+     * @param original Original string to modify.
+     * @return Original string wrapped with backtick.
+     *         If original string is null or empty, it just returns the original.
+     */
+    @Nullable
+    public static String inBackticks(@Nullable String original) {
+        if (Empty.check(original)) {
+            return original;
+        }
+        return "`" + original + "`";
+    }
+
+    /**
      * Returns original string wrapped with single quotes.
      * @param original Original string to modify
      * @return Original string wrapped with single quotes.
