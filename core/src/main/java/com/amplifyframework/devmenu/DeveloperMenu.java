@@ -130,6 +130,32 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
     }
 
     /**
+     * Returns a String representation of the stored logs that contain the given
+     * String, or all logs if the given String is null or the empty string.
+     * @param searchText the text to search for in the logs
+     * @return the stored logs as a String.
+     */
+    public String getFilteredLogs(String searchText) {
+        if (searchText == null || searchText.isEmpty()) {
+            return getLogs();
+        }
+        List<LogEntry> logs = loggingPlugin.getLogs();
+        if (logs.isEmpty()) {
+            return "No logs to display.";
+        }
+        StringBuilder logsStringBuilder = new StringBuilder();
+        String lowercaseSearchText = searchText.toLowerCase(Locale.US);
+        for (LogEntry log : logs) {
+            String formattedLog = log.toString();
+            if (formattedLog.toLowerCase(Locale.US).contains(lowercaseSearchText)) {
+                logsStringBuilder.append(formattedLog);
+            }
+        }
+        String filteredLogs = logsStringBuilder.toString();
+        return filteredLogs.isEmpty() ? "No logs match the search criteria." : filteredLogs;
+    }
+
+    /**
      * Creates and returns the issue body containing the issue description,
      * environment information, device information, and (optionally) logs.
      * @param description the description of the issue

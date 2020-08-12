@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
@@ -42,7 +43,14 @@ public final class DevMenuLogsFragment extends Fragment {
         View logsView = inflater.inflate(R.layout.dev_menu_fragment_logs, container, false);
         // Display the logs (if any).
         TextView logsText = logsView.findViewById(R.id.logs_text);
-        logsText.setText(DeveloperMenu.singletonInstance(getContext()).getLogs());
+        DeveloperMenu developerMenu = DeveloperMenu.singletonInstance(getContext());
+        logsText.setText(developerMenu.getLogs());
+        // Search the logs when the search button is pressed.
+        logsView.findViewById(R.id.search_logs_button).setOnClickListener(view -> {
+            logsText.setText(R.string.placeholder_logs);
+            EditText searchText = logsView.findViewById(R.id.search_logs_field);
+            logsText.setText(developerMenu.getFilteredLogs(searchText.getText().toString()));
+        });
         return logsView;
     }
 }
