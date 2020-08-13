@@ -33,8 +33,10 @@ import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.util.Empty;
+import com.amplifyframework.util.Immutable;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -69,7 +71,10 @@ public final class Amplify {
     @SuppressWarnings("checkstyle:all") public static final DataStoreCategory DataStore = new DataStoreCategory();
     @SuppressWarnings("checkstyle:all") public static final PredictionsCategory Predictions = new PredictionsCategory();
 
-    private static final LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> CATEGORIES = buildCategoriesMap();
+    /**
+     * A map from each type of category to an entry point for that category.
+     */
+    public static final Map<CategoryType, Category<? extends Plugin<?>>> CATEGORIES = buildCategoriesMap();
 
     // Used as a synchronization locking object. Set to true once configure() is complete.
     private static final AtomicBoolean CONFIGURATION_LOCK = new AtomicBoolean(false);
@@ -84,9 +89,9 @@ public final class Amplify {
         throw new UnsupportedOperationException("No instances allowed.");
     }
 
-    // The fact that this is a LinkedHashMap, and not a Map, is important.
+    // The fact that this is a LinkedHashMap is important.
     // We are relying on the ordering of this data-structure, for configuration.
-    private static LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> buildCategoriesMap() {
+    private static Map<CategoryType, Category<? extends Plugin<?>>> buildCategoriesMap() {
         final LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> categories = new LinkedHashMap<>();
         categories.put(CategoryType.ANALYTICS, Analytics);
         categories.put(CategoryType.API, API);
@@ -96,7 +101,7 @@ public final class Amplify {
         categories.put(CategoryType.HUB, Hub);
         categories.put(CategoryType.DATASTORE, DataStore);
         categories.put(CategoryType.PREDICTIONS, Predictions);
-        return categories;
+        return Immutable.of(categories);
     }
 
     /**
