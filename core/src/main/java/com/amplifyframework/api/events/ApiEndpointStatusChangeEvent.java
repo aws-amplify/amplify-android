@@ -19,8 +19,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiChannelEventName;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 
@@ -28,7 +28,7 @@ import com.amplifyframework.hub.HubEvent;
  * This class represents the hub event payload for
  * {@link com.amplifyframework.api.ApiChannelEventName#API_ENDPOINT_STATUS_CHANGED}.
  */
-public final class ApiEndpointStatusChangeEvent {
+public final class ApiEndpointStatusChangeEvent implements HubEvent.Data<ApiEndpointStatusChangeEvent> {
     private final ApiEndpointStatus currentStatus;
     private final ApiEndpointStatus previousStatus;
 
@@ -91,6 +91,27 @@ public final class ApiEndpointStatusChangeEvent {
             "}";
     }
 
+    @Override
+    public HubEvent<ApiEndpointStatusChangeEvent> toHubEvent() {
+        return HubEvent.create(ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED, this);
+    }
+
+    /**
+     * Factory method that attempts to cast the data field of the
+     * {@link HubEvent} object as an instance of {@link ApiEndpointStatusChangeEvent}.
+     * @param hubEvent An instance of {@link HubEvent}
+     * @return An instance of {@link ApiEndpointStatusChangeEvent}.
+     * @throws AmplifyException If unable to cast to the target type.
+     */
+    public static ApiEndpointStatusChangeEvent from(HubEvent<?> hubEvent) throws AmplifyException {
+        if (hubEvent.getData() instanceof ApiEndpointStatusChangeEvent) {
+            return (ApiEndpointStatusChangeEvent) hubEvent.getData();
+        }
+        String expectedClassName = ApiEndpointStatusChangeEvent.class.getName();
+        throw new AmplifyException("Unable to cast event data from " + expectedClassName,
+                                   "Ensure that the event payload is of type " + expectedClassName);
+    }
+
     /**
      * Enum that describes the reachability status of an API endpoint.
      */
@@ -117,8 +138,7 @@ public final class ApiEndpointStatusChangeEvent {
          */
         public void announceTransitionFrom(ApiEndpointStatus previousStatus) {
             ApiEndpointStatusChangeEvent eventData = new ApiEndpointStatusChangeEvent(this, previousStatus);
-            Amplify.Hub.publish(HubChannel.API,
-                                HubEvent.create(ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED, eventData));
+            eventData.toHubEvent().publish(HubChannel.API);
         }
     }
 }

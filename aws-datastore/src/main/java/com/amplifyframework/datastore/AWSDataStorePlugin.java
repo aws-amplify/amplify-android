@@ -25,7 +25,6 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
-import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
@@ -47,7 +46,6 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
@@ -109,12 +107,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         Amplify.Hub.subscribe(HubChannel.API, hubEvent -> {
             return ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED.name().equals(hubEvent.getName());
         }, hubEvent -> {
-                if (hubEvent.getData() instanceof ApiEndpointStatusChangeEvent) {
-                    ApiEndpointStatusChangeEvent eventData = (ApiEndpointStatusChangeEvent) hubEvent.getData();
-                    boolean isActive = ApiEndpointStatus.REACHABLE.equals(eventData.getCurrentStatus());
-                    Amplify.Hub.publish(HubChannel.DATASTORE,
-                        HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatusEvent(isActive))
-                    );
+                try {
+                    ApiEndpointStatusChangeEvent apiEvent = ApiEndpointStatusChangeEvent.from(hubEvent);
+                    NetworkStatusEvent.from(apiEvent).toHubEvent().publish(HubChannel.DATASTORE);
+                } catch (AmplifyException exception) {
+                    LOG.warn("Unable to public message to Amplify Hub", exception);
                 }
             });
     }
