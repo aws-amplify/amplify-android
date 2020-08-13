@@ -44,14 +44,12 @@ public final class HubAccumulator {
     private final long quantity;
     private final CopyOnWriteArrayList<HubEvent<?>> events;
     private final AtomicReference<SubscriptionToken> token;
-    private final CountDownLatch firstItemLatch;
 
     private HubAccumulator(
             @NonNull HubChannel channel, @NonNull HubEventFilter filter, int quantity) {
         this.channel = channel;
         this.filter = filter;
         this.latch = new CountDownLatch(quantity);
-        this.firstItemLatch = new CountDownLatch(1);
         this.quantity = quantity;
         this.events = new CopyOnWriteArrayList<>();
         this.token = new AtomicReference<>();
@@ -122,9 +120,6 @@ public final class HubAccumulator {
             synchronized (events) {
                 if (events.size() < quantity) {
                     events.add(event);
-                    if (firstItemLatch.getCount() > 0) {
-                        firstItemLatch.countDown();
-                    }
                     latch.countDown();
                     if (latch.getCount() == 0) {
                         Amplify.Hub.unsubscribe(this.token.get());
@@ -177,10 +172,10 @@ public final class HubAccumulator {
     @NonNull
     public HubEvent<?> awaitFirst() {
         // If the event list is empty, then wait.
-        if (events.size() == 0) {
-            Latch.await(firstItemLatch);
+        if (events.isEmpty()) {
+            Latch.await(latch);
         }
-        return events.size() > 0 ? events.get(0) : null;
+        return events.isEmpty() ? null : events.get(0);
     }
 
     /**
@@ -195,9 +190,9 @@ public final class HubAccumulator {
     @NonNull
     public HubEvent<?> awaitFirst(int amount, TimeUnit unit) {
         // If the event list is empty, then wait.
-        if (events.size() == 0) {
-            Latch.await(firstItemLatch, unit.toMillis(amount));
+        if (events.isEmpty()) {
+            Latch.await(latch, unit.toMillis(amount));
         }
-        return events.size() > 0 ? events.get(0) : null;
+        return events.isEmpty() ? null : events.get(0);
     }
 }
