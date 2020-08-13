@@ -16,6 +16,7 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
+import android.content.res.Resources.NotFoundException;
 import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
@@ -75,7 +76,7 @@ public final class Resources {
 
         try {
             inputStream = context.getResources().openRawResource(resourceId);
-        } catch (android.content.res.Resources.NotFoundException exception) {
+        } catch (NotFoundException exception) {
             throw new AmplifyException(
                     "Failed to find the resource with ID " + resourceId + ".",
                     exception, "Please check that it has been created."
