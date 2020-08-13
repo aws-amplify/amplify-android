@@ -20,15 +20,20 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
+import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.logging.Logger;
 
 /**
  * Event payload for the {@link com.amplifyframework.datastore.DataStoreChannelEventName#NETWORK_STATUS} event.
  */
 public final class NetworkStatusEvent implements HubEvent.Data<NetworkStatusEvent> {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final boolean active;
 
     /**
@@ -101,5 +106,22 @@ public final class NetworkStatusEvent implements HubEvent.Data<NetworkStatusEven
     public static NetworkStatusEvent from(ApiEndpointStatusChangeEvent apiEvent) {
         boolean isActive = ApiEndpointStatus.REACHABLE.equals(apiEvent.getCurrentStatus());
         return new NetworkStatusEvent(isActive);
+    }
+
+    /**
+     * Start listening for API_ENDPOINT_STATUS_CHANGED to be emitted by the API and trigger
+     * the DataStore NETWORK_STATUS event accordingly.
+     */
+    public static void monitor() {
+        Amplify.Hub.subscribe(HubChannel.API, hubEvent -> {
+            return ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED.name().equals(hubEvent.getName());
+        }, hubEvent -> {
+                try {
+                    ApiEndpointStatusChangeEvent apiEvent = ApiEndpointStatusChangeEvent.from(hubEvent);
+                    NetworkStatusEvent.from(apiEvent).toHubEvent().publish(HubChannel.DATASTORE);
+                } catch (AmplifyException exception) {
+                    LOG.warn("Unable to public message to Amplify Hub", exception);
+                }
+            });
     }
 }
