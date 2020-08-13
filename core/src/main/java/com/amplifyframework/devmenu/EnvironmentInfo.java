@@ -27,9 +27,7 @@ import com.amplifyframework.core.plugin.Plugin;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -62,11 +60,8 @@ public final class EnvironmentInfo {
      * @return version information for each plugin added
      */
     public String getPluginVersions() {
-        // TODO: can we centralize these somewhere? We want ~1 file in the code base that lists all the categories.
-        List<Category<?>> categories = Arrays.asList(Amplify.Analytics, Amplify.API, Amplify.Auth, Amplify.Logging,
-                Amplify.Storage, Amplify.Hub, Amplify.DataStore, Amplify.Predictions);
         StringBuilder pluginStringBuilder = new StringBuilder();
-        for (Category<?> category : categories) {
+        for (Category<?> category : Amplify.CATEGORIES.values()) {
             pluginStringBuilder.append(getCategoryPluginVersions(category));
         }
         String pluginVersions = pluginStringBuilder.toString();
