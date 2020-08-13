@@ -30,6 +30,12 @@ import com.amplifyframework.core.R;
  * to display the logs on the developer menu.
  */
 public final class DevMenuLogsFragment extends Fragment {
+    // The view for this fragment.
+    private View logsView;
+    // An instance of DeveloperMenu.
+    private DeveloperMenu developerMenu;
+    // Displays the logs text.
+    private TextSwitcher logsText;
 
     /**
      * Required empty public constructor.
@@ -40,18 +46,34 @@ public final class DevMenuLogsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View logsView = inflater.inflate(R.layout.dev_menu_fragment_logs, container, false);
+        logsView = inflater.inflate(R.layout.dev_menu_fragment_logs, container, false);
         // Display the logs (if any).
-        TextSwitcher logsText = logsView.findViewById(R.id.logs_text);
-        DeveloperMenu developerMenu = DeveloperMenu.singletonInstance(getContext());
+        developerMenu = DeveloperMenu.singletonInstance(getContext());
+        logsText = logsView.findViewById(R.id.logs_text);
         logsText.setText(developerMenu.getLogs());
         // Search the logs when the search button is pressed.
-        logsView.findViewById(R.id.search_logs_button).setOnClickListener(view -> {
-            EditText searchText = logsView.findViewById(R.id.search_logs_field);
-            searchText.clearFocus();
-            logsText.setText(getString(R.string.placeholder_logs));
-            logsText.setText(developerMenu.getFilteredLogs(searchText.getText().toString()));
-        });
+        logsView.findViewById(R.id.search_logs_button).setOnClickListener(view -> searchLogs());
         return logsView;
+    }
+
+    /**
+     * Display the logs (if any) that contain the search query.
+     */
+    private void searchLogs() {
+        /*
+        // Uncomment this block of code to hide the soft input keyboard
+        // when the search button is pressed.
+        Context context = getContext();
+        if (context != null) {
+            // Hide the soft input keyboard.
+            InputMethodManager inputMethodManager = (InputMethodManager)
+                    context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(logsView.getWindowToken(), 0);
+        }
+         */
+        EditText searchText = logsView.findViewById(R.id.search_logs_field);
+        searchText.clearFocus();
+        logsText.setText(getString(R.string.placeholder_logs));
+        logsText.setText(developerMenu.getFilteredLogs(searchText.getText().toString()));
     }
 }
