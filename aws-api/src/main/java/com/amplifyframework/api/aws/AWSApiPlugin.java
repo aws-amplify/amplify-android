@@ -45,7 +45,6 @@ import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.util.UserAgent;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -757,17 +756,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         @Override
-        public void connectFailed(@NotNull Call call,
-                                  @NotNull InetSocketAddress inetSocketAddress,
-                                  @NotNull Proxy proxy,
+        public void connectFailed(@NonNull Call call,
+                                  @NonNull InetSocketAddress inetSocketAddress,
+                                  @NonNull Proxy proxy,
                                   @Nullable Protocol protocol,
-                                  @NotNull IOException ioe) {
+                                  @NonNull IOException ioe) {
             super.connectFailed(call, inetSocketAddress, proxy, protocol, ioe);
             transitionTo(ApiEndpointStatus.NOT_REACHABLE);
         }
 
         @Override
-        public void connectionAcquired(@NotNull Call call, @NotNull Connection connection) {
+        public void connectionAcquired(@NonNull Call call, @NonNull Connection connection) {
             super.connectionAcquired(call, connection);
             transitionTo(ApiEndpointStatus.REACHABLE);
         }
