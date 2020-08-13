@@ -20,7 +20,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.TextSwitcher;
 import androidx.fragment.app.Fragment;
 
 import com.amplifyframework.core.R;
@@ -42,13 +42,14 @@ public final class DevMenuLogsFragment extends Fragment {
         // Inflate the layout for this fragment
         View logsView = inflater.inflate(R.layout.dev_menu_fragment_logs, container, false);
         // Display the logs (if any).
-        TextView logsText = logsView.findViewById(R.id.logs_text);
+        TextSwitcher logsText = logsView.findViewById(R.id.logs_text);
         DeveloperMenu developerMenu = DeveloperMenu.singletonInstance(getContext());
         logsText.setText(developerMenu.getLogs());
         // Search the logs when the search button is pressed.
         logsView.findViewById(R.id.search_logs_button).setOnClickListener(view -> {
-            logsText.setText(R.string.placeholder_logs);
             EditText searchText = logsView.findViewById(R.id.search_logs_field);
+            searchText.clearFocus();
+            logsText.setText(getString(R.string.placeholder_logs));
             logsText.setText(developerMenu.getFilteredLogs(searchText.getText().toString()));
         });
         return logsView;
