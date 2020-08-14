@@ -15,6 +15,11 @@
 
 package com.amplifyframework.datastore.events;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.util.Arrays;
+
 /**
  * Event payload emitted when the sync process starts.
  */
@@ -26,7 +31,7 @@ public final class SyncQueriesStartedEvent {
      * @param models An array of model names.
      */
     public SyncQueriesStartedEvent(String[] models) {
-        this.models = models;
+        this.models = Arrays.copyOf(models, models.length);
     }
 
     /**
@@ -35,5 +40,35 @@ public final class SyncQueriesStartedEvent {
      */
     public String[] getModels() {
         return models;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "SyncQueriesStartedEvent{" +
+            "models=" + Arrays.toString(models) +
+            '}';
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(models);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        SyncQueriesStartedEvent that = (SyncQueriesStartedEvent) thatObject;
+        if (models.length != that.models.length) {
+            return false;
+        }
+
+        return Arrays.equals(models, that.models);
     }
 }
