@@ -16,6 +16,8 @@
 package com.amplifyframework.datastore.events;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Hub event payload emitted when the initial sync completes for a given model.
@@ -102,9 +104,51 @@ public final class ModelSyncedEvent {
     public String toString() {
         return "ModelSyncedEvent{" +
             "model=" + model +
+            ", isFullSync=" + isFullSync +
+            ", isDeltaSync=" + isDeltaSync +
             ", added=" + added +
             ", updated=" + updated +
             ", deleted=" + deleted +
             '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int result = model != null ? model.hashCode() : 0;
+        result = 31 * result + Boolean.valueOf(isFullSync).hashCode();
+        result = 31 * result + Boolean.valueOf(isDeltaSync).hashCode();
+        result = 31 * result + Integer.valueOf(added);
+        result = 31 * result + Integer.valueOf(updated);
+        result = 31 * result + Integer.valueOf(deleted);
+        return result;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        ModelSyncedEvent that = (ModelSyncedEvent) thatObject;
+
+        if (!ObjectsCompat.equals(model, that.model)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(isFullSync, that.isFullSync)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(isDeltaSync, that.isDeltaSync)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(added, that.added)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(updated, that.updated)) {
+            return false;
+        }
+        return ObjectsCompat.equals(deleted, that.deleted);
     }
 }
