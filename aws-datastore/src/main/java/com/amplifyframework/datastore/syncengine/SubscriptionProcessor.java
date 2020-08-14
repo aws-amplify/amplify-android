@@ -28,9 +28,12 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.AmplifyDisposables;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Arrays;
@@ -119,6 +122,8 @@ final class SubscriptionProcessor {
             return;
         }
         if (subscriptionsStarted) {
+            Amplify.Hub.publish(HubChannel.DATASTORE,
+                                HubEvent.create(DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED));
             LOG.info(String.format(Locale.US,
                 "Began buffering subscription events for remote mutations %s to Cloud models of types %s.",
                 modelProvider.models(), Arrays.toString(SubscriptionType.values())
