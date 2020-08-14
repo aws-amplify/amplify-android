@@ -31,7 +31,7 @@ public final class ModelSyncedEvent {
     /**
      * Constructs a ModelSyncEvent object.
      * @param model The of the model.
-     * @param syncType Indicates whether is a full or delta sync.
+     * @param isFullSync Indicates whether the initial sync was a FULL sync.
      * @param added Number of records added during the sync attempt.
      * @param updated Number of records updated during the sync attempt.
      * @param deleted Number of records deleted during the sync attempt.

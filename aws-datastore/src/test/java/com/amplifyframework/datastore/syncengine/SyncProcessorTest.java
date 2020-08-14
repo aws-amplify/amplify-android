@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore.syncengine;
 
 import android.util.Range;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -128,8 +127,8 @@ public final class SyncProcessorTest {
             .blockingGet();
 
         this.syncMetricsObserver = new SyncMetricsObserver(inMemoryStorageAdapter,
-                                                            syncableModels,
-                                                            () -> dataStoreConfiguration);
+            syncableModels,
+            () -> dataStoreConfiguration);
 
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
@@ -161,8 +160,6 @@ public final class SyncProcessorTest {
         // Collects one modelSynced event for each model.
         HubAccumulator modelSyncedAccumulator =
             createAccumulator(forEvent(DataStoreChannelEventName.MODEL_SYNCED), expectedModelCount);
-
-
 
         // Add a couple of seed records so they can be deleted/updated.
         storageAdapter.save(DRUM_POST.getModel());
