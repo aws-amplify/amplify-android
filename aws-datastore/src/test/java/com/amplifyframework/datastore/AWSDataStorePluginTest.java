@@ -19,7 +19,7 @@ import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
-import com.amplifyframework.api.ApiChannelEventName;
+import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;

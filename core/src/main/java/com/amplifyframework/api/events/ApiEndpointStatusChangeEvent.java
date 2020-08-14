@@ -20,13 +20,11 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiChannelEventName;
-import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 
 /**
  * This class represents the hub event payload for
- * {@link com.amplifyframework.api.ApiChannelEventName#API_ENDPOINT_STATUS_CHANGED}.
+ * {@link ApiChannelEventName#API_ENDPOINT_STATUS_CHANGED}.
  */
 public final class ApiEndpointStatusChangeEvent implements HubEvent.Data<ApiEndpointStatusChangeEvent> {
     private final ApiEndpointStatus currentStatus;
@@ -132,13 +130,13 @@ public final class ApiEndpointStatusChangeEvent implements HubEvent.Data<ApiEndp
         NOT_REACHABLE;
 
         /**
-         * Publishes an event to the Hub with the instance as the current value
-         * and the previous status passed in as a parameter.
-         * @param previousStatus The value to be sent as the previous status.
+         * Creates an instance of {@link ApiEndpointStatusChangeEvent} representing
+         * a state transition to a new status.
+         * @param newStatus The new desired status.
+         * @return An instance of {@link ApiEndpointStatusChangeEvent}
          */
-        public void announceTransitionFrom(ApiEndpointStatus previousStatus) {
-            ApiEndpointStatusChangeEvent eventData = new ApiEndpointStatusChangeEvent(this, previousStatus);
-            eventData.toHubEvent().publish(HubChannel.API);
+        public ApiEndpointStatusChangeEvent transitionTo(ApiEndpointStatus newStatus) {
+            return new ApiEndpointStatusChangeEvent(newStatus, this);
         }
     }
 }

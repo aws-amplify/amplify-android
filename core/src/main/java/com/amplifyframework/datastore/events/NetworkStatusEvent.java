@@ -20,7 +20,7 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiChannelEventName;
+import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.core.Amplify;
@@ -30,7 +30,7 @@ import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 /**
- * Event payload for the {@link com.amplifyframework.datastore.DataStoreChannelEventName#NETWORK_STATUS} event.
+ * Event payload for the {@link DataStoreChannelEventName#NETWORK_STATUS} event.
  */
 public final class NetworkStatusEvent implements HubEvent.Data<NetworkStatusEvent> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");

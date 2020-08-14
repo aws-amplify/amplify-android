@@ -13,8 +13,9 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api;
+package com.amplifyframework.api.events;
 
+import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
