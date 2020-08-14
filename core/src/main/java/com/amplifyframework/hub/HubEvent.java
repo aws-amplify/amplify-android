@@ -19,8 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.core.Amplify;
-
 import java.util.Objects;
 import java.util.UUID;
 
@@ -130,9 +128,10 @@ public final class HubEvent<T> {
     /**
      * Publish the instance of the {@link HubEvent} to Amplify Hub.
      * @param channel The channel to publish the event to.
+     * @param hub A reference to the Hub category.
      */
-    public void publish(@NonNull HubChannel channel) {
-        Amplify.Hub.publish(channel, this);
+    public void publish(@NonNull HubChannel channel, @NonNull HubCategoryBehavior hub) {
+        hub.publish(channel, this);
     }
 
     @NonNull

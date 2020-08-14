@@ -18,9 +18,9 @@ package com.amplifyframework.api.aws;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;

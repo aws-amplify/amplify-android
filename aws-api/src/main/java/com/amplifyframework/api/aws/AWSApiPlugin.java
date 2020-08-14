@@ -40,6 +40,7 @@ import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
@@ -777,7 +778,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             ApiEndpointStatus previousStatus = currentNetworkStatus.getAndSet(newStatus);
             if (previousStatus != newStatus) {
                 ApiEndpointStatusChangeEvent apiEndpointStatusChangeEvent = previousStatus.transitionTo(newStatus);
-                apiEndpointStatusChangeEvent.toHubEvent().publish(HubChannel.API);
+                apiEndpointStatusChangeEvent.toHubEvent().publish(HubChannel.API, Amplify.Hub);
             }
         }
     }

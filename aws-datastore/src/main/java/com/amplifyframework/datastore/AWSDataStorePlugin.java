@@ -37,11 +37,11 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
-import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
+import com.amplifyframework.datastore.syncengine.NetworkStatusMonitor;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
@@ -185,7 +185,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             event -> InitializationStatus.SUCCEEDED.toString().equals(event.getName()),
             event -> categoryInitializationsPending.countDown()
         );
-        NetworkStatusEvent.monitor();
+        NetworkStatusMonitor.start();
     }
 
     @WorkerThread
