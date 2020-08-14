@@ -138,9 +138,6 @@ public final class AWSDataStorePluginTest {
      */
     @Test
     public void configureAndInitializeInApiMode() throws JSONException, AmplifyException {
-        HubAccumulator orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.REMOTE_SYNC_STARTED, 1)
-                .start();
         HubAccumulator dataStoreReadyObserver =
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
@@ -158,7 +155,6 @@ public final class AWSDataStorePluginTest {
         awsDataStorePlugin.initialize(context);
 
         dataStoreReadyObserver.await();
-        orchestratorInitObserver.await();
         subscriptionsEstablishedObserver.await();
         networkStatusObserver.await();
 
@@ -208,6 +204,10 @@ public final class AWSDataStorePluginTest {
      */
     @Test
     public void clearStopsSyncUntilNextInteraction() throws AmplifyException, JSONException {
+//        HubAccumulator subscriptionsStarted =
+//            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED, 1)
+//                          .start();
+
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
         JSONObject dataStorePluginJson = new JSONObject()
@@ -221,7 +221,7 @@ public final class AWSDataStorePluginTest {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
         HubAccumulator orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.REMOTE_SYNC_STARTED, 1)
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
         orchestratorInitObserver.await();
         assertRemoteSubscriptionsStarted();
@@ -265,7 +265,7 @@ public final class AWSDataStorePluginTest {
         }).when(mockApiPlugin).mutate(any(), any(), any());
 
         orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.REMOTE_SYNC_STARTED, 1)
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
 
         synchronousDataStore.clear();

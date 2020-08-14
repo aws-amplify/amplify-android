@@ -305,11 +305,6 @@ public final class Orchestrator {
             LOG.debug("Draining subscription buffer...");
             subscriptionProcessor.startDrainingMutationBuffer(this::stopApiSyncBlocking);
 
-            LOG.debug("Publishing to hub...");
-            Amplify.Hub.publish(
-                HubChannel.DATASTORE,
-                HubEvent.create(DataStoreChannelEventName.REMOTE_SYNC_STARTED)
-            );
             currentMode.set(Mode.SYNC_VIA_API);
             emitter.onComplete();
         })
@@ -338,10 +333,6 @@ public final class Orchestrator {
             LOG.info("Stopping synchronization with remote API.");
             subscriptionProcessor.stopAllSubscriptionActivity();
             mutationProcessor.stopDrainingMutationOutbox();
-            Amplify.Hub.publish(
-                HubChannel.DATASTORE,
-                HubEvent.create(DataStoreChannelEventName.REMOTE_SYNC_STOPPED)
-            );
         })
         .onErrorComplete()
         .doOnComplete(() -> currentMode.set(Mode.LOCAL_ONLY));
