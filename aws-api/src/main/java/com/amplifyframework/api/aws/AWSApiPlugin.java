@@ -27,6 +27,8 @@ import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
+import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -38,14 +40,19 @@ import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.ModelOperation;
+import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,8 +62,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
+import okhttp3.Call;
+import okhttp3.Connection;
+import okhttp3.EventListener;
 import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 
 /**
  * Plugin implementation to be registered with Amplify API category.
@@ -122,6 +134,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             final EndpointType endpointType = apiConfiguration.getEndpointType();
             final OkHttpClient.Builder builder = new OkHttpClient.Builder();
             builder.addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string));
+            builder.eventListener(new ApiConnectionEventListener());
             if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
                 builder.addInterceptor(interceptorFactory.create(apiConfiguration));
             }
@@ -730,6 +743,43 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             result = 31 * result + (okHttpClient != null ? okHttpClient.hashCode() : 0);
             result = 31 * result + (subscriptionEndpoint != null ? subscriptionEndpoint.hashCode() : 0);
             return result;
+        }
+    }
+
+    /**
+     * This class implements OkHttp's {@link EventListener}. Its main purpose
+     * is to listen to network-related events reported by the http client and trigger
+     * a Hub event if necessary.
+     */
+    private static final class ApiConnectionEventListener extends EventListener {
+        private final AtomicReference<ApiEndpointStatus> currentNetworkStatus;
+
+        ApiConnectionEventListener() {
+            currentNetworkStatus = new AtomicReference<>(ApiEndpointStatus.UNKOWN);
+        }
+
+        @Override
+        public void connectFailed(@NonNull Call call,
+                                  @NonNull InetSocketAddress inetSocketAddress,
+                                  @NonNull Proxy proxy,
+                                  @Nullable Protocol protocol,
+                                  @NonNull IOException ioe) {
+            super.connectFailed(call, inetSocketAddress, proxy, protocol, ioe);
+            transitionTo(ApiEndpointStatus.NOT_REACHABLE);
+        }
+
+        @Override
+        public void connectionAcquired(@NonNull Call call, @NonNull Connection connection) {
+            super.connectionAcquired(call, connection);
+            transitionTo(ApiEndpointStatus.REACHABLE);
+        }
+
+        private void transitionTo(ApiEndpointStatus newStatus) {
+            ApiEndpointStatus previousStatus = currentNetworkStatus.getAndSet(newStatus);
+            if (previousStatus != newStatus) {
+                ApiEndpointStatusChangeEvent apiEndpointStatusChangeEvent = previousStatus.transitionTo(newStatus);
+                apiEndpointStatusChangeEvent.toHubEvent().publish(HubChannel.API, Amplify.Hub);
+            }
         }
     }
 }
