@@ -15,12 +15,12 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubSubscriber;
 import com.amplifyframework.logging.Logger;
 
 /**
@@ -33,9 +33,7 @@ public final class NetworkStatusMonitor {
     /**
      * Private constructor for utility class.
      */
-    private NetworkStatusMonitor() {
-
-    }
+    private NetworkStatusMonitor() {}
 
     /**
      * Start listening for API_ENDPOINT_STATUS_CHANGED to be emitted by the API and trigger
@@ -44,13 +42,8 @@ public final class NetworkStatusMonitor {
     public static void start() {
         Amplify.Hub.subscribe(HubChannel.API, hubEvent -> {
             return ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED.name().equals(hubEvent.getName());
-        }, hubEvent -> {
-                try {
-                    ApiEndpointStatusChangeEvent apiEvent = ApiEndpointStatusChangeEvent.from(hubEvent);
-                    NetworkStatusEvent.from(apiEvent).toHubEvent().publish(HubChannel.DATASTORE, Amplify.Hub);
-                } catch (AmplifyException exception) {
-                    LOG.warn("Unable to public message to Amplify Hub", exception);
-                }
-            });
+        }, HubSubscriber.<ApiEndpointStatusChangeEvent>create(eventData -> {
+            NetworkStatusEvent.from(eventData).toHubEvent().publish(HubChannel.DATASTORE, Amplify.Hub);
+        }));
     }
 }
