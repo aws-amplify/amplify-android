@@ -60,17 +60,6 @@ public final class DevMenuLogsFragment extends Fragment {
      * Display the logs (if any) that contain the search query.
      */
     private void searchLogs() {
-        /*
-        // Uncomment this block of code to hide the soft input keyboard
-        // when the search button is pressed.
-        Context context = getContext();
-        if (context != null) {
-            // Hide the soft input keyboard.
-            InputMethodManager inputMethodManager = (InputMethodManager)
-                    context.getSystemService(Context.INPUT_METHOD_SERVICE);
-            inputMethodManager.hideSoftInputFromWindow(logsView.getWindowToken(), 0);
-        }
-         */
         EditText searchText = logsView.findViewById(R.id.search_logs_field);
         searchText.clearFocus();
         logsText.setText(getString(R.string.placeholder_logs));
