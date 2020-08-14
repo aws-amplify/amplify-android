@@ -65,7 +65,9 @@ public enum DataStoreChannelEventName {
     SYNC_QUERIES_READY("syncQueriesReady"),
 
     /**
-     * All models have been synced.
+     * The sync process for one of the models has completed. This
+     * event is emitted with metrics related to the latest sync
+     * for the model.
      */
     MODEL_SYNCED("modelSynced");
 
