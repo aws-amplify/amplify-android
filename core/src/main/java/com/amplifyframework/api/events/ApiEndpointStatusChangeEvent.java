@@ -105,7 +105,7 @@ public final class ApiEndpointStatusChangeEvent implements HubEvent.Data<ApiEndp
         if (hubEvent.getData() instanceof ApiEndpointStatusChangeEvent) {
             return (ApiEndpointStatusChangeEvent) hubEvent.getData();
         }
-        String expectedClassName = ApiEndpointStatusChangeEvent.class.getName();
+        String expectedClassName = ApiEndpointStatusChangeEvent.class.getSimpleName();
         throw new AmplifyException("Unable to cast event data from " + expectedClassName,
                                    "Ensure that the event payload is of type " + expectedClassName);
     }
