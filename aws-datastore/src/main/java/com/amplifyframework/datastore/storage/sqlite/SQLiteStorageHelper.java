@@ -26,6 +26,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
+import com.amplifyframework.util.Wrap;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -135,7 +136,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
                 for (final SqlCommand sqlCommand : createSqlCommands.getCreateTableCommands()) {
                     if (!Empty.check(sqlCommand.tableName())) {
                         sqliteDatabase.execSQL("drop table if exists " +
-                                sqlCommand.tableName());
+                                Wrap.inBackticks(sqlCommand.tableName()));
                     }
                 }
                 sqliteDatabase.setTransactionSuccessful();
