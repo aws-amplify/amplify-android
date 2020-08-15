@@ -84,7 +84,7 @@ public enum SqlKeyword {
     /**
      * SQL keyword to check if a value is in range of values.
      */
-    BETWEEN("BEWTEEN"),
+    BETWEEN("BETWEEN"),
 
     /**
      * SQL keyword to check if a string is contained in another.
