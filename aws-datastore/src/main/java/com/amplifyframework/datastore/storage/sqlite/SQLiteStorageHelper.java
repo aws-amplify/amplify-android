@@ -214,7 +214,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
                 if (table.startsWith(SQLITE_SYSTEM_TABLE_PREFIX)) {
                     continue;
                 }
-                sqliteDatabase.execSQL("DROP TABLE IF EXISTS " + table);
+                sqliteDatabase.execSQL("DROP TABLE IF EXISTS " + Wrap.inBackticks(table));
                 LOG.debug("Dropped table: " + table);
             }
             sqliteDatabase.setTransactionSuccessful();
