@@ -66,6 +66,12 @@ public enum JavaFieldType {
     TIME(Temporal.Time.class.getSimpleName()),
 
     /**
+     * Represents the Timestamp data type.
+     * Is not currently used by TypeConverter as AWS_TIMESTAMP is being stored as long.
+     */
+    TIMESTAMP(Temporal.Timestamp.class.getSimpleName()),
+
+    /**
      * Represents the Enum type.
      */
     ENUM(Enum.class.getSimpleName()),

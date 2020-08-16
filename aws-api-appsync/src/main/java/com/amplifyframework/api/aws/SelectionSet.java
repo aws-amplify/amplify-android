@@ -24,14 +24,18 @@ import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.FieldFinder;
+import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -237,6 +241,15 @@ public final class SelectionSet {
                         Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1);
                         result.add(new SelectionSet(fieldName, fields));
                     }
+                } else if (isCustomType(field)) {
+                    Class<?> typeClass;
+                    if (Collection.class.isAssignableFrom(field.getType())) {
+                        ParameterizedType listType = (ParameterizedType) field.getGenericType();
+                        typeClass = (Class) listType.getActualTypeArguments()[0];
+                    } else {
+                        typeClass = field.getType();
+                    }
+                    result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(typeClass)));
                 } else {
                     result.add(new SelectionSet(fieldName, null));
                 }
@@ -245,6 +258,67 @@ public final class SelectionSet {
                 result.add(new SelectionSet(fieldName, null));
             }
             return result;
+        }
+
+        /**
+         * We handle customType fields differently as DEPTH does not apply here.
+         * @param clazz class we wish to build selection set for
+         * @return
+         */
+        private Set<SelectionSet> getNestedCustomTypeFields(Class<?> clazz) {
+            Set<SelectionSet> result = new HashSet<>();
+            for (Field field : findFieldsIn(clazz)) {
+                String fieldName = field.getName();
+                if (isCustomType(field)) {
+                    Class<?> typeClass;
+                    if (Collection.class.isAssignableFrom(field.getType())) {
+                        ParameterizedType listType = (ParameterizedType) field.getGenericType();
+                        typeClass = (Class) listType.getActualTypeArguments()[0];
+                    } else {
+                        typeClass = field.getType();
+                    }
+                    result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(typeClass)));
+                } else {
+                    result.add(new SelectionSet(fieldName, null));
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Helper for finding fields in a class.
+         * @param clazz class we wish to introspect
+         * @return
+         */
+        private List<Field> findFieldsIn(@NonNull Class<?> clazz) {
+            final List<Field> fields = new ArrayList<>();
+            Class<?> c = clazz;
+            while (c != null) {
+                for (Field field : c.getDeclaredFields()) {
+                    fields.add(field);
+                }
+                c = c.getSuperclass();
+            }
+            Collections.sort(fields, Comparator.comparing(Field::getName));
+            return Immutable.of(fields);
+        }
+
+        /**
+         * Helper to determine if field is a custom type. If custom types we need to build nested selection set.
+         * @param field field we wish to check
+         * @return
+         */
+        static boolean isCustomType(@NonNull Field field) {
+            if (Model.class.isAssignableFrom(field.getType()) || Enum.class.isAssignableFrom(field.getType())) {
+                return false;
+            }
+            try {
+                JavaFieldType.from(field.getType().getSimpleName());
+                return false;
+            } catch (IllegalArgumentException exception) {
+                // fallback to custom type, which will result in the field being converted to a JSON string
+                return true;
+            }
         }
     }
 }

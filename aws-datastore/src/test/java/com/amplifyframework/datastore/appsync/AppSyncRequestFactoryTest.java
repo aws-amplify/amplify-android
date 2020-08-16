@@ -22,6 +22,7 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.parenting.Parent;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.Resources;
 
@@ -52,6 +53,20 @@ public final class AppSyncRequestFactoryTest {
             Resources.readAsString("base-sync-request-document-for-blog-owner.txt"),
             AppSyncRequestFactory.buildSyncRequest(BlogOwner.class, null, null).getContent(),
             true
+        );
+    }
+
+    /**
+     * Validates the construction of a base-sync query document for models with custom types.
+     * @throws DataStoreException On failure to interrogate fields in Parent.class
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void validateCustomTypeRequestGenerationForBaseSync() throws DataStoreException, JSONException {
+        JSONAssert.assertEquals(
+                Resources.readAsString("base-sync-request-document-for-parent.txt"),
+                AppSyncRequestFactory.buildSyncRequest(Parent.class, null, null).getContent(),
+                true
         );
     }
 
