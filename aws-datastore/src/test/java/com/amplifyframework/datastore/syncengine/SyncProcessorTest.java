@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore.syncengine;
 
 import android.util.Range;
-import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
@@ -140,8 +139,7 @@ public final class SyncProcessorTest {
     @Test
     public void dataStoreHubEventsTriggered() throws DataStoreException {
         // Arrange - BEGIN
-        // We're only emitting events for Post and Blogger
-        int expectedModelCount = 2;
+        int expectedModelCount = Arrays.asList(Post.class, BlogOwner.class).size();
         // Collects one syncQueriesStarted event.
         HubAccumulator syncStartAccumulator =
             createAccumulator(syncQueryStartedForModels(modelCount), 1);
@@ -514,12 +512,7 @@ public final class SyncProcessorTest {
     }
 
     private static HubEventFilter forEvent(DataStoreChannelEventName eventName) {
-        return new HubEventFilter() {
-            @Override
-            public boolean filter(@NonNull HubEvent<?> hubEvent) {
-                return eventName.toString().equals(hubEvent.getName());
-            }
-        };
+        return hubEvent -> eventName.toString().equals(hubEvent.getName());
     }
 
     @SuppressWarnings("unchecked")
@@ -529,28 +522,21 @@ public final class SyncProcessorTest {
             .toList()
             .blockingGet();
 
-        return new HubEventFilter() {
-            @Override
-            public boolean filter(@NonNull HubEvent<?> hubEvent) {
-                if (!(hubEvent.getData() instanceof ModelSyncedEvent)) {
-                    return false;
-                }
-                ModelSyncedEvent hubEventData = (ModelSyncedEvent) hubEvent.getData();
-                return forEvent(DataStoreChannelEventName.MODEL_SYNCED).filter(hubEvent) &&
-                    modelNames.contains(hubEventData.getModel());
+        return hubEvent -> {
+            if (!(hubEvent.getData() instanceof ModelSyncedEvent)) {
+                return false;
             }
+            ModelSyncedEvent hubEventData = (ModelSyncedEvent) hubEvent.getData();
+            return forEvent(DataStoreChannelEventName.MODEL_SYNCED).filter(hubEvent) &&
+                modelNames.contains(hubEventData.getModel());
         };
     }
 
     private static HubEventFilter syncQueryStartedForModels(int modelCount) {
-        return new HubEventFilter() {
-            @Override
-            public boolean filter(@NonNull HubEvent<?> hubEvent) {
-
-                return forEvent(DataStoreChannelEventName.SYNC_QUERIES_STARTED).filter(hubEvent) &&
-                    hubEvent.getData() instanceof SyncQueriesStartedEvent &&
-                    ((SyncQueriesStartedEvent) hubEvent.getData()).getModels().length == modelCount;
-            }
+        return hubEvent -> {
+            return forEvent(DataStoreChannelEventName.SYNC_QUERIES_STARTED).filter(hubEvent) &&
+                hubEvent.getData() instanceof SyncQueriesStartedEvent &&
+                ((SyncQueriesStartedEvent) hubEvent.getData()).getModels().length == modelCount;
         };
     }
 
