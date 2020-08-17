@@ -212,8 +212,6 @@ public final class SyncProcessorTest {
         // Check - END
     }
 
-
-
     /**
      * When {@link SyncProcessor#hydrate()}'s {@link Completable} completes,
      * then the local storage adapter should have all of the remote model state.
