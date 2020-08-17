@@ -44,7 +44,7 @@ public final class DevMenuLogsFragment extends Fragment {
         DeveloperMenu developerMenu = DeveloperMenu.singletonInstance(getContext());
         TextView logsText = logsView.findViewById(R.id.logs_text);
         logsText.setText(developerMenu.getLogs());
-        // Search the logs when the search button is pressed.
+        // Search the logs when a search query is entered.
         SearchView searchLogsView = logsView.findViewById(R.id.search_logs_field);
         searchLogsView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
