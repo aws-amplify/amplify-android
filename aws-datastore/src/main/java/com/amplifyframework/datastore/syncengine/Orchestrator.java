@@ -37,14 +37,13 @@ import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Completable;
-import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -66,7 +65,7 @@ public final class Orchestrator {
     private final CompositeDisposable disposables;
     private final Scheduler startStopScheduler;
     private final LocalStorageAdapter localStorageAdapter;
-    private final List<Class<? extends Model>> syncableModels;
+    private final Set<Class<? extends Model>> syncableModels;
     private final SyncMetricsObserver syncObserver;
 
     /**
@@ -104,9 +103,7 @@ public final class Orchestrator {
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
 
         this.localStorageAdapter = localStorageAdapter;
-        syncableModels = Observable.fromIterable(modelProvider.models())
-            .toList()
-            .blockingGet();
+        syncableModels = modelProvider.models();
 
         this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
         this.syncProcessor = SyncProcessor.builder()

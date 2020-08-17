@@ -122,12 +122,8 @@ public final class SyncProcessorTest {
             .dataStoreErrorHandler(dataStoreException -> errorHandlerCallCount++)
             .build();
 
-        List<Class<? extends Model>> syncableModels = Observable.fromIterable(modelProvider.models())
-            .toList()
-            .blockingGet();
-
         this.syncMetricsObserver = new SyncMetricsObserver(inMemoryStorageAdapter,
-            syncableModels,
+                                                           modelProvider.models(),
             () -> dataStoreConfiguration);
 
         this.syncProcessor = SyncProcessor.builder()

@@ -29,8 +29,8 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,7 +42,7 @@ class SyncMetricsObserver {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private Map<String, ModelSyncMetrics> metricsByModel;
     private final Cancelable itemChangeObserver;
-    private final List<Class<? extends Model>> syncableModels;
+    private final Set<Class<? extends Model>> syncableModels;
 
     /**
      * Constructor that sets up an observer to watch for mutations
@@ -52,7 +52,7 @@ class SyncMetricsObserver {
      * @param dataStoreConfigurationProvider A reference to the DataStore configuration.
      */
     SyncMetricsObserver(LocalStorageAdapter localStorageAdapter,
-                        List<Class<? extends Model>> syncableModels,
+                        Set<Class<? extends Model>> syncableModels,
                         DataStoreConfigurationProvider dataStoreConfigurationProvider) {
         itemChangeObserver = localStorageAdapter.observe(
             this::onItemChange,
