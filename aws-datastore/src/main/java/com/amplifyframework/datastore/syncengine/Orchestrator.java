@@ -66,7 +66,6 @@ public final class Orchestrator {
     private final Scheduler startStopScheduler;
     private final LocalStorageAdapter localStorageAdapter;
     private final Set<Class<? extends Model>> syncableModels;
-    private final SyncMetricsObserver syncObserver;
 
     /**
      * Constructs a new Orchestrator.
@@ -114,9 +113,6 @@ public final class Orchestrator {
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .build();
-        this.syncObserver = new SyncMetricsObserver(localStorageAdapter,
-                                                    syncableModels,
-                                                    dataStoreConfigurationProvider);
         this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
         this.currentMode = new AtomicReference<>(Mode.STOPPED);

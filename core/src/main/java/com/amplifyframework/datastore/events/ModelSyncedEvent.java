@@ -19,10 +19,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.datastore.DataStoreChannelEventName;
+import com.amplifyframework.hub.HubEvent;
+
 /**
  * Hub event payload emitted when the initial sync completes for a given model.
  */
-public final class ModelSyncedEvent {
+public final class ModelSyncedEvent implements HubEvent.Data<ModelSyncedEvent> {
     private final int added;
     private final int updated;
     private final int deleted;
@@ -97,6 +100,11 @@ public final class ModelSyncedEvent {
      */
     public boolean isDeltaSync() {
         return isDeltaSync;
+    }
+
+    @Override
+    public HubEvent<ModelSyncedEvent> toHubEvent() {
+        return HubEvent.create(DataStoreChannelEventName.MODEL_SYNCED, this);
     }
 
     @NonNull

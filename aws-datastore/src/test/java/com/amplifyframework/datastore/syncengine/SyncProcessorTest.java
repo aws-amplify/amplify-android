@@ -88,7 +88,6 @@ public final class SyncProcessorTest {
     private SynchronousStorageAdapter storageAdapter;
 
     private SyncProcessor syncProcessor;
-    private SyncMetricsObserver syncMetricsObserver;
     private int errorHandlerCallCount;
     private int modelCount;
 
@@ -121,10 +120,6 @@ public final class SyncProcessorTest {
             .syncIntervalInMinutes(BASE_SYNC_INTERVAL_MINUTES)
             .dataStoreErrorHandler(dataStoreException -> errorHandlerCallCount++)
             .build();
-
-        this.syncMetricsObserver = new SyncMetricsObserver(inMemoryStorageAdapter,
-                                                           modelProvider.models(),
-            () -> dataStoreConfiguration);
 
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)

@@ -132,6 +132,7 @@ final class SyncProcessor {
 
     private Completable createHydrationTask(
             ModelWithMetadataComparator modelWithMetadataComparator, Class<? extends Model> modelClass) {
+        ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(modelClass);
         return syncTimeRegistry.lookupLastSyncTime(modelClass)
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
@@ -143,13 +144,21 @@ final class SyncProcessor {
                     // So that when we save them, the references will exist.
                     .sorted(modelWithMetadataComparator::compare)
                     // For each ModelWithMetadata, merge it into the local store.
-                    .flatMapCompletable(merger::merge)
+                    .flatMapCompletable(modelWithMetadata ->
+                        merger.merge(modelWithMetadata, metricsAccumulator::increment)
+                    )
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
             })
             .flatMapCompletable(syncType -> {
-                return SyncType.DELTA.equals(syncType) ?
+                Completable syncTimeSaveCompletable = SyncType.DELTA.equals(syncType) ?
                     syncTimeRegistry.saveLastDeltaSyncTime(modelClass, SyncTime.now()) :
                     syncTimeRegistry.saveLastBaseSyncTime(modelClass, SyncTime.now());
+                return syncTimeSaveCompletable.andThen(Completable.fromAction(() -> {
+                    metricsAccumulator
+                        .toModelSyncedEvent(syncType)
+                        .toHubEvent()
+                        .publish(HubChannel.DATASTORE, Amplify.Hub);
+                }));
             })
             .doOnError(failureToSync -> {
                 LOG.warn("Initial cloud sync failed.", failureToSync);

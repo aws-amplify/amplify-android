@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
@@ -66,6 +67,18 @@ final class Merger {
      * @return A completable operation to merge the model
      */
     <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata) {
+        return merge(modelWithMetadata, value -> { });
+    }
+
+    /**
+     * Merge an item back into the local store, using a default strategy.
+     * @param modelWithMetadata A model, combined with metadata about it
+     * @param storageItemChangeConsumer A callback invoked when the merge method saves or deletes the model.
+     * @param <T> Type of model
+     * @return A completable operation to merge the model
+     */
+    <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata,
+                                        Consumer<StorageItemChange<T>> storageItemChangeConsumer) {
         ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
         boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
         int incomingVersion = metadata.getVersion() == null ? -1 : metadata.getVersion();
@@ -87,8 +100,8 @@ final class Merger {
             .filter(currentVersion -> currentVersion == -1 || incomingVersion > currentVersion)
             // If we should merge, then do so now, starting with the model data.
             .flatMapCompletable(shouldMerge ->
-                (isDelete ? delete(model) : save(model))
-                    .andThen(save(metadata))
+                (isDelete ? delete(model, storageItemChangeConsumer) : save(model, storageItemChangeConsumer))
+                    .andThen(save(metadata, value -> { }))
             )
             // Let the world know that we've done a good thing.
             .doOnComplete(() -> {
@@ -112,7 +125,7 @@ final class Merger {
     }
 
     // Delete a model.
-    private <T extends Model> Completable delete(T model) {
+    private <T extends Model> Completable delete(T model, Consumer<StorageItemChange<T>> onStorageItemChange) {
         return Completable.defer(() -> Completable.create(emitter -> {
             // First, check if the thing exists.
             // If we don't, we'll get an exception saying basically,
@@ -121,7 +134,10 @@ final class Merger {
                 () -> localStorageAdapter.delete(
                     model,
                     StorageItemChange.Initiator.SYNC_ENGINE,
-                    ignored -> emitter.onComplete(),
+                    storageItemChange -> {
+                        onStorageItemChange.accept(storageItemChange);
+                        emitter.onComplete();
+                    },
                     emitter::onError
                 ),
                 emitter::onComplete
@@ -130,12 +146,15 @@ final class Merger {
     }
 
     // Create or update a model.
-    private <T extends Model> Completable save(T model) {
+    private <T extends Model> Completable save(T model, Consumer<StorageItemChange<T>> onStorageItemChange) {
         return Completable.defer(() -> Completable.create(emitter ->
             localStorageAdapter.save(
                 model,
                 StorageItemChange.Initiator.SYNC_ENGINE,
-                ignored -> emitter.onComplete(),
+                storageItemChange -> {
+                    onStorageItemChange.accept(storageItemChange);
+                    emitter.onComplete();
+                },
                 emitter::onError
             )
         ));
