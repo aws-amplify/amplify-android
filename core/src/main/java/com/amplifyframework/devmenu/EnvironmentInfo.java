@@ -61,7 +61,7 @@ public final class EnvironmentInfo {
      */
     public String getPluginVersions() {
         StringBuilder pluginStringBuilder = new StringBuilder();
-        for (Category<?> category : Amplify.CATEGORIES.values()) {
+        for (Category<?> category : Amplify.getCategoriesMap().values()) {
             pluginStringBuilder.append(getCategoryPluginVersions(category));
         }
         String pluginVersions = pluginStringBuilder.toString();
