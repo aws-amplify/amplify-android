@@ -18,38 +18,35 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="20dp"
+    android:layout_marginLeft="20dp"
+    android:layout_marginRight="20dp"
+    android:layout_marginBottom="20dp"
+    android:layout_marginTop="10dp"
     android:focusable="true"
     android:focusableInTouchMode="true"
     android:clickable="true"
     tools:context="com.amplifyframework.devmenu.DevMenuLogsFragment">
 
-    <EditText
+    <SearchView
         android:id="@+id/search_logs_field"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/search_logs_hint"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
         android:inputType="textNoSuggestions"
-        android:autofillHints="no"
-        android:layout_toLeftOf="@+id/search_logs_button"
-        android:layout_toStartOf="@+id/search_logs_button"
-        android:layout_marginRight="20dp"
-        android:layout_marginEnd="20dp"
         android:textSize="15sp"
-        android:textIsSelectable="true" />
-
-    <Button
-        android:id="@+id/search_logs_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/search_logs_button_text"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true" />
+        android:queryHint="@string/search_logs_hint"
+        android:iconifiedByDefault="false"
+        android:paddingLeft="-55dp"
+        android:paddingStart="-55dp"
+        android:paddingRight="0dp"
+        android:paddingEnd="0dp" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="10dp"
         android:layout_below="@+id/search_logs_field">
 
         <HorizontalScrollView
@@ -58,24 +55,14 @@
             android:requiresFadingEdge="horizontal"
             android:fadingEdgeLength="70dp">
 
-            <TextSwitcher
+            <TextView
                 android:id="@+id/logs_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:inAnimation="@android:anim/fade_in"
-                android:outAnimation="@android:anim/fade_out">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/placeholder_logs"
-                    style="@style/LogsTextStyle" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/placeholder_logs"
-                    style="@style/LogsTextStyle" />
-            </TextSwitcher>
+                android:text="@string/placeholder_logs"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:textSize="15sp"
+                android:lineSpacingExtra="3dp" />
         </HorizontalScrollView>
     </ScrollView>
 </RelativeLayout>

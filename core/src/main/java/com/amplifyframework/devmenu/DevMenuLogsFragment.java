@@ -19,8 +19,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.TextSwitcher;
+import android.widget.SearchView;
+import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
 import com.amplifyframework.core.R;
@@ -30,13 +30,6 @@ import com.amplifyframework.core.R;
  * to display the logs on the developer menu.
  */
 public final class DevMenuLogsFragment extends Fragment {
-    // The view for this fragment.
-    private View logsView;
-    // An instance of DeveloperMenu.
-    private DeveloperMenu developerMenu;
-    // Displays the logs text.
-    private TextSwitcher logsText;
-
     /**
      * Required empty public constructor.
      */
@@ -46,23 +39,26 @@ public final class DevMenuLogsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        logsView = inflater.inflate(R.layout.dev_menu_fragment_logs, container, false);
+        View logsView = inflater.inflate(R.layout.dev_menu_fragment_logs, container, false);
         // Display the logs (if any).
-        developerMenu = DeveloperMenu.singletonInstance(getContext());
-        logsText = logsView.findViewById(R.id.logs_text);
+        DeveloperMenu developerMenu = DeveloperMenu.singletonInstance(getContext());
+        TextView logsText = logsView.findViewById(R.id.logs_text);
         logsText.setText(developerMenu.getLogs());
         // Search the logs when the search button is pressed.
-        logsView.findViewById(R.id.search_logs_button).setOnClickListener(view -> searchLogs());
-        return logsView;
-    }
+        SearchView searchLogsView = logsView.findViewById(R.id.search_logs_field);
+        searchLogsView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String searchText) {
+                return false;
+            }
 
-    /**
-     * Display the logs (if any) that contain the search query.
-     */
-    private void searchLogs() {
-        EditText searchText = logsView.findViewById(R.id.search_logs_field);
-        searchText.clearFocus();
-        logsText.setText(getString(R.string.placeholder_logs));
-        logsText.setText(developerMenu.getFilteredLogs(searchText.getText().toString()));
+            @Override
+            public boolean onQueryTextChange(String searchText) {
+                logsText.setText(R.string.placeholder_logs);
+                logsText.setText(developerMenu.getFilteredLogs(searchText));
+                return true;
+            }
+        });
+        return logsView;
     }
 }

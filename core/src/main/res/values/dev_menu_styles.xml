@@ -27,9 +27,4 @@
         <item name="android:layout_centerVertical">true</item>
         <item name="android:switchMinWidth">50dp</item>
     </style>
-    <style name="LogsTextStyle">
-        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
-        <item name="android:textSize">15sp</item>
-        <item name="android:lineSpacingExtra">3dp</item>
-    </style>
 </resources>

@@ -24,6 +24,7 @@ import android.text.TextUtils;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.util.Empty;
 
 import java.util.List;
 import java.util.Locale;
@@ -136,7 +137,7 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
      * @return the stored logs as a String.
      */
     public String getFilteredLogs(String searchText) {
-        if (searchText == null || searchText.isEmpty()) {
+        if (Empty.check(searchText)) {
             return getLogs();
         }
         List<LogEntry> logs = loggingPlugin.getLogs();
