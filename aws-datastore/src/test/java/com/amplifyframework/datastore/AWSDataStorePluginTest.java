@@ -204,10 +204,6 @@ public final class AWSDataStorePluginTest {
      */
     @Test
     public void clearStopsSyncUntilNextInteraction() throws AmplifyException, JSONException {
-//        HubAccumulator subscriptionsStarted =
-//            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED, 1)
-//                          .start();
-
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
         JSONObject dataStorePluginJson = new JSONObject()
