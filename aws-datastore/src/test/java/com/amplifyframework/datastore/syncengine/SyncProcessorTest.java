@@ -81,7 +81,7 @@ public final class SyncProcessorTest {
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
     private static final List<String> SYSTEM_MODEL_NAMES =
         Observable.fromIterable(SystemModelsProviderFactory.create().models())
-            .map(m -> m.getSimpleName()).toList().blockingGet();
+            .map(Class::getSimpleName).toList().blockingGet();
 
     private AppSync appSync;
     private ModelProvider modelProvider;
