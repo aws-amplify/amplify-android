@@ -16,6 +16,7 @@
 package com.amplifyframework.util;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.BuildConfig;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
@@ -59,7 +60,7 @@ public final class UserAgentTest {
     @Test
     public void testWithoutConfiguration() {
         final String userAgent = UserAgent.string();
-        assertTrue(userAgent.startsWith("amplify-android/main ("));
+        assertTrue(userAgent.startsWith("amplify-android/" + BuildConfig.VERSION_NAME + " ("));
     }
 
     /**
@@ -72,7 +73,7 @@ public final class UserAgentTest {
         UserAgent.configure(platforms);
 
         final String userAgent = UserAgent.string();
-        assertTrue(userAgent.startsWith("amplify-android/main ("));
+        assertTrue(userAgent.startsWith("amplify-android/" + BuildConfig.VERSION_NAME + " ("));
     }
 
     /**
