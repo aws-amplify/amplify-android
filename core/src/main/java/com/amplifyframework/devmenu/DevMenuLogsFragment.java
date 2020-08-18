@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.SearchView;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
@@ -29,7 +30,6 @@ import com.amplifyframework.core.R;
  * to display the logs on the developer menu.
  */
 public final class DevMenuLogsFragment extends Fragment {
-
     /**
      * Required empty public constructor.
      */
@@ -41,8 +41,24 @@ public final class DevMenuLogsFragment extends Fragment {
         // Inflate the layout for this fragment
         View logsView = inflater.inflate(R.layout.dev_menu_fragment_logs, container, false);
         // Display the logs (if any).
+        DeveloperMenu developerMenu = DeveloperMenu.singletonInstance(getContext());
         TextView logsText = logsView.findViewById(R.id.logs_text);
-        logsText.setText(DeveloperMenu.singletonInstance(getContext()).getLogs());
+        logsText.setText(developerMenu.getLogs());
+        // Search the logs when a search query is entered.
+        SearchView searchLogsView = logsView.findViewById(R.id.search_logs_field);
+        searchLogsView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String searchText) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String searchText) {
+                logsText.setText(R.string.placeholder_logs);
+                logsText.setText(developerMenu.getFilteredLogs(searchText));
+                return true;
+            }
+        });
         return logsView;
     }
 }

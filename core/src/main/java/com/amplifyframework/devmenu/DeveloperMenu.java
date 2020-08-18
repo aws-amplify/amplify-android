@@ -25,6 +25,7 @@ import android.text.TextUtils;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.Empty;
 
 import java.util.List;
 import java.util.Locale;
@@ -129,6 +130,32 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
         } else {
             return TextUtils.join("", logs);
         }
+    }
+
+    /**
+     * Returns a String representation of the stored logs that contain the given
+     * String, or all logs if the given String is null or the empty string.
+     * @param searchText the text to search for in the logs
+     * @return the stored logs as a String.
+     */
+    public String getFilteredLogs(String searchText) {
+        if (Empty.check(searchText)) {
+            return getLogs();
+        }
+        List<LogEntry> logs = loggingPlugin.getLogs();
+        if (logs.isEmpty()) {
+            return "No logs to display.";
+        }
+        StringBuilder logsStringBuilder = new StringBuilder();
+        String lowercaseSearchText = searchText.toLowerCase(Locale.US);
+        for (LogEntry log : logs) {
+            String formattedLog = log.toString();
+            if (formattedLog.toLowerCase(Locale.US).contains(lowercaseSearchText)) {
+                logsStringBuilder.append(formattedLog);
+            }
+        }
+        String filteredLogs = logsStringBuilder.toString();
+        return filteredLogs.isEmpty() ? "No logs match the search criteria." : filteredLogs;
     }
 
     /**
