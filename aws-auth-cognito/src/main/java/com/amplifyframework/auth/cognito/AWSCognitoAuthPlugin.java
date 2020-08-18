@@ -802,7 +802,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     private AuthSignUpResult convertSignUpResult(@NonNull SignUpResult result, @NonNull String username) {
-        UserCodeDeliveryDetails details = result.getUserCodeDeliveryDetails();
+        UserCodeDeliveryDetails details = Objects.requireNonNull(result).getUserCodeDeliveryDetails();
         AuthCodeDeliveryDetails newDetails = details != null
                 ? new AuthCodeDeliveryDetails(
                     details.getDestination(),
