@@ -24,8 +24,8 @@ import android.text.TextUtils;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.util.Empty;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.Empty;
 
 import java.util.List;
 import java.util.Locale;
