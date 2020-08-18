@@ -33,8 +33,10 @@ import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.util.Empty;
+import com.amplifyframework.util.Immutable;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -97,6 +99,14 @@ public final class Amplify {
         categories.put(CategoryType.DATASTORE, DataStore);
         categories.put(CategoryType.PREDICTIONS, Predictions);
         return categories;
+    }
+
+    /**
+     * Returns an unordered map from each type of category to an entry point for that category.
+     * @return a Map from CategoryType to Category.
+     */
+    public static Map<CategoryType, Category<? extends Plugin<?>>> getCategoriesMap() {
+        return Immutable.of(CATEGORIES);
     }
 
     /**

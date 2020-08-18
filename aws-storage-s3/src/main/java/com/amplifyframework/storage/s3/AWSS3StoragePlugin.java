@@ -175,6 +175,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
     @NonNull
     @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
+    }
+
+    @NonNull
+    @Override
     public StorageGetUrlOperation<?> getUrl(
             @NonNull String key,
             @NonNull Consumer<StorageGetUrlResult> onSuccess,

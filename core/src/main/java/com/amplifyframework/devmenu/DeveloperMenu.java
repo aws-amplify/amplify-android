@@ -25,6 +25,7 @@ import android.text.TextUtils;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.util.Empty;
+import com.amplifyframework.logging.Logger;
 
 import java.util.List;
 import java.util.Locale;
@@ -34,6 +35,7 @@ import java.util.Locale;
  * developer menu.
  */
 public final class DeveloperMenu implements ShakeDetector.Listener {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:devmenu");
     // An instance of DeveloperMenu.
     private static DeveloperMenu sInstance;
     // Indicates whether the developer menu is visible.
@@ -164,8 +166,17 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
      * @return the issue body
      */
     public String createIssueBody(String description, boolean includeLogs) {
-        // TODO: add environment information to issue body
-        String envInfo = "";
+        EnvironmentInfo environmentInfo = new EnvironmentInfo();
+        String envInfo = "*Amplify Plugins Information:*\n" + environmentInfo.getPluginVersions();
+        String devEnvInfo = "";
+        try {
+            devEnvInfo = environmentInfo.getDeveloperEnvironmentInfo(context);
+        } catch (AmplifyException error) {
+            LOG.warn("Error reading developer environment information.");
+        }
+        if (!devEnvInfo.isEmpty()) {
+            envInfo += "\n\n*Developer Environment Information:*\n" + devEnvInfo;
+        }
         String deviceInfo = new DeviceInfo().toString();
         String logsText = "";
         if (includeLogs && !loggingPlugin.getLogs().isEmpty()) {

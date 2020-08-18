@@ -16,7 +16,6 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
-import android.content.res.Resources;
 import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
 
@@ -37,12 +36,10 @@ import com.amplifyframework.util.Immutable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 
 /**
  * AmplifyConfiguration serves as the top-level configuration object for the
@@ -112,7 +109,7 @@ public final class AmplifyConfiguration {
     @SuppressWarnings("WeakerAccess")
     @NonNull
     public static AmplifyConfiguration fromConfigFile(@NonNull Context context) throws AmplifyException {
-        return fromConfigFile(context, getConfigResourceId(context));
+        return fromConfigFile(context, Resources.getRawResourceId(context, DEFAULT_IDENTIFIER));
     }
 
     /**
@@ -127,48 +124,7 @@ public final class AmplifyConfiguration {
     @NonNull
     public static AmplifyConfiguration fromConfigFile(
             @NonNull Context context, @RawRes int configFileResourceId) throws AmplifyException {
-        return fromJson(readInputJson(context, configFileResourceId));
-    }
-
-    private static int getConfigResourceId(Context context) throws AmplifyException {
-        try {
-            return context.getResources()
-                .getIdentifier(DEFAULT_IDENTIFIER, "raw", context.getPackageName());
-        } catch (Exception exception) {
-            throw new AmplifyException(
-                "Failed to read " + DEFAULT_IDENTIFIER + ".",
-                exception, "Please check that it is correctly formed."
-            );
-        }
-    }
-
-    private static JSONObject readInputJson(Context context, int resourceId) throws AmplifyException {
-        InputStream inputStream;
-
-        try {
-            inputStream = context.getResources().openRawResource(resourceId);
-        } catch (Resources.NotFoundException exception) {
-            throw new AmplifyException(
-                    "Failed to find " + DEFAULT_IDENTIFIER + ".",
-                    exception, "Please check that it has been created."
-            );
-        }
-
-        final Scanner in = new Scanner(inputStream);
-        final StringBuilder sb = new StringBuilder();
-        while (in.hasNextLine()) {
-            sb.append(in.nextLine());
-        }
-        in.close();
-
-        try {
-            return new JSONObject(sb.toString());
-        } catch (JSONException jsonError) {
-            throw new AmplifyException(
-                "Failed to read " + DEFAULT_IDENTIFIER + ".",
-                jsonError, "Please check that it is correctly formed."
-            );
-        }
+        return fromJson(Resources.readJsonResourceFromId(context, configFileResourceId));
     }
 
     /**

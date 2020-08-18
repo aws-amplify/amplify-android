@@ -33,7 +33,7 @@ import com.amplifyframework.core.R;
  */
 public final class DevMenuFileIssueFragment extends Fragment {
     // Minimum number of characters required for the issue description.
-    private static final int MIN_DESCRIPTION_LENGTH = 140;
+    private static final int MIN_DESCRIPTION_LENGTH = 20;
     // Error message to display when the description does not satisfy the
     // minimum character count requirement.
     private static final String DESCRIPTION_LENGTH_ERROR = "Issue description must be at least "
@@ -72,13 +72,13 @@ public final class DevMenuFileIssueFragment extends Fragment {
      * @return the issue body
      */
     private String getIssueBody() {
-        EditText issueDescription = (EditText) fileIssueView.findViewById(R.id.issue_description);
+        EditText issueDescription = fileIssueView.findViewById(R.id.issue_description);
         String description = issueDescription.getText().toString();
         if (description.length() < MIN_DESCRIPTION_LENGTH) {
             issueDescription.setError(DESCRIPTION_LENGTH_ERROR);
             return "";
         } else {
-            Switch logsSwitch = (Switch) fileIssueView.findViewById(R.id.logs_switch);
+            Switch logsSwitch = fileIssueView.findViewById(R.id.logs_switch);
             return developerMenu.createIssueBody(description, logsSwitch.isChecked());
         }
     }

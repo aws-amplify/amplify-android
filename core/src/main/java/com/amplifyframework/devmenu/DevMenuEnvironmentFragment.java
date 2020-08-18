@@ -27,13 +27,17 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.R;
+import com.amplifyframework.logging.Logger;
 
 /**
  * A {@link Fragment} subclass representing the view
  * to display the environment information on the developer menu.
  */
 public final class DevMenuEnvironmentFragment extends Fragment {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:devmenu");
 
     /**
      * Required empty public constructor.
@@ -55,10 +59,26 @@ public final class DevMenuEnvironmentFragment extends Fragment {
      */
     private SpannableStringBuilder getEnvironmentInfo() {
         SpannableStringBuilder stringBuilder = new SpannableStringBuilder();
+        EnvironmentInfo envInfo = new EnvironmentInfo();
+        // Append the amplify plugin versions to stringBuilder
         stringBuilder.append(setBold("Amplify Plugins Information"));
-        stringBuilder.append("\nPlugin versions will be added here...\n\n");
+        String pluginVersions = "\n" + envInfo.getPluginVersions() + "\n";
+        stringBuilder.append(pluginVersions);
+
+        // Append the developer environment information to stringBuilder
         stringBuilder.append(setBold("Developer Environment Information"));
-        stringBuilder.append("\nDeveloper environment information will be added here...");
+        String devEnvInfo = "";
+        try {
+            devEnvInfo = envInfo.getDeveloperEnvironmentInfo(requireContext());
+        } catch (AmplifyException error) {
+            LOG.warn("Error reading developer environment information.");
+        }
+        if (devEnvInfo.isEmpty()) {
+            stringBuilder.append("\nUnable to retrieve developer environment information.");
+        } else {
+            devEnvInfo = "\n" + devEnvInfo;
+            stringBuilder.append(devEnvInfo);
+        }
         return stringBuilder;
     }
 
