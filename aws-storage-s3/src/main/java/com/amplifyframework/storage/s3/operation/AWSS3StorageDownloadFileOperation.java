@@ -26,6 +26,7 @@ import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
@@ -44,6 +45,7 @@ public final class AWSS3StorageDownloadFileOperation
         extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
     private final StorageService storageService;
     private final CognitoAuthProvider cognitoAuthProvider;
+    private final Consumer<StorageTransferProgress> onProgress;
     private final Consumer<StorageDownloadFileResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
@@ -54,6 +56,7 @@ public final class AWSS3StorageDownloadFileOperation
      * @param storageService S3 client wrapper
      * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
      * @param request download request parameters
+     * @param onProgress Notified upon advancements in download progress
      * @param onSuccess Notified when download results are available
      * @param onError Notified upon download error
      */
@@ -61,12 +64,14 @@ public final class AWSS3StorageDownloadFileOperation
             @NonNull StorageService storageService,
             @NonNull CognitoAuthProvider cognitoAuthProvider,
             @NonNull AWSS3StorageDownloadFileRequest request,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         super(request);
         this.storageService = storageService;
         this.cognitoAuthProvider = cognitoAuthProvider;
+        this.onProgress = onProgress;
         this.onSuccess = onSuccess;
         this.onError = onError;
         this.transferObserver = null;
@@ -180,14 +185,7 @@ public final class AWSS3StorageDownloadFileOperation
 
         @Override
         public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
-            final float progress;
-            if (bytesTotal != 0) {
-                progress = (float) bytesCurrent / bytesTotal;
-            } else {
-                progress = 1f;
-            }
-            Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create(StorageChannelEventName.DOWNLOAD_PROGRESS, progress));
+            onProgress.accept(new StorageTransferProgress(bytesCurrent, bytesTotal));
         }
 
         @Override

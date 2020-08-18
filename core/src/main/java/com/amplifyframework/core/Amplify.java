@@ -34,6 +34,7 @@ import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
+import com.amplifyframework.util.UserAgent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -136,6 +137,9 @@ public final class Amplify {
                         "Be sure to only call Amplify.configure once"
                 );
             }
+
+            // Configure User-Agent utility
+            UserAgent.configure(configuration.getPlatformVersions());
 
             DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
 

@@ -73,6 +73,7 @@ import com.amazonaws.mobile.client.results.SignUpResult;
 import com.amazonaws.mobile.client.results.Tokens;
 import com.amazonaws.mobile.client.results.UserCodeDeliveryDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.cognitoauth.AuthClient;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
 import com.amazonaws.services.cognitoidentity.model.NotAuthorizedException;
 import org.json.JSONException;
@@ -90,6 +91,13 @@ import java.util.concurrent.atomic.AtomicReference;
  * A Cognito implementation of the Auth Plugin.
  */
 public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
+    /**
+     * The result code for the activity manging the web UI sign in flow.
+     * This is needed for handling the response in the onActivityResult method of your activity.
+     * See the documentation for more information: https://docs.amplify.aws/lib/auth/signin_web_ui/q/platform/android
+     */
+    public static final int WEB_UI_SIGN_IN_ACTIVITY_CODE = AuthClient.CUSTOM_TABS_ACTIVITY_CODE;
+
     private static final String AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final long SECONDS_BEFORE_TIMEOUT = 10;
     private static final String COGNITO_USER_ID_ATTRIBUTE = "sub";
@@ -267,7 +275,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             new Callback<SignUpResult>() {
                 @Override
                 public void onResult(SignUpResult result) {
-                    onSuccess.accept(convertSignUpResult(result));
+                    onSuccess.accept(convertSignUpResult(result, username));
                 }
 
                 @Override
@@ -290,7 +298,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         awsMobileClient.confirmSignUp(username, confirmationCode, new Callback<SignUpResult>() {
             @Override
             public void onResult(SignUpResult result) {
-                onSuccess.accept(convertSignUpResult(result));
+                onSuccess.accept(convertSignUpResult(result, username));
             }
 
             @Override
@@ -311,7 +319,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         awsMobileClient.resendSignUp(username, new Callback<SignUpResult>() {
             @Override
             public void onResult(SignUpResult result) {
-                onSuccess.accept(convertSignUpResult(result));
+                onSuccess.accept(convertSignUpResult(result, username));
             }
 
             @Override
@@ -807,8 +815,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         }
     }
 
-    private AuthSignUpResult convertSignUpResult(SignUpResult result) {
-        UserCodeDeliveryDetails details = result.getUserCodeDeliveryDetails();
+    private AuthSignUpResult convertSignUpResult(@NonNull SignUpResult result, @NonNull String username) {
+        UserCodeDeliveryDetails details = Objects.requireNonNull(result).getUserCodeDeliveryDetails();
         AuthCodeDeliveryDetails newDetails = details != null
                 ? new AuthCodeDeliveryDetails(
                     details.getDestination(),
@@ -825,7 +833,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                 : AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
                         Collections.emptyMap(),
                         newDetails
-                )
+                ),
+                result.getUserSub() != null ? new AuthUser(result.getUserSub(), username) : null
         );
     }
 

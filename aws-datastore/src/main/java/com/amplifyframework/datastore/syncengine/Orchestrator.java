@@ -140,7 +140,13 @@ public final class Orchestrator {
             .subscribeOn(startStopScheduler)
             .doOnDispose(() -> LOG.debug("Orchestrator disposed a transition."))
             .subscribe(
-                () -> LOG.debug("Orchestrator completed a transition"),
+                () -> {
+                    LOG.debug("Orchestrator completed a transition");
+                    if (isStarted()) {
+                        Amplify.Hub.publish(HubChannel.DATASTORE,
+                            HubEvent.create(DataStoreChannelEventName.READY));
+                    }
+                },
                 failure -> LOG.warn("Orchestrator failed to transition.")
             ));
     }

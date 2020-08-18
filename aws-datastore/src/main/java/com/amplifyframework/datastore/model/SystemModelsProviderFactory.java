@@ -28,7 +28,7 @@ import com.amplifyframework.datastore.syncengine.PendingMutation;
  */
 public final class SystemModelsProviderFactory {
     // CHANGE this models version whenever any system models are added/removed/updated.
-    private static final String SYSTEM_MODELS_VERSION = "6232f439-0e0a-4aaa-a1b0-7a3abf7fcebc";
+    private static final String SYSTEM_MODELS_VERSION = "2f378292-cb5f-480e-b71d-cf441fd2e8be";
 
     private SystemModelsProviderFactory() {}
 
