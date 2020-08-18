@@ -217,7 +217,7 @@ public final class AuthComponentTest {
                     DELIVERY_MEDIUM,
                     ATTRIBUTE_NAME
             ),
-            null
+            USER_SUB
         );
 
         doAnswer(invocation -> {
@@ -264,7 +264,7 @@ public final class AuthComponentTest {
                         DELIVERY_MEDIUM,
                         ATTRIBUTE_NAME
                 ),
-                null
+                USER_SUB
         );
 
         doAnswer(invocation -> {
@@ -295,7 +295,7 @@ public final class AuthComponentTest {
                         DELIVERY_MEDIUM,
                         ATTRIBUTE_NAME
                 ),
-                null
+                USER_SUB
         );
 
         doAnswer(invocation -> {
@@ -889,6 +889,8 @@ public final class AuthComponentTest {
         validateCodeDeliveryDetails(nextStep.getCodeDeliveryDetails());
         assertTrue(result.isSignUpComplete());
         assertEquals(targetStep, nextStep.getSignUpStep());
+        assertEquals(USER_SUB, result.getUser().getUserId());
+        assertEquals(USERNAME, result.getUser().getUsername());
     }
 
     private void validateSignInResult(AuthSignInResult result, boolean targetIsSignedIn, AuthSignInStep targetStep) {

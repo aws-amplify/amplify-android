@@ -78,6 +78,7 @@ public final class RxAuthBindingTest {
     @Test
     public void testSignUpSucceeds() {
         // Arrange a response from delegate
+        String userId = RandomString.string();
         String username = RandomString.string();
         String password = RandomString.string();
         AuthSignUpOptions options = AuthSignUpOptions.builder().build();
@@ -86,7 +87,7 @@ public final class RxAuthBindingTest {
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.SMS);
         AuthSignUpStep step = AuthSignUpStep.CONFIRM_SIGN_UP_STEP;
         AuthNextSignUpStep nextStep = new AuthNextSignUpStep(step, Collections.emptyMap(), details);
-        AuthSignUpResult result = new AuthSignUpResult(false, nextStep);
+        AuthSignUpResult result = new AuthSignUpResult(false, nextStep, null);
         doAnswer(invocation -> {
             // 0 = username, 1 = pass, 2 = options, 3 = onSuccess, 4 = onFailure
             int positionOfSuccessConsumer = 3;
@@ -140,13 +141,14 @@ public final class RxAuthBindingTest {
      */
     @Test
     public void testResendSignUpCodeSucceeds() {
+        String userId = RandomString.string();
         String username = RandomString.string();
 
         // Arrange a result on the result consumer
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.EMAIL);
         AuthSignUpStep step = AuthSignUpStep.CONFIRM_SIGN_UP_STEP;
         AuthNextSignUpStep nextStep = new AuthNextSignUpStep(step, Collections.emptyMap(), details);
-        AuthSignUpResult result = new AuthSignUpResult(false, nextStep);
+        AuthSignUpResult result = new AuthSignUpResult(false, nextStep, null);
         doAnswer(invocation -> {
             // 0 = username, 1 = onResult, 2 = onFailure
             int positionOfResultConsumer = 1;
