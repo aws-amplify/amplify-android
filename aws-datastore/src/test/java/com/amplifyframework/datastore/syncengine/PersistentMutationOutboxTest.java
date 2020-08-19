@@ -54,6 +54,7 @@ public final class PersistentMutationOutboxTest {
     private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
 
     private PersistentMutationOutbox mutationOutbox;
+    private MutationQueue mutationQueue;
     private PendingMutation.Converter converter;
     private SynchronousStorageAdapter storage;
 
@@ -64,7 +65,8 @@ public final class PersistentMutationOutboxTest {
     public void setup() {
         InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
         storage = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
-        mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
+        mutationQueue = new MutationQueue();
+        mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter, mutationQueue);
         converter = new GsonPendingMutationConverter();
     }
 
@@ -742,7 +744,7 @@ public final class PersistentMutationOutboxTest {
 
     /**
      * If the queue contains multiple items, then
-     * {@link PersistentMutationOutbox#nextMutationForModelId(String)}
+     * {@link MutationQueue#nextMutationForModelId(String)}
      * returns the first one.
      * @throws DataStoreException On failure to arrange content into storage
      */
@@ -764,7 +766,7 @@ public final class PersistentMutationOutboxTest {
 
         assertEquals(
             firstMutation,
-            mutationOutbox.nextMutationForModelId(originalJoe.getId())
+            mutationQueue.nextMutationForModelId(originalJoe.getId())
         );
     }
 
