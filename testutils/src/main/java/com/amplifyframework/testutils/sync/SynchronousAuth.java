@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
@@ -32,6 +33,7 @@ import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.testutils.Await;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -252,18 +254,50 @@ public final class SynchronousAuth {
      */
     @NonNull
     public AuthSession fetchAuthSession() throws AuthException {
-        return Await.<AuthSession, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchAuthSession);
+        return Await.result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchAuthSession);
     }
 
     /**
      * Remembers current device synchronously.
-     * @return Dummy object -just indicates it completed successfully
+     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
     public Object rememberDevice() throws AuthException {
         return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.rememberDevice(() -> onResult.accept(new Object()), onError)
         );
+    }
+
+    /**
+     * Forgets the current device synchronously.
+     * @return Dummy object - just indicates it completed successfully
+     * @throws AuthException exception
+     */
+    public Object forgetDevice() throws AuthException {
+        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.forgetDevice(() -> onResult.accept(new Object()), onError)
+        );
+    }
+
+    /**
+     * Forgets the current device synchronously.
+     * @param device Auth device to forget
+     * @return Dummy object - just indicates it completed successfully
+     * @throws AuthException exception
+     */
+    public Object forgetDevice(@NonNull AuthDevice device) throws AuthException {
+        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.forgetDevice(device, () -> onResult.accept(new Object()), onError)
+        );
+    }
+
+    /**
+     * Fetches a list of remembered devices synchronously.
+     * @return List of remembered Auth devices upon successful fetch
+     * @throws AuthException exception
+     */
+    public List<AuthDevice> fetchDevices() throws AuthException {
+        return Await.result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchDevices);
     }
 
     /**
