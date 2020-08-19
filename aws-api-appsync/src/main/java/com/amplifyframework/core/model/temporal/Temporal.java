@@ -28,6 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -50,7 +51,7 @@ public final class Temporal {
      * <p>
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html#appsync-defined-scalars
      */
-    public static final class Date {
+    public static final class Date implements Comparable<Date> {
         private final LocalDate localDate;
         private final ZoneOffset zoneOffset;
 
@@ -176,6 +177,12 @@ public final class Temporal {
                     ", zoneOffset=\'" + zoneOffset + "\'" +
                     '}';
         }
+
+        @Override
+        public int compareTo(Date date) {
+            Objects.requireNonNull(date);
+            return toDate().compareTo(date.toDate());
+        }
     }
 
     /**
@@ -185,7 +192,7 @@ public final class Temporal {
      * <p>
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html#appsync-defined-scalars
      */
-    public static final class DateTime {
+    public static final class DateTime implements Comparable<DateTime> {
         private final OffsetDateTime offsetDateTime;
 
         /**
@@ -261,6 +268,12 @@ public final class Temporal {
                     "offsetDateTime=\'" + offsetDateTime + "\'" +
                     '}';
         }
+
+        @Override
+        public int compareTo(DateTime dateTime) {
+            Objects.requireNonNull(dateTime);
+            return toDate().compareTo(dateTime.toDate());
+        }
     }
 
     /**
@@ -272,7 +285,7 @@ public final class Temporal {
      * <p>
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html#appsync-defined-scalars
      */
-    public static final class Time {
+    public static final class Time implements Comparable<Time> {
         private final LocalTime localTime;
         private final ZoneOffset zoneOffset;
 
@@ -391,6 +404,12 @@ public final class Temporal {
                     ", zoneOffset=\'" + zoneOffset + "\'" +
                     '}';
         }
+
+        @Override
+        public int compareTo(Time time) {
+            Objects.requireNonNull(time);
+            return toDate().compareTo(time.toDate());
+        }
     }
 
     /**
@@ -399,7 +418,7 @@ public final class Temporal {
      * Negative values are also accepted and these represent the number of seconds
      * til 1970-01-01T00:00Z.
      */
-    public static final class Timestamp {
+    public static final class Timestamp implements Comparable<Timestamp> {
         private final long secondsSinceEpoch;
 
         /**
@@ -467,6 +486,12 @@ public final class Temporal {
             return "Temporal.Timestamp{" +
                     "timestamp=" + secondsSinceEpoch +
                     '}';
+        }
+
+        @Override
+        public int compareTo(Timestamp timestamp) {
+            Objects.requireNonNull(timestamp);
+            return Long.compare(getSecondsSinceEpoch(), timestamp.getSecondsSinceEpoch());
         }
     }
 }

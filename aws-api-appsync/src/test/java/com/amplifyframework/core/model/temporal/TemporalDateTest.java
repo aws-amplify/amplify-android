@@ -92,4 +92,23 @@ public final class TemporalDateTest {
         assertEquals(date, temporalDate.toDate());
         assertEquals(offsetInSeconds, temporalDate.getOffsetTotalSeconds());
     }
+
+    /**
+     * A {@link Temporal.Date} implements {@link java.lang.Comparable} correctly.
+     */
+    @Test
+    public void temporalDateIsComparable() {
+        Temporal.Date marchThirdPST = new Temporal.Date("2001-03-03-08:00:00");
+        Temporal.Date marchFourthPST = new Temporal.Date("2001-03-04-08:00:00");
+        Temporal.Date marchFifthPST = new Temporal.Date("2001-03-05-08:00:00");
+        Temporal.Date marchFourthCST = new Temporal.Date("2001-03-04-06:00:00");
+
+        // Verify comparison of DateTimes with same TimeZone
+        assertEquals(1, marchFourthPST.compareTo(marchThirdPST)); // march 4th is after march 3rd
+        assertEquals(0, marchFourthPST.compareTo(marchFourthPST)); // march 4th is equal to march 4th
+        assertEquals(-1, marchFourthPST.compareTo(marchFifthPST)); // march 4th is before march 5th
+
+        // Verify comparison of DateTimes with different TimeZones
+        assertEquals(1, marchFourthPST.compareTo(marchFourthCST)); // march 4th PST is after march 4th CST
+    }
 }

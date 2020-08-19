@@ -272,7 +272,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             new Callback<SignUpResult>() {
                 @Override
                 public void onResult(SignUpResult result) {
-                    onSuccess.accept(convertSignUpResult(result));
+                    onSuccess.accept(convertSignUpResult(result, username));
                 }
 
                 @Override
@@ -295,7 +295,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         awsMobileClient.confirmSignUp(username, confirmationCode, new Callback<SignUpResult>() {
             @Override
             public void onResult(SignUpResult result) {
-                onSuccess.accept(convertSignUpResult(result));
+                onSuccess.accept(convertSignUpResult(result, username));
             }
 
             @Override
@@ -316,7 +316,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         awsMobileClient.resendSignUp(username, new Callback<SignUpResult>() {
             @Override
             public void onResult(SignUpResult result) {
-                onSuccess.accept(convertSignUpResult(result));
+                onSuccess.accept(convertSignUpResult(result, username));
             }
 
             @Override
@@ -899,8 +899,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         }
     }
 
-    private AuthSignUpResult convertSignUpResult(SignUpResult result) {
-        UserCodeDeliveryDetails details = result.getUserCodeDeliveryDetails();
+    private AuthSignUpResult convertSignUpResult(@NonNull SignUpResult result, @NonNull String username) {
+        UserCodeDeliveryDetails details = Objects.requireNonNull(result).getUserCodeDeliveryDetails();
         AuthCodeDeliveryDetails newDetails = details != null
                 ? new AuthCodeDeliveryDetails(
                     details.getDestination(),
@@ -917,7 +917,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                 : AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
                         Collections.emptyMap(),
                         newDetails
-                )
+                ),
+                result.getUserSub() != null ? new AuthUser(result.getUserSub(), username) : null
         );
     }
 

@@ -16,8 +16,10 @@
 package com.amplifyframework.auth.result;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
 
 import java.util.Objects;
@@ -28,6 +30,7 @@ import java.util.Objects;
 public final class AuthSignUpResult {
     private final boolean isSignUpComplete;
     private final AuthNextSignUpStep nextStep;
+    private final AuthUser user;
 
     /**
      * Wraps the result of a sign up operation.
@@ -35,10 +38,12 @@ public final class AuthSignUpResult {
      *                         is successfully registered, there still may be additional steps that can be performed
      *                         such as user confirmation. Check {@link #getNextStep()} for this information.
      * @param nextStep Details about the next step in the sign up process (or whether the flow is now done).
+     * @param user If {@link #isSignUpComplete} is true, this holds the newly registered user. Otherwise, null.
      */
-    public AuthSignUpResult(boolean isSignUpComplete, @NonNull AuthNextSignUpStep nextStep) {
+    public AuthSignUpResult(boolean isSignUpComplete, @NonNull AuthNextSignUpStep nextStep, @Nullable AuthUser user) {
         this.isSignUpComplete = isSignUpComplete;
         this.nextStep = Objects.requireNonNull(nextStep);
+        this.user = user;
     }
 
     /**
@@ -61,19 +66,29 @@ public final class AuthSignUpResult {
     }
 
     /**
-     * When overriding, be sure to include isSignUpComplete and nextStep in the hash.
+     * If {@link #isSignUpComplete} is true, this returns the newly registered user. Otherwise, null.
+     * @return the newly registered user if {@link #isSignUpComplete} is true. Otherwise, null.
+     */
+    @Nullable
+    public AuthUser getUser() {
+        return user;
+    }
+
+    /**
+     * When overriding, be sure to include isSignUpComplete, nextStep, and user in the hash.
      * @return Hash code of this object
      */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
                 isSignUpComplete(),
-                getNextStep()
+                getNextStep(),
+                getUser()
         );
     }
 
     /**
-     * When overriding, be sure to include isSignUpComplete and nextStep in the comparison.
+     * When overriding, be sure to include isSignUpComplete, nextStep, and user in the comparison.
      * @return True if the two objects are equal, false otherwise
      */
     @Override
@@ -85,19 +100,21 @@ public final class AuthSignUpResult {
         } else {
             AuthSignUpResult authSignUpResult = (AuthSignUpResult) obj;
             return ObjectsCompat.equals(isSignUpComplete(), authSignUpResult.isSignUpComplete()) &&
-                    ObjectsCompat.equals(getNextStep(), authSignUpResult.getNextStep());
+                    ObjectsCompat.equals(getNextStep(), authSignUpResult.getNextStep()) &&
+                    ObjectsCompat.equals(getUser(), authSignUpResult.getUser());
         }
     }
 
     /**
-     * When overriding, be sure to include isSignUpComplete and nextStep in the output string.
+     * When overriding, be sure to include isSignUpComplete, nextStep, and user in the output string.
      * @return A string representation of the object
      */
     @Override
     public String toString() {
         return "AuthSignUpResult{" +
-                "userConfirmed=" + isSignUpComplete() +
+                "isSignUpComplete=" + isSignUpComplete() +
                 ", nextStep=" + getNextStep() +
+                ", user=" + getUser() +
                 '}';
     }
 }
