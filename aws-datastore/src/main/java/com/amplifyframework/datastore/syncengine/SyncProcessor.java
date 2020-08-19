@@ -34,7 +34,10 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Time;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -91,10 +94,16 @@ final class SyncProcessor {
      */
     Completable hydrate() {
         ModelWithMetadataComparator modelWithMetadataComparator =
-            new ModelWithMetadataComparator(modelProvider, modelSchemaRegistry);
+                new ModelWithMetadataComparator(modelProvider, modelSchemaRegistry);
+
+        ModelClassComparator modelClassComparator =
+                new ModelClassComparator(modelProvider, modelSchemaRegistry);
 
         final Set<Completable> hydrationTasks = new HashSet<>();
-        for (Class<? extends Model> clazz : modelProvider.models()) {
+        List<Class<? extends Model>> modelClsList =
+            new ArrayList<Class<? extends Model>>(modelProvider.models());
+        Collections.sort(modelClsList, modelClassComparator::compare);
+        for (Class<? extends Model> clazz : modelClsList) {
             hydrationTasks.add(createHydrationTask(modelWithMetadataComparator, clazz));
         }
         return Completable.concat(hydrationTasks);
@@ -309,7 +318,7 @@ final class SyncProcessor {
         @NonNull
         SyncProcessor build();
     }
-    
+
     /**
      * Compares to {@link ModelWithMetadata}, according to the topological order
      * of the {@link Model} within each. Topological order is determined by the
@@ -338,6 +347,37 @@ final class SyncProcessor {
         @NonNull
         private <M extends ModelWithMetadata<? extends Model>> ModelSchema schemaFor(M modelWithMetadata) {
             return modelSchemaRegistry.getModelSchemaForModelInstance(modelWithMetadata.getModel());
+        }
+    }
+
+    /**
+     * Compares to {@link ModelWithMetadata}, according to the topological order
+     * of the {@link Model} within each. Topological order is determined by the
+     * {@link TopologicalOrdering} utility.
+     */
+    private static final class ModelClassComparator {
+        private final ModelSchemaRegistry modelSchemaRegistry;
+        private final TopologicalOrdering topologicalOrdering;
+
+        ModelClassComparator(ModelProvider modelProvider, ModelSchemaRegistry modelSchemaRegistry) {
+            this.modelSchemaRegistry = modelSchemaRegistry;
+            this.topologicalOrdering =
+                    TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
+        }
+
+        private <M extends Class<? extends Model>> int compare(M left, M right) {
+            return topologicalOrdering.compare(schemaFor(left), schemaFor(right));
+        }
+
+        /**
+         * Gets the model schema for a model.
+         * @param modelCls A model with metadata about it
+         * @param <M> Type for ModelWithMetadata containing arbitrary model instances
+         * @return Model Schema for model
+         */
+        @NonNull
+        private <M extends Class<? extends Model>> ModelSchema schemaFor(M modelCls) {
+            return modelSchemaRegistry.getModelSchemaForModelClass(modelCls.getSimpleName());
         }
     }
 }
