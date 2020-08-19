@@ -242,14 +242,7 @@ public final class SelectionSet {
                         result.add(new SelectionSet(fieldName, fields));
                     }
                 } else if (isCustomType(field)) {
-                    Class<?> typeClass;
-                    if (Collection.class.isAssignableFrom(field.getType())) {
-                        ParameterizedType listType = (ParameterizedType) field.getGenericType();
-                        typeClass = (Class) listType.getActualTypeArguments()[0];
-                    } else {
-                        typeClass = field.getType();
-                    }
-                    result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(typeClass)));
+                    result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
                 } else {
                     result.add(new SelectionSet(fieldName, null));
                 }
@@ -270,14 +263,7 @@ public final class SelectionSet {
             for (Field field : findFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (isCustomType(field)) {
-                    Class<?> typeClass;
-                    if (Collection.class.isAssignableFrom(field.getType())) {
-                        ParameterizedType listType = (ParameterizedType) field.getGenericType();
-                        typeClass = (Class) listType.getActualTypeArguments()[0];
-                    } else {
-                        typeClass = field.getType();
-                    }
-                    result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(typeClass)));
+                    result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
                 } else {
                     result.add(new SelectionSet(fieldName, null));
                 }
@@ -309,16 +295,32 @@ public final class SelectionSet {
          * @return
          */
         static boolean isCustomType(@NonNull Field field) {
-            if (Model.class.isAssignableFrom(field.getType()) || Enum.class.isAssignableFrom(field.getType())) {
+            Class<?> cls = getClassForField(field);
+            if (Model.class.isAssignableFrom(cls) || Enum.class.isAssignableFrom(cls)) {
                 return false;
             }
             try {
-                JavaFieldType.from(field.getType().getSimpleName());
+                JavaFieldType.from(cls.getSimpleName());
                 return false;
             } catch (IllegalArgumentException exception) {
-                // fallback to custom type, which will result in the field being converted to a JSON string
+                // if we get here then field is  a custom type
                 return true;
             }
+        }
+
+        /**
+         * Get the class of a field. If field is a collection, it returns the Generic type
+         * @return
+         */
+        static Class<?> getClassForField(Field field) {
+            Class<?> typeClass;
+            if (Collection.class.isAssignableFrom(field.getType())) {
+                ParameterizedType listType = (ParameterizedType) field.getGenericType();
+                typeClass = (Class) listType.getActualTypeArguments()[0];
+            } else {
+                typeClass = field.getType();
+            }
+            return typeClass;
         }
     }
 }
