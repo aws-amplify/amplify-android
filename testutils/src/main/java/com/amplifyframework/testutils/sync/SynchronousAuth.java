@@ -252,8 +252,17 @@ public final class SynchronousAuth {
      */
     @NonNull
     public AuthSession fetchAuthSession() throws AuthException {
-        return Await.<AuthSession, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.fetchAuthSession(onResult, onError)
+        return Await.<AuthSession, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchAuthSession);
+    }
+
+    /**
+     * Remembers current device synchronously.
+     * @return Dummy object -just indicates it completed successfully
+     * @throws AuthException exception
+     */
+    public Object rememberDevice() throws AuthException {
+        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.rememberDevice(() -> onResult.accept(new Object()), onError)
         );
     }
 
