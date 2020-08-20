@@ -21,7 +21,9 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,8 +62,7 @@ public final class QueryOptions {
      */
     @NonNull
     public QueryOptions matches(@NonNull final QueryPredicate queryPredicate) {
-        this.queryPredicate = queryPredicate;
-        return this;
+        return new QueryOptions(queryPredicate, paginationInput, sortBy);
     }
 
     /**
@@ -74,19 +75,19 @@ public final class QueryOptions {
      */
     @NonNull
     public QueryOptions paginated(@NonNull final QueryPaginationInput paginationInput) {
-        this.paginationInput = paginationInput;
-        return this;
+        return new QueryOptions(queryPredicate, paginationInput, sortBy);
     }
 
     /**
-     * Updates the current options with a given {@code sortBy}.
+     * Appends the given {@code sortBy} arguments to the list of {@link QuerySortBy} elements.
      *
-     * @param sortBy sorting information
+     * @param querySortBy sorting information
      * @return current options with an updated {@code sortBy}.
      */
-    public QueryOptions sorted(@NonNull final QuerySortBy... sortBy) {
-        this.sortBy = Arrays.asList(sortBy);
-        return this;
+    public QueryOptions sorted(@NonNull final QuerySortBy... querySortBy) {
+        List<QuerySortBy> augmentedList = this.sortBy != null ? new ArrayList<>(this.sortBy) : new ArrayList<>();
+        augmentedList.addAll(Immutable.of(Arrays.asList(querySortBy)));
+        return new QueryOptions(queryPredicate, paginationInput, Immutable.of(augmentedList));
     }
 
     /**
