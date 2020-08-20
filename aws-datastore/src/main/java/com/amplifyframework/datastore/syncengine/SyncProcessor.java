@@ -97,7 +97,7 @@ final class SyncProcessor {
         ModelClassComparator modelClassComparator =
                 new ModelClassComparator(modelProvider, modelSchemaRegistry);
 
-        final Set<Completable> hydrationTasks = new HashSet<>();
+        final List<Completable> hydrationTasks = new ArrayList<>();
         List<Class<? extends Model>> modelClsList =
             new ArrayList<Class<? extends Model>>(modelProvider.models());
 
