@@ -34,7 +34,10 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Time;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -90,18 +93,24 @@ final class SyncProcessor {
      * @return An Rx {@link Completable} which can be used to perform the operation.
      */
     Completable hydrate() {
-        ModelWithMetadataComparator modelWithMetadataComparator =
-            new ModelWithMetadataComparator(modelProvider, modelSchemaRegistry);
 
-        final Set<Completable> hydrationTasks = new HashSet<>();
-        for (Class<? extends Model> clazz : modelProvider.models()) {
-            hydrationTasks.add(createHydrationTask(modelWithMetadataComparator, clazz));
+        ModelClassComparator modelClassComparator =
+                new ModelClassComparator(modelProvider, modelSchemaRegistry);
+
+        final List<Completable> hydrationTasks = new ArrayList<>();
+        List<Class<? extends Model>> modelClsList =
+            new ArrayList<Class<? extends Model>>(modelProvider.models());
+
+        // And sort them all, according to their model's topological order,
+        // So that when we save them, the references will exist.
+        Collections.sort(modelClsList, modelClassComparator::compare);
+        for (Class<? extends Model> clazz : modelClsList) {
+            hydrationTasks.add(createHydrationTask(clazz));
         }
         return Completable.concat(hydrationTasks);
     }
 
-    private Completable createHydrationTask(
-            ModelWithMetadataComparator modelWithMetadataComparator, Class<? extends Model> modelClass) {
+    private Completable createHydrationTask(Class<? extends Model> modelClass) {
         return syncTimeRegistry.lookupLastSyncTime(modelClass)
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
@@ -109,9 +118,6 @@ final class SyncProcessor {
                 return syncModel(modelClass, lastSyncTime)
                     // Okay, but we want to flatten the Iterable elements back into an Observable stream.
                     .flatMapObservable(Observable::fromIterable)
-                    // And sort them all, according to their model's topological order,
-                    // So that when we save them, the references will exist.
-                    .sorted(modelWithMetadataComparator::compare)
                     // For each ModelWithMetadata, merge it into the local store.
                     .flatMapCompletable(merger::merge)
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
@@ -309,35 +315,35 @@ final class SyncProcessor {
         @NonNull
         SyncProcessor build();
     }
-    
+
     /**
      * Compares to {@link ModelWithMetadata}, according to the topological order
      * of the {@link Model} within each. Topological order is determined by the
      * {@link TopologicalOrdering} utility.
      */
-    private static final class ModelWithMetadataComparator {
+    private static final class ModelClassComparator {
         private final ModelSchemaRegistry modelSchemaRegistry;
         private final TopologicalOrdering topologicalOrdering;
 
-        ModelWithMetadataComparator(ModelProvider modelProvider, ModelSchemaRegistry modelSchemaRegistry) {
+        ModelClassComparator(ModelProvider modelProvider, ModelSchemaRegistry modelSchemaRegistry) {
             this.modelSchemaRegistry = modelSchemaRegistry;
             this.topologicalOrdering =
-                TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
+                    TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
         }
 
-        private <M extends ModelWithMetadata<? extends Model>> int compare(M left, M right) {
+        private <M extends Class<? extends Model>> int compare(M left, M right) {
             return topologicalOrdering.compare(schemaFor(left), schemaFor(right));
         }
 
         /**
          * Gets the model schema for a model.
-         * @param modelWithMetadata A model with metadata about it
+         * @param modelCls A model with metadata about it
          * @param <M> Type for ModelWithMetadata containing arbitrary model instances
          * @return Model Schema for model
          */
         @NonNull
-        private <M extends ModelWithMetadata<? extends Model>> ModelSchema schemaFor(M modelWithMetadata) {
-            return modelSchemaRegistry.getModelSchemaForModelInstance(modelWithMetadata.getModel());
+        private <M extends Class<? extends Model>> ModelSchema schemaFor(M modelCls) {
+            return modelSchemaRegistry.getModelSchemaForModelClass(modelCls.getSimpleName());
         }
     }
 }
