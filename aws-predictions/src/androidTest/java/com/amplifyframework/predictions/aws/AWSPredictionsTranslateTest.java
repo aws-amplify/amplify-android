@@ -87,7 +87,7 @@ public final class AWSPredictionsTranslateTest {
 
         // Assert translation
         String translation = result.getTranslatedText();
-        assertTrue(translation.cotains("Hola mundo"));
+        assertTrue(translation.contains("Hola mundo"));
     }
 
     /**
