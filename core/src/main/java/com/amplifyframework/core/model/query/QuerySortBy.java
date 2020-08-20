@@ -18,7 +18,7 @@ package com.amplifyframework.core.model.query;
 /**
  * A simple data structure that holds sort information that can be applied queries.
  */
-public class QuerySortBy {
+public final class QuerySortBy {
     private final String field;
     private final QuerySortOrder sortOrder;
 
@@ -31,5 +31,21 @@ public class QuerySortBy {
     public QuerySortBy(String field, QuerySortOrder sortOrder) {
         this.field = field;
         this.sortOrder = sortOrder;
+    }
+
+    /**
+     * Returns the field to sort by.
+     * @return the field to sort by.
+     */
+    public String getField() {
+        return field;
+    }
+
+    /**
+     * Returns the order to sort by, either ASCENDING or DESCENDING.
+     * @return the order to sort by, either ASCENDING or DESCENDING.
+     */
+    public QuerySortOrder getSortOrder() {
+        return sortOrder;
     }
 }

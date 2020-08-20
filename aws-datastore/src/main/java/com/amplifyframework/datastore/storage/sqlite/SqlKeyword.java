@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.query.QuerySortOrder;
 import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 
@@ -149,10 +150,26 @@ public enum SqlKeyword {
     /**
      * SQL keyword to specify a size limit of the result set (used for paginating results).
      */
-    LIMIT("LIMIT");
+    LIMIT("LIMIT"),
+
+    /**
+     * SQL keyword to specify a column to sort the results by.
+     */
+    ORDER_BY("ORDER BY"),
+
+    /**
+     * SQL keyword meaning to sort in ascending order, for use with ORDER_BY.
+     */
+    ASC("ASC"),
+
+    /**
+     * SQL keyword meaning to sort in descending order, for use with ORDER_BY.
+     */
+    DESC("DESC");
 
     private static final Map<QueryOperator.Type, SqlKeyword> QUERY_OPERATOR_TO_SQL = new HashMap<>();
     private static final Map<QueryPredicateGroup.Type, SqlKeyword> QUERY_PREDICATE_GROUP_TO_SQL = new HashMap<>();
+    private static final Map<QuerySortOrder, SqlKeyword> QUERY_SORT_BY_TO_SQL = new HashMap<>();
 
     private final String stringValue;
 
@@ -167,6 +184,9 @@ public enum SqlKeyword {
         QUERY_PREDICATE_GROUP_TO_SQL.put(QueryPredicateGroup.Type.AND, SqlKeyword.AND);
         QUERY_PREDICATE_GROUP_TO_SQL.put(QueryPredicateGroup.Type.OR, SqlKeyword.OR);
         QUERY_PREDICATE_GROUP_TO_SQL.put(QueryPredicateGroup.Type.NOT, SqlKeyword.NOT);
+
+        QUERY_SORT_BY_TO_SQL.put(QuerySortOrder.ASCENDING, SqlKeyword.ASC);
+        QUERY_SORT_BY_TO_SQL.put(QuerySortOrder.DESCENDING, SqlKeyword.DESC);
     }
 
     SqlKeyword(String stringValue) {
@@ -198,6 +218,21 @@ public enum SqlKeyword {
         if (null == sqlKeyword) {
             throw new IllegalArgumentException(
                     "No SQL keyword mapping defined for query predicate group type = " + groupType.toString()
+            );
+        }
+        return sqlKeyword;
+    }
+
+    /**
+     * Retrieve the SQL specific keyword for the query sort order type.
+     * @param sortOrder the query sort order type
+     * @return the SQL specific keyword
+     */
+    public static SqlKeyword fromQuerySortOrder(@NonNull QuerySortOrder sortOrder) {
+        final SqlKeyword sqlKeyword = QUERY_SORT_BY_TO_SQL.get(Objects.requireNonNull(sortOrder));
+        if (null == sqlKeyword) {
+            throw new IllegalArgumentException(
+                    "No SQL keyword mapping defined for query sort order type = " + sortOrder.toString()
             );
         }
         return sqlKeyword;
