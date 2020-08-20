@@ -22,7 +22,6 @@ import androidx.core.util.Supplier;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
@@ -39,7 +38,6 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -64,8 +62,6 @@ public final class Orchestrator {
     private final MutationOutbox mutationOutbox;
     private final CompositeDisposable disposables;
     private final Scheduler startStopScheduler;
-    private final LocalStorageAdapter localStorageAdapter;
-    private final Set<Class<? extends Model>> syncableModels;
 
     /**
      * Constructs a new Orchestrator.
@@ -100,9 +96,6 @@ public final class Orchestrator {
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
-
-        this.localStorageAdapter = localStorageAdapter;
-        syncableModels = modelProvider.models();
 
         this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
         this.syncProcessor = SyncProcessor.builder()

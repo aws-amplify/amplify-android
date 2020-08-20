@@ -30,22 +30,18 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
-import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.ForEach;
 import com.amplifyframework.util.Time;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -84,11 +80,7 @@ final class SyncProcessor {
         this.appSync = Objects.requireNonNull(appSync);
         this.merger = Objects.requireNonNull(merger);
         this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
-        this.modelNames = Observable.fromIterable(modelProvider.models())
-                                        .map(m -> m.getSimpleName())
-                                        .toList()
-                                        .blockingGet()
-                                        .toArray(new String[0]);
+        this.modelNames = ForEach.inCollection(modelProvider.models(), Class::getSimpleName).toArray(new String[0]);
     }
 
     /**
@@ -378,27 +370,6 @@ final class SyncProcessor {
         @NonNull
         private <M extends ModelWithMetadata<? extends Model>> ModelSchema schemaFor(M modelWithMetadata) {
             return modelSchemaRegistry.getModelSchemaForModelInstance(modelWithMetadata.getModel());
-        }
-    }
-
-    private static final class ModelSyncMetrics {
-        private final Map<String, AtomicInteger> syncMetrics;
-        private final SyncTime lastSyncTime;
-
-        ModelSyncMetrics(SyncTime lastSyncTime) {
-            syncMetrics = new ConcurrentHashMap<>();
-            syncMetrics.put(DataStoreItemChange.Type.CREATE.name(), new AtomicInteger(0));
-            syncMetrics.put(DataStoreItemChange.Type.UPDATE.name(), new AtomicInteger(0));
-            syncMetrics.put(DataStoreItemChange.Type.DELETE.name(), new AtomicInteger(0));
-            this.lastSyncTime = lastSyncTime;
-        }
-
-        public void increment(StorageItemChange.Type changeType) {
-            syncMetrics.get(changeType.name()).incrementAndGet();
-        }
-
-        public int getCountFor(StorageItemChange.Type changeType) {
-            return syncMetrics.get(changeType.name()).get();
         }
     }
 }

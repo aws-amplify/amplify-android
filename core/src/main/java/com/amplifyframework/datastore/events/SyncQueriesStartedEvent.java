@@ -24,7 +24,7 @@ import java.util.Arrays;
  * Event payload emitted when the sync process starts.
  */
 public final class SyncQueriesStartedEvent {
-    private String[] models;
+    private final String[] models;
 
     /**
      * Constructs a SyncQueriesStartedEvent object.
@@ -65,10 +65,6 @@ public final class SyncQueriesStartedEvent {
         }
 
         SyncQueriesStartedEvent that = (SyncQueriesStartedEvent) thatObject;
-        if (models.length != that.models.length) {
-            return false;
-        }
-
         return Arrays.equals(models, that.models);
     }
 }

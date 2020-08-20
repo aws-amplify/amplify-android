@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.datastore.events.ModelSyncedEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -33,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 final class ModelSyncMetricsAccumulator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private final Map<String, AtomicInteger> syncMetrics;
+    private final Map<StorageItemChange.Type, AtomicInteger> syncMetrics;
     private final Class<? extends Model> modelClass;
 
     /**
@@ -44,9 +43,9 @@ final class ModelSyncMetricsAccumulator {
      */
     ModelSyncMetricsAccumulator(Class<? extends Model> modelClass) {
         syncMetrics = new ConcurrentHashMap<>();
-        syncMetrics.put(DataStoreItemChange.Type.CREATE.name(), new AtomicInteger(0));
-        syncMetrics.put(DataStoreItemChange.Type.UPDATE.name(), new AtomicInteger(0));
-        syncMetrics.put(DataStoreItemChange.Type.DELETE.name(), new AtomicInteger(0));
+        syncMetrics.put(StorageItemChange.Type.CREATE, new AtomicInteger(0));
+        syncMetrics.put(StorageItemChange.Type.UPDATE, new AtomicInteger(0));
+        syncMetrics.put(StorageItemChange.Type.DELETE, new AtomicInteger(0));
         this.modelClass = modelClass;
     }
 
@@ -58,9 +57,9 @@ final class ModelSyncMetricsAccumulator {
     public ModelSyncedEvent toModelSyncedEvent(SyncType syncType) {
         return new ModelSyncedEvent(modelClass.getSimpleName(),
                                     SyncType.BASE.equals(syncType),
-                                    syncMetrics.get(StorageItemChange.Type.CREATE.name()).get(),
-                                    syncMetrics.get(StorageItemChange.Type.UPDATE.name()).get(),
-                                    syncMetrics.get(StorageItemChange.Type.DELETE.name()).get());
+                                    syncMetrics.get(StorageItemChange.Type.CREATE).get(),
+                                    syncMetrics.get(StorageItemChange.Type.UPDATE).get(),
+                                    syncMetrics.get(StorageItemChange.Type.DELETE).get());
     }
 
     /**
@@ -68,6 +67,6 @@ final class ModelSyncMetricsAccumulator {
      * @param itemChange The change type to increment.
      */
     public void increment(StorageItemChange<? extends Model> itemChange) {
-        syncMetrics.get(itemChange.type().name()).incrementAndGet();
+        syncMetrics.get(itemChange.type()).incrementAndGet();
     }
 }

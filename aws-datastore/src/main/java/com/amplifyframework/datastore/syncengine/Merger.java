@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
@@ -67,7 +68,7 @@ final class Merger {
      * @return A completable operation to merge the model
      */
     <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata) {
-        return merge(modelWithMetadata, value -> { });
+        return merge(modelWithMetadata, NoOpConsumer.create());
     }
 
     /**
@@ -101,7 +102,7 @@ final class Merger {
             // If we should merge, then do so now, starting with the model data.
             .flatMapCompletable(shouldMerge ->
                 (isDelete ? delete(model, storageItemChangeConsumer) : save(model, storageItemChangeConsumer))
-                    .andThen(save(metadata, value -> { }))
+                    .andThen(save(metadata, NoOpConsumer.create()))
             )
             // Let the world know that we've done a good thing.
             .doOnComplete(() -> {

@@ -41,6 +41,7 @@ import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testutils.HubAccumulator;
+import com.amplifyframework.util.ForEach;
 import com.amplifyframework.util.Time;
 
 import org.junit.Before;
@@ -79,8 +80,7 @@ public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
     private static final List<String> SYSTEM_MODEL_NAMES =
-        Observable.fromIterable(SystemModelsProviderFactory.create().models())
-            .map(Class::getSimpleName).toList().blockingGet();
+        ForEach.inCollection(SystemModelsProviderFactory.create().models(), Class::getSimpleName);
 
     private AppSync appSync;
     private ModelProvider modelProvider;
@@ -186,6 +186,9 @@ public final class SyncProcessorTest {
         // Verify that [number of events] = [number of models]
         assertEquals(expectedModelCount, hubEvents.size());
 
+        ModelSyncedEvent expectedBlogOwnerCounts = new ModelSyncedEvent("BlogOwner", true, 1, 1, 0);
+        ModelSyncedEvent expectedPostCounts = new ModelSyncedEvent("Post", true, 0, 0, 1);
+
         // For each event (excluding system models), verify the desired count.
         for (HubEvent<?> event : hubEvents) {
             ModelSyncedEvent eventData = (ModelSyncedEvent) event.getData();
@@ -195,17 +198,17 @@ public final class SyncProcessorTest {
             switch (eventModel) {
                 case "BlogOwner":
                     // One BlogOwner added and one updated.
-                    assertOperationTypeCounts(eventData, 1, 1, 0);
+                    assertEquals(expectedBlogOwnerCounts, eventData);
                     break;
                 case "Post":
                     // One post deleted.
-                    assertOperationTypeCounts(eventData, 0, 0, 1);
+                    assertEquals(expectedPostCounts, eventData);
                     break;
                 default:
                     // Exclude system models
                     if (!SYSTEM_MODEL_NAMES.contains(eventModel)) {
-                        // Verify there were no unexpected events for any other models.
-                        assertOperationTypeCounts(eventData, 0, 0, 0);
+                        ModelSyncedEvent otherCounts = new ModelSyncedEvent(eventModel, true, 0, 0, 0);
+                        assertEquals(otherCounts, eventData);
                     }
             }
         }
@@ -496,15 +499,6 @@ public final class SyncProcessorTest {
         assertEquals(1, errorHandlerCallCount);
     }
 
-    private void assertOperationTypeCounts(ModelSyncedEvent event,
-                                           int expectedAdd,
-                                           int expectedUpdate,
-                                           int expectedDelete) {
-        assertEquals(expectedAdd, event.getAdded());
-        assertEquals(expectedUpdate, event.getUpdated());
-        assertEquals(expectedDelete, event.getDeleted());
-    }
-
     private static HubAccumulator createAccumulator(HubEventFilter eventFilter, int times) {
         return HubAccumulator.create(HubChannel.DATASTORE, eventFilter, times);
     }
@@ -515,10 +509,7 @@ public final class SyncProcessorTest {
 
     @SuppressWarnings("unchecked")
     private HubEventFilter syncMetricsEmittedFor(Class<? extends Model>... models) {
-        List<String> modelNames = Observable.fromIterable(Arrays.asList(models))
-            .map(model -> model.getSimpleName())
-            .toList()
-            .blockingGet();
+        List<String> modelNames = ForEach.inCollection(Arrays.asList(models), Class::getSimpleName);
 
         return hubEvent -> {
             if (!(hubEvent.getData() instanceof ModelSyncedEvent)) {
