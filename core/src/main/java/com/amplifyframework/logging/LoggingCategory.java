@@ -21,6 +21,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.util.Environment;
 
 /**
  * The LoggingCategory is a collection of zero or more plugin
@@ -33,9 +34,15 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
 
     /**
      * Constructs a logging category.
+     *
+     * When running on an Android device, logs are handled by the AndroidLoggingPlugin, which uses.
+     * {@link android.util.Log}.
+     *
+     * When running unit tests, the Android library is not available, so logs are handled by the JavaLoggingPlugin,
+     * which outputs logs using {@code System.out.println()}.
      */
     public LoggingCategory() {
-        this(new AndroidLoggingPlugin());
+        this(Environment.isJUnitTest() ? new JavaLoggingPlugin() : new AndroidLoggingPlugin());
     }
 
     @VisibleForTesting
