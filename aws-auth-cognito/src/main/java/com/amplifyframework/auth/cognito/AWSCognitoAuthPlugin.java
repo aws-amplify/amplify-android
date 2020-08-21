@@ -92,8 +92,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     /**
-     * The result code for the activity manging the web UI sign in flow.
-     * This is needed for handling the response in the onActivityResult method of your activity.
+     * The code which the web UI activity is launched under and is needed to listen to the result.
      * See the documentation for more information: https://docs.amplify.aws/lib/auth/signin_web_ui/q/platform/android
      */
     public static final int WEB_UI_SIGN_IN_ACTIVITY_CODE = AuthClient.CUSTOM_TABS_ACTIVITY_CODE;
