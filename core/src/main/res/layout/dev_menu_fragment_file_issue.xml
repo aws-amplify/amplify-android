@@ -34,20 +34,8 @@
         android:autofillHints="no"
         android:hint="@string/file_issue_hint"
         android:inputType="textMultiLine|textNoSuggestions"
-        android:layout_above="@id/logs_switch"
-        android:textSize="15sp" />
-
-    <Switch
-        android:id="@+id/logs_switch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:layout_above="@id/file_issue_warning"
-        android:text="@string/logs_switch_text"
-        android:textColor="?android:attr/textColorPrimaryInverse"
-        android:textOff="@string/empty"
-        android:textOn="@string/empty"
-        android:theme="@style/SwitchStyle"
-        android:layout_marginTop="5dp" />
+        android:textSize="15sp" />
 
     <TextView
         android:id="@+id/file_issue_warning"
@@ -58,8 +46,8 @@
         android:textColor="?android:attr/textColorPrimaryInverse"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:layout_above="@id/issue_buttons" />
 
     <LinearLayout

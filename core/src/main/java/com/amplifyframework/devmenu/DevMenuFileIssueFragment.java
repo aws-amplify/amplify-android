@@ -22,7 +22,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.Switch;
 import androidx.fragment.app.Fragment;
 
 import com.amplifyframework.core.R;
@@ -78,8 +77,7 @@ public final class DevMenuFileIssueFragment extends Fragment {
             issueDescription.setError(DESCRIPTION_LENGTH_ERROR);
             return "";
         } else {
-            Switch logsSwitch = fileIssueView.findViewById(R.id.logs_switch);
-            return developerMenu.createIssueBody(description, logsSwitch.isChecked());
+            return developerMenu.createIssueBody(description);
         }
     }
 
