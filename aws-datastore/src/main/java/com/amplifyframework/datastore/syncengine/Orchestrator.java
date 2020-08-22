@@ -41,10 +41,10 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.reactivex.Completable;
-import io.reactivex.Scheduler;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * Synchronizes changed data between the {@link LocalStorageAdapter} and {@link AppSync}.
@@ -240,12 +240,13 @@ public final class Orchestrator {
      */
     private void startObservingStorageChanges() {
         LOG.info("Starting to observe local storage changes.");
-        Throwable throwable = mutationOutbox.load()
-            .andThen(Completable.create(emitter -> {
-                storageObserver.startObservingStorageChanges(emitter::onComplete);
-                currentMode.set(Mode.LOCAL_ONLY);
-            })).blockingGet(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        if (throwable != null) {
+        try {
+            mutationOutbox.load()
+                .andThen(Completable.create(emitter -> {
+                    storageObserver.startObservingStorageChanges(emitter::onComplete);
+                    currentMode.set(Mode.LOCAL_ONLY);
+                })).blockingAwait(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (Throwable throwable) {
             LOG.warn("Failed to start observing storage changes.", throwable);
         }
     }
@@ -270,9 +271,10 @@ public final class Orchestrator {
             subscriptionProcessor.startSubscriptions();
 
             LOG.debug("About to hydrate...");
-            Throwable failure = syncProcessor.hydrate()
-                .blockingGet(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            if (failure != null) {
+            try {
+                syncProcessor.hydrate()
+                    .blockingAwait(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            } catch (Throwable failure) {
                 if (!emitter.isDisposed()) {
                     emitter.onError(new DataStoreException(
                         "Initial sync during DataStore initialization failed.", failure,
@@ -307,10 +309,11 @@ public final class Orchestrator {
     }
 
     private void stopApiSyncBlocking() {
-        Throwable failure = stopApiSync()
-            .subscribeOn(startStopScheduler)
-            .blockingGet(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        if (failure != null) {
+        try {
+            stopApiSync()
+                .subscribeOn(startStopScheduler)
+                .blockingAwait(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (Throwable failure) {
             LOG.warn("Failed to stop API sync.", failure);
         }
     }

@@ -29,7 +29,7 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertTrue;
 
@@ -60,9 +60,10 @@ public final class VersionRepositoryTest {
     /**
      * When you try to get a model version, but there's no metadata for that model,
      * this should fail with an {@link DataStoreException}.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void emitsErrorForNoMetadataInRepo() {
+    public void emitsErrorForNoMetadataInRepo() throws InterruptedException {
         // Arrange: no metadata is in the repo.
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson Williams")
@@ -73,14 +74,17 @@ public final class VersionRepositoryTest {
 
         // Act: try to lookup the metadata. Is it going to work? Duh.
         TestObserver<Integer> observer = versionRepository.findModelVersion(blogOwner).test();
-        assertTrue(observer.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
 
         // Assert: this failed. There was no version available.
-        String expectedMessage =
-            String.format(Locale.US, "Wanted 1 metadata for item with id = %s, but had 0.", blogOwner.getId());
-        observer
-            .assertError(DataStoreException.class)
-            .assertErrorMessage(expectedMessage);
+        observer.assertError(error -> {
+            if (!(error instanceof DataStoreException)) {
+                return false;
+            }
+            String expectedMessage =
+                String.format(Locale.US, "Wanted 1 metadata for item with id = %s, but had 0.", blogOwner.getId());
+            return expectedMessage.equals(error.getMessage());
+        });
     }
 
     /**
@@ -91,9 +95,10 @@ public final class VersionRepositoryTest {
      *         NOT EXPECTED. This happens on failure to arrange data before test action.
      *         The expected DataStoreException is communicated via callback, not thrown
      *         on the calling thread. It's a different thing than this.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void emitsErrorWhenMetadataHasNullVersion() throws DataStoreException {
+    public void emitsErrorWhenMetadataHasNullVersion() throws DataStoreException, InterruptedException {
         // Arrange a model an metadata into the store, but the metadtaa doesn't contain a valid version
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson")
@@ -103,23 +108,27 @@ public final class VersionRepositoryTest {
 
         // Act: try to get the version.
         TestObserver<Integer> observer = versionRepository.findModelVersion(blogOwner).test();
-        assertTrue(observer.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
 
         // Assert: the single emitted a DataStoreException.
-        String expectedMessage =
-            String.format(Locale.US, "Metadata for item with id = %s had null version.", blogOwner.getId());
-        observer
-            .assertError(DataStoreException.class)
-            .assertErrorMessage(expectedMessage);
+        observer.assertError(error -> {
+            if (!(error instanceof DataStoreException)) {
+                return false;
+            }
+            String expectedMessage =
+                String.format(Locale.US, "Metadata for item with id = %s had null version.", blogOwner.getId());
+            return expectedMessage.equals(error.getMessage());
+        });
     }
 
     /**
      * When there is metadata for a model in the store, and that metadata includes a version -
      * for heaven's sake, man - do please emit the dang thing.
      * @throws DataStoreException On failure to arrange data into store
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void emitsSuccessWithValueWhenVersionInStore() throws DataStoreException {
+    public void emitsSuccessWithValueWhenVersionInStore() throws DataStoreException, InterruptedException {
         // Arrange versioning info into the store.
         BlogOwner owner = BlogOwner.builder()
             .name("Jameson")
@@ -130,7 +139,7 @@ public final class VersionRepositoryTest {
 
         // Act! Try to obtain it via the Versioning Repository.
         TestObserver<Integer> observer = versionRepository.findModelVersion(owner).test();
-        assertTrue(observer.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
 
         // Assert: we got a version.
         observer

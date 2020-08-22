@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 
 /**
  * A synchronization wrapper on top of a {@link LocalStorageAdapter} instance, which presents
