@@ -145,7 +145,7 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Single<List<AuthDevice>> fetchDevices() {
-        return toSingle((delegate::fetchDevices));
+        return toSingle(delegate::fetchDevices);
     }
 
     @Override

@@ -229,15 +229,13 @@ public final class SynchronousAuth {
      * Complete password recovery process by inputting user's desired new password and confirmation code.
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    @NonNull
-    public Object confirmResetPassword(
+    public void confirmResetPassword(
             @NonNull String newPassword,
             @NonNull String confirmationCode
     ) throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.confirmResetPassword(
                     newPassword,
                     confirmationCode,
@@ -259,22 +257,20 @@ public final class SynchronousAuth {
 
     /**
      * Remembers current device synchronously.
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    public Object rememberDevice() throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+    public void rememberDevice() throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.rememberDevice(() -> onResult.accept(new Object()), onError)
         );
     }
 
     /**
      * Forgets the current device synchronously.
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    public Object forgetDevice() throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+    public void forgetDevice() throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.forgetDevice(() -> onResult.accept(new Object()), onError)
         );
     }
@@ -282,11 +278,10 @@ public final class SynchronousAuth {
     /**
      * Forgets the current device synchronously.
      * @param device Auth device to forget
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    public Object forgetDevice(@NonNull AuthDevice device) throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+    public void forgetDevice(@NonNull AuthDevice device) throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.forgetDevice(device, () -> onResult.accept(new Object()), onError)
         );
     }
@@ -304,27 +299,23 @@ public final class SynchronousAuth {
      * Update the password of an existing user - must be signed in to perform this action.
      * @param oldPassword The user's existing password
      * @param newPassword The new password desired on the user account
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    @NonNull
-    public Object updatePassword(
+    public void updatePassword(
             @NonNull String oldPassword,
             @NonNull String newPassword
     ) throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.updatePassword(oldPassword, newPassword, () -> onResult.accept(new Object()), onError)
         );
     }
 
     /**
      * Sign out synchronously.
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    @NonNull
-    public Object signOut() throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+    public void signOut() throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.signOut(
                     () -> onResult.accept(new Object()),
                     onError
