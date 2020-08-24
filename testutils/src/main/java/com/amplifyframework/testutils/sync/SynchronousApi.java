@@ -22,6 +22,7 @@ import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelQuery;
 import com.amplifyframework.api.graphql.model.ModelSubscription;
@@ -244,7 +245,7 @@ public final class SynchronousApi {
             @NonNull String apiName,
             @NonNull Class<T> clazz,
             @NonNull QueryPredicate predicate) throws ApiException {
-        final Iterable<T> queryResults = awaitResponseData((onResponse, onFailure) ->
+        final PaginatedResult<T> queryResults = awaitResponseData((onResponse, onFailure) ->
             asyncDelegate.query(apiName, ModelQuery.list(clazz, predicate), onResponse, onFailure)
         );
         final List<T> results = new ArrayList<>();
