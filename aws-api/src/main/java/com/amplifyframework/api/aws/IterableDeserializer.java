@@ -15,6 +15,10 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.PaginatedResult;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -27,8 +31,15 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-final class IterableDeserializer implements JsonDeserializer<Iterable<Object>> {
-    private static final String APP_SYNC_ITEMS_KEY = "items";
+final class IterableDeserializer<R> implements JsonDeserializer<Iterable<Object>> {
+    private static final String ITEMS_KEY = "items";
+    private static final String NEXT_TOKEN_KEY = "nextToken";
+
+    private final GraphQLRequest<R> request;
+
+    IterableDeserializer(GraphQLRequest<R> request) {
+        this.request = request;
+    }
 
     @Override
     public Iterable<Object> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context
@@ -52,14 +63,26 @@ final class IterableDeserializer implements JsonDeserializer<Iterable<Object>> {
              *              "name": "some name"
              *          }
              *      ],
+             *      "nextToken" : "some_next_token"
              *   }
              */
-
             JsonObject jsonObject = json.getAsJsonObject();
             // ...and it is in the format we expect from AppSync for a list of objects in a relationship
-            if (jsonObject.has(APP_SYNC_ITEMS_KEY) && jsonObject.get(APP_SYNC_ITEMS_KEY).isJsonArray()) {
-                JsonArray items = jsonObject.get(APP_SYNC_ITEMS_KEY).getAsJsonArray();
-                return toList(items, templateClassType, context);
+            if (jsonObject.has(ITEMS_KEY) && jsonObject.get(ITEMS_KEY).isJsonArray()) {
+                JsonArray itemsArray = jsonObject.get(ITEMS_KEY).getAsJsonArray();
+                Iterable<Object> items = toList(itemsArray, templateClassType, context);
+                if (PaginatedResult.class.equals(((ParameterizedType) typeOfT).getRawType())) {
+                    // Results of a GraphQL query at the root level are parsed into a PaginatedResult.  A
+                    // PaginatedResult extends the Iterable class, augmenting it with knowledge of whether a next page
+                    // exists, and how to request that next page (via the nextToken).
+                    return buildPaginatedResult(items, jsonObject.get(NEXT_TOKEN_KEY));
+                } else {
+                    // Results below than the root level are parsed as a List, because that is the type on the code
+                    // generated model for a one to many relationship to a list of objects.  For this case, a nextToken
+                    // may be present, but we currently ignore it.  In the future, we could update the generated model
+                    // to use a PaginatedResult instead of List, which would expose these details for customers.
+                    return items;
+                }
             } else {
                 throw new JsonParseException(
                     "Got JSON from an API call which was supposed to go with a List " +
@@ -83,5 +106,22 @@ final class IterableDeserializer implements JsonDeserializer<Iterable<Object>> {
             items.add(context.deserialize(item, type));
         }
         return items;
+    }
+
+    private PaginatedResult<Object> buildPaginatedResult(Iterable<Object> items, JsonElement nextTokenElement) {
+        GraphQLRequest<PaginatedResult<Object>> requestForNextPage = null;
+        if (nextTokenElement.isJsonPrimitive()) {
+            String nextToken = nextTokenElement.getAsJsonPrimitive().getAsString();
+            try {
+                if (request instanceof AppSyncGraphQLRequest) {
+                    requestForNextPage = ((AppSyncGraphQLRequest<R>) request).newBuilder()
+                            .variable(NEXT_TOKEN_KEY, "String", nextToken)
+                            .build();
+                }
+            } catch (AmplifyException exception) {
+                throw new JsonParseException("Failed to create requestForNextPage with nextToken variable", exception);
+            }
+        }
+        return new PaginatedResult<>(items, requestForNextPage);
     }
 }
