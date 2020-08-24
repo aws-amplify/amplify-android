@@ -77,7 +77,8 @@ public final class DevMenuFileIssueFragment extends Fragment {
             issueDescription.setError(DESCRIPTION_LENGTH_ERROR);
             return "";
         } else {
-            return developerMenu.createIssueBody(description);
+            // TODO: give the option of including logs in the issue body
+            return developerMenu.createIssueBody(description, false);
         }
     }
 

@@ -160,11 +160,12 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
 
     /**
      * Creates and returns the issue body containing the issue description,
-     * environment information, and device information.
+     * environment information, device information, and (optionally) logs.
      * @param description the description of the issue
+     * @param includeLogs whether to include logs in the issue body
      * @return the issue body
      */
-    public String createIssueBody(String description) {
+    public String createIssueBody(String description, boolean includeLogs) {
         EnvironmentInfo environmentInfo = new EnvironmentInfo();
         String envInfo = "*Amplify Plugins Information:*\n" + environmentInfo.getPluginVersions();
         String devEnvInfo = "";
@@ -177,8 +178,12 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
             envInfo += "\n\n*Developer Environment Information:*\n" + devEnvInfo;
         }
         String deviceInfo = new DeviceInfo().toString();
+        String logsText = "";
+        if (includeLogs && !loggingPlugin.getLogs().isEmpty()) {
+            logsText = "**Logs**\n```\n" + getLogs() + "```";
+        }
         return String.format(Locale.US, "**Issue Description**\n%s\n\n**Environment Information**\n%s\n\n" +
-                "**Device Information**\n%s", description, envInfo, deviceInfo);
+                "**Device Information**\n%s\n\n%s", description, envInfo, deviceInfo, logsText);
     }
 
     /**
