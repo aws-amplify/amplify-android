@@ -15,9 +15,15 @@
 
 package com.amplifyframework.api.graphql;
 
+import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.util.ObjectsCompat;
+
+import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 /**
  * Represents a page of results returned from an API.  Specifically, contains the list of items in the page, as well as
@@ -25,7 +31,8 @@ import androidx.core.util.ObjectsCompat;
  *
  * @param <T> Type of the items in the list.
  */
-public final class PaginatedResult<T> {
+public final class PaginatedResult<T> implements Iterable<T> {
+
     private final GraphQLRequest<PaginatedResult<T>> requestForNextResult;
     private final Iterable<T> items;
 
@@ -71,28 +78,45 @@ public final class PaginatedResult<T> {
         if (this == thatObject) {
             return true;
         }
+
         if (thatObject == null || getClass() != thatObject.getClass()) {
             return false;
         }
 
         PaginatedResult<?> paginatedResult = (PaginatedResult<?>) thatObject;
-
-        return ObjectsCompat.equals(items, paginatedResult.items) &&
-                ObjectsCompat.equals(requestForNextResult, paginatedResult.requestForNextResult);
+        return ObjectsCompat.equals(requestForNextResult, paginatedResult.requestForNextResult) &&
+                ObjectsCompat.equals(items, paginatedResult.items);
     }
 
     @Override
     public int hashCode() {
-        int result = items.hashCode();
-        result = 31 * result + (requestForNextResult != null ? requestForNextResult.hashCode() : 0);
-        return result;
+        return ObjectsCompat.hash(requestForNextResult, items);
     }
 
     @Override
     public String toString() {
         return "PaginatedResult{" +
-                "items=\'" + items + "\'" +
-                ", requestForNextPage=\'" + requestForNextResult + "\'" +
+                "requestForNextResult=" + requestForNextResult +
+                ", items=" + items +
                 '}';
+    }
+
+    @NonNull
+    @Override
+    public Iterator<T> iterator() {
+        return items.iterator();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public void forEach(@NonNull Consumer<? super T> action) {
+        items.forEach(action);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @NonNull
+    @Override
+    public Spliterator<T> spliterator() {
+        return items.spliterator();
     }
 }
