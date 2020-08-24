@@ -700,6 +700,7 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a successful request to remember current auth device will propagate a completion
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
     public void testRememberDevice() throws InterruptedException {
@@ -723,9 +724,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a successful request to forget current auth device will propagate a completion
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testForgetCurrentDevice() {
+    public void testForgetCurrentDevice() throws InterruptedException {
         // Arrange an invocation of the success Action
         doAnswer(invocation -> {
             // 0 = onComplete, 1 = onFailure
