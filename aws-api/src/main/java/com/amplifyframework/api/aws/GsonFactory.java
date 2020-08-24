@@ -50,7 +50,6 @@ final class GsonFactory {
             .registerTypeAdapter(Temporal.DateTime.class, new TemporalDeserializers.DateTimeDeserializer())
             .registerTypeAdapter(GraphQLResponse.class, new GraphQLResponseDeserializer())
             .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer())
-            .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer())
             .registerTypeAdapter(String.class, new StringDeserializer())
             .registerTypeAdapter(ModelWithMetadata.class, new ModelWithMetadataDeserializer());
     }
