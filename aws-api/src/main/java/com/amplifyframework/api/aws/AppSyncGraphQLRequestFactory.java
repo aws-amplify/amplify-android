@@ -106,7 +106,7 @@ public final class AppSyncGraphQLRequestFactory {
             Class<T> modelClass,
             QueryPredicate predicate
     ) {
-        Type dataType = TypeMaker.getParameterizedType(Iterable.class, modelClass);
+        Type dataType = TypeMaker.getParameterizedType(PaginatedResult.class, modelClass);
         return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType);
     }
 

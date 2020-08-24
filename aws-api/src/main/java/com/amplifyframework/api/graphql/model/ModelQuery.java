@@ -60,7 +60,7 @@ public final class ModelQuery {
      * @param <M> the concrete model type.
      * @return a valid {@link GraphQLRequest} instance.
      */
-    public static <M extends Model> GraphQLRequest<Iterable<M>> list(
+    public static <M extends Model> GraphQLRequest<PaginatedResult<M>> list(
             @NonNull Class<M> modelType,
             @NonNull QueryPredicate predicate
     ) {
@@ -77,7 +77,7 @@ public final class ModelQuery {
      * @return a valid {@link GraphQLRequest} instance.
      * @see #list(Class, QueryPredicate)
      */
-    public static <M extends Model> GraphQLRequest<Iterable<M>> list(@NonNull Class<M> modelType) {
+    public static <M extends Model> GraphQLRequest<PaginatedResult<M>> list(@NonNull Class<M> modelType) {
         return list(modelType, QueryPredicates.all());
     }
 

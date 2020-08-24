@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.model.ModelQuery;
 import com.amplifyframework.core.NoOpConsumer;
 
@@ -132,7 +133,7 @@ public final class AWSApiPluginUserAgentTest {
 
     private String checkUserAgent() throws Exception {
         // Make a new query request
-        GraphQLRequest<Iterable<Todo>> listTodos = ModelQuery.list(Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> listTodos = ModelQuery.list(Todo.class);
         api.query(listTodos, NoOpConsumer.create(), NoOpConsumer.create()); // Ignore result
 
         // Wait for server to receive the request and return user agent

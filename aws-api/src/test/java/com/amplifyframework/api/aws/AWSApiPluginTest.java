@@ -178,8 +178,8 @@ public final class AWSApiPluginTest {
         webServer.enqueue(new MockResponse()
             .setBody(Resources.readAsString("blog-owners-query-results.json")));
 
-        GraphQLResponse<Iterable<BlogOwner>> actualResponse =
-            Await.<GraphQLResponse<Iterable<BlogOwner>>, ApiException>result(((onResult, onError) ->
+        GraphQLResponse<PaginatedResult<BlogOwner>> actualResponse =
+            Await.<GraphQLResponse<PaginatedResult<BlogOwner>>, ApiException>result(((onResult, onError) ->
                 plugin.query(ModelQuery.list(BlogOwner.class), onResult, onError)
             ));
 
