@@ -125,15 +125,6 @@ public final class HubEvent<T> {
         return uuid;
     }
 
-    /**
-     * Publish the instance of the {@link HubEvent} to Amplify Hub.
-     * @param channel The channel to publish the event to.
-     * @param hub A reference to the Hub category.
-     */
-    public void publish(@NonNull HubChannel channel, @NonNull HubCategoryBehavior hub) {
-        hub.publish(channel, this);
-    }
-
     @NonNull
     @Override
     public String toString() {

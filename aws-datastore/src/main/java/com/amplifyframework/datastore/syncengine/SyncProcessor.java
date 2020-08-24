@@ -153,10 +153,8 @@ final class SyncProcessor {
                     syncTimeRegistry.saveLastDeltaSyncTime(modelClass, SyncTime.now()) :
                     syncTimeRegistry.saveLastBaseSyncTime(modelClass, SyncTime.now());
                 return syncTimeSaveCompletable.andThen(Completable.fromAction(() -> {
-                    metricsAccumulator
-                        .toModelSyncedEvent(syncType)
-                        .toHubEvent()
-                        .publish(HubChannel.DATASTORE, Amplify.Hub);
+                    Amplify.Hub.publish(HubChannel.DATASTORE,
+                                        metricsAccumulator.toModelSyncedEvent(syncType).toHubEvent());
                 }));
             })
             .doOnError(failureToSync -> {
