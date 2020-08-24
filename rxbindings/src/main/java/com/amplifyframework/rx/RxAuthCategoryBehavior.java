@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
@@ -32,6 +33,8 @@ import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+
+import java.util.List;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -176,6 +179,36 @@ public interface RxAuthCategoryBehavior {
      *         {@link AuthException} on failure
      */
     Single<AuthSession> fetchAuthSession();
+
+    /**
+     * Remember the user device that is currently being used.
+     * @return An Rx {@link Completable} which completes successfully if device is remembered,
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable rememberDevice();
+
+    /**
+     * Forget the user device that is currently being used from the list
+     * of remembered devices.
+     * @return An Rx {@link Completable} which completes successfully if device is forgotten,
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable forgetDevice();
+
+    /**
+     * Forget a specific user device from the list of remembered devices.
+     * @param device Auth device to forget
+     * @return An Rx {@link Completable} which completes successfully if device is forgotten,
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable forgetDevice(@NonNull AuthDevice device);
+
+    /**
+     * Obtain a list of devices that are being tracked by the category.
+     * @return An Rx {@link Single} which emits {@link List} of {@link AuthDevice} on success,
+     *          {@link AuthException} on failure
+     */
+    Single<List<AuthDevice>> fetchDevices();
 
     /**
      * Trigger password recovery for the given username.

@@ -23,6 +23,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.auth.AuthCategoryConfiguration;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthUser;
@@ -39,6 +40,7 @@ import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
 import com.amplifyframework.auth.result.step.AuthResetPasswordStep;
 import com.amplifyframework.auth.result.step.AuthSignInStep;
 import com.amplifyframework.auth.result.step.AuthSignUpStep;
+import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.util.UserAgent;
 
@@ -46,6 +48,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.DeviceOperations;
 import com.amazonaws.mobile.client.HostedUIOptions;
 import com.amazonaws.mobile.client.SignInUIOptions;
 import com.amazonaws.mobile.client.SignOutOptions;
@@ -53,6 +56,7 @@ import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.ForgotPasswordResult;
 import com.amazonaws.mobile.client.results.ForgotPasswordState;
+import com.amazonaws.mobile.client.results.ListDevicesResult;
 import com.amazonaws.mobile.client.results.SignInResult;
 import com.amazonaws.mobile.client.results.SignInState;
 import com.amazonaws.mobile.client.results.SignUpResult;
@@ -68,6 +72,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -79,12 +84,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Test that the current implementation of Auth as a wrapper of AWSMobileClient calls the correct
@@ -544,6 +551,88 @@ public final class AuthComponentTest {
 
         synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE);
         verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), any());
+    }
+
+    /**
+     * Tests that rememberDevice calls the AWSMobileClient device update status method to set
+     * remember status to true.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void rememberCurrentDevice() throws AuthException {
+        DeviceOperations deviceOps = mock(DeviceOperations.class);
+        when(mobileClient.getDeviceOperations()).thenReturn(deviceOps);
+
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(1);
+            callback.onResult(null);
+            return null;
+        }).when(deviceOps).updateStatus(anyBoolean(), any());
+
+        synchronousAuth.rememberDevice();
+        verify(mobileClient.getDeviceOperations()).updateStatus(eq(true), any());
+    }
+
+    /**
+     * Tests that forgetDevice calls the AWSMobileClient forget device method to forget
+     * the current device.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void forgetCurrentDevice() throws AuthException {
+        DeviceOperations deviceOps = mock(DeviceOperations.class);
+        when(mobileClient.getDeviceOperations()).thenReturn(deviceOps);
+
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(0);
+            callback.onResult(null);
+            return null;
+        }).when(deviceOps).forget(Mockito.<Callback<Void>>any());
+
+        synchronousAuth.forgetDevice();
+        verify(mobileClient.getDeviceOperations()).forget(Mockito.<Callback<Void>>any());
+    }
+
+    /**
+     * Tests that forgetDevice calls the AWSMobileClient forget device method to forget
+     * a device with matching ID.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void forgetDevice() throws AuthException {
+        DeviceOperations deviceOps = mock(DeviceOperations.class);
+        when(mobileClient.getDeviceOperations()).thenReturn(deviceOps);
+
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(1);
+            callback.onResult(null);
+            return null;
+        }).when(deviceOps).forget(any(), any());
+
+        AuthDevice device = AuthDevice.fromId(RandomString.string());
+        synchronousAuth.forgetDevice(device);
+        verify(mobileClient.getDeviceOperations()).forget(eq(device.getDeviceId()), any());
+    }
+
+    /**
+     * Tests that fetchDevices calls the AWSMobileClient list devices method to obtain
+     * a list of remembered devices.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void fetchDevices() throws AuthException {
+        ListDevicesResult listResult = new ListDevicesResult(new ArrayList<>(), null);
+        DeviceOperations deviceOps = mock(DeviceOperations.class);
+        when(mobileClient.getDeviceOperations()).thenReturn(deviceOps);
+
+        doAnswer(invocation -> {
+            Callback<ListDevicesResult> callback = invocation.getArgument(0);
+            callback.onResult(listResult);
+            return null;
+        }).when(deviceOps).list(any());
+
+        synchronousAuth.fetchDevices();
+        verify(mobileClient.getDeviceOperations()).list(any());
     }
 
     /**
