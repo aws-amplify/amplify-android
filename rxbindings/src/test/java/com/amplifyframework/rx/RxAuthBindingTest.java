@@ -21,6 +21,7 @@ import android.content.Intent;
 import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails.DeliveryMedium;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
@@ -42,13 +43,16 @@ import com.amplifyframework.testutils.random.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import io.reactivex.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -78,7 +82,6 @@ public final class RxAuthBindingTest {
     @Test
     public void testSignUpSucceeds() {
         // Arrange a response from delegate
-        String userId = RandomString.string();
         String username = RandomString.string();
         String password = RandomString.string();
         AuthSignUpOptions options = AuthSignUpOptions.builder().build();
@@ -93,7 +96,7 @@ public final class RxAuthBindingTest {
             int positionOfSuccessConsumer = 3;
             Consumer<AuthSignUpResult> onResult = invocation.getArgument(positionOfSuccessConsumer);
             onResult.accept(result);
-            return (Void) null;
+            return null;
         }).when(delegate).signUp(eq(username), eq(password), eq(options), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -122,7 +125,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 4;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).signUp(eq(username), eq(password), eq(options), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -141,7 +144,6 @@ public final class RxAuthBindingTest {
      */
     @Test
     public void testResendSignUpCodeSucceeds() {
-        String userId = RandomString.string();
         String username = RandomString.string();
 
         // Arrange a result on the result consumer
@@ -154,7 +156,7 @@ public final class RxAuthBindingTest {
             int positionOfResultConsumer = 1;
             Consumer<AuthSignUpResult> onResult = invocation.getArgument(positionOfResultConsumer);
             onResult.accept(result);
-            return (Void) null;
+            return null;
         }).when(delegate).resendSignUpCode(eq(username), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -182,7 +184,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 2;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).resendSignUpCode(eq(username), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -214,7 +216,7 @@ public final class RxAuthBindingTest {
             int positionOfResultConsumer = 2;
             Consumer<AuthSignInResult> onResult = invocation.getArgument(positionOfResultConsumer);
             onResult.accept(result);
-            return (Void) null;
+            return null;
         }).when(delegate).signIn(eq(username), eq(password), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -243,7 +245,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 3;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).signIn(eq(username), eq(password), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -274,7 +276,7 @@ public final class RxAuthBindingTest {
             int positionOfResultConsumer = 1;
             Consumer<AuthSignInResult> onResult = invocation.getArgument(positionOfResultConsumer);
             onResult.accept(expected);
-            return (Void) null;
+            return null;
         }).when(delegate).confirmSignIn(eq(confirmationCode), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -302,7 +304,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 2;
             Consumer<AuthException> onResult = invocation.getArgument(positionOfFailureConsumer);
             onResult.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).confirmSignIn(eq(confirmationCode), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -334,7 +336,7 @@ public final class RxAuthBindingTest {
             int positionOfResultConsumer = 2;
             Consumer<AuthSignInResult> onResult = invocation.getArgument(positionOfResultConsumer);
             onResult.accept(result);
-            return (Void) null;
+            return null;
         }).when(delegate).signInWithSocialWebUI(eq(provider), eq(activity), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -363,7 +365,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 3;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).signInWithSocialWebUI(eq(provider), eq(activity), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -394,7 +396,7 @@ public final class RxAuthBindingTest {
             int positionOfResultConsumer = 1;
             Consumer<AuthSignInResult> onResult = invocation.getArgument(positionOfResultConsumer);
             onResult.accept(result);
-            return (Void) null;
+            return null;
         }).when(delegate).signInWithWebUI(eq(activity), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -422,7 +424,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 2;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).signInWithWebUI(eq(activity), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -459,7 +461,7 @@ public final class RxAuthBindingTest {
             int positionOfResultConsumer = 0;
             Consumer<AuthSession> onResult = invocation.getArgument(positionOfResultConsumer);
             onResult.accept(expected);
-            return (Void) null;
+            return null;
         }).when(delegate).fetchAuthSession(anyConsumer(), anyConsumer());
 
         // Act: call the Rx binding
@@ -485,7 +487,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 1;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).fetchAuthSession(anyConsumer(), anyConsumer());
 
         // Act: call the Rx binding
@@ -516,7 +518,7 @@ public final class RxAuthBindingTest {
             int positionOfResultConsumer = 1;
             Consumer<AuthResetPasswordResult> onResult = invocation.getArgument(positionOfResultConsumer);
             onResult.accept(expected);
-            return (Void) null;
+            return null;
         }).when(delegate).resetPassword(eq(username), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -544,7 +546,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 2;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).resetPassword(eq(username), anyConsumer(), anyConsumer());
 
         // Act: call the binding
@@ -572,7 +574,7 @@ public final class RxAuthBindingTest {
             int positionOfCompletionAction = 2;
             Action onComplete = invocation.getArgument(positionOfCompletionAction);
             onComplete.call();
-            return (Void) null;
+            return null;
         }).when(delegate).confirmResetPassword(eq(newPassword), eq(confirmationCode), anyAction(), anyConsumer());
 
         // Act: call the binding
@@ -602,7 +604,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 3;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).confirmResetPassword(eq(newPassword), eq(confirmationCode), anyAction(), anyConsumer());
 
         // Act: call the binding
@@ -631,7 +633,7 @@ public final class RxAuthBindingTest {
             int positionOfCompletionAction = 2;
             Action onCompletion = invocation.getArgument(positionOfCompletionAction);
             onCompletion.call();
-            return (Void) null;
+            return null;
         }).when(delegate).updatePassword(eq(oldPassword), eq(newPassword), anyAction(), anyConsumer());
 
         // Act: call the binding
@@ -660,7 +662,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 3;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).updatePassword(eq(oldPassword), eq(newPassword), anyAction(), anyConsumer());
 
         // Act: call the binding
@@ -674,7 +676,102 @@ public final class RxAuthBindingTest {
     }
 
     /**
-     * Getting the current user should just pass through to the delegate, to reutrn whatever
+     * Tests that a successful request to remember current auth device will propagate a completion
+     * back through the binding.
+     */
+    @Test
+    public void testRememberDevice() {
+        // Arrange an invocation of the success Action
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            Action onCompletion = invocation.getArgument(0);
+            onCompletion.call();
+            return null;
+        }).when(delegate).rememberDevice(anyAction(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<Void> observer = auth.rememberDevice().test();
+
+        // Assert: Completable completes with success
+        observer.awaitTerminalEvent();
+        observer.assertNoErrors()
+                .assertComplete();
+    }
+
+    /**
+     * Tests that a successful request to forget current auth device will propagate a completion
+     * back through the binding.
+     */
+    @Test
+    public void testForgetCurrentDevice() {
+        // Arrange an invocation of the success Action
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            Action onCompletion = invocation.getArgument(0);
+            onCompletion.call();
+            return null;
+        }).when(delegate).forgetDevice(anyAction(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<Void> observer = auth.forgetDevice().test();
+
+        // Assert: Completable completes with success
+        observer.awaitTerminalEvent();
+        observer.assertNoErrors()
+                .assertComplete();
+    }
+
+    /**
+     * Tests that a successful request to forget a specific auth device will propagate a completion
+     * back through the binding.
+     */
+    @Test
+    public void testForgetSpecificDevice() {
+        // Arrange an invocation of the success Action
+        doAnswer(invocation -> {
+            // 0 = deviceToForget, 1 = onComplete, 2 = onFailure
+            Action onCompletion = invocation.getArgument(1);
+            onCompletion.call();
+            return null;
+        }).when(delegate).forgetDevice(any(), anyAction(), anyConsumer());
+
+        // Act: call the binding
+        AuthDevice deviceToForget = AuthDevice.fromId(RandomString.string());
+        TestObserver<Void> observer = auth.forgetDevice(deviceToForget).test();
+
+        // Assert: Completable completes with success
+        observer.awaitTerminalEvent();
+        observer.assertNoErrors()
+                .assertComplete();
+    }
+
+    /**
+     * Tests that a successful request to fetch remembered auth devices will propagate a completion
+     * back through the binding.
+     */
+    @Test
+    public void testFetchDevices() {
+        // Arrange delegate to furnish a result
+        AuthDevice device = AuthDevice.fromId(RandomString.string());
+        List<AuthDevice> expected = Collections.singletonList(device);
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            Consumer<List<AuthDevice>> onCompletion = invocation.getArgument(0);
+            onCompletion.accept(expected);
+            return null;
+        }).when(delegate).fetchDevices(anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<List<AuthDevice>> observer = auth.fetchDevices().test();
+
+        // Assert: result was furnished via Rx Single
+        observer.awaitTerminalEvent();
+        observer.assertNoErrors()
+                .assertValue(expected);
+    }
+
+    /**
+     * Getting the current user should just pass through to the delegate, to return whatever
      * it would.
      */
     @Test
@@ -695,7 +792,7 @@ public final class RxAuthBindingTest {
             int positionOfCompletionAction = 0;
             Action onComplete = invocation.getArgument(positionOfCompletionAction);
             onComplete.call();
-            return (Void) null;
+            return null;
         }).when(delegate).signOut(anyAction(), anyConsumer());
 
         // Act: call the binding
@@ -720,7 +817,7 @@ public final class RxAuthBindingTest {
             int positionOfFailureConsumer = 1;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
-            return (Void) null;
+            return null;
         }).when(delegate).signOut(anyAction(), anyConsumer());
 
         // Act: call the binding
