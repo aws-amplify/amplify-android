@@ -28,7 +28,7 @@ import com.amplifyframework.testutils.Await;
 
 import java.util.Objects;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 
 /**
  * A synchronous wrapper around an AppSync client, useful in test, so you can just

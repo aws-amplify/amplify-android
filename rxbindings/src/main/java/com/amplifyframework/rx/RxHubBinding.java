@@ -25,9 +25,9 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.SubscriptionToken;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
-import io.reactivex.disposables.Disposables;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 final class RxHubBinding implements RxHubCategoryBehavior {
 
@@ -54,7 +54,7 @@ final class RxHubBinding implements RxHubCategoryBehavior {
     public Observable<HubEvent<?>> on(@NonNull HubChannel hubChannel) {
         return Observable.defer(() -> Observable.create(emitter -> {
             SubscriptionToken token = hub.subscribe(hubChannel, emitter::onNext);
-            emitter.setDisposable(Disposables.fromAction(() -> hub.unsubscribe(token)));
+            emitter.setDisposable(Disposable.fromAction(() -> hub.unsubscribe(token)));
         }));
     }
 }

@@ -29,7 +29,7 @@ import com.amplifyframework.storage.result.StorageUploadFileResult;
 
 import java.io.File;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 /**
  * An Rx idiomatic expression of the facilities in Amplify's {@link StorageCategoryBehavior}.

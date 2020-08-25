@@ -34,10 +34,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 /*
  * The {@link MutationOutbox} is a persistently-backed in-order staging ground

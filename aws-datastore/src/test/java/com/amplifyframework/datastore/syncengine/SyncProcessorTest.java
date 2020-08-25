@@ -46,9 +46,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.BLOGGER_ISLA;
 import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.BLOGGER_JAMESON;
@@ -120,10 +120,11 @@ public final class SyncProcessorTest {
      * When {@link SyncProcessor#hydrate()}'s {@link Completable} completes,
      * then the local storage adapter should have all of the remote model state.
      * @throws DataStoreException On failure interacting with storage adapter
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @SuppressWarnings("unchecked") // Varied types in Observable.fromArray(...).
     @Test
-    public void localStorageAdapterIsHydratedFromRemoteModelState() throws DataStoreException {
+    public void localStorageAdapterIsHydratedFromRemoteModelState() throws DataStoreException, InterruptedException {
         // Arrange: drum post is already in the adapter before hydration.
         storageAdapter.save(DRUM_POST.getModel());
 
@@ -138,7 +139,7 @@ public final class SyncProcessorTest {
         // Act: Call hydrate, and await its completion - assert it completed without error
         TestObserver<ModelWithMetadata<? extends Model>> hydrationObserver = TestObserver.create();
         syncProcessor.hydrate().subscribe(hydrationObserver);
-        assertTrue(hydrationObserver.awaitTerminalEvent(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(hydrationObserver.await(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         hydrationObserver.assertNoErrors();
         hydrationObserver.assertComplete();
 
@@ -185,7 +186,7 @@ public final class SyncProcessorTest {
             Observable.fromArray(BLOGGER_ISLA, BLOGGER_JAMESON)
                 .flatMap(blogger -> Observable.fromArray(blogger.getModel(), blogger.getSyncMetadata()))
                 // And also the one metadata record for a deleted post
-                .startWith(DELETED_DRUM_POST.getSyncMetadata())
+                .startWithItem(DELETED_DRUM_POST.getSyncMetadata())
                 .toList()
                 .map(HashSet::new)
                 .blockingGet(),
@@ -222,9 +223,10 @@ public final class SyncProcessorTest {
      * doesn't actually need to delete this record. The deletion attempt will fail. But, that's
      * okay. Generally speaking, we want to do a "best effort" to apply the remote updates.
      * @throws DataStoreException On failure to query items in storage
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void hydrationContinuesEvenIfOneItemFailsToSync() throws DataStoreException {
+    public void hydrationContinuesEvenIfOneItemFailsToSync() throws DataStoreException, InterruptedException {
         // The local store does NOT have the drum post to start (or, for that matter, any items.)
         // inMemoryStorageAdapter.items().add(DRUM_POST.getModel());
 
@@ -237,7 +239,7 @@ public final class SyncProcessorTest {
         TestObserver<Void> hydrationObserver = syncProcessor.hydrate().test();
 
         // Assert that hydration completed without error.
-        assertTrue(hydrationObserver.awaitTerminalEvent(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(hydrationObserver.await(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         hydrationObserver.assertNoErrors();
         hydrationObserver.assertComplete();
 
@@ -256,7 +258,7 @@ public final class SyncProcessorTest {
             // Expect a metadata for Jameson & deleted drum post, and an entry for Jameson
             Observable.just(BLOGGER_JAMESON)
                 .flatMap(blogger -> Observable.fromArray(blogger.getModel(), blogger.getSyncMetadata()))
-                .startWith(DELETED_DRUM_POST.getSyncMetadata())
+                .startWithItem(DELETED_DRUM_POST.getSyncMetadata())
                 .toList()
                 .map(HashSet::new)
                 .blockingGet(),
