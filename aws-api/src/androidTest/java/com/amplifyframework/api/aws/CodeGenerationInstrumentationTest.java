@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.util.Log;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
@@ -44,10 +42,9 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -166,17 +163,12 @@ public final class CodeGenerationInstrumentationTest {
         // Act: try to create a subscription
         TestObserver<GraphQLResponse<PrivateNote>> observer = TestObserver.create();
         api.onCreate(NOTES_WITH_AUTH_API_NAME, PrivateNote.class).subscribe(observer);
-        List<Throwable> errors = observer.errors();
-
-        // Assert: it failed with a connection_error
-        assertEquals(1, errors.size());
-        Throwable throwable = errors.get(0);
-        assertTrue(
-            "Wanted ApiException, but got: " + Log.getStackTraceString(throwable),
-            throwable instanceof ApiException
-        );
-        assertNotNull(throwable.getMessage());
-        assertTrue(throwable.getMessage().contains("connection_error"));
+        observer.assertError(error -> {
+            if (!(error instanceof ApiException) || error.getMessage() == null) {
+                return false;
+            }
+            return error.getMessage().contains("connection_error");
+        });
     }
 
     /**

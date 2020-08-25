@@ -35,6 +35,7 @@ import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.UserAgent;
 
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -174,6 +175,14 @@ public final class Amplify {
             final P plugin, final RegistryUpdateType registryUpdateType) throws AmplifyException {
 
         synchronized (CONFIGURATION_LOCK) {
+            if (CONFIGURATION_LOCK.get()) {
+                final String updateString = registryUpdateType.name().toLowerCase(Locale.US);
+                throw new AmplifyException(
+                    "The client tried to " + updateString + " a plugin after calling configure().",
+                        "Plugins may not be added or removed after configure(...) is called."
+                );
+            }
+
             if (Empty.check(plugin.getPluginKey())) {
                 throw new AmplifyException(
                         "Plugin key was missing for + " + plugin.getClass().getSimpleName(),

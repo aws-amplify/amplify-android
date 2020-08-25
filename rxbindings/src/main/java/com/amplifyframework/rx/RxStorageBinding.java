@@ -34,7 +34,7 @@ import com.amplifyframework.storage.result.StorageUploadFileResult;
 
 import java.io.File;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 final class RxStorageBinding implements RxStorageCategoryBehavior {
     private final StorageCategoryBehavior storage;

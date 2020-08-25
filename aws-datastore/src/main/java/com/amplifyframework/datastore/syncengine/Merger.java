@@ -32,7 +32,7 @@ import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
-import io.reactivex.Completable;
+import io.reactivex.rxjava3.core.Completable;
 
 /**
  * The merger is responsible for merging cloud data back into the local store.

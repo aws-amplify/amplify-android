@@ -45,8 +45,9 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
@@ -62,6 +63,8 @@ import static org.mockito.Mockito.when;
  * Tests the {@link RxAuthBinding}.
  */
 public final class RxAuthBindingTest {
+    private static final long TIMEOUT_SECONDS = 2;
+
     private AuthCategoryBehavior delegate;
     private RxAuthBinding auth;
 
@@ -77,9 +80,10 @@ public final class RxAuthBindingTest {
 
     /**
      * Validates that a sign-up result are passed through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testSignUpSucceeds() {
+    public void testSignUpSucceeds() throws InterruptedException {
         // Arrange a response from delegate
         String username = RandomString.string();
         String password = RandomString.string();
@@ -102,7 +106,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignUpResult> observer = auth.signUp(username, password, options).test();
 
         // Assert: the result was furnished to the Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertValue(result);
@@ -110,9 +114,10 @@ public final class RxAuthBindingTest {
 
     /**
      * Validates that a sign-up failure are passed through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testSignUpFails() {
+    public void testSignUpFails() throws InterruptedException {
         String username = RandomString.string();
         String password = RandomString.string();
         AuthSignUpOptions options = AuthSignUpOptions.builder().build();
@@ -131,7 +136,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignUpResult> observer = auth.signUp(username, password, options).test();
 
         // Assert: error is furnished via Rx single.
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoValues()
             .assertError(failure);
@@ -140,9 +145,10 @@ public final class RxAuthBindingTest {
     /**
      * Validates that a successful call to resend the sign-up code will propagate the result
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testResendSignUpCodeSucceeds() {
+    public void testResendSignUpCodeSucceeds() throws InterruptedException {
         String username = RandomString.string();
 
         // Arrange a result on the result consumer
@@ -162,7 +168,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignUpResult> observer = auth.resendSignUpCode(username).test();
 
         // Assert: the result was furnished to the Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertValue(result);
@@ -171,9 +177,10 @@ public final class RxAuthBindingTest {
     /**
      * Validates that a failed call to resend the sign-up code will propagate the failure
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testResendSignUpCodeFails() {
+    public void testResendSignUpCodeFails() throws InterruptedException {
         String username = RandomString.string();
 
         // Arrange a failure on the failure consumer
@@ -190,7 +197,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignUpResult> observer = auth.resendSignUpCode(username).test();
 
         // Assert: the result was furnished to the Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoValues()
             .assertError(failure);
@@ -199,9 +206,10 @@ public final class RxAuthBindingTest {
     /**
      * Validates that a successful call to sign-in will propagate the result
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testSignInSucceeds() {
+    public void testSignInSucceeds() throws InterruptedException {
         String username = RandomString.string();
         String password = RandomString.string();
 
@@ -222,7 +230,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignInResult> observer = auth.signIn(username, password).test();
 
         // Assert: the result was furnished to the Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertValue(result);
@@ -231,9 +239,10 @@ public final class RxAuthBindingTest {
     /**
      * Validates that a failed call to sign-in will propagate the result
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testSignInFails() {
+    public void testSignInFails() throws InterruptedException {
         String username = RandomString.string();
         String password = RandomString.string();
 
@@ -251,7 +260,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignInResult> observer = auth.signIn(username, password).test();
 
         // Assert: the failure was furnished to the Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoValues()
             .assertError(failure);
@@ -260,9 +269,10 @@ public final class RxAuthBindingTest {
     /**
      * Validates that a successful call to confirm sign-in will propagate the result
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testConfirmSignInSucceeds() {
+    public void testConfirmSignInSucceeds() throws InterruptedException {
         String confirmationCode = RandomString.string();
 
         // Arrange a successful result.
@@ -282,7 +292,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignInResult> observer = auth.confirmSignIn(confirmationCode).test();
 
         // Assert: result is furnished
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertValue(expected);
@@ -291,9 +301,10 @@ public final class RxAuthBindingTest {
     /**
      * Validates that a failed call to confirm sign-in will propagate the failure
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testConfirmSignInFails() {
+    public void testConfirmSignInFails() throws InterruptedException {
         String confirmationCode = RandomString.string();
 
         // Arrange a failure.
@@ -310,7 +321,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignInResult> observer = auth.confirmSignIn(confirmationCode).test();
 
         // Assert: failure is furnished
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoValues()
             .assertError(failure);
@@ -319,9 +330,10 @@ public final class RxAuthBindingTest {
     /**
      * Validates that a successful call to sign-in with social web UI will propagate the result
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testSignInWithSocialWebUISucceeds() {
+    public void testSignInWithSocialWebUISucceeds() throws InterruptedException {
         AuthProvider provider = AuthProvider.amazon();
         Activity activity = new Activity();
 
@@ -342,7 +354,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignInResult> observer = auth.signInWithSocialWebUI(provider, activity).test();
 
         // Assert: result is furnished the via the Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertValue(result);
@@ -351,9 +363,10 @@ public final class RxAuthBindingTest {
     /**
      * Validates that a failed call to sign-in with social web UI will propagate the failure
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testSignInWithSocialWebUIFails() {
+    public void testSignInWithSocialWebUIFails() throws InterruptedException {
         AuthProvider provider = AuthProvider.amazon();
         Activity activity = new Activity();
 
@@ -371,7 +384,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignInResult> observer = auth.signInWithSocialWebUI(provider, activity).test();
 
         // Assert: failure is furnished the via the Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoValues()
             .assertError(failure);
@@ -380,9 +393,10 @@ public final class RxAuthBindingTest {
     /**
      * Validates that a successful call to sign-in with web UI will propagate the result
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testSignInWithWebUISucceeds() {
+    public void testSignInWithWebUISucceeds() throws InterruptedException {
         Activity activity = new Activity();
 
         // Arrange a result
@@ -402,7 +416,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignInResult> observer = auth.signInWithWebUI(activity).test();
 
         // Assert: result is furnished the via the Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertValue(result);
@@ -411,9 +425,10 @@ public final class RxAuthBindingTest {
     /**
      * Validates that a failed call to sign-in with web UI will propagate the failure
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testSignInWithWebUIFails() {
+    public void testSignInWithWebUIFails() throws InterruptedException {
         Activity activity = new Activity();
 
         // Arrange a failure
@@ -430,7 +445,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSignInResult> observer = auth.signInWithWebUI(activity).test();
 
         // Assert: failure is furnished the via the Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoValues()
             .assertError(failure);
@@ -450,9 +465,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a successful call to fetch the auth session will propagate the session object
      * back up through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testFetchAuthSessionSucceeds() {
+    public void testFetchAuthSessionSucceeds() throws InterruptedException {
         // Arrange an auth session object to return when delegate is called
         AuthSession expected = new AuthSession(false);
         doAnswer(invocation -> {
@@ -467,7 +483,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSession> observer = auth.fetchAuthSession().test();
 
         // Assert: AuthSession is furnished to the Rx Single.
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertValue(expected);
@@ -476,9 +492,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a failed call to fetch the auth session will propagate the failure
      * back up through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testFetchAuthSessionFails() {
+    public void testFetchAuthSessionFails() throws InterruptedException {
         // Arrange a failure when the delegate is called
         AuthException failure = new AuthException("Fetch session", " has failed.");
         doAnswer(invocation -> {
@@ -493,7 +510,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthSession> observer = auth.fetchAuthSession().test();
 
         // Assert: AuthException is furnished to the Rx Single.
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoValues()
             .assertError(failure);
@@ -502,9 +519,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a successful request to reset the password will propagate a result
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testResetPasswordSucceeds() {
+    public void testResetPasswordSucceeds() throws InterruptedException {
         String username = RandomString.string();
 
         // Arrange delegate to furnish a result
@@ -524,7 +542,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthResetPasswordResult> observer = auth.resetPassword(username).test();
 
         // Assert: result was furnished via Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertValue(expected);
@@ -533,9 +551,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a failed request to reset the password will propagate a failure
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testResetPasswordFails() {
+    public void testResetPasswordFails() throws InterruptedException {
         String username = RandomString.string();
 
         // Arrange delegate to furnish a failure
@@ -552,7 +571,7 @@ public final class RxAuthBindingTest {
         TestObserver<AuthResetPasswordResult> observer = auth.resetPassword(username).test();
 
         // Assert: failure was furnished via Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoValues()
             .assertError(failure);
@@ -561,9 +580,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a successful request to confirm password reset will propagate a completion
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testConfirmResetPasswordSucceeds() {
+    public void testConfirmResetPasswordSucceeds() throws InterruptedException {
         String newPassword = RandomString.string();
         String confirmationCode = RandomString.string();
 
@@ -581,7 +601,7 @@ public final class RxAuthBindingTest {
             auth.confirmResetPassword(newPassword, confirmationCode).test();
 
         // Assert: Completable was completed successfully
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertComplete();
@@ -590,9 +610,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a failed request to confirm password reset will propagate a failure
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testConfirmResetPasswordFails() {
+    public void testConfirmResetPasswordFails() throws InterruptedException {
         String newPassword = RandomString.string();
         String confirmationCode = RandomString.string();
 
@@ -611,7 +632,7 @@ public final class RxAuthBindingTest {
             auth.confirmResetPassword(newPassword, confirmationCode).test();
 
         // Assert: Completable terminated with failure
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNotComplete()
             .assertError(failure);
@@ -620,9 +641,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a successful request to update a user's password will propagate a completion
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testUpdatePasswordSucceeds() {
+    public void testUpdatePasswordSucceeds() throws InterruptedException {
         String oldPassword = RandomString.string();
         String newPassword = RandomString.string();
 
@@ -639,7 +661,7 @@ public final class RxAuthBindingTest {
         TestObserver<Void> observer = auth.updatePassword(oldPassword, newPassword).test();
 
         // Assert: Completable completes with success
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertComplete();
@@ -648,9 +670,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a failed request to update a user's password will propagate a failure
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testUpdatePasswordFails() {
+    public void testUpdatePasswordFails() throws InterruptedException {
         String oldPassword = RandomString.string();
         String newPassword = RandomString.string();
 
@@ -668,7 +691,7 @@ public final class RxAuthBindingTest {
         TestObserver<Void> observer = auth.updatePassword(oldPassword, newPassword).test();
 
         // Assert: Completable terminates with failure
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNotComplete()
             .assertError(failure);
@@ -677,9 +700,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a successful request to remember current auth device will propagate a completion
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testRememberDevice() {
+    public void testRememberDevice() throws InterruptedException {
         // Arrange an invocation of the success Action
         doAnswer(invocation -> {
             // 0 = onComplete, 1 = onFailure
@@ -692,7 +716,7 @@ public final class RxAuthBindingTest {
         TestObserver<Void> observer = auth.rememberDevice().test();
 
         // Assert: Completable completes with success
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertNoErrors()
                 .assertComplete();
     }
@@ -700,9 +724,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a successful request to forget current auth device will propagate a completion
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testForgetCurrentDevice() {
+    public void testForgetCurrentDevice() throws InterruptedException {
         // Arrange an invocation of the success Action
         doAnswer(invocation -> {
             // 0 = onComplete, 1 = onFailure
@@ -715,7 +740,7 @@ public final class RxAuthBindingTest {
         TestObserver<Void> observer = auth.forgetDevice().test();
 
         // Assert: Completable completes with success
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertNoErrors()
                 .assertComplete();
     }
@@ -723,9 +748,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a successful request to forget a specific auth device will propagate a completion
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testForgetSpecificDevice() {
+    public void testForgetSpecificDevice() throws InterruptedException {
         // Arrange an invocation of the success Action
         doAnswer(invocation -> {
             // 0 = deviceToForget, 1 = onComplete, 2 = onFailure
@@ -739,7 +765,7 @@ public final class RxAuthBindingTest {
         TestObserver<Void> observer = auth.forgetDevice(deviceToForget).test();
 
         // Assert: Completable completes with success
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertNoErrors()
                 .assertComplete();
     }
@@ -747,9 +773,10 @@ public final class RxAuthBindingTest {
     /**
      * Tests that a successful request to fetch remembered auth devices will propagate a completion
      * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testFetchDevices() {
+    public void testFetchDevices() throws InterruptedException {
         // Arrange delegate to furnish a result
         AuthDevice device = AuthDevice.fromId(RandomString.string());
         List<AuthDevice> expected = Collections.singletonList(device);
@@ -764,7 +791,7 @@ public final class RxAuthBindingTest {
         TestObserver<List<AuthDevice>> observer = auth.fetchDevices().test();
 
         // Assert: result was furnished via Rx Single
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertNoErrors()
                 .assertValue(expected);
     }
@@ -782,9 +809,10 @@ public final class RxAuthBindingTest {
 
     /**
      * Validates that a successful sign-out will propagate up into the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testSignOutSucceeds() {
+    public void testSignOutSucceeds() throws InterruptedException {
         // Arrange an invocation of the success action
         doAnswer(invocation -> {
             // 0 = onComplete, 1 = onFailure
@@ -798,7 +826,7 @@ public final class RxAuthBindingTest {
         TestObserver<Void> observer = auth.signOut().test();
 
         // Assert: Completable completes successfully
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
             .assertComplete();
@@ -806,9 +834,10 @@ public final class RxAuthBindingTest {
 
     /**
      * Validate that a sign-out failure is propagated up through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testSignOutFails() {
+    public void testSignOutFails() throws InterruptedException {
         // Arrange a callback on the failure consumer
         AuthException failure = new AuthException("Sign out", "has failed");
         doAnswer(invocation -> {
@@ -823,7 +852,7 @@ public final class RxAuthBindingTest {
         TestObserver<Void> observer = auth.signOut().test();
 
         // Assert: failure is furnished via Rx Completable.
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNotComplete()
             .assertError(failure);

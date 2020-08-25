@@ -29,6 +29,7 @@ import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -36,7 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
@@ -102,6 +103,7 @@ public final class GraphQLInstrumentationTest {
      *          expected response from the endpoint
      */
     @Test
+    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void subscriptionReceivesMutationOverAwsIam() throws ApiException {
         currentApiName = API_WITH_AWS_IAM;
         subscriptionReceivesMutation();
@@ -118,6 +120,7 @@ public final class GraphQLInstrumentationTest {
      *          to sign in as a valid user
      */
     @Test
+    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void subscriptionReceivesMutationOverCognitoUserPools() throws
             ApiException, JSONException, SynchronousMobileClient.MobileClientException {
         currentApiName = API_WITH_COGNITO_USER_POOLS;
