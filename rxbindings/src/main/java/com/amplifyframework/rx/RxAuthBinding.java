@@ -39,8 +39,8 @@ import com.amplifyframework.core.Amplify;
 import java.util.List;
 import java.util.Objects;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 
 final class RxAuthBinding implements RxAuthCategoryBehavior {
     private final AuthCategoryBehavior delegate;

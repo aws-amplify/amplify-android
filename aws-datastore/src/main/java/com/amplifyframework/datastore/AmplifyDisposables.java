@@ -29,8 +29,8 @@ import com.amplifyframework.logging.Logger;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.reactivex.ObservableEmitter;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.rxjava3.core.ObservableEmitter;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * A utility for building Rx {@link Disposable}s from Amplify entities,
@@ -49,7 +49,7 @@ public final class AmplifyDisposables {
     @NonNull
     public static Disposable fromCancelable(@Nullable Cancelable cancelable) {
         if (cancelable == null) {
-            return io.reactivex.disposables.Disposables.empty();
+            return io.reactivex.rxjava3.disposables.Disposable.empty();
         }
         return new Disposable() {
             private final AtomicReference<Boolean> isCanceled = new AtomicReference<>(false);
@@ -84,7 +84,7 @@ public final class AmplifyDisposables {
      * In a situation such as loss of connectivity, it's innevitable that multiple subscriptions will fail.
      * With that said, after the first failure, the other events sources (AppSync subscriptions)
      * will attempt to invoke the downstream onError handler which then results in an
-     * {@link io.reactivex.exceptions.UndeliverableException} being thrown.
+     * {@link io.reactivex.rxjava3.exceptions.UndeliverableException} being thrown.
      * </p>
      *
      * <p>

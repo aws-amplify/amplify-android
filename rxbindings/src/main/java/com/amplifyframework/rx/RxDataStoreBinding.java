@@ -33,8 +33,8 @@ import com.amplifyframework.datastore.DataStoreItemChange;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
 
 final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
     private final DataStoreCategoryBehavior dataStore;
