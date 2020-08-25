@@ -24,13 +24,13 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 /**
  * Tests the {@link RxHubBinding}.
  */
 public final class RxHubBindingTest {
-    private static final long REASONABLE_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final long TIMEOUT_SECONDS = 1;
 
     private RxHubCategoryBehavior rxHub;
 
@@ -54,26 +54,26 @@ public final class RxHubBindingTest {
         // Act: publish an event
         HubEvent<?> event = HubEvent.create(RandomString.string());
         rxHub.publish(HubChannel.HUB, event)
-            .blockingAwait(REASONABLE_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
+            .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Assert: subscriber got event
         observer.awaitCount(1).assertValue(event);
     }
 
     /**
-     * A cancelled subscription should not continue to receive Hub events.
+     * A disposed subscription should not continue to receive Hub events.
      */
     @Test
-    public void subscriberDoesNotReceiveEventWhenCanceled() {
-        // Act: subscribe, then cancel
+    public void subscriberDoesNotReceiveEventWhenDisposed() {
+        // Act: subscribe, then dispose
         TestObserver<HubEvent<?>> observer = rxHub.on(HubChannel.HUB).test();
-        observer.cancel();
+        observer.dispose();
 
         // Act: publish an event
         rxHub.publish(HubChannel.HUB, HubEvent.create(RandomString.string()));
 
         // Assert: observer was canceled, it never received any event(s).
-        observer.isCancelled();
+        observer.isDisposed();
         observer.assertNoValues();
     }
 }

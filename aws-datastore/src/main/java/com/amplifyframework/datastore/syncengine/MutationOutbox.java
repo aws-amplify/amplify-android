@@ -21,8 +21,8 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
 
 /*
  * The {@link MutationOutbox} is a persistently-backed in-order staging ground

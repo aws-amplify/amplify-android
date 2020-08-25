@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 /**
  * The VersionRepository provides a higher-level facade to lookup the version

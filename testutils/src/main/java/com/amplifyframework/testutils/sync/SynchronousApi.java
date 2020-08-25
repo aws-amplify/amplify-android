@@ -41,9 +41,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposables;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * A utility to perform synchronous calls to the {@link ApiCategory}.
@@ -337,7 +337,7 @@ public final class SynchronousApi {
                             emitter::onComplete
                     );
                     if (cancelable != null) {
-                        disposable.add(Disposables.fromAction(cancelable::cancel));
+                        disposable.add(Disposable.fromAction(cancelable::cancel));
                     }
                 }
             );
