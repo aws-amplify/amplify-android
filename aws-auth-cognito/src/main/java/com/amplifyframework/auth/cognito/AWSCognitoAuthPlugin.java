@@ -57,6 +57,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.util.UserAgent;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.logging.LogFactory;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
@@ -75,7 +76,15 @@ import com.amazonaws.mobile.client.results.UserCodeDeliveryDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.cognitoauth.AuthClient;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
-import com.amazonaws.services.cognitoidentity.model.NotAuthorizedException;
+import com.amazonaws.services.cognitoidentityprovider.model.AliasExistsException;
+import com.amazonaws.services.cognitoidentityprovider.model.CodeDeliveryFailureException;
+import com.amazonaws.services.cognitoidentityprovider.model.CodeMismatchException;
+import com.amazonaws.services.cognitoidentityprovider.model.ExpiredCodeException;
+import com.amazonaws.services.cognitoidentityprovider.model.InvalidPasswordException;
+import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException;
+import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException;
+import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException;
+import com.amazonaws.services.cognitoidentityprovider.model.UsernameExistsException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -279,9 +288,24 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                 @Override
                 public void onError(Exception error) {
-                    onException.accept(
-                        new AuthException("Sign up failed", error, "See attached exception for more details")
-                    );
+                    if (error instanceof UsernameExistsException) {
+                        onException.accept(
+                                new AuthException.AWSCognitoAuthException.UsernameExistsException(error.getCause())
+                        );
+                    } else if (error instanceof AliasExistsException) {
+                        onException.accept(
+                                new AuthException.AWSCognitoAuthException.AliasExistsException(error.getCause())
+                        );
+                    } else if (error instanceof AmazonClientException) {
+                        onException.accept(
+                                new AuthException.AWSCognitoAuthException.NetworkException(error.getCause())
+                        );
+                    } else {
+                        onException.accept(
+                                new AuthException("Sign up failed", error, "See attached exception for more details")
+                        );
+                    }
+
                 }
             }
         );
@@ -302,9 +326,36 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception error) {
-                onException.accept(
-                    new AuthException("Confirm sign up failed", error, "See attached exception for more details")
-                );
+                if (error instanceof UserNotFoundException) {
+                    onException.accept(
+                            new AuthException.AWSCognitoAuthException.UserNotFoundException(error.getCause())
+                    );
+                } else if (error instanceof CodeMismatchException) {
+                    onException.accept(
+                            new AuthException.AWSCognitoAuthException.CodeMismatchException(error.getCause())
+                    );
+                } else if (error instanceof ExpiredCodeException) {
+                    onException.accept(
+                            new AuthException.AWSCognitoAuthException.CodeExpiredException(error.getCause())
+                    );
+                } else if (error instanceof CodeDeliveryFailureException) {
+                    onException.accept(
+                            new AuthException.AWSCognitoAuthException.CodeDeliveryFailureException(error.getCause())
+                    );
+                } else if (error instanceof UserNotConfirmedException) {
+                    onException.accept(
+                            new AuthException.AWSCognitoAuthException.UserNotConfirmedException(error.getCause())
+                    );
+                } else if (error instanceof AmazonClientException) {
+                    onException.accept(
+                            new AuthException.AWSCognitoAuthException.NetworkException(error.getCause())
+                    );
+                } else {
+                    onException.accept(
+                            new AuthException("Confirm sign up failed", error,
+                                            "See attached exception for more details")
+                    );
+                }
             }
         });
     }
@@ -361,9 +412,23 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception error) {
-                onException.accept(
-                    new AuthException("Sign in failed", error, "See attached exception for more details")
-                );
+                if (error instanceof InvalidPasswordException) {
+                    onException.accept(
+                            new AuthException.AWSCognitoAuthException.InvalidPasswordException(error.getCause())
+                    );
+                } else if (error instanceof UserNotFoundException) {
+                    onException.accept(
+                            new AuthException.AWSCognitoAuthException.UserNotFoundException(error.getCause())
+                    );
+                } else if (error instanceof AmazonClientException) {
+                    onException.accept(
+                            new AuthException.AWSCognitoAuthException.NetworkException(error.getCause())
+                    );
+                } else {
+                    onException.accept(
+                            new AuthException("Sign in failed", error, "See attached exception for more details")
+                    );
+                }
             }
         });
     }
@@ -579,10 +644,10 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 }
 
                 @Override
-                public void onError(Exception exception) {
+                public void onError(Exception error) {
                     onException.accept(new AuthException(
                             "An error occurred confirming password recovery code",
-                            exception,
+                            error,
                             "See attached exception for more details"
                     ));
                 }
