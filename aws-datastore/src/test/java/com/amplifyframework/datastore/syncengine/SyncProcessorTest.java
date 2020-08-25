@@ -426,42 +426,46 @@ public final class SyncProcessorTest {
     /**
      * Validate that all records are synced, via pagination.
      * @throws AmplifyException on error building sync request for next page.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void modelWithMultiplePagesSyncsAllPages() throws AmplifyException {
+    public void modelWithMultiplePagesSyncsAllPages() throws AmplifyException, InterruptedException {
         syncAndExpect(5, 10);
     }
 
     /**
      * Validate that sync stops after retrieving syncMaxRecords results, even if there are more pages available.
      * @throws AmplifyException on error building sync request for next page.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void syncStopsAfterMaxRecords() throws AmplifyException {
+    public void syncStopsAfterMaxRecords() throws AmplifyException, InterruptedException {
         syncAndExpect(10, 5);
     }
 
     /**
      * Validate the sync can handle 500 of pages.  Even with a recursive, functional algorithm, this should pass.
      * @throws AmplifyException on error building sync request for next page.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void syncCanHandle500Pages() throws AmplifyException {
-        syncAndExpect(500, 10000);
+    public void syncCanHandle100Pages() throws AmplifyException, InterruptedException {
+        syncAndExpect(100, 10000);
     }
 
     /**
-     * Validate that sync can handle 1000 more pages.  This fails with a StackOverflowError if sync is implemented with
-     * a recursive, functional algorithm, because each call to the sync method is saved on the stack before execution
-     * begins.  The alternative is to implement a completely functional approach.
+     * Validate that sync can handle 1000 more pages.  This fails with a StackOverflowError if sync is implemented
+     * recursively, because each call to the sync method is saved on the stack before execution
+     * begins.  The solution is to use an iterative algorithm.
      * @throws AmplifyException on error building sync request for next page.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void syncCanHandle1000Pages() throws AmplifyException {
+    public void syncCanHandle1000Pages() throws AmplifyException, InterruptedException {
         syncAndExpect(1000, 10000);
     }
 
-    private void syncAndExpect(int numPages, int maxSyncRecords) throws AmplifyException {
+    private void syncAndExpect(int numPages, int maxSyncRecords) throws AmplifyException, InterruptedException {
         initSyncProcessor(maxSyncRecords);
         // Arrange a subscription to the storage adapter. We're going to watch for changes.
         // We expect to see content here as a result of the SyncProcessor applying updates.
@@ -485,7 +489,7 @@ public final class SyncProcessorTest {
         // Act: Call hydrate, and await its completion - assert it completed without error
         TestObserver<ModelWithMetadata<? extends Model>> hydrationObserver = TestObserver.create();
         syncProcessor.hydrate().subscribe(hydrationObserver);
-        assertTrue(hydrationObserver.awaitTerminalEvent(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(hydrationObserver.await(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         hydrationObserver.assertNoErrors();
         hydrationObserver.assertComplete();
 

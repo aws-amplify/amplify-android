@@ -16,9 +16,10 @@
 package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -59,17 +60,15 @@ public final class SynchronousAppSync {
     /**
      * Uses Amplify API category to get a list of changes which have happened since a last sync time.
      * @param <T> The type of data in the response. Must extend Model.
-     * @param modelClass The class of the Model we are querying on
-     * @param lastSync The time you last synced - all changes since this time are retrieved.
+     * @param request The request for the sync query.
      * @return Response data from AppSync.
      * @throws DataStoreException on failure to obtain response data
      */
     @NonNull
-    public <T extends Model> GraphQLResponse<Iterable<ModelWithMetadata<T>>> sync(
-            @NonNull Class<T> modelClass,
-            @Nullable Long lastSync) throws DataStoreException {
-        return Await.<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException>result((onResult, onError) ->
-            appSync.sync(modelClass, lastSync, onResult, onError)
+    public <T extends Model> GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>> sync(
+            @NonNull GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) throws DataStoreException {
+        return Await.<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>, DataStoreException>
+                result((onResult, onError) -> appSync.sync(request, onResult, onError)
         );
     }
 

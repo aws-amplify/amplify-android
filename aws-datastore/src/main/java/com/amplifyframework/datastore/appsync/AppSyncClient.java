@@ -68,7 +68,6 @@ public final class AppSyncClient implements AppSync {
         return new AppSyncClient(api);
     }
 
-    @SuppressWarnings("checkstyle:LineLength")
     @NonNull
     @Override
     public <T extends Model> GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> buildSyncRequest(

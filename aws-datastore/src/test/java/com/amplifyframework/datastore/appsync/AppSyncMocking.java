@@ -273,7 +273,7 @@ public final class AppSyncMocking {
         public final <M extends Model> SyncConfigurator mockSuccessResponse(
                 Class<M> modelClass, ModelWithMetadata<M>... responseItems) {
             return mockSuccessResponse(
-                    matcherFor(modelClass, null),
+                    matchesRequest(modelClass, null),
                     new GraphQLResponse<>(
                             new PaginatedResult<>(new HashSet<>(Arrays.asList(responseItems)), null),
                             Collections.emptyList()
@@ -309,7 +309,7 @@ public final class AppSyncMocking {
                         .build();
             }
             return mockSuccessResponse(
-                    matcherFor(modelClass, token),
+                    matchesRequest(modelClass, token),
                     new GraphQLResponse<>(
                             new PaginatedResult<>(items, requestForNextResult),
                             Collections.emptyList()
@@ -320,13 +320,13 @@ public final class AppSyncMocking {
         /**
          * Configures an instance of an {@link AppSync} to invoke the response callback with the provided mockResponse
          * when asked to {@link AppSync#sync(GraphQLRequest, Consumer, Consumer)}.
-         * @param requestMatcher ArgumentMatcher which returns true if the GraphQLRequest should be mocked.
+         * @param matchesRequest ArgumentMatcher which returns true if the GraphQLRequest should be mocked.
          * @param mockResponse GraphQLResponse to be passed back in the response callback.
          * @param <M> Type of models for which a response is mocked
          * @return The same Configurator instance, to enable chaining of calls
          */
         public <M extends Model> SyncConfigurator mockSuccessResponse(
-                ArgumentMatcher<GraphQLRequest<PaginatedResult<ModelWithMetadata<M>>>> requestMatcher,
+                ArgumentMatcher<GraphQLRequest<PaginatedResult<ModelWithMetadata<M>>>> matchesRequest,
                 GraphQLResponse<PaginatedResult<ModelWithMetadata<M>>> mockResponse) {
             doAnswer(invocation -> {
                 // Get a handle to the response consumer that is passed into the sync() method
@@ -341,14 +341,14 @@ public final class AppSyncMocking {
                 // Return a NoOp cancelable via the sync() method's return.
                 return new NoOpCancelable();
             }).when(appSync).sync(
-                argThat(requestMatcher),
+                argThat(matchesRequest),
                 any(), // Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<M>>>>
                 any()  // Consumer<DataStoreException>
             );
             return SyncConfigurator.this;
         }
 
-        private <M extends Model> ArgumentMatcher<GraphQLRequest<PaginatedResult<ModelWithMetadata<M>>>> matcherFor(
+        private <M extends Model> ArgumentMatcher<GraphQLRequest<PaginatedResult<ModelWithMetadata<M>>>> matchesRequest(
                 Class<M> modelClass, String nextToken) {
             return graphQLRequest -> {
                 if (graphQLRequest instanceof AppSyncGraphQLRequest) {
