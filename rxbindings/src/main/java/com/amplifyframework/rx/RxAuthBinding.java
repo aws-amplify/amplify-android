@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
@@ -35,10 +36,11 @@ import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.core.Amplify;
 
+import java.util.List;
 import java.util.Objects;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 
 final class RxAuthBinding implements RxAuthCategoryBehavior {
     private final AuthCategoryBehavior delegate;
@@ -124,6 +126,26 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     @Override
     public Single<AuthSession> fetchAuthSession() {
         return toSingle(delegate::fetchAuthSession);
+    }
+
+    @Override
+    public Completable rememberDevice() {
+        return toCompletable(delegate::rememberDevice);
+    }
+
+    @Override
+    public Completable forgetDevice() {
+        return toCompletable(delegate::forgetDevice);
+    }
+
+    @Override
+    public Completable forgetDevice(@NonNull AuthDevice device) {
+        return toCompletable((onComplete, onError) -> delegate.forgetDevice(device, onComplete, onError));
+    }
+
+    @Override
+    public Single<List<AuthDevice>> fetchDevices() {
+        return toSingle(delegate::fetchDevices);
     }
 
     @Override

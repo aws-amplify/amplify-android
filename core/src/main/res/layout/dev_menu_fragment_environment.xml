@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License").
+   You may not use this file except in compliance with the License.
+   A copy of the License is located at
+
+    http://aws.amazon.com/apache2.0
+
+   or in the "license" file accompanying this file. This file is distributed
+   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+   express or implied. See the License for the specific language governing
+   permissions and limitations under the License.
+-->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="30dp"
+    tools:context="com.amplifyframework.devmenu.DevMenuEnvironmentFragment">
+
+    <TextView
+        android:id="@+id/env_info_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/placeholder_env_info"
+        android:textColor="?android:attr/textColorPrimaryInverse"
+        android:textSize="16sp"/>
+</ScrollView>

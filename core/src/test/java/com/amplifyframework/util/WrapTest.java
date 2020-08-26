@@ -25,6 +25,23 @@ import static org.junit.Assert.assertNull;
  */
 public final class WrapTest {
     /**
+     * Validate wrapping a string in back ticks.
+     */
+    @Test
+    public void wrapInBackTicksReturnsBackTickedString() {
+        assertEquals("`Hamburger`", Wrap.inBackticks("Hamburger"));
+    }
+
+    /**
+     * Don't try wrapping null into back ticks, just return null.
+     */
+    @Test
+    public void passThroughNullWithoutBackTicks() {
+        //noinspection ConstantConditions
+        assertNull(Wrap.inBackticks(null));
+    }
+
+    /**
      * Validate wrapping a string in single quotes.
      */
     @Test

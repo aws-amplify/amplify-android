@@ -41,7 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 import static com.amplifyframework.rx.Matchers.anyConsumer;
 import static org.mockito.ArgumentMatchers.eq;

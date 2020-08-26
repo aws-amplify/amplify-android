@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License").
+   You may not use this file except in compliance with the License.
+   A copy of the License is located at
+
+    http://aws.amazon.com/apache2.0
+
+   or in the "license" file accompanying this file. This file is distributed
+   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+   express or implied. See the License for the specific language governing
+   permissions and limitations under the License.
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="15dp"
+    android:layout_marginRight="15dp"
+    android:layout_marginTop="10dp"
+    android:layout_marginBottom="10dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:clickable="true"
+    tools:context="com.amplifyframework.devmenu.DevMenuFileIssueFragment">
+
+    <EditText
+        android:id="@+id/issue_description"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:autofillHints="no"
+        android:hint="@string/file_issue_hint"
+        android:inputType="textMultiLine|textNoSuggestions"
+        android:layout_above="@id/file_issue_warning"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/file_issue_warning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/file_issue_warning_text"
+        android:textSize="15sp"
+        android:textColor="?android:attr/textColorPrimaryInverse"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_above="@id/issue_buttons" />
+
+    <LinearLayout
+        android:id="@+id/issue_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true">
+
+        <Button
+            android:id="@+id/copy_issue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/copy_issue_text"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            android:layout_marginRight="10dp"
+            android:layout_marginEnd="10dp"
+            style="?android:attr/buttonBarButtonStyle" />
+
+        <Button
+            android:id="@+id/file_issue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/file_issue_button_title"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            style="?android:attr/buttonBarButtonStyle" />
+    </LinearLayout>
+</RelativeLayout>

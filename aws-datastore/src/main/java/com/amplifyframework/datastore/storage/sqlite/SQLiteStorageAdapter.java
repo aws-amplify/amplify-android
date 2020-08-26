@@ -66,11 +66,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 /**
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
@@ -372,7 +372,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try (Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), options)) {
                 LOG.debug("Querying item for: " + itemClass.getSimpleName());
 
-                final Set<T> models = new HashSet<>();
+                final List<T> models = new ArrayList<>();
                 final ModelSchema modelSchema =
                     modelSchemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
 

@@ -32,10 +32,10 @@ import com.amplifyframework.logging.Logger;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * The {@link MutationProcessor} observes the {@link MutationOutbox}, and publishes its items to an
@@ -80,7 +80,7 @@ final class MutationProcessor {
                         "Pending mutations will be published to the cloud."
                 )
             )
-            .startWith(MutationOutbox.OutboxEvent.CONTENT_AVAILABLE) // To start draining immediately
+            .startWithItem(MutationOutbox.OutboxEvent.CONTENT_AVAILABLE) // To start draining immediately
             .subscribeOn(Schedulers.single())
             .observeOn(Schedulers.single())
             .flatMapCompletable(event -> drainMutationOutbox())

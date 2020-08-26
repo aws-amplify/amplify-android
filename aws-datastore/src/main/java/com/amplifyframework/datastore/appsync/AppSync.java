@@ -18,7 +18,9 @@ package com.amplifyframework.datastore.appsync;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
@@ -45,19 +47,34 @@ import com.amplifyframework.datastore.DataStoreException;
  */
 public interface AppSync {
     /**
+     * Builds a sync query {@link GraphQLRequest} that can be passed to the
+     * {@link AppSync#sync(GraphQLRequest, Consumer, Consumer)} method.
+     * @param <T> The type of data in the response. Must extend Model.
+     * @param modelClass The class of the Model we are querying on.
+     * @param lastSync The time you last synced - all changes since this time are retrieved.
+     * @param syncPageSize limit for number of records to return per page.
+     * @return A {@link GraphQLRequest} for making a sync query
+     * @throws DataStoreException on error building GraphQLRequest due to inability to obtain model schema.
+     */
+    @NonNull
+    <T extends Model> GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> buildSyncRequest(
+            @NonNull Class<T> modelClass,
+            @Nullable Long lastSync,
+            @Nullable Integer syncPageSize
+    ) throws DataStoreException;
+
+    /**
      * Uses Amplify API category to get a list of changes which have happened since a last sync time.
      * @param <T> The type of data in the response. Must extend Model.
-     * @param modelClass The class of the Model we are querying on
-     * @param lastSync The time you last synced - all changes since this time are retrieved.
+     * @param request The {@link GraphQLRequest} for requesting a sync query.
      * @param onResponse Invoked when response data is available.
-     * @param onFailure Invoked on failure to obtain response data
+     * @param onFailure Invoked on failure to obtain response data.
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
     @NonNull
     <T extends Model> Cancelable sync(
-            @NonNull Class<T> modelClass,
-            @Nullable Long lastSync,
-            @NonNull Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> onResponse,
+            @NonNull GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request,
+            @NonNull Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure
     );
 
