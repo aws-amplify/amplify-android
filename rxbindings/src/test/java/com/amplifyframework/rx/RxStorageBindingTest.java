@@ -96,9 +96,10 @@ public final class RxStorageBindingTest {
     }
 
     /**
-     * When {@link StorageCategoryBehavior#downloadFile(String, File, Options, Consumer, Consumer, Consumer)}
-     * invokes its success callback, the {@link StorageDownloadFileResult} should propagate
-     * via the {@link Single} returned by {@link RxStorageBinding.RxStorageDownloadOperation#observeResult()}.
+     * When {@link StorageCategoryBehavior#downloadFile(String, File, StorageDownloadFileOptions,
+     * Consumer, Consumer, Consumer)} invokes its success callback, the {@link StorageDownloadFileResult}
+     * should propagate via the {@link Single} returned by
+     * {@link RxStorageBinding.RxProgressAwareSingleOperation#observeResult()}.
      * @throws InterruptedException not expected.
      */
     @Test
@@ -129,7 +130,7 @@ public final class RxStorageBindingTest {
                                        anyConsumer(),
                                        anyConsumer());
 
-        RxStorageBinding.RxStorageDownloadOperation rxOperation =
+        RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> rxOperation =
             rxStorage.downloadFile(remoteKey, localFile, StorageDownloadFileOptions.defaultInstance());
         TestObserver<StorageDownloadFileResult> testObserver = rxOperation.observeResult().test();
         TestObserver<StorageTransferProgress> testProgressObserver = rxOperation.observeProgress().test();

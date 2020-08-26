@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
@@ -35,7 +36,10 @@ import com.amplifyframework.storage.result.StorageUploadFileResult;
 
 import java.io.File;
 
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.ReplaySubject;
 
 final class RxStorageBinding implements RxStorageCategoryBehavior {
     private final StorageCategoryBehavior storage;
@@ -51,15 +55,16 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
-    public RxStorageDownloadOperation downloadFile(@NonNull String key, @NonNull File local) {
+    public RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(@NonNull String key,
+                                                                                  @NonNull File local) {
         return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance());
     }
 
     @NonNull
     @Override
-    public RxStorageDownloadOperation downloadFile(
+    public RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
             @NonNull String key, @NonNull File local, @NonNull StorageDownloadFileOptions options) {
-        return new RxStorageDownloadOperation((onProgress, onResult, onError) -> {
+        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) -> {
             return storage.downloadFile(key, local, options, onProgress, onResult, onError);
         });
     }
@@ -118,23 +123,41 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
     }
 
     /**
-     * Defines the parameters of the download operation by
-     * supplying the generic types required by {@link RxAdapters.RxProgressAwareSingle}.
+     * A generic implementation of an operation that emits
+     * progress information and returns a single.
+     * @param <T> The type that represents the result of a given operation.
+     * @param <P> The type that represents the progress of a given operation.
      */
-    static final class RxStorageDownloadOperation extends
-        RxAdapters.RxProgressAwareSingle<StorageDownloadFileResult, StorageTransferProgress> {
-        RxStorageDownloadOperation(RxStorageDownloadCallbackMapper callbacks) {
-            super(callbacks);
-        }
-    }
+    static class RxProgressAwareSingleOperation<T> implements RxAdapters.RxSingleOperation<T> {
 
-    /**
-     * Type alias that defines the generic parameters for a download operation.
-     * @see RxAdapters.RxProgressAwareCallbackMapper
-     */
-    interface RxStorageDownloadCallbackMapper
-        extends RxAdapters.RxProgressAwareCallbackMapper<StorageDownloadFileResult,
-                                                         StorageTransferProgress,
-                                                         StorageException> {
+        private PublishSubject<StorageTransferProgress> progressSubject;
+        private ReplaySubject<T> resultSubject;
+        private Cancelable amplifyOperation;
+
+        RxProgressAwareSingleOperation(RxStorageTransferCallbackMapper<T> callbacks) {
+            progressSubject = PublishSubject.create();
+            resultSubject = ReplaySubject.create();
+            amplifyOperation = callbacks.emitTo(progressSubject::onNext,
+                                                resultSubject::onNext,
+                                                resultSubject::onError);
+        }
+
+        @Override
+        public void cancel() {
+            amplifyOperation.cancel();
+            resultSubject.onComplete();
+            progressSubject.onComplete();
+        }
+
+        @Override
+        public Single<T> observeResult() {
+            return Single.create(emitter -> {
+                resultSubject.subscribe(emitter::onSuccess, emitter::onError);
+            });
+        }
+
+        public Observable<StorageTransferProgress> observeProgress() {
+            return progressSubject;
+        }
     }
 }
