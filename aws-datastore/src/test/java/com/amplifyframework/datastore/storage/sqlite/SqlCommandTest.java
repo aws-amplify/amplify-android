@@ -25,6 +25,8 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.Page;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.QueryPaginationInput;
+import com.amplifyframework.core.model.query.QuerySortBy;
+import com.amplifyframework.core.model.query.QuerySortOrder;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.syncengine.PendingMutation;
@@ -219,6 +221,27 @@ public class SqlCommandTest {
         assertEquals(2, bindings.size());
         assertEquals(1, bindings.get(0));
         assertEquals(0, bindings.get(1));
+    }
+
+    /**
+     * Validates that a query, with an order by clause is generated correctly.
+     * @throws DataStoreException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
+     */
+    @Test
+    public void queryWithSortBy() throws DataStoreException {
+        final ModelSchema personSchema = getPersonModelSchema();
+        final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
+                personSchema,
+                Where.matchesAll().sorted(
+                        new QuerySortBy("lastName", QuerySortOrder.ASCENDING),
+                        new QuerySortBy("firstName", QuerySortOrder.DESCENDING))
+        );
+        assertNotNull(sqlCommand);
+        assertEquals(
+                PERSON_BASE_QUERY + " ORDER BY `Person_lastName` ASC, `Person_firstName` DESC;",
+                sqlCommand.sqlStatement()
+        );
+        assertEquals(0, sqlCommand.getBindings().size());
     }
 
     private static ModelSchema getPersonModelSchema() {

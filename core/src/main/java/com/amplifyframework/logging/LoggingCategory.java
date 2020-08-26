@@ -23,6 +23,11 @@ import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.util.Environment;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * The LoggingCategory is a collection of zero or more plugin
  * implementations which implement the logging category behavior. The
@@ -60,15 +65,18 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     @NonNull
     @Override
     public Logger forNamespace(@Nullable String namespace) {
-        return getLoggingPlugin().forNamespace(namespace);
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
+        List<Logger> delegates = new ArrayList<>();
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            delegates.add(plugin.forNamespace(namespace));
+        }
+        return new BroadcastLogger(delegates);
     }
 
     @NonNull
-    private LoggingPlugin<?> getLoggingPlugin() {
-        if (!super.isInitialized() || super.getPlugins().isEmpty()) {
-            return defaultPlugin;
-        } else {
-            return super.getSelectedPlugin();
-        }
+    @Override
+    protected LoggingPlugin<?> getSelectedPlugin() throws IllegalStateException {
+        throw new UnsupportedOperationException("Getting the selected logging plugin is not supported.");
     }
 }
