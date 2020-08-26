@@ -130,7 +130,7 @@ public final class AWSDataStorePluginTest {
 
     /**
      * Configuring and initialization the plugin when in API sync mode succeeds without
-     * freezing or crashing the the calling thread.
+     * freezing or crashing the calling thread.
      * @throws JSONException on failure to arrange plugin config
      * @throws AmplifyException on failure to arrange API plugin via Amplify facade
      */
