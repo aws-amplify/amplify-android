@@ -444,7 +444,7 @@ public final class SyncProcessorTest {
     }
 
     /**
-     * Validate the sync can handle 500 of pages.  Even with a recursive, functional algorithm, this should pass.
+     * Validate the sync can handle 100 of pages.  Even with a recursive, functional algorithm, this should pass.
      * @throws AmplifyException on error building sync request for next page.
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
