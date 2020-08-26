@@ -134,7 +134,7 @@ final class RxAdapters {
      * that emit progress information during processing.
      * @param <P> The type that represents the progress of a given operation.
      */
-    public interface RxProgressEmitter<P> {
+    public interface RxProgressAwareOperation<P> {
         /**
          * Returns an observable that the caller can subscribe to
          * receive progress information about the operation.
@@ -150,7 +150,7 @@ final class RxAdapters {
      * @param <P> The type that represents the progress of a given operation.
      */
     static class RxProgressAwareSingle<T, P>
-        implements RxAdapters.RxSingleOperation<T>, RxAdapters.RxProgressEmitter<P> {
+        implements RxAdapters.RxSingleOperation<T>, RxProgressAwareOperation<P> {
 
         private PublishSubject<P> progressSubject;
         private ReplaySubject<T> resultSubject;
