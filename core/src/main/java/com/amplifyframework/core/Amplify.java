@@ -37,8 +37,8 @@ import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
