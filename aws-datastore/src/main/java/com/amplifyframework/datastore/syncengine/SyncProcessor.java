@@ -41,10 +41,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.core.SingleEmitter;
 
 /**
  * "Hydrates" the local DataStore, using model metadata receive from the

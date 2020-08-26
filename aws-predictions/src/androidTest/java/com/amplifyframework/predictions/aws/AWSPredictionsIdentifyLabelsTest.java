@@ -33,7 +33,7 @@ import com.amplifyframework.util.Empty;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertFalse;

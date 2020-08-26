@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
@@ -32,6 +33,7 @@ import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.testutils.Await;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -227,15 +229,13 @@ public final class SynchronousAuth {
      * Complete password recovery process by inputting user's desired new password and confirmation code.
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    @NonNull
-    public Object confirmResetPassword(
+    public void confirmResetPassword(
             @NonNull String newPassword,
             @NonNull String confirmationCode
     ) throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.confirmResetPassword(
                     newPassword,
                     confirmationCode,
@@ -252,36 +252,70 @@ public final class SynchronousAuth {
      */
     @NonNull
     public AuthSession fetchAuthSession() throws AuthException {
-        return Await.<AuthSession, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.fetchAuthSession(onResult, onError)
+        return Await.result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchAuthSession);
+    }
+
+    /**
+     * Remembers current device synchronously.
+     * @throws AuthException exception
+     */
+    public void rememberDevice() throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.rememberDevice(() -> onResult.accept(new Object()), onError)
         );
+    }
+
+    /**
+     * Forgets the current device synchronously.
+     * @throws AuthException exception
+     */
+    public void forgetDevice() throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.forgetDevice(() -> onResult.accept(new Object()), onError)
+        );
+    }
+
+    /**
+     * Forgets the current device synchronously.
+     * @param device Auth device to forget
+     * @throws AuthException exception
+     */
+    public void forgetDevice(@NonNull AuthDevice device) throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.forgetDevice(device, () -> onResult.accept(new Object()), onError)
+        );
+    }
+
+    /**
+     * Fetches a list of remembered devices synchronously.
+     * @return List of remembered Auth devices upon successful fetch
+     * @throws AuthException exception
+     */
+    public List<AuthDevice> fetchDevices() throws AuthException {
+        return Await.result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchDevices);
     }
 
     /**
      * Update the password of an existing user - must be signed in to perform this action.
      * @param oldPassword The user's existing password
      * @param newPassword The new password desired on the user account
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    @NonNull
-    public Object updatePassword(
+    public void updatePassword(
             @NonNull String oldPassword,
             @NonNull String newPassword
     ) throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.updatePassword(oldPassword, newPassword, () -> onResult.accept(new Object()), onError)
         );
     }
 
     /**
      * Sign out synchronously.
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    @NonNull
-    public Object signOut() throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+    public void signOut() throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.signOut(
                     () -> onResult.accept(new Object()),
                     onError

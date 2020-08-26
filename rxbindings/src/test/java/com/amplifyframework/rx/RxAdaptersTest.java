@@ -25,10 +25,10 @@ import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Test;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertTrue;
 
@@ -64,16 +64,16 @@ public final class RxAdaptersTest {
     }
 
     /**
-     * The {@link Completable} returned by {@link RxAdapters#toCompletable(VoidResultEmitter)}
-     * is cancelable.
+     * A {@link Completable} is returned by {@link RxAdapters#toCompletable(VoidResultEmitter)}.
+     * It may be subscribed, and that subscription amy be disposed.
      */
     @SuppressWarnings("checkstyle:WhitespaceAround") // No-op VoidResultEmitter body
     @Test
-    public void completableIsCancellable() {
+    public void completableIsDisposable() {
         Completable completable = RxAdapters.toCompletable(((onResult, onError) -> {}));
         TestObserver<?> observer = completable.test();
-        observer.cancel();
-        assertTrue(observer.isCancelled());
+        observer.dispose();
+        assertTrue(observer.isDisposed());
     }
 
     /**
@@ -114,16 +114,17 @@ public final class RxAdaptersTest {
 
     /**
      * {@link RxAdapters#toSingle(CancelableResultEmitter)} returns a {@link Single} which
-     * can be canceled. The Amplify {@link Cancelable} returned by that emitter will also show
+     * can be disposed. The result of doing so will be to cancel the underlying operation.
+     * The Amplify {@link Cancelable} returned by that emitter will show
      * as canceled.
      */
     @Test
-    public void singleIsCancelable() {
+    public void underlyingOperationIsCanceledWhenSingleSubscriptionIsDisposed() {
         SimpleCancelable cancelable = new SimpleCancelable();
         TestObserver<?> observer = RxAdapters.toSingle(((onResult, onError) -> cancelable))
             .test();
-        observer.cancel();
-        assertTrue(observer.isCancelled());
+        observer.dispose();
+        assertTrue(observer.isDisposed());
         assertTrue(cancelable.isCanceled());
     }
 
@@ -164,22 +165,21 @@ public final class RxAdaptersTest {
             .test()
             .assertError(expected)
             .assertNoValues()
-            .assertNotComplete()
-            .assertTerminated();
+            .assertNotComplete();
     }
 
     /**
-     * The {@link Observable} returned by {@link RxAdapters#toObservable(CancelableStreamEmitter)}
-     * is cancelable.
+     * An {@link Observable} is returned by {@link RxAdapters#toObservable(CancelableStreamEmitter)}.
+     * When it is disposed, the underlying operation is canceled.
      */
     @Test
-    public void observableIsCancelable() {
+    public void underlyingCancelIsCalledWhenObservableSubscriptionIsDisposed() {
         SimpleCancelable cancelable = new SimpleCancelable();
         TestObserver<?> observer =
             RxAdapters.toObservable((onStart, onItem, onError, onComplete) -> cancelable)
                 .test();
-        observer.cancel();
-        assertTrue(observer.isCancelled());
+        observer.dispose();
+        assertTrue(observer.isDisposed());
         assertTrue(cancelable.isCanceled());
     }
 }

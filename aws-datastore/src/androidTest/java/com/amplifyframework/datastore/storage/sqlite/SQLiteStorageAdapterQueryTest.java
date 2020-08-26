@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;

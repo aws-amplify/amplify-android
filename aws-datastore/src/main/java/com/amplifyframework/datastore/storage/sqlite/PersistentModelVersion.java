@@ -27,7 +27,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import java.util.Iterator;
 import java.util.Objects;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 /**
  * A {@link Model} that will encapsulate the {@link ModelProvider#version()}

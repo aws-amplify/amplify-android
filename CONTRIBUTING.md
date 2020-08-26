@@ -377,7 +377,7 @@ git checkout -B add_merger_to_datastore
 To publish it:
 
 ```
-git push origin origin add_merger_to_datastore
+git push -u origin add_merger_to_datastore
 ```
 
 This last step will give you a URL to view a GitHub page in your browser.

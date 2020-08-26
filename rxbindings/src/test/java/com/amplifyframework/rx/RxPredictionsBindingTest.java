@@ -41,9 +41,10 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.io.ByteArrayInputStream;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Single;
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyConsumer;
 import static org.mockito.Mockito.doAnswer;
@@ -56,6 +57,8 @@ import static org.mockito.Mockito.mock;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class RxPredictionsBindingTest {
+    private static final long TIMEOUT_SECONDS = 2;
+
     private PredictionsCategoryBehavior delegate;
     private RxPredictionsCategoryBehavior rxPredictions;
 
@@ -72,9 +75,10 @@ public final class RxPredictionsBindingTest {
     /**
      * When the delegate behavior succeeds for the {@link RxPredictionsBinding#convertTextToSpeech(String)}
      * its result value should be emitted via the returned {@link Single}.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void testSuccessfulTextToSpeechConversion() {
+    public void testSuccessfulTextToSpeechConversion() throws InterruptedException {
         String text = RandomString.string();
         TextToSpeechResult result = TextToSpeechResult.fromAudioData(new ByteArrayInputStream(new byte[0]));
         doAnswer(invocation -> {
@@ -84,16 +88,17 @@ public final class RxPredictionsBindingTest {
             return mock(TextToSpeechOperation.class);
         }).when(delegate).convertTextToSpeech(eq(text), anyConsumer(), anyConsumer());
         TestObserver<TextToSpeechResult> observer = rxPredictions.convertTextToSpeech(text).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertValue(result);
     }
 
     /**
      * When the delegate behavior fails for the {@link RxPredictionsBinding#convertTextToSpeech(String)}
      * its emitted error should be propagated via the returned {@link Single}.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void testFailedTextToSpeechConversion() {
+    public void testFailedTextToSpeechConversion() throws InterruptedException {
         String text = RandomString.string();
         PredictionsException predictionsException = new PredictionsException("Uh", "Oh!");
         doAnswer(invocation -> {
@@ -103,16 +108,17 @@ public final class RxPredictionsBindingTest {
             return mock(TextToSpeechOperation.class);
         }).when(delegate).convertTextToSpeech(eq(text), anyConsumer(), anyConsumer());
         TestObserver<TextToSpeechResult> observer = rxPredictions.convertTextToSpeech(text).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(predictionsException);
     }
 
     /**
      * When the delegate returns a result for the {@link RxPredictionsBinding#translateText(String)}
      * call, the result should be emitted via the returned {@link Single}.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void testSuccessfulTranslateText() {
+    public void testSuccessfulTranslateText() throws InterruptedException {
         String text = "Cat";
         TranslateTextResult result = TranslateTextResult.builder()
             .targetLanguage(LanguageType.SPANISH)
@@ -125,16 +131,17 @@ public final class RxPredictionsBindingTest {
             return mock(TranslateTextOperation.class);
         }).when(delegate).translateText(eq(text), anyConsumer(), anyConsumer());
         TestObserver<TranslateTextResult> observer = rxPredictions.translateText(text).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertValue(result);
     }
 
     /**
      * When the delegate emits an error for the {@link RxPredictionsBinding#translateText(String)}
      * call, that error should be propagated via the returned {@link Single}.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void testFailedTranslateText() {
+    public void testFailedTranslateText() throws InterruptedException {
         String text = "Cat";
         PredictionsException predictionsException = new PredictionsException("Uh", "Oh");
         doAnswer(invocation -> {
@@ -144,16 +151,17 @@ public final class RxPredictionsBindingTest {
             return mock(TranslateTextOperation.class);
         }).when(delegate).translateText(eq(text), anyConsumer(), anyConsumer());
         TestObserver<TranslateTextResult> observer = rxPredictions.translateText(text).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(predictionsException);
     }
 
     /**
      * When the delegate of {@link RxPredictionsBinding#identify(IdentifyAction, Bitmap)} succeeds,
      * the result should be propagated via the returned {@link Single}.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void testSuccessfulImageIdentification() {
+    public void testSuccessfulImageIdentification() throws InterruptedException {
         Bitmap bitmap = Bitmap.createBitmap(10, 10, Bitmap.Config.ALPHA_8);
         IdentifyDocumentTextResult result = IdentifyDocumentTextResult.builder()
             .fullText(RandomString.string())
@@ -172,16 +180,17 @@ public final class RxPredictionsBindingTest {
         }).when(delegate).identify(eq(IdentifyActionType.DETECT_TEXT), eq(bitmap), anyConsumer(), anyConsumer());
         TestObserver<IdentifyResult> observer =
             rxPredictions.identify(IdentifyActionType.DETECT_TEXT, bitmap).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertValue(result);
     }
 
     /**
      * When the delegate of {@link RxPredictionsBinding#identify(IdentifyAction, Bitmap)} fails,
      * the failure should be propagated via the returned {@link Single}.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void testFailedImageIdentification() {
+    public void testFailedImageIdentification() throws InterruptedException {
         Bitmap bitmap = Bitmap.createBitmap(10, 10, Bitmap.Config.ALPHA_8);
         PredictionsException predictionsException = new PredictionsException("Uh", "Oh");
         doAnswer(invocation -> {
@@ -192,16 +201,17 @@ public final class RxPredictionsBindingTest {
         }).when(delegate).identify(eq(IdentifyActionType.DETECT_TEXT), eq(bitmap), anyConsumer(), anyConsumer());
         TestObserver<IdentifyResult> observer =
             rxPredictions.identify(IdentifyActionType.DETECT_TEXT, bitmap).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(predictionsException);
     }
 
     /**
      * When the delegate of {@link RxPredictionsBinding#interpret(String)} emits a result,
      * it should be propagated via the returned {@link Single}.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void testSuccessfulTextInterpretation() {
+    public void testSuccessfulTextInterpretation() throws InterruptedException {
         String text = RandomString.string();
         InterpretResult result = InterpretResult.builder().build();
         doAnswer(invocation -> {
@@ -211,16 +221,17 @@ public final class RxPredictionsBindingTest {
             return mock(InterpretOperation.class);
         }).when(delegate).interpret(eq(text), anyConsumer(), anyConsumer());
         TestObserver<InterpretResult> observer = rxPredictions.interpret(text).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertValue(result);
     }
 
     /**
      * When the delegate of {@link RxPredictionsBinding#interpret(String)} emits a failure,
      * it should be propagated via the returned {@link Single}.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void testFailedTextInterpretation() {
+    public void testFailedTextInterpretation() throws InterruptedException {
         String text = RandomString.string();
         PredictionsException predictionsException = new PredictionsException("Uh", "Oh");
         doAnswer(invocation -> {
@@ -230,7 +241,7 @@ public final class RxPredictionsBindingTest {
             return mock(InterpretOperation.class);
         }).when(delegate).interpret(eq(text), anyConsumer(), anyConsumer());
         TestObserver<InterpretResult> observer = rxPredictions.interpret(text).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(predictionsException);
     }
 }
