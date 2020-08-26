@@ -174,8 +174,7 @@ public final class RxStorageBindingTest {
     public void uploadFileReturnsResult() {
         StorageUploadFileResult result = StorageUploadFileResult.fromKey(remoteKey);
         doAnswer(invocation -> {
-            // 0 key, 1 local, 2 options, 3 onProgress 4 onResult, 5 onError
-            final int indexOfResultConsumer = 4;
+            final int indexOfResultConsumer = 2; // 0 key, 1 local, 2 onResult, 3 onError
             Consumer<StorageUploadFileResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
             resultConsumer.accept(result);
             return mock(StorageUploadFileOperation.class);
