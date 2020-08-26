@@ -30,6 +30,7 @@ import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 
 import java.io.File;
@@ -50,15 +51,17 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
-    public Single<StorageDownloadFileResult> downloadFile(@NonNull String key, @NonNull File local) {
-        return toSingle((onResult, onError) -> storage.downloadFile(key, local, onResult, onError));
+    public RxStorageDownloadOperation downloadFile(@NonNull String key, @NonNull File local) {
+        return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance());
     }
 
     @NonNull
     @Override
-    public Single<StorageDownloadFileResult> downloadFile(
+    public RxStorageDownloadOperation downloadFile(
             @NonNull String key, @NonNull File local, @NonNull StorageDownloadFileOptions options) {
-        return toSingle((onResult, onError) -> storage.downloadFile(key, local, options, onResult, onError));
+        return new RxStorageDownloadOperation((onProgress, onResult, onError) -> {
+            return storage.downloadFile(key, local, options, onProgress, onResult, onError);
+        });
     }
 
     @NonNull
@@ -112,5 +115,26 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     private <T> Single<T> toSingle(RxAdapters.CancelableResultEmitter<T, StorageException> method) {
         return RxAdapters.toSingle(method);
+    }
+
+    /**
+     * Defines the parameters of the download operation by
+     * supplying the generic types required by {@link RxAdapters.RxProgressAwareSingle}.
+     */
+    static final class RxStorageDownloadOperation extends
+        RxAdapters.RxProgressAwareSingle<StorageDownloadFileResult, StorageTransferProgress> {
+        RxStorageDownloadOperation(RxStorageDownloadCallbackMapper callbacks) {
+            super(callbacks);
+        }
+    }
+
+    /**
+     * Type alias that defines the generic parameters for a download operation.
+     * @see RxAdapters.RxProgressAwareCallbackMapper
+     */
+    interface RxStorageDownloadCallbackMapper
+        extends RxAdapters.RxProgressAwareCallbackMapper<StorageDownloadFileResult,
+                                                         StorageTransferProgress,
+                                                         StorageException> {
     }
 }

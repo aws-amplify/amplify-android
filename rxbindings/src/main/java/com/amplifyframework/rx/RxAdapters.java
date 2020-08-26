@@ -15,6 +15,7 @@
 
 package com.amplifyframework.rx;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
@@ -23,6 +24,8 @@ import com.amplifyframework.core.async.Cancelable;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.ReplaySubject;
 
 /**
  * Utility method to convert between behaviors that use the Amplify framework's native
@@ -99,5 +102,86 @@ final class RxAdapters {
      */
     interface VoidCompletionEmitter<E> {
         void emitTo(Action onComplete, Consumer<E> onError);
+    }
+
+    /**
+     * Interface that defines a contract for callback-style operations to be
+     * mapped to reactive-style operation types that offer a more idiomatic way
+     * of using reactive programming with the Amplify framework.
+     * @param <T> The type that represents the result of a given operation.
+     * @param <P> The type that represents the progress of a given operation.
+     * @param <E> The type of exception of a given operation.
+     */
+    interface RxProgressAwareCallbackMapper<T, P, E> {
+        Cancelable emitTo(Consumer<P> onProgress, Consumer<T> onItem, Consumer<E> onError);
+    }
+
+    /**
+     * Interface that should be implemented by reactive-style operations
+     * wishing to return a {@link Single} as its result.
+     * @param <T> The type that represents the result of a given operation.
+     */
+    public interface RxSingleOperation<T> extends Cancelable {
+        /**
+         * Maps the result of a callback-style operation to a {@link Single}.
+         * @return A {@link Single} that emits a result or an error.
+         */
+        Single<T> observeResult();
+    }
+
+    /**
+     * Interface that should be implemented by reactive-style operations
+     * that emit progress information during processing.
+     * @param <P> The type that represents the progress of a given operation.
+     */
+    public interface RxProgressEmitter<P> {
+        /**
+         * Returns an observable that the caller can subscribe to
+         * receive progress information about the operation.
+         * @return An observable that emits progress information.
+         */
+        Observable<P> observeProgress();
+    }
+
+    /**
+     * A generic implementation of an operation that emits
+     * progress information and returns a single.
+     * @param <T> The type that represents the result of a given operation.
+     * @param <P> The type that represents the progress of a given operation.
+     */
+    static class RxProgressAwareSingle<T, P>
+        implements RxAdapters.RxSingleOperation<T>, RxAdapters.RxProgressEmitter<P> {
+
+        private PublishSubject<P> progressSubject;
+        private ReplaySubject<T> resultSubject;
+        private Cancelable amplifyOperation;
+
+        RxProgressAwareSingle(RxProgressAwareCallbackMapper<T, P, ? extends AmplifyException> callbacks) {
+            progressSubject = PublishSubject.create();
+            resultSubject = ReplaySubject.create();
+            amplifyOperation = callbacks.emitTo(progressSubject::onNext,
+                                                resultSubject::onNext,
+                                                resultSubject::onError);
+        }
+
+        @Override
+        public void cancel() {
+            amplifyOperation.cancel();
+            resultSubject.onComplete();
+            progressSubject.onComplete();
+        }
+
+        @Override
+        public Single<T> observeResult() {
+            Single<T> objectSingle = Single.create(emitter -> {
+                resultSubject.subscribe(emitter::onSuccess, emitter::onError);
+            });
+            return objectSingle;
+        }
+
+        @Override
+        public Observable<P> observeProgress() {
+            return progressSubject;
+        }
     }
 }
