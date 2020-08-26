@@ -93,7 +93,7 @@ public final class AppSyncGraphQLRequestFactory {
     /**
      * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result.
      * The request will be created with the correct document based on the model schema and variables
-     * for filtering based on the the given predicate.
+     * for filtering based on the given predicate.
      *
      * @param modelClass the model class.
      * @param predicate the model predicate.
@@ -115,7 +115,7 @@ public final class AppSyncGraphQLRequestFactory {
      * within a certain range (i.e. paginated).
      *
      * The request will be created with the correct document based on the model schema and variables
-     * for filtering based on the the given predicate and pagination.
+     * for filtering based on the given predicate and pagination.
      *
      * @param modelClass the model class.
      * @param predicate the predicate for filtering.
