@@ -17,7 +17,10 @@ package com.amplifyframework.rx;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.storage.StorageCategoryBehavior;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
@@ -25,6 +28,7 @@ import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 
 import java.io.File;
@@ -40,12 +44,11 @@ public interface RxStorageCategoryBehavior {
      * Download a file.
      * @param key Remote key of file
      * @param local Local file to which to save
-     * @return A single which emits a download result on success, or an error on failure.
-     *         The download does not begin until subscription. You can cancel the download
-     *         by disposing the single subscription.
+     * @return An instance of {@link RxStorageBinding.RxStorageDownloadOperation} which emits a
+     *         download result or failure as a {@link Single}
      */
     @NonNull
-    Single<StorageDownloadFileResult> downloadFile(
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
             @NonNull String key,
             @NonNull File local
     );
@@ -55,12 +58,15 @@ public interface RxStorageCategoryBehavior {
      * @param key Remote key of file
      * @param local Local file to which to save
      * @param options Additional download options
-     * @return A single which emits a download result on success, or an error on failure.
+     * @return An instance of {@link RxStorageBinding.RxStorageDownloadOperation} which emits a
+     *         download result or failure as a {@link Single}. It also
+     *         provides progress information when the caller subscribes to
+     *         {@link RxStorageBinding.RxStorageDownloadOperation#observeProgress()}.
      *         The download does not begin until subscription. You can cancel the download
      *         by disposing the single subscription.
      */
     @NonNull
-    Single<StorageDownloadFileResult> downloadFile(
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
             @NonNull String key,
             @NonNull File local,
             @NonNull StorageDownloadFileOptions options
@@ -147,4 +153,15 @@ public interface RxStorageCategoryBehavior {
             @NonNull String path,
             @NonNull StorageListOptions options
     );
+
+    /**
+     * Type alias that defines the generic parameters for a download operation.
+     * @param <T> The type that represents the result of a given operation.
+     * @see RxAdapters.RxProgressAwareCallbackMapper
+     */
+    interface RxStorageTransferCallbackMapper<T> {
+        Cancelable emitTo(Consumer<StorageTransferProgress> onProgress,
+                          Consumer<T> onItem,
+                          Consumer<StorageException> onError);
+    }
 }

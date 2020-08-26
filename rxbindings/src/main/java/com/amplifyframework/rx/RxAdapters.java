@@ -100,4 +100,17 @@ final class RxAdapters {
     interface VoidCompletionEmitter<E> {
         void emitTo(Action onComplete, Consumer<E> onError);
     }
+
+    /**
+     * Interface that should be implemented by reactive-style operations
+     * wishing to return a {@link Single} as its result.
+     * @param <T> The type that represents the result of a given operation.
+     */
+    interface RxSingleOperation<T> extends Cancelable {
+        /**
+         * Maps the result of a callback-style operation to a {@link Single}.
+         * @return A {@link Single} that emits a result or an error.
+         */
+        Single<T> observeResult();
+    }
 }

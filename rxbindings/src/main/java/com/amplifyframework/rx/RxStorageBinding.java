@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
@@ -30,11 +31,15 @@ import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 
 import java.io.File;
 
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.ReplaySubject;
 
 final class RxStorageBinding implements RxStorageCategoryBehavior {
     private final StorageCategoryBehavior storage;
@@ -50,15 +55,18 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
-    public Single<StorageDownloadFileResult> downloadFile(@NonNull String key, @NonNull File local) {
-        return toSingle((onResult, onError) -> storage.downloadFile(key, local, onResult, onError));
+    public RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(@NonNull String key,
+                                                                                  @NonNull File local) {
+        return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance());
     }
 
     @NonNull
     @Override
-    public Single<StorageDownloadFileResult> downloadFile(
+    public RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
             @NonNull String key, @NonNull File local, @NonNull StorageDownloadFileOptions options) {
-        return toSingle((onResult, onError) -> storage.downloadFile(key, local, options, onResult, onError));
+        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) -> {
+            return storage.downloadFile(key, local, options, onProgress, onResult, onError);
+        });
     }
 
     @NonNull
@@ -112,5 +120,44 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     private <T> Single<T> toSingle(RxAdapters.CancelableResultEmitter<T, StorageException> method) {
         return RxAdapters.toSingle(method);
+    }
+
+    /**
+     * A generic implementation of an operation that emits
+     * progress information and returns a single.
+     * @param <T> The type that represents the result of a given operation.
+     * @param <P> The type that represents the progress of a given operation.
+     */
+    static class RxProgressAwareSingleOperation<T> implements RxAdapters.RxSingleOperation<T> {
+
+        private PublishSubject<StorageTransferProgress> progressSubject;
+        private ReplaySubject<T> resultSubject;
+        private Cancelable amplifyOperation;
+
+        RxProgressAwareSingleOperation(RxStorageTransferCallbackMapper<T> callbacks) {
+            progressSubject = PublishSubject.create();
+            resultSubject = ReplaySubject.create();
+            amplifyOperation = callbacks.emitTo(progressSubject::onNext,
+                                                resultSubject::onNext,
+                                                resultSubject::onError);
+        }
+
+        @Override
+        public void cancel() {
+            amplifyOperation.cancel();
+            resultSubject.onComplete();
+            progressSubject.onComplete();
+        }
+
+        @Override
+        public Single<T> observeResult() {
+            return Single.create(emitter -> {
+                resultSubject.subscribe(emitter::onSuccess, emitter::onError);
+            });
+        }
+
+        public Observable<StorageTransferProgress> observeProgress() {
+            return progressSubject;
+        }
     }
 }
