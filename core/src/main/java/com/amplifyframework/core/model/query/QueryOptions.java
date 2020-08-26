@@ -83,7 +83,7 @@ public final class QueryOptions {
      * @return current options with an updated {@code sortBy}.
      */
     public QueryOptions sorted(@NonNull final QuerySortBy... querySortBy) {
-        return new QueryOptions(queryPredicate, paginationInput, Arrays.asList(querySortBy));
+        return new QueryOptions(queryPredicate, paginationInput, Arrays.asList(Objects.requireNonNull(querySortBy)));
     }
 
     /**
