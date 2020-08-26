@@ -28,7 +28,7 @@ import java.util.Objects;
  * A data structure representing a model field and an order to sort by (ascending or descending), used to specify the
  * order of results from {@link DataStoreCategoryBehavior#query(Class, QueryOptions, Consumer, Consumer)}.
  *
- * The preferred way to create a QuerySortBy is with the @{@link QueryField#ascending()} and
+ * The preferred way to create a QuerySortBy is with the {@link QueryField#ascending()} and
  * {@link QueryField#descending()} helper methods (e.g. Todo.DESCRIPTION.ascending() or Todo.DESCRIPTION.descending())
  */
 public final class QuerySortBy {

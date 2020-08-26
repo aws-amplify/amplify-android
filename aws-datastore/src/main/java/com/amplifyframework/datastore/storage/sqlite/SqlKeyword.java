@@ -198,6 +198,7 @@ public enum SqlKeyword {
      * @param queryOperatorType the query operator type
      * @return the SQL specific keyword
      */
+    @NonNull
     public static SqlKeyword fromQueryOperator(@NonNull QueryOperator.Type queryOperatorType) {
         final SqlKeyword sqlKeyword = QUERY_OPERATOR_TO_SQL.get(Objects.requireNonNull(queryOperatorType));
         if (null == sqlKeyword) {
@@ -213,6 +214,7 @@ public enum SqlKeyword {
      * @param groupType the query predicate group type
      * @return the SQL specific keyword
      */
+    @NonNull
     public static SqlKeyword fromQueryPredicateGroup(@NonNull QueryPredicateGroup.Type groupType) {
         final SqlKeyword sqlKeyword = QUERY_PREDICATE_GROUP_TO_SQL.get(Objects.requireNonNull(groupType));
         if (null == sqlKeyword) {
@@ -228,6 +230,7 @@ public enum SqlKeyword {
      * @param sortOrder the query sort order type
      * @return the SQL specific keyword
      */
+    @NonNull
     public static SqlKeyword fromQuerySortOrder(@NonNull QuerySortOrder sortOrder) {
         final SqlKeyword sqlKeyword = QUERY_SORT_BY_TO_SQL.get(Objects.requireNonNull(sortOrder));
         if (null == sqlKeyword) {

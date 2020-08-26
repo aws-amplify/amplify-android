@@ -176,9 +176,9 @@ public final class SQLiteTable {
     }
 
     /**
-     * Returns the SQLiteColumn for the provided columnName.
-     * @param columnName columnName of the column
-     * @return the SQLiteColumn for the provided columnName.
+     * Returns the SQLiteColumn for the provided column name.
+     * @param columnName name of the column
+     * @return the SQLiteColumn for the provided column name.
      * @throws DataStoreException if no column is found for the provided columnName.
      */
     @NonNull
