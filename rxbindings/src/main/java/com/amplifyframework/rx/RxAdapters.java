@@ -121,7 +121,7 @@ final class RxAdapters {
      * wishing to return a {@link Single} as its result.
      * @param <T> The type that represents the result of a given operation.
      */
-    public interface RxSingleOperation<T> extends Cancelable {
+    interface RxSingleOperation<T> extends Cancelable {
         /**
          * Maps the result of a callback-style operation to a {@link Single}.
          * @return A {@link Single} that emits a result or an error.
@@ -134,7 +134,7 @@ final class RxAdapters {
      * that emit progress information during processing.
      * @param <P> The type that represents the progress of a given operation.
      */
-    public interface RxProgressAwareOperation<P> {
+    interface RxProgressAwareOperation<P> {
         /**
          * Returns an observable that the caller can subscribe to
          * receive progress information about the operation.
