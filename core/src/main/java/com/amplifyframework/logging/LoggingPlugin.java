@@ -41,4 +41,21 @@ public abstract class LoggingPlugin<E> implements LoggingCategoryBehavior, Plugi
     @Override
     public void initialize(@NonNull Context context) throws AmplifyException {
     }
+
+    @Override
+    public final boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof LoggingPlugin)) {
+            return false;
+        }
+        LoggingPlugin<?> otherPlugin = (LoggingPlugin<?>) object;
+        return getPluginKey().equals(otherPlugin.getPluginKey());
+    }
+
+    @Override
+    public final int hashCode() {
+        return getPluginKey().hashCode();
+    }
 }
