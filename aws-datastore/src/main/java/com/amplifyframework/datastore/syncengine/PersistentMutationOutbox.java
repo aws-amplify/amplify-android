@@ -24,9 +24,13 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.events.OutboxStatusEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.HashSet;
@@ -117,6 +121,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     // the pendingMutation, directly.
                     mutationQueue.updateExistingQueueItemOrAppendNew(pendingMutation.getMutationId(), pendingMutation);
                     LOG.info("Successfully enqueued " + pendingMutation);
+                    announceSuccessfulSave(pendingMutation);
+                    publishCurrentOutboxStatus();
                     semaphore.release();
                     subscriber.onComplete();
                 },
@@ -181,6 +187,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
                             return;
                         }
                     }
+                    // Publish outbox status upon loading
+                    publishCurrentOutboxStatus();
                     semaphore.release();
                     emitter.onComplete();
                 },
@@ -224,6 +232,28 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             ));
         });
+    }
+
+    /**
+     * Publish a successfully enqueued mutation to hub.
+     * @param pendingMutation A mutation that has been successfully enqueued to outbox
+     * @param <T> Type of model
+     */
+    private <T extends Model> void announceSuccessfulSave(PendingMutation<T> pendingMutation) {
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED, pendingMutation)
+        );
+    }
+
+    /**
+     * Publish current outbox status to hub.
+     */
+    private void publishCurrentOutboxStatus() {
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            new OutboxStatusEvent(mutationQueue.isEmpty()).toHubEvent()
+        );
     }
 
     /**

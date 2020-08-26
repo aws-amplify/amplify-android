@@ -147,6 +147,10 @@ final class MutationProcessor {
             HubChannel.DATASTORE,
             HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation)
         );
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, processedMutation)
+        );
     }
 
     /**
