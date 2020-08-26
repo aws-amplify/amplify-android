@@ -77,7 +77,7 @@ public final class QueryOptions {
     }
 
     /**
-     * Returns an immutable copy of the current query options with the the given {@code sortBy} arguments.
+     * Returns an immutable copy of the current query options with the given {@code sortBy} arguments.
      *
      * @param querySortBy sorting information.
      * @return current options with an updated {@code sortBy}.
