@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.QueryPaginationInput;
+import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -250,6 +251,27 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append("?");
             bindings.add(paginationInput.getLimit());
             bindings.add(paginationInput.getPage() * paginationInput.getLimit());
+        }
+
+        // Append order by
+        final List<QuerySortBy> sortByList = options.getSortBy();
+        if (sortByList != null) {
+            rawQuery.append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.ORDER_BY)
+                    .append(SqlKeyword.DELIMITER);
+            Iterator<QuerySortBy> sortByIterator = sortByList.iterator();
+            while (sortByIterator.hasNext()) {
+                final QuerySortBy sortBy = sortByIterator.next();
+                SQLiteColumn column = table.getColumn(sortBy.getField());
+                rawQuery.append(Wrap.inBackticks(column.getAliasedName()))
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.fromQuerySortOrder(sortBy.getSortOrder()));
+
+                if (sortByIterator.hasNext()) {
+                    rawQuery.append(",")
+                            .append(SqlKeyword.DELIMITER);
+                }
+            }
         }
 
         rawQuery.append(";");

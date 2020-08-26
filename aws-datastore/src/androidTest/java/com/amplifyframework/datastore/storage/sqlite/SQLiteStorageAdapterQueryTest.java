@@ -33,6 +33,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
@@ -279,7 +282,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         List<BlogOwner> result = adapter.query(
             BlogOwner.class,
-            Where.matchesAll().paginated(Page.startingAt(0).withLimit(pageSize))
+            Where.paginated(Page.startingAt(0).withLimit(pageSize))
         );
         assertNotNull(result);
         assertEquals(pageSize, result.size());
@@ -297,7 +300,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         List<BlogOwner> result = adapter.query(
             BlogOwner.class,
-            Where.matchesAll().paginated(Page.firstPage())
+            Where.paginated(Page.firstPage())
         );
         assertNotNull(result);
         assertEquals(pageSize, result.size());
@@ -316,10 +319,47 @@ public final class SQLiteStorageAdapterQueryTest {
 
         List<BlogOwner> result = adapter.query(
             BlogOwner.class,
-            Where.matchesAll().paginated(Page.firstResult())
+            Where.paginated(Page.firstResult())
         );
         assertNotNull(result);
         assertEquals(1, result.size());
+    }
+
+    /**
+     * Test query with order by.  Validate that a list of BlogOwners can be sorted first by name in descending order,
+     * then by wea in ascending order.
+     * @throws DataStoreException On failure to arrange items into store, or from the query action itself
+     */
+    @Test
+    public void queryWithOrderBy() throws DataStoreException {
+        // Expect
+        List<String> names = Arrays.asList("Joe", "Joe", "Joe", "Bob", "Bob", "Bob", "Dan", "Dan", "Dan");
+        List<String> weas = Arrays.asList("pon", "lth", "ver", "kly", "ken", "sel", "ner", "rer", "ned");
+        List<BlogOwner> owners = new ArrayList<>();
+
+        for (int i = 0; i < names.size(); i++) {
+            BlogOwner owner = BlogOwner.builder()
+                    .name(names.get(i))
+                    .wea(weas.get(i))
+                    .build();
+            adapter.save(owner);
+            owners.add(owner);
+        }
+
+        // Act
+        List<BlogOwner> result = adapter.query(
+                BlogOwner.class,
+                Where.sorted(BlogOwner.NAME.descending(), BlogOwner.WEA.ascending())
+        );
+
+        // Verify
+        List<BlogOwner> sorted = new ArrayList<>(owners);
+        Collections.sort(sorted, Comparator
+                .comparing(BlogOwner::getName)
+                .reversed()
+                .thenComparing(BlogOwner::getWea)
+        );
+        assertEquals(sorted, result);
     }
 
     private void createBlogOwnerRecords(final int count) throws DataStoreException {

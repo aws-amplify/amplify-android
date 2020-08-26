@@ -15,6 +15,9 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
+import com.amplifyframework.core.model.query.QuerySortBy;
+import com.amplifyframework.core.model.query.QuerySortOrder;
+
 /**
  * Represents a property in a model with methods for chaining conditions.
  */
@@ -124,5 +127,23 @@ public final class QueryField {
      */
     public QueryPredicateOperation<String> contains(String value) {
         return new QueryPredicateOperation<>(fieldName, new ContainsQueryOperator(value));
+    }
+
+    /**
+     * Generates a new sort object specifying a field that should be sorted in ascending order for a query.
+     *
+     * @return a QuerySortBy object, representing a field that should be sorted in ascending order for a query.
+     */
+    public QuerySortBy ascending() {
+        return new QuerySortBy(fieldName, QuerySortOrder.ASCENDING);
+    }
+
+    /**
+     * Generates a new sort object specifying a field that should be sorted in descending order for a query.
+     *
+     * @return a QuerySortBy object, representing a field that should be sorted in descending order for a query.
+     */
+    public QuerySortBy descending() {
+        return new QuerySortBy(fieldName, QuerySortOrder.DESCENDING);
     }
 }

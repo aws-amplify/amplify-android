@@ -372,7 +372,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try (Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), options)) {
                 LOG.debug("Querying item for: " + itemClass.getSimpleName());
 
-                final Set<T> models = new HashSet<>();
+                final List<T> models = new ArrayList<>();
                 final ModelSchema modelSchema =
                     modelSchemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
 
