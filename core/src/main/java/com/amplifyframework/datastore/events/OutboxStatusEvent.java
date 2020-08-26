@@ -20,8 +20,6 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
-import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.hub.HubEvent;
