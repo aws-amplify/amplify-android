@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A data structure that provides a query construction mechanism that consolidates all query-related
@@ -60,7 +61,7 @@ public final class QueryOptions {
      */
     @NonNull
     public QueryOptions matches(@NonNull final QueryPredicate queryPredicate) {
-        return new QueryOptions(queryPredicate, paginationInput, sortBy);
+        return new QueryOptions(Objects.requireNonNull(queryPredicate), paginationInput, sortBy);
     }
 
     /**
@@ -73,7 +74,7 @@ public final class QueryOptions {
      */
     @NonNull
     public QueryOptions paginated(@NonNull final QueryPaginationInput paginationInput) {
-        return new QueryOptions(queryPredicate, paginationInput, sortBy);
+        return new QueryOptions(queryPredicate, Objects.requireNonNull(paginationInput), sortBy);
     }
 
     /**

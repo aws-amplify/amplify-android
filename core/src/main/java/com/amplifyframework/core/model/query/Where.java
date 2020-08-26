@@ -21,6 +21,7 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Query DSL for query predicates.
@@ -44,7 +45,7 @@ public final class Where {
      * @return options with a given predicate.
      */
     public static QueryOptions matches(@NonNull final QueryPredicate queryPredicate) {
-        return new QueryOptions(queryPredicate, null, null);
+        return new QueryOptions(Objects.requireNonNull(queryPredicate), null, null);
     }
 
     /**
@@ -55,7 +56,7 @@ public final class Where {
      * @return options with proper predicate and pagination to match a model by its id.
      */
     public static QueryOptions id(@NonNull final String modelId) {
-        return matches(QueryField.field("id").eq(modelId)).paginated(Page.firstResult());
+        return matches(QueryField.field("id").eq(Objects.requireNonNull(modelId))).paginated(Page.firstResult());
     }
 
     /**
@@ -65,7 +66,7 @@ public final class Where {
      * @return options with the given sortBy fields.
      */
     public static QueryOptions paginated(@NonNull final QueryPaginationInput paginationInput) {
-        return new QueryOptions(null, paginationInput, null);
+        return new QueryOptions(null, Objects.requireNonNull(paginationInput), null);
     }
 
     /**
@@ -75,6 +76,6 @@ public final class Where {
      * @return options with the given sortBy fields.
      */
     public static QueryOptions sorted(@NonNull final QuerySortBy... sortBy) {
-        return new QueryOptions(null, null, Arrays.asList(sortBy));
+        return new QueryOptions(null, null, Arrays.asList(Objects.requireNonNull(sortBy)));
     }
 }
