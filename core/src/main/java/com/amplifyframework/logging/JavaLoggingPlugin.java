@@ -35,7 +35,7 @@ public final class JavaLoggingPlugin extends LoggingPlugin<Void> {
      */
     @SuppressWarnings("WeakerAccess") // This is a public API
     public JavaLoggingPlugin() {
-        this(LogLevel.VERBOSE);
+        this(LogLevel.INFO);
     }
 
     /**
