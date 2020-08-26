@@ -463,7 +463,7 @@ public final class ModelSchema {
         }
 
         /**
-         * Set the the name of the Model class.
+         * Set the name of the Model class.
          * @param name the name of the Model class.
          * @return the builder object
          */

@@ -92,7 +92,7 @@ interface MutationOutbox {
     /**
      * Marks a pending mutation as "in-flight." An in-flight mutation becomes
      * frozen to any further modifications, until it can be removed from the outbox, entirely.
-     * Mutations enter this state while they are being processed, and published the the cloud.
+     * Mutations enter this state while they are being processed, and published the cloud.
      * Mutations leave this state when the are removed from the outbox.
      * The "in-flight" status is NOT persisted, by design. When the system restarts,
      * no mutation is regarded as "in-flight."

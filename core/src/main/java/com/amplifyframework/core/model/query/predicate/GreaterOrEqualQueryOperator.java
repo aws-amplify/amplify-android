@@ -42,7 +42,7 @@ public final class GreaterOrEqualQueryOperator<T extends Comparable<T>> extends 
     }
 
     /**
-     * Returns true if the the provided field value is greater
+     * Returns true if the provided field value is greater
      * than or equal to the value associated with this operator.
      * @param field the field value to operate on
      * @return evaluated result of the operator
