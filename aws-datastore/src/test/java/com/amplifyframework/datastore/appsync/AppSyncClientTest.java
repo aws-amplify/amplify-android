@@ -69,8 +69,8 @@ public final class AppSyncClientTest {
 
         // We need it to response with **something** by default.
         // Use this same method to send more interesting test values back...
-        PaginatedResult<ModelWithMetadata<BlogOwner>> data = new PaginatedResult<>(new ArrayList<>(), null);
-        mockApiResponse(new GraphQLResponse<>(data, new ArrayList<>()));
+        PaginatedResult<ModelWithMetadata<BlogOwner>> data = new PaginatedResult<>(Collections.emptyList(), null);
+        mockApiResponse(new GraphQLResponse<>(data, Collections.emptyList()));
     }
 
     /**
