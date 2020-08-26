@@ -19,6 +19,8 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.BuildConfig;
+
 import org.json.JSONObject;
 
 /**
@@ -56,6 +58,12 @@ final class FakeLoggingPlugin<E> extends LoggingPlugin<E> {
     @Override
     public E getEscapeHatch() {
         return escapeHatch;
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 
     @NonNull

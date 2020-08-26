@@ -771,6 +771,12 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         return awsMobileClient;
     }
 
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
+    }
+
     private void signOutLocally(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
         awsMobileClient.signOut(
                 SignOutOptions.builder().signOutGlobally(false).invalidateTokens(true).build(),

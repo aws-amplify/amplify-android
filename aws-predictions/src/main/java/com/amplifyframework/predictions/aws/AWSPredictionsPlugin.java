@@ -127,6 +127,12 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
 
     @NonNull
     @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
+    }
+
+    @NonNull
+    @Override
     public TextToSpeechOperation<?> convertTextToSpeech(
             @NonNull String text,
             @NonNull Consumer<TextToSpeechResult> onSuccess,
