@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License").
+   You may not use this file except in compliance with the License.
+   A copy of the License is located at
+
+    http://aws.amazon.com/apache2.0
+
+   or in the "license" file accompanying this file. This file is distributed
+   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+   express or implied. See the License for the specific language governing
+   permissions and limitations under the License.
+-->
+
+<resources>
+    <string name="menu_title">Amplify Developer Menu</string>
+    <string name="env_button_title">View Environment Information</string>
+    <string name="device_button_title">View Device Information</string>
+    <string name="logs_button_title">View Logs</string>
+    <string name="file_issue_button_title">File Issue</string>
+    <string name="env_view_title">Environment Information</string>
+    <string name="device_view_title">Device Information</string>
+    <string name="logs_view_title">Logs</string>
+    <string name="file_issue_view_title">File Issue</string>
+    <string name="search_logs_hint">Enter search phrase…</string>
+    <string name="search_logs_button_text">Search</string>
+    <string name="placeholder_logs">Search results will appear here…</string>
+    <string name="placeholder_device_info">Waiting for device info…</string>
+    <string name="placeholder_env_info">Waiting for environment info…</string>
+    <string name="file_issue_hint">Please enter a brief description…</string>
+    <string name="empty" />
+    <string name="copy_issue_text">Copy to Clipboard</string>
+    <string name="file_issue_warning_text">
+        After pressing \"File Issue\", you will have the opportunity to review the
+        information included.
+    </string>
+</resources>
