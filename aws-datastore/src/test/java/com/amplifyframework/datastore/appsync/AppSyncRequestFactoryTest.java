@@ -74,9 +74,9 @@ public final class AppSyncRequestFactoryTest {
      */
     @Test
     public void validateRequestGenerationForPagination() throws DataStoreException, JSONException {
-        final String nextToken = Resources.readAsString("base-sync-request-next-token-value.txt").trim();
+        Integer limit = 1000;
         final GraphQLRequest<Iterable<Post>> request =
-                AppSyncRequestFactory.buildSyncRequest(BlogOwner.class, null, nextToken);
+                AppSyncRequestFactory.buildSyncRequest(BlogOwner.class, null, limit);
         JSONAssert.assertEquals(Resources.readAsString("base-sync-request-paginating-blog-owners.txt"),
                 request.getContent(),
                 true);

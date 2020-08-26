@@ -17,7 +17,8 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
@@ -36,19 +37,17 @@ import com.amplifyframework.util.Time;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.core.SingleEmitter;
+import io.reactivex.rxjava3.processors.BehaviorProcessor;
 
 /**
  * "Hydrates" the local DataStore, using model metadata receive from the
- * {@link AppSync#sync(Class, Long, Consumer, Consumer)}.
+ * {@link AppSync#sync(GraphQLRequest, Consumer, Consumer)}.
  * Hydration refers to populating the local storage with values from a remote system.
  *
  * For all items returned by the sync, merge them back into local storage through
@@ -93,7 +92,6 @@ final class SyncProcessor {
      * @return An Rx {@link Completable} which can be used to perform the operation.
      */
     Completable hydrate() {
-
         ModelClassComparator modelClassComparator =
                 new ModelClassComparator(modelProvider, modelSchemaRegistry);
 
@@ -115,9 +113,8 @@ final class SyncProcessor {
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
             .flatMap(lastSyncTime -> {
+                // Sync all the pages
                 return syncModel(modelClass, lastSyncTime)
-                    // Okay, but we want to flatten the Iterable elements back into an Observable stream.
-                    .flatMapObservable(Observable::fromIterable)
                     // For each ModelWithMetadata, merge it into the local store.
                     .flatMapCompletable(merger::merge)
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
@@ -172,45 +169,62 @@ final class SyncProcessor {
      *  2. Make a request to the AppSync endpoint. If the last sync time is within a recent window
      *     of time, then request a *delta* sync. If the last sync time is outside a recent window of time,
      *     perform a *base* sync. A base sync is preformed by passing null.
-     *  3. Update the
+     *  3. Continue fetching paged results until !hasNextResult() or we have synced the max records.
+     *
      * @param modelClass The model class to sync
-     * @param <T> The type of model to sync
-     * @return An {@link Single} which emits sync content, on success, {@link DataStoreException} on failure
+     * @param syncTime The time of a last successful sync.
+     * @param <T> The type of model to sync.
+     * @return a stream of all ModelWithMetadata&lt;T&gt; objects from all pages for the provided model.
+     * @throws DataStoreException if dataStoreConfigurationProvider.getConfiguration() fails
      */
-    private <T extends Model> Single<Iterable<ModelWithMetadata<T>>> syncModel(
-            Class<T> modelClass, SyncTime syncTime) {
+    private <T extends Model> Flowable<ModelWithMetadata<T>> syncModel(Class<T> modelClass, SyncTime syncTime)
+            throws DataStoreException {
         final Long lastSyncTimeAsLong = syncTime.exists() ? syncTime.toLong() : null;
-        return Single.<Iterable<ModelWithMetadata<T>>>create(emitter -> {
-            final Cancelable cancelable =
-                appSync.sync(modelClass, lastSyncTimeAsLong, metadataEmitter(emitter), emitter::onError);
-            emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
-        }).doOnSuccess(results ->
-            LOG.debug("Successfully sync'd down cloud state for model type = " + modelClass.getSimpleName())
-        ).doOnError(failureToSync ->
-            LOG.warn("Failed to sync down cloud state for model type = " + modelClass.getSimpleName(), failureToSync)
-        );
+        final Integer syncPageSize = dataStoreConfigurationProvider.getConfiguration().getSyncPageSize();
+
+        // Create a BehaviorProcessor, and set the default value to a GraphQLRequest that fetches the first page.
+        BehaviorProcessor<GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>> processor =
+                BehaviorProcessor.createDefault(appSync.buildSyncRequest(modelClass, lastSyncTimeAsLong, syncPageSize));
+
+        return processor.concatMap(request -> syncPage(request).toFlowable())
+                .doOnNext(paginatedResult -> {
+                    if (paginatedResult.hasNextResult()) {
+                        processor.onNext(paginatedResult.getRequestForNextResult());
+                    } else {
+                        processor.onComplete();
+                    }
+                })
+                // Flatten the PaginatedResult objects into a stream of ModelWithMetadata objects.
+                .concatMapIterable(PaginatedResult::getItems)
+                // Stop after fetching the maximum configured records to sync.
+                .take(dataStoreConfigurationProvider.getConfiguration().getSyncMaxRecords());
     }
 
-    private static <T extends Model> Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> metadataEmitter(
-        SingleEmitter<Iterable<ModelWithMetadata<T>>> singleEmitter) {
-        return resultFromEndpoint -> {
-            if (resultFromEndpoint.hasErrors()) {
-                singleEmitter.onError(new DataStoreException(
-                    String.format("A model sync failed: %s", resultFromEndpoint.getErrors()),
-                    "Check your schema."
-                ));
-            } else if (!resultFromEndpoint.hasData()) {
-                singleEmitter.onError(new DataStoreException(
-                    "Empty response from AppSync.", "Report to AWS team."
-                ));
-            } else {
-                final Set<ModelWithMetadata<T>> emittedValue = new HashSet<>();
-                for (ModelWithMetadata<T> modelWithMetadata : resultFromEndpoint.getData()) {
-                    emittedValue.add(modelWithMetadata);
+    /**
+     * Fetches one page for a sync.
+     * @param request GraphQLRequest object for the sync, obtained from {@link AppSync#buildSyncRequest}, or from
+     *                response.getData().getRequestForNextResult() for subsequent requests.
+     * @param <T> The type of model to sync.
+     */
+    private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
+            GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
+        return Single.create(emitter -> {
+            Cancelable cancelable = appSync.sync(request, result -> {
+                if (result.hasErrors()) {
+                    emitter.onError(new DataStoreException(
+                            String.format("A model sync failed: %s", result.getErrors()),
+                            "Check your schema."
+                    ));
+                } else if (!result.hasData()) {
+                    emitter.onError(new DataStoreException(
+                            "Empty response from AppSync.", "Report to AWS team."
+                    ));
+                } else {
+                    emitter.onSuccess(result.getData());
                 }
-                singleEmitter.onSuccess(emittedValue);
-            }
-        };
+            }, emitter::onError);
+            emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
+        });
     }
 
     /**

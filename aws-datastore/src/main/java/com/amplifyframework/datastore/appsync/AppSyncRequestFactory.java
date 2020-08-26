@@ -22,6 +22,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.TypeMaker;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
@@ -80,7 +81,7 @@ final class AppSyncRequestFactory {
     static <T, M extends Model> AppSyncGraphQLRequest<T> buildSyncRequest(
             @NonNull final Class<M> modelClass,
             @Nullable final Long lastSync,
-            @SuppressWarnings("SameParameterValue") @Nullable final String nextToken)
+            @Nullable final Integer limit)
             throws DataStoreException {
 
         try {
@@ -88,13 +89,13 @@ final class AppSyncRequestFactory {
                     .modelClass(modelClass)
                     .operation(QueryType.SYNC)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
-                    .responseType(TypeMaker.getParameterizedType(Iterable.class, ModelWithMetadata.class, modelClass));
+                    .responseType(TypeMaker.getParameterizedType(
+                            PaginatedResult.class, ModelWithMetadata.class, modelClass));
             if (lastSync != null) {
                 builder.variable("lastSync", "AWSTimestamp", lastSync);
             }
-
-            if (nextToken != null) {
-                builder.variable("nextToken", "String", nextToken);
+            if (limit != null) {
+                builder.variable("limit", "Int", limit);
             }
 
             return builder.build();
