@@ -236,7 +236,7 @@ public final class DataStoreItemChange<T extends Model> {
 
         /**
          * Builds an instance of a DataStoreItemChange using the provided
-         * configuration options currently stored in the the builder.
+         * configuration options currently stored in the builder.
          * @return A new DataStoreItemChange instance
          */
         @SuppressLint("SyntheticAccessor")

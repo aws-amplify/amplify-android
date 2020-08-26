@@ -53,7 +53,7 @@ public final class BetweenQueryOperator<T extends Comparable<T>> extends QueryOp
     }
 
     /**
-     * Returns true if the the provided field is between
+     * Returns true if the provided field is between
      * the values associated with this operator.
      * @param field the field value to operate on
      * @return evaluated result of the operator

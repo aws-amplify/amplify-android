@@ -25,7 +25,7 @@ import com.amplifyframework.hub.HubEvent;
 import java.util.Objects;
 
 /**
- * An enumeration of the names of events relating the the {@link DataStoreCategory},
+ * An enumeration of the names of events relating the {@link DataStoreCategory},
  * that are published via {@link HubCategory#publish(HubChannel, HubEvent)} on the
  * {@link HubChannel#DATASTORE} channel.
  */

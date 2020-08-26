@@ -128,7 +128,7 @@ public final class AppSyncMocking {
         }
 
         /**
-         * Mocks a response to the create() API. The mock will call back the the success consumer.
+         * Mocks a response to the create() API. The mock will call back to the success consumer.
          * The provided value is a ModelWithMetadata. The model is the one passed to the mock.
          * The metadata simply echos the model ID and includes the current time.
          * @param model When this model is received, mock is enacted. This model is passed back in response.
@@ -176,7 +176,7 @@ public final class AppSyncMocking {
         }
 
         /**
-         * Mocks a response to the delete() API. The mock will call back the the success consumer.
+         * Mocks a response to the delete() API. The mock will call back to the success consumer.
          * The provided value is a ModelWithMetadata. The model is the one passed to the mock.
          * The metadata simply echos the model ID and includes the current time, and includes
          * the _delete == true flag.
