@@ -20,6 +20,7 @@ import com.amplifyframework.api.aws.TypeMaker;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
@@ -37,7 +38,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -68,7 +69,8 @@ public final class AppSyncClientTest {
 
         // We need it to response with **something** by default.
         // Use this same method to send more interesting test values back...
-        mockApiResponse(new GraphQLResponse<>(new ArrayList<>(), new ArrayList<>()));
+        PaginatedResult<ModelWithMetadata<BlogOwner>> data = new PaginatedResult<>(Collections.emptyList(), null);
+        mockApiResponse(new GraphQLResponse<>(data, Collections.emptyList()));
     }
 
     /**
@@ -81,10 +83,16 @@ public final class AppSyncClientTest {
         //noinspection CodeBlock2Expr
         Await.result(
             (
-                Consumer<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>> onResult,
+                Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<BlogOwner>>>> onResult,
                 Consumer<DataStoreException> onError
             ) -> {
-                endpoint.sync(BlogOwner.class, null, onResult, onError);
+                try {
+                    GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> request =
+                            endpoint.buildSyncRequest(BlogOwner.class, null, null);
+                    endpoint.sync(request, onResult, onError);
+                } catch (DataStoreException datastoreException) {
+                    onError.accept(datastoreException);
+                }
             }
         );
 
@@ -95,7 +103,7 @@ public final class AppSyncClientTest {
         verify(api).query(requestCaptor.capture(), any(Consumer.class), any(Consumer.class));
         GraphQLRequest<ModelWithMetadata<BlogOwner>> capturedRequest = requestCaptor.getValue();
 
-        Type type = TypeMaker.getParameterizedType(Iterable.class, ModelWithMetadata.class, BlogOwner.class);
+        Type type = TypeMaker.getParameterizedType(PaginatedResult.class, ModelWithMetadata.class, BlogOwner.class);
         assertEquals(type, capturedRequest.getResponseType());
 
         // The request was sent as JSON. It has a null variables field, and a present query field.
@@ -110,10 +118,10 @@ public final class AppSyncClientTest {
      * Configures the API mock to return a particular response.
      * @param arrangedApiResponse Some response you want the API to return
      */
-    private void mockApiResponse(GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>> arrangedApiResponse) {
+    private void mockApiResponse(GraphQLResponse<PaginatedResult<ModelWithMetadata<BlogOwner>>> arrangedApiResponse) {
         doAnswer(invocation -> {
             final int argPositionOfResponseConsumer = 1; // second/middle arg, starting from arg 0
-            Consumer<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>> onResponse =
+            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<BlogOwner>>>> onResponse =
                 invocation.getArgument(argPositionOfResponseConsumer);
             onResponse.accept(arrangedApiResponse);
             return mock(GraphQLOperation.class);

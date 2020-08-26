@@ -32,12 +32,13 @@ import java.util.function.Consumer;
  * @param <T> Type of the items in the list.
  */
 public final class PaginatedResult<T> implements Iterable<T> {
+
     private final GraphQLRequest<PaginatedResult<T>> requestForNextResult;
     private final Iterable<T> items;
 
     /**
      * Creates a PaginatedResult.
-     * @param items the list of items from the response.
+     * @param items Iterable&lt;T&gt; of the items from the response.
      * @param requestForNextResult a GraphQLRequest to obtain the next page of results, or null if no next page.
      */
     public PaginatedResult(@NonNull Iterable<T> items,

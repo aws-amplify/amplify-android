@@ -26,6 +26,7 @@ import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
@@ -337,9 +338,10 @@ public final class AWSDataStorePluginTest {
             // Mock the API emitting an ApiEndpointStatusChangeEvent event.
             Amplify.Hub.publish(HubChannel.API, hubEvent);
             int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<Iterable<ModelWithMetadata<Person>>>> onResponse =
+            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Person>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            onResponse.accept(new GraphQLResponse<>(Collections.emptyList(), Collections.emptyList()));
+            PaginatedResult<ModelWithMetadata<Person>> data = new PaginatedResult<>(Collections.emptyList(), null);
+            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             return null;
         }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
 
