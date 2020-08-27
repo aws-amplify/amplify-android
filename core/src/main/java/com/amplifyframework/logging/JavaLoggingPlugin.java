@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package com.amplifyframework.logging;
 
 import android.content.Context;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -25,10 +24,10 @@ import com.amplifyframework.core.BuildConfig;
 import org.json.JSONObject;
 
 /**
- * AWS' default implementation of the {@link LoggingCategoryBehavior},
- * which emits logs to Android's {@link Log} class.
+ * Implementation of the {@link LoggingCategoryBehavior} designed for use by unit tests,
+ * which emits logs via {@code System.out.println()}.
  */
-public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
+public final class JavaLoggingPlugin extends LoggingPlugin<Void> {
     private static final String AMPLIFY_NAMESPACE = "amplify";
     private final LogLevel defaultLoggerThreshold;
 
@@ -37,7 +36,7 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
      * logging threshold.
      */
     @SuppressWarnings("WeakerAccess") // This is a public API
-    public AndroidLoggingPlugin() {
+    public JavaLoggingPlugin() {
         this(LogLevel.INFO);
     }
 
@@ -47,7 +46,7 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
      * @param defaultLoggerThreshold default threshold to use when creating loggers.
      */
     @SuppressWarnings("WeakerAccess") // This is a public API
-    public AndroidLoggingPlugin(@NonNull LogLevel defaultLoggerThreshold) {
+    public JavaLoggingPlugin(@NonNull LogLevel defaultLoggerThreshold) {
         this.defaultLoggerThreshold = defaultLoggerThreshold;
     }
 
@@ -55,13 +54,13 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @Override
     public Logger forNamespace(@Nullable String namespace) {
         String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
-        return new AndroidLogger(usedNamespace, defaultLoggerThreshold);
+        return new JavaLogger(usedNamespace, defaultLoggerThreshold);
     }
 
     @NonNull
     @Override
     public String getPluginKey() {
-        return "AndroidLoggingPlugin";
+        return "JavaLoggingPlugin";
     }
 
     @Override
