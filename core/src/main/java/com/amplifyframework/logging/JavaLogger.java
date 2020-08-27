@@ -97,13 +97,13 @@ final class JavaLogger implements Logger {
         log(LogLevel.VERBOSE, message);
     }
 
-    private void log(@NonNull LogLevel error, @Nullable String message) {
-        log(error, message, null);
+    private void log(@NonNull LogLevel level, @Nullable String message) {
+        log(level, message, null);
     }
 
-    private void log(@NonNull LogLevel error, @Nullable String message, @Nullable Throwable throwable) {
+    private void log(@NonNull LogLevel level, @Nullable String message, @Nullable Throwable throwable) {
         StringBuilder lineBuilder = new StringBuilder()
-                .append(error)
+                .append(level)
                 .append("/")
                 .append(namespace)
                 .append(": ")
