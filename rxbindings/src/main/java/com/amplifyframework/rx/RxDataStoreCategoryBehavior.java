@@ -107,10 +107,10 @@ public interface RxDataStoreCategoryBehavior {
     );
 
     /**
-     * Query the DataStore to find items of the requests Java class, using the provided
-     * {@link QueryOptions}. The query options include support for filtering and paging.
+     * Query the DataStore to find items of the requested Java class, using the provided
+     * {@link QueryOptions}. The query options include support for filtering, paging and sorting.
      * @param itemClass Class of items that will be queried
-     * @param options Filtering and paging options
+     * @param options Filtering, paging, and sorting options
      * @param <T> The type of items being queried
      * @return An observable stream of 0..n query results, if available.
      *         The Observable will then terminate either either a completion or error.
