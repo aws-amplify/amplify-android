@@ -38,7 +38,7 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
  * An implementation of the RxApiCategoryBehavior which satisfies the API contract by wrapping
  * {@link ApiCategoryBehavior} in Rx primitives.
  */
-final class RxApiBinding implements RxApiCategoryBehavior {
+public final class RxApiBinding implements RxApiCategoryBehavior {
     private final ApiCategoryBehavior api;
 
     RxApiBinding() {
@@ -51,6 +51,7 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     }
 
     @NonNull
+    @Override
     public <T> Single<GraphQLResponse<T>> query(@NonNull GraphQLRequest<T> graphQlRequest) {
         return toSingle((onResult, onError) -> api.query(graphQlRequest, onResult, onError));
     }
@@ -173,7 +174,13 @@ final class RxApiBinding implements RxApiCategoryBehavior {
         return CancelableBehaviors.toObservable(method);
     }
 
-    static class RxSubscriptionOperation<T> implements Cancelable {
+    /**
+     * A class that represents a subscription operation and exposes
+     * observables for consumers to listen to subscription data and
+     * status events.
+     * @param <T> The type representing the subscription data.
+     */
+    public static final class RxSubscriptionOperation<T> implements Cancelable {
         private BehaviorSubject<ConnectionState> connectionStateSubject;
         private Observable<T> subscriptionData;
         private Cancelable amplifyOperation;
@@ -197,14 +204,30 @@ final class RxApiBinding implements RxApiCategoryBehavior {
             });
         }
 
+        /**
+         * Returns an {@link Observable} which consumers can use to
+         * retrieve data received by the subscription operation.
+         * @return Reference to the {@link Observable} with subscription data.
+         */
         public Observable<T> observeSubscriptionData() {
             return subscriptionData;
         }
 
+        /**
+         * Once the subscription starts, this method returns
+         * the value of the subscriptionId.
+         * @return The value of the subscriptionId.
+         */
         public String getSubscriptionId() {
             return subscriptionId;
         }
 
+        /**
+         * Returns an {@link Observable} which consumers can use to
+         * receive notfication about the status of the subscription connection. Currently,
+         * only {@link ConnectionState#CONNECTED} is emitted.
+         * @return Reference to the {@link Observable} that receives connection events.
+         */
         public Observable<ConnectionState> observeConnectionState() {
             return connectionStateSubject;
         }
@@ -217,7 +240,15 @@ final class RxApiBinding implements RxApiCategoryBehavior {
             connectionStateSubject.onComplete();
         }
 
-        enum ConnectionState {
+        /**
+         * Enum representing connection states of a
+         * subscription operation.
+         */
+        public enum ConnectionState {
+            /**
+             * The subscription successfully established a connection and is
+             * ready to receive data.
+             */
             CONNECTED
         }
     }
