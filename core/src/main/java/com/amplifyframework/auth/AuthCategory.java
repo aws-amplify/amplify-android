@@ -90,10 +90,10 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
 
     @Override
     public void signIn(
-      @Nullable String username,
-      @NonNull AuthSignInOptions options,
-      @NonNull Consumer<AuthSignInResult> onSuccess,
-      @NonNull Consumer<AuthException> onError
+            @Nullable String username,
+            @NonNull AuthSignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().signIn(username, options, onSuccess, onError);
     }
@@ -110,9 +110,9 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
 
     @Override
     public void signIn(
-      @Nullable String username,
-      @NonNull Consumer<AuthSignInResult> onSuccess,
-      @NonNull Consumer<AuthException> onError
+            @Nullable String username,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().signIn(username, onSuccess, onError);
     }

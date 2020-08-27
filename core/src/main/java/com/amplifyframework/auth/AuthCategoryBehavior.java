@@ -100,16 +100,15 @@ public interface AuthCategoryBehavior {
      * Basic authentication to the app with a username and password or, if custom auth is setup,
      * you can send null for those and the necessary authentication details in the options object.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
-     * @param password User's password for normal signup, null if custom auth or passwordless configurations are setup
      * @param options Advanced options such as a map of auth information for custom auth
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void signIn(
-      @Nullable String username,
-      @NonNull AuthSignInOptions options,
-      @NonNull Consumer<AuthSignInResult> onSuccess,
-      @NonNull Consumer<AuthException> onError);
+            @Nullable String username,
+            @NonNull AuthSignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
 
     /**
      * Basic authentication to the app with a username and password.
@@ -131,9 +130,9 @@ public interface AuthCategoryBehavior {
      * @param onError Error callback
      */
     void signIn(
-      @Nullable String username,
-      @NonNull Consumer<AuthSignInResult> onSuccess,
-      @NonNull Consumer<AuthException> onError);
+            @Nullable String username,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
