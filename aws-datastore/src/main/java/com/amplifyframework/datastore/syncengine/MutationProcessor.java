@@ -125,6 +125,7 @@ final class MutationProcessor {
                     // if there are outstanding mutations in the outbox.
                     mutationOutbox.remove(mutationOutboxItem.getMutationId())
                         .andThen(merger.merge(modelWithMetadata))
+                        .doOnComplete(() -> announceSuccessfulSync(modelWithMetadata))
                 )
             )
             .doOnComplete(() -> {
@@ -147,9 +148,19 @@ final class MutationProcessor {
             HubChannel.DATASTORE,
             HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation)
         );
+    }
+
+    /**
+     * Publish a successfully mutated model and its metadata to hub.
+     * @param modelWithMetadata A model that was successfully mutated and its sync metadata
+     * @param <T> Type of model
+     */
+    private <T extends Model> void announceSuccessfulSync(ModelWithMetadata<T> modelWithMetadata) {
+        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent
+                .fromModelWithMetadata(modelWithMetadata);
         Amplify.Hub.publish(
             HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, processedMutation)
+            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, mutationEvent)
         );
     }
 

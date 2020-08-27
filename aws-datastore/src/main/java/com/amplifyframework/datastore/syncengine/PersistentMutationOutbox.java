@@ -240,9 +240,11 @@ final class PersistentMutationOutbox implements MutationOutbox {
      * @param <T> Type of model
      */
     private <T extends Model> void announceSuccessfulSave(PendingMutation<T> pendingMutation) {
+        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent
+                .fromModel(pendingMutation.getMutatedItem());
         Amplify.Hub.publish(
             HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED, pendingMutation)
+            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED, mutationEvent)
         );
     }
 
