@@ -26,6 +26,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
@@ -47,20 +48,20 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     }
 
     @NonNull
-    public <R> Single<GraphQLResponse<R>> query(@NonNull GraphQLRequest<R> graphQlRequest) {
+    public <T> Single<GraphQLResponse<T>> query(@NonNull GraphQLRequest<T> graphQlRequest) {
         return toSingle((onResult, onError) -> api.query(graphQlRequest, onResult, onError));
     }
 
     @NonNull
     @Override
-    public <R> Single<GraphQLResponse<R>> query(
-            @NonNull String apiName, @NonNull GraphQLRequest<R> graphQlRequest) {
+    public <T> Single<GraphQLResponse<T>> query(
+            @NonNull String apiName, @NonNull GraphQLRequest<T> graphQlRequest) {
         return toSingle((onResult, onError) -> api.query(apiName, graphQlRequest, onResult, onError));
     }
 
     @NonNull
     @Override
-    public <R> Single<GraphQLResponse<R>> mutate(@NonNull GraphQLRequest<R> graphQlRequest) {
+    public <T> Single<GraphQLResponse<T>> mutate(@NonNull GraphQLRequest<T> graphQlRequest) {
         return toSingle((onResult, onError) -> api.mutate(graphQlRequest, onResult, onError));
     }
 
@@ -75,7 +76,8 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     @Override
     public <T> Observable<GraphQLResponse<T>> subscribe(@NonNull GraphQLRequest<T> graphQlRequest) {
         return toObservable((onStart, onResult, onError, onComplete) ->
-                api.subscribe(graphQlRequest, onStart, onResult, onError, onComplete));
+            api.subscribe(graphQlRequest, onStart, onResult, onError, onComplete)
+        );
     }
 
     @NonNull
@@ -83,7 +85,7 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     public <T> Observable<GraphQLResponse<T>> subscribe(
             @NonNull String apiName, @NonNull GraphQLRequest<T> graphQlRequest) {
         return toObservable((onStart, onResult, onError, onComplete) ->
-                api.subscribe(apiName, graphQlRequest, onStart, onResult, onError, onComplete));
+            api.subscribe(apiName, graphQlRequest, onStart, onResult, onError, onComplete));
     }
 
     @NonNull
@@ -158,11 +160,12 @@ final class RxApiBinding implements RxApiCategoryBehavior {
         return toSingle((onResult, onError) -> api.patch(apiName, request, onResult, onError));
     }
 
-    private <T> Single<T> toSingle(RxAdapters.CancelableResultEmitter<T, ApiException> method) {
-        return RxAdapters.toSingle(method);
+    private <T> Single<T> toSingle(CancelableBehaviors.ResultEmitter<T, ApiException> method) {
+        return CancelableBehaviors.toSingle(method);
     }
 
-    private <T> Observable<T> toObservable(RxAdapters.CancelableStreamEmitter<String, T, ApiException> method) {
-        return RxAdapters.toObservable(method);
+    private <T> Observable<T> toObservable(
+            CancelableBehaviors.StreamEmitter<String, T, ApiException> method) {
+        return CancelableBehaviors.toObservable(method);
     }
 }

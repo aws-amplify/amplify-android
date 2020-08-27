@@ -30,7 +30,6 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.Disposable;
 
 final class RxHubBinding implements RxHubCategoryBehavior {
-
     private final HubCategoryBehavior hub;
 
     RxHubBinding() {
@@ -46,15 +45,15 @@ final class RxHubBinding implements RxHubCategoryBehavior {
     @NonNull
     @Override
     public <T> Completable publish(@NonNull HubChannel hubChannel, @NonNull HubEvent<T> hubEvent) {
-        return Completable.defer(() -> Completable.fromAction(() -> hub.publish(hubChannel, hubEvent)));
+        return Completable.fromAction(() -> hub.publish(hubChannel, hubEvent));
     }
 
     @NonNull
     @Override
     public Observable<HubEvent<?>> on(@NonNull HubChannel hubChannel) {
-        return Observable.defer(() -> Observable.create(emitter -> {
+        return Observable.create(emitter -> {
             SubscriptionToken token = hub.subscribe(hubChannel, emitter::onNext);
             emitter.setDisposable(Disposable.fromAction(() -> hub.unsubscribe(token)));
-        }));
+        });
     }
 }
