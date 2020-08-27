@@ -23,7 +23,9 @@ import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.datastore.syncengine.MutationOutbox.OutboxEvent;
 import com.amplifyframework.datastore.syncengine.PendingMutation.PersistentRecord;
+import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
@@ -71,6 +73,27 @@ public final class PersistentMutationOutboxTest {
     }
 
     /**
+     * Enqueueing a mutation should publish current outbox status.
+     */
+    @Test
+    public void outboxStatusIsPublishedToHub() {
+        BlogOwner raphael = BlogOwner.builder()
+                .name("Raphael Kim")
+                .build();
+        PendingMutation<BlogOwner> createRaphael = PendingMutation.creation(raphael, BlogOwner.class);
+        HubAccumulator statusAccumulator = HubAccumulator.create(
+                HubChannel.DATASTORE,
+                TestHubEventFilters.outboxIsEmpty(false), // outbox should not be empty
+                1
+        ).start();
+
+        // Enqueue an save for a Raphael BlogOwner object,
+        // and make sure that outbox status is published to hub.
+        mutationOutbox.enqueue(createRaphael).test();
+        statusAccumulator.await();
+    }
+
+    /**
      * Enqueueing a mutation should have the result of persisting
      * the mutation to storage, and notifying any observers that
      * a new mutation has been enqueued.
@@ -86,6 +109,11 @@ public final class PersistentMutationOutboxTest {
             .name("Jameson Williams")
             .build();
         PendingMutation<BlogOwner> createJameson = PendingMutation.creation(jameson, BlogOwner.class);
+        HubAccumulator savedMutationsAccumulator = HubAccumulator.create(
+                HubChannel.DATASTORE,
+                TestHubEventFilters.saveOf(jameson),
+                1
+        ).start();
 
         // Enqueue an save for a Jameson BlogOwner object,
         // and make sure that it calls back onComplete().
@@ -93,6 +121,9 @@ public final class PersistentMutationOutboxTest {
         saveObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         saveObserver.assertNoErrors().assertComplete();
         saveObserver.dispose();
+
+        // Wait for a Hub event telling us that the model got successfully enqueued.
+        savedMutationsAccumulator.await();
 
         // Expected to observe the mutation on the subject
         queueObserver.awaitCount(1);
