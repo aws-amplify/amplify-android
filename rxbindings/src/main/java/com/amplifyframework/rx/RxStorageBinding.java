@@ -42,7 +42,10 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.reactivex.rxjava3.subjects.ReplaySubject;
 
-final class RxStorageBinding implements RxStorageCategoryBehavior {
+/**
+ * Rx binding for Amplify's storage category.
+ */
+public final class RxStorageBinding implements RxStorageCategoryBehavior {
     private final StorageCategoryBehavior storage;
 
     RxStorageBinding() {
@@ -130,9 +133,8 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
      * A generic implementation of an operation that emits
      * progress information and returns a single.
      * @param <T> The type that represents the result of a given operation.
-     * @param <P> The type that represents the progress of a given operation.
      */
-    static class RxProgressAwareSingleOperation<T> implements RxAdapters.RxSingleOperation<T> {
+    public static final class RxProgressAwareSingleOperation<T> implements RxAdapters.RxSingleOperation<T> {
 
         private PublishSubject<StorageTransferProgress> progressSubject;
         private ReplaySubject<T> resultSubject;
@@ -153,6 +155,11 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
             progressSubject.onComplete();
         }
 
+        /**
+         * Returns a {@link Single} which consumers can use to capture
+         * the result of the operation.
+         * @return Instance of the {@link Single} for the operation result.
+         */
         @Override
         public Single<T> observeResult() {
             return Single.create(emitter -> {
@@ -160,6 +167,11 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
             });
         }
 
+        /**
+         * Returns an {@link Observable} which consumers can use to get
+         * progress notifications related to the operation.
+         * @return Reference to the {@link Observable} for progress notifications.
+         */
         public Observable<StorageTransferProgress> observeProgress() {
             return progressSubject;
         }
