@@ -25,80 +25,142 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 
 /**
- * Utility method to convert between behaviors that use the Amplify framework's native
- * {@link Consumer} and {@link Action}, into {@link Single} and {@link Observable}.
+ * Utilities for modeling Amplify category behaviors, and converting
+ * those category behaviors into Rx objects (Observable, Single, Completable).
  */
 final class RxAdapters {
     private RxAdapters() {}
 
-    static <T, E extends Throwable> Completable toCompletable(VoidResultEmitter<T, E> voidResultEmitter) {
-        return Completable.defer(() -> Completable.create(emitter ->
-            voidResultEmitter.emitTo(result -> emitter.onComplete(), emitter::onError)
-        ));
-    }
+    /**
+     * Cancelable behaviors are those Amplify category behaviors which return a cancelable
+     * operation. For example, most behaviors in Storage and Predictions will return
+     * a cancelable operation, whereas DataStore and Auth do not.
+     */
+    static final class CancelableBehaviors {
+        private CancelableBehaviors() {}
 
-    static <T, E extends Throwable> Single<T> toSingle(CancelableResultEmitter<T, E> cancelableResultEmitter) {
-        return Single.defer(() -> Single.create(emitter -> {
-            final Cancelable cancelable =
-                cancelableResultEmitter.emitTo(emitter::onSuccess, emitter::onError);
-            emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
-        }));
-    }
+        static <E extends Throwable> Completable toCompletable(ActionEmitter<E> behavior) {
+            return Completable.create(subscriber -> {
+                Cancelable cancelable = behavior.emitTo(subscriber::onComplete, subscriber::onError);
+                subscriber.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
+            });
+        }
 
-    static <S, T, E extends Throwable> Observable<T> toObservable(
-            CancelableStreamEmitter<S, T, E> cancelableStreamEmitter) {
-        return Observable.defer(() -> Observable.create(emitter -> {
-            Cancelable cancelable = cancelableStreamEmitter.streamTo(
-                NoOpConsumer.create(),
-                emitter::onNext,
-                emitter::onError,
-                emitter::onComplete
-            );
-            emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
-        }));
+        static <T, E extends Throwable> Single<T> toSingle(ResultEmitter<T, E> behavior) {
+            return Single.create(subscriber -> {
+                Cancelable cancelable = behavior.emitTo(subscriber::onSuccess, subscriber::onError);
+                subscriber.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
+            });
+        }
+
+        static <S, T, E extends Throwable> Observable<T> toObservable(StreamEmitter<S, T, E> behavior) {
+            return Observable.create(subscriber -> {
+                Cancelable cancelable = behavior.streamTo(
+                    NoOpConsumer.create(),
+                    subscriber::onNext,
+                    subscriber::onError,
+                    subscriber::onComplete
+                );
+                subscriber.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
+            });
+        }
+
+        /**
+         * Describes a behavior which emits a notification of start to an {@link Consumer},
+         * then emits 0..n values to a value {@link Consumer}, and finally terminated
+         * either by calling a successful {@link Action}, or emitting an error to an
+         * error {@link Consumer}. May be canceled via a returned {@link Cancelable}.
+         * Such a method may be wrapped into an {@link Observable}
+         * by using the {@link CancelableBehaviors#toObservable(StreamEmitter)} utility.
+         * @param <S> Type emitted to the start consumer
+         * @param <T> Type of object being emitted to the value consumer
+         * @param <E> Type emitted to error consumer
+         */
+        interface StreamEmitter<S, T, E> {
+            Cancelable streamTo(Consumer<S> onStart, Consumer<T> onItem, Consumer<E> onError, Action onComplete);
+        }
+
+        /**
+         * Describes a behavior which emits results to a result or error {@link Consumer},
+         * and can be canceled via an {@link Cancelable}. Such a method
+         * may be wrapped into an {@link Single} in a uniform way by using the
+         * {@link CancelableBehaviors#toSingle(ResultEmitter)} utility.
+         * @param <T> Type of result accepted by result consumer
+         * @param <E> Type of error accepted by error consumer
+         */
+        interface ResultEmitter<T, E extends Throwable> {
+            Cancelable emitTo(Consumer<T> onResult, Consumer<E> onError);
+        }
+
+        /**
+         * A behavior which terminates in a completion action or an error.
+         * Returns a cancelable when the behavior starts. Such a method
+         * may be wrapped into an {@link Completable} in a uniform way
+         * by using the {@link CancelableBehaviors#toCompletable(ActionEmitter)}
+         * utility.
+         * @param <E> Type of error emitted
+         */
+        interface ActionEmitter<E> {
+            Cancelable emitTo(Action onComplete, Consumer<E> onError);
+        }
     }
 
     /**
-     * A behavior which emits to a result listener, but returns no value, itself.
+     * Void behaviors are those Amplify category behaviors which have a void return type.
+     * For example, most behaviors in Auth and DataStore have a void return. Unlike
+     * {@link CancelableBehaviors}, such behaviors may not be canceled once begun.
      */
-    interface VoidResultEmitter<T, E extends Throwable> {
-        void emitTo(Consumer<T> onResult, Consumer<E> onError);
-    }
+    static final class VoidBehaviors {
+        private VoidBehaviors() {}
 
-    /**
-     * Describes a behavior which emits results to a result or error {@link Consumer},
-     * and can be canceled via an {@link Cancelable}. Such a method
-     * may be wrapped into an {@link Single} in a uniform way such as by the
-     * {@link RxAdapters#toSingle(CancelableResultEmitter)} method.
-     * @param <T> Type of result accepted by result consumer
-     * @param <E> Type of error accepted by error consumer
-     */
-    interface CancelableResultEmitter<T, E extends Throwable> {
-        Cancelable emitTo(Consumer<T> onResult, Consumer<E> onError);
-    }
+        static <E extends Throwable> Completable toCompletable(ActionEmitter<E> behavior) {
+            return Completable.create(subscriber -> behavior.emitTo(subscriber::onComplete, subscriber::onError));
+        }
 
-    /**
-     * Describes a behavior emits a notification of start to an {@link Consumer},
-     * then emits 0..n values to a value {@link Consumer}, and finally terminated
-     * either by calling a successful {@link Action}, or emitting an error to an
-     * error {@link Consumer}. May be canceled via a returned {@link Cancelable}.
-     * Such a method may be wrapped into an {@link Observable} in a uniform way such as
-     * by the {@link RxAdapters#toObservable(CancelableStreamEmitter)} method.
-     * @param <S> Type emitted to the start consumer
-     * @param <T> Type of object being emitted to the value consumer
-     * @param <E> Type emitted to error consumer
-     */
-    interface CancelableStreamEmitter<S, T, E> {
-        Cancelable streamTo(Consumer<S> onStart, Consumer<T> onItem, Consumer<E> onError, Action onComplete);
-    }
+        static <T, E extends Throwable> Single<T> toSingle(ResultEmitter<T, E> behavior) {
+            return Single.create(subscriber -> behavior.emitTo(subscriber::onSuccess, subscriber::onError));
+        }
 
-    /**
-     * Describes behavior which emits a completion notification via an {@link Action},
-     * or alternately, emits an error to a {@link Consumer}.
-     * @param <E> Type of error emitted
-     */
-    interface VoidCompletionEmitter<E> {
-        void emitTo(Action onComplete, Consumer<E> onError);
+        static <S, T, E extends Throwable> Observable<T> toObservable(StreamEmitter<S, T, E> behavior) {
+            return Observable.create(subscriber -> {
+                behavior.streamTo(
+                    NoOpConsumer.create(),
+                    subscriber::onNext,
+                    subscriber::onError,
+                    subscriber::onComplete
+                );
+            });
+        }
+
+        /**
+         * A behavior which streams items to a consumer, and then ends with an error or completion signal.
+         * The behavior does not itself return anything synchronously.
+         * The behavior begins by emitting to a start consumer.
+         * @param <S> Type of token emitted on successful start
+         * @param <T> Type of item output to stream consumer
+         * @param <E> Type of error emitted
+         */
+        interface StreamEmitter<S, T, E extends Throwable> {
+            void streamTo(Consumer<S> onStart, Consumer<T> onItem, Consumer<E> onError, Action onComplete);
+        }
+
+        /**
+         * A behavior which emits to a result listener, but returns no value, itself.
+         * @param <T> Type of result emitted
+         * @param <E> Type of error emitted
+         */
+        interface ResultEmitter<T, E extends Throwable> {
+            void emitTo(Consumer<T> onResult, Consumer<E> onError);
+        }
+
+        /**
+         * Describes behavior which emits a completion notification via an {@link Action},
+         * or alternately, emits an error to a {@link Consumer}.
+         * @param <E> Type of error emitted
+         */
+        interface ActionEmitter<E> {
+            void emitTo(Action onComplete, Consumer<E> onError);
+        }
     }
 
     /**

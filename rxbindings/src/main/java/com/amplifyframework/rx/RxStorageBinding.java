@@ -21,6 +21,7 @@ import androidx.annotation.VisibleForTesting;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
+import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
@@ -121,8 +122,8 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
         });
     }
 
-    private <T> Single<T> toSingle(RxAdapters.CancelableResultEmitter<T, StorageException> method) {
-        return RxAdapters.toSingle(method);
+    private <T> Single<T> toSingle(CancelableBehaviors.ResultEmitter<T, StorageException> method) {
+        return CancelableBehaviors.toSingle(method);
     }
 
     /**
