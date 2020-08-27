@@ -22,6 +22,7 @@ import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
@@ -40,6 +41,7 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyAction;
@@ -173,7 +175,6 @@ public final class RxApiBindingTest {
     @Test
     public void mutateEmitsFailure() throws InterruptedException {
         // Arrange category behavior to fail
-        Model model = RandomModel.model();
         ApiException expectedFailure = new ApiException("Expected", "Failure");
         GraphQLRequest<Model> deleteRequest = createMockMutationRequest(Model.class);
         doAnswer(invocation -> {
@@ -283,6 +284,57 @@ public final class RxApiBindingTest {
         dataObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         dataObserver.assertNoValues();
         dataObserver.assertError(expectedFailure);
+    }
+
+    @SuppressWarnings({"rawtypes"})
+    @Test
+    public void subscribeStartsAndGetsCancelled() throws InterruptedException {
+        // Arrange a category behavior which emits an expected sequence of callback events
+        String token = RandomString.string();
+        GraphQLRequest<Model> request = createMockSubscriptionRequest(Model.class);
+
+        doAnswer(invocation -> {
+            final int onStartPosition = 1;
+            final int onCompletePosition = 4;
+            Consumer<String> onStart = invocation.getArgument(onStartPosition);
+            Action onComplete = invocation.getArgument(onCompletePosition);
+            onStart.accept(token);
+
+            GraphQLOperation mockApiOperation = mock(GraphQLOperation.class);
+            doAnswer(apiCancelInvocation -> {
+                onComplete.call();
+                return null;
+            }).when(mockApiOperation).cancel();
+            return mockApiOperation;
+        }).when(delegate).subscribe(
+            eq(request),
+            anyConsumer(),
+            anyConsumer(),
+            anyConsumer(),
+            anyAction()
+        );
+
+        // Act: subscribe via binding
+        RxApiBinding.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
+        // Act: subscribe via binding
+        TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
+        TestObserver<ConnectionState> startObserver = rxOperation.observeConnectionState().test();
+
+        startObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        startObserver.assertValue(ConnectionState.CONNECTED);
+        startObserver.assertNoErrors();
+        assertEquals(token, rxOperation.getSubscriptionId());
+
+        // Act: cancel the subscription
+        Completable.timer(1, TimeUnit.SECONDS).andThen(Completable.fromAction(rxOperation::cancel)).subscribe();
+
+
+        dataObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        dataObserver.assertNoValues();
+        dataObserver.assertNoErrors();
+        dataObserver.assertComplete();
+
+        startObserver.assertComplete();
     }
 
     /**
