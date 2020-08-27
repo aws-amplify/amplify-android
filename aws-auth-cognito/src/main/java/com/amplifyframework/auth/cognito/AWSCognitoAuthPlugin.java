@@ -375,10 +375,10 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
     @Override
     public void signIn(
-        @Nullable String username,
-        @NonNull AuthSignInOptions options,
-        @NonNull final Consumer<AuthSignInResult> onSuccess,
-        @NonNull final Consumer<AuthException> onException
+            @Nullable String username,
+            @NonNull AuthSignInOptions options,
+            @NonNull final Consumer<AuthSignInResult> onSuccess,
+            @NonNull final Consumer<AuthException> onException
     ) {
         Map<String, String> metadata = null;
 
@@ -408,19 +408,19 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
     @Override
     public void signIn(
-        @Nullable String username,
-        @Nullable String password,
-        @NonNull final Consumer<AuthSignInResult> onSuccess,
-        @NonNull final Consumer<AuthException> onException
+            @Nullable String username,
+            @Nullable String password,
+            @NonNull final Consumer<AuthSignInResult> onSuccess,
+            @NonNull final Consumer<AuthException> onException
     ) {
         signIn(username, password, AWSCognitoAuthSignInOptions.builder().build(), onSuccess, onException);
     }
 
     @Override
     public void signIn(
-        @Nullable String username,
-        @NonNull final Consumer<AuthSignInResult> onSuccess,
-        @NonNull final Consumer<AuthException> onException
+            @Nullable String username,
+            @NonNull final Consumer<AuthSignInResult> onSuccess,
+            @NonNull final Consumer<AuthException> onException
     ) {
         signIn(username, AWSCognitoAuthSignInOptions.builder().build(), onSuccess, onException);
     }
