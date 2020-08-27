@@ -72,15 +72,18 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
-    public Single<StorageUploadFileResult> uploadFile(@NonNull String key, @NonNull File local) {
-        return toSingle((onResult, onError) -> storage.uploadFile(key, local, onResult, onError));
+    public RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(@NonNull String key,
+                                                                              @NonNull File local) {
+        return uploadFile(key, local, StorageUploadFileOptions.defaultInstance());
     }
 
     @NonNull
     @Override
-    public Single<StorageUploadFileResult> uploadFile(
+    public RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
             @NonNull String key, @NonNull File local, @NonNull StorageUploadFileOptions options) {
-        return toSingle((onResult, onError) -> storage.uploadFile(key, local, options, onResult, onError));
+        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) -> {
+            return storage.uploadFile(key, local, options, onProgress, onResult, onError);
+        });
     }
 
     @NonNull

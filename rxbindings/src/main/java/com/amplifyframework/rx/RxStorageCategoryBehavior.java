@@ -81,7 +81,7 @@ public interface RxStorageCategoryBehavior {
      *         by disposing the single subscription.
      */
     @NonNull
-    Single<StorageUploadFileResult> uploadFile(
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
             @NonNull String key,
             @NonNull File local
     );
@@ -96,7 +96,7 @@ public interface RxStorageCategoryBehavior {
      *         by disposing the single subscription.
      */
     @NonNull
-    Single<StorageUploadFileResult> uploadFile(
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
             @NonNull String key,
             @NonNull File local,
             @NonNull StorageUploadFileOptions options

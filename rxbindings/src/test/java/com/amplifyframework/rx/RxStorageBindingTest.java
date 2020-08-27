@@ -29,6 +29,7 @@ import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
@@ -170,23 +171,44 @@ public final class RxStorageBindingTest {
      * When {@link StorageCategoryBehavior#uploadFile(String, File, Consumer, Consumer)} returns
      * a {@link StorageUploadFileResult}, then the {@link Single} returned by
      * {@link RxStorageCategoryBehavior#uploadFile(String, File)} should emit that result.
+     * @throws InterruptedException Not expected.
      */
     @Test
-    public void uploadFileReturnsResult() {
+    public void uploadFileReturnsResult() throws InterruptedException {
         StorageUploadFileResult result = StorageUploadFileResult.fromKey(remoteKey);
         doAnswer(invocation -> {
-            final int indexOfResultConsumer = 2; // 0 key, 1 local, 2 onResult, 3 onError
+            // 0 key, 1 local, 2 options, 3 onProgress, 4 onResult, 5 onError
+            final int indexOfResultConsumer = 4;
+            final int indexOfProgressConsumer = 3;
             Consumer<StorageUploadFileResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
-            resultConsumer.accept(result);
-            return mock(StorageUploadFileOperation.class);
-        })
-        .when(delegate)
-            .uploadFile(eq(remoteKey), eq(localFile), anyConsumer(), anyConsumer());
+            Consumer<StorageTransferProgress> progressConsumer = invocation.getArgument(indexOfProgressConsumer);
 
-        rxStorage
-            .uploadFile(remoteKey, localFile)
-            .test()
-            .assertValues(result);
+            Observable.interval(100, TimeUnit.MILLISECONDS)
+                      .take(5)
+                      .flatMapCompletable(aLong -> {
+                          progressConsumer.accept(new StorageTransferProgress(aLong, 500));
+                          return Completable.complete();
+                      })
+                      .doOnComplete(() -> {
+                          resultConsumer.accept(result);
+                      })
+                      .subscribe();
+            return mock(StorageUploadFileOperation.class);
+        }).when(delegate).uploadFile(eq(remoteKey),
+                                     eq(localFile),
+                                     any(StorageUploadFileOptions.class),
+                                     anyConsumer(),
+                                     anyConsumer(),
+                                     anyConsumer());
+
+        RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> rxOperation =
+            rxStorage.uploadFile(remoteKey, localFile);
+        TestObserver<StorageUploadFileResult> testObserver = rxOperation.observeResult().test();
+        TestObserver<StorageTransferProgress> testProgressObserver = rxOperation.observeProgress().test();
+        testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        testObserver.assertValues(result);
+        testProgressObserver.assertValueCount(5);
+
     }
 
     /**
@@ -198,16 +220,21 @@ public final class RxStorageBindingTest {
     public void uploadFileReturnsError() {
         StorageException error = new StorageException("Error uploading.", "Expected.");
         doAnswer(invocation -> {
-            final int indexOfResultConsumer = 3; // 0 key, 1 local, 2 onResult, 3 onError
+            // 0 key, 1 local, 2 options, 3 onProgress 4 onResult, 5 onError
+            final int indexOfResultConsumer = 5;
             Consumer<StorageException> errorConsumer = invocation.getArgument(indexOfResultConsumer);
             errorConsumer.accept(error);
             return mock(StorageUploadFileOperation.class);
-        })
-        .when(delegate)
-            .uploadFile(eq(remoteKey), eq(localFile), anyConsumer(), anyConsumer());
+        }).when(delegate).uploadFile(eq(remoteKey),
+                                     eq(localFile),
+                                     any(StorageUploadFileOptions.class),
+                                     anyConsumer(),
+                                     anyConsumer(),
+                                     anyConsumer());
 
         rxStorage
             .uploadFile(remoteKey, localFile)
+            .observeResult()
             .test()
             .assertError(error);
     }
