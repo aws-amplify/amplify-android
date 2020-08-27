@@ -66,7 +66,7 @@ final class RxAdapters {
         }
 
         /**
-         * Describes a behavior emits a notification of start to an {@link Consumer},
+         * Describes a behavior which emits a notification of start to an {@link Consumer},
          * then emits 0..n values to a value {@link Consumer}, and finally terminated
          * either by calling a successful {@link Action}, or emitting an error to an
          * error {@link Consumer}. May be canceled via a returned {@link Cancelable}.
