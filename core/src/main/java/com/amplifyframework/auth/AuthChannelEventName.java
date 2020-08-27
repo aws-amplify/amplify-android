@@ -19,7 +19,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 
 /**
- * An enumeration of the names of events relating the the {@link AuthCategory},
+ * An enumeration of the names of events relating the {@link AuthCategory},
  * that are published via {@link com.amplifyframework.hub.HubCategory#publish(HubChannel, HubEvent)} on the
  * {@link HubChannel#AUTH} channel.
  */

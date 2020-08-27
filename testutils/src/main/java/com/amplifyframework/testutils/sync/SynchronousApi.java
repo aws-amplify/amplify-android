@@ -22,6 +22,7 @@ import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelQuery;
 import com.amplifyframework.api.graphql.model.ModelSubscription;
@@ -40,9 +41,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposables;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * A utility to perform synchronous calls to the {@link ApiCategory}.
@@ -244,7 +245,7 @@ public final class SynchronousApi {
             @NonNull String apiName,
             @NonNull Class<T> clazz,
             @NonNull QueryPredicate predicate) throws ApiException {
-        final Iterable<T> queryResults = awaitResponseData((onResponse, onFailure) ->
+        final PaginatedResult<T> queryResults = awaitResponseData((onResponse, onFailure) ->
             asyncDelegate.query(apiName, ModelQuery.list(clazz, predicate), onResponse, onFailure)
         );
         final List<T> results = new ArrayList<>();
@@ -336,7 +337,7 @@ public final class SynchronousApi {
                             emitter::onComplete
                     );
                     if (cancelable != null) {
-                        disposable.add(Disposables.fromAction(cancelable::cancel));
+                        disposable.add(Disposable.fromAction(cancelable::cancel));
                     }
                 }
             );

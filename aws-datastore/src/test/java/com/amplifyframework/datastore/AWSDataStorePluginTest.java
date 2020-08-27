@@ -26,6 +26,7 @@ import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
@@ -57,7 +58,7 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
@@ -132,7 +133,7 @@ public final class AWSDataStorePluginTest {
 
     /**
      * Configuring and initialization the plugin when in API sync mode succeeds without
-     * freezing or crashing the the calling thread.
+     * freezing or crashing the calling thread.
      * @throws JSONException on failure to arrange plugin config
      * @throws AmplifyException on failure to arrange API plugin via Amplify facade
      */
@@ -336,9 +337,10 @@ public final class AWSDataStorePluginTest {
             // Mock the API emitting an ApiEndpointStatusChangeEvent event.
             Amplify.Hub.publish(HubChannel.API, hubEvent);
             int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<Iterable<ModelWithMetadata<Person>>>> onResponse =
+            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Person>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            onResponse.accept(new GraphQLResponse<>(Collections.emptyList(), Collections.emptyList()));
+            PaginatedResult<ModelWithMetadata<Person>> data = new PaginatedResult<>(Collections.emptyList(), null);
+            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             return null;
         }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
 

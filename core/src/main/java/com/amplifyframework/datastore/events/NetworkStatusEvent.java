@@ -87,7 +87,7 @@ public final class NetworkStatusEvent implements HubEvent.Data<NetworkStatusEven
      * @throws AmplifyException If unable to cast to the target type.
      */
     public static NetworkStatusEvent from(HubEvent<?> hubEvent) throws AmplifyException {
-        if (!(hubEvent.getData() instanceof NetworkStatusEvent)) {
+        if (hubEvent.getData() instanceof NetworkStatusEvent) {
             return (NetworkStatusEvent) hubEvent.getData();
         }
         String expectedClassName = NetworkStatusEvent.class.getName();

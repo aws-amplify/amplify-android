@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
+import com.amplifyframework.datastore.events.OutboxStatusEvent;
 import com.amplifyframework.hub.HubEventFilter;
 
 final class TestHubEventFilters {
@@ -37,6 +38,38 @@ final class TestHubEventFilters {
             }
             String actualId = pendingMutation.getMutatedItem().getId();
             return model.getId().equals(actualId);
+        };
+    }
+
+    static <T extends Model> HubEventFilter saveOf(T model) {
+        return event -> {
+            DataStoreChannelEventName eventName = DataStoreChannelEventName.fromString(event.getName());
+            if (!DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED.equals(eventName)) {
+                return false;
+            }
+            OutboxMutationEvent<? extends Model> mutationEvent = (OutboxMutationEvent<? extends Model>) event.getData();
+            if (mutationEvent == null) {
+                return false;
+            }
+            if (!model.getClass().isAssignableFrom(mutationEvent.getModel())) {
+                return false;
+            }
+            String actualId = mutationEvent.getElement().getModel().getId();
+            return model.getId().equals(actualId);
+        };
+    }
+
+    static HubEventFilter outboxIsEmpty(boolean isEmpty) {
+        return event -> {
+            DataStoreChannelEventName eventName = DataStoreChannelEventName.fromString(event.getName());
+            if (!DataStoreChannelEventName.OUTBOX_STATUS.equals(eventName)) {
+                return false;
+            }
+            OutboxStatusEvent status = (OutboxStatusEvent) event.getData();
+            if (status == null) {
+                return false;
+            }
+            return isEmpty == status.isEmpty();
         };
     }
 }

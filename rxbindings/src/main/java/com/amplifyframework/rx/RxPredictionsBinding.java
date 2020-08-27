@@ -34,7 +34,7 @@ import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import java.util.Objects;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 final class RxPredictionsBinding implements RxPredictionsCategoryBehavior {
     private final PredictionsCategoryBehavior delegate;

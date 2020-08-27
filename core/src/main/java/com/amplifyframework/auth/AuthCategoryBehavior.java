@@ -30,6 +30,8 @@ import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 
+import java.util.List;
+
 /**
  * Specifies the behavior for the Auth category.
  */
@@ -193,6 +195,45 @@ public interface AuthCategoryBehavior {
      */
     void fetchAuthSession(
             @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Remember the user device that is currently being used.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void rememberDevice(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Forget the user device that is currently being used from the list
+     * of remembered devices.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void forgetDevice(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Forget a specific user device from the list of remembered devices.
+     * @param device Auth device to forget
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void forgetDevice(
+            @NonNull AuthDevice device,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Obtain a list of devices that are being tracked by the category.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void fetchDevices(
+            @NonNull Consumer<List<AuthDevice>> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
     /**

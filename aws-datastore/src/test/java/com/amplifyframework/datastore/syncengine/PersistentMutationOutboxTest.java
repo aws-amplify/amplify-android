@@ -23,7 +23,9 @@ import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.datastore.syncengine.MutationOutbox.OutboxEvent;
 import com.amplifyframework.datastore.syncengine.PendingMutation.PersistentRecord;
+import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
@@ -35,8 +37,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Observable;
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -71,13 +73,35 @@ public final class PersistentMutationOutboxTest {
     }
 
     /**
+     * Enqueueing a mutation should publish current outbox status.
+     */
+    @Test
+    public void outboxStatusIsPublishedToHub() {
+        BlogOwner raphael = BlogOwner.builder()
+                .name("Raphael Kim")
+                .build();
+        PendingMutation<BlogOwner> createRaphael = PendingMutation.creation(raphael, BlogOwner.class);
+        HubAccumulator statusAccumulator = HubAccumulator.create(
+                HubChannel.DATASTORE,
+                TestHubEventFilters.outboxIsEmpty(false), // outbox should not be empty
+                1
+        ).start();
+
+        // Enqueue an save for a Raphael BlogOwner object,
+        // and make sure that outbox status is published to hub.
+        mutationOutbox.enqueue(createRaphael).test();
+        statusAccumulator.await();
+    }
+
+    /**
      * Enqueueing a mutation should have the result of persisting
      * the mutation to storage, and notifying any observers that
      * a new mutation has been enqueued.
      * @throws DataStoreException On failure to query results, for assertions
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void enqueuePersistsMutationAndNotifiesObserver() throws DataStoreException {
+    public void enqueuePersistsMutationAndNotifiesObserver() throws DataStoreException, InterruptedException {
         // Observe the queue
         TestObserver<OutboxEvent> queueObserver = mutationOutbox.events().test();
 
@@ -85,13 +109,21 @@ public final class PersistentMutationOutboxTest {
             .name("Jameson Williams")
             .build();
         PendingMutation<BlogOwner> createJameson = PendingMutation.creation(jameson, BlogOwner.class);
+        HubAccumulator savedMutationsAccumulator = HubAccumulator.create(
+                HubChannel.DATASTORE,
+                TestHubEventFilters.saveOf(jameson),
+                1
+        ).start();
 
         // Enqueue an save for a Jameson BlogOwner object,
         // and make sure that it calls back onComplete().
         TestObserver<Void> saveObserver = mutationOutbox.enqueue(createJameson).test();
-        saveObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        saveObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         saveObserver.assertNoErrors().assertComplete();
         saveObserver.dispose();
+
+        // Wait for a Hub event telling us that the model got successfully enqueued.
+        savedMutationsAccumulator.await();
 
         // Expected to observe the mutation on the subject
         queueObserver.awaitCount(1);
@@ -127,7 +159,7 @@ public final class PersistentMutationOutboxTest {
         // Note that nothing has actually happened yet --
         // Nothing was put out on the observable ...
         testObserver.assertNoValues();
-        testObserver.assertNotTerminated();
+        testObserver.assertNotComplete();
         testObserver.dispose();
 
         // And nothing is in storage.
@@ -140,9 +172,10 @@ public final class PersistentMutationOutboxTest {
     /**
      * Calling load() will populate the outbox with content from disk.
      * @throws DataStoreException On failure to arrange models into storage before test action
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void loadPreparesOutbox() throws DataStoreException {
+    public void loadPreparesOutbox() throws DataStoreException, InterruptedException {
         // Arrange: some mutations.
         BlogOwner tony = BlogOwner.builder()
             .name("Tony Daniels")
@@ -158,7 +191,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> loadObserver = mutationOutbox.load().test();
 
         // Assert: load worked.
-        loadObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        loadObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         loadObserver.assertNoErrors().assertComplete();
         loadObserver.dispose();
 
@@ -173,9 +206,10 @@ public final class PersistentMutationOutboxTest {
     /**
      * Tests {@link MutationOutbox#remove(TimeBasedUuid)}.
      * @throws DataStoreException On failure to query results, for assertions
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void removeRemovesChangesFromQueue() throws DataStoreException {
+    public void removeRemovesChangesFromQueue() throws DataStoreException, InterruptedException {
         // Arrange: there is a change in the queue.
         BlogOwner bill = BlogOwner.builder()
             .name("Bill Gates")
@@ -186,7 +220,7 @@ public final class PersistentMutationOutboxTest {
 
         TestObserver<Void> testObserver = mutationOutbox.remove(deleteBillGates.getMutationId()).test();
 
-        testObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         testObserver.assertNoErrors().assertComplete();
         testObserver.dispose();
 
@@ -250,9 +284,10 @@ public final class PersistentMutationOutboxTest {
      * model comes in, an error should be returned. In other words, it is illegal to
      * create a mutation twice.
      * @throws DataStoreException On failure to query storage to assert post-action value of mutation
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void existingCreationIncomingCreationYieldsError() throws DataStoreException {
+    public void existingCreationIncomingCreationYieldsError() throws DataStoreException, InterruptedException {
         // Arrange an existing creation mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("The Real Papa Tony")
@@ -272,7 +307,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingCreation).test();
 
         // Assert: caused a failure.
-        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        enqueueObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
@@ -291,9 +326,10 @@ public final class PersistentMutationOutboxTest {
      * model comes in, an error should be returned. In other words, you can't create
      * something that already exists and is being updated.
      * @throws DataStoreException On failure to to query which mutations are in storage
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void existingUpdateIncomingCreationYieldsError() throws DataStoreException {
+    public void existingUpdateIncomingCreationYieldsError() throws DataStoreException, InterruptedException {
         // Arrange an existing update mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Tony with improvements applied")
@@ -313,7 +349,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingCreation).test();
 
         // Assert: caused a failure.
-        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        enqueueObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
@@ -333,9 +369,10 @@ public final class PersistentMutationOutboxTest {
      * for deletion, that deletion hasn't happened yet. So, it doesn't make sense to create()
      * something that currently already exists. That's like an "update."
      * @throws DataStoreException On failure to query which mutation is present in storage
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void existingDeletionIncomingCreationYieldsError() throws DataStoreException {
+    public void existingDeletionIncomingCreationYieldsError() throws DataStoreException, InterruptedException {
         // Arrange an existing deletion mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -355,7 +392,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingCreation).test();
 
         // Assert: caused a failure.
-        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        enqueueObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
@@ -374,9 +411,10 @@ public final class PersistentMutationOutboxTest {
      * updated is not meant to exist.
      * @throws DataStoreException On failure to query storage, for the purpose of asserting the
      *                            state of mutations after the test action
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void existingDeletionIncomingUpdateYieldsError() throws DataStoreException {
+    public void existingDeletionIncomingUpdateYieldsError() throws DataStoreException, InterruptedException {
         // Arrange an existing deletion mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -396,7 +434,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
         // Assert: caused a failure.
-        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        enqueueObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
@@ -414,9 +452,11 @@ public final class PersistentMutationOutboxTest {
      * When there is an existing update mutation, and a new update mutation with condition
      * comes in, then the existing one should remain and the new one should be appended.
      * @throws DataStoreException On failure to query storage for current mutations state
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void existingUpdateIncomingUpdateWithConditionAppendsMutation() throws DataStoreException {
+    public void existingUpdateIncomingUpdateWithConditionAppendsMutation()
+            throws DataStoreException, InterruptedException {
         // Arrange an existing update mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -436,7 +476,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
         // Assert: OK. The new mutation is accepted
-        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        enqueueObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertComplete();
 
         // Assert: the existing mutation is still there, by id ....
@@ -479,9 +519,11 @@ public final class PersistentMutationOutboxTest {
      * When there is an existing update mutation, and a new update mutation comes in,
      * then we need to remove any existing mutations for that modelId and create the new one.
      * @throws DataStoreException On failure to query storage for current mutations state
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void existingUpdateIncomingUpdateWithoutConditionRewritesExistingMutation() throws DataStoreException {
+    public void existingUpdateIncomingUpdateWithoutConditionRewritesExistingMutation()
+            throws DataStoreException, InterruptedException {
         // Arrange an existing update mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -501,7 +543,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
         // Assert: OK. The new mutation is accepted
-        enqueueObserver.awaitTerminalEvent();
+        enqueueObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertComplete();
 
         // Assert: the existing mutation has been removed
@@ -528,9 +570,11 @@ public final class PersistentMutationOutboxTest {
      * the exiting creation should be updated with the contents of the incoming
      * mutation. The original creation mutation ID should be retained, for ordering.
      * @throws DataStoreException On failure to query the storage to examine which mutations were saved
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void existingCreationIncomingUpdateRewritesExitingMutation() throws DataStoreException {
+    public void existingCreationIncomingUpdateRewritesExitingMutation()
+            throws DataStoreException, InterruptedException {
         // Arrange an existing creation mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -550,7 +594,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
         // Assert: OK. The new mutation is accepted
-        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        enqueueObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertComplete();
 
         // Assert: the existing mutation is still there, by id ....
@@ -716,7 +760,7 @@ public final class PersistentMutationOutboxTest {
         // Assert: an event for the original creation, then another for the update
         eventsObserver.awaitCount(2)
             .assertNoErrors()
-            .assertNotTerminated()
+            .assertNotComplete()
             .assertValues(OutboxEvent.CONTENT_AVAILABLE, OutboxEvent.CONTENT_AVAILABLE);
     }
 
@@ -738,7 +782,7 @@ public final class PersistentMutationOutboxTest {
         // Assert: we got an event!
         eventsObserver.awaitCount(1)
             .assertNoErrors()
-            .assertNotTerminated()
+            .assertNotComplete()
             .assertValue(OutboxEvent.CONTENT_AVAILABLE);
     }
 
@@ -809,9 +853,10 @@ public final class PersistentMutationOutboxTest {
 
     /**
      * It is an error to mark an item as in-flight, if it isn't even in the dang queue.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void errorWhenMarkingItemNotInQueue() {
+    public void errorWhenMarkingItemNotInQueue() throws InterruptedException {
         // Enqueue and remove a mutation.
         BlogOwner tabby = BlogOwner.builder()
             .name("Tabitha Stevens of Beaver Falls, Idaho")
@@ -824,7 +869,7 @@ public final class PersistentMutationOutboxTest {
 
         // Now, if we try to make that mutation as in-flight, its an error, since its already processed.
         TestObserver<Void> observer = mutationOutbox.markInFlight(creation.getMutationId()).test();
-        observer.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        observer.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         observer
             .assertError(DataStoreException.class)
             .assertError(error ->

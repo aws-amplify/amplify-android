@@ -64,7 +64,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -178,8 +178,8 @@ public final class AWSApiPluginTest {
         webServer.enqueue(new MockResponse()
             .setBody(Resources.readAsString("blog-owners-query-results.json")));
 
-        GraphQLResponse<Iterable<BlogOwner>> actualResponse =
-            Await.<GraphQLResponse<Iterable<BlogOwner>>, ApiException>result(((onResult, onError) ->
+        GraphQLResponse<PaginatedResult<BlogOwner>> actualResponse =
+            Await.<GraphQLResponse<PaginatedResult<BlogOwner>>, ApiException>result(((onResult, onError) ->
                 plugin.query(ModelQuery.list(BlogOwner.class), onResult, onError)
             ));
 

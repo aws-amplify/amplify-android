@@ -24,9 +24,13 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.events.OutboxStatusEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.HashSet;
@@ -34,10 +38,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 /*
  * The {@link MutationOutbox} is a persistently-backed in-order staging ground
@@ -117,6 +121,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     // the pendingMutation, directly.
                     mutationQueue.updateExistingQueueItemOrAppendNew(pendingMutation.getMutationId(), pendingMutation);
                     LOG.info("Successfully enqueued " + pendingMutation);
+                    announceSuccessfulSave(pendingMutation);
+                    publishCurrentOutboxStatus();
                     semaphore.release();
                     subscriber.onComplete();
                 },
@@ -181,6 +187,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
                             return;
                         }
                     }
+                    // Publish outbox status upon loading
+                    publishCurrentOutboxStatus();
                     semaphore.release();
                     emitter.onComplete();
                 },
@@ -224,6 +232,30 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             ));
         });
+    }
+
+    /**
+     * Publish a successfully enqueued mutation to hub.
+     * @param pendingMutation A mutation that has been successfully enqueued to outbox
+     * @param <T> Type of model
+     */
+    private <T extends Model> void announceSuccessfulSave(PendingMutation<T> pendingMutation) {
+        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent
+                .fromModel(pendingMutation.getMutatedItem());
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED, mutationEvent)
+        );
+    }
+
+    /**
+     * Publish current outbox status to hub.
+     */
+    private void publishCurrentOutboxStatus() {
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            new OutboxStatusEvent(mutationQueue.isEmpty()).toHubEvent()
+        );
     }
 
     /**

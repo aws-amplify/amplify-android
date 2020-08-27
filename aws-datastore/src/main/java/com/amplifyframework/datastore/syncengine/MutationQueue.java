@@ -36,7 +36,7 @@ public final class MutationQueue {
     private final Node dummyTail;
 
     /**
-     * Default constructor for {@link #MutationQueue}.
+     * Default constructor for {@link MutationQueue}.
      */
     public MutationQueue() {
         dummyHead = new Node();

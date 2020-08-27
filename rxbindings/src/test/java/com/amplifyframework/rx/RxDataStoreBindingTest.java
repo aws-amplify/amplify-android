@@ -39,8 +39,9 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
@@ -59,6 +60,8 @@ import static org.mockito.Mockito.when;
  * emitted.
  */
 public final class RxDataStoreBindingTest {
+    private static final long TIMEOUT_SECONDS = 2;
+
     private DataStorePlugin<?> delegate;
     private RxDataStoreCategoryBehavior rxDataStore;
 
@@ -83,9 +86,10 @@ public final class RxDataStoreBindingTest {
     /**
      * When the DataStore behavior successfully saves a value, the Rx binding
      * for save should just complete.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void saveCompletesWhenBehaviorEmitsResult() {
+    public void saveCompletesWhenBehaviorEmitsResult() throws InterruptedException {
         Model model = RandomModel.model();
 
         // Arrange: category returns notification of change when save is transacted
@@ -110,7 +114,7 @@ public final class RxDataStoreBindingTest {
         TestObserver<Void> observer = rxDataStore.save(model).test();
 
         // Assert: operation completed
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertComplete();
 
         // Assert: behavior was invoked
@@ -121,9 +125,10 @@ public final class RxDataStoreBindingTest {
     /**
      * When the DataStore save behavior emits an error, the Rx binding should
      * do the same.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void saveEmitsErrorWhenBehaviorDoes() {
+    public void saveEmitsErrorWhenBehaviorDoes() throws InterruptedException {
         Model model = RandomModel.model();
 
         // Arrange: The underlying category behavior returns an error.
@@ -138,7 +143,7 @@ public final class RxDataStoreBindingTest {
 
         // Act: try to save something.
         TestObserver<?> observer = rxDataStore.save(model).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(expectedFailure);
 
         verify(delegate)
@@ -148,9 +153,10 @@ public final class RxDataStoreBindingTest {
     /**
      * When the DataStore delete behavior returns a result, the Rx binding
      * should just complete.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void deleteCompletesWhenBehaviorEmitsResult() {
+    public void deleteCompletesWhenBehaviorEmitsResult() throws InterruptedException {
         Model model = RandomModel.model();
 
         // Arrange for the category to emit a result when delete() is called.
@@ -172,7 +178,7 @@ public final class RxDataStoreBindingTest {
 
         // Act: okay, call delete() on the Rx binding.
         TestObserver<Void> observer = rxDataStore.delete(model).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertComplete();
 
         verify(delegate)
@@ -182,9 +188,10 @@ public final class RxDataStoreBindingTest {
     /**
      * When the DataStore delete behavior emits a result, the Rx binding
      * should just complete.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void deleteEmitsErrorWhenBehaviorDoes() {
+    public void deleteEmitsErrorWhenBehaviorDoes() throws InterruptedException {
         // Arrange: delete() category behavior will callback failure consumer
         Model model = RandomModel.model();
         DataStoreException expectedFailure = new DataStoreException("Expected", "Failure");
@@ -200,7 +207,7 @@ public final class RxDataStoreBindingTest {
         TestObserver<Void> observer = rxDataStore.delete(model).test();
 
         // Assert: the same failure bubbled out from the category behavior
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(expectedFailure);
 
         verify(delegate)
@@ -210,9 +217,10 @@ public final class RxDataStoreBindingTest {
     /**
      * When the DataStore category behavior emits a query result, those results
      * should be emitted onto an Observable in the Rx binding.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void queryEmitsCategoryBehaviorResults() {
+    public void queryEmitsCategoryBehaviorResults() throws InterruptedException {
         // Arrange: query will return some results from category behavior
         List<Model> models = Arrays.asList(RandomModel.model(), RandomModel.model());
         doAnswer(invocation -> {
@@ -227,8 +235,8 @@ public final class RxDataStoreBindingTest {
         TestObserver<Model> observer = rxDataStore.query(Model.class).test();
 
         // Assert:
-        observer.awaitTerminalEvent();
-        observer.assertValueSet(models);
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertValueSequence(models);
 
         verify(delegate)
             .query(eq(Model.class), anyConsumer(), anyConsumer());
@@ -237,9 +245,10 @@ public final class RxDataStoreBindingTest {
     /**
      * When the DataStore emits a failure for a query, the Rx binding should terminate
      * with that failure.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void queryEmitsFailureWhenCategoryBehaviorDoes() {
+    public void queryEmitsFailureWhenCategoryBehaviorDoes() throws InterruptedException {
         DataStoreException expectedFailure = new DataStoreException("Expected", "Failure");
         doAnswer(invocation -> {
             final int positionOrFailureConsumer = 2;
@@ -250,7 +259,7 @@ public final class RxDataStoreBindingTest {
             .query(eq(Model.class), anyConsumer(), anyConsumer());
 
         TestObserver<Model> observer = rxDataStore.query(Model.class).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(expectedFailure);
 
         verify(delegate)
@@ -302,9 +311,10 @@ public final class RxDataStoreBindingTest {
     /**
      * The Rx binding for the DataStore's observe method is an Observable. It should
      * complete when the Rx binding's completion callback is triggered.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void observeCompletesWhenCategoryBehaviorDoes() {
+    public void observeCompletesWhenCategoryBehaviorDoes() throws InterruptedException {
         // Category behavior is arranged to complete
         doAnswer(invocation -> {
             // 0 = clazz, 1 = onStart, 2 = onNext, 3 = onFailure, 4 = onComplete
@@ -322,7 +332,7 @@ public final class RxDataStoreBindingTest {
 
         // Act: observe via Rx binding
         TestObserver<DataStoreItemChange<Model>> observer = rxDataStore.observe(Model.class).test();
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertComplete();
 
         verify(delegate)
@@ -332,9 +342,10 @@ public final class RxDataStoreBindingTest {
     /**
      * The Rx binding for the DataStore's observe behavior is an Observable. It should
      * fail with an exception when the DataStore observe method calls back its error consumer.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void observeFailsWhenCategoryBehaviorDoes() {
+    public void observeFailsWhenCategoryBehaviorDoes() throws InterruptedException {
         // Arrange for observer() to callback failure
         DataStoreException expectedFailure = new DataStoreException("Expected", "Failure");
         doAnswer(invocation -> {
@@ -355,7 +366,7 @@ public final class RxDataStoreBindingTest {
         TestObserver<DataStoreItemChange<Model>> observer = rxDataStore.observe(Model.class).test();
 
         // Assert: failure is propagated
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(expectedFailure);
 
         verify(delegate)

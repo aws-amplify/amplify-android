@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

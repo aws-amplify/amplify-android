@@ -32,6 +32,8 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
+import java.util.List;
+
 /**
  * Defines the Client API consumed by the application.
  * Internally routes the calls to the Auth Category
@@ -159,6 +161,39 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
+    public void rememberDevice(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().rememberDevice(onSuccess, onError);
+    }
+
+    @Override
+    public void forgetDevice(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().forgetDevice(onSuccess, onError);
+    }
+
+    @Override
+    public void forgetDevice(
+            @NonNull AuthDevice device,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().forgetDevice(device, onSuccess, onError);
+    }
+
+    @Override
+    public void fetchDevices(
+            @NonNull Consumer<List<AuthDevice>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().fetchDevices(onSuccess, onError);
+    }
+
+    @Override
     public void resetPassword(
             @NonNull String username,
             @NonNull Consumer<AuthResetPasswordResult> onSuccess,
@@ -181,8 +216,8 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     public void updatePassword(
             @NonNull String oldPassword,
             @NonNull String newPassword,
-            @Nullable Action onSuccess,
-            @Nullable Consumer<AuthException> onError
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().updatePassword(oldPassword, newPassword, onSuccess, onError);
     }

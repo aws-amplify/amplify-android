@@ -25,6 +25,7 @@ import androidx.annotation.VisibleForTesting;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthChannelEventName;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.auth.AuthProvider;
@@ -65,21 +66,26 @@ import com.amazonaws.mobile.client.SignInUIOptions;
 import com.amazonaws.mobile.client.SignOutOptions;
 import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
+import com.amazonaws.mobile.client.results.Device;
 import com.amazonaws.mobile.client.results.ForgotPasswordResult;
 import com.amazonaws.mobile.client.results.ForgotPasswordState;
+import com.amazonaws.mobile.client.results.ListDevicesResult;
 import com.amazonaws.mobile.client.results.SignInResult;
 import com.amazonaws.mobile.client.results.SignInState;
 import com.amazonaws.mobile.client.results.SignUpResult;
 import com.amazonaws.mobile.client.results.Tokens;
 import com.amazonaws.mobile.client.results.UserCodeDeliveryDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.cognitoauth.AuthClient;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
 import com.amazonaws.services.cognitoidentity.model.NotAuthorizedException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -90,6 +96,12 @@ import java.util.concurrent.atomic.AtomicReference;
  * A Cognito implementation of the Auth Plugin.
  */
 public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
+    /**
+     * The code which the web UI activity is launched under and is needed to listen to the result.
+     * See the documentation for more information: https://docs.amplify.aws/lib/auth/signin_web_ui/q/platform/android
+     */
+    public static final int WEB_UI_SIGN_IN_ACTIVITY_CODE = AuthClient.CUSTOM_TABS_ACTIVITY_CODE;
+
     private static final String AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final long SECONDS_BEFORE_TIMEOUT = 10;
     private static final String COGNITO_USER_ID_ATTRIBUTE = "sub";
@@ -511,6 +523,99 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     @Override
+    public void rememberDevice(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        awsMobileClient.getDeviceOperations().updateStatus(true, new Callback<Void>() {
+            @Override
+            public void onResult(Void result) {
+                onSuccess.call();
+            }
+
+            @Override
+            public void onError(Exception exception) {
+                onException.accept(new AuthException(
+                        "An error occurred while remembering a device",
+                        exception,
+                        "See attached exception for more details"
+                ));
+            }
+        });
+    }
+
+    @Override
+    public void forgetDevice(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        awsMobileClient.getDeviceOperations().forget(new Callback<Void>() {
+            @Override
+            public void onResult(Void result) {
+                onSuccess.call();
+            }
+
+            @Override
+            public void onError(Exception exception) {
+                onException.accept(new AuthException(
+                        "An error occurred while forgetting a device",
+                        exception,
+                        "See attached exception for more details"
+                ));
+            }
+        });
+    }
+
+    @Override
+    public void forgetDevice(
+            @NonNull AuthDevice device,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        awsMobileClient.getDeviceOperations().forget(device.getDeviceId(), new Callback<Void>() {
+            @Override
+            public void onResult(Void result) {
+                onSuccess.call();
+            }
+
+            @Override
+            public void onError(Exception exception) {
+                onException.accept(new AuthException(
+                        "An error occurred while forgetting a device",
+                        exception,
+                        "See attached exception for more details"
+                ));
+            }
+        });
+    }
+
+    @Override
+    public void fetchDevices(
+            @NonNull Consumer<List<AuthDevice>> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        awsMobileClient.getDeviceOperations().list(new Callback<ListDevicesResult>() {
+            @Override
+            public void onResult(ListDevicesResult result) {
+                List<AuthDevice> devices = new ArrayList<>();
+                for (Device device : result.getDevices()) {
+                    devices.add(AuthDevice.fromId(device.getDeviceKey()));
+                }
+                onSuccess.accept(devices);
+            }
+
+            @Override
+            public void onError(Exception exception) {
+                onException.accept(new AuthException(
+                        "An error occurred while fetching remembered devices.",
+                        exception,
+                        "See attached exception for more details"
+                ));
+            }
+        });
+    }
+
+    @Override
     public void resetPassword(
             @NonNull String username,
             @NonNull Consumer<AuthResetPasswordResult> onSuccess,
@@ -664,6 +769,12 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public AWSMobileClient getEscapeHatch() {
         return awsMobileClient;
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 
     private void signOutLocally(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {

@@ -21,7 +21,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 
 /**
- * An enumeration of the names of events relating the the {@link ApiCategory},
+ * An enumeration of the names of events relating the {@link ApiCategory},
  * that are published via {@link HubCategory#publish(HubChannel, HubEvent)} on the
  * {@link HubChannel#API} channel.
  */

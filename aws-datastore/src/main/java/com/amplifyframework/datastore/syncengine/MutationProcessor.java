@@ -32,10 +32,10 @@ import com.amplifyframework.logging.Logger;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * The {@link MutationProcessor} observes the {@link MutationOutbox}, and publishes its items to an
@@ -80,7 +80,7 @@ final class MutationProcessor {
                         "Pending mutations will be published to the cloud."
                 )
             )
-            .startWith(MutationOutbox.OutboxEvent.CONTENT_AVAILABLE) // To start draining immediately
+            .startWithItem(MutationOutbox.OutboxEvent.CONTENT_AVAILABLE) // To start draining immediately
             .subscribeOn(Schedulers.single())
             .observeOn(Schedulers.single())
             .flatMapCompletable(event -> drainMutationOutbox())
@@ -125,6 +125,7 @@ final class MutationProcessor {
                     // if there are outstanding mutations in the outbox.
                     mutationOutbox.remove(mutationOutboxItem.getMutationId())
                         .andThen(merger.merge(modelWithMetadata))
+                        .doOnComplete(() -> announceSuccessfulSync(modelWithMetadata))
                 )
             )
             .doOnComplete(() -> {
@@ -146,6 +147,20 @@ final class MutationProcessor {
         Amplify.Hub.publish(
             HubChannel.DATASTORE,
             HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation)
+        );
+    }
+
+    /**
+     * Publish a successfully mutated model and its metadata to hub.
+     * @param modelWithMetadata A model that was successfully mutated and its sync metadata
+     * @param <T> Type of model
+     */
+    private <T extends Model> void announceSuccessfulSync(ModelWithMetadata<T> modelWithMetadata) {
+        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent
+                .fromModelWithMetadata(modelWithMetadata);
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, mutationEvent)
         );
     }
 

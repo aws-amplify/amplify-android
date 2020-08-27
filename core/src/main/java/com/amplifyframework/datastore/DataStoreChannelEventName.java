@@ -25,7 +25,7 @@ import com.amplifyframework.hub.HubEvent;
 import java.util.Objects;
 
 /**
- * An enumeration of the names of events relating the the {@link DataStoreCategory},
+ * An enumeration of the names of events relating the {@link DataStoreCategory},
  * that are published via {@link HubCategory#publish(HubChannel, HubEvent)} on the
  * {@link HubChannel#DATASTORE} channel.
  */
@@ -59,6 +59,21 @@ public enum DataStoreChannelEventName {
      * The DataStore as a whole (not just the sync piece) is ready. At this point all data is available.
      */
     READY("ready"),
+
+    /**
+     * Notifies if there are mutations in the outbox.
+     */
+    OUTBOX_STATUS("outboxStatus"),
+
+    /**
+     * A local mutation was placed on the outbox.
+     */
+    OUTBOX_MUTATION_ENQUEUED("outboxMutationEnqueued"),
+
+    /**
+     * A mutation from the outbox has been successfully sent and merged to the backend.
+     */
+    OUTBOX_MUTATION_PROCESSED("outboxMutationProcessed"),
 
     /**
      * The DataStore is about to start the Sync Queries.

@@ -41,7 +41,7 @@ public final class NotEqualQueryOperator extends QueryOperator<Object> {
     }
 
     /**
-     * Returns true if the the provided field value does
+     * Returns true if the provided field value does
      * not equal the value associated with this operator.
      * @param field the field value to operate on
      * @return evaluated result of the operator

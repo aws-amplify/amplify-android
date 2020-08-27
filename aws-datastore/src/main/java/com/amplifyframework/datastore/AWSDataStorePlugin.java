@@ -53,9 +53,9 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
@@ -191,9 +191,10 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @WorkerThread
     @Override
     public void initialize(@NonNull Context context) throws AmplifyException {
-        Throwable initError = initializeStorageAdapter(context)
-            .blockingGet(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (initError != null) {
+        try {
+            initializeStorageAdapter(context)
+                .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (Throwable initError) {
             throw new AmplifyException(
                 "Failed to initialize the local storage adapter for the DataStore plugin.",
                 initError, AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -219,10 +220,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @SuppressWarnings("unused")
     synchronized void terminate() {
-        Throwable throwable = orchestrator.stop()
-            .andThen(Completable.fromAction(sqliteStorageAdapter::terminate))
-            .blockingGet(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (throwable != null) {
+        try {
+            orchestrator.stop()
+                .andThen(Completable.fromAction(sqliteStorageAdapter::terminate))
+                .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (Throwable throwable) {
             LOG.warn("An error occurred while terminating the DataStore plugin.", throwable);
         }
     }
@@ -234,6 +236,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public Void getEscapeHatch() {
         return null;
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 
     /**
@@ -457,19 +465,20 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     private void beforeOperation(@NonNull final Runnable runnable) {
-        Throwable throwable = Completable.fromAction(
-            () -> {
-                categoryInitializationsPending.await();
-                orchestrator.start();
-            })
-            .andThen(Completable.fromRunnable(runnable))
-            .blockingGet(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-
-        if (!orchestrator.isStarted() || !orchestrator.isStarted()) {
-            LOG.warn("Failed to execute request because DataStore is not fully initialized.");
-        }
-        if (throwable != null) {
-            LOG.warn("Failed to execute request due to an unexpected error.", throwable);
+        try {
+            Completable.fromAction(
+                () -> {
+                    categoryInitializationsPending.await();
+                    orchestrator.start();
+                })
+                .andThen(Completable.fromRunnable(runnable))
+                .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (Throwable throwable) {
+            if (!orchestrator.isStarted()) {
+                LOG.warn("Failed to execute request because DataStore is not fully initialized.");
+            } else {
+                LOG.warn("Failed to execute request due to an unexpected error.", throwable);
+            }
         }
     }
 
