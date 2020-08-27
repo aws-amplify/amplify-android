@@ -47,14 +47,14 @@ final class TestHubEventFilters {
             if (!DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED.equals(eventName)) {
                 return false;
             }
-            PendingMutation<? extends Model> pendingMutation = (PendingMutation<? extends Model>) event.getData();
-            if (pendingMutation == null) {
+            OutboxMutationEvent<? extends Model> mutationEvent = (OutboxMutationEvent<? extends Model>) event.getData();
+            if (mutationEvent == null) {
                 return false;
             }
-            if (!model.getClass().isAssignableFrom(pendingMutation.getClassOfMutatedItem())) {
+            if (!model.getClass().isAssignableFrom(mutationEvent.getModel())) {
                 return false;
             }
-            String actualId = pendingMutation.getMutatedItem().getId();
+            String actualId = mutationEvent.getElement().getModel().getId();
             return model.getId().equals(actualId);
         };
     }
