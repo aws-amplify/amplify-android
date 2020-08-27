@@ -127,10 +127,10 @@ public interface DataStoreCategoryBehavior {
     );
 
     /**
-     * Query the DataStore to find items of the requests Java class, using the provided
-     * {@link QueryOptions}. The query options include support for filtering and paging.
+     * Query the DataStore to find items of the requested Java class, using the provided
+     * {@link QueryOptions}. The query options include support for filtering, paging, and sorting.
      * @param itemClass Class of items that will be queried
-     * @param options Filtering and paging options
+     * @param options Filtering, paging, and sorting options
      * @param onQueryResults Called when there are results available
      * @param onQueryFailure Called when there is a failure that prevents results from being rendered
      * @param <T> The type of items being queried
