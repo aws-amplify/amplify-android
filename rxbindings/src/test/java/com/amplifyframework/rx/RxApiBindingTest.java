@@ -30,6 +30,7 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.rx.RxApiBinding.RxSubscriptionOperation.ConnectionState;
 import com.amplifyframework.testutils.random.RandomModel;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -43,6 +44,7 @@ import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -225,12 +227,20 @@ public final class RxApiBindingTest {
         );
 
         // Act: subscribe via binding
-        TestObserver<GraphQLResponse<Model>> observer =
-            rxApi.subscribe(request).test();
+        RxApiBinding.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
+        // Act: subscribe via binding
+        TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
+        TestObserver<ConnectionState> startObserver = rxOperation.observeConnectionState().test();
 
-        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        observer.assertValue(response);
-        observer.assertNoErrors();
+        startObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        startObserver.assertValue(ConnectionState.CONNECTED);
+        startObserver.assertNoErrors();
+
+        assertEquals(token, rxOperation.getSubscriptionId());
+
+        dataObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        dataObserver.assertValue(response);
+        dataObserver.assertNoErrors();
     }
 
     /**
@@ -259,14 +269,20 @@ public final class RxApiBindingTest {
             anyConsumer(),
             anyAction()
         );
-
+        RxApiBinding.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
         // Act: subscribe via binding
-        TestObserver<GraphQLResponse<Model>> observer =
-            rxApi.subscribe(request).test();
+        TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
+        TestObserver<ConnectionState> startObserver = rxOperation.observeConnectionState().test();
 
-        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        observer.assertNoValues();
-        observer.assertError(expectedFailure);
+        startObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        startObserver.assertValue(ConnectionState.CONNECTED);
+        startObserver.assertNoErrors();
+
+        assertEquals(token, rxOperation.getSubscriptionId());
+
+        dataObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        dataObserver.assertNoValues();
+        dataObserver.assertError(expectedFailure);
     }
 
     /**

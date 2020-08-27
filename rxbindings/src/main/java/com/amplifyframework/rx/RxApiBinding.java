@@ -26,10 +26,13 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 /**
  * An implementation of the RxApiCategoryBehavior which satisfies the API contract by wrapping
@@ -74,18 +77,19 @@ final class RxApiBinding implements RxApiCategoryBehavior {
 
     @NonNull
     @Override
-    public <T> Observable<GraphQLResponse<T>> subscribe(@NonNull GraphQLRequest<T> graphQlRequest) {
-        return toObservable((onStart, onResult, onError, onComplete) ->
-            api.subscribe(graphQlRequest, onStart, onResult, onError, onComplete)
-        );
+    public <T> RxSubscriptionOperation<GraphQLResponse<T>> subscribe(@NonNull GraphQLRequest<T> graphQlRequest) {
+        return new RxSubscriptionOperation<GraphQLResponse<T>>((onStart, onItem, onError, onComplete) -> {
+            return api.subscribe(graphQlRequest, onStart, onItem, onError, onComplete);
+        });
     }
 
     @NonNull
     @Override
-    public <T> Observable<GraphQLResponse<T>> subscribe(
-            @NonNull String apiName, @NonNull GraphQLRequest<T> graphQlRequest) {
-        return toObservable((onStart, onResult, onError, onComplete) ->
-            api.subscribe(apiName, graphQlRequest, onStart, onResult, onError, onComplete));
+    public <T> RxSubscriptionOperation<GraphQLResponse<T>> subscribe(@NonNull String apiName,
+                                                                     @NonNull GraphQLRequest<T> graphQlRequest) {
+        return new RxSubscriptionOperation<GraphQLResponse<T>>((onStart, onItem, onError, onComplete) -> {
+            return api.subscribe(apiName, graphQlRequest, onStart, onItem, onError, onComplete);
+        });
     }
 
     @NonNull
@@ -167,5 +171,54 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     private <T> Observable<T> toObservable(
             CancelableBehaviors.StreamEmitter<String, T, ApiException> method) {
         return CancelableBehaviors.toObservable(method);
+    }
+
+    static class RxSubscriptionOperation<T> implements Cancelable {
+        private BehaviorSubject<ConnectionState> connectionStateSubject;
+        private Observable<T> subscriptionData;
+        private Cancelable amplifyOperation;
+        private String subscriptionId;
+
+        private Consumer<String> onConnected = new Consumer<String>() {
+            @Override
+            public void accept(@NonNull String subscriptionId) {
+                RxSubscriptionOperation.this.subscriptionId = subscriptionId;
+                connectionStateSubject.onNext(ConnectionState.CONNECTED);
+            }
+        };
+
+        RxSubscriptionOperation(CancelableBehaviors.StreamEmitter<String, T, ApiException> callbacks) {
+            connectionStateSubject = BehaviorSubject.create();
+            subscriptionData = Observable.create(emitter -> {
+                amplifyOperation = callbacks.streamTo(onConnected::accept,
+                                                      emitter::onNext,
+                                                      emitter::onError,
+                                                      emitter::onComplete);
+            });
+        }
+
+        public Observable<T> observeSubscriptionData() {
+            return subscriptionData;
+        }
+
+        public String getSubscriptionId() {
+            return subscriptionId;
+        }
+
+        public Observable<ConnectionState> observeConnectionState() {
+            return connectionStateSubject;
+        }
+
+        @Override
+        public void cancel() {
+            if (amplifyOperation != null) {
+                amplifyOperation.cancel();
+            }
+            connectionStateSubject.onComplete();
+        }
+
+        enum ConnectionState {
+            CONNECTED
+        }
     }
 }

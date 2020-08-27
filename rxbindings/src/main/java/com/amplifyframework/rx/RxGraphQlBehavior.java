@@ -154,7 +154,7 @@ public interface RxGraphQlBehavior {
      *         the GraphQL network subscription will be closed.
      */
     @NonNull
-    <T> Observable<GraphQLResponse<T>> subscribe(
+    <T> RxApiBinding.RxSubscriptionOperation<GraphQLResponse<T>> subscribe(
             @NonNull GraphQLRequest<T> graphQlRequest
     );
 
@@ -180,7 +180,7 @@ public interface RxGraphQlBehavior {
      *         the GraphQL network subscription will be closed.
      */
     @NonNull
-    <R> Observable<GraphQLResponse<R>> subscribe(
+    <R> RxApiBinding.RxSubscriptionOperation<GraphQLResponse<R>> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<R> graphQlRequest
     );
