@@ -193,382 +193,282 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     * Exception thrown by AWS Cognito Auth.
+     * Could not perform the action because user not found in the system.
      */
-    public static class AWSCognitoAuthException extends AuthException {
-
+    public static class UserNotFoundException extends AuthException {
         private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "User not found in the system.";
+        private static final String RECOVERY_SUGGESTION = "Please enter correct username.";
 
         /**
-         * Creates a new AWS cognito auth related exception with a message, root cause, and recovery suggestion.
+         * Default message/recovery suggestion with a cause.
          *
-         * @param message            An error message describing why this exception was thrown
-         * @param cause              The underlying cause of this exception
-         * @param recoverySuggestion Text suggesting a way to recover from the error being described
+         * @param cause The original error.
          */
-        public AWSCognitoAuthException(
-                @NonNull final String message,
-                @NonNull final Throwable cause,
-                @NonNull final String recoverySuggestion
-        ) {
-            super(message, cause, recoverySuggestion);
+        public UserNotFoundException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because user not confirmed in the system.
+     */
+    public static class UserNotConfirmedException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "User not confirmed in the system.";
+        private static final String RECOVERY_SUGGESTION = "Please confirm user first and then retry operation";
 
         /**
-         * Constructs a new AWS cognito auth related exception using a provided message and an associated error.
-         *
-         * @param message            Explains the reason for the exception
-         * @param recoverySuggestion Text suggesting a way to recover from the error being described
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public AWSCognitoAuthException(
-                @NonNull final String message,
-                @NonNull final String recoverySuggestion
-        ) {
-            super(message, recoverySuggestion);
+        public UserNotConfirmedException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because username already exists in the system.
+     */
+    public static class UsernameExistsException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Username already exists in the system.";
+        private static final String RECOVERY_SUGGESTION = "Retry operation and enter another username.";
 
         /**
-         * Could not perform the action because user not found in the system.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class UserNotFoundException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "User not found in the system.";
-            private static final String RECOVERY_SUGGESTION = "Please enter correct username.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             *
-             * @param cause The original error.
-             */
-            public UserNotFoundException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public UsernameExistsException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because alias (an account with certain email or phone) already exists in the system.
+     */
+    public static class AliasExistsException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE =
+                "Alias (an account with this email or phone) already exists in the system.";
+        private static final String RECOVERY_SUGGESTION = "Retry operation and use another alias.";
 
         /**
-         * Could not perform the action because user not confirmed in the system.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class UserNotConfirmedException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "User not confirmed in the system.";
-            private static final String RECOVERY_SUGGESTION = "Retry operation and make a confirmation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public UserNotConfirmedException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public AliasExistsException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because error occurs when delivering the confirmation code.
+     */
+    public static class CodeDeliveryFailureException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Error in delivering the confirmation code.";
+        private static final String RECOVERY_SUGGESTION = "Retry operation and send another confirmation code.";
 
         /**
-         * Could not perform the action because username already exists in the system.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class UsernameExistsException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Username already exists in the system.";
-            private static final String RECOVERY_SUGGESTION = "Retry operation and enter another username.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public UsernameExistsException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public CodeDeliveryFailureException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because user enters incorrect confirmation code.
+     */
+    public static class CodeMismatchException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Confirmation code entered is not correct.";
+        private static final String RECOVERY_SUGGESTION = "Enter correct confirmation code.";
 
         /**
-         * Could not perform the action because alias already exists in the system.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class AliasExistsException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Alias already exists in the system.";
-            private static final String RECOVERY_SUGGESTION = "Retry operation and enter another alias.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public AliasExistsException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public CodeMismatchException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because confirmation code has expired.
+     */
+    public static class CodeExpiredException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Confirmation code has expired.";
+        private static final String RECOVERY_SUGGESTION =
+                "Resend a new confirmation code and then retry operation with it.";
 
         /**
-         * Could not perform the action because error occurs when delivering the confirmation code.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class CodeDeliveryFailureException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Error in delivering the confirmation code.";
-            private static final String RECOVERY_SUGGESTION = "Retry operation and send another confirmation code.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public CodeDeliveryFailureException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public CodeExpiredException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because there exists incorrect parameters.
+     */
+    public static class InvalidParameterException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "One or more parameters are incorrect.";
+        private static final String RECOVERY_SUGGESTION = "Enter correct parameters.";
 
         /**
-         * Could not perform the action because user enters incorrect confirmation code.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class CodeMismatchException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Confirmation code entered is not correct.";
-            private static final String RECOVERY_SUGGESTION = "Enter correct confirmation code.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public CodeMismatchException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public InvalidParameterException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because the password given is invalid.
+     */
+    public static class InvalidPasswordException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "The password given is invalid.";
+        private static final String RECOVERY_SUGGESTION = "Enter correct password.";
 
         /**
-         * Could not perform the action because confirmation code has expired.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class CodeExpiredException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Confirmation code has expired.";
-            private static final String RECOVERY_SUGGESTION = "Retry operation and send another confirmation code.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public CodeExpiredException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public InvalidPasswordException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because number of allowed operation has exceeded.
+     */
+    public static class LimitExceededException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Number of allowed operation has exceeded.";
+        private static final String RECOVERY_SUGGESTION =
+                "Please wait a while before re-attempting or increase the service limit.";
 
         /**
-         * Could not perform the action because there exists incorrect parameters.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public class InvalidParameterException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "One or more parameters are incorrect.";
-            private static final String RECOVERY_SUGGESTION = "Enter correct parameters.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public InvalidParameterException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public LimitExceededException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because password needs to be reset.
+     */
+    public static class PasswordResetRequiredException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Required to reset the password of the user.";
+        private static final String RECOVERY_SUGGESTION = "Reset the password of the user.";
 
         /**
-         * Could not perform the action because the password given is invalid.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class InvalidPasswordException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "The password given is invalid.";
-            private static final String RECOVERY_SUGGESTION = "Enter correct password.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public InvalidPasswordException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public PasswordResetRequiredException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because Amazon Cognito service cannot find the requested resource.
+     */
+    public static class ResourceNotFoundException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Could not find the requested online resource.";
+        private static final String RECOVERY_SUGGESTION = "Retry with exponential back-off";
 
         /**
-         * Could not perform the action because number of allowed operation has exceeded.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public class LimitExceededException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Number of allowed operation has exceeded.";
-            private static final String RECOVERY_SUGGESTION = "Turn off and re-attempt this operation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public LimitExceededException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public ResourceNotFoundException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because user made too many failed attempts for a given action.
+     */
+    public static class FailedAttemptsLimitExceededException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "User has made too many failed attempts for a given action.";
+        private static final String RECOVERY_SUGGESTION =
+                "Please check out the service configuration to see the condition of locking.";
 
         /**
-         * Could not perform the action because password needs to be reset.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class PasswordResetRequiredException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Required to reset the password of the user.";
-            private static final String RECOVERY_SUGGESTION = "Reset the password of the user.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public PasswordResetRequiredException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public FailedAttemptsLimitExceededException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because Amazon Cognito service encounters an invalid AWS Lambda response
+     * or encounters an unexpected exception with the AWS Lambda service.
+     */
+    public static class LambdaException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE =
+                "Amazon Cognito service encountered an invalid AWS Lambda response " +
+                        "or an unexpected exception with the AWS Lambda service.";
+        private static final String RECOVERY_SUGGESTION = "Please retry the operation.";
 
         /**
-         * Could not perform the action because Amazon Cognito service cannot find the requested resource.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class ResourceNotFoundException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Amazon Cognito service cannot find the requested resource.";
-            private static final String RECOVERY_SUGGESTION = "Turn off and re-attempt this operation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public ResourceNotFoundException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public LambdaException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because device is not tracked.
+     */
+    public static class DeviceNotTrackedException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Device is not tracked.";
+        private static final String RECOVERY_SUGGESTION = "Please check out the device configuration.";
 
         /**
-         * Could not perform the action because user made too many failed attempts for a given action.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class FailedAttemptsLimitExceededException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "User has made too many failed attempts for a given action.";
-            private static final String RECOVERY_SUGGESTION = "Turn off and re-attempt this operation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public FailedAttemptsLimitExceededException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public DeviceNotTrackedException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Could not perform the action because user cancelled the step.
+     */
+    public static class UserCancelledException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "User cancelled the flow.";
+        private static final String RECOVERY_SUGGESTION = "Please retry the operation if needed.";
 
         /**
-         * Could not perform the action because user made too many requests for a given operation.
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
          */
-        public static class RequestLimitExceededException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "The user has made too many requests for a given operation.";
-            private static final String RECOVERY_SUGGESTION = "Turn off and re-attempt this operation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public RequestLimitExceededException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
-        }
-
-        /**
-         * Could not perform the action because Amazon Cognito service encounters an invalid AWS Lambda response
-         * or encounters an unexpected exception with the AWS Lambda service.
-         */
-        public static class LambdaException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE =
-                    "Amazon Cognito service encounters an invalid AWS Lambda response " +
-                            "or encounters an unexpected exception with the AWS Lambda service.";
-            private static final String RECOVERY_SUGGESTION = "Turn off and re-attempt this operation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public LambdaException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
-        }
-
-        /**
-         * Could not perform the action because device is not tracked.
-         */
-        public static class DeviceNotTrackedException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Device is not tracked.";
-            private static final String RECOVERY_SUGGESTION = "Turn off and re-attempt this operation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public DeviceNotTrackedException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
-        }
-
-        /**
-         * Could not perform the action because there exists error in loading web UI.
-         */
-        public static class ErrorLoadingUIException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Error in loading the web UI.";
-            private static final String RECOVERY_SUGGESTION = "Turn off and re-attempt this operation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public ErrorLoadingUIException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
-        }
-
-        /**
-         * Could not perform the action because user cancelled the step.
-         */
-        public static class UserCancelledException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "User cancelled the step.";
-            private static final String RECOVERY_SUGGESTION = "Turn off and re-attempt this operation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public UserCancelledException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
-        }
-
-        /**
-         * Could not perform the action because requested resource is not available with the current account setup.
-         */
-        public static class InvalidAccountTypeException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Requested resource is not available with the current account setup.";
-            private static final String RECOVERY_SUGGESTION = "Turn off and re-attempt this operation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public InvalidAccountTypeException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
-        }
-
-        /**
-         * Could not perform the action since request was not completed because of any network related issue.
-         */
-        public static class NetworkException extends AWSCognitoAuthException {
-            private static final long serialVersionUID = 1L;
-            private static final String MESSAGE = "Request was not completed because of any network related issue.";
-            private static final String RECOVERY_SUGGESTION = "Turn off and re-attempt this operation.";
-
-            /**
-             * Default message/recovery suggestion with a cause.
-             * @param cause The original error.
-             */
-            public NetworkException(Throwable cause) {
-                super(MESSAGE, cause, RECOVERY_SUGGESTION);
-            }
+        public UserCancelledException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
     }
 }
