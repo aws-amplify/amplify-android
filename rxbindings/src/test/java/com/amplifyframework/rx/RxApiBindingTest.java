@@ -31,8 +31,8 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.rx.RxApiBinding.RxSubscriptionOperation.ConnectionState;
-import com.amplifyframework.rx.RxApiBinding.RxSubscriptionOperation.ConnectionStateEvent;
+import com.amplifyframework.rx.RxOperations.RxSubscriptionOperation.ConnectionState;
+import com.amplifyframework.rx.RxOperations.RxSubscriptionOperation.ConnectionStateEvent;
 import com.amplifyframework.testutils.random.RandomModel;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -230,7 +230,7 @@ public final class RxApiBindingTest {
         );
 
         // Act: subscribe via binding
-        RxApiBinding.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
+        RxOperations.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
         // Act: subscribe via binding
         TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
         TestObserver<ConnectionStateEvent> startObserver = rxOperation.observeConnectionState().test();
@@ -272,7 +272,7 @@ public final class RxApiBindingTest {
             anyConsumer(),
             anyAction()
         );
-        RxApiBinding.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
+        RxOperations.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
         // Act: subscribe via binding
         TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
         TestObserver<ConnectionStateEvent> startObserver = rxOperation.observeConnectionState().test();
@@ -321,7 +321,7 @@ public final class RxApiBindingTest {
         );
 
         // Act: subscribe via binding
-        RxApiBinding.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
+        RxOperations.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
         // Act: subscribe via binding
         TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
         TestObserver<ConnectionStateEvent> startObserver = rxOperation.observeConnectionState().test();
