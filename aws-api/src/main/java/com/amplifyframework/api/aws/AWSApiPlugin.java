@@ -27,6 +27,7 @@ import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -782,7 +783,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         private void transitionTo(ApiEndpointStatus newStatus) {
             ApiEndpointStatus previousStatus = currentNetworkStatus.getAndSet(newStatus);
             if (previousStatus != newStatus) {
-                Amplify.Hub.publish(HubChannel.API, previousStatus.transitionTo(newStatus).toHubEvent());
+                ApiEndpointStatusChangeEvent apiEndpointStatusChangeEvent = previousStatus.transitionTo(newStatus);
+                Amplify.Hub.publish(HubChannel.API, apiEndpointStatusChangeEvent.toHubEvent());
             }
         }
     }
