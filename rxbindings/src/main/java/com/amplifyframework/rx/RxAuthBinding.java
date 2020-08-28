@@ -35,6 +35,7 @@ import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.rx.RxAdapters.VoidBehaviors;
 
 import java.util.List;
 import java.util.Objects;
@@ -69,8 +70,7 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Single<AuthSignUpResult> resendSignUpCode(@NonNull String username) {
-        return toSingle((onResult, onError) ->
-            delegate.resendSignUpCode(username, onResult, onError));
+        return toSingle((onResult, onError) -> delegate.resendSignUpCode(username, onResult, onError));
     }
 
     @Override
@@ -140,7 +140,8 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Completable forgetDevice(@NonNull AuthDevice device) {
-        return toCompletable((onComplete, onError) -> delegate.forgetDevice(device, onComplete, onError));
+        return toCompletable((onComplete, onError) ->
+            delegate.forgetDevice(device, onComplete, onError));
     }
 
     @Override
@@ -177,18 +178,15 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Completable signOut(@NonNull AuthSignOutOptions options) {
-        return toCompletable((onComplete, onError) -> delegate.signOut(options, onComplete, onError));
+        return toCompletable((onComplete, onError) ->
+            delegate.signOut(options, onComplete, onError));
     }
 
-    private <T> Single<T> toSingle(RxAdapters.VoidResultEmitter<T, AuthException> resultEmitter) {
-        return Single.defer(() ->
-            Single.create(emitter -> resultEmitter.emitTo(emitter::onSuccess, emitter::onError))
-        );
+    private <T> Single<T> toSingle(VoidBehaviors.ResultEmitter<T, AuthException> behavior) {
+        return VoidBehaviors.toSingle(behavior);
     }
 
-    private Completable toCompletable(RxAdapters.VoidCompletionEmitter<AuthException> resultEmitter) {
-        return Completable.defer(() -> Completable.create(emitter ->
-            resultEmitter.emitTo(emitter::onComplete, emitter::onError)
-        ));
+    private Completable toCompletable(VoidBehaviors.ActionEmitter<AuthException> behavior) {
+        return VoidBehaviors.toCompletable(behavior);
     }
 }
