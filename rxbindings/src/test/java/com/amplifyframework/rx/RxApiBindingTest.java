@@ -32,6 +32,7 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.rx.RxApiBinding.RxSubscriptionOperation.ConnectionState;
+import com.amplifyframework.rx.RxApiBinding.RxSubscriptionOperation.ConnectionStateEvent;
 import com.amplifyframework.testutils.random.RandomModel;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -46,7 +47,6 @@ import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -206,6 +206,8 @@ public final class RxApiBindingTest {
         // Arrange a category behavior which emits an expected sequence of callback events
         String token = RandomString.string();
         Model model = RandomModel.model();
+        ConnectionStateEvent expectedConnectionStateEvent =
+            new ConnectionStateEvent(ConnectionState.CONNECTED, token);
         GraphQLResponse<Model> response = new GraphQLResponse<>(model, Collections.emptyList());
         GraphQLRequest<Model> request = createMockSubscriptionRequest(Model.class);
         doAnswer(invocation -> {
@@ -231,13 +233,11 @@ public final class RxApiBindingTest {
         RxApiBinding.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
         // Act: subscribe via binding
         TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
-        TestObserver<ConnectionState> startObserver = rxOperation.observeConnectionState().test();
+        TestObserver<ConnectionStateEvent> startObserver = rxOperation.observeConnectionState().test();
 
         startObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        startObserver.assertValue(ConnectionState.CONNECTED);
+        startObserver.assertValue(expectedConnectionStateEvent);
         startObserver.assertNoErrors();
-
-        assertEquals(token, rxOperation.getSubscriptionId());
 
         dataObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         dataObserver.assertValue(response);
@@ -254,6 +254,8 @@ public final class RxApiBindingTest {
         // Arrange a category behavior which starts and then fails
         ApiException expectedFailure = new ApiException("Expected", "Failure");
         String token = RandomString.string();
+        ConnectionStateEvent expectedConnectionStateEvent =
+            new ConnectionStateEvent(ConnectionState.CONNECTED, token);
         final GraphQLRequest<Model> request = createMockSubscriptionRequest(Model.class);
         doAnswer(invocation -> {
             final int onStartPosition = 1;
@@ -273,25 +275,29 @@ public final class RxApiBindingTest {
         RxApiBinding.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
         // Act: subscribe via binding
         TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
-        TestObserver<ConnectionState> startObserver = rxOperation.observeConnectionState().test();
+        TestObserver<ConnectionStateEvent> startObserver = rxOperation.observeConnectionState().test();
 
         startObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        startObserver.assertValue(ConnectionState.CONNECTED);
+        startObserver.assertValue(expectedConnectionStateEvent);
         startObserver.assertNoErrors();
-
-        assertEquals(token, rxOperation.getSubscriptionId());
 
         dataObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         dataObserver.assertNoValues();
         dataObserver.assertError(expectedFailure);
     }
 
-    @SuppressWarnings({"rawtypes"})
+    /**
+     * Verify that the subscription starts and is cancelled gracefully.
+     * @throws InterruptedException Not expected.
+     */
+    @SuppressWarnings("rawtypes")
     @Test
     public void subscribeStartsAndGetsCancelled() throws InterruptedException {
         // Arrange a category behavior which emits an expected sequence of callback events
         String token = RandomString.string();
         GraphQLRequest<Model> request = createMockSubscriptionRequest(Model.class);
+        ConnectionStateEvent expectedConnectionStateEvent =
+            new ConnectionStateEvent(ConnectionState.CONNECTED, token);
 
         doAnswer(invocation -> {
             final int onStartPosition = 1;
@@ -318,16 +324,14 @@ public final class RxApiBindingTest {
         RxApiBinding.RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
         // Act: subscribe via binding
         TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
-        TestObserver<ConnectionState> startObserver = rxOperation.observeConnectionState().test();
+        TestObserver<ConnectionStateEvent> startObserver = rxOperation.observeConnectionState().test();
 
         startObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        startObserver.assertValue(ConnectionState.CONNECTED);
+        startObserver.assertValue(expectedConnectionStateEvent);
         startObserver.assertNoErrors();
-        assertEquals(token, rxOperation.getSubscriptionId());
 
         // Act: cancel the subscription
         Completable.timer(1, TimeUnit.SECONDS).andThen(Completable.fromAction(rxOperation::cancel)).subscribe();
-
 
         dataObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         dataObserver.assertNoValues();

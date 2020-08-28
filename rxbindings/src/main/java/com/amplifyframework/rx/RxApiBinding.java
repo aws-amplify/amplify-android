@@ -16,6 +16,7 @@
 package com.amplifyframework.rx;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.api.ApiCategory;
@@ -30,6 +31,8 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
 
+import java.util.Objects;
+
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
@@ -38,7 +41,7 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
  * An implementation of the RxApiCategoryBehavior which satisfies the API contract by wrapping
  * {@link ApiCategoryBehavior} in Rx primitives.
  */
-public final class RxApiBinding implements RxApiCategoryBehavior {
+final class RxApiBinding implements RxApiCategoryBehavior {
     private final ApiCategoryBehavior api;
 
     RxApiBinding() {
@@ -181,20 +184,13 @@ public final class RxApiBinding implements RxApiCategoryBehavior {
      * @param <T> The type representing the subscription data.
      */
     public static final class RxSubscriptionOperation<T> implements Cancelable {
-        private BehaviorSubject<ConnectionState> connectionStateSubject;
+        private BehaviorSubject<ConnectionStateEvent> connectionStateSubject;
         private Observable<T> subscriptionData;
         private Cancelable amplifyOperation;
-        private String subscriptionId;
-
-        private Consumer<String> onConnected = new Consumer<String>() {
-            @Override
-            public void accept(@NonNull String subscriptionId) {
-                RxSubscriptionOperation.this.subscriptionId = subscriptionId;
-                connectionStateSubject.onNext(ConnectionState.CONNECTED);
-            }
-        };
+        private OnConnectedConsumer onConnected;
 
         RxSubscriptionOperation(CancelableBehaviors.StreamEmitter<String, T, ApiException> callbacks) {
+            onConnected = new OnConnectedConsumer();
             connectionStateSubject = BehaviorSubject.create();
             subscriptionData = Observable.create(emitter -> {
                 amplifyOperation = callbacks.streamTo(onConnected::accept,
@@ -214,30 +210,21 @@ public final class RxApiBinding implements RxApiCategoryBehavior {
         }
 
         /**
-         * Once the subscription starts, this method returns
-         * the value of the subscriptionId.
-         * @return The value of the subscriptionId.
-         */
-        public String getSubscriptionId() {
-            return subscriptionId;
-        }
-
-        /**
          * Returns an {@link Observable} which consumers can use to
          * receive notfication about the status of the subscription connection. Currently,
          * only {@link ConnectionState#CONNECTED} is emitted.
          * @return Reference to the {@link Observable} that receives connection events.
          */
-        public Observable<ConnectionState> observeConnectionState() {
+        public Observable<ConnectionStateEvent> observeConnectionState() {
             return connectionStateSubject;
         }
 
         @Override
         public void cancel() {
+            connectionStateSubject.onComplete();
             if (amplifyOperation != null) {
                 amplifyOperation.cancel();
             }
-            connectionStateSubject.onComplete();
         }
 
         /**
@@ -250,6 +237,72 @@ public final class RxApiBinding implements RxApiCategoryBehavior {
              * ready to receive data.
              */
             CONNECTED
+        }
+
+        /**
+         * Describes events emitted by the {@link RxSubscriptionOperation} class.
+         */
+        static class ConnectionStateEvent {
+            private ConnectionState connectionState;
+            private String subscriptionId;
+
+            ConnectionStateEvent(@NonNull ConnectionState connectionState,
+                                 @Nullable String subscriptionId) {
+                this.connectionState = connectionState;
+                this.subscriptionId = subscriptionId;
+            }
+
+            /**
+             * The connection state reported in the event.
+             * @return The {@link ConnectionState} representing the state of the connection.
+             */
+            @NonNull
+            public ConnectionState getConnectionState() {
+                return connectionState;
+            }
+
+            /**
+             * The subscriptionId associated with the event.
+             * @return The value of the subscriptionId.
+             */
+            @Nullable
+            public String getSubscriptionId() {
+                return subscriptionId;
+            }
+
+            @Override
+            public int hashCode() {
+                int result = connectionState.hashCode();
+                result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+                return result;
+            }
+
+            @Override
+            public boolean equals(@Nullable Object obj) {
+                if (this == obj) {
+                    return true;
+                } else if (obj == null || getClass() != obj.getClass()) {
+                    return false;
+                } else {
+                    ConnectionStateEvent privateNote = (ConnectionStateEvent) obj;
+                    return Objects.equals(getConnectionState(), privateNote.getConnectionState()) &&
+                        Objects.equals(getSubscriptionId(), privateNote.getSubscriptionId());
+                }
+            }
+
+            @NonNull
+            @Override
+            public String toString() {
+                return "ConnectionStateEvent{connectionState=" + connectionState + "," +
+                    "subscriptionId=" + subscriptionId + "}";
+            }
+        }
+
+        private final class OnConnectedConsumer implements Consumer<String> {
+            @Override
+            public void accept(@NonNull String subscriptionId) {
+                connectionStateSubject.onNext(new ConnectionStateEvent(ConnectionState.CONNECTED, subscriptionId));
+            }
         }
     }
 }
