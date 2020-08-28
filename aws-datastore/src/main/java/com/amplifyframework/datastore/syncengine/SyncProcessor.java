@@ -27,12 +27,17 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.AmplifyDisposables;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.ForEach;
 import com.amplifyframework.util.Time;
 
 import java.util.ArrayList;
@@ -62,6 +67,7 @@ final class SyncProcessor {
     private final AppSync appSync;
     private final Merger merger;
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
+    private final String[] modelNames;
 
     private SyncProcessor(
             ModelProvider modelProvider,
@@ -76,6 +82,7 @@ final class SyncProcessor {
         this.appSync = Objects.requireNonNull(appSync);
         this.merger = Objects.requireNonNull(merger);
         this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
+        this.modelNames = ForEach.inCollection(modelProvider.models(), Class::getSimpleName).toArray(new String[0]);
     }
 
     /**
@@ -105,10 +112,27 @@ final class SyncProcessor {
         for (Class<? extends Model> clazz : modelClsList) {
             hydrationTasks.add(createHydrationTask(clazz));
         }
-        return Completable.concat(hydrationTasks);
+
+        return Completable.concat(hydrationTasks)
+            .doOnSubscribe(ignore -> {
+                // This is where we trigger the syncQueriesStarted event since
+                // doOnSubscribe means that all upstream hydration tasks
+                // have started.
+                Amplify.Hub.publish(HubChannel.DATASTORE,
+                    HubEvent.create(DataStoreChannelEventName.SYNC_QUERIES_STARTED,
+                        new SyncQueriesStartedEvent(modelNames)
+                    )
+                );
+            })
+            .doOnComplete(() -> {
+                // When the Completable completes, then emit syncQueriesReady.
+                Amplify.Hub.publish(HubChannel.DATASTORE,
+                    HubEvent.create(DataStoreChannelEventName.SYNC_QUERIES_READY));
+            });
     }
 
     private Completable createHydrationTask(Class<? extends Model> modelClass) {
+        ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(modelClass);
         return syncTimeRegistry.lookupLastSyncTime(modelClass)
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
@@ -116,13 +140,19 @@ final class SyncProcessor {
                 // Sync all the pages
                 return syncModel(modelClass, lastSyncTime)
                     // For each ModelWithMetadata, merge it into the local store.
-                    .flatMapCompletable(merger::merge)
+                    .flatMapCompletable(modelWithMetadata ->
+                        merger.merge(modelWithMetadata, metricsAccumulator::increment)
+                    )
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
             })
             .flatMapCompletable(syncType -> {
-                return SyncType.DELTA.equals(syncType) ?
+                Completable syncTimeSaveCompletable = SyncType.DELTA.equals(syncType) ?
                     syncTimeRegistry.saveLastDeltaSyncTime(modelClass, SyncTime.now()) :
                     syncTimeRegistry.saveLastBaseSyncTime(modelClass, SyncTime.now());
+                return syncTimeSaveCompletable.andThen(Completable.fromAction(() -> {
+                    Amplify.Hub.publish(HubChannel.DATASTORE,
+                                        metricsAccumulator.toModelSyncedEvent(syncType).toHubEvent());
+                }));
             })
             .doOnError(failureToSync -> {
                 LOG.warn("Initial cloud sync failed.", failureToSync);
@@ -276,7 +306,8 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BuildStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfigurationProvider) {
+        public BuildStep dataStoreConfigurationProvider(
+            DataStoreConfigurationProvider dataStoreConfigurationProvider) {
             this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
             return Builder.this;
         }

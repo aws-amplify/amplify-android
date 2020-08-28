@@ -784,7 +784,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             ApiEndpointStatus previousStatus = currentNetworkStatus.getAndSet(newStatus);
             if (previousStatus != newStatus) {
                 ApiEndpointStatusChangeEvent apiEndpointStatusChangeEvent = previousStatus.transitionTo(newStatus);
-                apiEndpointStatusChangeEvent.toHubEvent().publish(HubChannel.API, Amplify.Hub);
+                Amplify.Hub.publish(HubChannel.API, apiEndpointStatusChangeEvent.toHubEvent());
             }
         }
     }

@@ -17,7 +17,9 @@ package com.amplifyframework.hub;
 
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
+import com.amplifyframework.datastore.events.ModelSyncedEvent;
 import com.amplifyframework.datastore.events.NetworkStatusEvent;
+import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
 import com.amplifyframework.testutils.EqualsToStringHashValidator;
 
 import org.junit.Test;
@@ -53,6 +55,34 @@ public class HubEventDataObjectsTest {
             new ApiEndpointStatusChangeEvent(ApiEndpointStatus.NOT_REACHABLE, ApiEndpointStatus.REACHABLE);
         ApiEndpointStatusChangeEvent status3 =
             new ApiEndpointStatusChangeEvent(ApiEndpointStatus.REACHABLE, ApiEndpointStatus.NOT_REACHABLE);
+        EqualsToStringHashValidator.validate(status1, status2, status3);
+    }
+
+    /**
+     * Verify {@link ModelSyncedEvent} behavior.
+     */
+    @Test
+    public void verifyModelSyncedEvent() {
+        ModelSyncedEvent status1 =
+            new ModelSyncedEvent("Post", true, 1, 2, 3);
+        ModelSyncedEvent status2 =
+            new ModelSyncedEvent("Blog", true, 3, 2, 1);
+        ModelSyncedEvent status3 =
+            new ModelSyncedEvent("Post", true, 1, 2, 3);
+        EqualsToStringHashValidator.validate(status1, status2, status3);
+    }
+
+    /**
+     * Verify {@link SyncQueriesStartedEvent} behavior.
+     */
+    @Test
+    public void verifySyncQueriesStartedEvent() {
+        SyncQueriesStartedEvent status1 =
+            new SyncQueriesStartedEvent(new String[] {"Blog", "Post"});
+        SyncQueriesStartedEvent status2 =
+            new SyncQueriesStartedEvent(new String[] {"Blog", "Post", "Car"});
+        SyncQueriesStartedEvent status3 =
+            new SyncQueriesStartedEvent(new String[] {"Blog", "Post"});
         EqualsToStringHashValidator.validate(status1, status2, status3);
     }
 }

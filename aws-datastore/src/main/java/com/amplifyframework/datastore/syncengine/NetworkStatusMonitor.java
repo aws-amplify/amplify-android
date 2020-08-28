@@ -43,7 +43,7 @@ public final class NetworkStatusMonitor {
         Amplify.Hub.subscribe(HubChannel.API, hubEvent -> {
             return ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED.name().equals(hubEvent.getName());
         }, HubSubscriber.<ApiEndpointStatusChangeEvent>create(eventData -> {
-            NetworkStatusEvent.from(eventData).toHubEvent().publish(HubChannel.DATASTORE, Amplify.Hub);
+            Amplify.Hub.publish(HubChannel.DATASTORE, NetworkStatusEvent.from(eventData).toHubEvent());
         }));
     }
 }
