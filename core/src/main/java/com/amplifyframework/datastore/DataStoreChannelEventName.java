@@ -45,16 +45,6 @@ public enum DataStoreChannelEventName {
     RECEIVED_FROM_CLOUD("received_from_cloud"),
 
     /**
-     * The remote synchonization processes started.
-     */
-    REMOTE_SYNC_STARTED("remote_sync_started"),
-
-    /**
-     * The remote synchonization processes stopped.
-     */
-    REMOTE_SYNC_STOPPED("remote_sync_stopped"),
-
-    /**
      * Indicates that the network is active or not.
      * It is triggered on DataStore start and also every time the network status changes.
      */
@@ -83,7 +73,24 @@ public enum DataStoreChannelEventName {
     /**
      * A mutation from the outbox has been successfully sent and merged to the backend.
      */
-    OUTBOX_MUTATION_PROCESSED("outboxMutationProcessed");
+    OUTBOX_MUTATION_PROCESSED("outboxMutationProcessed"),
+
+    /**
+     * The DataStore is about to start the Sync Queries.
+     */
+    SYNC_QUERIES_STARTED("syncQueriesStarted"),
+
+    /**
+     * All models have been synced.
+     */
+    SYNC_QUERIES_READY("syncQueriesReady"),
+
+    /**
+     * The sync process for one of the models has completed. This
+     * event is emitted with metrics related to the latest sync
+     * for the model.
+     */
+    MODEL_SYNCED("modelSynced");
 
     private final String hubEventName;
 

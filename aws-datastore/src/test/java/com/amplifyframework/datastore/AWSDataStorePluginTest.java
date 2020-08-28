@@ -58,6 +58,8 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.reactivex.rxjava3.core.Observable;
+
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -118,7 +120,7 @@ public final class AWSDataStorePluginTest {
         // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
-        assertSyncProcessorNotStarted();
+        assertSyncProcessorNotStarted(emptyApiCategory);
 
         Person person1 = createPerson("Test", "Dummy I");
         synchronousDataStore.save(person1);
@@ -137,9 +139,6 @@ public final class AWSDataStorePluginTest {
      */
     @Test
     public void configureAndInitializeInApiMode() throws JSONException, AmplifyException {
-        HubAccumulator orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.REMOTE_SYNC_STARTED, 1)
-                .start();
         HubAccumulator dataStoreReadyObserver =
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
@@ -157,7 +156,6 @@ public final class AWSDataStorePluginTest {
         awsDataStorePlugin.initialize(context);
 
         dataStoreReadyObserver.await();
-        orchestratorInitObserver.await();
         subscriptionsEstablishedObserver.await();
         networkStatusObserver.await();
 
@@ -220,7 +218,7 @@ public final class AWSDataStorePluginTest {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
         HubAccumulator orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.REMOTE_SYNC_STARTED, 1)
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
         orchestratorInitObserver.await();
         assertRemoteSubscriptionsStarted();
@@ -264,7 +262,7 @@ public final class AWSDataStorePluginTest {
         }).when(mockApiPlugin).mutate(any(), any(), any());
 
         orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.REMOTE_SYNC_STARTED, 1)
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
 
         synchronousDataStore.clear();
@@ -308,16 +306,17 @@ public final class AWSDataStorePluginTest {
     }
 
     /**
-     * Check that there were no interactions between the SyncProcessor
-     * and the model provider. This is used to verify that the synchronization
-     * processes don't start if there's no API configured.
+     * Check that the SyncProcessor did not start by asserting that the
+     * only interaction with the API category was triggered by the getPlugins
+     * method.
+     * @param mockApi Mock or spy of the ApiCategory being used for the test.
      */
-    private void assertSyncProcessorNotStarted() {
-        boolean syncProcessorNotInvoked = mockingDetails(modelProvider)
-            .getInvocations()
-            .stream()
-            .noneMatch(invocation -> invocation.getLocation().getSourceFile().contains("SyncProcessor"));
-        assertTrue(syncProcessorNotInvoked);
+    private void assertSyncProcessorNotStarted(ApiCategory mockApi) {
+        Long callsToApiCategory = Observable.fromIterable(mockingDetails(mockApi).getInvocations())
+            .filter(invocation -> !"getPlugins".equals(invocation.getMethod().getName()))
+            .count()
+            .blockingGet();
+        assertEquals(Long.valueOf(0), callsToApiCategory);
     }
 
     @SuppressWarnings("unchecked")
