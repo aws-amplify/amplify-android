@@ -372,4 +372,53 @@ public final class RxDataStoreBindingTest {
         verify(delegate)
             .observe(eq(Model.class), anyConsumer(), anyConsumer(), anyConsumer(), anyAction());
     }
+
+    /**
+     * The Rx binding for the DataStore's clear() method will propagate failures
+     * faithfully from the underlying delegate.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
+     */
+    @Test
+    public void clearFailsWhenCategoryBehaviorDoes() throws InterruptedException {
+        // Arrange a failure in the category behavior
+        DataStoreException expectedFailure = new DataStoreException("Expected", "Failure");
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            final int positionOfOnFailure = 1;
+            Consumer<DataStoreException> onFailure = invocation.getArgument(positionOfOnFailure);
+            onFailure.accept(expectedFailure);
+            return null; // "void"
+        }).when(delegate).clear(anyAction(), anyConsumer());
+
+        // Act: clear the store.
+        TestObserver<Void> observer = rxDataStore.clear().test();
+
+        // Assert: failure propagates through binding.
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertError(expectedFailure);
+    }
+
+    /**
+     * The Rx binding for the DataStore's clear() method will propagate success
+     * faithfully from the underlying delegate.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
+     */
+    @Test
+    public void clearSucceedsWhenCategoryBehaviorDoes() throws InterruptedException {
+        // Arrange success in the category behavior
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            final int positionOfOnSuccess = 0;
+            Action onSuccess = invocation.getArgument(positionOfOnSuccess);
+            onSuccess.call();
+            return null; // "void"
+        }).when(delegate).clear(anyAction(), anyConsumer());
+
+        // Act: clear the store.
+        TestObserver<Void> observer = rxDataStore.clear().test();
+
+        // Assert: success propagates through binding.
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertComplete();
+    }
 }
