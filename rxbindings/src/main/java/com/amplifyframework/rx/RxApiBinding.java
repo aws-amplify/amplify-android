@@ -36,7 +36,7 @@ import io.reactivex.rxjava3.core.Single;
  * An implementation of the RxApiCategoryBehavior which satisfies the API contract by wrapping
  * {@link ApiCategoryBehavior} in Rx primitives.
  */
-public final class RxApiBinding implements RxApiCategoryBehavior {
+final class RxApiBinding implements RxApiCategoryBehavior {
     private final ApiCategoryBehavior api;
 
     RxApiBinding() {
