@@ -76,7 +76,7 @@ import com.amazonaws.mobile.client.results.UserCodeDeliveryDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.cognitoauth.AuthClient;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
-import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException;
+import com.amazonaws.services.cognitoidentity.model.NotAuthorizedException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -105,7 +105,6 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     private String userId;
     private AWSMobileClient awsMobileClient;
     private AuthChannelEventName lastEvent;
-//    private CognitoAuthExceptionMapping cognitoAuthExceptionMapping = new CognitoAuthExceptionMapping();
 
     /**
      * A Cognito implementation of the Auth Plugin.
