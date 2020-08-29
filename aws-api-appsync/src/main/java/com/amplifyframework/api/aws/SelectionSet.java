@@ -294,7 +294,7 @@ public final class SelectionSet {
          * @param field field we wish to check
          * @return
          */
-        static boolean isCustomType(@NonNull Field field) {
+        private static boolean isCustomType(@NonNull Field field) {
             Class<?> cls = getClassForField(field);
             if (Model.class.isAssignableFrom(cls) || Enum.class.isAssignableFrom(cls)) {
                 return false;
