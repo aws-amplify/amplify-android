@@ -6,20 +6,20 @@ type Parent @model {
 }
 
 type Child {
-	name: String!
-	address: Address!
+  name: String!
+  address: Address!
 }
 
 type Address {
-	street: String!
-	street2: String!
-	city: City!
-	country: String!
+  street: String!
+  street2: String!
+  city: City!
+  country: String!
 }
 
 enum City {
-	FREETOWN
-	BO
-	MAKENI
-	KENEMA
+  FREETOWN
+  BO
+  MAKENI
+  KENEMA
 }

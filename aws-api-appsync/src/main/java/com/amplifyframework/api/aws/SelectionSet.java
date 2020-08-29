@@ -27,7 +27,6 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.FieldFinder;
-import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;
 
 import java.lang.reflect.Field;
@@ -35,7 +34,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -227,7 +225,7 @@ public final class SelectionSet {
             }
 
             ModelSchema schema = ModelSchema.fromModelClass(clazz);
-            for (Field field : FieldFinder.findFieldsIn(clazz)) {
+            for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
                     if (List.class.isAssignableFrom(field.getType())) {
@@ -260,7 +258,7 @@ public final class SelectionSet {
          */
         private Set<SelectionSet> getNestedCustomTypeFields(Class<?> clazz) {
             Set<SelectionSet> result = new HashSet<>();
-            for (Field field : findFieldsIn(clazz)) {
+            for (Field field : FieldFinder.findAllFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (isCustomType(field)) {
                     result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
@@ -269,24 +267,6 @@ public final class SelectionSet {
                 }
             }
             return result;
-        }
-
-        /**
-         * Helper for finding fields in a class.
-         * @param clazz class we wish to introspect
-         * @return
-         */
-        private List<Field> findFieldsIn(@NonNull Class<?> clazz) {
-            final List<Field> fields = new ArrayList<>();
-            Class<?> c = clazz;
-            while (c != null) {
-                for (Field field : c.getDeclaredFields()) {
-                    fields.add(field);
-                }
-                c = c.getSuperclass();
-            }
-            Collections.sort(fields, Comparator.comparing(Field::getName));
-            return Immutable.of(fields);
         }
 
         /**
