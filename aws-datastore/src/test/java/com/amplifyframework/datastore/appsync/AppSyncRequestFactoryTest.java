@@ -260,7 +260,6 @@ public final class AppSyncRequestFactoryTest {
                 Resources.readAsString("create-parent-request.txt"),
                 AppSyncRequestFactory.buildCreationRequest(buildTestParentModel()).getContent(),
                 true
-
         );
     }
 
