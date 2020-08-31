@@ -24,7 +24,6 @@ import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Wrap;
@@ -32,7 +31,6 @@ import com.amplifyframework.util.Wrap;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -225,7 +223,7 @@ public final class SelectionSet {
             }
 
             ModelSchema schema = ModelSchema.fromModelClass(clazz);
-            for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
+            for (Field field : FieldFinder.findFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
                     if (List.class.isAssignableFrom(field.getType())) {
@@ -239,8 +237,6 @@ public final class SelectionSet {
                         Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1);
                         result.add(new SelectionSet(fieldName, fields));
                     }
-                } else if (isCustomType(field)) {
-                    result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
                 } else {
                     result.add(new SelectionSet(fieldName, null));
                 }
@@ -249,58 +245,6 @@ public final class SelectionSet {
                 result.add(new SelectionSet(fieldName, null));
             }
             return result;
-        }
-
-        /**
-         * We handle customType fields differently as DEPTH does not apply here.
-         * @param clazz class we wish to build selection set for
-         * @return
-         */
-        private Set<SelectionSet> getNestedCustomTypeFields(Class<?> clazz) {
-            Set<SelectionSet> result = new HashSet<>();
-            for (Field field : FieldFinder.findAllFieldsIn(clazz)) {
-                String fieldName = field.getName();
-                if (isCustomType(field)) {
-                    result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
-                } else {
-                    result.add(new SelectionSet(fieldName, null));
-                }
-            }
-            return result;
-        }
-
-        /**
-         * Helper to determine if field is a custom type. If custom types we need to build nested selection set.
-         * @param field field we wish to check
-         * @return
-         */
-        private static boolean isCustomType(@NonNull Field field) {
-            Class<?> cls = getClassForField(field);
-            if (Model.class.isAssignableFrom(cls) || Enum.class.isAssignableFrom(cls)) {
-                return false;
-            }
-            try {
-                JavaFieldType.from(cls.getSimpleName());
-                return false;
-            } catch (IllegalArgumentException exception) {
-                // if we get here then field is  a custom type
-                return true;
-            }
-        }
-
-        /**
-         * Get the class of a field. If field is a collection, it returns the Generic type
-         * @return
-         */
-        static Class<?> getClassForField(Field field) {
-            Class<?> typeClass;
-            if (Collection.class.isAssignableFrom(field.getType())) {
-                ParameterizedType listType = (ParameterizedType) field.getGenericType();
-                typeClass = (Class) listType.getActualTypeArguments()[0];
-            } else {
-                typeClass = field.getType();
-            }
-            return typeClass;
         }
     }
 }
