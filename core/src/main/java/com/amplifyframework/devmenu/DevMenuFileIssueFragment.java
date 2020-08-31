@@ -15,6 +15,7 @@
 
 package com.amplifyframework.devmenu;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 
 import com.amplifyframework.core.R;
@@ -54,12 +56,14 @@ public final class DevMenuFileIssueFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         fileIssueView = inflater.inflate(R.layout.dev_menu_fragment_file_issue, container, false);
-        developerMenu = DeveloperMenu.singletonInstance(getContext());
+        Context appContext = requireContext().getApplicationContext();
+        developerMenu = DeveloperMenu.singletonInstance(appContext);
         fileIssueView.findViewById(R.id.file_issue).setOnClickListener(view -> fileIssue());
         fileIssueView.findViewById(R.id.copy_issue).setOnClickListener(view -> {
             String issueBody = getIssueBody();
             if (!issueBody.isEmpty()) {
                 developerMenu.copyToClipboard(issueBody);
+                Toast.makeText(appContext, "Copied issue body to clipboard.", Toast.LENGTH_SHORT).show();
             }
         });
         return fileIssueView;
