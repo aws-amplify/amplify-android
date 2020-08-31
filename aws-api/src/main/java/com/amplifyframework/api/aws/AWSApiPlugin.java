@@ -33,7 +33,6 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.Operation;
-import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.HttpMethod;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
@@ -56,7 +55,6 @@ import java.net.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -316,20 +314,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     private boolean isOwnerArgumentRequired(AuthRule authRule, Operation operation) {
-        if (!AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
-            return false;
-        }
-        List<ModelOperation> operations = authRule.getOperationsOrDefault();
-        if (SubscriptionType.ON_CREATE.equals(operation) && operations.contains(ModelOperation.CREATE)) {
-            return true;
-        }
-        if (SubscriptionType.ON_UPDATE.equals(operation) && operations.contains(ModelOperation.UPDATE)) {
-            return true;
-        }
-        if (SubscriptionType.ON_DELETE.equals(operation) && operations.contains(ModelOperation.DELETE)) {
-            return true;
-        }
-        return false;
+        return AuthStrategy.OWNER.equals(authRule.getAuthStrategy())
+            && authRule.getOperationsOrDefault().contains(ModelOperation.READ);
     }
 
     private String getUsername() throws ApiException {
