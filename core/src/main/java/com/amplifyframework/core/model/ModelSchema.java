@@ -110,7 +110,7 @@ public final class ModelSchema {
     @NonNull
     public static ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) throws AmplifyException {
         try {
-            final List<Field> classFields = FieldFinder.findFieldsIn(clazz);
+            final List<Field> classFields = FieldFinder.findModelFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
             final TreeMap<String, ModelAssociation> associations = new TreeMap<>();
             final TreeMap<String, ModelIndex> indexes = new TreeMap<>();

@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.parenting.Parent;
 import com.amplifyframework.testutils.Resources;
 
 import org.junit.Test;
@@ -40,5 +41,19 @@ public class SelectionSetTest {
                 .requestOptions(new DefaultGraphQLRequestOptions())
                 .build();
         assertEquals(Resources.readAsString("selection-set-post.txt"), selectionSet.toString() + "\n");
+    }
+
+    /**
+     * Test that custom type selection set serialization works as expected.
+     * @throws AmplifyException if a ModelSchema can't be derived from Post.class
+     */
+    @Test
+    public void nestedCustomTypeSelectionSetSerializesToExpectedValue() throws AmplifyException {
+        SelectionSet selectionSet = SelectionSet.builder()
+                .modelClass(Parent.class)
+                .operation(QueryType.GET)
+                .requestOptions(new DefaultGraphQLRequestOptions())
+                .build();
+        assertEquals(Resources.readAsString("selection-set-parent.txt"), selectionSet.toString() + "\n");
     }
 }
