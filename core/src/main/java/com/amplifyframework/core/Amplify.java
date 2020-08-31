@@ -157,6 +157,23 @@ public final class Amplify {
         }
     }
 
+    /**
+     * An opposite to {@link Amplify#configure(Context)} ()}. Removes all registered {@link Plugin}s
+     * and sets states t
+     */
+    public static void unconfigure() {
+        synchronized (CONFIGURATION_LOCK) {
+            if (CONFIGURATION_LOCK.get()) {
+                for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
+                    category.removeAllPlugins();
+                }
+
+                UserAgent.unconfigure();
+                CONFIGURATION_LOCK.set(false);
+            }
+        }
+    }
+
     private static void beginInitialization(@NonNull Category<? extends Plugin<?>> category, @NonNull Context context) {
         INITIALIZATION_POOL.execute(() -> category.initialize(context));
     }

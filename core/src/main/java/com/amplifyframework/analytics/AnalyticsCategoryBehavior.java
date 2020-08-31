@@ -86,4 +86,20 @@ public interface AnalyticsCategoryBehavior {
      * What is the behavior in this case? Naming ??
      */
     void flushEvents();
+
+    /**
+     * Starts analytics session. Should be avoided if sessions tracked per activity and should
+     * favored to default implementation that is using AutoSessionTracker that integrates
+     * with {@link android.app.Application.ActivityLifecycleCallbacks}. This implementation is done
+     * for apps that want to track analytics outside Activity lifecycle like {@link android.app.Service}.
+     */
+    void startSession();
+
+    /**
+     * Stops analytics session. Should be avoided if sessions tracked per activity and should
+     * favored to default implementation that is using AutoSessionTracker that integrates
+     * with {@link android.app.Application.ActivityLifecycleCallbacks}. This implementation is done
+     * for apps that want to track analytics outside Activity lifecycle like {@link android.app.Service}.
+     */
+    void stopSession();
 }

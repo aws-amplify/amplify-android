@@ -169,6 +169,14 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     }
 
     /**
+     * Removes all plugins and resets state to {@link State#NOT_CONFIGURED}.
+     */
+    public final void removeAllPlugins() {
+        plugins.clear();
+        state.set(State.NOT_CONFIGURED);
+    }
+
+    /**
      * Retrieve a plugin by its key.
      * @param pluginKey A key that identifies a plugin implementation
      * @return The plugin object associated to pluginKey, if registered

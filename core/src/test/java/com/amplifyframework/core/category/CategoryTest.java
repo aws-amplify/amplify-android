@@ -34,6 +34,8 @@ import java.util.Set;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -55,6 +57,30 @@ public final class CategoryTest {
         CategoryInitializationResult result = category.initialize(getApplicationContext());
         assertEquals(1, result.getSuccessfulPlugins().size());
         assertEquals(0, result.getFailedPlugins().size());
+    }
+
+    /**
+     * Validate the behavior of successful category plugin clean up.
+     */
+    @Test
+    public void successfulPluginClearing() throws AmplifyException {
+        Category<Plugin<Void>> category = SimpleCategory.type(CategoryType.ANALYTICS);
+        category.addPlugin(SimplePlugin.type(CategoryType.ANALYTICS));
+
+        category.configure(SimpleCategoryConfiguration.type(CategoryType.ANALYTICS), getApplicationContext());
+
+        CategoryInitializationResult result = category.initialize(getApplicationContext());
+        assertEquals(1, result.getSuccessfulPlugins().size());
+        assertEquals(0, result.getFailedPlugins().size());
+
+        assertTrue(category.isInitialized());
+
+        category.removeAllPlugins();
+        assertFalse(category.isInitialized());
+
+        CategoryInitializationResult resultPostCleanUp = category.initialize(getApplicationContext());
+        assertEquals(0, resultPostCleanUp.getSuccessfulPlugins().size());
+        assertEquals(0, resultPostCleanUp.getFailedPlugins().size());
     }
 
     /**

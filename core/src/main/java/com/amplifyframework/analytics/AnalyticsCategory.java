@@ -102,4 +102,14 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
             getSelectedPlugin().flushEvents();
         }
     }
+
+    @Override
+    public void startSession() {
+        getSelectedPlugin().startSession();
+    }
+
+    @Override
+    public void stopSession() {
+        getSelectedPlugin().stopSession();
+    }
 }

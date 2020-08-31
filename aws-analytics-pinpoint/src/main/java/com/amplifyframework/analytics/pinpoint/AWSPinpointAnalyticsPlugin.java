@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
 import androidx.annotation.VisibleForTesting;
 
+import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
 import com.amplifyframework.analytics.AnalyticsBooleanProperty;
 import com.amplifyframework.analytics.AnalyticsDoubleProperty;
 import com.amplifyframework.analytics.AnalyticsEventBehavior;
@@ -74,6 +75,7 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
     private AutoEventSubmitter autoEventSubmitter;
     private AnalyticsClient analyticsClient;
     private AutoSessionTracker autoSessionTracker;
+    private SessionClient sessionClient;
     private TargetingClient targetingClient;
     private AWSCredentialsProvider credentialsProviderOverride; // Currently used for integration testing purposes
 
@@ -294,6 +296,20 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         analyticsClient.submitEvents();
     }
 
+    @Override
+    public void startSession() {
+        if (sessionClient != null) {
+            sessionClient.startSession();
+        }
+    }
+
+    @Override
+    public void stopSession() {
+        if (sessionClient != null) {
+            sessionClient.stopSession();
+        }
+    }
+
     @NonNull
     @Override
     public String getPluginKey() {
@@ -373,6 +389,7 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         );
         this.analyticsClient = pinpointManager.getAnalyticsClient();
         this.targetingClient = pinpointManager.getTargetingClient();
+        this.sessionClient = pinpointManager.getSessionClient();
 
         // Initiate the logic to automatically submit events periodically
         autoEventSubmitter = new AutoEventSubmitter(analyticsClient,
@@ -380,7 +397,7 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         autoEventSubmitter.start();
 
         // Instantiate the logic to automatically track app session
-        autoSessionTracker = new AutoSessionTracker(this.analyticsClient, pinpointManager.getSessionClient());
+        autoSessionTracker = new AutoSessionTracker(this.analyticsClient, sessionClient);
         autoSessionTracker.startSessionTracking(application);
     }
 

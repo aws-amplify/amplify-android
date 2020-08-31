@@ -79,6 +79,13 @@ public final class UserAgent {
     }
 
     /**
+     * Resets the UserAgent
+     */
+    public static void unconfigure() {
+        reset();
+    }
+
+    /**
      * Reset User-Agent configuration for testing purposes.
      * No-op if User-Agent was not configured yet.
      */
