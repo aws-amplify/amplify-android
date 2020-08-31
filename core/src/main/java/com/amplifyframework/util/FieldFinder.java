@@ -23,7 +23,6 @@ import com.amplifyframework.core.model.annotations.ModelField;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -46,37 +45,18 @@ public final class FieldFinder {
      * @return set of fields
      */
     @NonNull
-    public static List<Field> findModelFieldsIn(@NonNull Class<?> clazz) {
+    public static List<Field> findFieldsIn(@NonNull Class<?> clazz) {
         final List<Field> fields = new ArrayList<>();
-        Class<?> fieldContainerClazz = clazz;
-        while (fieldContainerClazz != null) {
-            for (Field field : fieldContainerClazz.getDeclaredFields()) {
+        Class<?> c = clazz;
+        while (c != null) {
+            for (Field field : c.getDeclaredFields()) {
                 if (field.isAnnotationPresent(ModelField.class)) {
                     fields.add(field);
                 }
             }
-            fieldContainerClazz = fieldContainerClazz.getSuperclass();
+            c = c.getSuperclass();
         }
         Collections.sort(fields, (o1, o2) -> o1.getName().compareTo(o2.getName()));
-        return Immutable.of(fields);
-    }
-
-    /**
-     * Helper for finding all fields in a class without limiting limiting to {@link ModelField}.
-     * @param clazz clazz the Class object.
-     * @return set of fields
-     */
-    @NonNull
-    public static List<Field> findAllFieldsIn(@NonNull Class<?> clazz) {
-        final List<Field> fields = new ArrayList<>();
-        Class<?> fieldContainerClazz = clazz;
-        while (fieldContainerClazz != null) {
-            for (Field field : fieldContainerClazz.getDeclaredFields()) {
-                fields.add(field);
-            }
-            fieldContainerClazz = fieldContainerClazz.getSuperclass();
-        }
-        Collections.sort(fields, Comparator.comparing(Field::getName));
         return Immutable.of(fields);
     }
 
