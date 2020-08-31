@@ -1,0 +1,29 @@
+ {
+  address {
+    city
+    country
+    phonenumber {
+      carrier
+      code
+      number
+    }
+    street
+    street2
+  }
+  children {
+    address {
+      city
+      country
+      phonenumber {
+        carrier
+        code
+        number
+      }
+      street
+      street2
+    }
+    name
+  }
+  id
+  name
+}
