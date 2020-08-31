@@ -102,7 +102,7 @@ public final class RxOperations {
         /**
          * Describes events emitted by the {@link RxSubscriptionOperation} class.
          */
-        public static class ConnectionStateEvent {
+        public static final class ConnectionStateEvent {
             private ConnectionState connectionState;
             private String subscriptionId;
 
