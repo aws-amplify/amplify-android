@@ -15,6 +15,8 @@
 
 package com.amplifyframework.auth.cognito.util;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.auth.AuthException;
 
 import com.amazonaws.services.cognitoidentityprovider.model.AliasExistsException;
@@ -45,9 +47,10 @@ public final class CognitoAuthExceptionConverter {
      * Lookup method to convert AWS Cognito Exception to AuthException.
      * @param error Exception thrown by AWSMobileClient
      * @param fallbackMessage Fallback message to inform failure
-     * @return AuthException
+     * @return AuthException Specific exception for Amplify Auth
      */
-    public static AuthException lookup(Exception error, String fallbackMessage) {
+    @NonNull
+    public static AuthException lookup(@NonNull Exception error, @NonNull String fallbackMessage) {
         if (error instanceof UserNotFoundException) {
             return new AuthException.UserNotFoundException(error);
         }

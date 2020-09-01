@@ -193,7 +193,7 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     * Could not perform the action because user not found in the system.
+     * Could not perform the action because user was not found in the system.
      */
     public static class UserNotFoundException extends AuthException {
         private static final long serialVersionUID = 1L;
@@ -211,7 +211,7 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     * Could not perform the action because user not confirmed in the system.
+     * Could not perform the action because user is not confirmed in the system.
      */
     public static class UserNotConfirmedException extends AuthException {
         private static final long serialVersionUID = 1L;
@@ -263,7 +263,7 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     * Could not perform the action because error occurs when delivering the confirmation code.
+     * Could not perform the action because error occured when delivering the confirmation code.
      */
     public static class CodeDeliveryFailureException extends AuthException {
         private static final long serialVersionUID = 1L;
@@ -280,7 +280,7 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     * Could not perform the action because user enters incorrect confirmation code.
+     * Could not perform the action because user entered incorrect confirmation code.
      */
     public static class CodeMismatchException extends AuthException {
         private static final long serialVersionUID = 1L;
@@ -315,7 +315,7 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     * Could not perform the action because there exists incorrect parameters.
+     * Could not perform the action because there are incorrect parameters.
      */
     public static class InvalidParameterException extends AuthException {
         private static final long serialVersionUID = 1L;
