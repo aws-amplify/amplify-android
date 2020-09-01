@@ -88,7 +88,7 @@ final class SubscriptionProcessor {
     synchronized void startSubscriptions() {
         // let's ensure that we are not duplicating subscriptions here
         if (ongoingOperationsDisposable.size() > 0) {
-            if  (!ongoingOperationsDisposable.isDisposed()){
+            if (!ongoingOperationsDisposable.isDisposed()) {
                 LOG.info("Subscription already started");
                 return;
             } else {
