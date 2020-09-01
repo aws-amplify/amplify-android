@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <code>ModelField</code> value converter for SQLite. It converts from SQLite's <code>Cursor</code>
@@ -109,6 +110,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 return ((Temporal.DateTime) value).format();
             case TIME:
                 return ((Temporal.Time) value).format();
+            case TIMESTAMP:
+                return ((Temporal.Timestamp) value).getSecondsSinceEpoch();
             default:
                 LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", fieldType));
                 return null;
@@ -165,6 +168,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     return new Temporal.DateTime(valueAsString);
                 case TIME:
                     return new Temporal.Time(valueAsString);
+                case TIMESTAMP:
+                    return new Temporal.Timestamp(cursor.getLong(columnIndex), TimeUnit.SECONDS);
                 default:
                     LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", javaFieldType));
                     return null;
