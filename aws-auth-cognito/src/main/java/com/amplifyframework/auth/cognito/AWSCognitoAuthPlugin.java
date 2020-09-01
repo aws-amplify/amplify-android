@@ -280,13 +280,9 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                 @Override
                 public void onError(Exception error) {
-                    if (CognitoAuthExceptionConverter.lookup(error) != null) {
-                        onException.accept(CognitoAuthExceptionConverter.lookup(error));
-                    } else {
-                        onException.accept(
-                                new AuthException("Sign up failed", error, "See attached exception for more details")
-                        );
-                    }
+                    onException.accept(
+                           CognitoAuthExceptionConverter.lookup("Sign up failed", error)
+                    );
                 }
             }
         );
@@ -307,14 +303,9 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception error) {
-                if (CognitoAuthExceptionConverter.lookup(error) != null) {
-                    onException.accept(CognitoAuthExceptionConverter.lookup(error));
-                } else {
-                    onException.accept(
-                            new AuthException("Confirm sign up failed", error,
-                                            "See attached exception for more details")
-                    );
-                }
+                onException.accept(
+                        CognitoAuthExceptionConverter.lookup("Confirm sign up failed", error)
+                );
             }
         });
     }
@@ -333,17 +324,10 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception error) {
-                if (CognitoAuthExceptionConverter.lookup(error) != null) {
-                    onException.accept(CognitoAuthExceptionConverter.lookup(error));
-                } else {
-                    onException.accept(
-                            new AuthException(
-                                    "Resend confirmation code failed",
-                                    error,
-                                    "See attached exception for more details"
-                            )
-                    );
-                }
+                onException.accept(
+                        CognitoAuthExceptionConverter.lookup(
+                                "Resend confirmation code failed", error)
+                );
             }
         });
     }
@@ -375,13 +359,9 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception error) {
-                if (CognitoAuthExceptionConverter.lookup(error) != null) {
-                    onException.accept(CognitoAuthExceptionConverter.lookup(error));
-                } else {
-                    onException.accept(
-                            new AuthException("Sign in failed", error, "See attached exception for more details")
-                    );
-                }
+                onException.accept(
+                        CognitoAuthExceptionConverter.lookup("Sign in failed", error)
+                );
             }
         });
     }
@@ -415,15 +395,10 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception error) {
-                if (CognitoAuthExceptionConverter.lookup(error) != null) {
-                    onException.accept(CognitoAuthExceptionConverter.lookup(error));
-                } else {
-                    onException.accept(
-                            new AuthException("Confirm sign in failed",
-                                    error,
-                                    "See attached exception for more details")
-                    );
-                }
+                onException.accept(
+                        CognitoAuthExceptionConverter.lookup(
+                                "Confirm sign in failed", error)
+                );
             }
         });
     }

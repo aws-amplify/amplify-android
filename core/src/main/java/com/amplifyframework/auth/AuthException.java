@@ -384,7 +384,7 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     * Could not perform the action because Amazon Cognito service cannot find the requested resource.
+     * Could not perform the action because Amplify cannot find the requested resource.
      */
     public static class ResourceNotFoundException extends AuthException {
         private static final long serialVersionUID = 1L;
@@ -417,60 +417,4 @@ public class AuthException extends AmplifyException {
             super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
     }
-
-    /**
-     * Could not perform the action because Amazon Cognito service encounters an invalid AWS Lambda response
-     * or encounters an unexpected exception with the AWS Lambda service.
-     */
-    public static class LambdaException extends AuthException {
-        private static final long serialVersionUID = 1L;
-        private static final String MESSAGE =
-                "Amazon Cognito service encountered an invalid AWS Lambda response " +
-                        "or an unexpected exception with the AWS Lambda service.";
-        private static final String RECOVERY_SUGGESTION = "Please retry the operation.";
-
-        /**
-         * Default message/recovery suggestion with a cause.
-         * @param cause The original error.
-         */
-        public LambdaException(Throwable cause) {
-            super(MESSAGE, cause, RECOVERY_SUGGESTION);
-        }
-    }
-
-    /**
-     * Could not perform the action because device is not tracked.
-     */
-    public static class DeviceNotTrackedException extends AuthException {
-        private static final long serialVersionUID = 1L;
-        private static final String MESSAGE = "Device is not tracked.";
-        private static final String RECOVERY_SUGGESTION = "Please check out the device configuration.";
-
-        /**
-         * Default message/recovery suggestion with a cause.
-         * @param cause The original error.
-         */
-        public DeviceNotTrackedException(Throwable cause) {
-            super(MESSAGE, cause, RECOVERY_SUGGESTION);
-        }
-    }
-
-    /**
-     * Could not perform the action because user cancelled the step.
-     */
-    public static class UserCancelledException extends AuthException {
-        private static final long serialVersionUID = 1L;
-        private static final String MESSAGE = "User cancelled the flow.";
-        private static final String RECOVERY_SUGGESTION = "Please retry the operation if needed.";
-
-        /**
-         * Default message/recovery suggestion with a cause.
-         * @param cause The original error.
-         */
-        public UserCancelledException(Throwable cause) {
-            super(MESSAGE, cause, RECOVERY_SUGGESTION);
-        }
-    }
 }
-
-

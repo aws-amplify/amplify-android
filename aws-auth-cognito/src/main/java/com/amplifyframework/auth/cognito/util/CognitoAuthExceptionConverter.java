@@ -27,7 +27,6 @@ import com.amazonaws.services.cognitoidentityprovider.model.LimitExceededExcepti
 import com.amazonaws.services.cognitoidentityprovider.model.PasswordResetRequiredException;
 import com.amazonaws.services.cognitoidentityprovider.model.ResourceNotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.TooManyFailedAttemptsException;
-import com.amazonaws.services.cognitoidentityprovider.model.UnexpectedLambdaException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.UsernameExistsException;
@@ -44,10 +43,11 @@ public final class CognitoAuthExceptionConverter {
 
     /**
      * Lookup method to convert AWS Cognito Exception to AuthException.
+     * @param fallbackMessage Fallback message to inform failure
      * @param error Exception thrown by AWSMobileClient
      * @return AuthException
      */
-    public static AuthException lookup(Exception error) {
+    public static AuthException lookup(String fallbackMessage, Exception error) {
         if (error instanceof UserNotFoundException) {
             return new AuthException.UserNotFoundException(error);
         }
@@ -96,14 +96,11 @@ public final class CognitoAuthExceptionConverter {
             return new AuthException.FailedAttemptsLimitExceededException(error);
         }
 
-        if (error instanceof UnexpectedLambdaException) {
-            return new AuthException.LambdaException(error);
-        }
-
         if (error instanceof PasswordResetRequiredException) {
             return new AuthException.PasswordResetRequiredException(error);
         }
 
-        return null;
+        return new AuthException(fallbackMessage, error, "See attached exception for more details.");
+
     }
 }
