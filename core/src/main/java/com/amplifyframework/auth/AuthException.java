@@ -389,7 +389,8 @@ public class AuthException extends AmplifyException {
     public static class ResourceNotFoundException extends AuthException {
         private static final long serialVersionUID = 1L;
         private static final String MESSAGE = "Could not find the requested online resource.";
-        private static final String RECOVERY_SUGGESTION = "Retry with exponential back-off";
+        private static final String RECOVERY_SUGGESTION =
+                "Retry with exponential back-off or check your config file to be sure the endpoint is valid.";
 
         /**
          * Default message/recovery suggestion with a cause.

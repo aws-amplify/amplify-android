@@ -281,7 +281,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 @Override
                 public void onError(Exception error) {
                     onException.accept(
-                           CognitoAuthExceptionConverter.lookup("Sign up failed", error)
+                           CognitoAuthExceptionConverter.lookup(error, "Sign up failed")
                     );
                 }
             }
@@ -304,7 +304,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @Override
             public void onError(Exception error) {
                 onException.accept(
-                        CognitoAuthExceptionConverter.lookup("Confirm sign up failed", error)
+                        CognitoAuthExceptionConverter.lookup(error, "Confirm sign up failed")
                 );
             }
         });
@@ -326,7 +326,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             public void onError(Exception error) {
                 onException.accept(
                         CognitoAuthExceptionConverter.lookup(
-                                "Resend confirmation code failed", error)
+                                error, "Resend confirmation code failed")
                 );
             }
         });
@@ -360,7 +360,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @Override
             public void onError(Exception error) {
                 onException.accept(
-                        CognitoAuthExceptionConverter.lookup("Sign in failed", error)
+                        CognitoAuthExceptionConverter.lookup(error, "Sign in failed")
                 );
             }
         });
@@ -397,7 +397,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             public void onError(Exception error) {
                 onException.accept(
                         CognitoAuthExceptionConverter.lookup(
-                                "Confirm sign in failed", error)
+                                error, "Confirm sign in failed")
                 );
             }
         });

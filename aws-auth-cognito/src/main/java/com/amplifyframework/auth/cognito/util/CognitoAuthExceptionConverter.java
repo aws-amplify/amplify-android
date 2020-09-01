@@ -43,11 +43,11 @@ public final class CognitoAuthExceptionConverter {
 
     /**
      * Lookup method to convert AWS Cognito Exception to AuthException.
-     * @param fallbackMessage Fallback message to inform failure
      * @param error Exception thrown by AWSMobileClient
+     * @param fallbackMessage Fallback message to inform failure
      * @return AuthException
      */
-    public static AuthException lookup(String fallbackMessage, Exception error) {
+    public static AuthException lookup(Exception error, String fallbackMessage) {
         if (error instanceof UserNotFoundException) {
             return new AuthException.UserNotFoundException(error);
         }
