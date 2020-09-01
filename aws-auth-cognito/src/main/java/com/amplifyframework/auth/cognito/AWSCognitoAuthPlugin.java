@@ -36,6 +36,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
 import com.amplifyframework.auth.cognito.util.AuthProviderConverter;
+import com.amplifyframework.auth.cognito.util.CognitoAuthExceptionConverter;
 import com.amplifyframework.auth.cognito.util.SignInStateConverter;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
@@ -285,7 +286,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 @Override
                 public void onError(Exception error) {
                     onException.accept(
-                        new AuthException("Sign up failed", error, "See attached exception for more details")
+                           CognitoAuthExceptionConverter.lookup(error, "Sign up failed")
                     );
                 }
             }
@@ -308,7 +309,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @Override
             public void onError(Exception error) {
                 onException.accept(
-                    new AuthException("Confirm sign up failed", error, "See attached exception for more details")
+                        CognitoAuthExceptionConverter.lookup(error, "Confirm sign up failed")
                 );
             }
         });
@@ -329,11 +330,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @Override
             public void onError(Exception error) {
                 onException.accept(
-                    new AuthException(
-                        "Resend confirmation code failed",
-                        error,
-                        "See attached exception for more details"
-                    )
+                        CognitoAuthExceptionConverter.lookup(
+                                error, "Resend confirmation code failed")
                 );
             }
         });
@@ -367,7 +365,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @Override
             public void onError(Exception error) {
                 onException.accept(
-                    new AuthException("Sign in failed", error, "See attached exception for more details")
+                        CognitoAuthExceptionConverter.lookup(error, "Sign in failed")
                 );
             }
         });
@@ -403,7 +401,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @Override
             public void onError(Exception error) {
                 onException.accept(
-                        new AuthException("Confirm sign in failed", error, "See attached exception for more details")
+                        CognitoAuthExceptionConverter.lookup(
+                                error, "Confirm sign in failed")
                 );
             }
         });
@@ -677,10 +676,10 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 }
 
                 @Override
-                public void onError(Exception exception) {
+                public void onError(Exception error) {
                     onException.accept(new AuthException(
                             "An error occurred confirming password recovery code",
-                            exception,
+                            error,
                             "See attached exception for more details"
                     ));
                 }
