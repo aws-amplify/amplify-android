@@ -86,6 +86,15 @@ final class SubscriptionProcessor {
      * Start subscribing to model mutations.
      */
     synchronized void startSubscriptions() {
+        // let's ensure that we are not duplicating subscriptions here
+        if (ongoingOperationsDisposable.size() > 0) {
+            if  (!ongoingOperationsDisposable.isDisposed()){
+                LOG.info("Subscription already started");
+                return;
+            } else {
+                ongoingOperationsDisposable.clear();
+            }
+        }
         int subscriptionCount = modelProvider.models().size() * SubscriptionType.values().length;
         // Create a latch with the number of subscriptions are requesting. Each of these will be
         // counted down when each subscription's onStarted event is called.
