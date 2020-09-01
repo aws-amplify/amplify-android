@@ -97,20 +97,6 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
-     * Basic authentication to the app with a username and password or, if custom auth is setup,
-     * you can send null for those and the necessary authentication details in the options object.
-     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
-     * @param options Advanced options such as a map of auth information for custom auth
-     * @param onSuccess Success callback
-     * @param onError Error callback
-     */
-    void signIn(
-            @Nullable String username,
-            @NonNull AuthSignInOptions options,
-            @NonNull Consumer<AuthSignInResult> onSuccess,
-            @NonNull Consumer<AuthException> onError);
-
-    /**
      * Basic authentication to the app with a username and password.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param password User's password
@@ -120,17 +106,6 @@ public interface AuthCategoryBehavior {
     void signIn(
             @Nullable String username,
             @Nullable String password,
-            @NonNull Consumer<AuthSignInResult> onSuccess,
-            @NonNull Consumer<AuthException> onError);
-
-    /**
-     * Basic authentication to the app with a username passwordless.
-     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
-     * @param onSuccess Success callback
-     * @param onError Error callback
-     */
-    void signIn(
-            @Nullable String username,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 

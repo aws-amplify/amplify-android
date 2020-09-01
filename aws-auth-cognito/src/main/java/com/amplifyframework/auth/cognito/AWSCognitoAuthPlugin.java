@@ -376,53 +376,11 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public void signIn(
             @Nullable String username,
-            @NonNull AuthSignInOptions options,
-            @NonNull final Consumer<AuthSignInResult> onSuccess,
-            @NonNull final Consumer<AuthException> onException
-    ) {
-        Map<String, String> metadata = null;
-
-        if (options != null && options instanceof AWSCognitoAuthSignInOptions) {
-            metadata = ((AWSCognitoAuthSignInOptions) options).getMetadata();
-        }
-
-        awsMobileClient.signIn(username, metadata, new Callback<SignInResult>() {
-            @Override
-            public void onResult(SignInResult result) {
-                try {
-                    AuthSignInResult newResult = convertSignInResult(result);
-                    fetchAndSetUserId(() -> onSuccess.accept(newResult));
-                } catch (AuthException exception) {
-                    onException.accept(exception);
-                }
-            }
-
-            @Override
-            public void onError(Exception error) {
-                onException.accept(
-                    new AuthException("Sign in failed", error, "See attached exception for more details")
-                );
-            }
-        });
-    }
-
-    @Override
-    public void signIn(
-            @Nullable String username,
             @Nullable String password,
             @NonNull final Consumer<AuthSignInResult> onSuccess,
             @NonNull final Consumer<AuthException> onException
     ) {
         signIn(username, password, AWSCognitoAuthSignInOptions.builder().build(), onSuccess, onException);
-    }
-
-    @Override
-    public void signIn(
-            @Nullable String username,
-            @NonNull final Consumer<AuthSignInResult> onSuccess,
-            @NonNull final Consumer<AuthException> onException
-    ) {
-        signIn(username, AWSCognitoAuthSignInOptions.builder().build(), onSuccess, onException);
     }
 
     @Override

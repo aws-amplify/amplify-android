@@ -85,7 +85,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -348,7 +347,7 @@ public final class AuthComponentTest {
             Callback<SignInResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).signIn(any(), anyString(), any(), (Callback<SignInResult>) any());
+        }).when(mobileClient).signIn(any(), any(), any(), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.signIn(
                 USERNAME,
