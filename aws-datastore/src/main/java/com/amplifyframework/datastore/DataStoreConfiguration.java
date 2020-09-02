@@ -304,7 +304,7 @@ public final class DataStoreConfiguration {
 
         /**
          * Sets the name of the API which will be used for model synchronization.
-         * This name corresponds to a configured API in the `amplifyconfiguraiton.json`'s API
+         * This name corresponds to a configured API in the `amplifyconfiguration.json`'s API
          * category config. This is an optional configuration value. If it is not provided,
          * and the value is null, then the DataStore will attempt to use the first (and only)
          * configured API in the config file. This option is useful when you have *multiple*
