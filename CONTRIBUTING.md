@@ -132,10 +132,10 @@ First, identify the module you'll modify. The various Gradle modules are
 described below:
 
  - `core` - The Framework itself, including category behavior definitions
- - `aws-auth-cognito` - An plugin implementation of the Auth category that
+ - `aws-auth-cognito` - A plugin implementation of the Auth category that
     speaks to Amazon Cognito through the legacy `AWSMobileClient` utility
  - `aws-datastore` - An AppSync-based plugin for the DataStore category
- - `aws-api` - Plugin for API category with speciali abilities to talk to
+ - `aws-api` - Plugin for API category with special abilities to talk to
     AppSync and API Gateway endpoints
  - `aws-api-appsync` - AppSync implementation details that are shared
     accross multiple plugins implementations (`aws-api`, `aws-datastore`)
@@ -487,7 +487,7 @@ iOS, and numerous JavaScript-based web platforms. The Amplify CLI
 provides an entry point to configure backend resources for all of these
 platforms.
 
-2. [AWS Amplify for Flutter](https://github.com/aws-amplify/amplify-flutter)
+1. [AWS Amplify for Flutter](https://github.com/aws-amplify/amplify-flutter)
 2. [AWS Amplify for iOS](https://github.com/aws-amplify/amplify-ios)
 3. [AWS Amplify for JavaScript](https://github.com/aws-amplify/amplify-js)
 4. [AWS Amplify CLI](https://github.com/aws-amplify/amplify-cli)

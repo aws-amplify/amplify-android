@@ -15,7 +15,7 @@ and [this blog post](https://aws.amazon.com/blogs/mobile/using-rxjava-with-aws-a
 ### Pre-requisites
 
 All of the pre-requisites in the [Getting
-Started guide](https://aws-amplify.github.io/docs/android/start) apply
+Started guide](https://docs.amplify.aws/start/q/integration/android) apply
 as normal.
 
 ### Gradle
@@ -30,7 +30,7 @@ dependencies {
 
 ### Initialization
 Initialize Amplify through the `RxAmplify` facade instead of through
-`Amplify` directrly. The `RxAmplify` facade exposes the same
+`Amplify` directly. The `RxAmplify` facade exposes the same
 functionalities as the core `Amplify` facade:
 
 ```java
