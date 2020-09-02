@@ -35,6 +35,8 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 
+import java.util.Objects;
+
 /**
  * An implementation of the {@link AppSync} client interface.
  *
@@ -48,13 +50,31 @@ import com.amplifyframework.datastore.DataStoreException;
  */
 public final class AppSyncClient implements AppSync {
     private final GraphQLBehavior api;
+    private final ApiNameProvider apiNameProvider;
 
     /**
      * Constructs a new AppSyncClient.
      * @param api The API Category, configured with a DataStore API
+     * @param apiNameProvider Provides the name of the API to target.
      */
-    private AppSyncClient(GraphQLBehavior api) {
+    private AppSyncClient(GraphQLBehavior api, ApiNameProvider apiNameProvider) {
         this.api = api;
+        this.apiNameProvider = apiNameProvider;
+    }
+
+    /**
+     * Obtain an instance of the AppSyncAPI, which uses the Amplify API category
+     * as its backing implementation for GraphQL behaviors.
+     * Specifies an API token to pass into the API category while targeting an AppSync endpoint.
+     * @param api GraphQL api behavior through which this app sync client will talk
+     * @param apiNameProvider Provides the name of the API that will be targeted.
+     * @return An App Sync API instance
+     */
+    @NonNull
+    public static AppSyncClient via(@NonNull GraphQLBehavior api, @NonNull ApiNameProvider apiNameProvider) {
+        Objects.requireNonNull(api);
+        Objects.requireNonNull(apiNameProvider);
+        return new AppSyncClient(api, apiNameProvider);
     }
 
     /**
@@ -65,7 +85,8 @@ public final class AppSyncClient implements AppSync {
      */
     @NonNull
     public static AppSyncClient via(@NonNull GraphQLBehavior api) {
-        return new AppSyncClient(api);
+        Objects.requireNonNull(api);
+        return new AppSyncClient(api, new NullApiNameProvider());
     }
 
     @NonNull
@@ -100,14 +121,16 @@ public final class AppSyncClient implements AppSync {
                 failure, AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
 
-        final Cancelable cancelable = api.query(request, responseConsumer, failureConsumer);
+        final String apiName = apiNameProvider.getApiName();
+        final Cancelable cancelable = (apiName != null) ?
+            api.query(apiName, request, responseConsumer, failureConsumer) :
+            api.query(request, responseConsumer, failureConsumer);
         if (cancelable != null) {
             return cancelable;
         }
         return new NoOpCancelable();
     }
 
-    @SuppressWarnings("unchecked") // (Class<T>)
     @NonNull
     @Override
     public <T extends Model> Cancelable create(
@@ -146,7 +169,6 @@ public final class AppSyncClient implements AppSync {
         return update(model, version, QueryPredicates.all(), onResponse, onFailure);
     }
 
-    @SuppressWarnings("unchecked") // (Class<T>)
     @NonNull
     @Override
     public <T extends Model> Cancelable update(
@@ -294,13 +316,23 @@ public final class AppSyncClient implements AppSync {
                 "Error during subscription.", failure, "Evaluate details."
             ));
 
-        final Cancelable cancelable = api.subscribe(
-            request,
-            onSubscriptionStarted,
-            responseConsumer,
-            failureConsumer,
-            onSubscriptionCompleted
-        );
+        final String apiName = apiNameProvider.getApiName();
+        final Cancelable cancelable = (apiName != null) ?
+            api.subscribe(
+                apiName,
+                request,
+                onSubscriptionStarted,
+                responseConsumer,
+                failureConsumer,
+                onSubscriptionCompleted
+            ) :
+            api.subscribe(
+                request,
+                onSubscriptionStarted,
+                responseConsumer,
+                failureConsumer,
+                onSubscriptionCompleted
+            );
         if (cancelable != null) {
             return cancelable;
         }
@@ -323,10 +355,40 @@ public final class AppSyncClient implements AppSync {
             failure -> onFailure.accept(new DataStoreException(
                 "Failure during mutation.", failure, "Check details."
             ));
-        final Cancelable cancelable = api.mutate(request, responseConsumer, failureConsumer);
+        final String apiName = apiNameProvider.getApiName();
+        final Cancelable cancelable = (apiName != null) ?
+            api.mutate(apiName, request, responseConsumer, failureConsumer) :
+            api.mutate(request, responseConsumer, failureConsumer);
         if (cancelable != null) {
             return cancelable;
         }
         return new NoOpCancelable();
+    }
+
+    /**
+     * Provides the name of the API instance that the AppSyncClient will talk to.
+     * The API name is a token used by the API category to select one of its configured
+     * APIs.
+     */
+    @FunctionalInterface
+    public interface ApiNameProvider {
+        /**
+         * Gets the name of the API to use when interacting with AppSync via API category.
+         * @return Name of API to talk to
+         */
+        @Nullable
+        String getApiName();
+    }
+
+    /**
+     * An implementation of {@link ApiNameProvider} which always returns null for the API name;
+     * that is to say "no specific API is selected; use default behavior".
+     */
+    private static final class NullApiNameProvider implements ApiNameProvider {
+        @Nullable
+        @Override
+        public String getApiName() {
+            return null;
+        }
     }
 }

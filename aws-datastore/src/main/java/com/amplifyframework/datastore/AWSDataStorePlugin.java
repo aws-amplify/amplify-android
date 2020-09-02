@@ -94,7 +94,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             modelProvider,
             modelSchemaRegistry,
             sqliteStorageAdapter,
-            AppSyncClient.via(api),
+            AppSyncClient.via(api, () -> pluginConfiguration.getApiName()),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.Mode.LOCAL_ONLY : Orchestrator.Mode.SYNC_VIA_API
         );

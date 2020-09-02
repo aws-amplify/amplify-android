@@ -43,6 +43,7 @@ public final class DataStoreConfiguration {
 
     private final DataStoreErrorHandler dataStoreErrorHandler;
     private final DataStoreConflictHandler dataStoreConflictHandler;
+    private final String apiName;
     private final Integer syncMaxRecords;
     private final Integer syncPageSize;
     private Long syncIntervalInMinutes;
@@ -51,11 +52,13 @@ public final class DataStoreConfiguration {
     private DataStoreConfiguration(
             DataStoreErrorHandler dataStoreErrorHandler,
             DataStoreConflictHandler dataStoreConflictHandler,
+            String apiName,
             Long syncIntervalInMinutes,
             Integer syncMaxRecords,
             Integer syncPageSize) {
         this.dataStoreErrorHandler = dataStoreErrorHandler;
         this.dataStoreConflictHandler = dataStoreConflictHandler;
+        this.apiName = apiName;
         this.syncMaxRecords = syncMaxRecords;
         this.syncPageSize = syncPageSize;
         if (syncIntervalInMinutes != null) {
@@ -112,6 +115,7 @@ public final class DataStoreConfiguration {
         return builder()
             .dataStoreErrorHandler(dataStoreErrorHandler)
             .dataStoreConflictHandler(ApplyRemoteConflictHandler.instance(dataStoreErrorHandler))
+            .apiName(null)
             .syncIntervalInMinutes(DEFAULT_SYNC_INTERVAL_MINUTES)
             .syncPageSize(DEFAULT_SYNC_PAGE_SIZE)
             .syncMaxRecords(DEFAULT_SYNC_MAX_RECORDS)
@@ -134,6 +138,18 @@ public final class DataStoreConfiguration {
     @NonNull
     public DataStoreConflictHandler getDataStoreConflictHandler() {
         return this.dataStoreConflictHandler;
+    }
+
+    /**
+     * Gets the name of the API that is used for DataStore synchronization (if any).
+     * This is one of the entries the `amplifyconfiguration.json` which specifies
+     * a valid AppSync endpoint that has been configured with auto-merge conflict resolution.
+     * This field is optional. If not provided, the DataStore tries to use whatever is in the config file.
+     * @return the name of an API to use for DataStore configuration, if present
+     */
+    @Nullable
+    public String getApiName() {
+        return this.apiName;
     }
 
     /**
@@ -193,6 +209,9 @@ public final class DataStoreConfiguration {
         if (!ObjectsCompat.equals(getDataStoreConflictHandler(), that.getDataStoreConflictHandler())) {
             return false;
         }
+        if (!ObjectsCompat.equals(getApiName(), that.getApiName())) {
+            return false;
+        }
         if (!ObjectsCompat.equals(getSyncMaxRecords(), that.getSyncMaxRecords())) {
             return false;
         }
@@ -210,6 +229,7 @@ public final class DataStoreConfiguration {
     public int hashCode() {
         int result = getDataStoreErrorHandler() != null ? getDataStoreErrorHandler().hashCode() : 0;
         result = 31 * result + (getDataStoreConflictHandler() != null ? getDataStoreConflictHandler().hashCode() : 0);
+        result = 31 * result + (getApiName() != null ? getApiName().hashCode() : 0);
         result = 31 * result + (getSyncMaxRecords() != null ? getSyncMaxRecords().hashCode() : 0);
         result = 31 * result + (getSyncPageSize() != null ? getSyncPageSize().hashCode() : 0);
         result = 31 * result + (getSyncIntervalInMinutes() != null ? getSyncIntervalInMinutes().hashCode() : 0);
@@ -222,6 +242,7 @@ public final class DataStoreConfiguration {
         return "DataStoreConfiguration{" +
             "dataStoreErrorHandler=" + dataStoreErrorHandler +
             ", dataStoreConflictHandler=" + dataStoreConflictHandler +
+            ", apiName=" + apiName +
             ", syncMaxRecords=" + syncMaxRecords +
             ", syncPageSize=" + syncPageSize +
             ", syncIntervalInMinutes=" + syncIntervalInMinutes +
@@ -236,6 +257,7 @@ public final class DataStoreConfiguration {
     public static final class Builder {
         private DataStoreErrorHandler dataStoreErrorHandler;
         private DataStoreConflictHandler dataStoreConflictHandler;
+        private String apiName;
         private Long syncIntervalInMinutes;
         private Integer syncMaxRecords;
         private Integer syncPageSize;
@@ -277,6 +299,22 @@ public final class DataStoreConfiguration {
         @NonNull
         public Builder dataStoreErrorHandler(@NonNull DataStoreErrorHandler dataStoreErrorHandler) {
             this.dataStoreErrorHandler = Objects.requireNonNull(dataStoreErrorHandler);
+            return Builder.this;
+        }
+
+        /**
+         * Sets the name of the API which will be used for model synchronization.
+         * This name corresponds to a configured API in the `amplifyconfiguraiton.json`'s API
+         * category config. This is an optional configuration value. If it is not provided,
+         * and the value is null, then the DataStore will attempt to use the first (and only)
+         * configured API in the config file. This option is useful when you have *multiple*
+         * APIs specified in the config file, and need to deliberately select one of them, only.
+         * @param apiName Name of API to use for model synchronization
+         * @return Current builder instance
+         */
+        @NonNull
+        public Builder apiName(@Nullable String apiName) {
+            this.apiName = apiName;
             return Builder.this;
         }
 
@@ -331,6 +369,9 @@ public final class DataStoreConfiguration {
                 }
                 try {
                     switch (configKey) {
+                        case API_NAME:
+                            this.apiName(pluginJson.getString(ConfigKey.API_NAME.toString()));
+                            break;
                         case SYNC_INTERVAL_IN_MINUTES:
                             this.syncIntervalInMinutes(pluginJson
                                 .getLong(ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString()));
@@ -359,6 +400,7 @@ public final class DataStoreConfiguration {
             }
             dataStoreErrorHandler = userProvidedConfiguration.getDataStoreErrorHandler();
             dataStoreConflictHandler = userProvidedConfiguration.getDataStoreConflictHandler();
+            apiName = userProvidedConfiguration.getApiName();
             syncIntervalInMinutes = getValueOrDefault(
                 userProvidedConfiguration.getSyncIntervalInMinutes(),
                 syncIntervalInMinutes);
@@ -387,6 +429,7 @@ public final class DataStoreConfiguration {
                 dataStoreConflictHandler = getValueOrDefault(
                     dataStoreConflictHandler,
                     ApplyRemoteConflictHandler.instance(dataStoreErrorHandler));
+                apiName = getValueOrDefault(apiName, null);
                 syncIntervalInMinutes = getValueOrDefault(syncIntervalInMinutes, DEFAULT_SYNC_INTERVAL_MINUTES);
                 syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
@@ -394,6 +437,7 @@ public final class DataStoreConfiguration {
             return new DataStoreConfiguration(
                 dataStoreErrorHandler,
                 dataStoreConflictHandler,
+                apiName,
                 syncIntervalInMinutes,
                 syncMaxRecords,
                 syncPageSize
@@ -402,6 +446,15 @@ public final class DataStoreConfiguration {
     }
 
     enum ConfigKey {
+        /**
+         * The value associated to this configuration key will contain the name of an API
+         * that has been configured for the API category. This API will be used for all
+         * model synchronization in the DataStore. It is useful to supply this value in
+         * situations where the configuration file specifies multiple APIs. In this case,
+         * the DataStore's default behavior (of just picking the first configured API)
+         * will be overridden.
+         */
+        API_NAME("apiName"),
         /**
          * At most one base sync will be performed within this interval of time.
          * The interval is expressed in milliseconds.
