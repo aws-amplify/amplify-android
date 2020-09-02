@@ -47,6 +47,7 @@ import org.junit.Test;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Observable;
 
@@ -303,7 +304,7 @@ public final class AppSyncClientInstrumentationTest {
     private <T> T awaitResponseData(
             Await.ResultErrorEmitter<GraphQLResponse<T>, DataStoreException> resultErrorEmitter)
             throws DataStoreException {
-        final GraphQLResponse<T> response = Await.result(resultErrorEmitter);
+        final GraphQLResponse<T> response = Await.result(TimeUnit.SECONDS.toMillis(20), resultErrorEmitter);
         if (response.hasErrors()) {
             String firstErrorMessage = response.getErrors().get(0).getMessage();
             throw new DataStoreException("Response contained errors: " + firstErrorMessage, "Check request.");
