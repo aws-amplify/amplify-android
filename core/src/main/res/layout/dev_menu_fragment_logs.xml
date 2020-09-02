@@ -34,6 +34,8 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/filter_logs"
+        android:layout_toStartOf="@+id/filter_logs"
         android:inputType="textNoSuggestions"
         android:textSize="15sp"
         android:queryHint="@string/search_logs_hint"
@@ -42,6 +44,16 @@
         android:paddingStart="-55dp"
         android:paddingRight="0dp"
         android:paddingEnd="0dp" />
+
+    <Button
+        android:id="@+id/filter_logs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/log_level_filter"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp" />
 
     <ScrollView
         android:layout_width="match_parent"
