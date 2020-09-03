@@ -1,0 +1,61 @@
+version: 0.2
+env:
+  shell: /bin/sh
+phases:
+  install:
+#    runtime-versions:
+#      android: 29
+#      nodejs: 12
+    commands:
+      - echo 'Install phase starting'
+    finally:
+      - echo 'Install phase completed.'
+  pre_build:
+    commands:
+      - echo 'Pre-build phase starting'
+    finally:
+      - echo 'Pre-build phase completed.'
+  build:
+    commands:
+      - echo 'Build phase starting'
+      - JAVA_HOME=$JDK_8_HOME ./gradlew build
+    finally:
+      - echo 'Build phase completed.'
+  post_build:
+    commands:
+      - echo 'Post-build phase starting'
+    finally:
+      - echo 'Post-build phase completed.'
+#reports:
+#  report-group-name-or-arn:
+#    files:
+#      - location
+#      - location
+#    base-directory: location
+#    discard-paths: no | yes
+#    file-format: report-format
+#artifacts:
+#  files:
+#    - location
+#    - location
+#  name: artifact-name
+#  discard-paths: no | yes
+#  base-directory: location
+#  secondary-artifacts:
+#    artifactIdentifier:
+#      files:
+#        - location
+#        - location
+#      name: secondary-artifact-name
+#      discard-paths: no | yes
+#      base-directory: location
+#    artifactIdentifier:
+#      files:
+#        - location
+#        - location
+#      discard-paths: no | yes
+#      base-directory: location
+#cache:
+#  paths:
+#    - path
+#    - path
