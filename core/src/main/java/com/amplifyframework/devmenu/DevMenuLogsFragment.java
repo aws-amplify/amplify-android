@@ -26,11 +26,12 @@ import android.widget.SearchView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RawRes;
 import androidx.fragment.app.Fragment;
 
 import com.amplifyframework.core.R;
 import com.amplifyframework.logging.LogLevel;
+
+import java.util.Locale;
 
 /**
  * A {@link Fragment} subclass representing the view
@@ -41,11 +42,8 @@ public final class DevMenuLogsFragment extends Fragment {
     private DeveloperMenu developerMenu;
     // The query entered in the search box.
     private String searchQuery;
-    // LogLevel currently selected in the log level menu.
-    private LogLevel selectedLogLevel;
-    // Resource ID of the log level menu item selected.
-    @RawRes
-    private int logLevelMenuId;
+    // Item currently selected on the menu to filter logs.
+    private MenuItem selectedLogsFilterItem;
     // The TextView where the logs are displayed.
     private TextView logsText;
 
@@ -78,7 +76,6 @@ public final class DevMenuLogsFragment extends Fragment {
                 return true;
             }
         });
-        logLevelMenuId = R.id.all_logs;
         Button filterLogs = logsView.findViewById(R.id.filter_logs);
         registerForContextMenu(filterLogs);
         filterLogs.setOnClickListener(view -> requireActivity().openContextMenu(view));
@@ -90,28 +87,15 @@ public final class DevMenuLogsFragment extends Fragment {
                                     @Nullable ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, view, menuInfo);
         requireActivity().getMenuInflater().inflate(R.menu.dev_menu_logs_menu, menu);
-        menu.findItem(logLevelMenuId).setChecked(true);
+        if (selectedLogsFilterItem == null) {
+            selectedLogsFilterItem = menu.findItem(R.id.all_logs);
+        }
+        menu.findItem(selectedLogsFilterItem.getItemId()).setChecked(true);
     }
 
     @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        int itemId = item.getItemId();
-        if (itemId == R.id.all_logs) {
-            selectedLogLevel = null;
-        } else if (itemId == R.id.error_logs) {
-            selectedLogLevel = LogLevel.ERROR;
-        } else if (itemId == R.id.warn_logs) {
-            selectedLogLevel = LogLevel.WARN;
-        } else if (itemId == R.id.info_logs) {
-            selectedLogLevel = LogLevel.INFO;
-        } else if (itemId == R.id.debug_logs) {
-            selectedLogLevel = LogLevel.DEBUG;
-        } else if (itemId == R.id.verbose_logs) {
-            selectedLogLevel = LogLevel.VERBOSE;
-        } else {
-            return super.onContextItemSelected(item);
-        }
-        logLevelMenuId = itemId;
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+        selectedLogsFilterItem = item;
         displayFilteredLogs();
         return true;
     }
@@ -122,6 +106,10 @@ public final class DevMenuLogsFragment extends Fragment {
      */
     private void displayFilteredLogs() {
         logsText.setText(R.string.placeholder_logs);
+        LogLevel selectedLogLevel = null;
+        if (selectedLogsFilterItem.getItemId() != R.id.all_logs) {
+            selectedLogLevel = LogLevel.valueOf(selectedLogsFilterItem.getTitle().toString().toUpperCase(Locale.US));
+        }
         logsText.setText(developerMenu.getFilteredLogs(searchQuery, selectedLogLevel));
     }
 }
