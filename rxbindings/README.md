@@ -2,10 +2,10 @@
 
 The Rx Bindings provide a facade to the Amplify library.  Instead of
 using Amplify's native callback interface, you can interact with Amplify
-APIs by means of RxJava2
-[`Observable`](http://reactivex.io/RxJava/javadoc/io/reactivex/Observable.html),
-[`Single`](http://reactivex.io/RxJava/javadoc/io/reactivex/Single.html), and
-[`Completable`](http://reactivex.io/RxJava/javadoc/io/reactivex/Completable.html).
+APIs by means of RxJava3
+[`Observable`](http://reactivex.io/RxJava/3.x/javadoc/io/reactivex/rxjava3/core/Observable.html),
+[`Single`](http://reactivex.io/RxJava/3.x/javadoc/io/reactivex/rxjava3/core/Single.html), and
+[`Completable`](http://reactivex.io/RxJava/3.x/javadoc/io/reactivex/rxjava3/core/Completable.html).
 
 For more information see [the public documentation](https://docs.amplify.aws/lib/project-setup/rxjava/q/platform/android)
 and [this blog post](https://aws.amazon.com/blogs/mobile/using-rxjava-with-aws-amplify-android-library/).
