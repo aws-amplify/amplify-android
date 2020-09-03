@@ -36,4 +36,11 @@
         After pressing \"File Issue\", you will have the opportunity to review the
         information included.
     </string>
+    <string name="all_logs">All Logs</string>
+    <string name="error">Error</string>
+    <string name="warn">Warn</string>
+    <string name="info">Info</string>
+    <string name="debug">Debug</string>
+    <string name="verbose">Verbose</string>
+    <string name="log_level_filter">Filter by Log Level</string>
 </resources>

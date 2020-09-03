@@ -21,9 +21,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.text.TextUtils;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
 
@@ -133,13 +135,15 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
     }
 
     /**
-     * Returns a String representation of the stored logs that contain the given
-     * String, or all logs if the given String is null or the empty string.
+     * Returns a String representation of the stored logs that contain the given String and
+     * are at the given log level, or all logs if the given String is null or the empty string
+     * and the given log level is null.
      * @param searchText the text to search for in the logs
+     * @param logLevel the log level of the logs to return
      * @return the stored logs as a String.
      */
-    public String getFilteredLogs(String searchText) {
-        if (Empty.check(searchText)) {
+    public String getFilteredLogs(@Nullable String searchText, @Nullable LogLevel logLevel) {
+        if (Empty.check(searchText) && logLevel == null) {
             return getLogs();
         }
         List<LogEntry> logs = loggingPlugin.getLogs();
@@ -147,10 +151,11 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
             return "No logs to display.";
         }
         StringBuilder logsStringBuilder = new StringBuilder();
-        String lowercaseSearchText = searchText.toLowerCase(Locale.US);
+        String lowercaseSearchText = searchText == null ? "" : searchText.toLowerCase(Locale.US);
         for (LogEntry log : logs) {
             String formattedLog = log.toString();
-            if (formattedLog.toLowerCase(Locale.US).contains(lowercaseSearchText)) {
+            if (formattedLog.toLowerCase(Locale.US).contains(lowercaseSearchText)
+                    && (logLevel == null || log.getLogLevel() == logLevel)) {
                 logsStringBuilder.append(formattedLog);
             }
         }
