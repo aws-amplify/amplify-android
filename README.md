@@ -8,18 +8,18 @@
  </a>
 
 
-AWS Amplify provides a high-level interface to perform different categories of
-cloud operations. Each category is fulfilled by a _plugin_. You specify which
-plugins to use during setup.
+AWS Amplify provides a high-level interface to perform different
+**categories** of cloud operations. Each category is fulfilled by a
+**plugin**. You specify which plugins to use during setup.
 
 The default plugins that we provide are designed to facilitate interaction with
-Amazon Web Services (AWS). But, the Amplify framework is designed to be
+Amazon Web Services (AWS). But, the Amplify Framework is designed to be
 extensible to any other backend or service.
 
 To familiarize yourself with Amplify, checkout our [Getting Started
 Guide](https://docs.amplify.aws/start/q/integration/android).
 
-## Features / APIs
+## Categories
 
 - **[Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)**
   APIs and building blocks for developers who want to create user authentication
@@ -63,31 +63,46 @@ dependencies section:
 
 ```groovy
 dependencies {
-    implementation 'com.amplifyframework:core:1.1.2'
-
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:1.1.2'
-    implementation 'com.amplifyframework:aws-api:1.1.2'
-    implementation 'com.amplifyframework:aws-auth-cognito:1.1.2'
-    implementation 'com.amplifyframework:aws-datastore:1.1.2'
-    implementation 'com.amplifyframework:aws-predictions:1.1.2'
-    implementation 'com.amplifyframework:aws-storage-s3:1.1.2'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:1.3.1'
+    implementation 'com.amplifyframework:aws-api:1.3.1'
+    implementation 'com.amplifyframework:aws-auth-cognito:1.3.1'
+    implementation 'com.amplifyframework:aws-datastore:1.3.1'
+    implementation 'com.amplifyframework:aws-predictions:1.3.1'
+    implementation 'com.amplifyframework:aws-storage-s3:1.3.1'
 }
 ```
 
-### Java 8 Compatibility
+### Java 8 Requirement
 
-Amplify Android uses Java 8 features. Please add a `compileOptions`
+Amplify Android _requires_ Java 8 features. Please add a `compileOptions`
 block inside your app's `build.gradle`, as below:
 
 ```gradle
 android {
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 ```
+In the same file, add core library desugaring in your `dependencies`
+block:
+```gradle
+dependencies {
+    // Add this line
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.10'
+}
+```
+
+### Rx Support
+
+By default, Amplify's interfaces render results through async callbacks.
+However, we also offer an Rx-compatible front-end to Amplify.
+
+See [Using RxJava with Amplify](https://docs.amplify.aws/lib/project-setup/rxjava/q/platform/android)
+for more information.
 
 ### Authentication
 
@@ -113,3 +128,4 @@ and we'll get back to you.
 ## Contribute to the Project
 
 Please see the [Contributing Guidelines](./CONTRIBUTING.md).
+
