@@ -25,6 +25,7 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.events.OutboxStatusEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -134,6 +135,7 @@ final class MutationProcessor {
                         "and removed from the mutation outbox: " + mutationOutboxItem
                 );
                 announceSuccessfulPublication(mutationOutboxItem);
+                publishCurrentOutboxStatus();
             })
             .doOnError(error -> LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error));
     }
@@ -161,6 +163,16 @@ final class MutationProcessor {
         Amplify.Hub.publish(
             HubChannel.DATASTORE,
             HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, mutationEvent)
+        );
+    }
+
+    /**
+     * Publish current outbox status to hub.
+     */
+    private void publishCurrentOutboxStatus() {
+        Amplify.Hub.publish(
+                HubChannel.DATASTORE,
+                new OutboxStatusEvent(mutationOutbox.peek() == null).toHubEvent()
         );
     }
 
