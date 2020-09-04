@@ -27,12 +27,14 @@ import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Defines the Client API consumed by the application.
@@ -210,6 +212,51 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().confirmResetPassword(newPassword, confirmationCode, onSuccess, onError);
+    }
+
+    @Override
+    public void fetchUserAttributes(
+            @NonNull Consumer<List<AuthUserAttribute>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().fetchUserAttributes(onSuccess, onError);
+    }
+
+    @Override
+    public void updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull Consumer<AuthUpdateAttributeResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().updateUserAttribute(attribute, onSuccess, onError);
+    }
+
+    @Override
+    public void updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().updateUserAttributes(attributes, onSuccess, onError);
+    }
+
+    @Override
+    public void resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().resendUserAttributeConfirmationCode(attributeKey, onSuccess, onError);
+    }
+
+    @Override
+    public void confirmUserAttribute(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull String confirmationCode,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().confirmUserAttribute(attributeKey, confirmationCode, onSuccess, onError);
     }
 
     @Override
