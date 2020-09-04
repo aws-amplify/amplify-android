@@ -1,0 +1,84 @@
+{
+  "query": "mutation CreateParent($input: CreateParentInput!) {
+  createParent(input: $input) {
+    _deleted
+    _lastChangedAt
+    _version
+    address {
+      city
+      country
+      phonenumber {
+        carrier
+        code
+        number
+      }
+      street
+      street2
+    }
+    children {
+      address {
+        city
+        country
+        phonenumber {
+          carrier
+          code
+          number
+        }
+        street
+        street2
+      }
+      name
+    }
+    id
+    name
+  }
+}
+",
+  "variables": {
+      "input": {
+        "address": {
+          "street": "555 Five Fiver",
+          "street2": "township",
+          "city": "BO",
+          "phonenumber": {
+            "code": 232,
+            "carrier": 54,
+            "number": 11111111
+          },
+          "country": "Sierra Leone"
+        },
+        "children": [
+          {
+            "name": "SAM",
+            "address": {
+              "street": "555 Five Fiver",
+              "street2": "township",
+              "city": "BO",
+              "phonenumber": {
+                "code": 232,
+                "carrier": 54,
+                "number": 11111111
+              },
+              "country": "Sierra Leone"
+            }
+          },
+          {
+            "name": "MAS",
+            "address": {
+              "street": "555 Five Fiver",
+              "street2": "township",
+              "city": "BO",
+              "phonenumber": {
+                "code": 232,
+                "carrier": 54,
+                "number": 11111111
+              },
+              "country": "Sierra Leone"
+            }
+          }
+        ],
+        "name": "Jane Doe",
+        "id": "426f8e8d-ea0f-4839-a73f-6a2a38565ba1"
+      }
+    }
+}
