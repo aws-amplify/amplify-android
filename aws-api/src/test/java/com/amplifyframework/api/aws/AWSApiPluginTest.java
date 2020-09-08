@@ -25,10 +25,8 @@ import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelPagination;
@@ -294,33 +292,19 @@ public final class AWSApiPluginTest {
     }
 
     /**
-     * Verify that owner argument is required for ON_CREATE subscription if ModelOperation.CREATE is specified.
+     * Verify that owner argument is required for all subscriptions if ModelOperation.READ is specified.
      * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
      */
     @Test
-    public void ownerArgumentAddedForOnCreate() throws AmplifyException {
-        assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_CREATE));
-        assertTrue(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_CREATE));
-    }
-
-    /**
-     * Verify that owner argument is required for ON_UPDATE subscription if ModelOperation.UPDATE is specified.
-     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
-     */
-    @Test
-    public void ownerArgumentAddedForOnUpdate() throws AmplifyException {
+    public void ownerArgumentAddedForRestrictedRead() throws AmplifyException {
         assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_UPDATE));
-        assertTrue(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_UPDATE));
-    }
+        assertTrue(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_UPDATE));
 
-    /**
-     * Verify that owner argument is required for ON_DELETE subscription if ModelOperation.DELETE is specified.
-     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
-     */
-    @Test
-    public void ownerArgumentAddedForOnDelete() throws AmplifyException {
         assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_DELETE));
-        assertTrue(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_DELETE));
+        assertTrue(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_DELETE));
+
+        assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_CREATE));
+        assertTrue(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_CREATE));
     }
 
     /**
@@ -330,14 +314,14 @@ public final class AWSApiPluginTest {
     @Test
     public void ownerArgumentNotAddedIfOperationNotRestricted() throws AmplifyException {
         assertFalse(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_UPDATE));
-        assertFalse(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_UPDATE));
+        assertFalse(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_UPDATE));
         assertFalse(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_UPDATE));
 
         assertFalse(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_DELETE));
-        assertFalse(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_DELETE));
         assertFalse(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_DELETE));
+        assertFalse(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_DELETE));
 
-        assertFalse(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_CREATE));
+        assertFalse(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_CREATE));
         assertFalse(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_CREATE));
         assertFalse(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_CREATE));
     }
@@ -349,16 +333,6 @@ public final class AWSApiPluginTest {
     @Test
     public void ownerArgumentNotAddedIfNotOwnerStrategy() throws AmplifyException {
         assertFalse(isOwnerArgumentAdded(Group.class, SubscriptionType.ON_CREATE));
-    }
-
-    /**
-     * Verify owner argument NOT added for Query or Mutation operations.
-     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
-     */
-    @Test
-    public void verifyOwnerArgumentNotAddedIfNotSubscriptionOperation() throws AmplifyException {
-        assertFalse(isOwnerArgumentAdded(Owner.class, QueryType.GET));
-        assertFalse(isOwnerArgumentAdded(Owner.class, MutationType.CREATE));
     }
 
     private boolean isOwnerArgumentAdded(Class<? extends Model> clazz, Operation operation)

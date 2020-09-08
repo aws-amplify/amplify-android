@@ -32,7 +32,6 @@ import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointS
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.rest.HttpMethod;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
@@ -286,7 +285,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             try {
                 AppSyncGraphQLRequest<R> appSyncRequest = (AppSyncGraphQLRequest<R>) request;
                 for (AuthRule authRule : appSyncRequest.getModelSchema().getAuthRules()) {
-                    if (isOwnerArgumentRequired(authRule, appSyncRequest.getOperation())) {
+                    if (isOwnerArgumentRequired(authRule)) {
                         request = appSyncRequest.newBuilder()
                                 .variable(authRule.getOwnerFieldOrDefault(), "String!", getUsername())
                                 .build();
@@ -313,7 +312,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return operation;
     }
 
-    private boolean isOwnerArgumentRequired(AuthRule authRule, Operation operation) {
+    private boolean isOwnerArgumentRequired(AuthRule authRule) {
         return AuthStrategy.OWNER.equals(authRule.getAuthStrategy())
             && authRule.getOperationsOrDefault().contains(ModelOperation.READ);
     }
