@@ -23,17 +23,17 @@ import com.amplifyframework.auth.result.step.AuthNextUpdateAttributeStep;
 import java.util.Objects;
 
 /**
- * Wraps the result of a user attribute operation.
+ * Wraps the result of an update user attribute operation.
  */
 public class AuthUpdateAttributeResult {
     private final boolean isUpdated;
     private final AuthNextUpdateAttributeStep nextStep;
 
     /**
-     * Wraps the result of a user attribute operation.
+     * Wraps the result of an update user attribute operation.
      * @param isUpdated True if the user attribute has now been updated, False otherwise.
      *                  Check {@link #getNextStep()} for details on additional steps that may be required.
-     * @param nextStep Details about the next step in the sign up process (or whether the flow is now done).
+     * @param nextStep Details about the next step in the update attribute process (or whether the flow is now done).
      */
     public AuthUpdateAttributeResult(boolean isUpdated, @NonNull AuthNextUpdateAttributeStep nextStep) {
         this.isUpdated = isUpdated;

@@ -285,7 +285,7 @@ public interface AuthCategoryBehavior {
 
     /**
      * Update multiple user attributes.
-     * @param attributes Attribute to be updated
+     * @param attributes Attributes to be updated
      * @param onSuccess Success callback
      * @param onError Error callback
      */

@@ -727,47 +727,69 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull Consumer<AuthException> onError
     ) {
 
-        Map<String, String> userAttribute = new HashMap<>();
-        userAttribute.put(
-                attribute.getKey().getKeyString(),
-                attribute.getValue()
-        );
+        Map<String, String> userAttributeMap = new HashMap<>();
+        String userAttributeKeyString = attribute.getKey().getKeyString();
+        String userAttributeValue = attribute.getValue();
+        userAttributeMap.put(userAttributeKeyString, userAttributeValue);
 
         awsMobileClient.updateUserAttributes(
-                userAttribute,
+                userAttributeMap,
                 new Callback<List<UserCodeDeliveryDetails>>() {
-                @Override
-                public void onResult(List<UserCodeDeliveryDetails> result) {
-                    if (result != null) {
-                        for (UserCodeDeliveryDetails details : result) {
-                            if (details.getAttributeName().equals(attribute.getKey().getKeyString())) {
-                                onSuccess.accept(new AuthUpdateAttributeResult(
-                                        true,
-                                        new AuthNextUpdateAttributeStep(
-                                                AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
-                                                Collections.emptyMap(),
-                                                convertCodeDeliveryDetails(details))
-                                ));
+                    @Override
+                    public void onResult(List<UserCodeDeliveryDetails> result) {
+                        if (result != null) {
+                            for (UserCodeDeliveryDetails details : result) {
+                                String attributeNameResult = details.getAttributeName();
+
+                                if ("email".equals(attributeNameResult) ||
+                                        "phone_number".equals(attributeNameResult)) {
+                                    if (attributeNameResult.equals(userAttributeKeyString)) {
+                                        onSuccess.accept(new AuthUpdateAttributeResult(
+                                                true,
+                                                new AuthNextUpdateAttributeStep(
+                                                    AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                                                    Collections.emptyMap(),
+                                                    convertCodeDeliveryDetails(details))
+                                        ));
+                                    } else {
+                                        onError.accept(new AuthException(
+                                                "Returned a wrong attribute name",
+                                                "See attached exception for more details"));
+                                    }
+                                } else {
+                                    onError.accept(new AuthException(
+                                            "Returned an undefined attribute name",
+                                            "See attached exception for more details"
+                                    ));
+                                }
                             }
+                        } else if (result == null && !"email".equals(userAttributeKeyString) &&
+                                !"phone_number".equals(userAttributeKeyString)) {
+                            onSuccess.accept(new AuthUpdateAttributeResult(
+                                    true,
+                                    new AuthNextUpdateAttributeStep(
+                                            AuthUpdateAttributeStep.DONE,
+                                            Collections.emptyMap(),
+                                            null)
+                            ));
+                        } else {
+                            onError.accept(new AuthException(
+                                    "Code delivery failed",
+                                    "See attached exception for more details"
+                            ));
                         }
-                    } else {
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
                         onError.accept(new AuthException(
-                                "Code delivery failed",
+                                "Failed to update user attributes",
+                                error,
                                 "See attached exception for more details"
                         ));
                     }
                 }
-
-                @Override
-                public void onError(Exception error) {
-                    onError.accept(new AuthException(
-                            "Failed to update user attribute",
-                            error,
-                            "See attached exception for more details"
-                            )
-                    );
-                }
-            });
+        );
     }
 
     @Override
@@ -789,21 +811,47 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         public void onResult(List<UserCodeDeliveryDetails> result) {
                             if (result != null) {
                                 for (UserCodeDeliveryDetails details : result) {
-                                    if (details.getAttributeName().equals(userAttributeKeyString)) {
-                                        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
-                                                new HashMap<>();
-                                        resultMap.put(new AuthUserAttributeKey(userAttributeKeyString),
-                                                new AuthUpdateAttributeResult(
-                                                        true,
-                                                        new AuthNextUpdateAttributeStep(
-                                                                AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
-                                                                Collections.emptyMap(),
-                                                                convertCodeDeliveryDetails(details))
-                                                ));
+                                    String attributeNameResult = details.getAttributeName();
 
-                                        onSuccess.accept(resultMap);
+                                    if ("email".equals(attributeNameResult) ||
+                                            "phone_number".equals(attributeNameResult)) {
+                                        if (attributeNameResult.equals(userAttributeKeyString)) {
+                                            Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
+                                                    new HashMap<>();
+                                            resultMap.put(new AuthUserAttributeKey(userAttributeKeyString),
+                                                    new AuthUpdateAttributeResult(
+                                                            true,
+                                                            new AuthNextUpdateAttributeStep(
+                                                                    AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                                                                    Collections.emptyMap(),
+                                                                    convertCodeDeliveryDetails(details))
+                                                    ));
+                                            onSuccess.accept(resultMap);
+                                        } else {
+                                            onError.accept(new AuthException(
+                                                    "Returned a wrong attribute name",
+                                                    "See attached exception for more details"));
+                                        }
+                                    } else {
+                                        onError.accept(new AuthException(
+                                                "Returned an undefined attribute name",
+                                                "See attached exception for more details"
+                                        ));
                                     }
                                 }
+                            } else if (result == null && !"email".equals(userAttributeKeyString) &&
+                                    !"phone_number".equals(userAttributeKeyString)) {
+                                Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
+                                        new HashMap<>();
+                                resultMap.put(new AuthUserAttributeKey(userAttributeKeyString),
+                                        new AuthUpdateAttributeResult(
+                                                true,
+                                                new AuthNextUpdateAttributeStep(
+                                                        AuthUpdateAttributeStep.DONE,
+                                                        Collections.emptyMap(),
+                                                        null)
+                                        ));
+                                onSuccess.accept(resultMap);
                             } else {
                                 onError.accept(new AuthException(
                                         "Code delivery failed",
@@ -815,16 +863,13 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         @Override
                         public void onError(Exception error) {
                             onError.accept(new AuthException(
-                                            "Failed to update user attribute",
-                                            error,
-                                            "See attached exception for more details"
-                                    )
-                            );
+                                    "Failed to update user attributes",
+                                    error,
+                                    "See attached exception for more details"
+                            ));
                         }
-                    }
-            );
+                    });
         }
-
     }
 
     @Override
@@ -839,6 +884,11 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             public void onResult(UserCodeDeliveryDetails result) {
                 if (result.getAttributeName().equals(attributeName)) {
                     onSuccess.accept(convertCodeDeliveryDetails(result));
+                } else {
+                    onError.accept(new AuthException(
+                            "Returned a wrong attribute name",
+                            "See attached exception for more details"
+                    ));
                 }
             }
 
@@ -861,7 +911,6 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull Consumer<AuthException> onError
     ) {
 
-        // Confirm update user attribute
         awsMobileClient.confirmUpdateUserAttribute(
                 attributeKey.getKeyString(),
                 confirmationCode,
@@ -874,7 +923,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     @Override
                     public void onError(Exception error) {
                         onError.accept(new AuthException(
-                                "An error occurred confirming update user attribute",
+                                "An error occurred confirming user attribute",
                                 error,
                                 "See attached exception for more details"
                         ));

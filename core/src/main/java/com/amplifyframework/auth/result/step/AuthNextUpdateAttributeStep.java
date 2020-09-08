@@ -37,7 +37,7 @@ public final class AuthNextUpdateAttributeStep {
     private final AuthCodeDeliveryDetails codeDeliveryDetails;
 
     /**
-     * Gives details on the next step, if there is one, in the sign in flow.
+     * Gives details on the next step, if there is one, in the update attribute flow.
      * @param updateAttributeStep the next step in the user attribute update flow (could be optional or required)
      * @param additionalInfo possible extra info to go with the next step (refer to plugin documentation)
      * @param codeDeliveryDetails Details about how a code was sent, if relevant to the current step
@@ -80,7 +80,7 @@ public final class AuthNextUpdateAttributeStep {
     }
 
     /**
-     * When overriding, be sure to include signInStep, additionalInfo, and codeDeliveryDetails in the hash.
+     * When overriding, be sure to include updateAttributeStep, additionalInfo, and codeDeliveryDetails in the hash.
      * @return Hash code of this object
      */
     @Override
