@@ -763,8 +763,22 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                     ));
                                 }
                             }
-                        } else if (result == null && !"email".equals(userAttributeKeyString) &&
-                                !"phone_number".equals(userAttributeKeyString)) {
+                        } else if (result == null &&
+                                ("address".equals(userAttributeKeyString) ||
+                                        "birthdate".equals(userAttributeKeyString) ||
+                                        "family_name".equals(userAttributeKeyString) ||
+                                        "gender".equals(userAttributeKeyString) ||
+                                        "given_name".equals(userAttributeKeyString) ||
+                                        "locale".equals(userAttributeKeyString) ||
+                                        "middle_name".equals(userAttributeKeyString) ||
+                                        "nickname".equals(userAttributeKeyString) ||
+                                        "picture".equals(userAttributeKeyString) ||
+                                        "preferred_username".equals(userAttributeKeyString) ||
+                                        "profile".equals(userAttributeKeyString) ||
+                                        "updated_at".equals(userAttributeKeyString) ||
+                                        "website".equals(userAttributeKeyString) ||
+                                        "zoneinfo".equals(userAttributeKeyString) ||
+                                        "name".equals(userAttributeKeyString))) {
                             onSuccess.accept(new AuthUpdateAttributeResult(
                                     true,
                                     new AuthNextUpdateAttributeStep(
@@ -839,8 +853,22 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                         ));
                                     }
                                 }
-                            } else if (result == null && !"email".equals(userAttributeKeyString) &&
-                                    !"phone_number".equals(userAttributeKeyString)) {
+                            } else if (result == null &&
+                                    ("address".equals(userAttributeKeyString) ||
+                                            "birthdate".equals(userAttributeKeyString) ||
+                                            "family_name".equals(userAttributeKeyString) ||
+                                            "gender".equals(userAttributeKeyString) ||
+                                            "given_name".equals(userAttributeKeyString) ||
+                                            "locale".equals(userAttributeKeyString) ||
+                                            "middle_name".equals(userAttributeKeyString) ||
+                                            "nickname".equals(userAttributeKeyString) ||
+                                            "picture".equals(userAttributeKeyString) ||
+                                            "preferred_username".equals(userAttributeKeyString) ||
+                                            "profile".equals(userAttributeKeyString) ||
+                                            "updated_at".equals(userAttributeKeyString) ||
+                                            "website".equals(userAttributeKeyString) ||
+                                            "zoneinfo".equals(userAttributeKeyString) ||
+                                            "name".equals(userAttributeKeyString))) {
                                 Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
                                         new HashMap<>();
                                 resultMap.put(new AuthUserAttributeKey(userAttributeKeyString),
