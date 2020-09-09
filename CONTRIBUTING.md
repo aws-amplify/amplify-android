@@ -89,6 +89,8 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.1'
+        
+	implementation 'com.amplifyframework:core:main' // Specify `main` instead of a version number to point to mavenLocal
     }
 }
 
