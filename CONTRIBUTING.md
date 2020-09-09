@@ -89,6 +89,8 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.1'
+        
+	 implementation 'com.amplifyframework:core:main' // Specify `main` instead of a version number to point to mavenLocal
     }
 }
 
@@ -523,4 +525,3 @@ contribution.
 We may ask you to sign a
 [Contributor License Agreement (CLA)](http://en.wikipedia.org/wiki/Contributor_License_Agreement) for
 larger changes.
-
