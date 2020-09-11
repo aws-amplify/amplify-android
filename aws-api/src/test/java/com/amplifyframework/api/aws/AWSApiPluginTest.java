@@ -100,7 +100,19 @@ public final class AWSApiPluginTest {
         webServer.start(8080);
         baseUrl = webServer.url("/");
         authProvider = mock(CognitoUserPoolsAuthProvider.class);
-        when(authProvider.getUsername()).thenReturn("johndoe");
+        // Returns a sample access token with the username value of "Facebook_100003287976754"
+        when(authProvider.getLatestAuthToken()).thenReturn("eyJraWQiOiJnMmtYXC8rSXRmNFwvcmwyODhBSTNCMk9kNDVsdEU" +
+                        "4ZUtIZmF0RkNRWEVDMmM9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiI2YTRjZjMxMi01MWM5LTQyNjAtYjRhZC0wMDdj" +
+                        "MDdkZDdmMzMiLCJjb2duaXRvOmdyb3VwcyI6WyJ1cy13ZXN0LTJfejVWM1ZQa1h5X0ZhY2Vib29rIiwiQWRtaW4iXSwi" +
+                        "dG9rZW5fdXNlIjoiYWNjZXNzIiwic2NvcGUiOiJhd3MuY29nbml0by5zaWduaW4udXNlci5hZG1pbiBwaG9uZSBvcGVu" +
+                        "aWQgcHJvZmlsZSBlbWFpbCIsImF1dGhfdGltZSI6MTU5OTY4MTk2MywiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRw" +
+                        "LnVzLXdlc3QtMi5hbWF6b25hd3MuY29tXC91cy13ZXN0LTJfejVWM1ZQa1h5IiwiZXhwIjoxNTk5NzU3OTE3LCJpYXQi" +
+                        "OjE1OTk3NTQzMTcsInZlcnNpb24iOjIsImp0aSI6ImQyNzYxMDg3LTliNmYtNDYzMS1iYWJjLTY0ZWQzM2UyNGQzMiIs" +
+                        "ImNsaWVudF9pZCI6IjNjZDdjcGJ1N2huYzlka2xoMmZsamg3am0xIiwidXNlcm5hbWUiOiJGYWNlYm9va18xMDAwMDMy" +
+                        "ODc5NzY3NTQifQ.gtINNiuOhAPG5Z-4KgT7Hppw9wYyoVF8lvFhGdAWPi0c3sQvGpTLlBlgh8NqaELai84fTOTsQT4sH" +
+                        "YwP31ik58qrIp7QQ8IOU91mXy2i3-ygsIWGEetvNaMd5ICXhTWUxg7gpKxsJQbrtH88DkO3NxAQSpGoUzlkKzJILekNn" +
+                        "H5wC5drUocg_1yHTYfwsG23QVsm-cHvNsxkzRzjS3Gr18x5jTuhflr24yOGl_fdRas8-kA5q_vMuKclnNuxCztNHOBGk" +
+                        "h-sfTaOh6C-FstV2GOuwtEknlCQqLdJUVSMQO2M4hTScGPXOr2Gz9xTX9QY0D9eNL7806LYObm5nmRd7g");
 
         JSONObject configuration = new JSONObject()
             .put("graphQlApi", new JSONObject()
@@ -350,7 +362,7 @@ public final class AWSApiPluginTest {
                 NoOpConsumer.create(),
                 EmptyAction.create());
 
-        return "johndoe".equals(graphQLOperation.getRequest().getVariables().get("owner"));
+        return "Facebook_100003287976754".equals(graphQLOperation.getRequest().getVariables().get("owner"));
     }
 
     @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
