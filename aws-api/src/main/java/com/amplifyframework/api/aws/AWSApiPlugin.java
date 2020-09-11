@@ -46,6 +46,8 @@ import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.util.UserAgent;
 
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -329,13 +331,27 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 );
             }
         }
-        String username = cognitoProvider.getUsername();
-        if (username == null) {
+
+        String username;
+
+        // Grabs username value from the access token directly since this can differ from the colloquial username
+        // returned by the getUsername method (e.g. email/phone based sign in return the email/phone number in
+        // getUsername but the access token holds the user id in the username field which is what AppSync checks).
+        try {
+            username = CognitoJWTParser
+                    .getPayload(cognitoProvider.getLatestAuthToken())
+                    .getString("username");
+        } catch (JSONException error) {
+            username = null;
+        }
+
+        if (username == null || username.isEmpty()) {
             throw new ApiException(
                     "Attempted to subscribe to a model with owner based authorization without a username",
                     "Make sure that a user is logged in before subscribing to a model with owner based auth"
             );
         }
+
         return username;
     }
 
