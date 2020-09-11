@@ -147,12 +147,12 @@ public final class Amplify {
             boolean disableDevMenu = false;
 
             try {
-                ApplicationInfo ai = context.getPackageManager().getApplicationInfo(
+                ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(
                         context.getPackageName(),
                         PackageManager.GET_META_DATA
                 );
 
-                if (ai.metaData != null && (Boolean) ai.metaData.get("disable_dev_menu")) {
+                if (applicationInfo.metaData != null && (Boolean) applicationInfo.metaData.get("disable_dev_menu")) {
                     disableDevMenu = true;
                 }
             } catch (Exception error) {
