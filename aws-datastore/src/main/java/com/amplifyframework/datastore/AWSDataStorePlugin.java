@@ -122,6 +122,29 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     /**
+     * Constructs an {@link AWSDataStorePlugin} using a user-provided configuration.
+     * The plugin will be able to warehouse models as described in
+     * {@link AWSDataStorePlugin#AWSDataStorePlugin()}.
+     * @param userProvidedConfiguration
+     *        Additionally, consider these user-provided configuration options.
+     *        These values override anything found in `amplifyconfiguration.json`.
+     *        This configuration may also include hooks for conflict resolution
+     *        and or global error handling.
+     * @throws DataStoreException
+     *         If not possible to locate the code-generated model provider,
+     *         com.amplifyframework.datastore.generated.model.AmplifyModelProvider.
+     */
+    @SuppressWarnings("unused") // It's a public API.
+    public AWSDataStorePlugin(@NonNull DataStoreConfiguration userProvidedConfiguration) throws DataStoreException {
+        this(
+            ModelProviderLocator.locate(),
+            ModelSchemaRegistry.instance(),
+            Amplify.API,
+            Objects.requireNonNull(userProvidedConfiguration)
+        );
+    }
+
+    /**
      * Constructs an {@link AWSDataStorePlugin} which can warehouse the model types provided by
      * the supplied {@link ModelProvider}. If the API plugin is present and configured,
      * then remote synchronization will be performed through {@link Amplify#API}.

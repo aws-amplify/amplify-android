@@ -76,11 +76,13 @@ public final class PersistentMutationOutboxTest {
      * Enqueueing a mutation should publish current outbox status.
      */
     @Test
-    public void outboxStatusIsPublishedToHub() {
+    public void outboxStatusIsPublishedToHubOnEnqueue() {
         BlogOwner raphael = BlogOwner.builder()
                 .name("Raphael Kim")
                 .build();
         PendingMutation<BlogOwner> createRaphael = PendingMutation.creation(raphael, BlogOwner.class);
+
+        // Start listening for publication events.
         HubAccumulator statusAccumulator = HubAccumulator.create(
                 HubChannel.DATASTORE,
                 TestHubEventFilters.outboxIsEmpty(false), // outbox should not be empty

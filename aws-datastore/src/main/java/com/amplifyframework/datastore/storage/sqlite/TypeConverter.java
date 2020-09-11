@@ -64,6 +64,7 @@ public final class TypeConverter {
         JAVA_TO_SQL.put(JavaFieldType.DATE, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.DATE_TIME, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.TIME, SQLiteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.TIMESTAMP, SQLiteDataType.INTEGER);
         JAVA_TO_SQL.put(JavaFieldType.MODEL, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.CUSTOM_TYPE, SQLiteDataType.TEXT);
     }
