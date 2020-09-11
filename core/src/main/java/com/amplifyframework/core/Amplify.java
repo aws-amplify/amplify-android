@@ -16,8 +16,6 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -144,22 +142,7 @@ public final class Amplify {
             // Configure User-Agent utility
             UserAgent.configure(configuration.getPlatformVersions());
 
-            boolean disableDevMenu = false;
-
-            try {
-                ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(
-                        context.getPackageName(),
-                        PackageManager.GET_META_DATA
-                );
-
-                if (applicationInfo.metaData != null && (Boolean) applicationInfo.metaData.get("disable_dev_menu")) {
-                    disableDevMenu = true;
-                }
-            } catch (Exception error) {
-                // Don't disable dev menu - override flag does not exist or it has an invalid value.
-            }
-
-            if (!disableDevMenu) {
+            if (configuration.isDevMenuEnabled()) {
                 DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
             }
 

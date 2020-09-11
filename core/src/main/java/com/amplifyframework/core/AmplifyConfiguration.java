@@ -55,6 +55,7 @@ public final class AmplifyConfiguration {
 
     private final Map<String, CategoryConfiguration> categoryConfigurations;
     private final Map<UserAgent.Platform, String> platformVersions;
+    private final boolean devMenuEnabled;
 
     /**
      * Constructs a new AmplifyConfiguration object.
@@ -63,16 +64,30 @@ public final class AmplifyConfiguration {
     @VisibleForTesting
     @SuppressWarnings("WeakerAccess") // These are created and accessed as public API
     public AmplifyConfiguration(@NonNull Map<String, CategoryConfiguration> configs) {
-        this(configs, new LinkedHashMap<>());
+        // Dev menu is enabled by default in debug mode
+        this(configs, new LinkedHashMap<>(), true);
+    }
+
+    /**
+     * Constructs a new AmplifyConfiguration object.
+     * @param configs Category configurations
+     * @param devMenuEnabled Specifies whether the developer menu should be enabled (debug mode only) or not
+     */
+    @VisibleForTesting
+    @SuppressWarnings("WeakerAccess") // These are created and accessed as public API
+    public AmplifyConfiguration(@NonNull Map<String, CategoryConfiguration> configs, boolean devMenuEnabled) {
+        this(configs, new LinkedHashMap<>(), devMenuEnabled);
     }
 
     private AmplifyConfiguration(
             Map<String, CategoryConfiguration> configs,
-            Map<UserAgent.Platform, String> platformVersions
+            Map<UserAgent.Platform, String> platformVersions,
+            boolean devMenuEnabled
     ) {
         this.categoryConfigurations = new HashMap<>();
         this.categoryConfigurations.putAll(configs);
         this.platformVersions = platformVersions;
+        this.devMenuEnabled = devMenuEnabled;
     }
 
     /**
@@ -123,6 +138,14 @@ public final class AmplifyConfiguration {
     @NonNull
     public Map<UserAgent.Platform, String> getPlatformVersions() {
         return Immutable.of(platformVersions);
+    }
+
+    /**
+     * Returns true if the developer menu feature is enabled (on debug mode only) and false if it is disabled.
+     * @return true if the developer menu feature is enabled (on debug mode only) and false if it is disabled.
+     */
+    public boolean isDevMenuEnabled() {
+        return devMenuEnabled;
     }
 
     private static Map<String, CategoryConfiguration> configsFromJson(JSONObject json) throws AmplifyException {
@@ -222,6 +245,7 @@ public final class AmplifyConfiguration {
     public static final class Builder {
         private final Map<String, CategoryConfiguration> categoryConfiguration;
         private final Map<UserAgent.Platform, String> platformVersions;
+        private boolean devMenuEnabled = true; // Dev menu is enabled by default in debug mode
 
         private Builder(Map<String, CategoryConfiguration> categoryConfiguration) {
             this.categoryConfiguration = categoryConfiguration;
@@ -250,6 +274,17 @@ public final class AmplifyConfiguration {
         }
 
         /**
+         * Specifically enable or disable the dev menu. By default it's enabled (debug mode only).
+         * @param devMenuEnabled True if you want it enabled, False if you want it disabled.
+         * @return this builder instance.
+         */
+        @NonNull
+        public Builder devMenuEnabled(boolean devMenuEnabled) {
+            this.devMenuEnabled = devMenuEnabled;
+            return this;
+        }
+
+        /**
          * Constructs an instance of Amplify configuration object using this builder.
          * @return A fully configured instance of {@link AmplifyConfiguration}.
          */
@@ -257,7 +292,8 @@ public final class AmplifyConfiguration {
         public AmplifyConfiguration build() {
             return new AmplifyConfiguration(
                     categoryConfiguration,
-                    platformVersions
+                    platformVersions,
+                    devMenuEnabled
             );
         }
     }
