@@ -3,9 +3,6 @@ env:
   shell: /bin/sh
 phases:
   install:
-#    runtime-versions:
-#      android: 29
-#      nodejs: 12
     commands:
       - echo 'Install phase starting'
     finally:
@@ -24,38 +21,19 @@ phases:
   post_build:
     commands:
       - echo 'Post-build phase starting'
+      - pwd
+      - mkdir -p allTests
+      - cp -f ./*/build/test-results/testReleaseUnitTest/*.xml ./allTests
     finally:
       - echo 'Post-build phase completed.'
-#reports:
-#  report-group-name-or-arn:
-#    files:
-#      - location
-#      - location
-#    base-directory: location
-#    discard-paths: no | yes
-#    file-format: report-format
+reports:
+  amplify-android-unit-tests:
+    files:
+      - allTests/*
+    discard-paths: yes
+    file-format: JUNITXML
 #artifacts:
 #  files:
-#    - location
-#    - location
-#  name: artifact-name
-#  discard-paths: no | yes
-#  base-directory: location
-#  secondary-artifacts:
-#    artifactIdentifier:
-#      files:
-#        - location
-#        - location
-#      name: secondary-artifact-name
-#      discard-paths: no | yes
-#      base-directory: location
-#    artifactIdentifier:
-#      files:
-#        - location
-#        - location
-#      discard-paths: no | yes
-#      base-directory: location
-#cache:
-#  paths:
-#    - path
-#    - path
+#    - '**/*.apk'
+#  name: amplify-android-cat-apks
+#  discard-paths: yes
