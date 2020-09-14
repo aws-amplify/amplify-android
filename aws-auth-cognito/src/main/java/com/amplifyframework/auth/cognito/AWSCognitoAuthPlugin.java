@@ -736,61 +736,38 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 new Callback<List<UserCodeDeliveryDetails>>() {
                     @Override
                     public void onResult(List<UserCodeDeliveryDetails> result) {
-                        if (result != null) {
-                            if (isValidUserAttribute(attribute.getKey())) {
-                                if (isUserAttributeVerifiedByCode(attribute.getKey())) {
-                                    for (UserCodeDeliveryDetails details : result) {
-                                        if (details.getAttributeName().equals(userAttributeKeyString)) {
-                                            onSuccess.accept(new AuthUpdateAttributeResult(
-                                                    true,
-                                                    new AuthNextUpdateAttributeStep(
-                                                            AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
-                                                            Collections.emptyMap(),
-                                                            convertCodeDeliveryDetails(details))
-                                            ));
-                                        } else {
-                                            onError.accept(new AuthException(
-                                                    "Returned an incorrect attribute name",
-                                                    "See attached exception for more details"
-                                            ));
-                                        }
+                        if (isValidUserAttribute(attribute.getKey())) {
+                            if (isUserAttributeVerifiedByCode(attribute.getKey())) {
+                                for (UserCodeDeliveryDetails details : result) {
+                                    if (details.getAttributeName().equals(userAttributeKeyString)) {
+                                        onSuccess.accept(new AuthUpdateAttributeResult(
+                                                true,
+                                                new AuthNextUpdateAttributeStep(
+                                                        AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                                                        Collections.emptyMap(),
+                                                        convertCodeDeliveryDetails(details))
+                                        ));
+                                    } else {
+                                        onError.accept(new AuthException(
+                                                "Returned an incorrect attribute name",
+                                                "See attached exception for more details"
+                                        ));
                                     }
-                                } else {
-                                    onError.accept(new AuthException(
-                                            "Code was returned with an attribute not verified by code",
-                                            "See attached exception for more details"
-                                    ));
                                 }
                             } else {
-                                onError.accept(new AuthException(
-                                        "Invalid attribute name",
-                                        "See attached exception for more details"
+                                onSuccess.accept(new AuthUpdateAttributeResult(
+                                        true,
+                                        new AuthNextUpdateAttributeStep(
+                                                AuthUpdateAttributeStep.DONE,
+                                                Collections.emptyMap(),
+                                                null)
                                 ));
                             }
-                        }
-
-                        if (result == null) {
-                            if (isValidUserAttribute(attribute.getKey())) {
-                                if (!isUserAttributeVerifiedByCode(attribute.getKey())) {
-                                    onSuccess.accept(new AuthUpdateAttributeResult(
-                                            true,
-                                            new AuthNextUpdateAttributeStep(
-                                                    AuthUpdateAttributeStep.DONE,
-                                                    Collections.emptyMap(),
-                                                    null)
-                                    ));
-                                } else {
-                                    onError.accept(new AuthException(
-                                            "Code was not returned with an attribute verified by code",
-                                            "See attached exception for more details"
-                                    ));
-                                }
-                            } else {
-                                onError.accept(new AuthException(
-                                        "Invalid attribute name",
-                                        "See attached exception for more details"
-                                ));
-                            }
+                        } else {
+                            onError.accept(new AuthException(
+                                    "Invalid attribute name",
+                                    "See attached exception for more details"
+                            ));
                         }
                     }
 
@@ -823,69 +800,46 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     new Callback<List<UserCodeDeliveryDetails>>() {
                         @Override
                         public void onResult(List<UserCodeDeliveryDetails> result) {
-                            if (result != null) {
-                                if (isValidUserAttribute(attribute.getKey())) {
-                                    if (isUserAttributeVerifiedByCode(attribute.getKey())) {
-                                        for (UserCodeDeliveryDetails details : result) {
-                                            if (details.getAttributeName().equals(userAttributeKeyString)) {
-                                                Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
-                                                        new HashMap<>();
-                                                resultMap.put(new AuthUserAttributeKey(userAttributeKeyString),
-                                                        new AuthUpdateAttributeResult(
-                                                                true,
-                                                                new AuthNextUpdateAttributeStep(
-                                                                        AuthUpdateAttributeStep.
-                                                                                CONFIRM_ATTRIBUTE_WITH_CODE,
-                                                                        Collections.emptyMap(),
-                                                                        convertCodeDeliveryDetails(details))
-                                                        ));
-                                                onSuccess.accept(resultMap);
-                                            } else {
-                                                onError.accept(new AuthException(
-                                                        "Returned an incorrect attribute name",
-                                                        "See attached exception for more details"));
-                                            }
+                            if (isValidUserAttribute(attribute.getKey())) {
+                                if (isUserAttributeVerifiedByCode(attribute.getKey())) {
+                                    for (UserCodeDeliveryDetails details : result) {
+                                        if (details.getAttributeName().equals(userAttributeKeyString)) {
+                                            Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
+                                                    new HashMap<>();
+                                            resultMap.put(new AuthUserAttributeKey(userAttributeKeyString),
+                                                    new AuthUpdateAttributeResult(
+                                                            true,
+                                                            new AuthNextUpdateAttributeStep(
+                                                                    AuthUpdateAttributeStep.
+                                                                            CONFIRM_ATTRIBUTE_WITH_CODE,
+                                                                    Collections.emptyMap(),
+                                                                    convertCodeDeliveryDetails(details))
+                                                    ));
+                                            onSuccess.accept(resultMap);
+                                        } else {
+                                            onError.accept(new AuthException(
+                                                    "Returned an incorrect attribute name",
+                                                    "See attached exception for more details"));
                                         }
-                                    } else {
-                                        onError.accept(new AuthException(
-                                                "Code was returned with an attribute not verified by code",
-                                                "See attached exception for more details"
-                                        ));
                                     }
                                 } else {
-                                    onError.accept(new AuthException(
-                                            "Invalid attribute name",
-                                            "See attached exception for more details"
-                                    ));
+                                    Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
+                                            new HashMap<>();
+                                    resultMap.put(new AuthUserAttributeKey(userAttributeKeyString),
+                                            new AuthUpdateAttributeResult(
+                                                    true,
+                                                    new AuthNextUpdateAttributeStep(
+                                                            AuthUpdateAttributeStep.DONE,
+                                                            Collections.emptyMap(),
+                                                            null)
+                                            ));
+                                    onSuccess.accept(resultMap);
                                 }
-                            }
-
-                            if (result == null) {
-                                if (isValidUserAttribute(attribute.getKey())) {
-                                    if (!isUserAttributeVerifiedByCode(attribute.getKey())) {
-                                        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
-                                                new HashMap<>();
-                                        resultMap.put(new AuthUserAttributeKey(userAttributeKeyString),
-                                                new AuthUpdateAttributeResult(
-                                                        true,
-                                                        new AuthNextUpdateAttributeStep(
-                                                                AuthUpdateAttributeStep.DONE,
-                                                                Collections.emptyMap(),
-                                                                null)
-                                                ));
-                                        onSuccess.accept(resultMap);
-                                    } else {
-                                        onError.accept(new AuthException(
-                                                "Code was not returned with an attribute verified by code",
-                                                "See attached exception for more details"
-                                        ));
-                                    }
-                                } else {
-                                    onError.accept(new AuthException(
-                                            "Invalid attribute name",
-                                            "See attached exception for more details"
-                                    ));
-                                }
+                            } else {
+                                onError.accept(new AuthException(
+                                        "Invalid attribute name",
+                                        "See attached exception for more details"
+                                ));
                             }
                         }
 
