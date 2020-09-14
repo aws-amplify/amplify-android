@@ -53,6 +53,11 @@ public final class TemporalTimeTest {
         assertEquals("01:22:00", new Temporal.Time("01:22").format());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void parseInvalidFormat(){
+        new Temporal.Time("2001-02-03T01:30:15.444+05").format();
+    }
+
     /**
      * An {@link Temporal.Time} may be converted to and from a Java {@link Date}.
      * When no zone offset is provided, the Date is assumed to be relative to GMT.

@@ -48,6 +48,11 @@ public final class TemporalDateTest {
         }
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void parseInvalidFormat(){
+        new Temporal.Date("2001-02-03T01:30:15").format();
+    }
+
     /**
      * An {@link Temporal.Date} may be created from a Java {@link Date}, and can
      * be converted back to a Java {@link Date}.

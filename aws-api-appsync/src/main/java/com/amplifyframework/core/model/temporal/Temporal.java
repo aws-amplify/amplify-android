@@ -91,8 +91,7 @@ public final class Temporal {
                 zoneOffset = ZoneOffset.from(odt);
             } catch (DateTimeParseException exception) {
                 // Optional timezone offset not present
-                localDate = LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE);
-                zoneOffset = null;
+                throw new IllegalArgumentException("Failed to create Temporal.Date object from " + text, exception);
             }
             this.localDate = localDate;
             this.zoneOffset = zoneOffset;
@@ -213,7 +212,11 @@ public final class Temporal {
          * @param text a valid extended ISO-8601 DateTime string
          */
         public DateTime(@NonNull String text) {
-            this.offsetDateTime = OffsetDateTime.parse(text, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            try{
+                this.offsetDateTime = OffsetDateTime.parse(text, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            }catch (DateTimeParseException exception){
+                throw new IllegalArgumentException("Failed to create Temporal.DateTime object from " + text, exception);
+            }
         }
 
         /**
@@ -326,8 +329,7 @@ public final class Temporal {
                 zoneOffset = ZoneOffset.from(offsetTime);
             } catch (DateTimeParseException exception) {
                 // Optional timezone offset not present
-                localTime = LocalTime.parse(text, DateTimeFormatter.ISO_LOCAL_TIME);
-                zoneOffset = null;
+                throw new IllegalArgumentException("Failed to create Temporal.Time object from " + text, exception);
             }
             this.localTime = localTime;
             this.zoneOffset = zoneOffset;

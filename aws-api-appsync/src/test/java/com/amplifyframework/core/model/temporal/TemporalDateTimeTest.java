@@ -51,6 +51,11 @@ public final class TemporalDateTimeTest {
         assertEquals("2001-02-03T01:30:00Z", new Temporal.DateTime("2001-02-03T01:30Z").format());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void parseInvalidFormat(){
+        new Temporal.DateTime("2001-02-03T01:30:15.444+05").format();
+    }
+
     /**
      * An {@link Temporal.DateTime} may be constructed from a Java {@link Date}, and
      * converted back to one.
