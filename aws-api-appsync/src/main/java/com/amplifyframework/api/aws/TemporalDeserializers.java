@@ -54,7 +54,7 @@ public final class TemporalDeserializers {
      * Deserializer of Temporal.DateTime, an extended ISO-8601 DateTime string.  Time zone offset is required.
      * <p>
      * Based on the <a href=https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html>AWS AppSync AWSDateTime
-     * scalar.</a>git fetch upstream
+     * scalar.</a>
      */
     public static final class DateTimeDeserializer implements JsonDeserializer<Temporal.DateTime> {
         @Override
