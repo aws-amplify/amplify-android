@@ -52,6 +52,14 @@ public final class TemporalDateTimeTest {
     }
 
     /**
+     * Tests that {@link Temporal.DateTime} constructor throws when String input is invalid.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void parseInvalidFormat() {
+        new Temporal.DateTime("2001-02-03T01:30:15.444+05");
+    }
+
+    /**
      * An {@link Temporal.DateTime} may be constructed from a Java {@link Date}, and
      * converted back to one.
      */
