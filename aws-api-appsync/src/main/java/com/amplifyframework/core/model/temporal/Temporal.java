@@ -81,6 +81,7 @@ public final class Temporal {
          * with an optional timezone offset.
          *
          * @param text A valid extended ISO-8601 Date string, with an optional timezone offset
+         * @throws IllegalArgumentException when text input is not a valid ISO-8601 Date string.
          */
         public Date(@NonNull String text) {
             LocalDate localDate;
@@ -325,6 +326,7 @@ public final class Temporal {
          * Constructs an {@link Temporal.Time} from a valid, extended ISO-8601 Time string.
          *
          * @param text A valid, extended ISO-8601 Time string
+         * @throws IllegalArgumentException when text input is not a valid ISO-8601 Time string.
          */
         public Time(@NonNull String text) {
             LocalTime localTime;
