@@ -796,6 +796,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                         "See attached exception for more details"
                                 ));
                             }
+
                             if (!isUserAttributeVerifiedByCode(attribute.getKey())) {
                                 Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
                                         new HashMap<>();
@@ -809,6 +810,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                         ));
                                 onSuccess.accept(resultMap);
                             }
+                            
                             for (UserCodeDeliveryDetails details : result) {
                                 if (details.getAttributeName().equals(attribute.getKey().getKeyString())) {
                                     Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
