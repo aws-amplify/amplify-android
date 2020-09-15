@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
  * AppSync temporal scalars</a>.
  */
 public final class TemporalDeserializers {
-
     /**
      * Deserializer of Temporal.Date, an extended ISO-8601 Date string, with an optional timezone offset.
      * <p>
