@@ -54,11 +54,12 @@ public final class TemporalDeserializers {
      * Deserializer of Temporal.DateTime, an extended ISO-8601 DateTime string.  Time zone offset is required.
      * <p>
      * Based on the <a href=https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html>AWS AppSync AWSDateTime
-     * scalar.</a>
+     * scalar.</a>git fetch upstream
      */
     public static final class DateTimeDeserializer implements JsonDeserializer<Temporal.DateTime> {
         @Override
-        public Temporal.DateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
+        public Temporal.DateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
             try {
                 return new Temporal.DateTime(json.getAsString());
             } catch (IllegalArgumentException exception) {
@@ -77,7 +78,8 @@ public final class TemporalDeserializers {
      */
     public static final class TimeDeserializer implements JsonDeserializer<Temporal.Time> {
         @Override
-        public Temporal.Time deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
+        public Temporal.Time deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
             try {
                 return new Temporal.Time(json.getAsString());
             } catch (IllegalArgumentException exception) {

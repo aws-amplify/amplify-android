@@ -334,8 +334,12 @@ public final class Temporal {
                 localTime = LocalTime.from(offsetTime);
                 zoneOffset = ZoneOffset.from(offsetTime);
             } catch (DateTimeParseException exception) {
-                // Optional timezone offset not present
-                throw new IllegalArgumentException("Failed to create Temporal.Time object from " + text, exception);
+                try {
+                    localTime = LocalTime.parse(text, DateTimeFormatter.ISO_LOCAL_TIME);
+                    zoneOffset = null;
+                } catch (DateTimeParseException dateTimeParseException) {
+                    throw new IllegalArgumentException("Failed to create Temporal.Time object from " + text, exception);
+                }
             }
             this.localTime = localTime;
             this.zoneOffset = zoneOffset;
