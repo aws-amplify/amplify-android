@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.core.model.temporal.Temporal;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -42,7 +43,8 @@ public final class TemporalDeserializers {
             try {
                 return new Temporal.Date(json.getAsString());
             } catch (IllegalArgumentException exception) {
-                throw new JsonParseException("Failed to deserialize " + json.getAsString() + " as a Temporal.Date due to " + exception);
+                throw new JsonParseException("Failed to deserialize " +
+                        json.getAsString() + " as a Temporal.Date due to " + exception);
             }
 
         }
@@ -60,7 +62,8 @@ public final class TemporalDeserializers {
             try {
                 return new Temporal.DateTime(json.getAsString());
             } catch (IllegalArgumentException exception) {
-                throw new JsonParseException("Failed to deserialize " + json.getAsString() + " as a Temporal.DateTime due to " + exception);
+                throw new JsonParseException("Failed to deserialize " +
+                        json.getAsString() + " as a Temporal.DateTime due to " + exception);
             }
 
         }
@@ -78,7 +81,8 @@ public final class TemporalDeserializers {
             try {
                 return new Temporal.Time(json.getAsString());
             } catch (IllegalArgumentException exception) {
-                throw new JsonParseException("Failed to deserialize " + json.getAsString() + " as a Temporal.Time due to " + exception);
+                throw new JsonParseException("Failed to deserialize " +
+                        json.getAsString() + " as a Temporal.Time due to " + exception);
             }
 
         }

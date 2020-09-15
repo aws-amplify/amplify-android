@@ -215,6 +215,7 @@ public final class Temporal {
          * Constructs an {@link Temporal.DateTime} from a valid extended ISO-8601 DateTime string.
          *
          * @param text a valid extended ISO-8601 DateTime string
+         * @throws IllegalArgumentException if no zoneOffset is set.
          */
         public DateTime(@NonNull String text) {
             try {
