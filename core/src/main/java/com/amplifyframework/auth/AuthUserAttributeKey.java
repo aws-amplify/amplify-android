@@ -18,6 +18,9 @@ package com.amplifyframework.auth;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Factory for preset user attributes and the ability to specify a custom one.
  */
@@ -193,6 +196,32 @@ public final class AuthUserAttributeKey {
      */
     public static AuthUserAttributeKey custom(String attributeKey) {
         return new AuthUserAttributeKey(attributeKey);
+    }
+
+    /**
+     * Method for getting a list of all valid user attribute keys.
+     * @return a list of user attribute keys
+     */
+    public static List<AuthUserAttributeKey> authUserAttributeKeyList() {
+        return Arrays.asList(
+                AuthUserAttributeKey.phoneNumber(),
+                AuthUserAttributeKey.email(),
+                AuthUserAttributeKey.address(),
+                AuthUserAttributeKey.birthdate(),
+                AuthUserAttributeKey.familyName(),
+                AuthUserAttributeKey.gender(),
+                AuthUserAttributeKey.middleName(),
+                AuthUserAttributeKey.givenName(),
+                AuthUserAttributeKey.locale(),
+                AuthUserAttributeKey.nickname(),
+                AuthUserAttributeKey.picture(),
+                AuthUserAttributeKey.preferredUsername(),
+                AuthUserAttributeKey.profile(),
+                AuthUserAttributeKey.updatedAt(),
+                AuthUserAttributeKey.website(),
+                AuthUserAttributeKey.zoneInfo(),
+                AuthUserAttributeKey.name()
+        );
     }
 
     /**
