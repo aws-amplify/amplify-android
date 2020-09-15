@@ -48,9 +48,12 @@ public final class TemporalDateTest {
         }
     }
 
+    /**
+     * Tests that {@link Temporal.Date} constructor throws when String input is invalid.
+     */
     @Test(expected = IllegalArgumentException.class)
-    public void parseInvalidFormat(){
-        new Temporal.Date("2001-02-03T01:30:15").format();
+    public void parseInvalidFormat() {
+        new Temporal.Date("2001-02-03T01:30:15");
     }
 
     /**

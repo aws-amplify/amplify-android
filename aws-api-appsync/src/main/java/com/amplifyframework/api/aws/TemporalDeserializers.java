@@ -15,12 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
-import android.util.Log;
-
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.temporal.Temporal;
-
-import com.amplifyframework.logging.Logger;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -34,7 +29,6 @@ import java.util.concurrent.TimeUnit;
  * AppSync temporal scalars</a>.
  */
 public final class TemporalDeserializers {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     /**
      * Deserializer of Temporal.Date, an extended ISO-8601 Date string, with an optional timezone offset.
@@ -44,15 +38,12 @@ public final class TemporalDeserializers {
      */
     public static final class DateDeserializer implements JsonDeserializer<Temporal.Date> {
         @Override
-        public Temporal.Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-                throws JsonParseException {
+        public Temporal.Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
             try {
                 return new Temporal.Date(json.getAsString());
             } catch (IllegalArgumentException exception) {
-                LOG.warn("Failed to deserialize " + json.getAsString() + " as a Temporal.Date due to " + exception);
-                return null;
+                throw new JsonParseException("Failed to deserialize " + json.getAsString() + " as a Temporal.Date due to " + exception);
             }
-
 
         }
     }
@@ -65,14 +56,13 @@ public final class TemporalDeserializers {
      */
     public static final class DateTimeDeserializer implements JsonDeserializer<Temporal.DateTime> {
         @Override
-        public Temporal.DateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-                throws JsonParseException {
+        public Temporal.DateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
             try {
                 return new Temporal.DateTime(json.getAsString());
             } catch (IllegalArgumentException exception) {
-                LOG.warn("Failed to deserialize " + json.getAsString() + " as a Temporal.DateTime due to " + exception);
-                return null;
+                throw new JsonParseException("Failed to deserialize " + json.getAsString() + " as a Temporal.DateTime due to " + exception);
             }
+
         }
     }
 
@@ -84,13 +74,11 @@ public final class TemporalDeserializers {
      */
     public static final class TimeDeserializer implements JsonDeserializer<Temporal.Time> {
         @Override
-        public Temporal.Time deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-                throws JsonParseException {
+        public Temporal.Time deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
             try {
                 return new Temporal.Time(json.getAsString());
             } catch (IllegalArgumentException exception) {
-                LOG.warn("Failed to deserialize " + json.getAsString() + " as a Temporal.Time due to " + exception);
-                return null;
+                throw new JsonParseException("Failed to deserialize " + json.getAsString() + " as a Temporal.Time due to " + exception);
             }
 
         }
