@@ -20,6 +20,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.BuildConfig;
+
 import org.json.JSONObject;
 
 /**
@@ -34,7 +36,7 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
      * Creates a logging plugin using {@link LogLevel#INFO} as the default
      * logging threshold.
      */
-    @SuppressWarnings("WeakerAccess") // This is a a public API
+    @SuppressWarnings("WeakerAccess") // This is a public API
     public AndroidLoggingPlugin() {
         this(LogLevel.INFO);
     }
@@ -44,7 +46,7 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
      * when creating loggers.
      * @param defaultLoggerThreshold default threshold to use when creating loggers.
      */
-    @SuppressWarnings("WeakerAccess") // This is a a public API
+    @SuppressWarnings("WeakerAccess") // This is a public API
     public AndroidLoggingPlugin(@NonNull LogLevel defaultLoggerThreshold) {
         this.defaultLoggerThreshold = defaultLoggerThreshold;
     }
@@ -73,5 +75,11 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @Override
     public Void getEscapeHatch() {
         return null;
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 }

@@ -162,4 +162,20 @@ public final class HubEvent<T> {
         result = 31 * result + (uuid != null ? uuid.hashCode() : 0);
         return result;
     }
+
+    /**
+     * Interface that should be implemented by any type
+     * used as an event payload.
+     * @param <T> A class representing the event payload.
+     *
+     */
+    public interface Data<T> {
+
+        /**
+         * An implementation of this method should create an instance of
+         * {@link HubEvent} with using itself as the {@link HubEvent#data} field.
+         * @return An instance of {@link HubEvent}
+         */
+        HubEvent<T> toHubEvent();
+    }
 }

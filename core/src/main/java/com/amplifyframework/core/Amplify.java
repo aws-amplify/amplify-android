@@ -27,13 +27,18 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategory;
+import com.amplifyframework.devmenu.DeveloperMenu;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.util.Empty;
+import com.amplifyframework.util.Immutable;
+import com.amplifyframework.util.UserAgent;
 
 import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -99,6 +104,14 @@ public final class Amplify {
     }
 
     /**
+     * Returns an unordered map from each type of category to an entry point for that category.
+     * @return a Map from CategoryType to Category.
+     */
+    public static Map<CategoryType, Category<? extends Plugin<?>>> getCategoriesMap() {
+        return Immutable.of(CATEGORIES);
+    }
+
+    /**
      * Read the configuration from amplifyconfiguration.json file.
      * @param context Android context required to read the contents of file
      * @throws AmplifyException thrown when already configured or there is no plugin found for a configuration
@@ -124,6 +137,13 @@ public final class Amplify {
                     "The client issued a subsequent call to `Amplify.configure` after the first had already succeeded.",
                         "Be sure to only call Amplify.configure once"
                 );
+            }
+
+            // Configure User-Agent utility
+            UserAgent.configure(configuration.getPlatformVersions());
+
+            if (configuration.isDevMenuEnabled()) {
+                DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
             }
 
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
@@ -170,6 +190,14 @@ public final class Amplify {
             final P plugin, final RegistryUpdateType registryUpdateType) throws AmplifyException {
 
         synchronized (CONFIGURATION_LOCK) {
+            if (CONFIGURATION_LOCK.get()) {
+                final String updateString = registryUpdateType.name().toLowerCase(Locale.US);
+                throw new AmplifyException(
+                    "The client tried to " + updateString + " a plugin after calling configure().",
+                        "Plugins may not be added or removed after configure(...) is called."
+                );
+            }
+
             if (Empty.check(plugin.getPluginKey())) {
                 throw new AmplifyException(
                         "Plugin key was missing for + " + plugin.getClass().getSimpleName(),

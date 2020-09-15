@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License").
+   You may not use this file except in compliance with the License.
+   A copy of the License is located at
+
+    http://aws.amazon.com/apache2.0
+
+   or in the "license" file accompanying this file. This file is distributed
+   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+   express or implied. See the License for the specific language governing
+   permissions and limitations under the License.
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="20dp"
+    android:layout_marginRight="20dp"
+    android:layout_marginBottom="20dp"
+    android:layout_marginTop="10dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:clickable="true"
+    tools:context="com.amplifyframework.devmenu.DevMenuLogsFragment">
+
+    <SearchView
+        android:id="@+id/search_logs_field"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/filter_logs"
+        android:layout_toStartOf="@+id/filter_logs"
+        android:inputType="textNoSuggestions"
+        android:textSize="15sp"
+        android:queryHint="@string/search_logs_hint"
+        android:iconifiedByDefault="false"
+        android:paddingLeft="-55dp"
+        android:paddingStart="-55dp"
+        android:paddingRight="0dp"
+        android:paddingEnd="0dp" />
+
+    <Button
+        android:id="@+id/filter_logs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/log_level_filter"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/search_logs_field">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:requiresFadingEdge="horizontal"
+            android:fadingEdgeLength="70dp">
+
+            <TextView
+                android:id="@+id/logs_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/placeholder_logs"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:textSize="15sp"
+                android:lineSpacingExtra="3dp" />
+        </HorizontalScrollView>
+    </ScrollView>
+</RelativeLayout>

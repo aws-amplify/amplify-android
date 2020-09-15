@@ -205,7 +205,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      *         been configured
      */
     @NonNull
-    protected final P getSelectedPlugin() throws IllegalStateException {
+    protected P getSelectedPlugin() throws IllegalStateException {
         if (plugins.isEmpty()) {
             throw new IllegalStateException(
                 "Tried to get a plugin but that plugin was not present. " +

@@ -32,21 +32,26 @@ import java.util.concurrent.TimeUnit;
 public final class TemporalDeserializers {
     /**
      * Deserializer of Temporal.Date, an extended ISO-8601 Date string, with an optional timezone offset.
-     *
+     * <p>
      * Based on the <a href=https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html> AWS AppSync AWSDate
      * scalar.</a>
      */
     public static final class DateDeserializer implements JsonDeserializer<Temporal.Date> {
         @Override
-        public Temporal.Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-                throws JsonParseException {
-            return new Temporal.Date(json.getAsString());
+        public Temporal.Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
+            try {
+                return new Temporal.Date(json.getAsString());
+            } catch (IllegalArgumentException exception) {
+                throw new JsonParseException("Failed to deserialize " +
+                        json.getAsString() + " as a Temporal.Date due to " + exception);
+            }
+
         }
     }
 
     /**
      * Deserializer of Temporal.DateTime, an extended ISO-8601 DateTime string.  Time zone offset is required.
-     *
+     * <p>
      * Based on the <a href=https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html>AWS AppSync AWSDateTime
      * scalar.</a>
      */
@@ -54,13 +59,19 @@ public final class TemporalDeserializers {
         @Override
         public Temporal.DateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
-            return new Temporal.DateTime(json.getAsString());
+            try {
+                return new Temporal.DateTime(json.getAsString());
+            } catch (IllegalArgumentException exception) {
+                throw new JsonParseException("Failed to deserialize " +
+                        json.getAsString() + " as a Temporal.DateTime due to " + exception);
+            }
+
         }
     }
 
     /**
      * Deserializer of Temporal.Time, an extended ISO-8601 Time string, with an optional timezone offset.
-     *
+     * <p>
      * Based on the <a href=https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html>AWS AppSync AWSTime
      * scalar.</a>
      */
@@ -68,7 +79,13 @@ public final class TemporalDeserializers {
         @Override
         public Temporal.Time deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
-            return new Temporal.Time(json.getAsString());
+            try {
+                return new Temporal.Time(json.getAsString());
+            } catch (IllegalArgumentException exception) {
+                throw new JsonParseException("Failed to deserialize " +
+                        json.getAsString() + " as a Temporal.Time due to " + exception);
+            }
+
         }
     }
 
@@ -76,7 +93,7 @@ public final class TemporalDeserializers {
      * Deserializer of Temporal.Timestamp, a scalar type that represents the number of seconds elapsed
      * since 1970-01-01T00:00Z. Timestamps are serialized and deserialized as numbers. Negative values are also accepted
      * and these represent the number of seconds till 1970-01-01T00:00Z.
-     *
+     * <p>
      * Based on the <a href=https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html>AWS AppSync AWSTemporal
      * scalar.</a>
      */

@@ -82,4 +82,11 @@ public interface Plugin<E> extends CategoryTypeable {
     @Nullable
     E getEscapeHatch();
 
+    /**
+     * Returns the plugin version.
+     * @return the plugin version
+     */
+    @NonNull
+    String getVersion();
+
 }

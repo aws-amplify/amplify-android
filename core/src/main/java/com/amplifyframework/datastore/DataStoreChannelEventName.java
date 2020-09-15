@@ -25,7 +25,7 @@ import com.amplifyframework.hub.HubEvent;
 import java.util.Objects;
 
 /**
- * An enumeration of the names of events relating the the {@link DataStoreCategory},
+ * An enumeration of the names of events relating the {@link DataStoreCategory},
  * that are published via {@link HubCategory#publish(HubChannel, HubEvent)} on the
  * {@link HubChannel#DATASTORE} channel.
  */
@@ -45,14 +45,52 @@ public enum DataStoreChannelEventName {
     RECEIVED_FROM_CLOUD("received_from_cloud"),
 
     /**
-     * The remote synchonization processes started.
+     * Indicates that the network is active or not.
+     * It is triggered on DataStore start and also every time the network status changes.
      */
-    REMOTE_SYNC_STARTED("remote_sync_started"),
+    NETWORK_STATUS("networkStatus"),
 
     /**
-     * The remote synchonization processes stopped.
+     * The websocket connection has been established and all the graphql subscriptions too.
      */
-    REMOTE_SYNC_STOPPED("remote_sync_stopped");
+    SUBSCRIPTIONS_ESTABLISHED("subscriptionsEstablished"),
+
+    /**
+     * The DataStore as a whole (not just the sync piece) is ready. At this point all data is available.
+     */
+    READY("ready"),
+
+    /**
+     * Notifies if there are mutations in the outbox.
+     */
+    OUTBOX_STATUS("outboxStatus"),
+
+    /**
+     * A local mutation was placed on the outbox.
+     */
+    OUTBOX_MUTATION_ENQUEUED("outboxMutationEnqueued"),
+
+    /**
+     * A mutation from the outbox has been successfully sent and merged to the backend.
+     */
+    OUTBOX_MUTATION_PROCESSED("outboxMutationProcessed"),
+
+    /**
+     * The DataStore is about to start the Sync Queries.
+     */
+    SYNC_QUERIES_STARTED("syncQueriesStarted"),
+
+    /**
+     * All models have been synced.
+     */
+    SYNC_QUERIES_READY("syncQueriesReady"),
+
+    /**
+     * The sync process for one of the models has completed. This
+     * event is emitted with metrics related to the latest sync
+     * for the model.
+     */
+    MODEL_SYNCED("modelSynced");
 
     private final String hubEventName;
 

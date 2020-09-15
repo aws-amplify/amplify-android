@@ -25,6 +25,7 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.events.OutboxStatusEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -32,10 +33,10 @@ import com.amplifyframework.logging.Logger;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * The {@link MutationProcessor} observes the {@link MutationOutbox}, and publishes its items to an
@@ -80,7 +81,7 @@ final class MutationProcessor {
                         "Pending mutations will be published to the cloud."
                 )
             )
-            .startWith(MutationOutbox.OutboxEvent.CONTENT_AVAILABLE) // To start draining immediately
+            .startWithItem(MutationOutbox.OutboxEvent.CONTENT_AVAILABLE) // To start draining immediately
             .subscribeOn(Schedulers.single())
             .observeOn(Schedulers.single())
             .flatMapCompletable(event -> drainMutationOutbox())
@@ -109,14 +110,6 @@ final class MutationProcessor {
     }
 
     /**
-     * Checks if the mutation processor is actively observing the mutation outbox.
-     * @return True if the mutation processor is subscribed the mutation outbox.
-     */
-    boolean isDrainingMutationOutbox() {
-        return ongoingOperationsDisposable.size() > 0;
-    }
-
-    /**
      * Process an item in the mutation outbox.
      * @param mutationOutboxItem An item in the mutation outbox
      * @param <T> Type of model
@@ -133,6 +126,7 @@ final class MutationProcessor {
                     // if there are outstanding mutations in the outbox.
                     mutationOutbox.remove(mutationOutboxItem.getMutationId())
                         .andThen(merger.merge(modelWithMetadata))
+                        .doOnComplete(() -> announceSuccessfulSync(modelWithMetadata))
                 )
             )
             .doOnComplete(() -> {
@@ -141,6 +135,7 @@ final class MutationProcessor {
                         "and removed from the mutation outbox: " + mutationOutboxItem
                 );
                 announceSuccessfulPublication(mutationOutboxItem);
+                publishCurrentOutboxStatus();
             })
             .doOnError(error -> LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error));
     }
@@ -154,6 +149,30 @@ final class MutationProcessor {
         Amplify.Hub.publish(
             HubChannel.DATASTORE,
             HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation)
+        );
+    }
+
+    /**
+     * Publish a successfully mutated model and its metadata to hub.
+     * @param modelWithMetadata A model that was successfully mutated and its sync metadata
+     * @param <T> Type of model
+     */
+    private <T extends Model> void announceSuccessfulSync(ModelWithMetadata<T> modelWithMetadata) {
+        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent
+                .fromModelWithMetadata(modelWithMetadata);
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, mutationEvent)
+        );
+    }
+
+    /**
+     * Publish current outbox status to hub.
+     */
+    private void publishCurrentOutboxStatus() {
+        Amplify.Hub.publish(
+                HubChannel.DATASTORE,
+                new OutboxStatusEvent(mutationOutbox.peek() == null).toHubEvent()
         );
     }
 

@@ -25,6 +25,8 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.Page;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.QueryPaginationInput;
+import com.amplifyframework.core.model.query.QuerySortBy;
+import com.amplifyframework.core.model.query.QuerySortOrder;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.syncengine.PendingMutation;
@@ -54,8 +56,8 @@ import static org.junit.Assert.assertTrue;
 public class SqlCommandTest {
 
     private static final String PERSON_BASE_QUERY =
-            "SELECT Person.id AS Person_id, Person.age AS Person_age, Person.firstName AS Person_firstName, " +
-                    "Person.lastName AS Person_lastName FROM Person";
+            "SELECT `Person`.`id` AS `Person_id`, `Person`.`age` AS `Person_age`, `Person`.`firstName` AS " +
+                    "`Person_firstName`, `Person`.`lastName` AS `Person_lastName` FROM `Person`";
 
     private SQLCommandFactory sqlCommandFactory;
 
@@ -78,11 +80,11 @@ public class SqlCommandTest {
 
         final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(personSchema);
         assertEquals("Person", sqlCommand.tableName());
-        assertEquals("CREATE TABLE IF NOT EXISTS Person (" +
-                "id TEXT PRIMARY KEY NOT NULL, " +
-                "age INTEGER, " +
-                "firstName TEXT NOT NULL, " +
-                "lastName TEXT NOT NULL);", sqlCommand.sqlStatement());
+        assertEquals("CREATE TABLE IF NOT EXISTS `Person` (" +
+                "`id` TEXT PRIMARY KEY NOT NULL, " +
+                "`age` INTEGER, " +
+                "`firstName` TEXT NOT NULL, " +
+                "`lastName` TEXT NOT NULL);", sqlCommand.sqlStatement());
     }
 
     /**
@@ -98,7 +100,7 @@ public class SqlCommandTest {
 
         final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(modelSchema);
         assertEquals("Guitar", sqlCommand.tableName());
-        assertEquals("CREATE TABLE IF NOT EXISTS Guitar ", sqlCommand.sqlStatement());
+        assertEquals("CREATE TABLE IF NOT EXISTS `Guitar` ", sqlCommand.sqlStatement());
     }
 
     /**
@@ -124,7 +126,7 @@ public class SqlCommandTest {
 
         final SqlCommand createIndexSqlCommand = sqlCommandIterator.next();
         assertEquals("Person", createIndexSqlCommand.tableName());
-        assertEquals("CREATE INDEX IF NOT EXISTS idBasedIndex ON Person (id);",
+        assertEquals("CREATE INDEX IF NOT EXISTS `idBasedIndex` ON `Person` (`id`);",
                 createIndexSqlCommand.sqlStatement());
     }
 
@@ -143,8 +145,8 @@ public class SqlCommandTest {
             // expected
             new SqlCommand(
                 "PersistentRecord",
-                "CREATE INDEX IF NOT EXISTS containedModelClassNameBasedIndex " +
-                    "ON PersistentRecord (containedModelClassName);"
+                "CREATE INDEX IF NOT EXISTS `containedModelClassNameBasedIndex` " +
+                    "ON `PersistentRecord` (`containedModelClassName`);"
             ),
             // actual
             sqlCommandIterator.next()
@@ -219,6 +221,27 @@ public class SqlCommandTest {
         assertEquals(2, bindings.size());
         assertEquals(1, bindings.get(0));
         assertEquals(0, bindings.get(1));
+    }
+
+    /**
+     * Validates that a query, with an order by clause is generated correctly.
+     * @throws DataStoreException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
+     */
+    @Test
+    public void queryWithSortBy() throws DataStoreException {
+        final ModelSchema personSchema = getPersonModelSchema();
+        final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
+                personSchema,
+                Where.matchesAll().sorted(
+                        new QuerySortBy("lastName", QuerySortOrder.ASCENDING),
+                        new QuerySortBy("firstName", QuerySortOrder.DESCENDING))
+        );
+        assertNotNull(sqlCommand);
+        assertEquals(
+                PERSON_BASE_QUERY + " ORDER BY `Person_lastName` ASC, `Person_firstName` DESC;",
+                sqlCommand.sqlStatement()
+        );
+        assertEquals(0, sqlCommand.getBindings().size());
     }
 
     private static ModelSchema getPersonModelSchema() {

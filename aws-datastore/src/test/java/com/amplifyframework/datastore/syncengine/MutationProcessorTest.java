@@ -33,6 +33,7 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
 
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.outboxIsEmpty;
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -67,6 +68,33 @@ public final class MutationProcessorTest {
     }
 
     /**
+     * Processing a mutation should publish current outbox status.
+     */
+    @Test
+    public void outboxStatusIsPublishedToHubOnProcess() {
+        BlogOwner raphael = BlogOwner.builder()
+                .name("Raphael Kim")
+                .build();
+        PendingMutation<BlogOwner> createRaphael = PendingMutation.creation(raphael, BlogOwner.class);
+
+        // Mock up a response from AppSync and enqueue a mutation.
+        AppSyncMocking.create(appSync).mockResponse(raphael);
+        mutationOutbox.enqueue(createRaphael).blockingAwait();
+
+        // Start listening for publication events.
+        HubAccumulator statusAccumulator = HubAccumulator.create(
+                HubChannel.DATASTORE,
+                outboxIsEmpty(true), // outbox should be empty after processing its only mutation
+                1
+        ).start();
+
+        // Start draining the outbox which has one mutation enqueued,
+        // and make sure that outbox status is published to hub.
+        mutationProcessor.startDrainingMutationOutbox();
+        statusAccumulator.await();
+    }
+
+    /**
      * Tests the {@link MutationProcessor#startDrainingMutationOutbox()}. After this method
      * is called, any content in the {@link MutationOutbox} should be published via the {@link AppSync}
      * and then removed.
@@ -82,7 +110,7 @@ public final class MutationProcessorTest {
         synchronousStorageAdapter.save(tony);
 
         // Arrange a cooked response from AppSync.
-        AppSyncMocking.onCreate(appSync).mockResponse(tony);
+        AppSyncMocking.create(appSync).mockResponse(tony);
 
         // Start listening for publication events.
         HubAccumulator accumulator =

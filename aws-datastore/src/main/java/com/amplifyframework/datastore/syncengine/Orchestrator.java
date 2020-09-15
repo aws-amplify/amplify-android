@@ -17,12 +17,14 @@ package com.amplifyframework.datastore.syncengine;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
+import androidx.core.util.Supplier;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.AWSDataStorePlugin;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
@@ -34,33 +36,32 @@ import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
+import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.reactivex.Completable;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
- * Synchronizes changed data between the {@link LocalStorageAdapter}
- * and {@link AppSync}.
+ * Synchronizes changed data between the {@link LocalStorageAdapter} and {@link AppSync}.
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long SYNC_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
-    // This timeout has to be somewhat generous to account for situations where a request to
-    // stop is made immediately after starting things up. This should only be the case
-    // when the clear API is invoked right after the plugin starts.
-    private static final long ACQUIRE_PERMIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(30);
+    private static final long OP_TIMEOUT_SECONDS = 10;
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
-    private final MutationOutbox mutationOutbox;
     private final MutationProcessor mutationProcessor;
     private final StorageObserver storageObserver;
-    private final AtomicReference<OrchestratorStatus> status;
-    private final Semaphore startStopSemaphore;
-    private Completable initializationCompletable;
+    private final Supplier<Mode> targetMode;
+    private final AtomicReference<Mode> currentMode;
+    private final MutationOutbox mutationOutbox;
+    private final CompositeDisposable disposables;
+    private final Scheduler startStopScheduler;
 
     /**
      * Constructs a new Orchestrator.
@@ -68,31 +69,29 @@ public final class Orchestrator {
      * and the {@link LocalStorageAdapter}.
      * @param modelProvider A provider of the models to be synchronized
      * @param modelSchemaRegistry A registry of model schema
-     * @param localStorageAdapter Interface to local storage, used to
-     *                       durably store offline changes until
-     *                       then can be written to the network
+     * @param localStorageAdapter
+     *        used to durably store offline changes until they can be written to the network
      * @param appSync An AppSync Endpoint
-     * @param dataStoreConfigurationProvider An instance that implements {@link DataStoreConfigurationProvider}
-     *                       Note that the provider-style interface is needed because
-     *                       at the time this constructor is called from the
-     *                       {@link com.amplifyframework.datastore.AWSDataStorePlugin}'s constructor,
-     *                       the plugin is not fully configured yet. The reference to the
-     *                       variable returned by the provider only get set after the plugin's
-     *                       #{@link com.amplifyframework.datastore.AWSDataStorePlugin#configure(JSONObject, Context)}
-     *                       is invoked by Amplify.
-     *
+     * @param dataStoreConfigurationProvider
+     *        A {@link DataStoreConfigurationProvider}; Note that the provider-style interface
+     *        is needed because at the time this constructor is called from the
+     *        {@link AWSDataStorePlugin}'s constructor, the plugin is not fully configured yet.
+     *        The reference to the variable returned by the provider only get set after the plugin's
+     *        {@link AWSDataStorePlugin#configure(JSONObject, Context)} is invoked by Amplify.
+     * @param targetMode The desired mode of operation - online, or offline
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
             @NonNull final ModelSchemaRegistry modelSchemaRegistry,
             @NonNull final LocalStorageAdapter localStorageAdapter,
             @NonNull final AppSync appSync,
-            @NonNull final DataStoreConfigurationProvider dataStoreConfigurationProvider) {
+            @NonNull final DataStoreConfigurationProvider dataStoreConfigurationProvider,
+            @NonNull final Supplier<Mode> targetMode) {
         Objects.requireNonNull(modelSchemaRegistry);
         Objects.requireNonNull(modelProvider);
         Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
-        this.status = new AtomicReference<>(OrchestratorStatus.STOPPED);
+
         this.mutationOutbox = new PersistentMutationOutbox(localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
@@ -109,168 +108,242 @@ public final class Orchestrator {
             .build();
         this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
-        this.startStopSemaphore = new Semaphore(1);
+        this.currentMode = new AtomicReference<>(Mode.STOPPED);
+        this.targetMode = targetMode;
+        this.disposables = new CompositeDisposable();
+        this.startStopScheduler = Schedulers.single();
     }
 
     /**
-     * Checks whether the orchestrator is {@link OrchestratorStatus#STARTED}.
-     * @return True if the orchestrator is started, false otherwise.
+     * Checks if the orchestrator is running in the desired target state.
+     * @return true if so, false otherwise.
      */
     public boolean isStarted() {
-        return OrchestratorStatus.STARTED.equals(status.get());
+        return ObjectsCompat.equals(targetMode.get(), currentMode.get());
+    }
+
+    /**
+     * Checks if the orchestrator is stopped.
+     * @return true if so, false otherwise.
+     */
+    @SuppressWarnings("unused")
+    public boolean isStopped() {
+        return Mode.STOPPED.equals(currentMode.get());
     }
 
     /**
      * Start performing sync operations between the local storage adapter
      * and the remote GraphQL endpoint.
-     * @param onLocalStorageReady Callback to signal that it is safe to start interacting with the DataStore.
-     * @return A Completable operation to start the sync engine orchestrator.
      */
-    @NonNull
-    public synchronized Completable start(Action onLocalStorageReady) {
-        if (!transitionToState(OrchestratorStatus.STARTED)) {
-            return Completable.error(new DataStoreException(
-                "Unable to start the orchestrator because an operation is already in progress.",
-                AmplifyException.TODO_RECOVERY_SUGGESTION)
-            );
-        }
-        return mutationOutbox.load().andThen(
-            Completable.fromAction(() -> {
-                LOG.debug("Starting the orchestrator.");
-                if (!storageObserver.isObservingStorageChanges()) {
-                    LOG.debug("Starting local storage observer.");
-                    // At the very least, we need the local storage observer running. Don't need to block
-                    // for the others. The onLocalStorageReady is invoked to indicate that.
-                    storageObserver.startObservingStorageChanges(onLocalStorageReady);
-                }
-                if (!subscriptionProcessor.isObservingSubscriptionEvents()) {
-                    LOG.debug("Starting subscription processor.");
-                    subscriptionProcessor.startSubscriptions();
-                }
-                if (!syncProcessor.hydrate().blockingAwait(SYNC_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                    throw new DataStoreException(
-                        "Initial sync during DataStore initialization exceeded timeout of " + SYNC_TIMEOUT_MS,
-                        AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-                    );
-                }
-                if (!mutationProcessor.isDrainingMutationOutbox()) {
-                    LOG.debug("Starting mutation processor.");
-                    mutationProcessor.startDrainingMutationOutbox();
-                }
-                if (!subscriptionProcessor.isDrainingMutationBuffer()) {
-                    LOG.debug("Starting draining mutation buffer.");
-                    subscriptionProcessor.startDrainingMutationBuffer();
-                }
-                status.compareAndSet(OrchestratorStatus.STARTING, OrchestratorStatus.STARTED);
-                LOG.debug("Orchestrator started.");
-                announceRemoteSyncStarted();
-            })
-        ).doFinally(startStopSemaphore::release);
+    public void start() {
+        disposables.add(transitionCompletable()
+            .subscribeOn(startStopScheduler)
+            .doOnDispose(() -> LOG.debug("Orchestrator disposed a transition."))
+            .subscribe(
+                () -> {
+                    LOG.debug("Orchestrator completed a transition");
+                    if (isStarted()) {
+                        Amplify.Hub.publish(HubChannel.DATASTORE,
+                            HubEvent.create(DataStoreChannelEventName.READY));
+                    }
+                },
+                failure -> LOG.warn("Orchestrator failed to transition.")
+            ));
     }
 
-    /**
-     * Stop all model synchronization.
-     * @return A completable with the activities
-     */
-    public synchronized Completable stop() {
-        if (!transitionToState(OrchestratorStatus.STOPPED)) {
-            return Completable.error(new DataStoreException(
-                "Unable to stop the orchestrator because an operation is already in progress.",
-                AmplifyException.TODO_RECOVERY_SUGGESTION)
-            );
+    private Completable transitionCompletable() {
+        Mode current = currentMode.get();
+        Mode target = targetMode.get();
+        if (ObjectsCompat.equals(current, target)) {
+            return Completable.complete();
         }
-        return Completable.fromAction(() -> {
-            LOG.info("Intentionally stopping cloud synchronization, now.");
-            subscriptionProcessor.stopAllSubscriptionActivity();
-            storageObserver.stopObservingStorageChanges();
-            mutationProcessor.stopDrainingMutationOutbox();
-            status.compareAndSet(OrchestratorStatus.STOPPING, OrchestratorStatus.STOPPED);
-            LOG.debug("Stopped remote synchronization.");
-            announceRemoteSyncStopped();
-        })
-        .doFinally(startStopSemaphore::release);
-    }
+        LOG.info(String.format(Locale.US,
+            "DataStore orchestrator transitioning states. " +
+                "Current mode = %s, target mode = %s.", current, target
+        ));
 
-    private synchronized boolean transitionToState(OrchestratorStatus targetStatus) {
-        OrchestratorStatus expectedCurrentStatus;
-        switch (targetStatus) {
-            case STARTED:
-                expectedCurrentStatus = OrchestratorStatus.STOPPED;
-                break;
+        switch (target) {
             case STOPPED:
-                expectedCurrentStatus = OrchestratorStatus.STARTED;
-                break;
+                return transitionToStopped(current);
+            case LOCAL_ONLY:
+                return transitionToLocalOnly(current);
+            case SYNC_VIA_API:
+                return transitionToApiSync(current);
             default:
-                LOG.warn("Invalid attempt to transition orchestrator to " + targetStatus.name());
-                return false;
+                return unknownMode(target);
         }
-        try {
-            LOG.debug("Requesting permit to set the orchestrator status to:" + targetStatus.name());
-            boolean permitAcquired = startStopSemaphore.tryAcquire(ACQUIRE_PERMIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            if (!permitAcquired) {
-                LOG.warn("Unable to acquire permit to set the orchestrator status to:" + targetStatus.name());
-                return false;
-            }
-            boolean statusSet = status.compareAndSet(expectedCurrentStatus, targetStatus);
-            // only stop if it's started AND if we can get a permit.
-            if (!statusSet) {
-                LOG.warn(String.format("Failed to set orchestrator status to: %s. Current status: %s",
-                    targetStatus.name(),
-                    status.get())
-                );
-                // Since we acquired the permit but failed to set the status, let's release the permit.
-                startStopSemaphore.release();
-                return false;
-            }
-        } catch (InterruptedException exception) {
-            LOG.warn("Orchestrator was interrupted while setting status to " + targetStatus.name());
-            return false;
-        }
-        return true;
-    }
-
-    private void announceRemoteSyncStarted() {
-        Amplify.Hub.publish(
-            HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.REMOTE_SYNC_STARTED)
-        );
-    }
-
-    private void announceRemoteSyncStopped() {
-        Amplify.Hub.publish(
-            HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.REMOTE_SYNC_STOPPED)
-        );
     }
 
     /**
-     * Represents possible status of the orchestrator.
+     * Stop the orchestrator.
+     * @return A completable which emits success when orchestrator stops
      */
-    enum OrchestratorStatus {
+    public Completable stop() {
+        LOG.info("DataStore orchestrator stopping. Current mode = " + currentMode.get().name());
+        disposables.clear();
+        return transitionToStopped(currentMode.get())
+            .subscribeOn(startStopScheduler);
+    }
+
+    private static Completable unknownMode(Mode mode) {
+        return Completable.error(new DataStoreException(
+            "Orchestrator state machine made reference to unknown mode = " + mode.name(),
+            AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+        ));
+    }
+
+    private Completable transitionToStopped(Mode current) {
+        switch (current) {
+            case SYNC_VIA_API:
+                return stopApiSync().doFinally(this::stopObservingStorageChanges);
+            case LOCAL_ONLY:
+                stopObservingStorageChanges();
+                return Completable.complete();
+            case STOPPED:
+                return Completable.complete();
+            default:
+                return unknownMode(current);
+        }
+    }
+
+    private Completable transitionToLocalOnly(Mode current) {
+        switch (current) {
+            case STOPPED:
+                startObservingStorageChanges();
+                return Completable.complete();
+            case LOCAL_ONLY:
+                return Completable.complete();
+            case SYNC_VIA_API:
+                return stopApiSync();
+            default:
+                return unknownMode(current);
+        }
+    }
+
+    private Completable transitionToApiSync(Mode current) {
+        switch (current) {
+            case SYNC_VIA_API:
+                return Completable.complete();
+            case LOCAL_ONLY:
+                return startApiSync();
+            case STOPPED:
+                startObservingStorageChanges();
+                return startApiSync();
+            default:
+                return unknownMode(current);
+        }
+    }
+
+    /**
+     * Start observing the local storage adapter for changes;
+     * enqueue them into the mutation outbox.
+     */
+    private void startObservingStorageChanges() {
+        LOG.info("Starting to observe local storage changes.");
+        try {
+            mutationOutbox.load()
+                .andThen(Completable.create(emitter -> {
+                    storageObserver.startObservingStorageChanges(emitter::onComplete);
+                    currentMode.set(Mode.LOCAL_ONLY);
+                })).blockingAwait(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (Throwable throwable) {
+            LOG.warn("Failed to start observing storage changes.", throwable);
+        }
+    }
+
+    /**
+     * Stop observing the local storage. Do not enqueue changes to the outbox.
+     */
+    private void stopObservingStorageChanges() {
+        LOG.info("Stopping observation of local storage changes.");
+        storageObserver.stopObservingStorageChanges();
+        currentMode.set(Mode.STOPPED);
+    }
+
+    /**
+     * Start syncing models to and from a remote API.
+     * @return A Completable that succeeds when API sync is enabled.
+     */
+    private Completable startApiSync() {
+        return Completable.create(emitter -> {
+            LOG.info("Starting API synchronization mode.");
+
+            subscriptionProcessor.startSubscriptions();
+
+            LOG.debug("About to hydrate...");
+            try {
+                syncProcessor.hydrate()
+                    .blockingAwait(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            } catch (Throwable failure) {
+                if (!emitter.isDisposed()) {
+                    emitter.onError(new DataStoreException(
+                        "Initial sync during DataStore initialization failed.", failure,
+                        AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                    ));
+                } else {
+                    LOG.warn("Initial sync during DataStore initialization failed.", failure);
+                    emitter.onComplete();
+                }
+                return;
+            }
+
+            LOG.debug("Draining outbox...");
+            mutationProcessor.startDrainingMutationOutbox();
+
+            LOG.debug("Draining subscription buffer...");
+            subscriptionProcessor.startDrainingMutationBuffer(this::stopApiSyncBlocking);
+
+            currentMode.set(Mode.SYNC_VIA_API);
+            emitter.onComplete();
+        })
+        .doOnError(error -> {
+            LOG.error("Failure encountered while attempting to start API sync.", error);
+            stopApiSyncBlocking();
+        })
+        .onErrorComplete();
+    }
+
+    private void stopApiSyncBlocking() {
+        try {
+            stopApiSync()
+                .subscribeOn(startStopScheduler)
+                .blockingAwait(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (Throwable failure) {
+            LOG.warn("Failed to stop API sync.", failure);
+        }
+    }
+
+    /**
+     * Stop all model synchronization with the remote API.
+     * A Completable that ends when API sync is stopped.
+     */
+    private Completable stopApiSync() {
+        return Completable.fromAction(() -> {
+            LOG.info("Stopping synchronization with remote API.");
+            subscriptionProcessor.stopAllSubscriptionActivity();
+            mutationProcessor.stopDrainingMutationOutbox();
+        })
+        .onErrorComplete()
+        .doOnComplete(() -> currentMode.set(Mode.LOCAL_ONLY));
+    }
+
+    /**
+     * The mode of operation for the Orchestrator's synchronization logic.
+     */
+    public enum Mode {
         /**
-         * The orchestrator is in the process of shutting down all the necessary components. Any requests to
-         * start it will be ignored.
-         *
-         * Upon completion, the state should be changed to {@link #STOPPED}.
-         */
-        STOPPING,
-        /**
-         * The orchestrator is stopped and it is currently not performing any background processing. At this point
-         * it is safe to start it. Only possible transition from this state should be to {@link #STARTING}
-         * which happens by invoking {@link #start()}
+         * The sync orchestrator is fully stopped.
          */
         STOPPED,
+
         /**
-         * The orchestrator is bootstrapping all the components needed to perform the different background
-         * processes it orchestrates.
-         *
-         * Upon completion, the state should be changed to {@link #STARTED}
+         * The orchestrator will enqueue mutations into a holding pen, to sync with server, later.
          */
-        STARTING,
+        LOCAL_ONLY,
+
         /**
-         * The orchestrator is started. Only possible transition from this state should be to {@link #STOPPING}
-         * which happens by invoking {@link #stop()}
+         * The orchestrator maintains components to actively sync data up and down.
          */
-        STARTED
+        SYNC_VIA_API
     }
 }

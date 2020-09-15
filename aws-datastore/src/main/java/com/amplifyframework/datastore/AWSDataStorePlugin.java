@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,6 +41,7 @@ import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
+import com.amplifyframework.datastore.syncengine.NetworkStatusMonitor;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
@@ -52,18 +52,18 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Completable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long PLUGIN_INIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
-    private static final long PLUGIN_TERMINATE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long LIFECYCLE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -75,11 +75,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // Keeps track of whether of not the category is initialized yet
     private final CountDownLatch categoryInitializationsPending;
 
-    private final AtomicBoolean isOrchestratorReady;
-
-    // Used to interrogate plugins, to understand if sync should be automatically turned on
-    private final ApiCategory api;
-
     // User-provided configuration for the plugin.
     private final DataStoreConfiguration userProvidedConfiguration;
 
@@ -87,7 +82,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // overrides provided via the userProvidedConfiguration
     private DataStoreConfiguration pluginConfiguration;
 
-    @SuppressLint("CheckResult")
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
@@ -95,14 +89,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @Nullable DataStoreConfiguration userProvidedConfiguration) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
-        this.isOrchestratorReady = new AtomicBoolean(false);
-        this.api = api;
+        // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
             modelSchemaRegistry,
             sqliteStorageAdapter,
             AppSyncClient.via(api),
-            () -> pluginConfiguration
+            () -> pluginConfiguration,
+            () -> api.getPlugins().isEmpty() ? Orchestrator.Mode.LOCAL_ONLY : Orchestrator.Mode.SYNC_VIA_API
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
     }
@@ -125,6 +119,29 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @SuppressWarnings("unused") // This is a public API.
     public AWSDataStorePlugin() throws DataStoreException {
         this(ModelProviderLocator.locate(), Amplify.API);
+    }
+
+    /**
+     * Constructs an {@link AWSDataStorePlugin} using a user-provided configuration.
+     * The plugin will be able to warehouse models as described in
+     * {@link AWSDataStorePlugin#AWSDataStorePlugin()}.
+     * @param userProvidedConfiguration
+     *        Additionally, consider these user-provided configuration options.
+     *        These values override anything found in `amplifyconfiguration.json`.
+     *        This configuration may also include hooks for conflict resolution
+     *        and or global error handling.
+     * @throws DataStoreException
+     *         If not possible to locate the code-generated model provider,
+     *         com.amplifyframework.datastore.generated.model.AmplifyModelProvider.
+     */
+    @SuppressWarnings("unused") // It's a public API.
+    public AWSDataStorePlugin(@NonNull DataStoreConfiguration userProvidedConfiguration) throws DataStoreException {
+        this(
+            ModelProviderLocator.locate(),
+            ModelSchemaRegistry.instance(),
+            Amplify.API,
+            Objects.requireNonNull(userProvidedConfiguration)
+        );
     }
 
     /**
@@ -167,7 +184,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
-    @SuppressLint("CheckResult")
     @Override
     public void configure(
             @NonNull JSONObject pluginConfiguration,
@@ -192,24 +208,22 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             event -> InitializationStatus.SUCCEEDED.toString().equals(event.getName()),
             event -> categoryInitializationsPending.countDown()
         );
+        NetworkStatusMonitor.start();
     }
 
     @WorkerThread
     @Override
     public void initialize(@NonNull Context context) throws AmplifyException {
-        Throwable initError = initializeStorageAdapter(context)
-            .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (initError != null) {
-            throw new AmplifyException("Failed to initialize the local storage adapter for the DataStore plugin.",
-                                        initError,
-                                        AmplifyException.TODO_RECOVERY_SUGGESTION);
+        try {
+            initializeStorageAdapter(context)
+                .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (Throwable initError) {
+            throw new AmplifyException(
+                "Failed to initialize the local storage adapter for the DataStore plugin.",
+                initError, AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
-        // Kick off orchestrator asynchronously.
-        synchronized (isOrchestratorReady) {
-            initializeOrchestrator()
-                .subscribeOn(Schedulers.io())
-                .subscribe();
-        }
+        orchestrator.start();
     }
 
     /**
@@ -226,15 +240,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     /**
      * Terminate use of the plugin.
-     * @throws AmplifyException On failure to terminate use of the plugin
      */
     @SuppressWarnings("unused")
-    synchronized void terminate() throws AmplifyException {
-        Throwable throwable = orchestrator.stop()
-            .andThen(
-                Completable.fromAction(sqliteStorageAdapter::terminate)
-            ).blockingGet(PLUGIN_TERMINATE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (throwable != null) {
+    synchronized void terminate() {
+        try {
+            orchestrator.stop()
+                .andThen(Completable.fromAction(sqliteStorageAdapter::terminate))
+                .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (Throwable throwable) {
             LOG.warn("An error occurred while terminating the DataStore plugin.", throwable);
         }
     }
@@ -246,6 +259,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public Void getEscapeHatch() {
         return null;
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 
     /**
@@ -438,6 +457,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * @param onComplete Invoked if the call is successful.
      * @param onError Invoked if not successful
      */
+    @SuppressWarnings("unused")
     @Override
     public void clear(@NonNull Action onComplete,
                       @NonNull Consumer<DataStoreException> onError) {
@@ -445,7 +465,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         // only thing we have to wait for is the category initialization latch.
         boolean isCategoryInitialized = false;
         try {
-            isCategoryInitialized = categoryInitializationsPending.await(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            isCategoryInitialized = categoryInitializationsPending.await(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException exception) {
             LOG.warn("Execution interrupted while waiting for DataStore to be initialized.");
         }
@@ -453,55 +473,35 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             onError.accept(new DataStoreException("DataStore not ready to be cleared.", "Retry your request."));
             return;
         }
-        isOrchestratorReady.set(false);
-        orchestrator.stop()
+        Disposable disposable = orchestrator.stop()
             .subscribeOn(Schedulers.io())
             .andThen(Completable.fromAction(() -> sqliteStorageAdapter.clear(() -> {
                 // Invoke the consumer's callback once the clear operation is finished.
                 onComplete.call();
                 // Kick off the orchestrator asynchronously.
-                initializeOrchestrator()
-                    .doOnError(throwable -> LOG.warn("Failed to restart orchestrator after clearing.", throwable))
-                    .doOnComplete(() -> LOG.info("Orchestrator restarted after clear operation."))
-                    .subscribe();
+                orchestrator.start();
             }, onError)))
-            .doOnError(throwable -> LOG.warn("Clear operation failed", throwable))
-            .doOnComplete(() -> LOG.debug("Clear operation completed."))
-            .subscribe();
+            .subscribe(
+                () -> LOG.debug("Clear operation completed."),
+                throwable -> LOG.warn("Clear operation failed", throwable)
+            );
     }
 
     private void beforeOperation(@NonNull final Runnable runnable) {
-        Throwable throwable = Completable.fromAction(categoryInitializationsPending::await)
-            .repeatUntil(() -> {
-                // Repeat until this is true or the blockingGet call times out.
-                synchronized (isOrchestratorReady) {
-                    return isOrchestratorReady.get();
-                }
-            })
-            .andThen(Completable.fromRunnable(runnable))
-            .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (!(throwable == null && isOrchestratorReady.get())) {
-            if (!isOrchestratorReady.get()) {
+        try {
+            Completable.fromAction(
+                () -> {
+                    categoryInitializationsPending.await();
+                    orchestrator.start();
+                })
+                .andThen(Completable.fromRunnable(runnable))
+                .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (Throwable throwable) {
+            if (!orchestrator.isStarted()) {
                 LOG.warn("Failed to execute request because DataStore is not fully initialized.");
             } else {
                 LOG.warn("Failed to execute request due to an unexpected error.", throwable);
             }
-        }
-    }
-
-    private Completable initializeOrchestrator() {
-        if (api.getPlugins().isEmpty()) {
-            isOrchestratorReady.set(true);
-            return Completable.complete();
-        } else {
-            // Let's prevent the orchestrator startup from possibly running in main.
-            return orchestrator.start(() -> {
-                // This callback is invoked when the local storage observer gets initialized.
-                isOrchestratorReady.set(true);
-            })
-            .repeatUntil(() -> isOrchestratorReady.get())
-            .observeOn(Schedulers.io())
-            .subscribeOn(Schedulers.io());
         }
     }
 

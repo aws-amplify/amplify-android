@@ -16,9 +16,9 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
-import android.content.res.Resources;
 import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
@@ -33,16 +33,17 @@ import com.amplifyframework.logging.LoggingCategoryConfiguration;
 import com.amplifyframework.predictions.PredictionsCategoryConfiguration;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.util.Immutable;
+import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
+import java.util.Objects;
 
 /**
  * AmplifyConfiguration serves as the top-level configuration object for the
@@ -53,15 +54,40 @@ public final class AmplifyConfiguration {
     private static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
 
     private final Map<String, CategoryConfiguration> categoryConfigurations;
+    private final Map<UserAgent.Platform, String> platformVersions;
+    private final boolean devMenuEnabled;
 
     /**
      * Constructs a new AmplifyConfiguration object.
      * @param configs Category configurations
      */
+    @VisibleForTesting
     @SuppressWarnings("WeakerAccess") // These are created and accessed as public API
     public AmplifyConfiguration(@NonNull Map<String, CategoryConfiguration> configs) {
+        // Dev menu is enabled by default in debug mode
+        this(configs, new LinkedHashMap<>(), true);
+    }
+
+    /**
+     * Constructs a new AmplifyConfiguration object.
+     * @param configs Category configurations
+     * @param devMenuEnabled Specifies whether the developer menu should be enabled (debug mode only) or not
+     */
+    @VisibleForTesting
+    @SuppressWarnings("WeakerAccess") // These are created and accessed as public API
+    public AmplifyConfiguration(@NonNull Map<String, CategoryConfiguration> configs, boolean devMenuEnabled) {
+        this(configs, new LinkedHashMap<>(), devMenuEnabled);
+    }
+
+    private AmplifyConfiguration(
+            Map<String, CategoryConfiguration> configs,
+            Map<UserAgent.Platform, String> platformVersions,
+            boolean devMenuEnabled
+    ) {
         this.categoryConfigurations = new HashMap<>();
         this.categoryConfigurations.putAll(configs);
+        this.platformVersions = platformVersions;
+        this.devMenuEnabled = devMenuEnabled;
     }
 
     /**
@@ -74,33 +100,7 @@ public final class AmplifyConfiguration {
      */
     @NonNull
     public static AmplifyConfiguration fromJson(@NonNull JSONObject json) throws AmplifyException {
-        final List<CategoryConfiguration> possibleConfigs = Arrays.asList(
-            new AnalyticsCategoryConfiguration(),
-            new ApiCategoryConfiguration(),
-            new AuthCategoryConfiguration(),
-            new DataStoreCategoryConfiguration(),
-            new HubCategoryConfiguration(),
-            new LoggingCategoryConfiguration(),
-            new PredictionsCategoryConfiguration(),
-            new StorageCategoryConfiguration()
-        );
-
-        final Map<String, CategoryConfiguration> actualConfigs = new HashMap<>();
-        try {
-            for (CategoryConfiguration possibleConfig : possibleConfigs) {
-                String categoryJsonKey = possibleConfig.getCategoryType().getConfigurationKey();
-                if (json.has(categoryJsonKey)) {
-                    possibleConfig.populateFromJSON(json.getJSONObject(categoryJsonKey));
-                    actualConfigs.put(categoryJsonKey, possibleConfig);
-                }
-            }
-        } catch (JSONException error) {
-            throw new AmplifyException(
-                "Could not parse amplifyconfiguration.json ",
-                error, "Check any modifications made to the file."
-            );
-        }
-        return new AmplifyConfiguration(Immutable.of(actualConfigs));
+        return builder(json).build();
     }
 
     /**
@@ -112,7 +112,7 @@ public final class AmplifyConfiguration {
     @SuppressWarnings("WeakerAccess")
     @NonNull
     public static AmplifyConfiguration fromConfigFile(@NonNull Context context) throws AmplifyException {
-        return fromConfigFile(context, getConfigResourceId(context));
+        return builder(context, Resources.getRawResourceId(context, DEFAULT_IDENTIFIER)).build();
     }
 
     /**
@@ -127,48 +127,55 @@ public final class AmplifyConfiguration {
     @NonNull
     public static AmplifyConfiguration fromConfigFile(
             @NonNull Context context, @RawRes int configFileResourceId) throws AmplifyException {
-        return fromJson(readInputJson(context, configFileResourceId));
+        return builder(context, configFileResourceId).build();
     }
 
-    private static int getConfigResourceId(Context context) throws AmplifyException {
-        try {
-            return context.getResources()
-                .getIdentifier(DEFAULT_IDENTIFIER, "raw", context.getPackageName());
-        } catch (Exception exception) {
-            throw new AmplifyException(
-                "Failed to read " + DEFAULT_IDENTIFIER + ".",
-                exception, "Please check that it is correctly formed."
-            );
-        }
+    /**
+     * Obtain a map of additional platforms that are using this library
+     * for tracking usage metrics.
+     * @return A map of additional platforms and their versions.
+     */
+    @NonNull
+    public Map<UserAgent.Platform, String> getPlatformVersions() {
+        return Immutable.of(platformVersions);
     }
 
-    private static JSONObject readInputJson(Context context, int resourceId) throws AmplifyException {
-        InputStream inputStream;
+    /**
+     * Returns true if the developer menu feature is enabled (on debug mode only) and false if it is disabled.
+     * @return true if the developer menu feature is enabled (on debug mode only) and false if it is disabled.
+     */
+    public boolean isDevMenuEnabled() {
+        return devMenuEnabled;
+    }
 
+    private static Map<String, CategoryConfiguration> configsFromJson(JSONObject json) throws AmplifyException {
+        final List<CategoryConfiguration> possibleConfigs = Arrays.asList(
+                new AnalyticsCategoryConfiguration(),
+                new ApiCategoryConfiguration(),
+                new AuthCategoryConfiguration(),
+                new DataStoreCategoryConfiguration(),
+                new HubCategoryConfiguration(),
+                new LoggingCategoryConfiguration(),
+                new PredictionsCategoryConfiguration(),
+                new StorageCategoryConfiguration()
+        );
+
+        final Map<String, CategoryConfiguration> actualConfigs = new HashMap<>();
         try {
-            inputStream = context.getResources().openRawResource(resourceId);
-        } catch (Resources.NotFoundException exception) {
+            for (CategoryConfiguration possibleConfig : possibleConfigs) {
+                String categoryJsonKey = possibleConfig.getCategoryType().getConfigurationKey();
+                if (json.has(categoryJsonKey)) {
+                    possibleConfig.populateFromJSON(json.getJSONObject(categoryJsonKey));
+                    actualConfigs.put(categoryJsonKey, possibleConfig);
+                }
+            }
+        } catch (JSONException error) {
             throw new AmplifyException(
-                    "Failed to find " + DEFAULT_IDENTIFIER + ".",
-                    exception, "Please check that it has been created."
+                    "Could not parse amplifyconfiguration.json ",
+                    error, "Check any modifications made to the file."
             );
         }
-
-        final Scanner in = new Scanner(inputStream);
-        final StringBuilder sb = new StringBuilder();
-        while (in.hasNextLine()) {
-            sb.append(in.nextLine());
-        }
-        in.close();
-
-        try {
-            return new JSONObject(sb.toString());
-        } catch (JSONException jsonError) {
-            throw new AmplifyException(
-                "Failed to read " + DEFAULT_IDENTIFIER + ".",
-                jsonError, "Please check that it is correctly formed."
-            );
-        }
+        return Immutable.of(actualConfigs);
     }
 
     /**
@@ -187,6 +194,107 @@ public final class AmplifyConfiguration {
             return EmptyCategoryConfiguration.forCategoryType(categoryType);
         } else {
             return categoryConfiguration;
+        }
+    }
+
+    /**
+     * Loads a builder for an {@link AmplifyConfiguration} from an amplifyconfiguration.json file.
+     *
+     * @param context Context needed for reading JSON file
+     * @return An Amplify configuration builder instance
+     * @throws AmplifyException If there is a problem in the config file
+     */
+    @NonNull
+    public static Builder builder(@NonNull Context context) throws AmplifyException {
+        return builder(context, Resources.getRawResourceId(context, DEFAULT_IDENTIFIER));
+    }
+
+    /**
+     * Loads a builder for an {@link AmplifyConfiguration} from a particular configuration file.
+     * @param context Android Context
+     * @param configFileResourceId
+     *        The Android resource ID of a raw resource which contains
+     *        an amplify configuration as JSON
+     * @return An Amplify configuration builder instance
+     * @throws AmplifyException If there is a problem in the config file
+     */
+    @NonNull
+    public static Builder builder(
+            @NonNull Context context,
+            @RawRes int configFileResourceId
+    ) throws AmplifyException {
+        return builder(Resources.readJsonResourceFromId(Objects.requireNonNull(context), configFileResourceId));
+    }
+
+    /**
+     * Loads a builder for {@link AmplifyConfiguration} directly from an {@link JSONObject}.
+     * Users should prefer loading from resources files via {@link #builder(Context)},
+     * or {@link #builder(Context, int)}.
+     * @param json A JSON object
+     * @return An Amplify configuration builder instance
+     * @throws AmplifyException If the JSON does not represent a valid AmplifyConfiguration
+     */
+    @NonNull
+    public static Builder builder(@NonNull JSONObject json) throws AmplifyException {
+        return new Builder(configsFromJson(Objects.requireNonNull(json)));
+    }
+
+    /**
+     * Builder for AmplifyConfiguration with an option to specify additional platforms.
+     */
+    public static final class Builder {
+        private final Map<String, CategoryConfiguration> categoryConfiguration;
+        private final Map<UserAgent.Platform, String> platformVersions;
+        private boolean devMenuEnabled = true; // Dev menu is enabled by default in debug mode
+
+        private Builder(Map<String, CategoryConfiguration> categoryConfiguration) {
+            this.categoryConfiguration = categoryConfiguration;
+            this.platformVersions = new LinkedHashMap<>();
+        }
+
+        /**
+         * Add an additional platform and its version to be used for tracking
+         * usage metrics and return the builder.
+         * Note: Do not add "amplify-android", as it is already accounted for.
+         * Adding {@link UserAgent.Platform#ANDROID} as platform is a no-op.
+         * @param platform Additional platform that uses this library.
+         * @param version Version number associated with the additional platform.
+         * @return this builder instance.
+         */
+        @NonNull
+        public Builder addPlatform(@NonNull UserAgent.Platform platform, @NonNull String version) {
+            // Do not allow user to specify Android platform to prevent redundancy.
+            if (!UserAgent.Platform.ANDROID.equals(platform)) {
+                this.platformVersions.put(
+                        Objects.requireNonNull(platform),
+                        Objects.requireNonNull(version)
+                );
+            }
+            return this;
+        }
+
+        /**
+         * Specifically enable or disable the dev menu. By default it's enabled (debug mode only).
+         * @param devMenuEnabled True if you want it enabled, False if you want it disabled.
+         * @return this builder instance.
+         */
+        @NonNull
+        public Builder devMenuEnabled(boolean devMenuEnabled) {
+            this.devMenuEnabled = devMenuEnabled;
+            return this;
+        }
+
+        /**
+         * Constructs an instance of Amplify configuration object using this builder.
+         * @return A fully configured instance of {@link AmplifyConfiguration}.
+         */
+        @NonNull
+        public AmplifyConfiguration build() {
+            return new AmplifyConfiguration(
+                    categoryConfiguration,
+                    platformVersions,
+                    devMenuEnabled
+            );
         }
     }
 }

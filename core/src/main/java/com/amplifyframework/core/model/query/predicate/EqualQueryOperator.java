@@ -41,7 +41,7 @@ public final class EqualQueryOperator extends QueryOperator<Object> {
     }
 
     /**
-     * Returns true if the the provided field value equals
+     * Returns true if the provided field value equals
      * the value associated with this operator.
      * @param field the field value to operate on
      * @return evaluated result of the operator

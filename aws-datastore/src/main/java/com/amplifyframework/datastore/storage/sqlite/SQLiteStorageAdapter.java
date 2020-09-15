@@ -55,7 +55,6 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -67,11 +66,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 /**
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
@@ -104,9 +103,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Used to publish events to the observables subscribed.
     private final Subject<StorageItemChange<? extends Model>> itemChangeSubject;
 
-    // Map of tableName => Insert Prepared statement.
-    private Map<String, SqlCommand> insertSqlPreparedStatements;
-
     // Represents a connection to the SQLite database. This database reference
     // can be used to do all SQL operations against the underlying database
     // that this handle represents.
@@ -138,7 +134,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             ModelProvider systemModelsProvider) {
         this.modelSchemaRegistry = modelSchemaRegistry;
         this.modelsProvider = CompoundModelProvider.of(systemModelsProvider, userModelsProvider);
-        this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();
         this.itemChangeSubject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         this.toBeDisposed = new CompositeDisposable();
@@ -216,17 +211,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 databaseConnectionHandle = sqliteStorageHelper.getWritableDatabase();
                 this.sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry, databaseConnectionHandle);
-
-                /*
-                 * Create INSERT INTO TABLE_NAME statements for all SQL tables
-                 * and compile them and store in an in-memory map. Later, when a
-                 * {@link #save(T, Consumer, Consumer)} operation needs to insert
-                 * an object (sql rows) into the database, it can bind the input
-                 * values with the prepared insert statement.
-                 *
-                 * This is done to improve performance of database write operations.
-                 */
-                this.insertSqlPreparedStatements = getInsertSqlPreparedStatements();
 
                 /*
                  * Detect if the version of the models stored in SQLite is different
@@ -317,8 +301,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     // insert model in SQLite
                     type = StorageItemChange.Type.CREATE;
 
-                    sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
-                    if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
+                    sqlCommand = sqlCommandFactory.insertFor(modelSchema);
+                    if (!sqlCommand.hasCompiledSqlStatement()) {
                         onError.accept(new DataStoreException(
                             "No insert statement found for the Model: " + modelSchema.getName(),
                             AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -388,7 +372,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try (Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), options)) {
                 LOG.debug("Querying item for: " + itemClass.getSimpleName());
 
-                final Set<T> models = new HashSet<>();
+                final List<T> models = new ArrayList<>();
                 final ModelSchema modelSchema =
                     modelSchemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
 
@@ -551,8 +535,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public synchronized void terminate() throws DataStoreException {
         try {
-            insertSqlPreparedStatements = null;
-
             if (toBeDisposed != null) {
                 toBeDisposed.clear();
             }
@@ -621,21 +603,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             createIndexCommands.addAll(sqlCommandFactory.createIndexesFor(modelSchema));
         }
         return new CreateSqlCommands(createTableCommands, createIndexCommands);
-    }
-
-    private Map<String, SqlCommand> getInsertSqlPreparedStatements() {
-        final Map<String, SqlCommand> modifiableMap = new HashMap<>();
-        final Set<Map.Entry<String, ModelSchema>> modelSchemaEntrySet =
-                modelSchemaRegistry.getModelSchemaMap().entrySet();
-        for (final Map.Entry<String, ModelSchema> entry : modelSchemaEntrySet) {
-            final String tableName = entry.getKey();
-            final ModelSchema modelSchema = entry.getValue();
-            modifiableMap.put(
-                    tableName,
-                    sqlCommandFactory.insertFor(modelSchema)
-            );
-        }
-        return Immutable.of(modifiableMap);
     }
 
     // Binds each value inside list onto compiled statement in order
@@ -776,7 +743,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         // SELECT 1 FROM '{tableName}' WHERE {columnName} = '{columnValue}'
         final String queryString = "" +
             SqlKeyword.SELECT + SqlKeyword.DELIMITER + "1" + SqlKeyword.DELIMITER +
-            SqlKeyword.FROM + SqlKeyword.DELIMITER + Wrap.inSingleQuotes(tableName) + SqlKeyword.DELIMITER +
+            SqlKeyword.FROM + SqlKeyword.DELIMITER + Wrap.inBackticks(tableName) + SqlKeyword.DELIMITER +
             SqlKeyword.WHERE + SqlKeyword.DELIMITER + columnName + SqlKeyword.DELIMITER +
             SqlKeyword.EQUAL + SqlKeyword.DELIMITER + Wrap.inSingleQuotes(columnValue);
         try (Cursor cursor = databaseConnectionHandle.rawQuery(queryString, null)) {

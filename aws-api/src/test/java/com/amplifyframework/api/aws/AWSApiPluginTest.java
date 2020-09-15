@@ -20,13 +20,13 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.events.ApiChannelEventName;
+import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelPagination;
@@ -39,10 +39,13 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.EmptyAction;
+import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -59,7 +62,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -97,7 +100,19 @@ public final class AWSApiPluginTest {
         webServer.start(8080);
         baseUrl = webServer.url("/");
         authProvider = mock(CognitoUserPoolsAuthProvider.class);
-        when(authProvider.getUsername()).thenReturn("johndoe");
+        // Returns a sample access token with the username value of "Facebook_100003287976754"
+        when(authProvider.getLatestAuthToken()).thenReturn("eyJraWQiOiJnMmtYXC8rSXRmNFwvcmwyODhBSTNCMk9kNDVsdEU" +
+                        "4ZUtIZmF0RkNRWEVDMmM9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiI2YTRjZjMxMi01MWM5LTQyNjAtYjRhZC0wMDdj" +
+                        "MDdkZDdmMzMiLCJjb2duaXRvOmdyb3VwcyI6WyJ1cy13ZXN0LTJfejVWM1ZQa1h5X0ZhY2Vib29rIiwiQWRtaW4iXSwi" +
+                        "dG9rZW5fdXNlIjoiYWNjZXNzIiwic2NvcGUiOiJhd3MuY29nbml0by5zaWduaW4udXNlci5hZG1pbiBwaG9uZSBvcGVu" +
+                        "aWQgcHJvZmlsZSBlbWFpbCIsImF1dGhfdGltZSI6MTU5OTY4MTk2MywiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRw" +
+                        "LnVzLXdlc3QtMi5hbWF6b25hd3MuY29tXC91cy13ZXN0LTJfejVWM1ZQa1h5IiwiZXhwIjoxNTk5NzU3OTE3LCJpYXQi" +
+                        "OjE1OTk3NTQzMTcsInZlcnNpb24iOjIsImp0aSI6ImQyNzYxMDg3LTliNmYtNDYzMS1iYWJjLTY0ZWQzM2UyNGQzMiIs" +
+                        "ImNsaWVudF9pZCI6IjNjZDdjcGJ1N2huYzlka2xoMmZsamg3am0xIiwidXNlcm5hbWUiOiJGYWNlYm9va18xMDAwMDMy" +
+                        "ODc5NzY3NTQifQ.gtINNiuOhAPG5Z-4KgT7Hppw9wYyoVF8lvFhGdAWPi0c3sQvGpTLlBlgh8NqaELai84fTOTsQT4sH" +
+                        "YwP31ik58qrIp7QQ8IOU91mXy2i3-ygsIWGEetvNaMd5ICXhTWUxg7gpKxsJQbrtH88DkO3NxAQSpGoUzlkKzJILekNn" +
+                        "H5wC5drUocg_1yHTYfwsG23QVsm-cHvNsxkzRzjS3Gr18x5jTuhflr24yOGl_fdRas8-kA5q_vMuKclnNuxCztNHOBGk" +
+                        "h-sfTaOh6C-FstV2GOuwtEknlCQqLdJUVSMQO2M4hTScGPXOr2Gz9xTX9QY0D9eNL7806LYObm5nmRd7g");
 
         JSONObject configuration = new JSONObject()
             .put("graphQlApi", new JSONObject()
@@ -173,8 +188,8 @@ public final class AWSApiPluginTest {
         webServer.enqueue(new MockResponse()
             .setBody(Resources.readAsString("blog-owners-query-results.json")));
 
-        GraphQLResponse<Iterable<BlogOwner>> actualResponse =
-            Await.<GraphQLResponse<Iterable<BlogOwner>>, ApiException>result(((onResult, onError) ->
+        GraphQLResponse<PaginatedResult<BlogOwner>> actualResponse =
+            Await.<GraphQLResponse<PaginatedResult<BlogOwner>>, ApiException>result(((onResult, onError) ->
                 plugin.query(ModelQuery.list(BlogOwner.class), onResult, onError)
             ));
 
@@ -224,6 +239,9 @@ public final class AWSApiPluginTest {
      */
     @Test
     public void graphQlMutationGetsResponse() throws JSONException, ApiException {
+        HubAccumulator networkStatusObserver =
+            HubAccumulator.create(HubChannel.API, ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED, 1)
+                .start();
         // Arrange a response from the "server"
         String expectedName = RandomString.string();
         webServer.enqueue(new MockResponse().setBody(new JSONObject()
@@ -246,6 +264,13 @@ public final class AWSApiPluginTest {
 
         // Assert that the expected response was received
         assertEquals(expectedName, actualResponse.getData().getName());
+
+        // Verify that the expected hub event fired.
+        HubEvent<?> event = networkStatusObserver.awaitFirst();
+        assertNotNull(event);
+        assertTrue(event.getData() instanceof ApiEndpointStatusChangeEvent);
+        ApiEndpointStatusChangeEvent eventData = (ApiEndpointStatusChangeEvent) event.getData();
+        assertEquals(ApiEndpointStatusChangeEvent.ApiEndpointStatus.REACHABLE, eventData.getCurrentStatus());
     }
 
     /**
@@ -279,33 +304,19 @@ public final class AWSApiPluginTest {
     }
 
     /**
-     * Verify that owner argument is required for ON_CREATE subscription if ModelOperation.CREATE is specified.
+     * Verify that owner argument is required for all subscriptions if ModelOperation.READ is specified.
      * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
      */
     @Test
-    public void ownerArgumentAddedForOnCreate() throws AmplifyException {
-        assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_CREATE));
-        assertTrue(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_CREATE));
-    }
-
-    /**
-     * Verify that owner argument is required for ON_UPDATE subscription if ModelOperation.UPDATE is specified.
-     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
-     */
-    @Test
-    public void ownerArgumentAddedForOnUpdate() throws AmplifyException {
+    public void ownerArgumentAddedForRestrictedRead() throws AmplifyException {
         assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_UPDATE));
-        assertTrue(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_UPDATE));
-    }
+        assertTrue(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_UPDATE));
 
-    /**
-     * Verify that owner argument is required for ON_DELETE subscription if ModelOperation.DELETE is specified.
-     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
-     */
-    @Test
-    public void ownerArgumentAddedForOnDelete() throws AmplifyException {
         assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_DELETE));
-        assertTrue(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_DELETE));
+        assertTrue(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_DELETE));
+
+        assertTrue(isOwnerArgumentAdded(Owner.class, SubscriptionType.ON_CREATE));
+        assertTrue(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_CREATE));
     }
 
     /**
@@ -315,14 +326,14 @@ public final class AWSApiPluginTest {
     @Test
     public void ownerArgumentNotAddedIfOperationNotRestricted() throws AmplifyException {
         assertFalse(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_UPDATE));
-        assertFalse(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_UPDATE));
+        assertFalse(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_UPDATE));
         assertFalse(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_UPDATE));
 
         assertFalse(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_DELETE));
-        assertFalse(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_DELETE));
         assertFalse(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_DELETE));
+        assertFalse(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_DELETE));
 
-        assertFalse(isOwnerArgumentAdded(OwnerRead.class, SubscriptionType.ON_CREATE));
+        assertFalse(isOwnerArgumentAdded(OwnerCreate.class, SubscriptionType.ON_CREATE));
         assertFalse(isOwnerArgumentAdded(OwnerUpdate.class, SubscriptionType.ON_CREATE));
         assertFalse(isOwnerArgumentAdded(OwnerDelete.class, SubscriptionType.ON_CREATE));
     }
@@ -334,16 +345,6 @@ public final class AWSApiPluginTest {
     @Test
     public void ownerArgumentNotAddedIfNotOwnerStrategy() throws AmplifyException {
         assertFalse(isOwnerArgumentAdded(Group.class, SubscriptionType.ON_CREATE));
-    }
-
-    /**
-     * Verify owner argument NOT added for Query or Mutation operations.
-     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
-     */
-    @Test
-    public void verifyOwnerArgumentNotAddedIfNotSubscriptionOperation() throws AmplifyException {
-        assertFalse(isOwnerArgumentAdded(Owner.class, QueryType.GET));
-        assertFalse(isOwnerArgumentAdded(Owner.class, MutationType.CREATE));
     }
 
     private boolean isOwnerArgumentAdded(Class<? extends Model> clazz, Operation operation)
@@ -361,7 +362,7 @@ public final class AWSApiPluginTest {
                 NoOpConsumer.create(),
                 EmptyAction.create());
 
-        return "johndoe".equals(graphQLOperation.getRequest().getVariables().get("owner"));
+        return "Facebook_100003287976754".equals(graphQLOperation.getRequest().getVariables().get("owner"));
     }
 
     @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })

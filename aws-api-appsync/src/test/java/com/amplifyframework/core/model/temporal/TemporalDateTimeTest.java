@@ -52,6 +52,14 @@ public final class TemporalDateTimeTest {
     }
 
     /**
+     * Tests that {@link Temporal.DateTime} constructor throws when String input is invalid.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void parseInvalidFormat() {
+        new Temporal.DateTime("2001-02-03T01:30:15.444+05");
+    }
+
+    /**
      * An {@link Temporal.DateTime} may be constructed from a Java {@link Date}, and
      * converted back to one.
      */
@@ -67,5 +75,24 @@ public final class TemporalDateTimeTest {
         Temporal.DateTime temporalDateTime = new Temporal.DateTime(date, offsetInSeconds);
         assertEquals(date, temporalDateTime.toDate());
         assertEquals(offsetInSeconds, temporalDateTime.getOffsetTotalSeconds());
+    }
+
+    /**
+     * A {@link Temporal.DateTime} implements {@link java.lang.Comparable} correctly.
+     */
+    @Test
+    public void temporalDateTimeIsComparable() {
+        Temporal.DateTime sixAmPST = new Temporal.DateTime("2001-03-03T06:00:00.000-08:00:00");
+        Temporal.DateTime sevenAmPST = new Temporal.DateTime("2001-03-03T07:00:00.000-08:00:00");
+        Temporal.DateTime eightAmPST = new Temporal.DateTime("2001-03-03T08:00:00.000-08:00:00");
+        Temporal.DateTime eightAmCST = new Temporal.DateTime("2001-03-03T08:00:00.000-06:00:00");
+
+        // Verify comparison of DateTimes with same TimeZone
+        assertEquals(1, sevenAmPST.compareTo(sixAmPST));
+        assertEquals(0, sevenAmPST.compareTo(sevenAmPST));
+        assertEquals(-1, sevenAmPST.compareTo(eightAmPST));
+
+        // Verify comparison of DateTimes with different TimeZones
+        assertEquals(1, sevenAmPST.compareTo(eightAmCST));
     }
 }

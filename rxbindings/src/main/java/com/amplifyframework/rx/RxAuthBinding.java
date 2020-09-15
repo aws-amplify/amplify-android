@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
@@ -34,11 +35,13 @@ import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.rx.RxAdapters.VoidBehaviors;
 
+import java.util.List;
 import java.util.Objects;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 
 final class RxAuthBinding implements RxAuthCategoryBehavior {
     private final AuthCategoryBehavior delegate;
@@ -67,8 +70,7 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Single<AuthSignUpResult> resendSignUpCode(@NonNull String username) {
-        return toSingle((onResult, onError) ->
-            delegate.resendSignUpCode(username, onResult, onError));
+        return toSingle((onResult, onError) -> delegate.resendSignUpCode(username, onResult, onError));
     }
 
     @Override
@@ -127,6 +129,27 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
+    public Completable rememberDevice() {
+        return toCompletable(delegate::rememberDevice);
+    }
+
+    @Override
+    public Completable forgetDevice() {
+        return toCompletable(delegate::forgetDevice);
+    }
+
+    @Override
+    public Completable forgetDevice(@NonNull AuthDevice device) {
+        return toCompletable((onComplete, onError) ->
+            delegate.forgetDevice(device, onComplete, onError));
+    }
+
+    @Override
+    public Single<List<AuthDevice>> fetchDevices() {
+        return toSingle(delegate::fetchDevices);
+    }
+
+    @Override
     public Single<AuthResetPasswordResult> resetPassword(@NonNull String username) {
         return toSingle((onResult, onError) -> delegate.resetPassword(username, onResult, onError));
     }
@@ -155,18 +178,15 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Completable signOut(@NonNull AuthSignOutOptions options) {
-        return toCompletable((onComplete, onError) -> delegate.signOut(options, onComplete, onError));
+        return toCompletable((onComplete, onError) ->
+            delegate.signOut(options, onComplete, onError));
     }
 
-    private <T> Single<T> toSingle(RxAdapters.VoidResultEmitter<T, AuthException> resultEmitter) {
-        return Single.defer(() ->
-            Single.create(emitter -> resultEmitter.emitTo(emitter::onSuccess, emitter::onError))
-        );
+    private <T> Single<T> toSingle(VoidBehaviors.ResultEmitter<T, AuthException> behavior) {
+        return VoidBehaviors.toSingle(behavior);
     }
 
-    private Completable toCompletable(RxAdapters.VoidCompletionEmitter<AuthException> resultEmitter) {
-        return Completable.defer(() -> Completable.create(emitter ->
-            resultEmitter.emitTo(emitter::onComplete, emitter::onError)
-        ));
+    private Completable toCompletable(VoidBehaviors.ActionEmitter<AuthException> behavior) {
+        return VoidBehaviors.toCompletable(behavior);
     }
 }

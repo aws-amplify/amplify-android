@@ -17,6 +17,7 @@ package com.amplifyframework.testmodels.personcar;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashSet;
@@ -58,6 +59,7 @@ public final class RandomVersionModelProvider implements ModelProvider {
         final Set<Class<? extends Model>> modifiableSet = new HashSet<>();
         modifiableSet.add(Person.class);
         modifiableSet.add(Car.class);
+        modifiableSet.add(Meeting.class);
         return Immutable.of(modifiableSet);
     }
 

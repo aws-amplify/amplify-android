@@ -18,23 +18,23 @@ package com.amplifyframework.rx;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.DataStoreItemChange;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
 
 /**
  * An Rx-idiomatic expression of the behaviors in {@link DataStoreCategoryBehavior}.
  */
-@SuppressWarnings("unused") // These are all public APIs
 public interface RxDataStoreCategoryBehavior {
 
     /**
      * Saves an item into the DataStore.
-     * @param item An item to save
      * @param <T> The time of item being saved
+     * @param item An item to save
      * @return A {@link Completable} which completes on success, emits error on error
      */
     @NonNull
@@ -43,14 +43,40 @@ public interface RxDataStoreCategoryBehavior {
     );
 
     /**
+     * Saves an item into the DataStore, considering a predicate.
+     * @param <T> The time of item being saved
+     * @param item An item to save
+     * @param predicate Predicate condition to apply for conditional write
+     * @return A {@link Completable} which completes on success, emits error on error
+     */
+    @NonNull
+    <T extends Model> Completable save(
+            @NonNull T item,
+            @NonNull QueryPredicate predicate
+    );
+
+    /**
      * Deletes an item from the DataStore.
-     * @param item An item to delete from the DataStore
      * @param <T> The type of item being deleted
+     * @param item An item to delete from the DataStore
      * @return A {@link Completable} which completes on success, emits error on error
      */
     @NonNull
     <T extends Model> Completable delete(
             @NonNull T item
+    );
+
+    /**
+     * Deletes an item from the DataStore, considering a predicate.
+     * @param <T> The type of item being deleted
+     * @param item An item to delete from the DataStore
+     * @param predicate Predicate condition to apply for conditional write
+     * @return A {@link Completable} which completes on success, emits error on error
+     */
+    @NonNull
+    <T extends Model> Completable delete(
+            @NonNull T item,
+            @NonNull QueryPredicate predicate
     );
 
     /**
@@ -78,6 +104,21 @@ public interface RxDataStoreCategoryBehavior {
     <T extends Model> Observable<T> query(
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate predicate
+    );
+
+    /**
+     * Query the DataStore to find items of the requested Java class, using the provided
+     * {@link QueryOptions}. The query options include support for filtering, paging and sorting.
+     * @param itemClass Class of items that will be queried
+     * @param options Filtering, paging, and sorting options
+     * @param <T> The type of items being queried
+     * @return An observable stream of 0..n query results, if available.
+     *         The Observable will then terminate either either a completion or error.
+     */
+    @NonNull
+    <T extends Model> Observable<T> query(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryOptions options
     );
 
     /**
@@ -134,4 +175,13 @@ public interface RxDataStoreCategoryBehavior {
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate selectionCriteria
     );
+
+    /**
+     * Resets the underlying DataStore to its pre-initialized state such that no data remains on the local
+     * device. Every implementation of this behavior may have its own interpretation of what clear means.
+     * This is meant to be a destructive operation that allows for safe disposal of data stored locally.
+     * @return A {@link Completable} which emits success upon successful clear of DataStore,
+     *         emits an error, otherwise
+     */
+    Completable clear();
 }

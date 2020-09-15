@@ -42,7 +42,7 @@ public final class LessThanQueryOperator<T extends Comparable<T>> extends QueryO
     }
 
     /**
-     * Returns true if the the provided field value is less
+     * Returns true if the provided field value is less
      * than the value associated with this operator.
      * @param field the field value to operate on
      * @return evaluated result of the operator

@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
@@ -29,8 +30,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 
 final class SyncTimeRegistry {
     private final LocalStorageAdapter localStorageAdapter;
@@ -55,9 +56,26 @@ final class SyncTimeRegistry {
         });
     }
 
-    <T extends Model> Completable saveLastSyncTime(@NonNull Class<T> modelClazz, SyncTime syncTime) {
+    <T extends Model> Completable saveLastDeltaSyncTime(@NonNull Class<T> modelClazz,
+                                                        @Nullable SyncTime syncTime) {
         LastSyncMetadata metadata = syncTime.exists() ?
-            LastSyncMetadata.lastSyncedAt(modelClazz, syncTime.toLong()) :
+            LastSyncMetadata.deltaSyncedAt(modelClazz, syncTime.toLong()) :
+            LastSyncMetadata.neverSynced(modelClazz);
+
+        return Completable.create(emitter ->
+            localStorageAdapter.save(
+                metadata,
+                Initiator.SYNC_ENGINE,
+                saveResult -> emitter.onComplete(),
+                emitter::onError
+            )
+        );
+    }
+
+    <T extends Model> Completable saveLastBaseSyncTime(@NonNull Class<T> modelClazz,
+                                                   @Nullable SyncTime syncTime) {
+        LastSyncMetadata metadata = syncTime.exists() ?
+            LastSyncMetadata.baseSyncedAt(modelClazz, syncTime.toLong()) :
             LastSyncMetadata.neverSynced(modelClazz);
 
         return Completable.create(emitter ->

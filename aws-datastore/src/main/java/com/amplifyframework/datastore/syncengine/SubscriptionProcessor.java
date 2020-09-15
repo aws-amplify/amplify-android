@@ -28,9 +28,12 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.AmplifyDisposables;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Arrays;
@@ -42,10 +45,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.ReplaySubject;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.ReplaySubject;
 
 /**
  * Observes mutations occurring on a remote {@link AppSync} system. The mutations arrive
@@ -82,7 +85,7 @@ final class SubscriptionProcessor {
     /**
      * Start subscribing to model mutations.
      */
-    synchronized void startSubscriptions() throws DataStoreException {
+    synchronized void startSubscriptions() {
         int subscriptionCount = modelProvider.models().size() * SubscriptionType.values().length;
         // Create a latch with the number of subscriptions are requesting. Each of these will be
         // counted down when each subscription's onStarted event is called.
@@ -99,6 +102,7 @@ final class SubscriptionProcessor {
         }
         ongoingOperationsDisposable.add(Observable.merge(subscriptions)
             .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
             .subscribe(
                 buffer::onNext,
                 exception -> {
@@ -109,7 +113,7 @@ final class SubscriptionProcessor {
                 },
                 buffer::onComplete
             ));
-        boolean subscriptionsStarted = false;
+        boolean subscriptionsStarted;
         try {
             LOG.debug("Waiting for subscriptions to start.");
             subscriptionsStarted = latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
@@ -118,6 +122,8 @@ final class SubscriptionProcessor {
             return;
         }
         if (subscriptionsStarted) {
+            Amplify.Hub.publish(HubChannel.DATASTORE,
+                                HubEvent.create(DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED));
             LOG.info(String.format(Locale.US,
                 "Began buffering subscription events for remote mutations %s to Cloud models of types %s.",
                 modelProvider.models(), Arrays.toString(SubscriptionType.values())
@@ -167,7 +173,6 @@ final class SubscriptionProcessor {
             // this means means closing the underlying network connection.
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         })
-        .retry(RetryStrategy.RX_INTERRUPTIBLE_WITH_BACKOFF::retryHandler)
         .doOnError(subscriptionError ->
             LOG.warn(String.format(Locale.US,
                 "An error occurred on the remote %s subscription for model %s.",
@@ -189,36 +194,18 @@ final class SubscriptionProcessor {
      * Start draining mutations out of the mutation buffer.
      * This should be called after {@link #startSubscriptions()}.
      */
-    void startDrainingMutationBuffer() {
+    void startDrainingMutationBuffer(Action onPipelineBroken) {
         ongoingOperationsDisposable.add(
             buffer
                 .doOnSubscribe(disposable ->
                     LOG.info("Starting processing subscription data buffer.")
                 )
                 .flatMapCompletable(mutation -> merger.merge(mutation.modelWithMetadata()))
-                .subscribe(
-                    () -> LOG.warn("Reading from subscriptions buffer is completed."),
-                    failure -> LOG.warn("Reading subscriptions buffer has failed.", failure)
-                )
+                .doOnError(failure -> LOG.warn("Reading subscriptions buffer has failed.", failure))
+                .doOnComplete(() -> LOG.warn("Reading from subscriptions buffer is completed."))
+                .onErrorComplete()
+                .subscribe(onPipelineBroken::call)
         );
-    }
-
-    /**
-     * Checks if the subscription processor is listening
-     * for events coming from the remote DataStore.
-     * @return true if there are listeners. False otherwise.
-     */
-    boolean isObservingSubscriptionEvents() {
-        return ongoingOperationsDisposable.size() > 0;
-    }
-
-    /**
-     * Check if the subscription processor is processing
-     * changes coming from the remote DataStore.
-     * @return
-     */
-    boolean isDrainingMutationBuffer() {
-        return buffer.hasObservers();
     }
 
     /**

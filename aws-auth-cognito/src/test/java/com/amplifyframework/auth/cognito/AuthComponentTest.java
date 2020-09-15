@@ -23,6 +23,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.auth.AuthCategoryConfiguration;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthUser;
@@ -39,12 +40,15 @@ import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
 import com.amplifyframework.auth.result.step.AuthResetPasswordStep;
 import com.amplifyframework.auth.result.step.AuthSignInStep;
 import com.amplifyframework.auth.result.step.AuthSignUpStep;
+import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
+import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.DeviceOperations;
 import com.amazonaws.mobile.client.HostedUIOptions;
 import com.amazonaws.mobile.client.SignInUIOptions;
 import com.amazonaws.mobile.client.SignOutOptions;
@@ -52,6 +56,7 @@ import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.ForgotPasswordResult;
 import com.amazonaws.mobile.client.results.ForgotPasswordState;
+import com.amazonaws.mobile.client.results.ListDevicesResult;
 import com.amazonaws.mobile.client.results.SignInResult;
 import com.amazonaws.mobile.client.results.SignInState;
 import com.amazonaws.mobile.client.results.SignUpResult;
@@ -67,6 +72,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -78,12 +84,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Test that the current implementation of Auth as a wrapper of AWSMobileClient calls the correct
@@ -148,6 +156,7 @@ public final class AuthComponentTest {
         UserStateDetails userStateDetails = new UserStateDetails(UserState.SIGNED_OUT, null);
         Context context = getApplicationContext();
         JSONObject pluginConfig = new JSONObject().put("TestKey", "TestVal");
+        pluginConfig.put("UserAgentOverride", UserAgent.string());
         JSONObject json = new JSONObject().put("plugins",
                 new JSONObject().put(
                     PLUGIN_KEY,
@@ -167,7 +176,11 @@ public final class AuthComponentTest {
 
         ArgumentCaptor<AWSConfiguration> awsConfigCaptor = ArgumentCaptor.forClass(AWSConfiguration.class);
         verify(mobileClient).initialize(eq(context), awsConfigCaptor.capture(), any());
-        assertEquals(pluginConfig.toString(), awsConfigCaptor.getValue().toString());
+        String returnedConfig = awsConfigCaptor.getValue().toString();
+        String inputConfig = pluginConfig.toString();
+        // Strip the opening and closing braces from the test input and ensure that the key/value pair is included
+        // in the returned aws config.
+        assertTrue(returnedConfig.contains(inputConfig.substring(1, inputConfig.length() - 1)));
     }
 
     /**
@@ -213,7 +226,7 @@ public final class AuthComponentTest {
                     DELIVERY_MEDIUM,
                     ATTRIBUTE_NAME
             ),
-            null
+            USER_SUB
         );
 
         doAnswer(invocation -> {
@@ -260,7 +273,7 @@ public final class AuthComponentTest {
                         DELIVERY_MEDIUM,
                         ATTRIBUTE_NAME
                 ),
-                null
+                USER_SUB
         );
 
         doAnswer(invocation -> {
@@ -282,6 +295,7 @@ public final class AuthComponentTest {
      * @throws AuthException test fails if this gets thrown since method should succeed
      */
     @Test
+    @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
     public void resendSignUpCode() throws AuthException {
         SignUpResult amcResult = new SignUpResult(
                 false,
@@ -290,18 +304,18 @@ public final class AuthComponentTest {
                         DELIVERY_MEDIUM,
                         ATTRIBUTE_NAME
                 ),
-                null
+                USER_SUB
         );
 
         doAnswer(invocation -> {
             Callback<SignUpResult> callback = invocation.getArgument(1);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).resendSignUp(any(), any());
+        }).when(mobileClient).resendSignUp(any(), (Callback<SignUpResult>) any());
 
         AuthSignUpResult result = synchronousAuth.resendSignUpCode(USERNAME);
         validateSignUpResult(result, AuthSignUpStep.CONFIRM_SIGN_UP_STEP);
-        verify(mobileClient).resendSignUp(eq(USERNAME), any());
+        verify(mobileClient).resendSignUp(eq(USERNAME), (Callback<SignUpResult>) any());
     }
 
     /**
@@ -311,6 +325,7 @@ public final class AuthComponentTest {
      * @throws AuthException test fails if this gets thrown since method should succeed
      */
     @Test
+    @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
     public void signIn() throws AuthException {
         SignInResult amcResult = new SignInResult(
             SignInState.SMS_MFA,
@@ -332,7 +347,7 @@ public final class AuthComponentTest {
             Callback<SignInResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).signIn(any(), any(), any(), any());
+        }).when(mobileClient).signIn(any(), any(), any(), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.signIn(
                 USERNAME,
@@ -346,7 +361,7 @@ public final class AuthComponentTest {
                 AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
         );
 
-        verify(mobileClient).signIn(eq(USERNAME), eq(PASSWORD), eq(METADATA), any());
+        verify(mobileClient).signIn(eq(USERNAME), eq(PASSWORD), eq(METADATA), (Callback<SignInResult>) any());
     }
 
     /**
@@ -355,6 +370,7 @@ public final class AuthComponentTest {
      * @throws AuthException test fails if this gets thrown since method should succeed
      */
     @Test
+    @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
     public void confirmSignIn() throws AuthException {
         SignInResult amcResult = new SignInResult(
                 SignInState.DONE,
@@ -376,11 +392,11 @@ public final class AuthComponentTest {
             Callback<SignInResult> callback = invocation.getArgument(1);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignIn(any(String.class), any());
+        }).when(mobileClient).confirmSignIn(any(String.class), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE);
         validateSignInResult(result, true, AuthSignInStep.DONE);
-        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), any());
+        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), (Callback<SignInResult>) any());
     }
 
     /**
@@ -535,6 +551,88 @@ public final class AuthComponentTest {
 
         synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE);
         verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), any());
+    }
+
+    /**
+     * Tests that rememberDevice calls the AWSMobileClient device update status method to set
+     * remember status to true.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void rememberCurrentDevice() throws AuthException {
+        DeviceOperations deviceOps = mock(DeviceOperations.class);
+        when(mobileClient.getDeviceOperations()).thenReturn(deviceOps);
+
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(1);
+            callback.onResult(null);
+            return null;
+        }).when(deviceOps).updateStatus(anyBoolean(), any());
+
+        synchronousAuth.rememberDevice();
+        verify(mobileClient.getDeviceOperations()).updateStatus(eq(true), any());
+    }
+
+    /**
+     * Tests that forgetDevice calls the AWSMobileClient forget device method to forget
+     * the current device.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void forgetCurrentDevice() throws AuthException {
+        DeviceOperations deviceOps = mock(DeviceOperations.class);
+        when(mobileClient.getDeviceOperations()).thenReturn(deviceOps);
+
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(0);
+            callback.onResult(null);
+            return null;
+        }).when(deviceOps).forget(Mockito.<Callback<Void>>any());
+
+        synchronousAuth.forgetDevice();
+        verify(mobileClient.getDeviceOperations()).forget(Mockito.<Callback<Void>>any());
+    }
+
+    /**
+     * Tests that forgetDevice calls the AWSMobileClient forget device method to forget
+     * a device with matching ID.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void forgetDevice() throws AuthException {
+        DeviceOperations deviceOps = mock(DeviceOperations.class);
+        when(mobileClient.getDeviceOperations()).thenReturn(deviceOps);
+
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(1);
+            callback.onResult(null);
+            return null;
+        }).when(deviceOps).forget(any(), any());
+
+        AuthDevice device = AuthDevice.fromId(RandomString.string());
+        synchronousAuth.forgetDevice(device);
+        verify(mobileClient.getDeviceOperations()).forget(eq(device.getDeviceId()), any());
+    }
+
+    /**
+     * Tests that fetchDevices calls the AWSMobileClient list devices method to obtain
+     * a list of remembered devices.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void fetchDevices() throws AuthException {
+        ListDevicesResult listResult = new ListDevicesResult(new ArrayList<>(), null);
+        DeviceOperations deviceOps = mock(DeviceOperations.class);
+        when(mobileClient.getDeviceOperations()).thenReturn(deviceOps);
+
+        doAnswer(invocation -> {
+            Callback<ListDevicesResult> callback = invocation.getArgument(0);
+            callback.onResult(listResult);
+            return null;
+        }).when(deviceOps).list(any());
+
+        synchronousAuth.fetchDevices();
+        verify(mobileClient.getDeviceOperations()).list(any());
     }
 
     /**
@@ -882,6 +980,8 @@ public final class AuthComponentTest {
         validateCodeDeliveryDetails(nextStep.getCodeDeliveryDetails());
         assertTrue(result.isSignUpComplete());
         assertEquals(targetStep, nextStep.getSignUpStep());
+        assertEquals(USER_SUB, result.getUser().getUserId());
+        assertEquals(USERNAME, result.getUser().getUsername());
     }
 
     private void validateSignInResult(AuthSignInResult result, boolean targetIsSignedIn, AuthSignInStep targetStep) {

@@ -21,13 +21,10 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.core.model.Model;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
@@ -46,23 +43,14 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     }
 
     @Override
-    @SuppressWarnings("unchecked") // Cast from GraphQLRequest<R> to GraphQLRequest<PaginatedResult<Model>>
     public <R> GraphQLResponse<R> buildResponse(GraphQLRequest<R> request, String responseJson, Type typeOfR
     ) throws ApiException {
         Type responseType = TypeMaker.getParameterizedType(GraphQLResponse.class, typeOfR);
         try {
-            if (typeOfR instanceof ParameterizedType
-                    && ((ParameterizedType) typeOfR).getRawType().equals(PaginatedResult.class)) {
-                AppSyncPaginatedResultDeserializer paginatedResultDeserializer =
-                        new AppSyncPaginatedResultDeserializer((AppSyncGraphQLRequest<PaginatedResult<Model>>) request);
-                Gson paginatedResultGson = gson
-                        .newBuilder()
-                        .registerTypeAdapter(PaginatedResult.class, paginatedResultDeserializer)
-                        .create();
-                return paginatedResultGson.fromJson(responseJson, responseType);
-            } else {
-                return gson.fromJson(responseJson, responseType);
-            }
+            Gson responseGson = gson.newBuilder()
+                    .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer<>(request))
+                    .create();
+            return responseGson.fromJson(responseJson, responseType);
         } catch (JsonSyntaxException jsonSyntaxException) {
             throw new ApiException(
                     "Amplify encountered an error while deserializing an object.",

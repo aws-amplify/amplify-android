@@ -16,9 +16,11 @@
 package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
+import com.amplifyframework.api.aws.TypeMaker;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
@@ -27,9 +29,7 @@ import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
 
-import com.google.gson.reflect.TypeToken;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,11 +38,10 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -70,7 +69,8 @@ public final class AppSyncClientTest {
 
         // We need it to response with **something** by default.
         // Use this same method to send more interesting test values back...
-        mockApiResponse(new GraphQLResponse<>(new ArrayList<>(), new ArrayList<>()));
+        PaginatedResult<ModelWithMetadata<BlogOwner>> data = new PaginatedResult<>(Collections.emptyList(), null);
+        mockApiResponse(new GraphQLResponse<>(data, Collections.emptyList()));
     }
 
     /**
@@ -83,30 +83,34 @@ public final class AppSyncClientTest {
         //noinspection CodeBlock2Expr
         Await.result(
             (
-                Consumer<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>> onResult,
+                Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<BlogOwner>>>> onResult,
                 Consumer<DataStoreException> onError
             ) -> {
-                endpoint.sync(BlogOwner.class, null, onResult, onError);
+                try {
+                    GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> request =
+                            endpoint.buildSyncRequest(BlogOwner.class, null, null);
+                    endpoint.sync(request, onResult, onError);
+                } catch (DataStoreException datastoreException) {
+                    onError.accept(datastoreException);
+                }
             }
         );
 
         // Now, capture the request argument on API, so we can see what was passed.
         // Recall that we pass a raw doc to API.
-        ArgumentCaptor<GraphQLRequest<String>> requestCaptor = ArgumentCaptor.forClass(GraphQLRequest.class);
+        ArgumentCaptor<GraphQLRequest<ModelWithMetadata<BlogOwner>>> requestCaptor =
+                ArgumentCaptor.forClass(GraphQLRequest.class);
         verify(api).query(requestCaptor.capture(), any(Consumer.class), any(Consumer.class));
-        GraphQLRequest<String> capturedRequest = requestCaptor.getValue();
+        GraphQLRequest<ModelWithMetadata<BlogOwner>> capturedRequest = requestCaptor.getValue();
 
-        Type type = TypeToken.getParameterized(Iterable.class, String.class).getType();
+        Type type = TypeMaker.getParameterizedType(PaginatedResult.class, ModelWithMetadata.class, BlogOwner.class);
         assertEquals(type, capturedRequest.getResponseType());
 
         // The request was sent as JSON. It has a null variables field, and a present query field.
-        JSONObject requestJson = new JSONObject(capturedRequest.getContent());
-        assertTrue(requestJson.has("variables"));
-        assertTrue(requestJson.isNull("variables"));
-        assertTrue(requestJson.has("query"));
-        assertEquals(
+        JSONAssert.assertEquals(
             Resources.readAsString("base-sync-request-document-for-blog-owner.txt"),
-            requestJson.getString("query")
+            capturedRequest.getContent(),
+            true
         );
     }
 
@@ -114,10 +118,10 @@ public final class AppSyncClientTest {
      * Configures the API mock to return a particular response.
      * @param arrangedApiResponse Some response you want the API to return
      */
-    private void mockApiResponse(GraphQLResponse<Iterable<String>> arrangedApiResponse) {
+    private void mockApiResponse(GraphQLResponse<PaginatedResult<ModelWithMetadata<BlogOwner>>> arrangedApiResponse) {
         doAnswer(invocation -> {
             final int argPositionOfResponseConsumer = 1; // second/middle arg, starting from arg 0
-            Consumer<GraphQLResponse<Iterable<String>>> onResponse =
+            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<BlogOwner>>>> onResponse =
                 invocation.getArgument(argPositionOfResponseConsumer);
             onResponse.accept(arrangedApiResponse);
             return mock(GraphQLOperation.class);
@@ -146,12 +150,14 @@ public final class AppSyncClientTest {
         endpoint.update(meeting, null, response -> { }, error -> { });
 
         // Now, capture the request argument on API, so we can see what was passed.
-        ArgumentCaptor<GraphQLRequest<String>> requestCaptor = ArgumentCaptor.forClass(GraphQLRequest.class);
+        ArgumentCaptor<GraphQLRequest<ModelWithMetadata<Meeting>>> requestCaptor =
+                ArgumentCaptor.forClass(GraphQLRequest.class);
         verify(api).mutate(requestCaptor.capture(), any(Consumer.class), any(Consumer.class));
-        GraphQLRequest<String> capturedRequest = requestCaptor.getValue();
+        GraphQLRequest<ModelWithMetadata<Meeting>> capturedRequest = requestCaptor.getValue();
 
         // Assert
-        assertEquals(String.class, capturedRequest.getResponseType());
+        assertEquals(TypeMaker.getParameterizedType(ModelWithMetadata.class, Meeting.class),
+                capturedRequest.getResponseType());
         JSONAssert.assertEquals(Resources.readAsString("update-meeting.txt"),
                 capturedRequest.getContent(), true);
     }

@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.model.ModelQuery;
 import com.amplifyframework.core.NoOpConsumer;
 
@@ -45,8 +46,9 @@ import static org.junit.Assert.assertTrue;
  * in {@link AWSApiPlugin}.
  */
 @RunWith(RobolectricTestRunner.class)
-public final class UserAgentTest {
-    private static final long REQUEST_TIMEOUT_MS = 200;
+public final class AWSApiPluginUserAgentTest {
+    // This was previously 200ms, but resulted in flaky tests because server.takeRequest would sometimes return null.
+    private static final long REQUEST_TIMEOUT_SECONDS = 5;
     private static final String USER_AGENT_REGEX = "^(?<libraryName>.*?)\\/(?<libraryVersion>.*?) " +
             "\\((?<systemName>.*?) (?<systemVersion>.*?); " +
             "(?<deviceManufacturer>.*?) (?<deviceName>.*?); " +
@@ -131,11 +133,11 @@ public final class UserAgentTest {
 
     private String checkUserAgent() throws Exception {
         // Make a new query request
-        GraphQLRequest<Iterable<Todo>> listTodos = ModelQuery.list(Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> listTodos = ModelQuery.list(Todo.class);
         api.query(listTodos, NoOpConsumer.create(), NoOpConsumer.create()); // Ignore result
 
         // Wait for server to receive the request and return user agent
-        RecordedRequest request = server.takeRequest(REQUEST_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        RecordedRequest request = server.takeRequest(REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
         return request.getHeader("User-Agent");
     }

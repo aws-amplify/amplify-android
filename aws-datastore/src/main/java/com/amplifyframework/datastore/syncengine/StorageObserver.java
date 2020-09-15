@@ -26,9 +26,9 @@ import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
-import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * Observes a {@link LocalStorageAdapter} for its {@link StorageItemChange}s.
@@ -76,15 +76,6 @@ final class StorageObserver {
                 error -> LOG.warn("Storage adapter subscription ended in error", error)
             )
         );
-    }
-
-    /**
-     * Checks if the storage observer is listening
-     * for events emitted by the local DataStore.
-     * @return true if there are listeners. False otherwise.
-     */
-    boolean isObservingStorageChanges() {
-        return ongoingOperationsDisposable.size() > 0;
     }
 
     private <T extends Model> PendingMutation<T> toPendingMutation(StorageItemChange<T> change) {

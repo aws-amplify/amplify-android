@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -73,9 +73,10 @@ public final class MergerTest {
      * merge, A should NOT be in the store anymore.
      * @throws DataStoreException On failure to arrange test data into store,
      *                            or on failure to query results for test assertions
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void mergeDeletionForExistingItem() throws DataStoreException {
+    public void mergeDeletionForExistingItem() throws DataStoreException, InterruptedException {
         // Arrange: A blog owner, and some metadata about it, are in the store.
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson")
@@ -91,7 +92,7 @@ public final class MergerTest {
             new ModelMetadata(blogOwner.getId(), true, 2, Temporal.Timestamp.now());
         TestObserver<Void> observer =
             merger.merge(new ModelWithMetadata<>(blogOwner, deletionMetadata)).test();
-        assertTrue(observer.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
         observer.assertNoErrors().assertComplete();
 
         // Assert: the blog owner is no longer in the store.
@@ -104,9 +105,10 @@ public final class MergerTest {
      * there was no work to be performed (it was already deleted.) After
      * the merge, there should STILL be no matching item in the store.
      * @throws DataStoreException On failure to query results for assertions
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void mergeDeletionForNotExistingItem() throws DataStoreException {
+    public void mergeDeletionForNotExistingItem() throws DataStoreException, InterruptedException {
         // Arrange, to start, there are no items matching the incoming deletion request.
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson")
@@ -119,7 +121,7 @@ public final class MergerTest {
             new ModelMetadata(blogOwner.getId(), true, 1, Temporal.Timestamp.now());
         TestObserver<Void> observer =
             merger.merge(new ModelWithMetadata<>(blogOwner, deletionMetadata)).test();
-        assertTrue(observer.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
         observer.assertNoErrors().assertComplete();
 
         // Assert: there is still nothing in the store.
@@ -130,9 +132,10 @@ public final class MergerTest {
      * Assume there is NO item A. Then, we try to merge a save for a
      * item A. This should succeed, with A being in the store, at the end.
      * @throws DataStoreException On failure to query results for assertions
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void mergeSaveForNotExistingItem() throws DataStoreException {
+    public void mergeSaveForNotExistingItem() throws DataStoreException, InterruptedException {
         // Arrange: nothing in the store, to start.
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson")
@@ -143,7 +146,7 @@ public final class MergerTest {
 
         // Act: merge a creation for an item
         TestObserver<Void> observer = merger.merge(new ModelWithMetadata<>(blogOwner, metadata)).test();
-        assertTrue(observer.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
         observer.assertNoErrors().assertComplete();
 
         // Assert: the item & its associated metadata are now in the store.
@@ -156,9 +159,10 @@ public final class MergerTest {
      * This should succeed, and it should be treated as an update. After the merge,
      * A should have the updates from the merge.
      * @throws DataStoreException On failure to arrange data into store
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void mergeSaveForExistingItem() throws DataStoreException {
+    public void mergeSaveForExistingItem() throws DataStoreException, InterruptedException {
         // Arrange: an item is already in the store.
         BlogOwner originalModel = BlogOwner.builder()
             .name("Jameson The Original")
@@ -174,7 +178,7 @@ public final class MergerTest {
         ModelMetadata updatedMetadata =
             new ModelMetadata(originalMetadata.getId(), false, 2, Temporal.Timestamp.now());
         TestObserver<Void> observer = merger.merge(new ModelWithMetadata<>(updatedModel, updatedMetadata)).test();
-        assertTrue(observer.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
         observer.assertComplete().assertNoErrors();
 
         // Assert: the *UPDATED* stuff is in the store, *only*.
@@ -187,9 +191,10 @@ public final class MergerTest {
      * if there is a pending mutation in the outbox, for a model of the same ID,
      * then that item shall NOT be merged.
      * @throws DataStoreException On failure to arrange data into store
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void itemIsNotMergedWhenOutboxHasPendingMutation() throws DataStoreException {
+    public void itemIsNotMergedWhenOutboxHasPendingMutation() throws DataStoreException, InterruptedException {
         // Arrange: some model with a well known ID exists on the system.
         // We pretend that the user has recently updated it via the DataStore update() API.
         String knownId = RandomString.string();
@@ -205,7 +210,7 @@ public final class MergerTest {
             blogOwner, BlogOwner.class, PendingMutation.Type.CREATE, QueryPredicates.all()
         );
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(pendingMutation).test();
-        enqueueObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        enqueueObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
         enqueueObserver.assertNoErrors().assertComplete();
 
         // Act: now, cloud sync happens, and the sync engine tries to apply an update
@@ -213,7 +218,7 @@ public final class MergerTest {
         // item should be DELETED.
         ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Temporal.Timestamp.now());
         TestObserver<Void> mergeObserver = merger.merge(new ModelWithMetadata<>(blogOwner, cloudMetadata)).test();
-        mergeObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        mergeObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
         mergeObserver.assertNoErrors().assertComplete();
 
         // Assert: the item is NOT deleted from the local store.
@@ -228,9 +233,10 @@ public final class MergerTest {
      * An incoming mutation whose model has a LOWER version than an already existing model
      * shall be rejected from the merger.
      * @throws DataStoreException On failure interacting with local store during test arrange/verify.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void itemWithLowerVersionIsNotMerged() throws DataStoreException {
+    public void itemWithLowerVersionIsNotMerged() throws DataStoreException, InterruptedException {
         // Arrange a model and metadata into storage.
         BlogOwner existingModel = BlogOwner.builder()
             .name("Cornelius Daniels")
@@ -247,7 +253,7 @@ public final class MergerTest {
         ModelWithMetadata<BlogOwner> modelWithLowerVersionMetadata =
             new ModelWithMetadata<>(existingModel, lowerVersionMetadata);
         TestObserver<Void> mergeObserver = merger.merge(modelWithLowerVersionMetadata).test();
-        mergeObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        mergeObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
         mergeObserver.assertNoErrors().assertComplete();
 
         // Assert: Joey is still the same old Joey.
@@ -265,9 +271,10 @@ public final class MergerTest {
      * The user may have updated the data locally via the DataStore API. So we would clobber it.
      * The version must be strictly HIGHER than the current version, in order for the merge to succeed.
      * @throws DataStoreException On failure to interact with storage during arrange/verify
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void itemWithSameVersionIsNotMerged() throws DataStoreException {
+    public void itemWithSameVersionIsNotMerged() throws DataStoreException, InterruptedException {
         // Arrange a model and metadata into storage.
         BlogOwner existingModel = BlogOwner.builder()
             .name("Cornelius Daniels")
@@ -284,7 +291,7 @@ public final class MergerTest {
         ModelWithMetadata<BlogOwner> modelWithLowerVersionMetadata =
             new ModelWithMetadata<>(incomingModel, lowerVersionMetadata);
         TestObserver<Void> mergeObserver = merger.merge(modelWithLowerVersionMetadata).test();
-        mergeObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        mergeObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
         mergeObserver.assertNoErrors().assertComplete();
 
         // Assert: Joey is still the same old Joey.
@@ -305,9 +312,10 @@ public final class MergerTest {
      * But, it the inputs to the system are technically different, so it is
      * a distinct test in terms of system input/output.
      * @throws DataStoreException On failure to interact with storage during arrange/verification
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void itemWithoutVersionIsNotMerged() throws DataStoreException {
+    public void itemWithoutVersionIsNotMerged() throws DataStoreException, InterruptedException {
         // Arrange a model and metadata into storage.
         BlogOwner existingModel = BlogOwner.builder()
             .name("Cornelius Daniels")
@@ -323,7 +331,7 @@ public final class MergerTest {
         ModelWithMetadata<BlogOwner> incomingModelWithMetadata =
             new ModelWithMetadata<>(existingModel, metadataWithoutVersion);
         TestObserver<Void> mergeObserver = merger.merge(incomingModelWithMetadata).test();
-        mergeObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        mergeObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
         mergeObserver.assertNoErrors().assertComplete();
 
         // Assert: Joey is still the same old Joey.

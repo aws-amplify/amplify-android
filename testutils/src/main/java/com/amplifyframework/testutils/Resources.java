@@ -141,7 +141,7 @@ public final class Resources {
      *             ${PROJECT_ROOT}/src/test/resources/foo/bar.lines would have a relative
      *             path value of "foo/bar.lines".
      * @return A list of strings, one for each line of text found in the resource file
-     *         that exists at the the provided path.
+     *         that exists at the provided path.
      */
     public static List<String> readLines(String path) {
         return Arrays.asList(readAsString(path).split("\\r?\\n"));

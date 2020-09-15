@@ -6,7 +6,7 @@ commands:
     parameters:
       gradle_version:
         description: "The version of Gradle to install"
-        default: "6.5.1"
+        default: "6.6.1"
         type: string
 
     steps:
@@ -81,7 +81,7 @@ jobs:
   build:
     working_directory: ~/amplify-android-home
     docker:
-      - image: circleci/android:api-29
+      - image: circleci/android@sha256:46d2bb895a6fc8404ef3b5237475bd2e10ec0f0cebfc671dbe4f8b90c305b168
     resource_class: xlarge
     environment:
       JVM_OPTS: -Xmx3200m
@@ -119,11 +119,6 @@ jobs:
       - run:
           name: Run integration test
           command: .circleci/run-integration-tests.sh
-      - run:
-          name: Store coverage data
-          command: |
-              .circleci/retry.sh 3 "./gradlew jacocoFullReport --no-daemon"
-              .circleci/codecov.sh  # From https://codecov.io/bash
       - store_artifacts:
           path: logcat.log
 workflows:

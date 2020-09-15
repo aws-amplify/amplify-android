@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.ModelWithMetadataDeserializer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -48,8 +50,8 @@ final class GsonFactory {
             .registerTypeAdapter(Temporal.DateTime.class, new TemporalDeserializers.DateTimeDeserializer())
             .registerTypeAdapter(GraphQLResponse.class, new GraphQLResponseDeserializer())
             .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer())
-            .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer())
-            .registerTypeAdapter(String.class, new StringDeserializer());
+            .registerTypeAdapter(String.class, new StringDeserializer())
+            .registerTypeAdapter(ModelWithMetadata.class, new ModelWithMetadataDeserializer());
     }
 
     private static void withAdditionalAdapters(GsonBuilder builder, Map<Class<?>, Object> additionalAdapters) {
