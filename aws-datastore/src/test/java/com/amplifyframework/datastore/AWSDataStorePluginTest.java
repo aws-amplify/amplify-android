@@ -45,7 +45,6 @@ import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
-import com.amplifyframework.util.Time;
 
 import org.json.JSONException;
 import org.json.JSONObject;

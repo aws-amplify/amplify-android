@@ -31,8 +31,8 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -206,7 +206,8 @@ public final class AppSyncClientInstrumentationTest {
         // TODO: This is currently a pretty worthless test - mainly for setting a debug point and manually inspecting
         // When you call sync with a lastSyncTime it gives you one entry per version of that object which was created
         // since that time.
-        Iterable<ModelWithMetadata<Post>> postSyncResult = sync(api.buildSyncRequest(Post.class, startTimeSeconds, 1000));
+        Iterable<ModelWithMetadata<Post>> postSyncResult =
+                sync(api.buildSyncRequest(Post.class, startTimeSeconds, 1000));
         assertTrue(postSyncResult.iterator().hasNext());
     }
 
