@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.core.model.annotations.ModelField;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -62,17 +63,24 @@ public final class FieldFinder {
     }
 
     /**
-     * Helper for finding all fields in a class without limiting limiting to {@link ModelField}.
+     * Helper for finding all fields in a class without limiting to {@link ModelField}.
      * @param clazz clazz the Class object.
      * @return set of fields
      */
     @NonNull
-    public static List<Field> findAllFieldsIn(@NonNull Class<?> clazz) {
+    public static List<Field> findNonTransientFieldsIn(@NonNull Class<?> clazz) {
         final List<Field> fields = new ArrayList<>();
         Class<?> fieldContainerClazz = clazz;
         while (fieldContainerClazz != null) {
             for (Field field : fieldContainerClazz.getDeclaredFields()) {
-                fields.add(field);
+                /**
+                 * In Android 21+, java.lang.Object has two transient fields, shadow$_klass_ and shadow$_monitor_.
+                 * They are not actually present when running unit tests, but only when running on an Android device.
+                 * We don't care about them, so we will filter them out by ignoring all transient fields.
+                 */
+                if (!Modifier.isTransient(field.getModifiers())) {
+                    fields.add(field);
+                }
             }
             fieldContainerClazz = fieldContainerClazz.getSuperclass();
         }

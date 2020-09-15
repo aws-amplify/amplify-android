@@ -142,7 +142,9 @@ public final class Amplify {
             // Configure User-Agent utility
             UserAgent.configure(configuration.getPlatformVersions());
 
-            DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
+            if (configuration.isDevMenuEnabled()) {
+                DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
+            }
 
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
                 if (category.getPlugins().size() > 0) {

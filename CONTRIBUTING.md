@@ -103,6 +103,7 @@ Then, specify `main` instead of a version number to point to mavenLocal inside `
 dependencies {
     implementation 'com.amplifyframework:core:main'
 }
+```
 
 ## Tools
 [Gradle](https://gradle.org) is used for all [build and dependency management](https://developer.android.com/studio/build).

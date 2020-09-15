@@ -258,7 +258,7 @@ public final class SelectionSet {
          */
         private Set<SelectionSet> getNestedCustomTypeFields(Class<?> clazz) {
             Set<SelectionSet> result = new HashSet<>();
-            for (Field field : FieldFinder.findAllFieldsIn(clazz)) {
+            for (Field field : FieldFinder.findNonTransientFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (isCustomType(field)) {
                     result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));

@@ -29,10 +29,10 @@ import com.amplifyframework.util.Time;
 public final class ShakeDetector {
     // A device movement is classified as a shake if the acceleration
     // is above this threshold.
-    private static final double SHAKE_THRESHOLD = 11.7;
+    private static final double SHAKE_THRESHOLD = SensorManager.GRAVITY_EARTH * 1.33f;
     // The minimum duration (in milliseconds) that the device needs to
     // be shaken in order to make the developer menu appear or disappear.
-    private static final int SHAKE_TIME = 500;
+    private static final int SHAKE_TIME = 1000;
 
     // Listener to handle shake events.
     private final ShakeDetector.Listener listener;
