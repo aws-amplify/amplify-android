@@ -424,11 +424,11 @@ Are you using the right versions of Gradle, Ant, Groovy, Kotlin, Java, Mac OS X?
 ./gradlew -version
 
 ------------------------------------------------------------
-Gradle 6.6
+Gradle 6.6.1
 ------------------------------------------------------------
 
-Build time:   2020-08-10 22:06:19 UTC
-Revision:     d119144684a0c301aea027b79857815659e431b9
+Build time:   2020-08-25 16:29:12 UTC
+Revision:     f2d1fb54a951d8b11d25748e4711bec8d128d7e3
 
 Kotlin:       1.3.72
 Groovy:       2.5.12
