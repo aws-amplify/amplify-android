@@ -80,7 +80,7 @@ the root of the `amplify-android` project:
 
 After this, you can use the published development artifacts from an app.
 To do so, specify `mavenLocal()` inside the app's top-level
-`build.gradle` file:
+`build.gradle(Project)` file:
 
 ```gradle
 buildscript {
@@ -89,8 +89,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.1'
-        
-	 implementation 'com.amplifyframework:core:main' // Specify `main` instead of a version number to point to mavenLocal
     }
 }
 
@@ -98,6 +96,12 @@ allprojects {
     repositories {
         mavenLocal() // this should ideally appear before other repositories
     }
+}
+```
+Then, specify `main` instead of a version number to point to mavenLocal inside `build.gradle(Module)` file:
+```
+dependencies {
+    implementation 'com.amplifyframework:core:main'
 }
 ```
 

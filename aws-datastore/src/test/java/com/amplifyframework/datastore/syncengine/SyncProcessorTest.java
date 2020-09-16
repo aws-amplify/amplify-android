@@ -23,6 +23,7 @@ import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
@@ -650,8 +651,9 @@ public final class SyncProcessorTest {
                 .name(RandomString.string())
                 .id(RandomString.string())
                 .build();
+        Temporal.Timestamp randomTimestamp = new Temporal.Timestamp(new Random().nextLong(), TimeUnit.SECONDS);
         return new ModelWithMetadata<>(blogOwner,
-                new ModelMetadata(blogOwner.getId(), null, new Random().nextInt(), new Random().nextLong())
+                new ModelMetadata(blogOwner.getId(), null, new Random().nextInt(), randomTimestamp)
         );
     }
 

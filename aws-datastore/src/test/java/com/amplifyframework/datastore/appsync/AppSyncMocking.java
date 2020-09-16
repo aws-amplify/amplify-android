@@ -27,9 +27,9 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.random.RandomString;
-import com.amplifyframework.util.Time;
 
 import org.mockito.ArgumentMatcher;
 import org.mockito.stubbing.Answer;
@@ -144,7 +144,7 @@ public final class AppSyncMocking {
 
                 // Pass back a ModelWithMetadata. Model is the one provided.
                 ModelMetadata metadata =
-                    new ModelMetadata(capturedModel.getId(), false, 1, Time.now());
+                    new ModelMetadata(capturedModel.getId(), false, 1, new Temporal.Timestamp());
                 ModelWithMetadata<T> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
                 Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResult =
                     invocation.getArgument(indexOfResultConsumer);
@@ -196,7 +196,7 @@ public final class AppSyncMocking {
 
                 String modelId = invocation.getArgument(indexOfModelId);
                 int version = invocation.getArgument(indexOfVersion);
-                ModelMetadata metadata = new ModelMetadata(modelId, true, version, Time.now());
+                ModelMetadata metadata = new ModelMetadata(modelId, true, version, Temporal.Timestamp.now());
                 ModelWithMetadata<? extends Model> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
 
                 onResult.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));

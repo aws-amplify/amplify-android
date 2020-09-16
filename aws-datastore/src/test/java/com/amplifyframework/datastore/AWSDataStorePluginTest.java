@@ -34,6 +34,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
@@ -44,7 +45,6 @@ import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
-import com.amplifyframework.util.Time;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -232,7 +232,7 @@ public final class AWSDataStorePluginTest {
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Time.now());
+            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now());
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             return mock(GraphQLOperation.class);
@@ -255,7 +255,7 @@ public final class AWSDataStorePluginTest {
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            ModelMetadata modelMetadata = new ModelMetadata(person2.getId(), false, 1, Time.now());
+            ModelMetadata modelMetadata = new ModelMetadata(person2.getId(), false, 1, Temporal.Timestamp.now());
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person2, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             return mock(GraphQLOperation.class);

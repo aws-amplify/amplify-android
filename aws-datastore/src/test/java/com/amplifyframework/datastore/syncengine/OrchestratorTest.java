@@ -19,6 +19,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -31,7 +32,6 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
-import com.amplifyframework.util.Time;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,7 +76,7 @@ public final class OrchestratorTest {
 
         // Mock behaviors from AppSync
         AppSync appSync = mock(AppSync.class);
-        ModelMetadata metadata = new ModelMetadata(susan.getId(), false, 1, Time.now());
+        ModelMetadata metadata = new ModelMetadata(susan.getId(), false, 1, Temporal.Timestamp.now());
         ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(susan, metadata);
         AppSyncMocking.create(appSync).mockResponse(susan);
         AppSyncMocking.sync(appSync).mockSuccessResponse(BlogOwner.class, modelWithMetadata);

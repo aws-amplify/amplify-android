@@ -81,6 +81,7 @@ public final class Temporal {
          * with an optional timezone offset.
          *
          * @param text A valid extended ISO-8601 Date string, with an optional timezone offset
+         * @throws IllegalArgumentException when text input is not a valid ISO-8601 Date string.
          */
         public Date(@NonNull String text) {
             LocalDate localDate;
@@ -90,9 +91,13 @@ public final class Temporal {
                 localDate = LocalDate.from(odt);
                 zoneOffset = ZoneOffset.from(odt);
             } catch (DateTimeParseException exception) {
-                // Optional timezone offset not present
-                localDate = LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE);
-                zoneOffset = null;
+                try {
+                    // Optional timezone offset not present
+                    localDate = LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE);
+                    zoneOffset = null;
+                } catch (DateTimeParseException dateTimeParseException) {
+                    throw new IllegalArgumentException("Failed to create Temporal.Date object from " + text, exception);
+                }
             }
             this.localDate = localDate;
             this.zoneOffset = zoneOffset;
@@ -211,9 +216,14 @@ public final class Temporal {
          * Constructs an {@link Temporal.DateTime} from a valid extended ISO-8601 DateTime string.
          *
          * @param text a valid extended ISO-8601 DateTime string
+         * @throws IllegalArgumentException when text input is not a valid ISO-8601 DateTime string.
          */
         public DateTime(@NonNull String text) {
-            this.offsetDateTime = OffsetDateTime.parse(text, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            try {
+                this.offsetDateTime = OffsetDateTime.parse(text, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            } catch (DateTimeParseException exception) {
+                throw new IllegalArgumentException("Failed to create Temporal.DateTime object from " + text, exception);
+            }
         }
 
         /**
@@ -316,6 +326,7 @@ public final class Temporal {
          * Constructs an {@link Temporal.Time} from a valid, extended ISO-8601 Time string.
          *
          * @param text A valid, extended ISO-8601 Time string
+         * @throws IllegalArgumentException when text input is not a valid ISO-8601 Time string.
          */
         public Time(@NonNull String text) {
             LocalTime localTime;
@@ -325,9 +336,12 @@ public final class Temporal {
                 localTime = LocalTime.from(offsetTime);
                 zoneOffset = ZoneOffset.from(offsetTime);
             } catch (DateTimeParseException exception) {
-                // Optional timezone offset not present
-                localTime = LocalTime.parse(text, DateTimeFormatter.ISO_LOCAL_TIME);
-                zoneOffset = null;
+                try {
+                    localTime = LocalTime.parse(text, DateTimeFormatter.ISO_LOCAL_TIME);
+                    zoneOffset = null;
+                } catch (DateTimeParseException dateTimeParseException) {
+                    throw new IllegalArgumentException("Failed to create Temporal.Time object from " + text, exception);
+                }
             }
             this.localTime = localTime;
             this.zoneOffset = zoneOffset;
@@ -400,7 +414,8 @@ public final class Temporal {
         @Override
         public String toString() {
             return "Temporal.Time{" +
-                    "localTime=\'" + localTime + "\'" +
+                    "localTime=\'" +
+                    "" + localTime + "\'" +
                     ", zoneOffset=\'" + zoneOffset + "\'" +
                     '}';
         }
@@ -451,6 +466,14 @@ public final class Temporal {
          */
         public Timestamp(@NonNull java.util.Date date) {
             this(date.getTime(), TimeUnit.MILLISECONDS);
+        }
+
+        /**
+         * Returns a new Timestamp instance that represents the current system time.
+         * @return a new Timestamp instance that represents the current system time.
+         */
+        public static Timestamp now() {
+            return new Timestamp();
         }
 
         /**
