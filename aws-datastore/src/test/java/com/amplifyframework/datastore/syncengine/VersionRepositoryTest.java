@@ -15,12 +15,12 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.util.Time;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -135,7 +135,7 @@ public final class VersionRepositoryTest {
             .build();
         final int maxRandomVersion = 1_000;
         int expectedVersion = new Random().nextInt(maxRandomVersion);
-        storageAdapter.save(new ModelMetadata(owner.getId(), false, expectedVersion, Time.now()));
+        storageAdapter.save(new ModelMetadata(owner.getId(), false, expectedVersion, Temporal.Timestamp.now()));
 
         // Act! Try to obtain it via the Versioning Repository.
         TestObserver<Integer> observer = versionRepository.findModelVersion(owner).test();

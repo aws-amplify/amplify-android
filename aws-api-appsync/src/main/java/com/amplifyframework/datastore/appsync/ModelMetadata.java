@@ -22,6 +22,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.Objects;
 
@@ -37,7 +38,7 @@ public final class ModelMetadata implements Model {
     private final @ModelField(targetType = "ID", isRequired = true) String id;
     private final @ModelField(targetType = "Boolean") Boolean _deleted;
     private final @ModelField(targetType = "Int") Integer _version;
-    private final @ModelField(targetType = "AWSTimestamp") Long _lastChangedAt;
+    private final @ModelField(targetType = "AWSTimestamp") Temporal.Timestamp _lastChangedAt;
 
     /**
      * Constructor for this metadata model.
@@ -50,7 +51,7 @@ public final class ModelMetadata implements Model {
             @NonNull String id,
             @Nullable Boolean deleted,
             @Nullable Integer version,
-            @Nullable Long lastChangedAt) {
+            @Nullable Temporal.Timestamp lastChangedAt) {
         this.id = Objects.requireNonNull(id);
         this._deleted = deleted;
         this._version = version;
@@ -89,7 +90,7 @@ public final class ModelMetadata implements Model {
      * @return last changed at time
      */
     @Nullable
-    public Long getLastChangedAt() {
+    public Temporal.Timestamp getLastChangedAt() {
         return _lastChangedAt;
     }
 
