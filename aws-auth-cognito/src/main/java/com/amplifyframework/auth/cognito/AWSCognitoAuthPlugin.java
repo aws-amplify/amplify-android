@@ -731,14 +731,25 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 new Callback<List<UserCodeDeliveryDetails>>() {
                     @Override
                     public void onResult(List<UserCodeDeliveryDetails> result) {
-                        if (!isValidUserAttribute(attribute.getKey())) {
+                        if (!isValidUserAttribute(attribute.getKey().getKeyString())) {
                             onError.accept(new AuthException(
                                     "Invalid attribute name",
                                     "See attached exception for more details"
                             ));
                         }
 
-                        if (!isUserAttributeVerifiedByCode(attribute.getKey())) {
+                        if (!isUserAttributeVerifiedByCode(attribute.getKey().getKeyString())) {
+                            onSuccess.accept(new AuthUpdateAttributeResult(
+                                    true,
+                                    new AuthNextUpdateAttributeStep(
+                                            AuthUpdateAttributeStep.DONE,
+                                            Collections.emptyMap(),
+                                            null)
+                            ));
+                        }
+
+                        // Code verified user attribute was updated before
+                        if (result.size() == 0) {
                             onSuccess.accept(new AuthUpdateAttributeResult(
                                     true,
                                     new AuthNextUpdateAttributeStep(
@@ -784,23 +795,28 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
+        Map<String, String> attributesMap = new HashMap<>();
         for (AuthUserAttribute attribute : attributes) {
-            awsMobileClient.updateUserAttributes(
-                    Collections.singletonMap(attribute.getKey().getKeyString(), attribute.getValue()),
-                    new Callback<List<UserCodeDeliveryDetails>>() {
-                        @Override
-                        public void onResult(List<UserCodeDeliveryDetails> result) {
-                            if (!isValidUserAttribute(attribute.getKey())) {
+            attributesMap.put(attribute.getKey().getKeyString(), attribute.getValue());
+        }
+
+        awsMobileClient.updateUserAttributes(
+                attributesMap,
+                new Callback<List<UserCodeDeliveryDetails>>() {
+                    @Override
+                    public void onResult(List<UserCodeDeliveryDetails> result) {
+                        for (String attributeKey : attributesMap.keySet()) {
+                            if (!isValidUserAttribute(attributeKey)) {
                                 onError.accept(new AuthException(
                                         "Invalid attribute name",
                                         "See attached exception for more details"
                                 ));
                             }
 
-                            if (!isUserAttributeVerifiedByCode(attribute.getKey())) {
+                            if (!isUserAttributeVerifiedByCode(attributeKey)) {
                                 Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
                                         new HashMap<>();
-                                resultMap.put(new AuthUserAttributeKey(attribute.getKey().getKeyString()),
+                                resultMap.put(new AuthUserAttributeKey(attributeKey),
                                         new AuthUpdateAttributeResult(
                                                 true,
                                                 new AuthNextUpdateAttributeStep(
@@ -810,12 +826,28 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                         ));
                                 onSuccess.accept(resultMap);
                             }
-                            
+
+                            // Code verified user attribute was updated before
+                            if (result.size() == 0) {
+                                Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
+                                        new HashMap<>();
+                                resultMap.put(new AuthUserAttributeKey(attributeKey),
+                                        new AuthUpdateAttributeResult(
+                                                true,
+                                                new AuthNextUpdateAttributeStep(
+                                                        AuthUpdateAttributeStep.
+                                                                DONE,
+                                                        Collections.emptyMap(),
+                                                        null)
+                                        ));
+                                onSuccess.accept(resultMap);
+                            }
+
                             for (UserCodeDeliveryDetails details : result) {
-                                if (details.getAttributeName().equals(attribute.getKey().getKeyString())) {
+                                if (details.getAttributeName().equals(attributeKey)) {
                                     Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
                                             new HashMap<>();
-                                    resultMap.put(new AuthUserAttributeKey(attribute.getKey().getKeyString()),
+                                    resultMap.put(new AuthUserAttributeKey(attributeKey),
                                             new AuthUpdateAttributeResult(
                                                     true,
                                                     new AuthNextUpdateAttributeStep(
@@ -832,17 +864,17 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                 }
                             }
                         }
+                    }
 
-                        @Override
-                        public void onError(Exception error) {
-                            onError.accept(new AuthException(
-                                    "Failed to update user attributes",
-                                    error,
-                                    "See attached exception for more details"
-                            ));
-                        }
-                    });
-        }
+                    @Override
+                    public void onError(Exception error) {
+                        onError.accept(new AuthException(
+                                "Failed to update user attributes",
+                                error,
+                                "See attached exception for more details"
+                        ));
+                    }
+                });
     }
 
     @Override
@@ -1173,14 +1205,14 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             : null;
     }
 
-    private boolean isValidUserAttribute(AuthUserAttributeKey userAttributeKey) {
+    private boolean isValidUserAttribute(String userAttributeKey) {
         return AuthUserAttributeKey.authUserAttributeKeyList().contains(userAttributeKey);
     }
 
-    private boolean isUserAttributeVerifiedByCode(AuthUserAttributeKey userAttributeKey) {
-        List<AuthUserAttributeKey> codeVerifiedAttributeKeys = Arrays.asList(
-                AuthUserAttributeKey.phoneNumber(),
-                AuthUserAttributeKey.email()
+    private boolean isUserAttributeVerifiedByCode(String userAttributeKey) {
+        List<String> codeVerifiedAttributeKeys = Arrays.asList(
+                AuthUserAttributeKey.phoneNumber().getKeyString(),
+                AuthUserAttributeKey.email().getKeyString()
         );
         return codeVerifiedAttributeKeys.contains(userAttributeKey);
     }

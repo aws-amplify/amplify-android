@@ -202,25 +202,25 @@ public final class AuthUserAttributeKey {
      * Method for getting a list of all valid user attribute keys.
      * @return a list of user attribute keys
      */
-    public static List<AuthUserAttributeKey> authUserAttributeKeyList() {
+    public static List<String> authUserAttributeKeyList() {
         return Arrays.asList(
-                AuthUserAttributeKey.phoneNumber(),
-                AuthUserAttributeKey.email(),
-                AuthUserAttributeKey.address(),
-                AuthUserAttributeKey.birthdate(),
-                AuthUserAttributeKey.familyName(),
-                AuthUserAttributeKey.gender(),
-                AuthUserAttributeKey.middleName(),
-                AuthUserAttributeKey.givenName(),
-                AuthUserAttributeKey.locale(),
-                AuthUserAttributeKey.nickname(),
-                AuthUserAttributeKey.picture(),
-                AuthUserAttributeKey.preferredUsername(),
-                AuthUserAttributeKey.profile(),
-                AuthUserAttributeKey.updatedAt(),
-                AuthUserAttributeKey.website(),
-                AuthUserAttributeKey.zoneInfo(),
-                AuthUserAttributeKey.name()
+                AuthUserAttributeKey.phoneNumber().getKeyString(),
+                AuthUserAttributeKey.email().getKeyString(),
+                AuthUserAttributeKey.address().getKeyString(),
+                AuthUserAttributeKey.birthdate().getKeyString(),
+                AuthUserAttributeKey.familyName().getKeyString(),
+                AuthUserAttributeKey.gender().getKeyString(),
+                AuthUserAttributeKey.middleName().getKeyString(),
+                AuthUserAttributeKey.givenName().getKeyString(),
+                AuthUserAttributeKey.locale().getKeyString(),
+                AuthUserAttributeKey.nickname().getKeyString(),
+                AuthUserAttributeKey.picture().getKeyString(),
+                AuthUserAttributeKey.preferredUsername().getKeyString(),
+                AuthUserAttributeKey.profile().getKeyString(),
+                AuthUserAttributeKey.updatedAt().getKeyString(),
+                AuthUserAttributeKey.website().getKeyString(),
+                AuthUserAttributeKey.zoneInfo().getKeyString(),
+                AuthUserAttributeKey.name().getKeyString()
         );
     }
 
