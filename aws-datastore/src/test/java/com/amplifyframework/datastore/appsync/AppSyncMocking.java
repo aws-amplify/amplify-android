@@ -30,7 +30,6 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.random.RandomString;
-import com.amplifyframework.util.Time;
 
 import org.mockito.ArgumentMatcher;
 import org.mockito.stubbing.Answer;
