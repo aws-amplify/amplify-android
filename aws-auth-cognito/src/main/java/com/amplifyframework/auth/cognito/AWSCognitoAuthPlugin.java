@@ -779,36 +779,36 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 new Callback<List<UserCodeDeliveryDetails>>() {
                     @Override
                     public void onResult(List<UserCodeDeliveryDetails> result) {
-                        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap =
-                                new HashMap<>();
+                        Map<String, UserCodeDeliveryDetails> codeDetailsMap = new HashMap<>();
+                        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap = new HashMap<>();
 
                         for (UserCodeDeliveryDetails details : result) {
-                            Map<String, UserCodeDeliveryDetails> codeDetailsMap =
-                                    Collections.singletonMap(details.getAttributeName(), details);
-                            for (String attributeKey : attributesMap.keySet()) {
-                                if (codeDetailsMap.containsKey(attributeKey)) {
-                                    resultMap.put(new AuthUserAttributeKey(attributeKey),
-                                            new AuthUpdateAttributeResult(
-                                                    true,
-                                                    new AuthNextUpdateAttributeStep(
-                                                            AuthUpdateAttributeStep.
-                                                                    CONFIRM_ATTRIBUTE_WITH_CODE,
-                                                            Collections.emptyMap(),
-                                                            convertCodeDeliveryDetails(details))
-                                            ));
-                                } else {
-                                    resultMap.put(new AuthUserAttributeKey(attributeKey),
-                                            new AuthUpdateAttributeResult(
-                                                    true,
-                                                    new AuthNextUpdateAttributeStep(
-                                                            AuthUpdateAttributeStep.
-                                                                    DONE,
-                                                            Collections.emptyMap(),
-                                                            null)
-                                            ));
-                                }
-                                onSuccess.accept(resultMap);
+                            codeDetailsMap.put(details.getAttributeName(), details);
+                        }
+
+                        for (String attributeKey : attributesMap.keySet()) {
+                            if (codeDetailsMap.containsKey(attributeKey)) {
+                                resultMap.put(new AuthUserAttributeKey(attributeKey),
+                                        new AuthUpdateAttributeResult(
+                                                true,
+                                                new AuthNextUpdateAttributeStep(
+                                                        AuthUpdateAttributeStep.
+                                                                CONFIRM_ATTRIBUTE_WITH_CODE,
+                                                        Collections.emptyMap(),
+                                                        convertCodeDeliveryDetails(codeDetailsMap.get(attributeKey)))
+                                        ));
+                            } else {
+                                resultMap.put(new AuthUserAttributeKey(attributeKey),
+                                        new AuthUpdateAttributeResult(
+                                                true,
+                                                new AuthNextUpdateAttributeStep(
+                                                        AuthUpdateAttributeStep.
+                                                                DONE,
+                                                        Collections.emptyMap(),
+                                                        null)
+                                        ));
                             }
+                            onSuccess.accept(resultMap);
                         }
                     }
 
