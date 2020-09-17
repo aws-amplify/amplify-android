@@ -18,9 +18,6 @@ package com.amplifyframework.auth;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * Factory for preset user attributes and the ability to specify a custom one.
  */
@@ -196,32 +193,6 @@ public final class AuthUserAttributeKey {
      */
     public static AuthUserAttributeKey custom(String attributeKey) {
         return new AuthUserAttributeKey(attributeKey);
-    }
-
-    /**
-     * Method for getting a list of all valid user attribute keys.
-     * @return a list of user attribute keys
-     */
-    public static List<String> authUserAttributeKeyList() {
-        return Arrays.asList(
-                AuthUserAttributeKey.phoneNumber().getKeyString(),
-                AuthUserAttributeKey.email().getKeyString(),
-                AuthUserAttributeKey.address().getKeyString(),
-                AuthUserAttributeKey.birthdate().getKeyString(),
-                AuthUserAttributeKey.familyName().getKeyString(),
-                AuthUserAttributeKey.gender().getKeyString(),
-                AuthUserAttributeKey.middleName().getKeyString(),
-                AuthUserAttributeKey.givenName().getKeyString(),
-                AuthUserAttributeKey.locale().getKeyString(),
-                AuthUserAttributeKey.nickname().getKeyString(),
-                AuthUserAttributeKey.picture().getKeyString(),
-                AuthUserAttributeKey.preferredUsername().getKeyString(),
-                AuthUserAttributeKey.profile().getKeyString(),
-                AuthUserAttributeKey.updatedAt().getKeyString(),
-                AuthUserAttributeKey.website().getKeyString(),
-                AuthUserAttributeKey.zoneInfo().getKeyString(),
-                AuthUserAttributeKey.name().getKeyString()
-        );
     }
 
     /**
