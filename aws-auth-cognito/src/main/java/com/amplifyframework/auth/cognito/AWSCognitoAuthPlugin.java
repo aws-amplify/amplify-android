@@ -739,15 +739,13 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                             null)
                             ));
                         } else {
-                            for (UserCodeDeliveryDetails details : result) {
-                                onSuccess.accept(new AuthUpdateAttributeResult(
-                                        true,
-                                        new AuthNextUpdateAttributeStep(
-                                                AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
-                                                Collections.emptyMap(),
-                                                convertCodeDeliveryDetails(details))
-                                ));
-                            }
+                            onSuccess.accept(new AuthUpdateAttributeResult(
+                                    true,
+                                    new AuthNextUpdateAttributeStep(
+                                            AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                                            Collections.emptyMap(),
+                                            convertCodeDeliveryDetails(result.get(0)))
+                            ));
                         }
                     }
 
