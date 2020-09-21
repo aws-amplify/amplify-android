@@ -58,13 +58,28 @@ public class AuthException extends AmplifyException {
     public static class SignedOutException extends AuthException {
         private static final long serialVersionUID = 1L;
         private static final String MESSAGE = "You are currently signed out.";
-        private static final String RECOVERY_SUGGESTION = "Please sign in and reattempt the operation.";
+        private static final String DEFAULT_RECOVERY_SUGGESTION = "Please sign in and reattempt the operation.";
+        private static final String IDENTITY_POOL_RECOVERY_SUGGESTION = "If you have guest access enabled, please " +
+                "check that your device is online and try again. Otherwise if guest access is not enabled, you'll " +
+                "need to sign in and try again.";
 
         /**
          * Default message/recovery suggestion without a cause.
          */
         public SignedOutException() {
-            super(MESSAGE, RECOVERY_SUGGESTION);
+            super(MESSAGE, DEFAULT_RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Returns the default error message with a recovery message based on whether guest access is enabled or not
+         * since the user would not necessarily have to sign in to recover from the error if guest access is enabled.
+         * @param guestAccess specifies whether guest access is enabled or not so that the proper recovery message can
+         *                    be returned.
+         */
+        public SignedOutException(GuestAccess guestAccess) {
+            super(MESSAGE, guestAccess == GuestAccess.GUEST_ACCESS_ENABLED ?
+                            IDENTITY_POOL_RECOVERY_SUGGESTION :
+                            DEFAULT_RECOVERY_SUGGESTION);
         }
 
         /**
@@ -72,7 +87,7 @@ public class AuthException extends AmplifyException {
          * @param cause The original error.
          */
         public SignedOutException(Throwable cause) {
-            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+            super(MESSAGE, cause, DEFAULT_RECOVERY_SUGGESTION);
         }
     }
 
@@ -417,5 +432,21 @@ public class AuthException extends AmplifyException {
         public FailedAttemptsLimitExceededException(Throwable cause) {
             super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Allows the user to specify whether guest access is enabled or not since this can affect which
+     * recovery message should be included.
+     */
+    public enum GuestAccess {
+        /**
+         * Auth has been configured to support guest access (where a user can get credentials once online without being
+         * signed in).
+         */
+        GUEST_ACCESS_ENABLED,
+        /**
+         * AAuth has not been configured to support guest access.
+         */
+        GUEST_ACCESS_DISABLED
     }
 }

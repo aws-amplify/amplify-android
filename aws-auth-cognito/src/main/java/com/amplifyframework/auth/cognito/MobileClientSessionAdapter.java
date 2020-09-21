@@ -55,23 +55,26 @@ final class MobileClientSessionAdapter {
             @NonNull AWSMobileClient awsMobileClient,
             @NonNull Consumer<AuthSession> onComplete) {
 
-        // Try to get identity ID - if the account doesn't support identity pools, Android AWSMobileClient throws an
-        // exception and we return an invalid account exception for identity ID and AWS credentials. If it's just null,
-        // it could be guest access is not setup or it just hasn't been online to retrieve them yet so for now we leave
-        // it at a signed out exception.
-        try {
-            String identityId = awsMobileClient.getIdentityId();
-
-            if (identityId == null) {
-                onComplete.accept(signedOutSessionWithIdentityPool());
-                return;
-            } else {
-                fetchSignedOutSessionWithIdentityId(identityId, awsMobileClient, onComplete);
+        // Try to get AWS Credentials - if the account doesn't support identity pools, Android AWSMobileClient throws an
+        // exception with a "Cognito Identity not configured" message. Otherwise, if it returns an exception with the
+        // message "Failed to get credentials from Cognito Identity" it could mean either Guest mode is supported
+        // but the device is offline without cached credentials or Guest mode is not supported. Finally, if it returns
+        // the credentials, that means Guest mode is supported so we then also retrieve the Identity ID.
+        awsMobileClient.getAWSCredentials(new Callback<AWSCredentials>() {
+            @Override
+            public void onResult(AWSCredentials result) {
+                fetchSignedOutSessionWithAWSCredentials(result, awsMobileClient, onComplete);
             }
-        } catch (Throwable exception) {
-            onComplete.accept(signedOutSessionWithoutIdentityPool());
-            return;
-        }
+
+            @Override
+            public void onError(Exception error) {
+                if (error.getMessage().contains("Cognito Identity not configured")) {
+                    onComplete.accept(signedOutSessionWithoutIdentityPool());
+                } else {
+                    onComplete.accept(signedOutSessionWithIdentityPool());
+                }
+            }
+        });
     }
 
     static void fetchSignedInSession(
@@ -242,35 +245,36 @@ final class MobileClientSessionAdapter {
         }
     }
 
-    private static void fetchSignedOutSessionWithIdentityId(
-            String identityId,
-            AWSMobileClient awsMobileClient,
-            Consumer<AuthSession> onComplete) {
-        awsMobileClient.getAWSCredentials(new Callback<AWSCredentials>() {
-            @Override
-            public void onResult(AWSCredentials result) {
-                if (result != null) {
-                    onComplete.accept(
-                            new AWSCognitoAuthSession(
-                                    false,
-                                    AuthSessionResult.success(identityId),
-                                    AuthSessionResult.success(result),
-                                    AuthSessionResult.failure(new AuthException.SignedOutException()),
-                                    AuthSessionResult.failure(new AuthException.SignedOutException())
-                            )
-                    );
-                } else {
-                    onComplete.accept(signedOutSessionWithIdentityPool());
-                }
-            }
+    private static void fetchSignedOutSessionWithAWSCredentials(
+        AWSCredentials credentials,
+        AWSMobileClient awsMobileClient,
+        Consumer<AuthSession> onComplete) {
 
-            // Currently the errors returned by AWSMobileClient don't specify why credentials were unavailable.
-            // So we go for the more generic signed out exception for now.
-            @Override
-            public void onError(Exception error) {
-                onComplete.accept(signedOutSessionWithIdentityPool());
-            }
-        });
+        try {
+            String identityId = awsMobileClient.getIdentityId();
+
+            onComplete.accept(
+                    new AWSCognitoAuthSession(
+                            false,
+                            AuthSessionResult.success(identityId),
+                            AuthSessionResult.success(credentials),
+                            AuthSessionResult.failure(new AuthException.SignedOutException()),
+                            AuthSessionResult.failure(new AuthException.SignedOutException())
+                    )
+            );
+        } catch (Throwable exception) {
+            onComplete.accept(new AWSCognitoAuthSession(
+                    false,
+                    AuthSessionResult.failure(new AuthException(
+                            "Retrieved guest credentials but failed to retrieve Identity ID",
+                            exception,
+                            "This should never happen. See the attached exception for more details.")),
+                    AuthSessionResult.success(credentials),
+                    AuthSessionResult.failure(new AuthException.SignedOutException()),
+                    AuthSessionResult.failure(new AuthException.SignedOutException())
+            ));
+            return;
+        }
     }
 
     private static AuthSession signedOutSessionWithoutIdentityPool() {
@@ -286,8 +290,10 @@ final class MobileClientSessionAdapter {
     private static AuthSession signedOutSessionWithIdentityPool() {
         return new AWSCognitoAuthSession(
                 false,
-                AuthSessionResult.failure(new AuthException.SignedOutException()),
-                AuthSessionResult.failure(new AuthException.SignedOutException()),
+                AuthSessionResult.failure(new AuthException.SignedOutException(
+                        AuthException.GuestAccess.GUEST_ACCESS_ENABLED)),
+                AuthSessionResult.failure(new AuthException.SignedOutException(
+                        AuthException.GuestAccess.GUEST_ACCESS_ENABLED)),
                 AuthSessionResult.failure(new AuthException.SignedOutException()),
                 AuthSessionResult.failure(new AuthException.SignedOutException())
         );
