@@ -68,7 +68,7 @@ public class AuthException extends AmplifyException {
                     "Please sign in and reattempt the operation.");
             RECOVERY_SUGGESTIONS.put(GuestAccess.GUEST_ACCESS_POSSIBLE,
                     "If you have guest access enabled, please check that your device is online and try again. " +
-                        "Otherwise if guest access is not enabled, you'll need to sign in and try again.");
+                    "Otherwise if guest access is not enabled, you'll need to sign in and try again.");
             RECOVERY_SUGGESTIONS.put(GuestAccess.GUEST_ACCESS_ENABLED,
                     "For guest access, please check that your device is online and try again. For normal user " +
                     "access, please sign in.");
@@ -464,7 +464,7 @@ public class AuthException extends AmplifyException {
          */
         GUEST_ACCESS_POSSIBLE,
         /**
-         * AAuth has not been configured to support guest access.
+         * Auth has not been configured to support guest access.
          */
         GUEST_ACCESS_DISABLED
     }
