@@ -291,9 +291,9 @@ final class MobileClientSessionAdapter {
         return new AWSCognitoAuthSession(
                 false,
                 AuthSessionResult.failure(new AuthException.SignedOutException(
-                        AuthException.GuestAccess.GUEST_ACCESS_ENABLED)),
+                        AuthException.GuestAccess.GUEST_ACCESS_POSSIBLE)),
                 AuthSessionResult.failure(new AuthException.SignedOutException(
-                        AuthException.GuestAccess.GUEST_ACCESS_ENABLED)),
+                        AuthException.GuestAccess.GUEST_ACCESS_POSSIBLE)),
                 AuthSessionResult.failure(new AuthException.SignedOutException()),
                 AuthSessionResult.failure(new AuthException.SignedOutException())
         );

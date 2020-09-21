@@ -19,6 +19,9 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Exception thrown by Storage category plugins.
  */
@@ -57,17 +60,29 @@ public class AuthException extends AmplifyException {
      */
     public static class SignedOutException extends AuthException {
         private static final long serialVersionUID = 1L;
+        private static final Map<GuestAccess, String> RECOVERY_SUGGESTIONS;
+
+        static {
+            RECOVERY_SUGGESTIONS = new HashMap<>();
+            RECOVERY_SUGGESTIONS.put(GuestAccess.GUEST_ACCESS_DISABLED,
+                    "Please sign in and reattempt the operation.");
+            RECOVERY_SUGGESTIONS.put(GuestAccess.GUEST_ACCESS_POSSIBLE,
+                    "If you have guest access enabled, please check that your device is online and try again. " +
+                        "Otherwise if guest access is not enabled, you'll need to sign in and try again.");
+            RECOVERY_SUGGESTIONS.put(GuestAccess.GUEST_ACCESS_ENABLED,
+                    "For guest access, please check that your device is online and try again. For normal user " +
+                    "access, please sign in.");
+        }
+
         private static final String MESSAGE = "You are currently signed out.";
-        private static final String DEFAULT_RECOVERY_SUGGESTION = "Please sign in and reattempt the operation.";
-        private static final String IDENTITY_POOL_RECOVERY_SUGGESTION = "If you have guest access enabled, please " +
-                "check that your device is online and try again. Otherwise if guest access is not enabled, you'll " +
-                "need to sign in and try again.";
 
         /**
          * Default message/recovery suggestion without a cause.
          */
         public SignedOutException() {
-            super(MESSAGE, DEFAULT_RECOVERY_SUGGESTION);
+            // Return the guest access disabled message by default since it's the most straightforward way to address
+            // a signed out error.
+            super(MESSAGE, RECOVERY_SUGGESTIONS.get(GuestAccess.GUEST_ACCESS_DISABLED));
         }
 
         /**
@@ -77,9 +92,7 @@ public class AuthException extends AmplifyException {
          *                    be returned.
          */
         public SignedOutException(GuestAccess guestAccess) {
-            super(MESSAGE, guestAccess == GuestAccess.GUEST_ACCESS_ENABLED ?
-                            IDENTITY_POOL_RECOVERY_SUGGESTION :
-                            DEFAULT_RECOVERY_SUGGESTION);
+            super(MESSAGE, RECOVERY_SUGGESTIONS.get(guestAccess));
         }
 
         /**
@@ -87,7 +100,9 @@ public class AuthException extends AmplifyException {
          * @param cause The original error.
          */
         public SignedOutException(Throwable cause) {
-            super(MESSAGE, cause, DEFAULT_RECOVERY_SUGGESTION);
+            // Return the guest access disabled message by default since it's the most straightforward way to address
+            // a signed out error.
+            super(MESSAGE, cause, RECOVERY_SUGGESTIONS.get(GuestAccess.GUEST_ACCESS_DISABLED));
         }
     }
 
@@ -444,6 +459,10 @@ public class AuthException extends AmplifyException {
          * signed in).
          */
         GUEST_ACCESS_ENABLED,
+        /**
+         * Auth could support guest access but it is unknown if that mode is currently enabled.
+         */
+        GUEST_ACCESS_POSSIBLE,
         /**
          * AAuth has not been configured to support guest access.
          */
