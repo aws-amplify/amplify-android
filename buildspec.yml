@@ -1,11 +1,16 @@
+version: 0.2
 # This file is used as part of the build process implemented using AWS CodeBuild [1].
 # The CodeBuild documentation [2] provides an introduction of the service and its capabilities. In general
 # terms, it allows us to configure the actions executed when a build is triggered by a commit to the
 # amplify-android GitHub repository.
 #
+# For the purposes of this repo, we're simply running a build by using "./gradlew build"
+# command and in the post-build phase, we consolidate the JUnit report files in one location.
+# In the reports section, we're instructing CodeBuild to publish those reports which can be
+# viewed in the AWS CodeBuild console (Future work will be to publish those to Github for easier access).
+#
 # [1] - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
 # [2] - https://docs.aws.amazon.com/codebuild/latest/userguide/planning.html
-version: 0.2
 env:
   shell: /bin/sh
 phases:
