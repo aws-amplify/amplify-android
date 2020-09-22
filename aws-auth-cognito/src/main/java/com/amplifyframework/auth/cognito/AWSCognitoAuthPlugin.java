@@ -855,14 +855,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         awsMobileClient.verifyUserAttribute(attributeName, new Callback<UserCodeDeliveryDetails>() {
             @Override
             public void onResult(UserCodeDeliveryDetails result) {
-                if (result.getAttributeName().equals(attributeName)) {
-                    onSuccess.accept(convertCodeDeliveryDetails(result));
-                } else {
-                    onError.accept(new AuthException(
-                            "Returned an incorrect attribute name",
-                            "See attached exception for more details"
-                    ));
-                }
+                onSuccess.accept(convertCodeDeliveryDetails(result));
             }
 
             @Override
