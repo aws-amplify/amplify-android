@@ -692,6 +692,30 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     @Override
+    public void updatePassword(
+            @NonNull String oldPassword,
+            @NonNull String newPassword,
+            @Nullable Action onSuccess,
+            @Nullable Consumer<AuthException> onException
+    ) {
+        awsMobileClient.changePassword(oldPassword, newPassword, new Callback<Void>() {
+            @Override
+            public void onResult(Void result) {
+                onSuccess.call();
+            }
+
+            @Override
+            public void onError(Exception error) {
+                onException.accept(new AuthException(
+                        "Failed to change password",
+                        error,
+                        "See attached exception for more details"
+                ));
+            }
+        });
+    }
+
+    @Override
     public void fetchUserAttributes(
             @NonNull Consumer<List<AuthUserAttribute>> onSuccess,
             @NonNull Consumer<AuthException> onError
@@ -878,30 +902,6 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         ));
                     }
                 });
-    }
-
-    @Override
-    public void updatePassword(
-            @NonNull String oldPassword,
-            @NonNull String newPassword,
-            @Nullable Action onSuccess,
-            @Nullable Consumer<AuthException> onException
-    ) {
-        awsMobileClient.changePassword(oldPassword, newPassword, new Callback<Void>() {
-            @Override
-            public void onResult(Void result) {
-                onSuccess.call();
-            }
-
-            @Override
-            public void onError(Exception error) {
-                onException.accept(new AuthException(
-                        "Failed to change password",
-                        error,
-                        "See attached exception for more details"
-                ));
-            }
-        });
     }
 
     @Override

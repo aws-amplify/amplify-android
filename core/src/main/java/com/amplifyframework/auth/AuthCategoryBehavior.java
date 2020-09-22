@@ -263,6 +263,20 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
+     * Update the password of an existing user - must be signed in to perform this action.
+     * @param oldPassword The user's existing password
+     * @param newPassword The new password desired on the user account
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void updatePassword(
+            @NonNull String oldPassword,
+            @NonNull String newPassword,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
      * Fetch user attributes.
      * @param onSuccess Success callback
      * @param onError Error callback
@@ -318,20 +332,6 @@ public interface AuthCategoryBehavior {
     void confirmUserAttribute(
             @NonNull AuthUserAttributeKey attributeKey,
             @NonNull String confirmationCode,
-            @NonNull Action onSuccess,
-            @NonNull Consumer<AuthException> onError
-    );
-
-    /**
-     * Update the password of an existing user - must be signed in to perform this action.
-     * @param oldPassword The user's existing password
-     * @param newPassword The new password desired on the user account
-     * @param onSuccess Success callback
-     * @param onError Error callback
-     */
-    void updatePassword(
-            @NonNull String oldPassword,
-            @NonNull String newPassword,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError
     );

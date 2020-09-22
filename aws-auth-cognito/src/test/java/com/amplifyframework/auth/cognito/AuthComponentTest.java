@@ -19,6 +19,7 @@ import android.app.Activity;
 import android.content.Context;
 import androidx.annotation.Nullable;
 
+import com.amazonaws.services.cognitoidentityprovider.model.UpdateUserAttributesResult;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.auth.AuthCategoryConfiguration;
@@ -27,6 +28,7 @@ import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthUser;
+import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
@@ -35,11 +37,13 @@ import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSessionResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.auth.result.step.AuthNextSignInStep;
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
 import com.amplifyframework.auth.result.step.AuthResetPasswordStep;
 import com.amplifyframework.auth.result.step.AuthSignInStep;
 import com.amplifyframework.auth.result.step.AuthSignUpStep;
+import com.amplifyframework.auth.result.step.AuthUpdateAttributeStep;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.util.UserAgent;
@@ -74,6 +78,7 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -551,6 +556,153 @@ public final class AuthComponentTest {
 
         synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE);
         verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), any());
+    }
+
+    /**
+     * Tests that fetchUserAttributes method of the Auth wrapper of AWSMobileClient (AMC) calls
+     * AMC.getUserAttributes and get to fetch the user attributes.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void fetchUserAttributes() throws AuthException {
+        Map<String, String> attributeMap = Collections.singletonMap(ATTRIBUTE_KEY, ATTRIBUTE_VAL);
+
+        doAnswer(invocation -> {
+            Callback<Map<String, String>> callback = invocation.getArgument(0);
+            callback.onResult(attributeMap);
+            return null;
+        }).when(mobileClient)
+                .getUserAttributes(Mockito.<Callback<Map<String, String>>>any());
+
+        List<AuthUserAttribute> result = synchronousAuth.fetchUserAttribute();
+        assertEquals(ATTRIBUTE_KEY, result.get(0).getKey().getKeyString());
+        assertEquals(ATTRIBUTE_VAL, result.get(0).getValue());
+        verify(mobileClient).getUserAttributes(Mockito.<Callback<Map<String, String>>> any());
+    }
+
+    /**
+     * Tests that updateUserAttribute method of the Auth wrapper of AWSMobileClient (AMC) calls
+     * AMC.updateUserAttributes with the user attribute it received.
+     * Also ensures that in the onResult case, the success callback receives a valid AuthUpdateAttributeResult and in
+     * the onError case, the error call back receives an AuthException with the root cause attached.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void updateUserAttribute() throws AuthException {
+        AuthUserAttribute attribute = new AuthUserAttribute(new AuthUserAttributeKey(ATTRIBUTE_KEY), ATTRIBUTE_VAL);
+        Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey().getKeyString(), attribute.getValue());
+        List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(new UserCodeDeliveryDetails(
+                DESTINATION,
+                DELIVERY_MEDIUM,
+                ATTRIBUTE_NAME
+        ));
+
+        doAnswer(invocation -> {
+            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(1);
+            callback.onResult(userCodeDeliveryDetailsList);
+            return null;
+        }).when(mobileClient)
+                .updateUserAttributes(any(), Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
+
+        AuthUpdateAttributeResult result = synchronousAuth.updateUserAttribute(attribute);
+
+        assertTrue(result.isUpdated());
+        assertEquals(
+                AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                result.getNextStep().getUpdateAttributeStep()
+        );
+        validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
+        verify(mobileClient).updateUserAttributes(eq(attributeMap), Mockito.<Callback<List<UserCodeDeliveryDetails>>> any());
+    }
+
+    /**
+     * Tests that updateUserAttributes method of the Auth wrapper of AWSMobileClient (AMC) Calls
+     * AMC.updateUserAttributes with the user attributes it received.
+     * Also ensures that in the onResult case, the success callback receives a valid Map which maps
+     * AuthUserAttributeKey into AuthUpdateAttributeResult, and in the onError case, the error call
+     * back receives an AuthException with the root cause attached.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void updateUserAttributes() throws AuthException {
+        List<AuthUserAttribute> attributes = new ArrayList<>();
+        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+        attributes.add(new AuthUserAttribute(attributeKey, ATTRIBUTE_VAL));
+
+        Map<String, String> attributesMap = new HashMap<>();
+        for (AuthUserAttribute attribute : attributes) {
+            attributesMap.put(attribute.getKey().getKeyString(), attribute.getValue());
+        }
+
+        List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(new UserCodeDeliveryDetails(
+                DESTINATION,
+                DELIVERY_MEDIUM,
+                ATTRIBUTE_NAME
+        ));
+
+        doAnswer(invocation -> {
+            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(1);
+            callback.onResult(userCodeDeliveryDetailsList);
+            return null;
+        }).when(mobileClient)
+                .updateUserAttributes(any(), Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
+
+        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> result = synchronousAuth.updateUserAttributes(attributes);
+
+        assertTrue(result.get(attributeKey).isUpdated());
+        assertEquals(
+                AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                result.get(attributeKey).getNextStep().getUpdateAttributeStep()
+        );
+        validateCodeDeliveryDetails(result.get(attributeKey).getNextStep().getCodeDeliveryDetails());
+        verify(mobileClient).updateUserAttributes(eq(attributesMap), Mockito.<Callback<List<UserCodeDeliveryDetails>>> any());
+    }
+
+    /**
+     * Tests the resendUserAttributeConfirmationCode method of the Auth wrapper of AWSMobileClient (AMC) Calls
+     * AMC.verifyUserAttribute with the user attribute key to be verified.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void resendUserAttributeConfirmationCode() throws AuthException {
+        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+        UserCodeDeliveryDetails userCodeDeliveryDetails = new UserCodeDeliveryDetails(
+                DESTINATION,
+                DELIVERY_MEDIUM,
+                ATTRIBUTE_NAME
+        );
+
+        doAnswer(invocation -> {
+            Callback<UserCodeDeliveryDetails> callback = invocation.getArgument(1);
+            callback.onResult(userCodeDeliveryDetails);
+            return null;
+        }).when(mobileClient)
+                .verifyUserAttribute(any(), Mockito.<Callback<UserCodeDeliveryDetails>>any());
+
+        AuthCodeDeliveryDetails result = synchronousAuth.resendUserAttributeConfirmationCode(attributeKey);
+        validateCodeDeliveryDetails(result);
+        verify(mobileClient).verifyUserAttribute(eq(attributeKey.getKeyString()), Mockito.<Callback<UserCodeDeliveryDetails>> any());
+    }
+
+    /**
+     * Tests the confirmUserAttribute method of the Auth wrapper of AWSMobileClient (AMC) Calls
+     * AMC.confirmUpdateUserAttribute with the user attribute key and confirmation code.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void confirmUserAttribute() throws AuthException {
+        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(2);
+            callback.onResult(null);
+            return null;
+        }).when(mobileClient)
+                .confirmUpdateUserAttribute(any(), any(), Mockito.<Callback<Void>>any());
+
+        synchronousAuth.ConfirmUserAttribute(attributeKey, CONFIRMATION_CODE);
+        verify(mobileClient).confirmUpdateUserAttribute(
+                eq(attributeKey.getKeyString()), eq(CONFIRMATION_CODE), Mockito.<Callback<Void>> any());
     }
 
     /**

@@ -20,20 +20,26 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
+import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
+import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.testutils.Await;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -256,7 +262,7 @@ public final class SynchronousAuth {
     }
 
     /**
-     * Remembers current device synchronously.
+     * Remember current device synchronously.
      * @throws AuthException exception
      */
     public void rememberDevice() throws AuthException {
@@ -266,7 +272,7 @@ public final class SynchronousAuth {
     }
 
     /**
-     * Forgets the current device synchronously.
+     * Forget the current device synchronously.
      * @throws AuthException exception
      */
     public void forgetDevice() throws AuthException {
@@ -276,7 +282,7 @@ public final class SynchronousAuth {
     }
 
     /**
-     * Forgets the current device synchronously.
+     * Forget the current device synchronously.
      * @param device Auth device to forget
      * @throws AuthException exception
      */
@@ -287,7 +293,7 @@ public final class SynchronousAuth {
     }
 
     /**
-     * Fetches a list of remembered devices synchronously.
+     * Fetch a list of remembered devices synchronously.
      * @return List of remembered Auth devices upon successful fetch
      * @throws AuthException exception
      */
@@ -308,6 +314,70 @@ public final class SynchronousAuth {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.updatePassword(oldPassword, newPassword, () -> onResult.accept(new Object()), onError)
         );
+    }
+
+    /**
+     * Fetch a list of user attributes synchronously.
+     * @return List of user attributes upon successful fetch
+     * @throws AuthException exception
+     */
+    public List<AuthUserAttribute> fetchUserAttribute() throws AuthException {
+        return Await.<List<AuthUserAttribute>, AuthException>result(((onResult, onError) -> {
+            asyncDelegate.fetchUserAttributes(onResult, onError);
+        }));
+    }
+
+    /**
+     * Update user attribute synchronously.
+     * @param attribute The user attribute to be updated
+     * @return result object
+     * @throws AuthException exception
+     */
+    public AuthUpdateAttributeResult updateUserAttribute(@NonNull AuthUserAttribute attribute) throws AuthException {
+        return Await.<AuthUpdateAttributeResult, AuthException>result((onResult, onError) -> {
+            asyncDelegate.updateUserAttribute(attribute, onResult, onError);
+        });
+    }
+
+    /**
+     * Update user attributes synchronously.
+     * @param attributes The user attributes to be updated
+     * @return result object
+     * @throws AuthException exception
+     */
+    public Map<AuthUserAttributeKey, AuthUpdateAttributeResult> updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes) throws AuthException {
+        return Await.<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>, AuthException>result(((onResult, onError) -> {
+            asyncDelegate.updateUserAttributes(attributes, onResult, onError);
+        }));
+    }
+
+    /**
+     * Resend user attribute confirmation code to verify user attribute synchronously.
+     * @param attributeKey The user attribute key
+     * @return result object
+     * @throws AuthException exception
+     */
+    public AuthCodeDeliveryDetails resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey) throws AuthException {
+        return Await.<AuthCodeDeliveryDetails, AuthException>result(((onResult, onError) -> {
+            asyncDelegate.resendUserAttributeConfirmationCode(attributeKey, onResult, onError);
+        }));
+    }
+
+    /**
+     * Confirm user attribute synchronously.
+     * @param attributeKey The user attribute key
+     * @param confirmationCode The confirmation code the user received after starting the confirmUserAttribute process
+     * @throws AuthException exception
+     */
+    public void ConfirmUserAttribute(@NonNull AuthUserAttributeKey attributeKey,
+                                     @NonNull String confirmationCode) throws AuthException {
+         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) -> {
+                asyncDelegate.confirmUserAttribute(
+                        attributeKey, confirmationCode, () -> onResult.accept(new Object()), onError
+                );
+        });
     }
 
     /**

@@ -215,6 +215,16 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
+    public void updatePassword(
+            @NonNull String oldPassword,
+            @NonNull String newPassword,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().updatePassword(oldPassword, newPassword, onSuccess, onError);
+    }
+
+    @Override
     public void fetchUserAttributes(
             @NonNull Consumer<List<AuthUserAttribute>> onSuccess,
             @NonNull Consumer<AuthException> onError
@@ -257,16 +267,6 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().confirmUserAttribute(attributeKey, confirmationCode, onSuccess, onError);
-    }
-
-    @Override
-    public void updatePassword(
-            @NonNull String oldPassword,
-            @NonNull String newPassword,
-            @NonNull Action onSuccess,
-            @NonNull Consumer<AuthException> onError
-    ) {
-        getSelectedPlugin().updatePassword(oldPassword, newPassword, onSuccess, onError);
     }
 
     @Override

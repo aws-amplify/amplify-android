@@ -21,11 +21,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
+import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
+import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -33,11 +36,14 @@ import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.internal.operators.completable.CompletableLift;
 
 /**
  * An Rx-idiomatic expression of the {@link AuthCategoryBehavior}.
@@ -236,6 +242,47 @@ public interface RxAuthCategoryBehavior {
      *         otherwise.
      */
     Completable updatePassword(@NonNull String oldPassword, @NonNull String newPassword);
+
+    /**
+     * Fetch the user attributes of an existing user - must be signed in to perform this action.
+     * @return An Rx {@link Single} which emits {@link List} of {@link AuthUserAttribute} on success,
+     *          {@link AuthException} on failure
+     */
+    Single<List<AuthUserAttribute>> fetchUserAttributes();
+
+    /**
+     * Update a user attribute of a user who is signed in.
+     * @param attribute The user attribute to be updated
+     * @return An Rx {@link Single} which emits {@link AuthUpdateAttributeResult} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthUpdateAttributeResult> updateUserAttribute(@NonNull AuthUserAttribute attribute);
+
+    /**
+     * Update a list of user attributes of a user who is signed in.
+     * @param attributes A list of user attributes to be updated
+     * @return An Rx {@link Single} which emits a map which maps {@link AuthUserAttributeKey} into
+     *         {@link AuthUpdateAttributeResult} on success, {@link AuthException} on failure
+     */
+    Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(@NonNull List<AuthUserAttribute> attributes);
+
+    /**
+     * Resend user attribute confirmation code to verify user attribute.
+     * @param attributeKey The attribute key to be confirmed.
+     * @return An Rx {@link Single} which emits {@link AuthCodeDeliveryDetails} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthCodeDeliveryDetails> resendUserAttributeConfirmationCode(@NonNull AuthUserAttributeKey attributeKey);
+
+    /**
+     * Confirm user attribute.
+     * @param attributeKey The user attribute key
+     * @param confirmationCode The confirmation code the user received after starting
+     *                         the resendUserAttributeConfirmationCode process
+     * @return An Rx {@link Completable} which completes successfully if userAttributeKey is confirmed,
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable confirmUserAttribute(@NonNull AuthUserAttributeKey attributeKey, @NonNull String confirmationCode);
 
     /**
      * Gets the currently logged in User.
