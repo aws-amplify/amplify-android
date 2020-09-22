@@ -35,7 +35,6 @@ import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.Consumer;
 import com.amplifyframework.testutils.Await;
 
 import java.util.List;
@@ -347,9 +346,10 @@ public final class SynchronousAuth {
      */
     public Map<AuthUserAttributeKey, AuthUpdateAttributeResult> updateUserAttributes(
             @NonNull List<AuthUserAttribute> attributes) throws AuthException {
-        return Await.<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>, AuthException>result(((onResult, onError) -> {
-            asyncDelegate.updateUserAttributes(attributes, onResult, onError);
-        }));
+        return Await.<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>, AuthException>result((
+            (onResult, onError) -> {
+                asyncDelegate.updateUserAttributes(attributes, onResult, onError);
+            }));
     }
 
     /**
@@ -371,12 +371,12 @@ public final class SynchronousAuth {
      * @param confirmationCode The confirmation code the user received after starting the confirmUserAttribute process
      * @throws AuthException exception
      */
-    public void ConfirmUserAttribute(@NonNull AuthUserAttributeKey attributeKey,
+    public void confirmUserAttribute(@NonNull AuthUserAttributeKey attributeKey,
                                      @NonNull String confirmationCode) throws AuthException {
-         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) -> {
-                asyncDelegate.confirmUserAttribute(
-                        attributeKey, confirmationCode, () -> onResult.accept(new Object()), onError
-                );
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) -> {
+            asyncDelegate.confirmUserAttribute(
+                    attributeKey, confirmationCode, () -> onResult.accept(new Object()), onError
+            );
         });
     }
 

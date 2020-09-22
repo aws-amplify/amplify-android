@@ -43,7 +43,6 @@ import java.util.Map;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.internal.operators.completable.CompletableLift;
 
 /**
  * An Rx-idiomatic expression of the {@link AuthCategoryBehavior}.
@@ -264,7 +263,8 @@ public interface RxAuthCategoryBehavior {
      * @return An Rx {@link Single} which emits a map which maps {@link AuthUserAttributeKey} into
      *         {@link AuthUpdateAttributeResult} on success, {@link AuthException} on failure
      */
-    Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(@NonNull List<AuthUserAttribute> attributes);
+    Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes);
 
     /**
      * Resend user attribute confirmation code to verify user attribute.

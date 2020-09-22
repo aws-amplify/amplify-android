@@ -22,11 +22,14 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
+import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
+import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -34,10 +37,12 @@ import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.rx.RxAdapters.VoidBehaviors;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -164,6 +169,36 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     public Completable updatePassword(@NonNull String oldPassword, @NonNull String newPassword) {
         return toCompletable((onComplete, onError) ->
             delegate.updatePassword(oldPassword, newPassword, onComplete, onError));
+    }
+
+    @Override
+    public Single<List<AuthUserAttribute>> fetchUserAttributes() {
+        return toSingle((delegate::fetchUserAttributes));
+    }
+
+    @Override
+    public Single<AuthUpdateAttributeResult> updateUserAttribute(@NonNull AuthUserAttribute attribute) {
+        return toSingle(((onResult, onError) -> delegate.updateUserAttribute(attribute, onResult, onError)));
+    }
+
+    @Override
+    public Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes) {
+        return toSingle(((onResult, onError) -> delegate.updateUserAttributes(attributes, onResult, onError)));
+    }
+
+    @Override
+    public Single<AuthCodeDeliveryDetails> resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey) {
+        return toSingle(((onResult, onError) ->
+                delegate.resendUserAttributeConfirmationCode(attributeKey, onResult, onError)));
+    }
+
+    @Override
+    public Completable confirmUserAttribute(@NonNull AuthUserAttributeKey attributeKey,
+                                            @NonNull String confirmationCode) {
+        return toCompletable(((onComplete, onError) ->
+                delegate.confirmUserAttribute(attributeKey, confirmationCode, onComplete, onError)));
     }
 
     @Override

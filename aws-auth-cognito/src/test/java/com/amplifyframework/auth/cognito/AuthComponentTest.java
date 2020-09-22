@@ -19,7 +19,6 @@ import android.app.Activity;
 import android.content.Context;
 import androidx.annotation.Nullable;
 
-import com.amazonaws.services.cognitoidentityprovider.model.UpdateUserAttributesResult;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.auth.AuthCategoryConfiguration;
@@ -577,7 +576,7 @@ public final class AuthComponentTest {
         List<AuthUserAttribute> result = synchronousAuth.fetchUserAttribute();
         assertEquals(ATTRIBUTE_KEY, result.get(0).getKey().getKeyString());
         assertEquals(ATTRIBUTE_VAL, result.get(0).getValue());
-        verify(mobileClient).getUserAttributes(Mockito.<Callback<Map<String, String>>> any());
+        verify(mobileClient).getUserAttributes(Mockito.<Callback<Map<String, String>>>any());
     }
 
     /**
@@ -590,12 +589,10 @@ public final class AuthComponentTest {
     @Test
     public void updateUserAttribute() throws AuthException {
         AuthUserAttribute attribute = new AuthUserAttribute(new AuthUserAttributeKey(ATTRIBUTE_KEY), ATTRIBUTE_VAL);
-        Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey().getKeyString(), attribute.getValue());
-        List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(new UserCodeDeliveryDetails(
-                DESTINATION,
-                DELIVERY_MEDIUM,
-                ATTRIBUTE_NAME
-        ));
+        Map<String, String> attributeMap =
+                Collections.singletonMap(attribute.getKey().getKeyString(), attribute.getValue());
+        List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(
+                new UserCodeDeliveryDetails(DESTINATION, DELIVERY_MEDIUM, ATTRIBUTE_NAME));
 
         doAnswer(invocation -> {
             Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(1);
@@ -612,7 +609,8 @@ public final class AuthComponentTest {
                 result.getNextStep().getUpdateAttributeStep()
         );
         validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
-        verify(mobileClient).updateUserAttributes(eq(attributeMap), Mockito.<Callback<List<UserCodeDeliveryDetails>>> any());
+        verify(mobileClient).updateUserAttributes(eq(attributeMap),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
     }
 
     /**
@@ -634,11 +632,12 @@ public final class AuthComponentTest {
             attributesMap.put(attribute.getKey().getKeyString(), attribute.getValue());
         }
 
-        List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(new UserCodeDeliveryDetails(
-                DESTINATION,
-                DELIVERY_MEDIUM,
-                ATTRIBUTE_NAME
-        ));
+        List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(
+                new UserCodeDeliveryDetails(
+                        DESTINATION,
+                        DELIVERY_MEDIUM,
+                        ATTRIBUTE_NAME
+                ));
 
         doAnswer(invocation -> {
             Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(1);
@@ -647,7 +646,8 @@ public final class AuthComponentTest {
         }).when(mobileClient)
                 .updateUserAttributes(any(), Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
 
-        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> result = synchronousAuth.updateUserAttributes(attributes);
+        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> result =
+                synchronousAuth.updateUserAttributes(attributes);
 
         assertTrue(result.get(attributeKey).isUpdated());
         assertEquals(
@@ -655,7 +655,8 @@ public final class AuthComponentTest {
                 result.get(attributeKey).getNextStep().getUpdateAttributeStep()
         );
         validateCodeDeliveryDetails(result.get(attributeKey).getNextStep().getCodeDeliveryDetails());
-        verify(mobileClient).updateUserAttributes(eq(attributesMap), Mockito.<Callback<List<UserCodeDeliveryDetails>>> any());
+        verify(mobileClient).updateUserAttributes(
+                eq(attributesMap), Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
     }
 
     /**
@@ -681,7 +682,8 @@ public final class AuthComponentTest {
 
         AuthCodeDeliveryDetails result = synchronousAuth.resendUserAttributeConfirmationCode(attributeKey);
         validateCodeDeliveryDetails(result);
-        verify(mobileClient).verifyUserAttribute(eq(attributeKey.getKeyString()), Mockito.<Callback<UserCodeDeliveryDetails>> any());
+        verify(mobileClient).verifyUserAttribute(eq(attributeKey.getKeyString()),
+                Mockito.<Callback<UserCodeDeliveryDetails>>any());
     }
 
     /**
@@ -700,9 +702,9 @@ public final class AuthComponentTest {
         }).when(mobileClient)
                 .confirmUpdateUserAttribute(any(), any(), Mockito.<Callback<Void>>any());
 
-        synchronousAuth.ConfirmUserAttribute(attributeKey, CONFIRMATION_CODE);
+        synchronousAuth.confirmUserAttribute(attributeKey, CONFIRMATION_CODE);
         verify(mobileClient).confirmUpdateUserAttribute(
-                eq(attributeKey.getKeyString()), eq(CONFIRMATION_CODE), Mockito.<Callback<Void>> any());
+                eq(attributeKey.getKeyString()), eq(CONFIRMATION_CODE), Mockito.<Callback<Void>>any());
     }
 
     /**
