@@ -44,6 +44,7 @@ import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.util.UserAgent;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -88,7 +89,6 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -679,7 +679,14 @@ public final class AuthComponentTest {
      */
     @Test
     public void signedOutSessionWithIdentityPoolAndNoGuest() throws AuthException {
-        doAnswer(invocation -> null).when(mobileClient).getIdentityId();
+        AmazonClientException credentialsResult =
+                new AmazonClientException("Failed to get credentials from Cognito Identity", null);
+
+        doAnswer(invocation -> {
+            Callback<AWSCredentials> callback = invocation.getArgument(0);
+            callback.onError(credentialsResult);
+            return null;
+        }).when(mobileClient).getAWSCredentials(any());
 
         UserStateDetails stateResult = new UserStateDetails(UserState.SIGNED_OUT, null);
         doAnswer(invocation -> {
@@ -690,12 +697,14 @@ public final class AuthComponentTest {
 
         AWSCognitoAuthSession authSession = (AWSCognitoAuthSession) synchronousAuth.fetchAuthSession();
         verify(mobileClient).currentUserState(any());
-        verify(mobileClient).getIdentityId();
+        verify(mobileClient).getAWSCredentials(any());
 
         AWSCognitoAuthSession expectedResult = new AWSCognitoAuthSession(
                 false,
-                AuthSessionResult.failure(new AuthException.SignedOutException()),
-                AuthSessionResult.failure(new AuthException.SignedOutException()),
+                AuthSessionResult.failure(new AuthException.SignedOutException(
+                        AuthException.GuestAccess.GUEST_ACCESS_POSSIBLE)),
+                AuthSessionResult.failure(new AuthException.SignedOutException(
+                        AuthException.GuestAccess.GUEST_ACCESS_POSSIBLE)),
                 AuthSessionResult.failure(new AuthException.SignedOutException()),
                 AuthSessionResult.failure(new AuthException.SignedOutException())
         );
@@ -749,12 +758,12 @@ public final class AuthComponentTest {
      */
     @Test
     public void signedOutSessionWithNoIdentityPool() throws AuthException {
-        doThrow(new RuntimeException()).when(mobileClient).getIdentityId();
+        AmazonClientException credentialsResult =
+                new AmazonClientException("Cognito Identity not configured", null);
 
-        AWSCredentials awsCredentialsResult = new BasicAWSCredentials(ACCESS_KEY, SECRET_KEY);
         doAnswer(invocation -> {
             Callback<AWSCredentials> callback = invocation.getArgument(0);
-            callback.onResult(awsCredentialsResult);
+            callback.onError(credentialsResult);
             return null;
         }).when(mobileClient).getAWSCredentials(any());
 
@@ -767,7 +776,7 @@ public final class AuthComponentTest {
 
         AWSCognitoAuthSession authSession = (AWSCognitoAuthSession) synchronousAuth.fetchAuthSession();
         verify(mobileClient).currentUserState(any());
-        verify(mobileClient).getIdentityId();
+        verify(mobileClient).getAWSCredentials(any());
 
         AWSCognitoAuthSession expectedResult = new AWSCognitoAuthSession(
                 false,
