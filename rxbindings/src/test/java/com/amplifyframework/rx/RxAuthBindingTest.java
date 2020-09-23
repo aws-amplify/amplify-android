@@ -820,7 +820,7 @@ public final class RxAuthBindingTest {
     public void testFetchUserAttributes() throws InterruptedException {
         // Arrange an invocation of the success Action
         List<AuthUserAttribute> expected = Collections.singletonList(
-                new AuthUserAttribute(new AuthUserAttributeKey(ATTRIBUTE_KEY), ATTRIBUTE_VAL)
+                new AuthUserAttribute(AuthUserAttributeKey.custom(ATTRIBUTE_KEY), ATTRIBUTE_VAL)
         );
 
         doAnswer(invocation -> {
@@ -848,7 +848,7 @@ public final class RxAuthBindingTest {
     @Test
     public void testUpdateUserAttribute() throws InterruptedException {
         // Arrange an invocation of the success Action
-        AuthUserAttribute attribute = new AuthUserAttribute(new AuthUserAttributeKey(ATTRIBUTE_KEY), ATTRIBUTE_VAL);
+        AuthUserAttribute attribute = new AuthUserAttribute(AuthUserAttributeKey.custom(ATTRIBUTE_KEY), ATTRIBUTE_VAL);
         AuthUpdateAttributeResult expected = new AuthUpdateAttributeResult(
                 true,
                 new AuthNextUpdateAttributeStep(
@@ -883,8 +883,8 @@ public final class RxAuthBindingTest {
     public void testUpdateUserAttributes() throws InterruptedException {
         // Arrange an invocation of the success Action
         List<AuthUserAttribute> attributes = new ArrayList<>();
-        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
-        AuthUserAttributeKey attributeKeyWithoutCode = new AuthUserAttributeKey(ATTRIBUTE_KEY_WITHOUT_CODE_DELIVERY);
+        AuthUserAttributeKey attributeKey = AuthUserAttributeKey.custom(ATTRIBUTE_KEY);
+        AuthUserAttributeKey attributeKeyWithoutCode = AuthUserAttributeKey.custom(ATTRIBUTE_KEY_WITHOUT_CODE_DELIVERY);
         attributes.add(new AuthUserAttribute(attributeKey, ATTRIBUTE_VAL));
         attributes.add(new AuthUserAttribute(attributeKeyWithoutCode, ATTRIBUTE_VAL_WITHOUT_CODE_DELIVERY));
 
@@ -935,7 +935,7 @@ public final class RxAuthBindingTest {
     @Test
     public void testResendUserAttributeConfirmationCode() throws InterruptedException {
         // Arrange an invocation of the success Action
-        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+        AuthUserAttributeKey attributeKey = AuthUserAttributeKey.custom(ATTRIBUTE_KEY);
         AuthCodeDeliveryDetails expected = new AuthCodeDeliveryDetails(
                 DESTINATION,
                 DeliveryMedium.EMAIL,
@@ -965,7 +965,7 @@ public final class RxAuthBindingTest {
     @Test
     public void testConfirmUserAttribute() throws InterruptedException {
         // Arrange an invocation of the success Action
-        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+        AuthUserAttributeKey attributeKey = AuthUserAttributeKey.custom(ATTRIBUTE_KEY);
 
         doAnswer(invocation -> {
             Action onComplete = invocation.getArgument(2);

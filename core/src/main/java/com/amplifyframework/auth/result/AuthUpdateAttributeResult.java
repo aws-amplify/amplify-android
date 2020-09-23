@@ -25,7 +25,7 @@ import java.util.Objects;
 /**
  * Wraps the result of an update user attribute operation.
  */
-public class AuthUpdateAttributeResult {
+public final class AuthUpdateAttributeResult {
     private final boolean isUpdated;
     private final AuthNextUpdateAttributeStep nextStep;
 

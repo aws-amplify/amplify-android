@@ -590,7 +590,7 @@ public final class AuthComponentTest {
      */
     @Test
     public void updateUserAttribute() throws AuthException {
-        AuthUserAttribute attribute = new AuthUserAttribute(new AuthUserAttributeKey(ATTRIBUTE_KEY), ATTRIBUTE_VAL);
+        AuthUserAttribute attribute = new AuthUserAttribute(AuthUserAttributeKey.custom(ATTRIBUTE_KEY), ATTRIBUTE_VAL);
         Map<String, String> attributeMap =
                 Collections.singletonMap(attribute.getKey().getKeyString(), attribute.getValue());
         List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(
@@ -626,8 +626,8 @@ public final class AuthComponentTest {
     @Test
     public void updateUserAttributes() throws AuthException {
         List<AuthUserAttribute> attributes = new ArrayList<>();
-        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
-        AuthUserAttributeKey attributeKeyWithoutCode = new AuthUserAttributeKey(ATTRIBUTE_KEY_WITHOUT_CODE_DELIVERY);
+        AuthUserAttributeKey attributeKey = AuthUserAttributeKey.custom(ATTRIBUTE_KEY);
+        AuthUserAttributeKey attributeKeyWithoutCode = AuthUserAttributeKey.custom(ATTRIBUTE_KEY_WITHOUT_CODE_DELIVERY);
         attributes.add(new AuthUserAttribute(attributeKey, ATTRIBUTE_VAL));
         attributes.add(new AuthUserAttribute(attributeKeyWithoutCode, ATTRIBUTE_VAL_WITHOUT_CODE_DELIVERY));
 
@@ -675,7 +675,7 @@ public final class AuthComponentTest {
      */
     @Test
     public void resendUserAttributeConfirmationCode() throws AuthException {
-        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+        AuthUserAttributeKey attributeKey = AuthUserAttributeKey.custom(ATTRIBUTE_KEY);
         UserCodeDeliveryDetails userCodeDeliveryDetails = new UserCodeDeliveryDetails(
                 DESTINATION,
                 DELIVERY_MEDIUM,
@@ -702,7 +702,7 @@ public final class AuthComponentTest {
      */
     @Test
     public void confirmUserAttribute() throws AuthException {
-        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+        AuthUserAttributeKey attributeKey = AuthUserAttributeKey.custom(ATTRIBUTE_KEY);
 
         doAnswer(invocation -> {
             Callback<Void> callback = invocation.getArgument(2);

@@ -726,7 +726,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 List<AuthUserAttribute> userAttributes = new ArrayList<>();
                 for (Map.Entry<String, String> entry : result.entrySet()) {
                     userAttributes.add(new AuthUserAttribute(
-                            new AuthUserAttributeKey(entry.getKey()), entry.getValue()));
+                            AuthUserAttributeKey.custom(entry.getKey()), entry.getValue()));
                 }
                 onSuccess.accept(userAttributes);
             }
@@ -810,7 +810,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                         for (String attributeKey : attributesMap.keySet()) {
                             if (codeDetailsMap.containsKey(attributeKey)) {
-                                resultMap.put(new AuthUserAttributeKey(attributeKey),
+                                resultMap.put(AuthUserAttributeKey.custom(attributeKey),
                                         new AuthUpdateAttributeResult(
                                                 true,
                                                 new AuthNextUpdateAttributeStep(
@@ -820,7 +820,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                                         convertCodeDeliveryDetails(codeDetailsMap.get(attributeKey)))
                                         ));
                             } else {
-                                resultMap.put(new AuthUserAttributeKey(attributeKey),
+                                resultMap.put(AuthUserAttributeKey.custom(attributeKey),
                                         new AuthUpdateAttributeResult(
                                                 true,
                                                 new AuthNextUpdateAttributeStep(
