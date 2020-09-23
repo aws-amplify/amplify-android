@@ -173,32 +173,32 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Single<List<AuthUserAttribute>> fetchUserAttributes() {
-        return toSingle((delegate::fetchUserAttributes));
+        return toSingle(delegate::fetchUserAttributes);
     }
 
     @Override
     public Single<AuthUpdateAttributeResult> updateUserAttribute(@NonNull AuthUserAttribute attribute) {
-        return toSingle(((onResult, onError) -> delegate.updateUserAttribute(attribute, onResult, onError)));
+        return toSingle((onResult, onError) -> delegate.updateUserAttribute(attribute, onResult, onError));
     }
 
     @Override
     public Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(
             @NonNull List<AuthUserAttribute> attributes) {
-        return toSingle(((onResult, onError) -> delegate.updateUserAttributes(attributes, onResult, onError)));
+        return toSingle((onResult, onError) -> delegate.updateUserAttributes(attributes, onResult, onError));
     }
 
     @Override
     public Single<AuthCodeDeliveryDetails> resendUserAttributeConfirmationCode(
             @NonNull AuthUserAttributeKey attributeKey) {
-        return toSingle(((onResult, onError) ->
-                delegate.resendUserAttributeConfirmationCode(attributeKey, onResult, onError)));
+        return toSingle((onResult, onError) ->
+                delegate.resendUserAttributeConfirmationCode(attributeKey, onResult, onError));
     }
 
     @Override
     public Completable confirmUserAttribute(@NonNull AuthUserAttributeKey attributeKey,
                                             @NonNull String confirmationCode) {
-        return toCompletable(((onComplete, onError) ->
-                delegate.confirmUserAttribute(attributeKey, confirmationCode, onComplete, onError)));
+        return toCompletable((onComplete, onError) ->
+                delegate.confirmUserAttribute(attributeKey, confirmationCode, onComplete, onError));
     }
 
     @Override

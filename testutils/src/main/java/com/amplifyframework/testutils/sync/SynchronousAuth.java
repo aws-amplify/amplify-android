@@ -321,9 +321,9 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     public List<AuthUserAttribute> fetchUserAttribute() throws AuthException {
-        return Await.<List<AuthUserAttribute>, AuthException>result(((onResult, onError) -> {
+        return Await.<List<AuthUserAttribute>, AuthException>result((onResult, onError) -> {
             asyncDelegate.fetchUserAttributes(onResult, onError);
-        }));
+        });
     }
 
     /**
@@ -360,9 +360,9 @@ public final class SynchronousAuth {
      */
     public AuthCodeDeliveryDetails resendUserAttributeConfirmationCode(
             @NonNull AuthUserAttributeKey attributeKey) throws AuthException {
-        return Await.<AuthCodeDeliveryDetails, AuthException>result(((onResult, onError) -> {
+        return Await.<AuthCodeDeliveryDetails, AuthException>result((onResult, onError) -> {
             asyncDelegate.resendUserAttributeConfirmationCode(attributeKey, onResult, onError);
-        }));
+        });
     }
 
     /**

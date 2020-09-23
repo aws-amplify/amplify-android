@@ -111,6 +111,8 @@ public final class AuthComponentTest {
     private static final String NEW_PASSWORD = "newPassword123";
     private static final String ATTRIBUTE_KEY = AuthUserAttributeKey.email().getKeyString();
     private static final String ATTRIBUTE_VAL = "email@email.com";
+    private static final String ATTRIBUTE_KEY_WITHOUT_CODE_DELIVERY = AuthUserAttributeKey.name().getKeyString();
+    private static final String ATTRIBUTE_VAL_WITHOUT_CODE_DELIVERY = "name";
     private static final String CONFIRMATION_CODE = "confirm";
     private static final String PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final String IDENTITY_ID = "identityId";
@@ -559,7 +561,7 @@ public final class AuthComponentTest {
 
     /**
      * Tests that fetchUserAttributes method of the Auth wrapper of AWSMobileClient (AMC) calls
-     * AMC.getUserAttributes and get to fetch the user attributes.
+     * AMC.getUserAttributes to obtain a list of user attributes.
      * @throws AuthException test fails if this gets thrown since method should succeed
      */
     @Test
@@ -625,7 +627,9 @@ public final class AuthComponentTest {
     public void updateUserAttributes() throws AuthException {
         List<AuthUserAttribute> attributes = new ArrayList<>();
         AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+        AuthUserAttributeKey attributeKeyWithoutCode = new AuthUserAttributeKey(ATTRIBUTE_KEY_WITHOUT_CODE_DELIVERY);
         attributes.add(new AuthUserAttribute(attributeKey, ATTRIBUTE_VAL));
+        attributes.add(new AuthUserAttribute(attributeKeyWithoutCode, ATTRIBUTE_VAL_WITHOUT_CODE_DELIVERY));
 
         Map<String, String> attributesMap = new HashMap<>();
         for (AuthUserAttribute attribute : attributes) {
@@ -650,9 +654,14 @@ public final class AuthComponentTest {
                 synchronousAuth.updateUserAttributes(attributes);
 
         assertTrue(result.get(attributeKey).isUpdated());
+        assertTrue(result.get(attributeKeyWithoutCode).isUpdated());
         assertEquals(
                 AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
                 result.get(attributeKey).getNextStep().getUpdateAttributeStep()
+        );
+        assertEquals(
+                AuthUpdateAttributeStep.DONE,
+                result.get(attributeKeyWithoutCode).getNextStep().getUpdateAttributeStep()
         );
         validateCodeDeliveryDetails(result.get(attributeKey).getNextStep().getCodeDeliveryDetails());
         verify(mobileClient).updateUserAttributes(

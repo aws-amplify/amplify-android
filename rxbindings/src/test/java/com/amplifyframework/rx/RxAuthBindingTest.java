@@ -26,25 +26,34 @@ import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
+import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep;
 import com.amplifyframework.auth.result.step.AuthNextSignInStep;
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
+import com.amplifyframework.auth.result.step.AuthNextUpdateAttributeStep;
 import com.amplifyframework.auth.result.step.AuthResetPasswordStep;
 import com.amplifyframework.auth.result.step.AuthSignInStep;
 import com.amplifyframework.auth.result.step.AuthSignUpStep;
+import com.amplifyframework.auth.result.step.AuthUpdateAttributeStep;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.observers.TestObserver;
@@ -52,6 +61,7 @@ import io.reactivex.rxjava3.observers.TestObserver;
 import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -64,6 +74,13 @@ import static org.mockito.Mockito.when;
  */
 public final class RxAuthBindingTest {
     private static final long TIMEOUT_SECONDS = 2;
+    private static final String ATTRIBUTE_KEY = AuthUserAttributeKey.email().getKeyString();
+    private static final String ATTRIBUTE_VAL = "email@email.com";
+    private static final String ATTRIBUTE_KEY_WITHOUT_CODE_DELIVERY = AuthUserAttributeKey.name().getKeyString();
+    private static final String ATTRIBUTE_VAL_WITHOUT_CODE_DELIVERY = "name";
+    private static final String CONFIRMATION_CODE = "confirm";
+    private static final String DESTINATION = "e***@email.com";
+    private static final String ATTRIBUTE_NAME = "email";
 
     private AuthCategoryBehavior delegate;
     private RxAuthBinding auth;
@@ -797,6 +814,178 @@ public final class RxAuthBindingTest {
     }
 
     /**
+     * Tests that a successful request to fetch user attributes will propagate a completion
+     * back through the binding.
+     * @throws InterruptedException  If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testFetchUserAttributes() throws InterruptedException {
+        // Arrange an invocation of the success Action
+        List<AuthUserAttribute> expected = Collections.singletonList(
+                new AuthUserAttribute(new AuthUserAttributeKey(ATTRIBUTE_KEY), ATTRIBUTE_VAL)
+        );
+
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            Consumer<List<AuthUserAttribute>> onCompletion = invocation.getArgument(0);
+            onCompletion.accept(expected);
+            return null;
+        }).when(delegate)
+                .fetchUserAttributes(anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<List<AuthUserAttribute>> observer = auth.fetchUserAttributes().test();
+
+        // Assert: Completable completes with success
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNoErrors()
+                .assertValue(expected);
+    }
+
+    /**
+     * Tests that a successful request to update a user attribute will propagate a completion
+     * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testUpdateUserAttribute() throws InterruptedException {
+        // Arrange an invocation of the success Action
+        AuthUserAttribute attribute = new AuthUserAttribute(new AuthUserAttributeKey(ATTRIBUTE_KEY), ATTRIBUTE_VAL);
+        AuthUpdateAttributeResult expected = new AuthUpdateAttributeResult(
+                true,
+                new AuthNextUpdateAttributeStep(
+                        AuthUpdateAttributeStep.DONE,
+                        Collections.emptyMap(),
+                        null
+                )
+        );
+
+        doAnswer(invocation -> {
+            Consumer<AuthUpdateAttributeResult> onCompletion = invocation.getArgument(1);
+            onCompletion.accept(expected);
+            return null;
+        }).when(delegate)
+                .updateUserAttribute(any(), anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<AuthUpdateAttributeResult> observer = auth.updateUserAttribute(attribute).test();
+
+        // Assert: Completable completes with success
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNoErrors()
+                .assertValue(expected);
+    }
+
+    /**
+     * Tests that a successful request to update user attributes will propagate a completion
+     * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testUpdateUserAttributes() throws InterruptedException {
+        // Arrange an invocation of the success Action
+        List<AuthUserAttribute> attributes = new ArrayList<>();
+        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+        AuthUserAttributeKey attributeKeyWithoutCode = new AuthUserAttributeKey(ATTRIBUTE_KEY_WITHOUT_CODE_DELIVERY);
+        attributes.add(new AuthUserAttribute(attributeKey, ATTRIBUTE_VAL));
+        attributes.add(new AuthUserAttribute(attributeKeyWithoutCode, ATTRIBUTE_VAL_WITHOUT_CODE_DELIVERY));
+
+        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> attributeResultMap = new HashMap<>();
+        attributeResultMap.put(attributeKey, new AuthUpdateAttributeResult(
+                true,
+                new AuthNextUpdateAttributeStep(
+                        AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                        Collections.emptyMap(),
+                        new AuthCodeDeliveryDetails(
+                                DESTINATION,
+                                DeliveryMedium.EMAIL,
+                                ATTRIBUTE_NAME
+                        )
+                )
+        ));
+        attributeResultMap.put(attributeKeyWithoutCode, new AuthUpdateAttributeResult(
+                true,
+                new AuthNextUpdateAttributeStep(
+                        AuthUpdateAttributeStep.DONE,
+                        Collections.emptyMap(),
+                        null)
+        ));
+
+        doAnswer(invocation -> {
+            Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onCompletion =
+                    invocation.getArgument(1);
+            onCompletion.accept(attributeResultMap);
+            return null;
+        }).when(delegate)
+                .updateUserAttributes(any(), anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> observer =
+                auth.updateUserAttributes(attributes).test();
+
+        // Assert: Completable completes with success
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNoErrors()
+                .assertValue(attributeResultMap);
+    }
+
+    /**
+     * Tests that a successful request to resend user attribute confirmation code will propagate a
+     * completion back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testResendUserAttributeConfirmationCode() throws InterruptedException {
+        // Arrange an invocation of the success Action
+        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+        AuthCodeDeliveryDetails expected = new AuthCodeDeliveryDetails(
+                DESTINATION,
+                DeliveryMedium.EMAIL,
+                ATTRIBUTE_NAME
+        );
+
+        doAnswer(invocation -> {
+            Consumer<AuthCodeDeliveryDetails> onCompletion = invocation.getArgument(1);
+            onCompletion.accept(expected);
+            return null;
+        }).when(delegate)
+                .resendUserAttributeConfirmationCode(any(), anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<AuthCodeDeliveryDetails> observer = auth.resendUserAttributeConfirmationCode(attributeKey).test();
+
+        // Assert: Completable completes with success
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNoErrors()
+                .assertValue(expected);
+    }
+
+    /**
+     * Validates that a successful request to confirm user attribute will propagate up into the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testConfirmUserAttribute() throws InterruptedException {
+        // Arrange an invocation of the success Action
+        AuthUserAttributeKey attributeKey = new AuthUserAttributeKey(ATTRIBUTE_KEY);
+
+        doAnswer(invocation -> {
+            Action onComplete = invocation.getArgument(2);
+            onComplete.call();
+            return null;
+        }).when(delegate)
+                .confirmUserAttribute(any(), any(), anyAction(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<Void> observer = auth.confirmUserAttribute(attributeKey, CONFIRMATION_CODE).test();
+
+        // Assert: Completable completes successfully
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNoErrors()
+                .assertComplete();
+    }
+
+    /**
      * Getting the current user should just pass through to the delegate, to return whatever
      * it would.
      */
@@ -827,9 +1016,8 @@ public final class RxAuthBindingTest {
 
         // Assert: Completable completes successfully
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        observer
-            .assertNoErrors()
-            .assertComplete();
+        observer.assertNoErrors()
+                .assertComplete();
     }
 
     /**
@@ -853,8 +1041,7 @@ public final class RxAuthBindingTest {
 
         // Assert: failure is furnished via Rx Completable.
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        observer
-            .assertNotComplete()
-            .assertError(failure);
+        observer.assertNotComplete()
+                .assertError(failure);
     }
 }
