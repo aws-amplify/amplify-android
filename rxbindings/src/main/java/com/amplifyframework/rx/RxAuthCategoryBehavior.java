@@ -279,7 +279,7 @@ public interface RxAuthCategoryBehavior {
      * @param attributeKey The user attribute key
      * @param confirmationCode The confirmation code the user received after starting
      *                         the resendUserAttributeConfirmationCode process
-     * @return An Rx {@link Completable} which completes successfully if userAttributeKey is confirmed,
+     * @return An Rx {@link Completable} which completes successfully if attributeKey is confirmed,
      *         emits an {@link AuthException} otherwise
      */
     Completable confirmUserAttribute(@NonNull AuthUserAttributeKey attributeKey, @NonNull String confirmationCode);
