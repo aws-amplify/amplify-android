@@ -32,6 +32,7 @@ import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
@@ -46,12 +47,15 @@ import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSessionResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep;
 import com.amplifyframework.auth.result.step.AuthNextSignInStep;
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
+import com.amplifyframework.auth.result.step.AuthNextUpdateAttributeStep;
 import com.amplifyframework.auth.result.step.AuthResetPasswordStep;
 import com.amplifyframework.auth.result.step.AuthSignInStep;
 import com.amplifyframework.auth.result.step.AuthSignUpStep;
+import com.amplifyframework.auth.result.step.AuthUpdateAttributeStep;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -709,6 +713,188 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 ));
             }
         });
+    }
+
+    @Override
+    public void fetchUserAttributes(
+            @NonNull Consumer<List<AuthUserAttribute>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        awsMobileClient.getUserAttributes(new Callback<Map<String, String>>() {
+            @Override
+            public void onResult(Map<String, String> result) {
+                List<AuthUserAttribute> userAttributes = new ArrayList<>();
+                for (Map.Entry<String, String> entry : result.entrySet()) {
+                    userAttributes.add(new AuthUserAttribute(
+                            AuthUserAttributeKey.custom(entry.getKey()), entry.getValue()));
+                }
+                onSuccess.accept(userAttributes);
+            }
+
+            @Override
+            public void onError(Exception error) {
+                onError.accept(new AuthException(
+                        "Failed to fetch user attributes",
+                        error,
+                        "Ensure that you are logged in and online"
+                ));
+            }
+        });
+    }
+
+    @Override
+    public void updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull Consumer<AuthUpdateAttributeResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+
+        awsMobileClient.updateUserAttributes(
+                Collections.singletonMap(attribute.getKey().getKeyString(), attribute.getValue()),
+                new Callback<List<UserCodeDeliveryDetails>>() {
+                    @Override
+                    public void onResult(List<UserCodeDeliveryDetails> result) {
+                        if (result.size() == 0) {
+                            onSuccess.accept(new AuthUpdateAttributeResult(
+                                    true,
+                                    new AuthNextUpdateAttributeStep(
+                                            AuthUpdateAttributeStep.DONE,
+                                            Collections.emptyMap(),
+                                            null)
+                            ));
+                        } else {
+                            onSuccess.accept(new AuthUpdateAttributeResult(
+                                    true,
+                                    new AuthNextUpdateAttributeStep(
+                                            AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                                            Collections.emptyMap(),
+                                            convertCodeDeliveryDetails(result.get(0)))
+                            ));
+                        }
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        onError.accept(new AuthException(
+                                "Failed to update user attributes",
+                                error,
+                                "See attached exception for more details"
+                        ));
+                    }
+                }
+        );
+    }
+
+    @Override
+    public void updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        Map<String, String> attributesMap = new HashMap<>();
+        for (AuthUserAttribute attribute : attributes) {
+            attributesMap.put(attribute.getKey().getKeyString(), attribute.getValue());
+        }
+
+        awsMobileClient.updateUserAttributes(
+                attributesMap,
+                new Callback<List<UserCodeDeliveryDetails>>() {
+                    @Override
+                    public void onResult(List<UserCodeDeliveryDetails> result) {
+                        Map<String, UserCodeDeliveryDetails> codeDetailsMap = new HashMap<>();
+                        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> resultMap = new HashMap<>();
+
+                        for (UserCodeDeliveryDetails details : result) {
+                            codeDetailsMap.put(details.getAttributeName(), details);
+                        }
+
+                        for (String attributeKey : attributesMap.keySet()) {
+                            if (codeDetailsMap.containsKey(attributeKey)) {
+                                resultMap.put(AuthUserAttributeKey.custom(attributeKey),
+                                        new AuthUpdateAttributeResult(
+                                                true,
+                                                new AuthNextUpdateAttributeStep(
+                                                        AuthUpdateAttributeStep.
+                                                                CONFIRM_ATTRIBUTE_WITH_CODE,
+                                                        Collections.emptyMap(),
+                                                        convertCodeDeliveryDetails(codeDetailsMap.get(attributeKey)))
+                                        ));
+                            } else {
+                                resultMap.put(AuthUserAttributeKey.custom(attributeKey),
+                                        new AuthUpdateAttributeResult(
+                                                true,
+                                                new AuthNextUpdateAttributeStep(
+                                                        AuthUpdateAttributeStep.
+                                                                DONE,
+                                                        Collections.emptyMap(),
+                                                        null)
+                                        ));
+                            }
+                            onSuccess.accept(resultMap);
+                        }
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        onError.accept(new AuthException(
+                                "Failed to update user attributes",
+                                error,
+                                "See attached exception for more details"
+                        ));
+                    }
+                });
+    }
+
+    @Override
+    public void resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        String attributeName = attributeKey.getKeyString();
+        awsMobileClient.verifyUserAttribute(attributeName, new Callback<UserCodeDeliveryDetails>() {
+            @Override
+            public void onResult(UserCodeDeliveryDetails result) {
+                onSuccess.accept(convertCodeDeliveryDetails(result));
+            }
+
+            @Override
+            public void onError(Exception error) {
+                onError.accept(new AuthException(
+                        "Failed to resend user attribute confirmation code",
+                        error,
+                        "See attached exception for more details"
+                ));
+            }
+        });
+    }
+
+    @Override
+    public void confirmUserAttribute(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull String confirmationCode,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+
+        awsMobileClient.confirmUpdateUserAttribute(
+                attributeKey.getKeyString(),
+                confirmationCode,
+                new Callback<Void>() {
+                    @Override
+                    public void onResult(Void result) {
+                        onSuccess.call();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        onError.accept(new AuthException(
+                                "An error occurred confirming user attribute",
+                                error,
+                                "See attached exception for more details"
+                        ));
+                    }
+                });
     }
 
     @Override

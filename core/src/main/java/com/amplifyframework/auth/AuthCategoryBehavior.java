@@ -27,10 +27,12 @@ import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Specifies the behavior for the Auth category.
@@ -270,6 +272,66 @@ public interface AuthCategoryBehavior {
     void updatePassword(
             @NonNull String oldPassword,
             @NonNull String newPassword,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Fetch user attributes.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void fetchUserAttributes(
+            @NonNull Consumer<List<AuthUserAttribute>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Update a single user attribute.
+     * @param attribute Attribute to be updated
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull Consumer<AuthUpdateAttributeResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Update multiple user attributes.
+     * @param attributes Attributes to be updated
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * If the user's confirmation code expires or they just missed it, this method
+     * can be used to send them a new one.
+     * @param attributeKey Key of attribute that user wants to operate on
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Use attribute key and confirmation code to confirm user attribute.
+     * @param attributeKey Key of attribute that user wants to operate on
+     * @param confirmationCode The confirmation code the user received after starting the user attribute operation
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void confirmUserAttribute(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull String confirmationCode,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError
     );
