@@ -20,6 +20,8 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.temporal.Temporal;
 
+import java.util.Date;
+
 /**
  * Enumerate the types used in the fields
  * of {@link com.amplifyframework.core.model.Model} classes.
@@ -28,75 +30,72 @@ public enum JavaFieldType {
     /**
      * Represents the boolean data type.
      */
-    BOOLEAN(Boolean.class.getSimpleName()),
+    BOOLEAN(Boolean.class),
 
     /**
      * Represents the int data type.
      */
-    INTEGER(Integer.class.getSimpleName()),
+    INTEGER(Integer.class),
 
     /**
      * Represents the long data type.
      */
-    LONG(Long.class.getSimpleName()),
+    LONG(Long.class),
 
     /**
      * Represents the float data type.
      */
-    FLOAT(Float.class.getSimpleName()),
+    FLOAT(Float.class),
 
     /**
      * Represents the String data type.
      */
-    STRING(String.class.getSimpleName()),
+    STRING(String.class),
+
+    /**
+     * Represents the java.lang.Date data type.
+     */
+    JAVA_DATE(Date.class),
 
     /**
      * Represents the Date data type.
      */
-    DATE(Temporal.Date.class.getSimpleName()),
+    DATE(Temporal.Date.class),
 
     /**
      * Represents the DateTime data type.
      */
-    DATE_TIME(Temporal.DateTime.class.getSimpleName()),
+    DATE_TIME(Temporal.DateTime.class),
 
     /**
      * Represents the Time data type.
      */
-    TIME(Temporal.Time.class.getSimpleName()),
+    TIME(Temporal.Time.class),
 
     /**
      * Represents the Timestamp data type.
      */
-    TIMESTAMP(Temporal.Timestamp.class.getSimpleName()),
+    TIMESTAMP(Temporal.Timestamp.class),
     
     /**
      * Represents the Enum type.
      */
-    ENUM(Enum.class.getSimpleName()),
+    ENUM(Enum.class),
 
     /**
      * Represents the Model type.
      */
-    MODEL(Model.class.getSimpleName()),
+    MODEL(Model.class),
 
     /**
      * Represents any custom type (objects that are not models).
      */
-    CUSTOM_TYPE(Object.class.getSimpleName());
+    CUSTOM_TYPE(Object.class);
 
-    private final String javaFieldType;
+    private final Class<?> javaFieldType;
 
-    JavaFieldType(@NonNull String javaFieldType) {
+    JavaFieldType(@NonNull Class<?> javaFieldType) {
         this.javaFieldType = javaFieldType;
-    }
-
-    /**
-     * Return the string that represents the value of the enumeration constant.
-     * @return the string that represents the value of the enumeration constant.
-     */
-    public String stringValue() {
-        return this.javaFieldType;
     }
 
     /**
@@ -105,9 +104,9 @@ public enum JavaFieldType {
      * @param javaFieldType the string representation of the field type.
      * @return the enumeration constant.
      */
-    public static JavaFieldType from(@NonNull String javaFieldType) {
+    public static JavaFieldType from(@NonNull Class<?> javaFieldType) {
         for (final JavaFieldType type : JavaFieldType.values()) {
-            if (javaFieldType.equals(type.stringValue())) {
+            if (javaFieldType.equals(type.javaFieldType)) {
                 return type;
             }
         }

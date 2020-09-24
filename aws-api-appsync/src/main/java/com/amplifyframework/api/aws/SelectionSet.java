@@ -280,7 +280,7 @@ public final class SelectionSet {
                 return false;
             }
             try {
-                JavaFieldType.from(cls.getSimpleName());
+                JavaFieldType.from(cls);
                 return false;
             } catch (IllegalArgumentException exception) {
                 // if we get here then field is  a custom type
