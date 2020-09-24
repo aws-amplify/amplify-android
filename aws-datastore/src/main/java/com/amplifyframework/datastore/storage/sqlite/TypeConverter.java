@@ -62,6 +62,7 @@ public final class TypeConverter {
         JAVA_TO_SQL.put(JavaFieldType.STRING, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.ENUM, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.DATE, SQLiteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.JAVA_DATE, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.DATE_TIME, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.TIME, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.TIMESTAMP, SQLiteDataType.INTEGER);
@@ -77,7 +78,7 @@ public final class TypeConverter {
             return JavaFieldType.ENUM;
         }
         try {
-            return JavaFieldType.from(field.getType().getSimpleName());
+            return JavaFieldType.from(field.getType());
         } catch (IllegalArgumentException exception) {
             // fallback to custom type, which will result in the field being converted to a JSON string
             return JavaFieldType.CUSTOM_TYPE;
@@ -97,7 +98,7 @@ public final class TypeConverter {
             return JavaFieldType.ENUM;
         }
         try {
-            return JavaFieldType.from(value.getClass().getSimpleName());
+            return JavaFieldType.from(value.getClass());
         } catch (IllegalArgumentException exception) {
             // fallback to custom type, which will result in the field being converted to a JSON string
             return JavaFieldType.CUSTOM_TYPE;
