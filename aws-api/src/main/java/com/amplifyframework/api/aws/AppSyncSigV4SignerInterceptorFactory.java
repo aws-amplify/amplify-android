@@ -70,7 +70,11 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 // Otherwise, a new lambda is made per interceptor generation.
                 ApiKeyAuthProvider keyProvider = apiAuthProviders.getApiKeyAuthProvider();
                 if (keyProvider == null) {
-                    keyProvider = config::getApiKey;
+                    final String apiKey = config.getApiKey();
+                    if (apiKey == null) {
+                        throw new IllegalArgumentException("API key in configuration must be non-null.");
+                    }
+                    keyProvider = () -> apiKey;
                 }
                 return new AppSyncSigV4SignerInterceptor(config.getEndpointType(), keyProvider);
             case AWS_IAM:

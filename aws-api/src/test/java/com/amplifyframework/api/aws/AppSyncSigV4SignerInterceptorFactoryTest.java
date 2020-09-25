@@ -113,6 +113,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .endpoint("")
                 .region("")
                 .authorizationType(AuthorizationType.API_KEY)
+                // .apiKey("NON-NULL-VALUE") Note that this is commented out.
                 .build();
         factory.create(config).intercept(new MockChain());
     }
