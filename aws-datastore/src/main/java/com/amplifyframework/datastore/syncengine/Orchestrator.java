@@ -286,7 +286,7 @@ public final class Orchestrator {
             LOG.debug("About to hydrate...");
             try {
                 boolean subscribed = syncProcessor.hydrate()
-                    .blockingAwait(adjustedTimeoutSeconds, TimeUnit.MILLISECONDS);
+                    .blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
                 if (!subscribed) {
                     throw new TimeoutException("Subscription timed out.");
                 }
@@ -323,7 +323,7 @@ public final class Orchestrator {
         try {
             boolean subscribed = stopApiSync()
                 .subscribeOn(startStopScheduler)
-                .blockingAwait(adjustedTimeoutSeconds, TimeUnit.MILLISECONDS);
+                .blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
             if (!subscribed) {
                 throw new TimeoutException("Subscription timed out.");
             }
