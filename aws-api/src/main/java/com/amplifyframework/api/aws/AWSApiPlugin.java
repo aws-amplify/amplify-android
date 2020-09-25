@@ -302,7 +302,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         } else {
                             onSubscriptionFailure.accept(new ApiException("Detected multiple owner type auth rules " +
                                     "with a READ operation", "We currently do not support this use case. Please " +
-                                    "limit your type to just one auth rule with a READ operation restriction."));
+                                    "limit your type to just one owner auth rule with a READ operation restriction."));
                             return null;
                         }
                     } else if (isReadRestrictingStaticGroup(authRule)) {
