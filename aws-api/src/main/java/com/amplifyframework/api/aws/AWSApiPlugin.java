@@ -386,10 +386,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         final String GROUPS_KEY = "cognito:groups";
 
         try {
-            JSONObject authKey = CognitoJWTParser.getPayload(cognitoProvider.getLatestAuthToken());
+            JSONObject accessToken = CognitoJWTParser.getPayload(cognitoProvider.getLatestAuthToken());
 
-            if (authKey.has(GROUPS_KEY)) {
-                JSONArray jsonGroups = authKey.getJSONArray(GROUPS_KEY);
+            if (accessToken.has(GROUPS_KEY)) {
+                JSONArray jsonGroups = accessToken.getJSONArray(GROUPS_KEY);
 
                 for (int i = 0; i < jsonGroups.length(); i++) {
                     groups.add(jsonGroups.getString(i));
