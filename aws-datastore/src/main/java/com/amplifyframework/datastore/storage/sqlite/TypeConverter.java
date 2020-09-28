@@ -62,7 +62,6 @@ public final class TypeConverter {
         JAVA_TO_SQL.put(JavaFieldType.STRING, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.ENUM, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.DATE, SQLiteDataType.TEXT);
-        JAVA_TO_SQL.put(JavaFieldType.JAVA_DATE, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.DATE_TIME, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.TIME, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.TIMESTAMP, SQLiteDataType.INTEGER);

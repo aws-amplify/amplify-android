@@ -101,7 +101,7 @@ public final class AppSyncGraphQLRequestFactoryTest {
             .firstName("Tony")
             .lastName("Swanson")
             .age(19)
-            .dob(new Date(2000, 1, 15))
+            .dob(new Temporal.Date(new Date(2000, 1, 15)))
             .id(expectedId)
             .relationship(MaritalStatus.single)
             .build();

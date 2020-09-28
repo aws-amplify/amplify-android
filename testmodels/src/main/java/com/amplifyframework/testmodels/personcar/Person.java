@@ -22,8 +22,8 @@ import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.temporal.Temporal;
 
-import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -55,7 +55,7 @@ public final class Person implements Model {
     private final Integer age;
 
     @ModelField(targetType = "AWSDate")
-    private final Date dob;
+    private final Temporal.Date dob;
 
     @ModelField
     private final MaritalStatus relationship;
@@ -64,7 +64,7 @@ public final class Person implements Model {
                    String first_name,
                    String last_name,
                    Integer age,
-                   Date dob,
+                   Temporal.Date dob,
                    MaritalStatus relationship) {
         this.id = id;
         this.first_name = first_name;
@@ -161,7 +161,7 @@ public final class Person implements Model {
      * Returns the person's date of birth.
      * @return date of birth.
      */
-    public Date getDob() {
+    public Temporal.Date getDob() {
         return dob;
     }
 
@@ -251,7 +251,7 @@ public final class Person implements Model {
          * @param dob The person's date of birth.
          * @return next step.
          */
-        FinalStep dob(Date dob);
+        FinalStep dob(Temporal.Date dob);
 
         /**
          * Set the person's relationship status.
@@ -276,7 +276,7 @@ public final class Person implements Model {
         private String first_name;
         private String last_name;
         private Integer age;
-        private Date dob;
+        private Temporal.Date dob;
         private MaritalStatus relationship;
 
         /**
@@ -341,8 +341,8 @@ public final class Person implements Model {
          * @param dob The person's date of birth.
          * @return Current Builder instance, for fluent method chaining
          */
-        public FinalStep dob(Date dob) {
-            this.dob = dob == null ? null : new Date(dob.getTime());
+        public FinalStep dob(Temporal.Date dob) {
+            this.dob = dob == null ? null : new Temporal.Date(dob.toDate());
             return this;
         }
 
@@ -381,7 +381,7 @@ public final class Person implements Model {
                 String first_name,
                 String last_name,
                 Integer age,
-                Date dob,
+                Temporal.Date dob,
                 MaritalStatus relationship) {
             super.id(id);
             super.firstName(first_name)
@@ -412,7 +412,7 @@ public final class Person implements Model {
         }
 
         @Override
-        public NewBuilder dob(Date dob) {
+        public NewBuilder dob(Temporal.Date dob) {
             return (NewBuilder) super.dob(dob);
         }
 

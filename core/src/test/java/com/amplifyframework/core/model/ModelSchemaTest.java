@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -45,9 +44,10 @@ public final class ModelSchemaTest {
      * The factory {@link ModelSchema#fromModelClass(Class)} will produce
      * an {@link ModelSchema} that meets our expectations for the {@link Person} model.
      * @throws AmplifyException from model schema parsing
+     * @throws ClassNotFoundException from Class.forName("com.amplifyframework.core.model.temporal.Temporal$Date")
      */
     @Test
-    public void modelSchemaIsGeneratedForPersonModel() throws AmplifyException {
+    public void modelSchemaIsGeneratedForPersonModel() throws AmplifyException, ClassNotFoundException {
         Map<String, ModelField> expectedFields = new HashMap<>();
         expectedFields.put("id", ModelField.builder()
             .targetType("ID")
@@ -70,7 +70,7 @@ public final class ModelSchemaTest {
         expectedFields.put("dob", ModelField.builder()
             .targetType("AWSDate")
             .name("dob")
-            .type(Date.class)
+            .type(Class.forName("com.amplifyframework.core.model.temporal.Temporal$Date"))
             .build());
         expectedFields.put("age", ModelField.builder()
             .targetType("Int")
