@@ -27,6 +27,7 @@ import androidx.test.espresso.matcher.ViewMatchers;
 import com.amplifyframework.core.R;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -36,6 +37,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Tests the navigation behavior for {@link DevMenuMainFragment}.
  */
+@Ignore("All of these tests timeout frequently with an error about the root of the view hierarchy never taking focus")
 public final class DevMenuMainViewInstrumentationTest {
     // A navigation host controller for testing.
     private TestNavHostController navHostController;
