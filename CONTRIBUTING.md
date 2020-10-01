@@ -465,7 +465,7 @@ output to a file, and grep through it.
 
 The Amplify Android library emits logs while it is running on a device
 or emulator. By default, debug and verbose logs are not output.
-However, you can change the log treshold at runtime, by explicitly
+However, you can change the log threshold at runtime, by explicitly
 configuring a logging plugin:
 ```kotlin
 Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))
