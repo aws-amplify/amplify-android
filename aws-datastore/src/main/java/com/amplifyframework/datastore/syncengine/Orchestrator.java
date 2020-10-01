@@ -53,7 +53,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final long TIMEOUT_SECONDS_PER_MODEL = 2;
-    private static final long MINIMUM_OP_TIMEOUT_SECONDS = 10;
+    private static final long NETWORK_OP_TIMEOUT_SECONDS = 10;
+    private static final long LOCAL_OP_TIMEOUT_SECONDS = 2;
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
@@ -119,7 +120,7 @@ public final class Orchestrator {
         // Operation times out after 10 seconds. If there are more than 5 models,
         // then 2 seconds are added to the timer per additional model count.
         this.adjustedTimeoutSeconds = Math.max(
-            MINIMUM_OP_TIMEOUT_SECONDS,
+            NETWORK_OP_TIMEOUT_SECONDS,
             TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
         );
     }
@@ -255,7 +256,7 @@ public final class Orchestrator {
                 .andThen(Completable.create(emitter -> {
                     storageObserver.startObservingStorageChanges(emitter::onComplete);
                     currentMode.set(Mode.LOCAL_ONLY);
-                })).blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
+                })).blockingAwait(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             if (!subscribed) {
                 throw new TimeoutException("Subscription timed out.");
             }

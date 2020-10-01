@@ -59,7 +59,7 @@ import io.reactivex.rxjava3.subjects.ReplaySubject;
 final class SubscriptionProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final long TIMEOUT_SECONDS_PER_MODEL = 2;
-    private static final long MINIMUM_OP_TIMEOUT_SECONDS = 10;
+    private static final long NETWORK_OP_TIMEOUT_SECONDS = 10;
 
     private final AppSync appSync;
     private final ModelProvider modelProvider;
@@ -82,9 +82,12 @@ final class SubscriptionProcessor {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.merger = Objects.requireNonNull(merger);
         this.ongoingOperationsDisposable = new CompositeDisposable();
+
+        // Operation times out after 10 seconds. If there are more than 5 models,
+        // then 2 seconds are added to the timer per additional model count.
         this.adjustedTimeoutSeconds = Math.max(
-                MINIMUM_OP_TIMEOUT_SECONDS,
-                TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
+            NETWORK_OP_TIMEOUT_SECONDS,
+            TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
         );
     }
 
