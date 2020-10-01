@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
+package com.amplifyframework.util;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -25,7 +25,6 @@ import java.util.Arrays;
  * throughout the codebase.
  */
 public final class TypeMaker {
-
     private TypeMaker() {
         throw new UnsupportedOperationException("No instances allowed.");
     }

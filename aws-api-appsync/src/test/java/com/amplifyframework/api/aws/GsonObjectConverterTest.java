@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.testutils.Resources;
+import com.amplifyframework.util.GsonObjectConverter;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -29,11 +30,11 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the {@link GsonUtil}.
+ * Tests the {@link GsonObjectConverter}.
  */
-public class GsonUtilTest {
+public final class GsonObjectConverterTest {
     /**
-     * Validates that the {@link GsonUtil} is able to convert a Gson-typed {@link JsonObject}
+     * Validates that the {@link GsonObjectConverter} is able to convert a Gson-typed {@link JsonObject}
      * into a Java-language {@link Map} of {@link String}-{@link Object} entries.
      */
     @Test
@@ -71,7 +72,7 @@ public class GsonUtilTest {
         // Build the actual Map using GsonUtil
         final String json = Resources.readAsString("gson-util.json");
         JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
-        Map<String, Object> actual = GsonUtil.toMap(jsonObject);
+        Map<String, Object> actual = GsonObjectConverter.toMap(jsonObject);
 
         // Assert that the response is expected
         assertEquals(expected, actual);

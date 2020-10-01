@@ -33,6 +33,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteModelFieldTypeConverter;
 import com.amplifyframework.datastore.storage.sqlite.SqlKeyword;
 import com.amplifyframework.datastore.storage.sqlite.TypeConverter;
+import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
 
 import java.util.Iterator;
@@ -99,7 +100,7 @@ public final class SQLPredicate {
     private void addBinding(Object value) {
         final JavaFieldType fieldType = TypeConverter.getJavaFieldTypeFromValue(value);
         final Object sqlValue = SQLiteModelFieldTypeConverter.convertRawValueToTarget(
-                value, fieldType, null);
+                value, fieldType, GsonFactory.instance());
         bindings.add(sqlValue);
     }
 
@@ -228,8 +229,7 @@ public final class SQLPredicate {
             default:
                 throw new DataStoreException(
                         "Tried to parse an unsupported QueryOperator type",
-                        "Check if a new QueryOperator.Type enum has been created which is not supported " +
-                                "in the AppSyncGraphQLRequestFactory."
+                        "Check if a new QueryOperator.Type enum has been created which is not supported."
                 );
         }
     }

@@ -18,38 +18,26 @@ package com.amplifyframework.datastore.syncengine;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.predicate.QueryOperator;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.model.OperatorInterfaceAdapter;
-import com.amplifyframework.datastore.model.PredicateInterfaceAdapter;
+import com.amplifyframework.util.GsonFactory;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapter;
-import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 
 /**
  * A utility to convert between {@link PendingMutation} and {@link PendingMutation.PersistentRecord}.
  */
-public final class GsonPendingMutationConverter implements PendingMutation.Converter {
+final class GsonPendingMutationConverter implements PendingMutation.Converter {
     private final Gson gson;
 
     /**
      * Constructs a new instance of hte {@link GsonPendingMutationConverter}.
      */
     GsonPendingMutationConverter() {
-        this.gson = new GsonBuilder()
-            .registerTypeAdapterFactory(new ClassTypeAdapterFactory())
-            .registerTypeAdapter(QueryPredicate.class, new PredicateInterfaceAdapter())
-            .registerTypeAdapter(QueryOperator.class, new OperatorInterfaceAdapter())
+        this.gson = GsonFactory.instance()
+            .newBuilder()
             .registerTypeAdapter(TimeBasedUuid.class, new TimeBasedUuidTypeAdapter())
             .create();
     }
@@ -82,62 +70,5 @@ public final class GsonPendingMutationConverter implements PendingMutation.Conve
         final Type itemType =
             TypeToken.getParameterized(PendingMutation.class, itemClass).getType();
         return gson.fromJson(record.getSerializedMutationData(), itemType);
-    }
-
-    /**
-     * A {@link TypeAdapterFactory} which generates a {@link TypeAdapter} for use
-     * with {@link Class}-type objects.
-     */
-    static final class ClassTypeAdapterFactory implements TypeAdapterFactory {
-        @SuppressWarnings("unchecked") // (TypeAdapter<T>)
-        @Override
-        public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
-            if (!Class.class.isAssignableFrom(typeToken.getRawType())) {
-                return null;
-            }
-            return (TypeAdapter<T>) new ClassTypeAdapter();
-        }
-    }
-
-    /**
-     * {@link PendingMutation} contains an {@link Class} member, but Gson doesn't
-     * know what to do with it. So, we need this custom {@link TypeAdapter}.
-     */
-    static final class ClassTypeAdapter extends TypeAdapter<Class<?>> {
-        @Override
-        public void write(JsonWriter jsonWriter, Class<?> clazz) throws IOException {
-            if (clazz == null) {
-                jsonWriter.nullValue();
-                return;
-            }
-            jsonWriter.value(clazz.getName());
-        }
-
-        @Override
-        public Class<?> read(JsonReader jsonReader) throws IOException {
-            if (jsonReader.peek() == JsonToken.NULL) {
-                jsonReader.nextNull();
-                return null;
-            }
-            final Class<?> clazz;
-            try {
-                clazz = Class.forName(jsonReader.nextString());
-            } catch (ClassNotFoundException exception) {
-                throw new IOException(exception);
-            }
-            return clazz;
-        }
-    }
-
-    static final class TimeBasedUuidTypeAdapter extends TypeAdapter<TimeBasedUuid> {
-        @Override
-        public void write(JsonWriter jsonWriter, TimeBasedUuid value) throws IOException {
-            jsonWriter.jsonValue(value.toString());
-        }
-
-        @Override
-        public TimeBasedUuid read(JsonReader jsonReader) throws IOException {
-            return TimeBasedUuid.fromString(jsonReader.nextString());
-        }
     }
 }

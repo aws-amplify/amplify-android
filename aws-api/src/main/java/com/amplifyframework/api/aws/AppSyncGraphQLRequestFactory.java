@@ -38,6 +38,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.util.Casing;
+import com.amplifyframework.util.TypeMaker;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public final class AppSyncGraphQLRequestFactory {
     private static final int DEFAULT_QUERY_LIMIT = 1000;
 
     // This class should not be instantiated
-    private AppSyncGraphQLRequestFactory() { }
+    private AppSyncGraphQLRequestFactory() {}
 
     /**
      * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result.
