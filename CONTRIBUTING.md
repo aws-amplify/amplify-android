@@ -468,7 +468,7 @@ or emulator. By default, debugging and verbose logs are not output.
 However, you can change the log treshold at runtime, by explicitly
 configuring a logging plugin:
 ```kotlin
-Amplifly.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))
+Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))
 // ... Add more plugins only *after* setting the log plugin.
 ```
 
