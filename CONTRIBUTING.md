@@ -464,7 +464,7 @@ output to a file, and grep through it.
 ### Getting More Output
 
 The Amplify Android library emits logs while it is running on a device
-or emulator. By default, debugging and verbose logs are not output.
+or emulator. By default, debug and verbose logs are not output.
 However, you can change the log treshold at runtime, by explicitly
 configuring a logging plugin:
 ```kotlin
