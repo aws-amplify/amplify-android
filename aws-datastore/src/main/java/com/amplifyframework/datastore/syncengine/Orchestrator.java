@@ -322,11 +322,11 @@ public final class Orchestrator {
 
     private void stopApiSyncBlocking() {
         try {
-            boolean subscribed = stopApiSync()
+            boolean stopped = stopApiSync()
                 .subscribeOn(startStopScheduler)
-                .blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
-            if (!subscribed) {
-                throw new TimeoutException("Subscription timed out.");
+                .blockingAwait(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!stopped) {
+                throw new TimeoutException("Operation timed out.");
             }
         } catch (Throwable failure) {
             LOG.warn("Failed to stop API sync.", failure);
