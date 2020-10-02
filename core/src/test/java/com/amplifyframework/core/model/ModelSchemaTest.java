@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 
@@ -70,7 +71,7 @@ public final class ModelSchemaTest {
         expectedFields.put("dob", ModelField.builder()
             .targetType("AWSDate")
             .name("dob")
-            .type(Class.forName("com.amplifyframework.core.model.temporal.Temporal$Date"))
+            .type(Temporal.Date.class)
             .build());
         expectedFields.put("age", ModelField.builder()
             .targetType("Int")

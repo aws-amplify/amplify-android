@@ -26,6 +26,7 @@ dependencies {
     implementation dependency.androidx.nav.uiktx
     implementation dependency.androidx.nav.dynamicfeatures
 
+    testImplementation project(path: ':aws-api-appsync') // Used to reference Temporal types in tests.
     testImplementation project(path: ':testmodels')
     testImplementation(project(path: ':testutils')) {
         transitive = false
