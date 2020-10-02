@@ -16,15 +16,15 @@
 package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.graphql.GraphQLBehavior;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
-import com.amplifyframework.datastore.appsync.AppSync;
-import com.amplifyframework.datastore.appsync.AppSyncMocking;
-import com.amplifyframework.datastore.appsync.ModelMetadata;
-import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.ApiMocking;
+import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
@@ -46,7 +46,10 @@ import io.reactivex.rxjava3.core.Observable;
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests the {@link Orchestrator}.
@@ -70,19 +73,18 @@ public final class OrchestratorTest {
             .name("Susan Quimby")
             .build();
 
-        HubAccumulator accumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(susan), 1)
+        HubAccumulator orchestratorInitObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
 
-        // Mock behaviors from AppSync
-        AppSync appSync = mock(AppSync.class);
-        ModelMetadata metadata = new ModelMetadata(susan.getId(), false, 1, Temporal.Timestamp.now());
-        ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(susan, metadata);
-        AppSyncMocking.create(appSync).mockResponse(susan);
-        AppSyncMocking.sync(appSync).mockSuccessResponse(BlogOwner.class, modelWithMetadata);
-        AppSyncMocking.onCreate(appSync).callOnStart();
-        AppSyncMocking.onDelete(appSync).callOnStart();
-        AppSyncMocking.onUpdate(appSync).callOnStart();
+        // Mock behaviors from for the API category
+        GraphQLBehavior mockApi = mock(GraphQLBehavior.class);
+
+        ApiMocking.mockSubscriptionStart(mockApi);
+        ApiMocking.mockSuccessfulMutation(mockApi, susan);
+        ApiMocking.mockSuccessfulSyncQuery(mockApi, susan);
+
+        AppSyncClient appSync = AppSyncClient.via(mockApi);
 
         InMemoryStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
         ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
@@ -101,7 +103,13 @@ public final class OrchestratorTest {
 
         // Arrange: orchestrator is running
         orchestrator.start();
+        // Try to start it twice.
+        orchestrator.start();
 
+        orchestratorInitObserver.await(10, TimeUnit.SECONDS);
+        HubAccumulator accumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(susan), 1)
+                          .start();
         // Act: Put BlogOwner into storage, and wait for it to complete.
         SynchronousStorageAdapter.delegatingTo(localStorageAdapter).save(susan);
 
@@ -117,5 +125,8 @@ public final class OrchestratorTest {
         );
 
         assertTrue(orchestrator.stop().blockingAwait(5, TimeUnit.SECONDS));
+        // Verify that the API query method was only called once. This ensures that we're preventing
+        // concurrent calls to the orchestrator.
+        verify(mockApi, times(1)).query(any(GraphQLRequest.class), any(), any());
     }
 }

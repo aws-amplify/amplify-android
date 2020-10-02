@@ -38,6 +38,7 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -62,6 +63,7 @@ public final class Orchestrator {
     private final MutationOutbox mutationOutbox;
     private final CompositeDisposable disposables;
     private final Scheduler startStopScheduler;
+    private final Semaphore startStopSemaphore;
 
     /**
      * Constructs a new Orchestrator.
@@ -112,6 +114,7 @@ public final class Orchestrator {
         this.targetMode = targetMode;
         this.disposables = new CompositeDisposable();
         this.startStopScheduler = Schedulers.single();
+        this.startStopSemaphore = new Semaphore(1);
     }
 
     /**
@@ -135,10 +138,16 @@ public final class Orchestrator {
      * Start performing sync operations between the local storage adapter
      * and the remote GraphQL endpoint.
      */
-    public void start() {
+    public synchronized void start() {
+        LOG.debug("Available permits = " + startStopSemaphore.availablePermits());
+        if (!startStopSemaphore.tryAcquire()) {
+            LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");
+            return;
+        }
         disposables.add(transitionCompletable()
             .subscribeOn(startStopScheduler)
             .doOnDispose(() -> LOG.debug("Orchestrator disposed a transition."))
+            .doFinally(startStopSemaphore::release)
             .subscribe(
                 () -> {
                     LOG.debug("Orchestrator completed a transition");
@@ -180,9 +189,16 @@ public final class Orchestrator {
      */
     public Completable stop() {
         LOG.info("DataStore orchestrator stopping. Current mode = " + currentMode.get().name());
+        if (!startStopSemaphore.tryAcquire()) {
+            LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");
+            return Completable.error(
+                new DataStoreException("Unable to acquire orchestrator lock. Transition currently in progress.",
+                                       "Retry your operation"));
+        }
         disposables.clear();
         return transitionToStopped(currentMode.get())
-            .subscribeOn(startStopScheduler);
+            .subscribeOn(startStopScheduler)
+            .doFinally(startStopSemaphore::release);
     }
 
     private static Completable unknownMode(Mode mode) {
