@@ -42,10 +42,7 @@ import static org.mockito.Mockito.doAnswer;
  * Utility to mock behaviors of the API category.
  */
 public final class ApiMocking {
-
-    private ApiMocking(){
-
-    }
+    private ApiMocking() {}
 
     /**
      * Mock successful subscription start calls.
@@ -135,7 +132,7 @@ public final class ApiMocking {
         );
     }
 
-    private static <M extends Model> ArgumentMatcher<GraphQLRequest<M>> getMatcherFor(M model) {
+    private static <M extends Model> ArgumentMatcher<GraphQLRequest<M>> requestContainsModelId(String modelId) {
         return graphQLRequest -> {
             try {
                 JSONObject payload = new JSONObject(graphQLRequest.getContent());

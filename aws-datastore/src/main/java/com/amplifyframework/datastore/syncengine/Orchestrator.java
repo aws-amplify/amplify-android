@@ -187,13 +187,12 @@ public final class Orchestrator {
      * Stop the orchestrator.
      * @return A completable which emits success when orchestrator stops
      */
-    public Completable stop() {
+    public synchronized Completable stop() {
         LOG.info("DataStore orchestrator stopping. Current mode = " + currentMode.get().name());
         try {
             startStopSemaphore.acquire();
 
         } catch (InterruptedException exception) {
-            LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");
             return Completable.error(
                 new DataStoreException("Unable to acquire orchestrator lock. Transition currently in progress.",
                                        exception,
