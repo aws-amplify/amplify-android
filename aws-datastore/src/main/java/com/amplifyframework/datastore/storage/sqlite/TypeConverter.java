@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.types.JavaFieldType;
-import com.amplifyframework.datastore.appsync.AWSAppSyncScalarType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +29,6 @@ import java.util.Map;
  * GraphQL, Java and SQL data types.
  */
 public final class TypeConverter {
-    private static final Map<AWSAppSyncScalarType, JavaFieldType> AWS_GRAPH_QL_TO_JAVA = new HashMap<>();
     private static final Map<JavaFieldType, SQLiteDataType> JAVA_TO_SQL = new HashMap<>();
 
     /**
@@ -40,21 +38,6 @@ public final class TypeConverter {
     }
 
     static {
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.ID, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.STRING, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.INT, JavaFieldType.INTEGER);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.FLOAT, JavaFieldType.FLOAT);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.BOOLEAN, JavaFieldType.BOOLEAN);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_DATE, JavaFieldType.DATE);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_TIME, JavaFieldType.TIME);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_DATE_TIME, JavaFieldType.DATE);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_TIMESTAMP, JavaFieldType.LONG);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_EMAIL, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_JSON, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_URL, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_PHONE, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_IP_ADDRESS, JavaFieldType.STRING);
-
         JAVA_TO_SQL.put(JavaFieldType.BOOLEAN, SQLiteDataType.INTEGER);
         JAVA_TO_SQL.put(JavaFieldType.LONG, SQLiteDataType.INTEGER);
         JAVA_TO_SQL.put(JavaFieldType.INTEGER, SQLiteDataType.INTEGER);
