@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.api.aws.GraphQLRequestOptions;
 import com.amplifyframework.api.aws.LeafSerializationBehavior;
 
@@ -32,16 +34,19 @@ public final class DataStoreGraphQLRequestOptions implements GraphQLRequestOptio
     private static final String VERSION_KEY = "_version";
     private static final String LAST_CHANGED_AT_KEY = "_lastChangedAt";
 
+    @NonNull
     @Override
     public List<String> paginationFields() {
         return Arrays.asList(NEXT_TOKEN_KEY, STARTED_AT_KEY);
     }
 
+    @NonNull
     @Override
     public List<String> modelMetaFields() {
         return Arrays.asList(VERSION_KEY, DELETED_KEY, LAST_CHANGED_AT_KEY);
     }
 
+    @NonNull
     @Override
     public String listField() {
         return ITEMS_KEY;
@@ -52,6 +57,7 @@ public final class DataStoreGraphQLRequestOptions implements GraphQLRequestOptio
         return 1;
     }
 
+    @NonNull
     @Override
     public LeafSerializationBehavior leafSerializationBehavior() {
         return LeafSerializationBehavior.JUST_ID;
