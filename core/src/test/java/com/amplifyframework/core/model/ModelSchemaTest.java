@@ -45,10 +45,9 @@ public final class ModelSchemaTest {
      * The factory {@link ModelSchema#fromModelClass(Class)} will produce
      * an {@link ModelSchema} that meets our expectations for the {@link Person} model.
      * @throws AmplifyException from model schema parsing
-     * @throws ClassNotFoundException from Class.forName("com.amplifyframework.core.model.temporal.Temporal$Date")
      */
     @Test
-    public void modelSchemaIsGeneratedForPersonModel() throws AmplifyException, ClassNotFoundException {
+    public void modelSchemaIsGeneratedForPersonModel() throws AmplifyException {
         Map<String, ModelField> expectedFields = new HashMap<>();
         expectedFields.put("id", ModelField.builder()
             .targetType("ID")
