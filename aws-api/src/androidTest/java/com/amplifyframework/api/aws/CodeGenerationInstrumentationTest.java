@@ -21,6 +21,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.noteswithauth.PrivateNote;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
@@ -82,7 +83,7 @@ public final class CodeGenerationInstrumentationTest {
             .firstName("David")
             .lastName("Daudelin")
             .age(29)
-            .dob(new SimpleDateFormat("MM/dd/yyyy").parse("07/25/1990"))
+            .dob(new Temporal.Date(new SimpleDateFormat("MM/dd/yyyy").parse("07/25/1990")))
             .relationship(MaritalStatus.married)
             .build();
         Person createdPerson = api.create(PERSON_API_NAME, david);
