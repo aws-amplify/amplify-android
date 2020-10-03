@@ -82,11 +82,14 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
     public static Object convertRawValueToTarget(
             @Nullable final Object value,
             @NonNull final JavaFieldType fieldType,
-            @Nullable Gson gson
+            @NonNull Gson gson
     ) {
         if (value == null) {
             return null;
         }
+        Objects.requireNonNull(fieldType);
+        Objects.requireNonNull(gson);
+
         switch (fieldType) {
             case INTEGER:
             case LONG:
@@ -102,8 +105,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             case ENUM:
                 return ((Enum) value).name();
             case CUSTOM_TYPE:
-                final Gson jsonConverter = gson != null ? gson : new Gson();
-                return jsonConverter.toJson(value);
+                return gson.toJson(value);
             case DATE:
                 return ((Temporal.Date) value).format();
             case DATE_TIME:
@@ -239,5 +241,4 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         final JavaFieldType javaFieldType = TypeConverter.getJavaFieldType(field);
         return convertRawValueToTarget(fieldValue, javaFieldType, gson);
     }
-
 }

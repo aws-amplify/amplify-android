@@ -20,7 +20,6 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
-import com.amplifyframework.api.aws.TypeMaker;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
@@ -43,6 +42,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Casing;
+import com.amplifyframework.util.TypeMaker;
 
 import java.util.ArrayList;
 import java.util.Arrays;

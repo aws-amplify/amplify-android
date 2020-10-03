@@ -48,6 +48,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;
 
@@ -134,7 +135,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             ModelProvider systemModelsProvider) {
         this.modelSchemaRegistry = modelSchemaRegistry;
         this.modelsProvider = CompoundModelProvider.of(systemModelsProvider, userModelsProvider);
-        this.gson = new Gson();
+        this.gson = GsonFactory.instance();
         this.itemChangeSubject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         this.toBeDisposed = new CompositeDisposable();
     }
