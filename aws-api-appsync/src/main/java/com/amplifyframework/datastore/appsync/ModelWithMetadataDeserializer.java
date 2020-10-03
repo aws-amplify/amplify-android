@@ -15,8 +15,11 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.model.Model;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -24,11 +27,21 @@ import com.google.gson.JsonParseException;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Objects;
 
 /**
- * Deserializer for ModelWithMetadata.
+ * Deserializes JSON into {@link ModelWithMetadata}.
  */
 public final class ModelWithMetadataDeserializer implements JsonDeserializer<ModelWithMetadata<? extends Model>> {
+    /**
+     * Register this deserializer into a {@link GsonBuilder}.
+     * @param builder A {@link GsonBuilder}
+     */
+    public static void register(@NonNull GsonBuilder builder) {
+        Objects.requireNonNull(builder);
+        builder.registerTypeAdapter(ModelWithMetadata.class, new ModelWithMetadataDeserializer());
+    }
+
     @Override
     @SuppressWarnings("unchecked") // Cast Type to Class<? extends Model>
     public ModelWithMetadata<? extends Model> deserialize(

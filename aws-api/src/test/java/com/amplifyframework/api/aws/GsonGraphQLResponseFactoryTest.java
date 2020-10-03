@@ -26,6 +26,8 @@ import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
+import com.amplifyframework.util.GsonFactory;
+import com.amplifyframework.util.TypeMaker;
 
 import com.google.gson.Gson;
 import org.json.JSONException;
@@ -60,7 +62,7 @@ public final class GsonGraphQLResponseFactoryTest {
      */
     @Before
     public void setup() {
-        Gson gson = GsonFactory.create();
+        Gson gson = GsonFactory.instance();
         responseFactory = new GsonGraphQLResponseFactory(gson);
     }
 
@@ -435,7 +437,7 @@ public final class GsonGraphQLResponseFactoryTest {
         assertEquals(expectedMeetings, actualMeetings);
     }
 
-    private <R> AppSyncGraphQLRequest<R> buildDummyRequest(Type responseType) throws ApiException {
+    private <T> AppSyncGraphQLRequest<T> buildDummyRequest(Type responseType) throws ApiException {
         try {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(Todo.class)

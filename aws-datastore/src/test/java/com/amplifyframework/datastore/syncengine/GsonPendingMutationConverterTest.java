@@ -19,8 +19,6 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -29,7 +27,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Tests the functionality of the {@link GsonPendingMutationConverter}.
  */
-public class GsonPendingMutationConverterTest {
+public final class GsonPendingMutationConverterTest {
     /**
      * Validate that the {@link GsonPendingMutationConverter} can be
      * used to convert a sample {@link PendingMutation} to a
@@ -59,24 +57,5 @@ public class GsonPendingMutationConverterTest {
         // Now, try to convert it back...
         PendingMutation<Blog> reconstructedItemChange = converter.fromRecord(record);
         assertEquals(originalMutation, reconstructedItemChange);
-    }
-
-    /**
-     * Tests the functionality of just the
-     * {@link GsonPendingMutationConverter.TimeBasedUuidTypeAdapter}
-     * in isolation.
-     */
-    @Test
-    public void canConvertTimeBasedUuid() {
-        TimeBasedUuid original = TimeBasedUuid.create();
-
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(TimeBasedUuid.class, new GsonPendingMutationConverter.TimeBasedUuidTypeAdapter())
-            .create();
-
-        String json = gson.toJson(original);
-        TimeBasedUuid reconstructed = gson.fromJson(json, TimeBasedUuid.class);
-
-        assertEquals(original, reconstructed);
     }
 }

@@ -13,9 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
-
-import com.amplifyframework.util.Immutable;
+package com.amplifyframework.util;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -27,13 +25,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-final class GsonUtil {
-
-    private GsonUtil() {
+/**
+ * A utility to convert Gson types into pure Java types.
+ */
+public final class GsonObjectConverter {
+    private GsonObjectConverter() {
         throw new UnsupportedOperationException("No instances allowed.");
     }
 
-    static Map<String, Object> toMap(JsonObject object) {
+    /**
+     * Converts A Gson {@link JsonObject} into a Java String-to-Object map.
+     * @param object JsonObject to convert
+     * @return Java String-to-Object Map
+     */
+    public static Map<String, Object> toMap(JsonObject object) {
         Map<String, Object> map = new HashMap<>();
         for (String key : object.keySet()) {
             JsonElement element = object.get(key);
@@ -42,7 +47,12 @@ final class GsonUtil {
         return Immutable.of(map);
     }
 
-    static List<Object> toList(JsonArray array) {
+    /**
+     * Converts a Gson {@link JsonArray} into a Java list of Object.
+     * @param array Gson {@link JsonArray} to convert
+     * @return Java list of Object
+     */
+    public static List<Object> toList(JsonArray array) {
         List<Object> list = new ArrayList<>();
         for (int i = 0; i < array.size(); i++) {
             JsonElement element = array.get(i);
