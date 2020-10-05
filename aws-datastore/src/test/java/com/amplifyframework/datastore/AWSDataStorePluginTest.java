@@ -120,6 +120,7 @@ public final class AWSDataStorePluginTest {
         // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
+        dataStoreReadyObserver.await();
         assertSyncProcessorNotStarted(emptyApiCategory);
 
         Person person1 = createPerson("Test", "Dummy I");
@@ -127,8 +128,6 @@ public final class AWSDataStorePluginTest {
         assertNotNull(person1.getId());
         Person person1FromDb = synchronousDataStore.get(Person.class, person1.getId());
         assertEquals(person1, person1FromDb);
-
-        dataStoreReadyObserver.await();
     }
 
     /**

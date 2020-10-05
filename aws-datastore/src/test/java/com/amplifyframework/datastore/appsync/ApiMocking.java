@@ -87,7 +87,7 @@ public final class ApiMocking {
             // Technically, create() returns a Cancelable...
             return null;
         }).when(mockApi).mutate(
-            argThat(getMatcherFor(model)), // Match the id of the model passed in to the function.
+            argThat(requestContainsModelId(model.getId())), // Match the id of the model passed in to the function.
             any(), // onResponse
             any() // onFailure
         );
@@ -137,7 +137,7 @@ public final class ApiMocking {
             try {
                 JSONObject payload = new JSONObject(graphQLRequest.getContent());
                 String modelIdInRequest = payload.getJSONObject("variables").getJSONObject("input").getString("id");
-                return model.getId().equals(modelIdInRequest);
+                return modelId.equals(modelIdInRequest);
             } catch (JSONException exception) {
                 fail("Invalid GraphQLRequest payload." + exception.getMessage());
             }

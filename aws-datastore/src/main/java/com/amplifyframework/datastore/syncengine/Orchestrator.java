@@ -135,17 +135,54 @@ public final class Orchestrator {
     }
 
     /**
-     * Start performing sync operations between the local storage adapter
-     * and the remote GraphQL endpoint.
+     * Start the orchestrator with the default timeout of 10 seconds.
      */
     public synchronized void start() {
+        start(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Start performing sync operations between the local storage adapter
+     * and the remote GraphQL endpoint. The timeout parameters provided will be
+     * used to block execution of the current thread until lock acquisition has
+     * either failed or succeded, or the timeout is elapsed.
+     *
+     * @param opTimeout The desired timeout for the start operation.
+     * @param timeUnit The unit of time of the opTimeout parameter.
+     */
+    public synchronized void start(long opTimeout, TimeUnit timeUnit) {
         LOG.debug("Available permits = " + startStopSemaphore.availablePermits());
-        if (!startStopSemaphore.tryAcquire()) {
-            LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");
-            return;
-        }
-        disposables.add(transitionCompletable()
+        transitionCompletable()
             .subscribeOn(startStopScheduler)
+            .doOnSubscribe(subscriber -> {
+                LOG.debug("Orchestrator start method invoked.");
+                if (!startStopSemaphore.tryAcquire(opTimeout, timeUnit)) {
+                    LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");
+                    // Get rid of this new subscriber to avoid executing unnecessary transitions.
+                    subscriber.dispose();
+                    Mode current = currentMode.get();
+                    // Here, we determine if an exception should be throws
+                    if (Mode.LOCAL_ONLY.equals(current) || Mode.SYNC_VIA_API.equals(current)) {
+                        // If the current mode is at least LOCAL_ONLY, we can let the call continue
+                        // because we know that at StorageObserver is running and will buffer mutations
+                        // for the MutationProcessor.
+                        return;
+                    } else {
+                        throw new DataStoreException("Unable to acquire orchestrator lock. " +
+                                                         "Transition currently in progress.",
+                                                     "Retry your operation.");
+                    }
+                } else {
+                    LOG.debug("Lock acquired.");
+                    if (!isStarted()) {
+                        disposables.add(subscriber);
+                    } else {
+                        LOG.debug("Orchestrator already started. " + startStopSemaphore.availablePermits());
+                        startStopSemaphore.release();
+                        subscriber.dispose();
+                    }
+                }
+            })
             .doOnDispose(() -> LOG.debug("Orchestrator disposed a transition."))
             .doFinally(startStopSemaphore::release)
             .subscribe(
@@ -157,7 +194,7 @@ public final class Orchestrator {
                     }
                 },
                 failure -> LOG.warn("Orchestrator failed to transition.")
-            ));
+            );
     }
 
     private Completable transitionCompletable() {
@@ -190,8 +227,11 @@ public final class Orchestrator {
     public synchronized Completable stop() {
         LOG.info("DataStore orchestrator stopping. Current mode = " + currentMode.get().name());
         try {
-            startStopSemaphore.acquire();
-
+            if (!startStopSemaphore.tryAcquire(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                return Completable.error(
+                    new DataStoreException("Unable to acquire orchestrator lock. Transition currently in progress.",
+                                           "Retry your operation"));
+            }
         } catch (InterruptedException exception) {
             return Completable.error(
                 new DataStoreException("Unable to acquire orchestrator lock. Transition currently in progress.",
