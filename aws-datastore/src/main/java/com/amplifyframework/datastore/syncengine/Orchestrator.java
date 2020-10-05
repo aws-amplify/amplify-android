@@ -258,7 +258,7 @@ public final class Orchestrator {
                     currentMode.set(Mode.LOCAL_ONLY);
                 })).blockingAwait(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             if (!subscribed) {
-                throw new TimeoutException("Subscription timed out.");
+                throw new TimeoutException("Timed out while preparing local-only mode.");
             }
         } catch (Throwable throwable) {
             LOG.warn("Failed to start observing storage changes.", throwable);
@@ -289,7 +289,7 @@ public final class Orchestrator {
                 boolean subscribed = syncProcessor.hydrate()
                     .blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
                 if (!subscribed) {
-                    throw new TimeoutException("Subscription timed out.");
+                    throw new TimeoutException("Timed out while performing initial model sync.");
                 }
             } catch (Throwable failure) {
                 if (!emitter.isDisposed()) {
@@ -324,9 +324,9 @@ public final class Orchestrator {
         try {
             boolean stopped = stopApiSync()
                 .subscribeOn(startStopScheduler)
-                .blockingAwait(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                .blockingAwait(NETWORK_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             if (!stopped) {
-                throw new TimeoutException("Operation timed out.");
+                throw new TimeoutException("Timed out while waiting for API synchronization to end.");
             }
         } catch (Throwable failure) {
             LOG.warn("Failed to stop API sync.", failure);
