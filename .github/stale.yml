@@ -13,6 +13,6 @@ markComment: >
 # Comment to post when closing a stale issue. Set to `false` to disable
 closeComment: >
   This issue has been automatically closed because of inactivity.
-  Please open a new issue if are still encountering problems.
+  Please open a new issue if you are still encountering problems.
 # Limit to only `issues` or `pulls`
 only: issues
