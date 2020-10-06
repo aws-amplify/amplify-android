@@ -21,10 +21,12 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
-import com.amplifyframework.datastore.appsync.ApiMocking;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
+import com.amplifyframework.datastore.appsync.ModelMetadata;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
@@ -32,6 +34,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
+import com.amplifyframework.testutils.mocks.ApiMocking;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,8 +84,15 @@ public final class OrchestratorTest {
         GraphQLBehavior mockApi = mock(GraphQLBehavior.class);
 
         ApiMocking.mockSubscriptionStart(mockApi);
-        ApiMocking.mockSuccessfulMutation(mockApi, susan);
-        ApiMocking.mockSuccessfulSyncQuery(mockApi, susan);
+
+        ModelMetadata metadata = new ModelMetadata(susan.getId(),
+                                                   false,
+                                                   1,
+                                                   Temporal.Timestamp.now());
+        ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(susan, metadata);
+
+        ApiMocking.mockSuccessfulMutation(mockApi, susan.getId(), modelWithMetadata);
+        ApiMocking.mockSuccessfulQuery(mockApi, modelWithMetadata);
 
         AppSyncClient appSync = AppSyncClient.via(mockApi);
 

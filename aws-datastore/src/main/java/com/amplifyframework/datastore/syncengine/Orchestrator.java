@@ -153,7 +153,6 @@ public final class Orchestrator {
     public synchronized void start(long opTimeout, TimeUnit timeUnit) {
         LOG.debug("Available permits = " + startStopSemaphore.availablePermits());
         transitionCompletable()
-            .subscribeOn(startStopScheduler)
             .doOnSubscribe(subscriber -> {
                 LOG.debug("Orchestrator start method invoked.");
                 if (!startStopSemaphore.tryAcquire(opTimeout, timeUnit)) {
@@ -178,13 +177,13 @@ public final class Orchestrator {
                         disposables.add(subscriber);
                     } else {
                         LOG.debug("Orchestrator already started. " + startStopSemaphore.availablePermits());
-                        startStopSemaphore.release();
                         subscriber.dispose();
                     }
                 }
             })
             .doOnDispose(() -> LOG.debug("Orchestrator disposed a transition."))
             .doFinally(startStopSemaphore::release)
+            .subscribeOn(startStopScheduler)
             .subscribe(
                 () -> {
                     LOG.debug("Orchestrator completed a transition");
