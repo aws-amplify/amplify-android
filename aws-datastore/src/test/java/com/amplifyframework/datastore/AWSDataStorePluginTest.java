@@ -19,6 +19,7 @@ import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.events.ApiChannelEventName;
@@ -323,6 +324,7 @@ public final class AWSDataStorePluginTest {
     private ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
         ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
+
         when(mockApiPlugin.getPluginKey()).thenReturn(MOCK_API_PLUGIN_NAME);
         when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
@@ -366,6 +368,8 @@ public final class AWSDataStorePluginTest {
             any(Action.class)
         );
         mockApiCategory.addPlugin(mockApiPlugin);
+        mockApiCategory.configure(new ApiCategoryConfiguration(), getApplicationContext());
+        mockApiCategory.initialize(getApplicationContext());
         return mockApiCategory;
     }
 

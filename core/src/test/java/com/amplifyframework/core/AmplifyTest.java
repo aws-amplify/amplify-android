@@ -27,6 +27,7 @@ import org.robolectric.annotation.Config;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+
 /**
  * Tests the top-level {@link Amplify} facade.
  */
@@ -41,11 +42,10 @@ public class AmplifyTest {
     public void pluginCanBeAddedAndRemoved() throws AmplifyException {
         // Arrange a plugin
         final SimpleLoggingPlugin loggingPlugin = SimpleLoggingPlugin.instance();
-
         // Add it, and assert that it was added...
         Amplify.addPlugin(loggingPlugin);
         assertEquals(1, Amplify.Logging.getPlugins().size());
-        assertEquals(loggingPlugin, Amplify.Logging.getPlugin(loggingPlugin.getPluginKey()));
+        assertEquals(loggingPlugin, Amplify.Logging.getPlugins().iterator().next());
 
         // Remove it, make sure it's not there anymore.
         Amplify.removePlugin(loggingPlugin);
