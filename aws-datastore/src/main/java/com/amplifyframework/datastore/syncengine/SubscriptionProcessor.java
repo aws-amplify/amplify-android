@@ -58,12 +58,14 @@ import io.reactivex.rxjava3.subjects.ReplaySubject;
  */
 final class SubscriptionProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long SUBSCRIPTION_START_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
+    private static final long TIMEOUT_SECONDS_PER_MODEL = 2;
+    private static final long NETWORK_OP_TIMEOUT_SECONDS = 10;
 
     private final AppSync appSync;
     private final ModelProvider modelProvider;
     private final Merger merger;
     private final CompositeDisposable ongoingOperationsDisposable;
+    private final long adjustedTimeoutSeconds;
     private ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
 
     /**
@@ -80,6 +82,13 @@ final class SubscriptionProcessor {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.merger = Objects.requireNonNull(merger);
         this.ongoingOperationsDisposable = new CompositeDisposable();
+
+        // Operation times out after 10 seconds. If there are more than 5 models,
+        // then 2 seconds are added to the timer per additional model count.
+        this.adjustedTimeoutSeconds = Math.max(
+            NETWORK_OP_TIMEOUT_SECONDS,
+            TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
+        );
     }
 
     /**
@@ -116,7 +125,7 @@ final class SubscriptionProcessor {
         boolean subscriptionsStarted;
         try {
             LOG.debug("Waiting for subscriptions to start.");
-            subscriptionsStarted = latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            subscriptionsStarted = latch.await(adjustedTimeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException exception) {
             LOG.warn("Subscription operations were interrupted during setup.");
             return;
