@@ -44,6 +44,7 @@ import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.NetworkStatusMonitor;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
@@ -224,7 +225,22 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 initError, AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }
-        orchestrator.start();
+        startOrchestratorAsync();
+    }
+
+    private void startOrchestratorAsync() {
+        orchestrator
+            .start()
+            .subscribe(
+                () -> {
+                    LOG.debug("Orchestrator completed a transition");
+                    if (orchestrator.isStarted()) {
+                        Amplify.Hub.publish(HubChannel.DATASTORE,
+                                            HubEvent.create(DataStoreChannelEventName.READY));
+                    }
+                },
+                failure -> LOG.warn("Orchestrator failed to transition.")
+            );
     }
 
     /**
@@ -480,7 +496,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 // Invoke the consumer's callback once the clear operation is finished.
                 onComplete.call();
                 // Kick off the orchestrator asynchronously.
-                orchestrator.start();
+                startOrchestratorAsync();
             }, onError)))
             .subscribe(
                 () -> LOG.debug("Clear operation completed."),
@@ -490,11 +506,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private void beforeOperation(@NonNull final Runnable runnable) {
         try {
-            Completable.fromAction(
-                () -> {
-                    categoryInitializationsPending.await();
-                    orchestrator.start(BEFORE_OP_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                })
+            categoryInitializationsPending.await();
+            orchestrator.start(BEFORE_OP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                 .andThen(Completable.fromRunnable(runnable))
                 .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (Throwable throwable) {

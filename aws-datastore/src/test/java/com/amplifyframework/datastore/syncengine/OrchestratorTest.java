@@ -76,8 +76,9 @@ public final class OrchestratorTest {
             .name("Susan Quimby")
             .build();
 
+        // SUBSCRIPTIONS_ESTABLISHED indicates that the orchestrator is up and running.
         HubAccumulator orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED, 1)
                 .start();
 
         // Mock behaviors from for the API category
@@ -112,9 +113,12 @@ public final class OrchestratorTest {
             );
 
         // Arrange: orchestrator is running
-        orchestrator.start();
-        // Try to start it twice.
-        orchestrator.start();
+        orchestrator.start().subscribe();
+
+        // Try to start it in a new thread.
+        new Thread(() -> orchestrator.start().subscribe()).start();
+        // Try to start it again on a current thread.
+        orchestrator.start().subscribe();
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         HubAccumulator accumulator =
