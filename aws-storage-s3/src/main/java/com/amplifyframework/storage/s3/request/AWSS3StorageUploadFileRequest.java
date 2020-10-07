@@ -34,6 +34,7 @@ public final class AWSS3StorageUploadFileRequest {
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final String contentType;
+    private final String sseAlgorithm;
     private final Map<String, String> metadata;
 
     /**
@@ -52,6 +53,7 @@ public final class AWSS3StorageUploadFileRequest {
             @NonNull StorageAccessLevel accessLevel,
             @Nullable String targetIdentityId,
             @Nullable String contentType,
+            @Nullable String sseAlgorithm,
             @Nullable Map<String, String> metadata
     ) {
         this.key = key;
@@ -59,6 +61,7 @@ public final class AWSS3StorageUploadFileRequest {
         this.accessLevel = accessLevel;
         this.targetIdentityId = targetIdentityId;
         this.contentType = contentType;
+        this.sseAlgorithm = sseAlgorithm;
         this.metadata = new HashMap<>();
         if (metadata != null) {
             this.metadata.putAll(metadata);
@@ -108,6 +111,15 @@ public final class AWSS3StorageUploadFileRequest {
     @Nullable
     public String getContentType() {
         return contentType;
+    }
+
+    /**
+     * Gets the server side encryption algorithm.
+     * @return server side encryption algorithm
+     */
+    @Nullable
+    public String getSSEAlgorithm() {
+        return sseAlgorithm;
     }
 
     /**

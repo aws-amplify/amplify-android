@@ -30,11 +30,13 @@ import java.util.Objects;
  */
 public final class StorageUploadFileOptions extends StorageOptions {
     private final String contentType;
+    private final String sseAlgorithm;
     private final Map<String, String> metadata;
 
     private StorageUploadFileOptions(final Builder builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
         this.contentType = builder.getContentType();
+        this.sseAlgorithm = builder.getSSEAlgorithm();
         this.metadata = builder.getMetadata();
     }
 
@@ -45,6 +47,15 @@ public final class StorageUploadFileOptions extends StorageOptions {
     @Nullable
     public String getContentType() {
         return contentType;
+    }
+
+    /**
+     * Server side encryption algorithm.
+     * @return Server side encryption algorithm
+     */
+    @Nullable
+    public String getSseAlgorithm() {
+        return sseAlgorithm;
     }
 
     /**
@@ -101,6 +112,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
      */
     public static final class Builder extends StorageOptions.Builder<Builder, StorageUploadFileOptions> {
         private String contentType;
+        private String sseAlgorithm;
         private Map<String, String> metadata;
 
         private Builder() {
@@ -120,6 +132,18 @@ public final class StorageUploadFileOptions extends StorageOptions {
         }
 
         /**
+         * Configures the server side encryption algorithm for a new StorageUploadFileOptions instance.
+         * @param sseAlgorithm SSEAlgorithm
+         * @return Current Builder instance for fluent chaining
+         */
+        @SuppressWarnings("WeakerAccess")
+        @NonNull
+        public Builder sseAlgorithm(@Nullable String sseAlgorithm) {
+            this.sseAlgorithm = sseAlgorithm;
+            return this;
+        }
+
+        /**
          * Configures metadata for new StorageUploadFileOptions instance.
          * @param metadata Metadata for StorageUploadFileOptions
          * @return Current Builder instance for fluent method chaining
@@ -133,6 +157,11 @@ public final class StorageUploadFileOptions extends StorageOptions {
         @Nullable
         String getContentType() {
             return contentType;
+        }
+
+        @Nullable
+        String getSSEAlgorithm() {
+            return sseAlgorithm;
         }
 
         @NonNull

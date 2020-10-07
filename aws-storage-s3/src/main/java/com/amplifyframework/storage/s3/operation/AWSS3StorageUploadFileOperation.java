@@ -109,6 +109,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setUserMetadata(getRequest().getMetadata());
         objectMetadata.setContentType(getRequest().getContentType());
+        objectMetadata.setSSEAlgorithm(getRequest().getSSEAlgorithm());
 
         // Upload!
         try {

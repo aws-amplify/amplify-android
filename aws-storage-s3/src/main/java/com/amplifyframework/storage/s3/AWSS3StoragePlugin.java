@@ -314,6 +314,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                         : defaultAccessLevel,
                 options.getTargetIdentityId(),
                 options.getContentType(),
+                options.getSseAlgorithm(),
                 options.getMetadata()
         );
 
