@@ -75,8 +75,8 @@ public final class AuthRule {
      *
      * @return identity claim
      */
-    public String getIdentityClaim() {
-        return this.identityClaim;
+    public String getIdentityClaimOrDefault() {
+        return Empty.check(this.identityClaim) ? "username" : this.identityClaim;
     }
 
     /**
