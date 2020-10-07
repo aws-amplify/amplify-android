@@ -54,7 +54,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
      * @return Server side encryption algorithm
      */
     @Nullable
-    public String getSseAlgorithm() {
+    public String getSSEAlgorithm() {
         return sseAlgorithm;
     }
 
