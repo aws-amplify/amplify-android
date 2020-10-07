@@ -30,32 +30,48 @@ import java.util.Objects;
  * which discards the local data, in favor of whatever was on the server.
  */
 public final class ApplyRemoteConflictHandler implements DataStoreConflictHandler {
+    private final DataStoreCategoryBehavior dataStore;
     private final DataStoreErrorHandler dataStoreErrorHandler;
 
-    private ApplyRemoteConflictHandler(DataStoreErrorHandler dataStoreErrorHandler) {
+    private ApplyRemoteConflictHandler(
+            DataStoreCategoryBehavior dataStore,
+            DataStoreErrorHandler dataStoreErrorHandler) {
+        this.dataStore = dataStore;
         this.dataStoreErrorHandler = dataStoreErrorHandler;
     }
 
     /**
      * Creates a new instance of the {@link ApplyRemoteConflictHandler}.
      * This handler discards local data in preference of remote data.
-     * @param dataStoreErrorHandler Handler of unrecoverable errors
+     * @param dataStoreErrorHandler DataStore error handler
      * @return A {@link ApplyRemoteConflictHandler}
      */
     @NonNull
     public static ApplyRemoteConflictHandler instance(@NonNull DataStoreErrorHandler dataStoreErrorHandler) {
         Objects.requireNonNull(dataStoreErrorHandler);
-        return new ApplyRemoteConflictHandler(dataStoreErrorHandler);
+        return new ApplyRemoteConflictHandler(Amplify.DataStore, dataStoreErrorHandler);
+    }
+
+    /**
+     * Creates a new instance of the {@link ApplyRemoteConflictHandler}.
+     * @param dataStore DataStore instance to interact with when resolving conflict
+     * @param errorHandler DataStore error handler instance
+     * @return A {@link ApplyRemoteConflictHandler}
+     */
+    @NonNull
+    public static ApplyRemoteConflictHandler instance(
+            @NonNull DataStoreCategoryBehavior dataStore, @NonNull DataStoreErrorHandler errorHandler) {
+        Objects.requireNonNull(dataStore);
+        Objects.requireNonNull(errorHandler);
+        return new ApplyRemoteConflictHandler(dataStore, errorHandler);
     }
 
     @Override
     public <T extends Model> void resolveConflict(
             @NonNull DataStoreConflictData<T> conflictData,
             @NonNull Consumer<DataStoreConflictHandlerResult> onConflictResolved) {
-        final T local = conflictData.getLocal();
-        final T remote = conflictData.getRemote();
-        Amplify.DataStore.delete(local,
-            deleted -> Amplify.DataStore.save(remote,
+        dataStore.delete(conflictData.getLocal().getModel(),
+            deleted -> dataStore.save(conflictData.getRemote().getModel(),
                 saved -> onConflictResolved.accept(DataStoreConflictHandlerResult.APPLY_REMOTE),
                 dataStoreErrorHandler
             ),

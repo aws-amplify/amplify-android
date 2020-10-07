@@ -78,7 +78,7 @@ public final class OrchestratorTest {
         AppSync appSync = mock(AppSync.class);
         ModelMetadata metadata = new ModelMetadata(susan.getId(), false, 1, Temporal.Timestamp.now());
         ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(susan, metadata);
-        AppSyncMocking.create(appSync).mockResponse(susan);
+        AppSyncMocking.create(appSync).mockSuccessResponse(susan, modelWithMetadata);
         AppSyncMocking.sync(appSync).mockSuccessResponse(BlogOwner.class, modelWithMetadata);
         AppSyncMocking.onCreate(appSync).callOnStart();
         AppSyncMocking.onDelete(appSync).callOnStart();

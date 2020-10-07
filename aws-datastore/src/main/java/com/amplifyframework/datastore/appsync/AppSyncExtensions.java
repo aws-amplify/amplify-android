@@ -121,9 +121,9 @@ public final class AppSyncExtensions {
     @Override
     public String toString() {
         return "AppSyncExtensions{" +
-                "errorType=\'" + errorType + "\'" +
-                ", errorInfo=\'" + errorInfo + "\'" +
-                ", data=\'" + data + "\'" +
-                '}';
+            "errorType='" + errorType + '\'' +
+            ", errorInfo='" + errorInfo + '\'' +
+            ", data=" + data +
+            '}';
     }
 }
