@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StorageServerSideEncryption;
 
 import java.io.File;
 import java.util.HashMap;
@@ -34,7 +35,7 @@ public final class AWSS3StorageUploadFileRequest {
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final String contentType;
-    private final String sseAlgorithm;
+    private final StorageServerSideEncryption serverSideEncryption;
     private final Map<String, String> metadata;
 
     /**
@@ -45,6 +46,7 @@ public final class AWSS3StorageUploadFileRequest {
      * @param targetIdentityId If set, this should override the current user's identity ID.
      *                         If null, the operation will fetch the current identity ID.
      * @param contentType The standard MIME type describing the format of the object to store
+     * @param serverSideEncryption server side encryption type for selected bucket
      * @param metadata Metadata for the object to store
      */
     public AWSS3StorageUploadFileRequest(
@@ -53,7 +55,7 @@ public final class AWSS3StorageUploadFileRequest {
             @NonNull StorageAccessLevel accessLevel,
             @Nullable String targetIdentityId,
             @Nullable String contentType,
-            @Nullable String sseAlgorithm,
+            @Nullable StorageServerSideEncryption serverSideEncryption,
             @Nullable Map<String, String> metadata
     ) {
         this.key = key;
@@ -61,7 +63,7 @@ public final class AWSS3StorageUploadFileRequest {
         this.accessLevel = accessLevel;
         this.targetIdentityId = targetIdentityId;
         this.contentType = contentType;
-        this.sseAlgorithm = sseAlgorithm;
+        this.serverSideEncryption = serverSideEncryption;
         this.metadata = new HashMap<>();
         if (metadata != null) {
             this.metadata.putAll(metadata);
@@ -118,8 +120,8 @@ public final class AWSS3StorageUploadFileRequest {
      * @return server side encryption algorithm
      */
     @Nullable
-    public String getSSEAlgorithm() {
-        return sseAlgorithm;
+    public StorageServerSideEncryption getServerSideEncryption() {
+        return serverSideEncryption;
     }
 
     /**

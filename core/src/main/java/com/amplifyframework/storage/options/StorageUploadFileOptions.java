@@ -19,6 +19,7 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.storage.StorageServerSideEncryption;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
@@ -30,13 +31,13 @@ import java.util.Objects;
  */
 public final class StorageUploadFileOptions extends StorageOptions {
     private final String contentType;
-    private final String sseAlgorithm;
+    private final StorageServerSideEncryption serverSideEncryption;
     private final Map<String, String> metadata;
 
     private StorageUploadFileOptions(final Builder builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
         this.contentType = builder.getContentType();
-        this.sseAlgorithm = builder.getSSEAlgorithm();
+        this.serverSideEncryption = builder.getServerSideEncryption();
         this.metadata = builder.getMetadata();
     }
 
@@ -54,8 +55,8 @@ public final class StorageUploadFileOptions extends StorageOptions {
      * @return Server side encryption algorithm
      */
     @Nullable
-    public String getSSEAlgorithm() {
-        return sseAlgorithm;
+    public StorageServerSideEncryption getServerSideEncryption() {
+        return serverSideEncryption;
     }
 
     /**
@@ -112,7 +113,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
      */
     public static final class Builder extends StorageOptions.Builder<Builder, StorageUploadFileOptions> {
         private String contentType;
-        private String sseAlgorithm;
+        private StorageServerSideEncryption serverSideEncryption;
         private Map<String, String> metadata;
 
         private Builder() {
@@ -133,13 +134,13 @@ public final class StorageUploadFileOptions extends StorageOptions {
 
         /**
          * Configures the server side encryption algorithm for a new StorageUploadFileOptions instance.
-         * @param sseAlgorithm SSEAlgorithm
+         * @param serverSideEncryption server side encryption algorithm
          * @return Current Builder instance for fluent chaining
          */
         @SuppressWarnings("WeakerAccess")
         @NonNull
-        public Builder sseAlgorithm(@Nullable String sseAlgorithm) {
-            this.sseAlgorithm = sseAlgorithm;
+        public Builder serverSideEncryption(@Nullable StorageServerSideEncryption serverSideEncryption) {
+            this.serverSideEncryption = serverSideEncryption;
             return this;
         }
 
@@ -160,8 +161,8 @@ public final class StorageUploadFileOptions extends StorageOptions {
         }
 
         @Nullable
-        String getSSEAlgorithm() {
-            return sseAlgorithm;
+        StorageServerSideEncryption getServerSideEncryption() {
+            return serverSideEncryption;
         }
 
         @NonNull

@@ -23,6 +23,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.storage.StorageChannelEventName;
+import com.amplifyframework.storage.StorageServerSideEncryption;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageTransferProgress;
@@ -109,7 +110,11 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setUserMetadata(getRequest().getMetadata());
         objectMetadata.setContentType(getRequest().getContentType());
-        objectMetadata.setSSEAlgorithm(getRequest().getSSEAlgorithm());
+
+        StorageServerSideEncryption storageServerSideEncryption = getRequest().getServerSideEncryption();
+        if (storageServerSideEncryption != null) {
+            objectMetadata.setSSEAlgorithm(storageServerSideEncryption.getName());
+        }
 
         // Upload!
         try {
