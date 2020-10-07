@@ -46,7 +46,7 @@ public final class AWSS3StorageUploadFileRequest {
      * @param targetIdentityId If set, this should override the current user's identity ID.
      *                         If null, the operation will fetch the current identity ID.
      * @param contentType The standard MIME type describing the format of the object to store
-     * @param serverSideEncryption server side encryption type for selected bucket
+     * @param serverSideEncryption server side encryption type for the current storage bucket
      * @param metadata Metadata for the object to store
      */
     public AWSS3StorageUploadFileRequest(
