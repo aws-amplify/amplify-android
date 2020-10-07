@@ -1081,7 +1081,6 @@ public final class AuthComponentTest {
     @Test
     public void getCurrentUser() {
         doAnswer(invocation -> USERNAME).when(mobileClient).getUsername();
-
         AuthUser user = authCategory.getCurrentUser();
 
         assertEquals(USER_SUB, user.getUserId());
