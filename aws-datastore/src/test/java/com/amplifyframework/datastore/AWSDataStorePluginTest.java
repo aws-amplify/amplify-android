@@ -324,7 +324,6 @@ public final class AWSDataStorePluginTest {
     private ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
         ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
-
         when(mockApiPlugin.getPluginKey()).thenReturn(MOCK_API_PLUGIN_NAME);
         when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
