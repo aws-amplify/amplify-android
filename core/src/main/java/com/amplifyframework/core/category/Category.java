@@ -181,7 +181,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         P plugin = plugins.get(pluginKey);
         if (plugin == null) {
             throw new IllegalStateException(
-                    "Tried to get a plugin but that plugin was not present. " +
+                "Tried to get a plugin but that plugin was not present. " +
                             "Check if the plugin was added originally or perhaps was already removed."
             );
         } else if (!isConfigured()) {
