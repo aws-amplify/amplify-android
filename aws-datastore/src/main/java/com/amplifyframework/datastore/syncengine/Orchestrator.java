@@ -159,7 +159,7 @@ public final class Orchestrator {
                     LOG.info("Orchestrator completed a transition");
                     if (isStarted()) {
                         Amplify.Hub.publish(HubChannel.DATASTORE,
-                                            HubEvent.create(DataStoreChannelEventName.READY));
+                            HubEvent.create(DataStoreChannelEventName.READY));
                     }
                 })
                 .doOnError(failure -> {
