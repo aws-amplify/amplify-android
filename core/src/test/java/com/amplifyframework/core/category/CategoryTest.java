@@ -34,6 +34,7 @@ import java.util.Set;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 /**
@@ -155,5 +156,23 @@ public final class CategoryTest {
             .escapeHatch(null)
             .categoryType(categoryType)
             .build());
+    }
+
+    /**
+     * Attempts to use a plugin should throw an IllegalStateException if a customer forgets to call Amplify.configure().
+     * @throws AmplifyException on category.configure()
+     */
+    @Test
+    public void cantGetPluginBeforeConfigured() throws AmplifyException {
+        FakeCategory category = new FakeCategory(CategoryType.API);
+        String pluginKey = RandomString.string();
+        category.addPlugin(FakePlugin.builder()
+                .pluginKey(pluginKey)
+                .categoryType(CategoryType.API)
+                .escapeHatch(new Object())
+                .build());
+        // category.configure has not been called yet, so getSelectedPlugin and getPlugin below will throw an exception
+        assertThrows(IllegalStateException.class, () -> category.getSelectedPlugin());
+        assertThrows(IllegalStateException.class, () -> category.getPlugin(pluginKey));
     }
 }
