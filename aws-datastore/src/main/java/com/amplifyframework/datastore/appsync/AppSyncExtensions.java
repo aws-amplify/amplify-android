@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
@@ -33,7 +34,7 @@ public final class AppSyncExtensions {
     private static final String ERROR_INFO_KEY = "errorInfo";
     private static final String DATA_KEY = "data";
 
-    private final String errorType;
+    private final AppSyncErrorType errorType;
     private final String errorInfo;
     private final Map<String, Object> data;
 
@@ -44,7 +45,7 @@ public final class AppSyncExtensions {
      */
     @SuppressWarnings("unchecked")
     public AppSyncExtensions(Map<String, Object> extensions) {
-        this.errorType = (String) extensions.get(ERROR_TYPE_KEY);
+        this.errorType = AppSyncErrorType.enumerate((String) extensions.get(ERROR_TYPE_KEY));
         this.errorInfo = (String) extensions.get(ERROR_INFO_KEY);
         this.data = (Map<String, Object>) extensions.get(DATA_KEY);
     }
@@ -58,7 +59,7 @@ public final class AppSyncExtensions {
      * @param data Additional error data, as defined by AppSync
      */
     public AppSyncExtensions(String errorType, String errorInfo, Map<String, Object> data) {
-        this.errorType = errorType;
+        this.errorType = AppSyncErrorType.enumerate(errorType);
         this.errorInfo = errorInfo;
         this.data = data;
     }
@@ -70,7 +71,7 @@ public final class AppSyncExtensions {
      * @return errorType
      */
     @Nullable
-    public String getErrorType() {
+    public AppSyncErrorType getErrorType() {
         return errorType;
     }
 
@@ -95,7 +96,7 @@ public final class AppSyncExtensions {
     }
 
     @Override
-    public boolean equals(Object thatObject) {
+    public boolean equals(@Nullable Object thatObject) {
         if (this == thatObject) {
             return true;
         }
@@ -103,11 +104,11 @@ public final class AppSyncExtensions {
             return false;
         }
 
-        AppSyncExtensions extensions = (AppSyncExtensions) thatObject;
+        AppSyncExtensions that = (AppSyncExtensions) thatObject;
 
-        return ObjectsCompat.equals(errorType, extensions.errorType) &&
-                ObjectsCompat.equals(errorInfo, extensions.errorInfo) &&
-                ObjectsCompat.equals(data, extensions.data);
+        return ObjectsCompat.equals(this.errorType, that.errorType) &&
+            ObjectsCompat.equals(this.errorInfo, that.errorInfo) &&
+            ObjectsCompat.equals(this.data, that.data);
     }
 
     @Override
@@ -118,12 +119,70 @@ public final class AppSyncExtensions {
         return result;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "AppSyncExtensions{" +
-                "errorType=\'" + errorType + "\'" +
-                ", errorInfo=\'" + errorInfo + "\'" +
-                ", data=\'" + data + "\'" +
+            "errorType='" + errorType + '\'' +
+            ", errorInfo='" + errorInfo + '\'' +
+            ", data=" + data +
+            '}';
+    }
+
+    /**
+     * An enumeration of the various error types that we expect
+     * to see in the value of {@link AppSyncExtensions#getErrorType()}.
+     * @see <a href="https://docs.aws.amazon.com/appsync/latest/devguide/conflict-detection-and-sync.html#errors">
+     *     AppSync Conflict Detection & Resolution Errors
+     *     </a>
+     */
+    public enum AppSyncErrorType {
+        /**
+         * Conflict detection finds a version mismatch and the conflict handler rejects the mutation.
+         * Example: Conflict resolution with an Optimistic Concurrency conflict handler.
+         * Or, Lambda conflict handler returned with REJECT.
+         */
+        CONFLICT_UNHANDLED("ConflictUnhandled");
+
+        private final String value;
+
+        AppSyncErrorType(String value) {
+            this.value = value;
+        }
+
+        /**
+         * Gets the string value of the error type.
+         * Note that this returns a different string from {@link #toString()},
+         * which is used for debugging, not as a field accessor.
+         * @return Error type as a string
+         */
+        @NonNull
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * Enumerate an error type from a string.
+         * @param maybeMatch A possibly matching error type
+         * @return An AppSyncErrorType if the provided string matches a known error type,
+         *         otherwise, null.
+         */
+        @Nullable
+        public static AppSyncErrorType enumerate(@Nullable String maybeMatch) {
+            for (AppSyncErrorType value : AppSyncErrorType.values()) {
+                if (value.getValue().equals(maybeMatch)) {
+                    return value;
+                }
+            }
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "AppSyncErrorType{" +
+                "value='" + value + '\'' +
                 '}';
+        }
     }
 }
