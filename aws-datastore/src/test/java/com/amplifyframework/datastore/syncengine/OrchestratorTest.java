@@ -36,6 +36,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.mocks.ApiMocking;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -59,6 +60,56 @@ import static org.mockito.Mockito.verify;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
+    private Orchestrator orchestrator;
+    private HubAccumulator orchestratorInitObserver;
+    private GraphQLBehavior mockApi;
+    private InMemoryStorageAdapter localStorageAdapter;
+    private BlogOwner susan;
+
+    /**
+     * Setup mocks and other common elements.
+     * @throws AmplifyException Not expected.
+     */
+    @SuppressWarnings("unchecked")
+    @Before
+    public void setup() throws AmplifyException {
+        ShadowLog.stream = System.out;
+        // Arrange: create a BlogOwner
+        susan = BlogOwner.builder().name("Susan Quimby").build();
+
+        // SUBSCRIPTIONS_ESTABLISHED indicates that the orchestrator is up and running.
+        orchestratorInitObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED, 1)
+                          .start();
+
+        ModelMetadata metadata = new ModelMetadata(susan.getId(),
+                                                   false,
+                                                   1,
+                                                   Temporal.Timestamp.now());
+        ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(susan, metadata);
+        // Mock behaviors from for the API category
+        mockApi = mock(GraphQLBehavior.class);
+        ApiMocking.mockSubscriptionStart(mockApi);
+        ApiMocking.mockSuccessfulMutation(mockApi, susan.getId(), modelWithMetadata);
+        ApiMocking.mockSuccessfulQuery(mockApi, modelWithMetadata);
+        AppSyncClient appSync = AppSyncClient.via(mockApi);
+
+        localStorageAdapter = InMemoryStorageAdapter.create();
+        ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry.clear();
+        modelSchemaRegistry.load(modelProvider.models());
+
+        orchestrator =
+            new Orchestrator(modelProvider,
+                modelSchemaRegistry,
+                localStorageAdapter,
+                appSync,
+                DataStoreConfiguration::defaults,
+                () -> Orchestrator.Mode.SYNC_VIA_API
+            );
+    }
+
     /**
      * When an item is placed into storage, a cascade of
      * things happen which should ultimately result in a mutation call
@@ -69,55 +120,7 @@ public final class OrchestratorTest {
     @SuppressWarnings("unchecked") // Casting ? in HubEvent<?> to PendingMutation<? extends Model>
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
-        ShadowLog.stream = System.out;
-
-        // Arrange: create a BlogOwner
-        final BlogOwner susan = BlogOwner.builder()
-            .name("Susan Quimby")
-            .build();
-
-        // SUBSCRIPTIONS_ESTABLISHED indicates that the orchestrator is up and running.
-        HubAccumulator orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED, 1)
-                .start();
-
-        // Mock behaviors from for the API category
-        GraphQLBehavior mockApi = mock(GraphQLBehavior.class);
-
-        ApiMocking.mockSubscriptionStart(mockApi);
-
-        ModelMetadata metadata = new ModelMetadata(susan.getId(),
-                                                   false,
-                                                   1,
-                                                   Temporal.Timestamp.now());
-        ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(susan, metadata);
-
-        ApiMocking.mockSuccessfulMutation(mockApi, susan.getId(), modelWithMetadata);
-        ApiMocking.mockSuccessfulQuery(mockApi, modelWithMetadata);
-
-        AppSyncClient appSync = AppSyncClient.via(mockApi);
-
-        InMemoryStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
-        ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.clear();
-        modelSchemaRegistry.load(modelProvider.models());
-
-        Orchestrator orchestrator =
-            new Orchestrator(modelProvider,
-                modelSchemaRegistry,
-                localStorageAdapter,
-                appSync,
-                DataStoreConfiguration::defaults,
-                () -> Orchestrator.Mode.SYNC_VIA_API
-            );
-
         // Arrange: orchestrator is running
-        orchestrator.start().subscribe();
-
-        // Try to start it in a new thread.
-        new Thread(() -> orchestrator.start().subscribe()).start();
-        // Try to start it again on a current thread.
         orchestrator.start().subscribe();
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
@@ -139,8 +142,27 @@ public final class OrchestratorTest {
         );
 
         assertTrue(orchestrator.stop().blockingAwait(5, TimeUnit.SECONDS));
-        // Verify that the API query method was only called once. This ensures that we're preventing
-        // concurrent calls to the orchestrator.
+    }
+
+    /**
+     * Verify preventing concurrent state transitions from happening.
+     * @throws AmplifyException Not expected.
+     */
+    @SuppressWarnings("unchecked") // Casting any(GraphQLRequest.class)
+    @Test
+    public void preventConcurrentStateTransitions() throws AmplifyException {
+
+        // Arrange: orchestrator is running
+        orchestrator.start().subscribe();
+
+        // Try to start it in a new thread.
+        new Thread(() -> orchestrator.start().subscribe()).start();
+        // Try to start it again on a current thread.
+        orchestrator.start().subscribe();
+
+        orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         verify(mockApi, times(1)).query(any(GraphQLRequest.class), any(), any());
+
+        assertTrue(orchestrator.stop().blockingAwait(5, TimeUnit.SECONDS));
     }
 }

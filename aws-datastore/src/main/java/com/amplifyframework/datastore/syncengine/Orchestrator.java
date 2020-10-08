@@ -154,7 +154,7 @@ public final class Orchestrator {
      * Start performing sync operations between the local storage adapter
      * and the remote GraphQL endpoint. The timeout parameters provided will be
      * used to block execution of the current thread until lock acquisition has
-     * either failed or succeded, or the timeout is elapsed.
+     * either failed or succeeded, or the timeout is elapsed.
      *
      * @param opTimeout The desired timeout for the start operation.
      * @param timeUnit The unit of time of the opTimeout parameter.
