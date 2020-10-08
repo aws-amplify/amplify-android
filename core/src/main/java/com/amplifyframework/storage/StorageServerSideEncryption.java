@@ -27,7 +27,12 @@ public enum StorageServerSideEncryption {
     /**
      * aws:kms encryption.
      */
-    KMS_KEYS("aws:kms");
+    KMS_KEYS("aws:kms"),
+
+    /**
+     * No encryption.
+     */
+    NONE("");
 
     private final String name;
 

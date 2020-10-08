@@ -54,7 +54,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
      * Server side encryption algorithm.
      * @return Server side encryption algorithm
      */
-    @Nullable
+    @NonNull
     public StorageServerSideEncryption getServerSideEncryption() {
         return serverSideEncryption;
     }
@@ -117,6 +117,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
         private Map<String, String> metadata;
 
         private Builder() {
+            this.serverSideEncryption = StorageServerSideEncryption.NONE;
             this.metadata = new HashMap<>();
         }
 
@@ -139,8 +140,8 @@ public final class StorageUploadFileOptions extends StorageOptions {
          */
         @SuppressWarnings("WeakerAccess")
         @NonNull
-        public Builder serverSideEncryption(@Nullable StorageServerSideEncryption serverSideEncryption) {
-            this.serverSideEncryption = serverSideEncryption;
+        public Builder serverSideEncryption(@NonNull StorageServerSideEncryption serverSideEncryption) {
+            this.serverSideEncryption = Objects.requireNonNull(serverSideEncryption);
             return this;
         }
 
@@ -160,7 +161,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
             return contentType;
         }
 
-        @Nullable
+        @NonNull
         StorageServerSideEncryption getServerSideEncryption() {
             return serverSideEncryption;
         }

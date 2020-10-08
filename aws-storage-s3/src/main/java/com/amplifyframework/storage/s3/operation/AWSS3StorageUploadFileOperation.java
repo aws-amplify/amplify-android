@@ -112,7 +112,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         objectMetadata.setContentType(getRequest().getContentType());
 
         StorageServerSideEncryption storageServerSideEncryption = getRequest().getServerSideEncryption();
-        if (storageServerSideEncryption != null) {
+        if (!StorageServerSideEncryption.NONE.equals(storageServerSideEncryption)) {
             objectMetadata.setSSEAlgorithm(storageServerSideEncryption.getName());
         }
 

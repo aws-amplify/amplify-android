@@ -119,7 +119,7 @@ public final class AWSS3StorageUploadFileRequest {
      * Gets the server side encryption algorithm.
      * @return server side encryption algorithm
      */
-    @Nullable
+    @NonNull
     public StorageServerSideEncryption getServerSideEncryption() {
         return serverSideEncryption;
     }
