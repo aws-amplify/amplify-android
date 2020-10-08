@@ -92,9 +92,9 @@ public final class Amplify {
     // We are relying on the ordering of this data-structure, for configuration.
     private static LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> buildCategoriesMap() {
         final LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> categories = new LinkedHashMap<>();
+        categories.put(CategoryType.AUTH, Auth); // This must be before ANALYTICS, API, STORAGE, & PREDICTIONS
         categories.put(CategoryType.ANALYTICS, Analytics);
         categories.put(CategoryType.API, API);
-        categories.put(CategoryType.AUTH, Auth);
         categories.put(CategoryType.LOGGING, Logging);
         categories.put(CategoryType.STORAGE, Storage);
         categories.put(CategoryType.HUB, Hub);
