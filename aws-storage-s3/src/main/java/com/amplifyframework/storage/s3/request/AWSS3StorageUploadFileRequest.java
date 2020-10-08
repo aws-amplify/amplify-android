@@ -55,7 +55,7 @@ public final class AWSS3StorageUploadFileRequest {
             @NonNull StorageAccessLevel accessLevel,
             @Nullable String targetIdentityId,
             @Nullable String contentType,
-            @Nullable StorageServerSideEncryption serverSideEncryption,
+            @NonNull StorageServerSideEncryption serverSideEncryption,
             @Nullable Map<String, String> metadata
     ) {
         this.key = key;
