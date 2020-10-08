@@ -147,7 +147,7 @@ public final class Orchestrator {
      * @return A completable that when subscribed to will attempt to start the orchestrator.
      */
     public synchronized Completable start() {
-        return start(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        return start(NETWORK_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
     /**
@@ -220,7 +220,7 @@ public final class Orchestrator {
      */
     public synchronized Completable stop() {
         LOG.info("DataStore orchestrator stopping. Current mode = " + currentMode.get().name());
-        if (tryAcquireStartStopLock(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+        if (tryAcquireStartStopLock(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
             disposables.clear();
             return transitionToStopped(currentMode.get())
                 .subscribeOn(startStopScheduler)
