@@ -17,55 +17,57 @@ package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 
 import java.util.Objects;
 
 /**
- * Contains data pertaining to a conflict between two models, that has occurred
- * during model synchronization. One was found locally, and another found in the remote system.
- * @param <T> The type of the model instances that conflict (the are both of the same type.)
+ * Contains data pertaining to a conflict between two models and their associated
+ * metadata, that has occurred during model synchronization. One was found locally,
+ * and another found in the remote system.
+ * @param <T> The type of the model instances that conflict (they are both of the same type.)
  */
 public final class DataStoreConflictData<T extends Model> {
-    private final T local;
-    private final T remote;
+    private final ModelWithMetadata<T> local;
+    private final ModelWithMetadata<T> remote;
 
-    private DataStoreConflictData(T local, T remote) {
+    private DataStoreConflictData(ModelWithMetadata<T> local, ModelWithMetadata<T> remote) {
         this.local = local;
         this.remote = remote;
     }
 
     /**
      * Creates a new {@link DataStoreConflictData}.
-     * @param local The instance of a model that was found locally
-     * @param remote The instance of a model that was found on the server
+     * @param local The instance of a model (and its metadata) that was found locally
+     * @param remote The instance of a model (and its metadata) that was found on the server
      * @param <T> The type of the model instances experiencing conflict
      * @return Data about a model conflict
      */
     @NonNull
-    public static <T extends Model> DataStoreConflictData<T> create(@NonNull T local, @NonNull T remote) {
+    public static <T extends Model> DataStoreConflictData<T> create(
+            @NonNull ModelWithMetadata<T> local, @NonNull ModelWithMetadata<T> remote) {
         Objects.requireNonNull(local);
         Objects.requireNonNull(remote);
         return new DataStoreConflictData<>(local, remote);
     }
 
     /**
-     * Gets the local model.
-     * @return Local model
+     * Gets the local model and its associated metadata.
+     * @return Local model and its associated metadata
      */
     @NonNull
-    public T getLocal() {
+    public ModelWithMetadata<T> getLocal() {
         return this.local;
     }
 
     /**
-     * Gets the remote model.
-     * @return Remote model
+     * Gets the remote model and its associated metadata.
+     * @return Remote model and its associated metadata
      */
     @NonNull
-    public T getRemote() {
+    public ModelWithMetadata<T> getRemote() {
         return this.remote;
     }
 
@@ -80,21 +82,19 @@ public final class DataStoreConflictData<T extends Model> {
 
         DataStoreConflictData<?> that = (DataStoreConflictData<?>) thatObject;
 
-        if (!ObjectsCompat.equals(local, that.local)) {
+        if (!getLocal().equals(that.getLocal())) {
             return false;
         }
-
-        return ObjectsCompat.equals(remote, that.remote);
+        return getRemote().equals(that.getRemote());
     }
 
     @Override
     public int hashCode() {
-        int result = local.hashCode();
-        result = 31 * result + remote.hashCode();
+        int result = getLocal().hashCode();
+        result = 31 * result + getRemote().hashCode();
         return result;
     }
 
-    @NonNull
     @Override
     public String toString() {
         return "DataStoreConflictData{" +
