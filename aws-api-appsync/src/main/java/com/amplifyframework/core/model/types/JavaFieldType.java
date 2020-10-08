@@ -20,8 +20,6 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.temporal.Temporal;
 
-import java.util.Date;
-
 /**
  * Enumerate the types used in the fields
  * of {@link com.amplifyframework.core.model.Model} classes.
@@ -51,11 +49,6 @@ public enum JavaFieldType {
      * Represents the String data type.
      */
     STRING(String.class),
-
-    /**
-     * Represents the java.lang.Date data type.
-     */
-    JAVA_DATE(Date.class),
 
     /**
      * Represents the Date data type.

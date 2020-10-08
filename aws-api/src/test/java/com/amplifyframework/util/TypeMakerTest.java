@@ -13,10 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
+package com.amplifyframework.util;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import com.google.gson.reflect.TypeToken;
 import org.junit.Test;
@@ -29,14 +30,13 @@ import static org.junit.Assert.assertThrows;
 /**
  * Tests for TypeMaker utility class.
  */
-public class TypeMakerTest {
-
+public final class TypeMakerTest {
     /**
      * Validate that an IllegalArgumentException is thrown when no arguments are provided.
      */
     @Test
     public void makeTypeWithNoArguments() {
-        assertThrows(IllegalArgumentException.class, () -> TypeMaker.getParameterizedType());
+        assertThrows(IllegalArgumentException.class, TypeMaker::getParameterizedType);
     }
     
     /**
@@ -44,8 +44,8 @@ public class TypeMakerTest {
      */
     @Test
     public void makeTypeWithOneArgument() {
-        Type expectedType = Todo.class;
-        Type actualType = TypeMaker.getParameterizedType(Todo.class);
+        Type expectedType = BlogOwner.class;
+        Type actualType = TypeMaker.getParameterizedType(BlogOwner.class);
         assertEquals(expectedType, actualType);
     }
 
@@ -54,8 +54,8 @@ public class TypeMakerTest {
      */
     @Test
     public void makeParameterizedType() {
-        Type expectedType = TypeToken.getParameterized(Iterable.class, Todo.class).getType();
-        Type actualType = TypeMaker.getParameterizedType(Iterable.class, Todo.class);
+        Type expectedType = TypeToken.getParameterized(Iterable.class, BlogOwner.class).getType();
+        Type actualType = TypeMaker.getParameterizedType(Iterable.class, BlogOwner.class);
         assertEquals(expectedType, actualType);
     }
 
@@ -64,9 +64,9 @@ public class TypeMakerTest {
      */
     @Test
     public void makeParameterizedTypeOfParameterizedType() {
-        Type iterableType = TypeToken.getParameterized(Iterable.class, Todo.class).getType();
+        Type iterableType = TypeToken.getParameterized(Iterable.class, BlogOwner.class).getType();
         Type expectedType = TypeToken.getParameterized(GraphQLResponse.class, iterableType).getType();
-        Type actualType = TypeMaker.getParameterizedType(GraphQLResponse.class, Iterable.class, Todo.class);
+        Type actualType = TypeMaker.getParameterizedType(GraphQLResponse.class, Iterable.class, BlogOwner.class);
         assertEquals(expectedType, actualType);
     }
 
@@ -75,11 +75,11 @@ public class TypeMakerTest {
      */
     @Test
     public void makeParameterizedTypeOfParameterizedTypeOfParameterizedType() {
-        Type iterableType = TypeToken.getParameterized(Iterable.class, Todo.class).getType();
+        Type iterableType = TypeToken.getParameterized(Iterable.class, BlogOwner.class).getType();
         Type responseType = TypeToken.getParameterized(GraphQLResponse.class, iterableType).getType();
         Type expectedType = TypeToken.getParameterized(GraphQLRequest.class, responseType).getType();
         Type actualType = TypeMaker.getParameterizedType(GraphQLRequest.class,
-                GraphQLResponse.class, Iterable.class, Todo.class);
+                GraphQLResponse.class, Iterable.class, BlogOwner.class);
         assertEquals(expectedType, actualType);
     }
 }

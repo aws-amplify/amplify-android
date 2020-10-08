@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
-import com.amplifyframework.api.aws.TypeMaker;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -28,6 +27,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
+import com.amplifyframework.util.TypeMaker;
 
 import org.json.JSONException;
 import org.junit.Before;

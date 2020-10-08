@@ -37,6 +37,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -49,7 +50,9 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long OP_TIMEOUT_SECONDS = 10;
+    private static final long TIMEOUT_SECONDS_PER_MODEL = 2;
+    private static final long NETWORK_OP_TIMEOUT_SECONDS = 10;
+    private static final long LOCAL_OP_TIMEOUT_SECONDS = 2;
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
@@ -60,6 +63,7 @@ public final class Orchestrator {
     private final MutationOutbox mutationOutbox;
     private final CompositeDisposable disposables;
     private final Scheduler startStopScheduler;
+    private final long adjustedTimeoutSeconds;
     private final Semaphore startStopSemaphore;
 
     /**
@@ -111,6 +115,13 @@ public final class Orchestrator {
         this.targetMode = targetMode;
         this.disposables = new CompositeDisposable();
         this.startStopScheduler = Schedulers.single();
+
+        // Operation times out after 10 seconds. If there are more than 5 models,
+        // then 2 seconds are added to the timer per additional model count.
+        this.adjustedTimeoutSeconds = Math.max(
+            NETWORK_OP_TIMEOUT_SECONDS,
+            TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
+        );
         this.startStopSemaphore = new Semaphore(1);
     }
 
@@ -278,11 +289,14 @@ public final class Orchestrator {
     private void startObservingStorageChanges() {
         LOG.info("Starting to observe local storage changes.");
         try {
-            mutationOutbox.load()
+            boolean subscribed = mutationOutbox.load()
                 .andThen(Completable.create(emitter -> {
                     storageObserver.startObservingStorageChanges(emitter::onComplete);
                     currentMode.set(Mode.LOCAL_ONLY);
-                })).blockingAwait(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                })).blockingAwait(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!subscribed) {
+                throw new TimeoutException("Timed out while preparing local-only mode.");
+            }
         } catch (Throwable throwable) {
             LOG.warn("Failed to start observing storage changes.", throwable);
         }
@@ -309,8 +323,11 @@ public final class Orchestrator {
 
             LOG.debug("About to hydrate...");
             try {
-                syncProcessor.hydrate()
-                    .blockingAwait(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                boolean subscribed = syncProcessor.hydrate()
+                    .blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
+                if (!subscribed) {
+                    throw new TimeoutException("Timed out while performing initial model sync.");
+                }
             } catch (Throwable failure) {
                 if (!emitter.isDisposed()) {
                     emitter.onError(new DataStoreException(
@@ -342,9 +359,12 @@ public final class Orchestrator {
 
     private void stopApiSyncBlocking() {
         try {
-            stopApiSync()
+            boolean stopped = stopApiSync()
                 .subscribeOn(startStopScheduler)
-                .blockingAwait(OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                .blockingAwait(NETWORK_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!stopped) {
+                throw new TimeoutException("Timed out while waiting for API synchronization to end.");
+            }
         } catch (Throwable failure) {
             LOG.warn("Failed to stop API sync.", failure);
         }

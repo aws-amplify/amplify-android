@@ -461,6 +461,17 @@ output to a file, and grep through it.
 ./gradlew --debug 2>&1 > debugging-the-build.log
 ```
 
+### Getting More Output
+
+The Amplify Android library emits logs while it is running on a device
+or emulator. By default, debug and verbose logs are not output.
+However, you can change the log threshold at runtime, by explicitly
+configuring a logging plugin:
+```kotlin
+Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))
+// ... Add more plugins only *after* setting the log plugin.
+```
+
 ### Failing Instrumentation Tests
 
 If a single test is failing, run only that test, to isolate it. You may also
