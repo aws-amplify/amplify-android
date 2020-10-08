@@ -75,8 +75,7 @@ public final class ConflictUnhandledError<T extends Model> {
             }
 
             AppSyncExtensions appSyncExtensions = new AppSyncExtensions(error.getExtensions());
-            AppSyncErrorType errorType = AppSyncErrorType.fromErrorType(appSyncExtensions.getErrorType());
-            if (!AppSyncErrorType.CONFLICT_UNHANDLED.equals(errorType)) {
+            if (!AppSyncExtensions.AppSyncErrorType.CONFLICT_UNHANDLED.equals(appSyncExtensions.getErrorType())) {
                 continue;
             }
 

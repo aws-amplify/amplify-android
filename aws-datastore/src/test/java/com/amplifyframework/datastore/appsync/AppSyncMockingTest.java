@@ -15,8 +15,6 @@
 
 package com.amplifyframework.datastore.appsync;
 
-import androidx.core.util.ObjectsCompat;
-
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
@@ -41,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.functions.Predicate;
 
 import static org.mockito.Mockito.mock;
 
@@ -127,7 +124,8 @@ public final class AppSyncMockingTest {
      */
     @Test
     public void mockSuccessResponseForCreate() {
-        AppSyncMocking.create(appSync).mockSuccessResponse(StrawMen.JOE_MODEL);
+        AppSyncMocking.create(appSync)
+            .mockSuccessResponse(StrawMen.JOE_MODEL, StrawMen.JOE);
         GraphQLResponse<ModelWithMetadata<BlogOwner>> expectedResponse =
             new GraphQLResponse<>(StrawMen.JOE, Collections.emptyList());
         Single
@@ -136,7 +134,7 @@ public final class AppSyncMockingTest {
             )
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .assertValue(equalsRelaxingTimestamp(expectedResponse));
+            .assertValue(expectedResponse);
     }
 
     /**
@@ -166,21 +164,23 @@ public final class AppSyncMockingTest {
      */
     @Test
     public void mockSuccessResponseForUpdate() {
-        AppSyncMocking.update(appSync)
-            .mockSuccessResponse(StrawMen.TONY_MODEL, 1);
         ModelMetadata updatedMetadata =
             new ModelMetadata(StrawMen.TONY_MODEL.getId(), false, 2, StrawMen.JOE_METADATA.getLastChangedAt());
         ModelWithMetadata<BlogOwner> tonyWithUpdatedMetadata =
             new ModelWithMetadata<>(StrawMen.TONY_MODEL, updatedMetadata);
+        AppSyncMocking.update(appSync)
+            .mockSuccessResponse(StrawMen.TONY_MODEL, 1, tonyWithUpdatedMetadata);
+
         GraphQLResponse<ModelWithMetadata<BlogOwner>> expectedResponse =
             new GraphQLResponse<>(tonyWithUpdatedMetadata, Collections.emptyList());
+
         Single
             .<GraphQLResponse<ModelWithMetadata<BlogOwner>>>create(emitter ->
                 appSync.update(StrawMen.TONY_MODEL, 1, emitter::onSuccess, emitter::onError)
             )
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .assertValue(equalsRelaxingTimestamp(expectedResponse));
+            .assertValue(expectedResponse);
     }
 
     /**
@@ -211,12 +211,12 @@ public final class AppSyncMockingTest {
      */
     @Test
     public void mockSuccessResponseForDelete() {
-        AppSyncMocking.delete(appSync)
-            .mockSuccessResponse(StrawMen.TONY_MODEL, 1);
         ModelMetadata deletedMetadata =
             new ModelMetadata(StrawMen.TONY_MODEL.getId(), true, 2, StrawMen.JOE_METADATA.getLastChangedAt());
         ModelWithMetadata<BlogOwner> tonyWithDeleteMetadata =
             new ModelWithMetadata<>(StrawMen.TONY_MODEL, deletedMetadata);
+        AppSyncMocking.delete(appSync)
+            .mockSuccessResponse(StrawMen.TONY_MODEL, 1, tonyWithDeleteMetadata);
         GraphQLResponse<ModelWithMetadata<BlogOwner>> expectedResponse =
             new GraphQLResponse<>(tonyWithDeleteMetadata, Collections.emptyList());
         Single
@@ -232,7 +232,7 @@ public final class AppSyncMockingTest {
             )
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .assertValue(equalsRelaxingTimestamp(expectedResponse));
+            .assertValue(expectedResponse);
     }
 
     /**
@@ -322,36 +322,6 @@ public final class AppSyncMockingTest {
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .assertComplete();
-    }
-
-    private static Predicate<GraphQLResponse<ModelWithMetadata<BlogOwner>>> equalsRelaxingTimestamp(
-            GraphQLResponse<ModelWithMetadata<BlogOwner>> expectedResponse) {
-        return response -> {
-            if (!ObjectsCompat.equals(expectedResponse.getErrors(), response.getErrors())) {
-                return false;
-            }
-            ModelWithMetadata<BlogOwner> expectedMwm = expectedResponse.getData();
-            ModelWithMetadata<BlogOwner> mwm = response.getData();
-            return equalsRelaxingTimestamp(expectedMwm).test(mwm);
-        };
-    }
-
-    private static Predicate<ModelWithMetadata<BlogOwner>> equalsRelaxingTimestamp(
-            ModelWithMetadata<BlogOwner> expectedMwm) {
-        return mwm -> {
-            if (!ObjectsCompat.equals(expectedMwm.getModel(), mwm.getModel())) {
-                return false;
-            }
-            ModelMetadata expectedMetadata = expectedMwm.getSyncMetadata();
-            ModelMetadata metadata = mwm.getSyncMetadata();
-            if (!ObjectsCompat.equals(expectedMetadata.getId(), metadata.getId())) {
-                return false;
-            }
-            if (!ObjectsCompat.equals(expectedMetadata.getVersion(), metadata.getVersion())) {
-                return false;
-            }
-            return ObjectsCompat.equals(expectedMetadata.isDeleted(), metadata.isDeleted());
-        };
     }
 
     static final class StrawMen {
