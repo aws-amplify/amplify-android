@@ -121,7 +121,7 @@ public final class OrchestratorTest {
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
         // Arrange: orchestrator is running
-        orchestrator.start().subscribe();
+        orchestrator.start();
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         HubAccumulator accumulator =
@@ -153,12 +153,12 @@ public final class OrchestratorTest {
     public void preventConcurrentStateTransitions() throws AmplifyException {
 
         // Arrange: orchestrator is running
-        orchestrator.start().subscribe();
+        orchestrator.start();
 
         // Try to start it in a new thread.
-        new Thread(() -> orchestrator.start().subscribe()).start();
+        new Thread(() -> orchestrator.start()).start();
         // Try to start it again on a current thread.
-        orchestrator.start().subscribe();
+        orchestrator.start();
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         verify(mockApi, times(1)).query(any(GraphQLRequest.class), any(), any());

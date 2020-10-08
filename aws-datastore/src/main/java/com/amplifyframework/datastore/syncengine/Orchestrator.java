@@ -25,10 +25,13 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
@@ -143,42 +146,37 @@ public final class Orchestrator {
     }
 
     /**
-     * Start the orchestrator with the default timeout of 10 seconds.
-     * @return A completable that when subscribed to will attempt to start the orchestrator.
-     */
-    public synchronized Completable start() {
-        return start(NETWORK_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    }
-
-    /**
      * Start performing sync operations between the local storage adapter
-     * and the remote GraphQL endpoint. The timeout parameters provided will be
-     * used to block execution of the current thread until lock acquisition has
-     * either failed or succeeded, or the timeout is elapsed.
-     *
-     * @param opTimeout The desired timeout for the start operation.
-     * @param timeUnit The unit of time of the opTimeout parameter.
-     * @return A completable that when subscribed to will attempt to start the orchestrator.
+     * and the remote GraphQL endpoint.
      */
-    public synchronized Completable start(long opTimeout, TimeUnit timeUnit) {
-        if (tryAcquireStartStopLock(opTimeout, timeUnit)) {
-            return transitionCompletable()
+    public synchronized void start() {
+        if (tryAcquireStartStopLock(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            transitionCompletable()
                 .doOnSubscribe(subscriber -> {
-                    LOG.debug("Starting the orchestrator.");
+                    LOG.info("Starting the orchestrator.");
                 })
-                .doOnComplete(() -> LOG.debug("Orchestrator started."))
+                .doOnComplete(() -> {
+                    LOG.info("Orchestrator completed a transition");
+                    if (isStarted()) {
+                        Amplify.Hub.publish(HubChannel.DATASTORE,
+                                            HubEvent.create(DataStoreChannelEventName.READY));
+                    }
+                })
+                .doOnError(failure -> {
+                    LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.", failure);
+                })
                 .doOnDispose(() -> LOG.debug("Orchestrator disposed a transition."))
                 .doFinally(startStopSemaphore::release)
-                .subscribeOn(startStopScheduler);
+                .subscribeOn(startStopScheduler)
+                .subscribe();
         } else {
-            return Completable.error(new DataStoreException("Unable to acquire orchestrator lock. " +
-                                                        "Transition currently in progress.",
-                                                        "Retry your operation."));
+            LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");
         }
     }
 
     private boolean tryAcquireStartStopLock(long opTimeout, TimeUnit timeUnit) {
-        LOG.debug("Attempting to acquire lock. Permits available = " + startStopSemaphore.availablePermits());
+        boolean permitAvailable = startStopSemaphore.availablePermits() > 0;
+        LOG.debug("Attempting to acquire lock. Permits available = " + permitAvailable);
         try {
             if (!startStopSemaphore.tryAcquire(opTimeout, timeUnit)) {
                 LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");

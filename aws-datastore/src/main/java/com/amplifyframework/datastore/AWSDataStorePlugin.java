@@ -44,7 +44,6 @@ import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.NetworkStatusMonitor;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
@@ -64,7 +63,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final long LIFECYCLE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
-    private static final long BEFORE_OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(0);
 
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
@@ -225,22 +223,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 initError, AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }
-        startOrchestratorAsync();
-    }
-
-    private void startOrchestratorAsync() {
-        orchestrator
-            .start()
-            .subscribe(
-                () -> {
-                    LOG.debug("Orchestrator completed a transition");
-                    if (orchestrator.isStarted()) {
-                        Amplify.Hub.publish(HubChannel.DATASTORE,
-                                            HubEvent.create(DataStoreChannelEventName.READY));
-                    }
-                },
-                failure -> LOG.warn("Orchestrator failed to transition.")
-            );
+        orchestrator.start();
     }
 
     /**
@@ -496,7 +479,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 // Invoke the consumer's callback once the clear operation is finished.
                 onComplete.call();
                 // Kick off the orchestrator asynchronously.
-                startOrchestratorAsync();
+                orchestrator.start();
             }, onError)))
             .subscribe(
                 () -> LOG.debug("Clear operation completed."),
@@ -507,7 +490,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private void beforeOperation(@NonNull final Runnable runnable) {
         try {
             categoryInitializationsPending.await();
-            orchestrator.start(BEFORE_OP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            Completable.fromAction(orchestrator::start)
                 .andThen(Completable.fromRunnable(runnable))
                 .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (Throwable throwable) {
