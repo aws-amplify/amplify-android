@@ -489,8 +489,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private void beforeOperation(@NonNull final Runnable runnable) {
         try {
-            categoryInitializationsPending.await();
-            Completable.fromAction(orchestrator::start)
+            Completable.fromAction(
+                () -> {
+                    categoryInitializationsPending.await();
+                    orchestrator.start();
+                })
                 .andThen(Completable.fromRunnable(runnable))
                 .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (Throwable throwable) {

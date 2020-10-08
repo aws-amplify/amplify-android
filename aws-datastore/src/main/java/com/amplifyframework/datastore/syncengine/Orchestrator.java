@@ -151,7 +151,7 @@ public final class Orchestrator {
      */
     public synchronized void start() {
         if (tryAcquireStartStopLock(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-            transitionCompletable()
+            disposables.add(transitionCompletable()
                 .doOnSubscribe(subscriber -> {
                     LOG.info("Starting the orchestrator.");
                 })
@@ -168,7 +168,8 @@ public final class Orchestrator {
                 .doOnDispose(() -> LOG.debug("Orchestrator disposed a transition."))
                 .doFinally(startStopSemaphore::release)
                 .subscribeOn(startStopScheduler)
-                .subscribe();
+                .subscribe()
+            );
         } else {
             LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");
         }
