@@ -319,7 +319,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                     )
                 ) {
                     request = appSyncRequest.newBuilder()
-                            .variable(ownerRuleWithReadRestriction.getOwnerFieldOrDefault(), "String!", getUsername())
+                            .variable(
+                                ownerRuleWithReadRestriction.getOwnerFieldOrDefault(),
+                                    "String!",
+                                getIdentityValue(ownerRuleWithReadRestriction.getIdentityClaimOrDefault())
+                            )
                             .build();
                 }
             } catch (AmplifyException exception) {
@@ -354,30 +358,29 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             && authRule.getOperationsOrDefault().contains(ModelOperation.READ);
     }
 
-    private String getUsername() throws ApiException {
+    private String getIdentityValue(String identityClaim) throws ApiException {
         CognitoUserPoolsAuthProvider cognitoProvider = getAuthProvider();
 
-        String username;
+        String identityValue;
 
-        // Grabs username value from the access token directly since this can differ from the colloquial username
-        // returned by the getUsername method (e.g. email/phone based sign in return the email/phone number in
-        // getUsername but the access token holds the user id in the username field which is what AppSync checks).
         try {
-            username = CognitoJWTParser
+            identityValue = CognitoJWTParser
                     .getPayload(cognitoProvider.getLatestAuthToken())
-                    .getString("username");
+                    .getString(identityClaim);
         } catch (JSONException error) {
-            username = null;
+            identityValue = null;
         }
 
-        if (username == null || username.isEmpty()) {
+        if (identityValue == null || identityValue.isEmpty()) {
             throw new ApiException(
-                    "Attempted to subscribe to a model with owner based authorization without a username",
-                    "Make sure that a user is logged in before subscribing to a model with owner based auth"
+                    "Attempted to subscribe to a model with owner based authorization without " + identityClaim + " " +
+                    "which was specified (or defaulted to) as the identity claim.",
+                    "If you did not specify a custom identityClaim in your schema, make sure you are logged in. If " +
+                            "you did, check that the value you specified in your schema is present in the access key."
             );
         }
 
-        return username;
+        return identityValue;
     }
 
     private ArrayList<String> getUserGroups() throws ApiException {
