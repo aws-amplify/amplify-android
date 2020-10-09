@@ -38,6 +38,7 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -66,6 +67,7 @@ public final class Orchestrator {
     private final CompositeDisposable disposables;
     private final Scheduler startStopScheduler;
     private final long adjustedTimeoutSeconds;
+    private final Semaphore startStopSemaphore;
 
     /**
      * Constructs a new Orchestrator.
@@ -130,6 +132,7 @@ public final class Orchestrator {
             NETWORK_OP_TIMEOUT_SECONDS,
             TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
         );
+        this.startStopSemaphore = new Semaphore(1);
     }
 
     /**
@@ -153,20 +156,45 @@ public final class Orchestrator {
      * Start performing sync operations between the local storage adapter
      * and the remote GraphQL endpoint.
      */
-    public void start() {
-        disposables.add(transitionCompletable()
-            .subscribeOn(startStopScheduler)
-            .doOnDispose(() -> LOG.debug("Orchestrator disposed a transition."))
-            .subscribe(
-                () -> {
-                    LOG.debug("Orchestrator completed a transition");
+    public synchronized void start() {
+        if (tryAcquireStartStopLock(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            disposables.add(transitionCompletable()
+                .doOnSubscribe(subscriber -> {
+                    LOG.info("Starting the orchestrator.");
+                })
+                .doOnComplete(() -> {
+                    LOG.info("Orchestrator completed a transition");
                     if (isStarted()) {
                         Amplify.Hub.publish(HubChannel.DATASTORE,
                             HubEvent.create(DataStoreChannelEventName.READY));
                     }
-                },
-                failure -> LOG.warn("Orchestrator failed to transition.")
-            ));
+                })
+                .doOnError(failure -> {
+                    LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.", failure);
+                })
+                .doOnDispose(() -> LOG.debug("Orchestrator disposed a transition."))
+                .doFinally(startStopSemaphore::release)
+                .subscribeOn(startStopScheduler)
+                .subscribe()
+            );
+        } else {
+            LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");
+        }
+    }
+
+    private boolean tryAcquireStartStopLock(long opTimeout, TimeUnit timeUnit) {
+        boolean permitAvailable = startStopSemaphore.availablePermits() > 0;
+        LOG.debug("Attempting to acquire lock. Permits available = " + permitAvailable);
+        try {
+            if (!startStopSemaphore.tryAcquire(opTimeout, timeUnit)) {
+                LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");
+                return false;
+            }
+        } catch (InterruptedException exception) {
+            return false;
+        }
+        LOG.debug("Lock acquired.");
+        return true;
     }
 
     private Completable transitionCompletable() {
@@ -196,11 +224,19 @@ public final class Orchestrator {
      * Stop the orchestrator.
      * @return A completable which emits success when orchestrator stops
      */
-    public Completable stop() {
+    public synchronized Completable stop() {
         LOG.info("DataStore orchestrator stopping. Current mode = " + currentMode.get().name());
-        disposables.clear();
-        return transitionToStopped(currentMode.get())
-            .subscribeOn(startStopScheduler);
+        if (tryAcquireStartStopLock(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            disposables.clear();
+            return transitionToStopped(currentMode.get())
+                .subscribeOn(startStopScheduler)
+                .doFinally(startStopSemaphore::release);
+        } else {
+            return Completable.error(new DataStoreException("Unable to acquire orchestrator lock. " +
+                                                                "Transition currently in progress.",
+                                                            "Retry your operation"));
+        }
+
     }
 
     private static Completable unknownMode(Mode mode) {
