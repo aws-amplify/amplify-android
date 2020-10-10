@@ -44,11 +44,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.processors.BehaviorProcessor;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * "Hydrates" the local DataStore, using model metadata receive from the
@@ -61,6 +65,7 @@ import io.reactivex.rxjava3.processors.BehaviorProcessor;
 final class SyncProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
+    private static final int SYNC_SUBSCRIPTION_SWITCH_MILLISECONDS = 100;
     private final ModelProvider modelProvider;
     private final ModelSchemaRegistry modelSchemaRegistry;
     private final SyncTimeRegistry syncTimeRegistry;
@@ -68,6 +73,7 @@ final class SyncProcessor {
     private final Merger merger;
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
     private final String[] modelNames;
+    private final ConcurrentLinkedQueue<String> hydratedModels = new ConcurrentLinkedQueue<>();
 
     private SyncProcessor(
             ModelProvider modelProvider,
@@ -113,7 +119,7 @@ final class SyncProcessor {
             hydrationTasks.add(createHydrationTask(clazz));
         }
 
-        return Completable.concat(hydrationTasks)
+        return Completable.merge(hydrationTasks)
             .doOnSubscribe(ignore -> {
                 // This is where we trigger the syncQueriesStarted event since
                 // doOnSubscribe means that all upstream hydration tasks
@@ -133,7 +139,35 @@ final class SyncProcessor {
 
     private Completable createHydrationTask(Class<? extends Model> modelClass) {
         ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(modelClass);
+
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(
+            modelClass.getSimpleName());
+        List<String> dependencies = new ArrayList<>(
+            schema.getAssociations().values().stream()
+                .filter((i) -> i.isOwner())
+                .map((i) -> i.getAssociatedType())
+                .collect(Collectors.toList()));
+
+        LOG.debug("Sync dependencies for model:" + schema.getName() + " - "
+            + dependencies.toString());
+
         return syncTimeRegistry.lookupLastSyncTime(modelClass)
+            .delaySubscription(
+                Flowable.interval(SYNC_SUBSCRIPTION_SWITCH_MILLISECONDS, TimeUnit.MILLISECONDS)
+                    .doOnNext((i) -> {
+                        LOG.verbose("Waiting to meet dependency for " + schema.getName()
+                            + "\n dependencies: " + dependencies.toString()
+                            + "\n hydrated: " + hydratedModels.toString()
+                        );
+                    })
+                    .filter((i) ->
+                        dependencies.isEmpty() || hydratedModels.containsAll(dependencies))
+                    .doOnNext((i) ->
+                        LOG.debug("Dependencies met for " + schema.getName() + " current list: "
+                            + hydratedModels.toString()
+                        )
+                    ).take(1)
+            )
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
             .flatMap(lastSyncTime -> {
@@ -155,7 +189,7 @@ final class SyncProcessor {
                 }));
             })
             .doOnError(failureToSync -> {
-                LOG.warn("Initial cloud sync failed.", failureToSync);
+                LOG.warn("Initial cloud sync failed for model:" + schema.getName(), failureToSync);
                 DataStoreErrorHandler dataStoreErrorHandler =
                     dataStoreConfigurationProvider.getConfiguration().getDataStoreErrorHandler();
                 dataStoreErrorHandler.accept(new DataStoreException(
@@ -163,9 +197,17 @@ final class SyncProcessor {
                     "Check your internet connection."
                 ));
             })
-            .doOnComplete(() ->
-                LOG.info("Successfully sync'd down model state from cloud.")
-            );
+            .doOnComplete(() -> {
+                LOG.debug("Successfully sync'd down model:" + schema.getName()
+                    + " state from cloud.");
+            })
+            .doFinally(() -> {
+                hydratedModels.add(schema.getName());
+                LOG.debug("Adding to hydrated model list :" + schema.getName() +
+                    " \n current list: " + hydratedModels.toString()
+                );
+            })
+            .subscribeOn(Schedulers.io());
     }
 
     /**
