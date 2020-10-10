@@ -73,7 +73,6 @@ final class SyncProcessor {
     private final Merger merger;
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
     private final String[] modelNames;
-    private final ConcurrentLinkedQueue<String> hydratedModels = new ConcurrentLinkedQueue<>();
 
     private SyncProcessor(
             ModelProvider modelProvider,
@@ -111,12 +110,13 @@ final class SyncProcessor {
         final List<Completable> hydrationTasks = new ArrayList<>();
         List<Class<? extends Model>> modelClsList =
             new ArrayList<Class<? extends Model>>(modelProvider.models());
+        final ConcurrentLinkedQueue<String> hydratedModels = new ConcurrentLinkedQueue<>();
 
         // And sort them all, according to their model's topological order,
         // So that when we save them, the references will exist.
         Collections.sort(modelClsList, modelClassComparator::compare);
         for (Class<? extends Model> clazz : modelClsList) {
-            hydrationTasks.add(createHydrationTask(clazz));
+            hydrationTasks.add(createHydrationTask(clazz, hydratedModels));
         }
 
         return Completable.merge(hydrationTasks)
@@ -137,7 +137,8 @@ final class SyncProcessor {
             });
     }
 
-    private Completable createHydrationTask(Class<? extends Model> modelClass) {
+    private Completable createHydrationTask(Class<? extends Model> modelClass,
+                                            ConcurrentLinkedQueue<String> hydratedModels) {
         ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(modelClass);
 
         ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(
