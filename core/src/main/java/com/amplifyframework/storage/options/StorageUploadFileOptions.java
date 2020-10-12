@@ -19,6 +19,7 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.storage.StorageServerSideEncryption;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
@@ -30,11 +31,13 @@ import java.util.Objects;
  */
 public final class StorageUploadFileOptions extends StorageOptions {
     private final String contentType;
+    private final StorageServerSideEncryption serverSideEncryption;
     private final Map<String, String> metadata;
 
     private StorageUploadFileOptions(final Builder builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
         this.contentType = builder.getContentType();
+        this.serverSideEncryption = builder.getServerSideEncryption();
         this.metadata = builder.getMetadata();
     }
 
@@ -45,6 +48,15 @@ public final class StorageUploadFileOptions extends StorageOptions {
     @Nullable
     public String getContentType() {
         return contentType;
+    }
+
+    /**
+     * Server side encryption algorithm.
+     * @return Server side encryption algorithm
+     */
+    @NonNull
+    public StorageServerSideEncryption getServerSideEncryption() {
+        return serverSideEncryption;
     }
 
     /**
@@ -101,9 +113,11 @@ public final class StorageUploadFileOptions extends StorageOptions {
      */
     public static final class Builder extends StorageOptions.Builder<Builder, StorageUploadFileOptions> {
         private String contentType;
+        private StorageServerSideEncryption serverSideEncryption;
         private Map<String, String> metadata;
 
         private Builder() {
+            this.serverSideEncryption = StorageServerSideEncryption.NONE;
             this.metadata = new HashMap<>();
         }
 
@@ -116,6 +130,18 @@ public final class StorageUploadFileOptions extends StorageOptions {
         @NonNull
         public Builder contentType(@Nullable String contentType) {
             this.contentType = contentType;
+            return this;
+        }
+
+        /**
+         * Configures the server side encryption algorithm for a new StorageUploadFileOptions instance.
+         * @param serverSideEncryption server side encryption algorithm
+         * @return Current Builder instance for fluent chaining
+         */
+        @SuppressWarnings("WeakerAccess")
+        @NonNull
+        public Builder serverSideEncryption(@NonNull StorageServerSideEncryption serverSideEncryption) {
+            this.serverSideEncryption = Objects.requireNonNull(serverSideEncryption);
             return this;
         }
 
@@ -133,6 +159,11 @@ public final class StorageUploadFileOptions extends StorageOptions {
         @Nullable
         String getContentType() {
             return contentType;
+        }
+
+        @NonNull
+        StorageServerSideEncryption getServerSideEncryption() {
+            return serverSideEncryption;
         }
 
         @NonNull
