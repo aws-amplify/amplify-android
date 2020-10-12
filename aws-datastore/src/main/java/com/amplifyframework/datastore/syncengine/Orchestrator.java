@@ -56,6 +56,7 @@ public final class Orchestrator {
     private static final long TIMEOUT_SECONDS_PER_MODEL = 2;
     private static final long NETWORK_OP_TIMEOUT_SECONDS = 10;
     private static final long LOCAL_OP_TIMEOUT_SECONDS = 2;
+    private static final long NO_WAIT_TIMEOUT = 0;
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
@@ -166,7 +167,7 @@ public final class Orchestrator {
      * Attempts to start orchestrator however immediately exists if another process has a lock.
      */
     public void startWithBehaviorExitImmediatelyIfTransitioning() {
-        attemptStart(0);
+        attemptStart(NO_WAIT_TIMEOUT);
     }
 
     /**

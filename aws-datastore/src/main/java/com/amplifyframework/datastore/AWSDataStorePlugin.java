@@ -395,7 +395,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        beforeOperationReadyStorageAndOrchestrator(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+        beforeOperationReadyStorage(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
                     if (itemChange.itemClass().equals(itemClass)) {
@@ -420,7 +420,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        beforeOperationReadyStorageAndOrchestrator(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+        beforeOperationReadyStorage(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
                     if (itemChange.itemClass().equals(itemClass) && itemChange.item().getId().equals(uniqueId)) {
