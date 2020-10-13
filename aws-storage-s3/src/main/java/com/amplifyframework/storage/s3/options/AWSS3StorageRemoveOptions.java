@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,35 +13,32 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.options;
+package com.amplifyframework.storage.s3.options;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
-/**
- * Options to specify attributes of remove API invocation.
- */
-public class StorageRemoveOptions extends StorageOptions {
+import com.amplifyframework.storage.options.StorageRemoveOptions;
 
-    /**
-     * Constructs a StorageRemoveOptions instance with the
-     * attributes from builder instance.
-     * @param builder the builder with configured attributes
-     */
-    protected StorageRemoveOptions(final Builder<?> builder) {
-        super(builder.getAccessLevel(), builder.getTargetIdentityId());
+/**
+ * Options to specify attributes of object deletion operation from an AWS S3 bucket.
+ */
+public final class AWSS3StorageRemoveOptions extends StorageRemoveOptions {
+
+    private AWSS3StorageRemoveOptions(final Builder builder) {
+        super(builder);
     }
 
     /**
      * Factory method to create a new instance of the
-     * {@link StorageRemoveOptions.Builder}.  The builder can be
+     * {@link Builder}.  The builder can be
      * used to configure properties and then construct a new immutable
-     * instance of the StorageRemoveOptions.
-     * @return An instance of the {@link StorageRemoveOptions.Builder}
+     * instance of the AWSS3StorageRemoveOptions.
+     * @return An instance of the {@link Builder}
      */
     @NonNull
-    public static Builder<?> builder() {
-        return new Builder<>();
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -55,38 +52,32 @@ public class StorageRemoveOptions extends StorageOptions {
      *         values in the provided options
      */
     @NonNull
-    public static Builder<?> from(@NonNull final StorageRemoveOptions options) {
+    public static Builder from(@NonNull final AWSS3StorageRemoveOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
             .targetIdentityId(options.getTargetIdentityId());
     }
 
     /**
-     * Constructs a default instance of the {@link StorageRemoveOptions}.
-     * @return default instance of StorageRemoveOptions
+     * Constructs a default instance of the {@link AWSS3StorageRemoveOptions}.
+     * @return default instance of AWSS3StorageRemoveOptions
      */
     @NonNull
-    public static StorageRemoveOptions defaultInstance() {
+    public static AWSS3StorageRemoveOptions defaultInstance() {
         return builder().build();
     }
 
     /**
      * A utility that can be used to configure and construct immutable
-     * instances of the {@link StorageRemoveOptions}, by chaining
+     * instances of the {@link AWSS3StorageRemoveOptions}, by chaining
      * fluent configuration method calls.
-     * @param <B> the type of builder to chain with
      */
-    public static class Builder<B extends Builder<B>> extends StorageOptions.Builder<B, StorageRemoveOptions> {
-        /**
-         * Returns an instance of StorageRemoveOptions with the parameters
-         * specified by this builder.
-         * @return a configured instance of StorageRemoveOptions
-         */
+    public static final class Builder extends StorageRemoveOptions.Builder<Builder> {
         @SuppressLint("SyntheticAccessor")
         @Override
         @NonNull
-        public StorageRemoveOptions build() {
-            return new StorageRemoveOptions(this);
+        public AWSS3StorageRemoveOptions build() {
+            return new AWSS3StorageRemoveOptions(this);
         }
     }
 }

@@ -13,12 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage;
+package com.amplifyframework.storage.s3;
 
 /**
- * Represents storage server side encryption method type.
+ * Represents server side encryption method types that are supported by AWS S3.
  */
-public enum StorageServerSideEncryption {
+public enum ServerSideEncryption {
     /**
      * AES256 encryption.
      */
@@ -36,7 +36,7 @@ public enum StorageServerSideEncryption {
 
     private final String name;
 
-    StorageServerSideEncryption(String name) {
+    ServerSideEncryption(String name) {
         this.name = name;
     }
 

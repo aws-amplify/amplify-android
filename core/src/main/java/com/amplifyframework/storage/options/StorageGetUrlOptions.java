@@ -21,10 +21,15 @@ import androidx.annotation.NonNull;
 /**
  * Options to specify attributes of get URL API invocation.
  */
-public final class StorageGetUrlOptions extends StorageOptions {
+public class StorageGetUrlOptions extends StorageOptions {
     private final int expires;
 
-    private StorageGetUrlOptions(final Builder builder) {
+    /**
+     * Constructs a StorageGetUrlOptions instance with the
+     * attributes from builder instance.
+     * @param builder the builder with configured attributes
+     */
+    protected StorageGetUrlOptions(final Builder<?> builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
         this.expires = builder.getExpires();
     }
@@ -44,8 +49,8 @@ public final class StorageGetUrlOptions extends StorageOptions {
      */
     @SuppressLint("SyntheticAccessor")
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
     /**
@@ -59,7 +64,7 @@ public final class StorageGetUrlOptions extends StorageOptions {
      *         values in the provided options
      */
     @NonNull
-    public static Builder from(@NonNull StorageGetUrlOptions options) {
+    public static Builder<?> from(@NonNull StorageGetUrlOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
             .targetIdentityId(options.getTargetIdentityId())
@@ -79,8 +84,9 @@ public final class StorageGetUrlOptions extends StorageOptions {
      * A utility that can be used to configure and construct immutable
      * instances of the {@link StorageGetUrlOptions}, by chaining
      * fluent configuration method calls.
+     * @param <B> the type of builder to chain with
      */
-    public static final class Builder extends StorageOptions.Builder<Builder, StorageGetUrlOptions> {
+    public static class Builder<B extends Builder<B>> extends StorageOptions.Builder<B, StorageGetUrlOptions> {
         private int expires;
 
         /**
@@ -89,13 +95,14 @@ public final class StorageGetUrlOptions extends StorageOptions {
          * @param expires Amount of seconds until URL expires
          * @return Current Builder instance, for fluent method chaining
          */
-        @SuppressWarnings("WeakerAccess")
-        public Builder expires(int expires) {
+        @SuppressWarnings({"unchecked", "WeakerAccess"})
+        @NonNull
+        public final B expires(int expires) {
             this.expires = expires;
-            return this;
+            return (B) this;
         }
 
-        int getExpires() {
+        final int getExpires() {
             return expires;
         }
 

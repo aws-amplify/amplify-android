@@ -21,9 +21,14 @@ import androidx.annotation.NonNull;
 /**
  * Options to specify attributes of get API invocation.
  */
-public final class StorageDownloadFileOptions extends StorageOptions {
+public class StorageDownloadFileOptions extends StorageOptions {
 
-    private StorageDownloadFileOptions(final Builder builder) {
+    /**
+     * Constructs a StorageDownloadFileOptions instance with the
+     * attributes from builder instance.
+     * @param builder the builder with configured attributes
+     */
+    protected StorageDownloadFileOptions(final Builder<?> builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
     }
 
@@ -35,8 +40,8 @@ public final class StorageDownloadFileOptions extends StorageOptions {
      * @return An instance of the {@link StorageDownloadFileOptions.Builder}
      */
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
     /**
@@ -50,9 +55,10 @@ public final class StorageDownloadFileOptions extends StorageOptions {
      *         values in the provided options
      */
     @NonNull
-    public static Builder from(@NonNull final StorageDownloadFileOptions options) {
-        return builder().accessLevel(options.getAccessLevel())
-                .targetIdentityId(options.getTargetIdentityId());
+    public static Builder<?> from(@NonNull final StorageDownloadFileOptions options) {
+        return builder()
+            .accessLevel(options.getAccessLevel())
+            .targetIdentityId(options.getTargetIdentityId());
     }
 
     /**
@@ -68,8 +74,14 @@ public final class StorageDownloadFileOptions extends StorageOptions {
      * A utility that can be used to configure and construct immutable
      * instances of the {@link StorageDownloadFileOptions}, by chaining
      * fluent configuration method calls.
+     * @param <B> the type of builder to chain with
      */
-    public static final class Builder extends StorageOptions.Builder<Builder, StorageDownloadFileOptions> {
+    public static class Builder<B extends Builder<B>> extends StorageOptions.Builder<B, StorageDownloadFileOptions> {
+        /**
+         * Returns an instance of StorageDownloadFileOptions with the parameters
+         * specified by this builder.
+         * @return a configured instance of StorageDownloadFileOptions
+         */
         @SuppressLint("SyntheticAccessor")
         @Override
         @NonNull
