@@ -18,6 +18,7 @@ package com.amplifyframework.storage.options;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.Immutable;
 
@@ -98,6 +99,51 @@ public class StorageUploadFileOptions extends StorageOptions {
     @NonNull
     public static StorageUploadFileOptions defaultInstance() {
         return builder().build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof StorageUploadFileOptions)) {
+            return false;
+        } else {
+            StorageUploadFileOptions that = (StorageUploadFileOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getContentType(), that.getContentType()) &&
+                    ObjectsCompat.equals(getMetadata(), that.getMetadata());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId(),
+                getContentType(),
+                getMetadata()
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public String toString() {
+        return "StorageUploadFileOptions {" +
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                ", contentType=" + getContentType() +
+                ", metadata=" + getMetadata() +
+                '}';
     }
 
     /**

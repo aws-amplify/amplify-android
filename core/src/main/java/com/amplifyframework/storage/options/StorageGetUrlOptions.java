@@ -17,6 +17,7 @@ package com.amplifyframework.storage.options;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Options to specify attributes of get URL API invocation.
@@ -78,6 +79,48 @@ public class StorageGetUrlOptions extends StorageOptions {
     @NonNull
     public static StorageGetUrlOptions defaultInstance() {
         return builder().build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof StorageGetUrlOptions)) {
+            return false;
+        } else {
+            StorageGetUrlOptions that = (StorageGetUrlOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getExpires(), that.getExpires());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId(),
+                getExpires()
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public String toString() {
+        return "StorageGetUrlOptions {" +
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                ", expires=" + getExpires() +
+                '}';
     }
 
     /**

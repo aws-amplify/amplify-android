@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.options;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 
@@ -64,6 +65,36 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
     @NonNull
     public static AWSS3StorageDownloadFileOptions defaultInstance() {
         return builder().build();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof AWSS3StorageDownloadFileOptions)) {
+            return false;
+        } else {
+            AWSS3StorageDownloadFileOptions that = (AWSS3StorageDownloadFileOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId()
+        );
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AWSS3StorageDownloadFileOptions {" +
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                '}';
     }
 
     /**

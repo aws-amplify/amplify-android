@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.options;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
@@ -81,6 +82,45 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
     @NonNull
     public static AWSS3StorageUploadFileOptions defaultInstance() {
         return builder().build();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof AWSS3StorageUploadFileOptions)) {
+            return false;
+        } else {
+            AWSS3StorageUploadFileOptions that = (AWSS3StorageUploadFileOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getContentType(), that.getContentType()) &&
+                    ObjectsCompat.equals(getServerSideEncryption(), that.getServerSideEncryption()) &&
+                    ObjectsCompat.equals(getMetadata(), that.getMetadata());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId(),
+                getContentType(),
+                getServerSideEncryption(),
+                getMetadata()
+        );
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AWSS3StorageUploadFileOptions {" +
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                ", contentType=" + getContentType() +
+                ", serverSideEncryption=" + getServerSideEncryption().getName() +
+                ", metadata=" + getMetadata() +
+                '}';
     }
 
     /**

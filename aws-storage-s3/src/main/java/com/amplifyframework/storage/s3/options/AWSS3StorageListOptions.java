@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.options;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.storage.options.StorageListOptions;
 
@@ -64,6 +65,36 @@ public final class AWSS3StorageListOptions extends StorageListOptions {
     @NonNull
     public static AWSS3StorageListOptions defaultInstance() {
         return builder().build();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof AWSS3StorageListOptions)) {
+            return false;
+        } else {
+            AWSS3StorageListOptions that = (AWSS3StorageListOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId()
+        );
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AWSS3StorageListOptions {" +
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                '}';
     }
 
     /**

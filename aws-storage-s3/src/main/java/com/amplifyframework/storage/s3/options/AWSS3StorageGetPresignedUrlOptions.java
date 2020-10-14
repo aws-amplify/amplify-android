@@ -17,6 +17,7 @@ package com.amplifyframework.storage.s3.options;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 
@@ -65,6 +66,39 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
     @NonNull
     public static AWSS3StorageGetPresignedUrlOptions defaultInstance() {
         return builder().build();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof AWSS3StorageGetPresignedUrlOptions)) {
+            return false;
+        } else {
+            AWSS3StorageGetPresignedUrlOptions that = (AWSS3StorageGetPresignedUrlOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getExpires(), that.getExpires());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId(),
+                getExpires()
+        );
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AWSS3StorageGetPresignedUrlOptions {" +
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                ", expires=" + getExpires() +
+                '}';
     }
 
     /**

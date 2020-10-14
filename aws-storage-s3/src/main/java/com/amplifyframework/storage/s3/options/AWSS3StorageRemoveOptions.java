@@ -17,6 +17,7 @@ package com.amplifyframework.storage.s3.options;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 
@@ -65,6 +66,36 @@ public final class AWSS3StorageRemoveOptions extends StorageRemoveOptions {
     @NonNull
     public static AWSS3StorageRemoveOptions defaultInstance() {
         return builder().build();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof AWSS3StorageRemoveOptions)) {
+            return false;
+        } else {
+            AWSS3StorageRemoveOptions that = (AWSS3StorageRemoveOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId()
+        );
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AWSS3StorageRemoveOptions {" +
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                '}';
     }
 
     /**

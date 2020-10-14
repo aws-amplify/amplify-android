@@ -17,6 +17,7 @@ package com.amplifyframework.storage.options;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Options to specify attributes of get API invocation.
@@ -68,6 +69,45 @@ public class StorageDownloadFileOptions extends StorageOptions {
     @NonNull
     public static StorageDownloadFileOptions defaultInstance() {
         return builder().build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof StorageDownloadFileOptions)) {
+            return false;
+        } else {
+            StorageDownloadFileOptions that = (StorageDownloadFileOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId()
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public String toString() {
+        return "StorageDownloadFileOptions {" +
+            "accessLevel=" + getAccessLevel() +
+            ", targetIdentityId=" + getTargetIdentityId() +
+            '}';
     }
 
     /**
