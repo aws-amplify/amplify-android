@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.StorageAccessLevel;
-import com.amplifyframework.storage.StorageServerSideEncryption;
+import com.amplifyframework.storage.s3.ServerSideEncryption;
 
 import java.io.File;
 import java.util.HashMap;
@@ -35,7 +35,7 @@ public final class AWSS3StorageUploadFileRequest {
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final String contentType;
-    private final StorageServerSideEncryption serverSideEncryption;
+    private final ServerSideEncryption serverSideEncryption;
     private final Map<String, String> metadata;
 
     /**
@@ -55,7 +55,7 @@ public final class AWSS3StorageUploadFileRequest {
             @NonNull StorageAccessLevel accessLevel,
             @Nullable String targetIdentityId,
             @Nullable String contentType,
-            @NonNull StorageServerSideEncryption serverSideEncryption,
+            @NonNull ServerSideEncryption serverSideEncryption,
             @Nullable Map<String, String> metadata
     ) {
         this.key = key;
@@ -120,7 +120,7 @@ public final class AWSS3StorageUploadFileRequest {
      * @return server side encryption algorithm
      */
     @NonNull
-    public StorageServerSideEncryption getServerSideEncryption() {
+    public ServerSideEncryption getServerSideEncryption() {
         return serverSideEncryption;
     }
 
