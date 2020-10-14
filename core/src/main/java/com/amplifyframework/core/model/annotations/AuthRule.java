@@ -15,7 +15,6 @@
 
 package com.amplifyframework.core.model.annotations;
 
-import com.amplifyframework.core.model.AuthProvider;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.ModelOperation;
 
