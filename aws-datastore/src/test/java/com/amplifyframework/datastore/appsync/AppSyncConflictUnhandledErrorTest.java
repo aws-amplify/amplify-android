@@ -41,9 +41,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
- * Tests the {@link ConflictUnhandledError} class.
+ * Tests the {@link AppSyncConflictUnhandledError} class.
  */
-public final class ConflictUnhandledErrorTest {
+public final class AppSyncConflictUnhandledErrorTest {
     private Gson gson;
 
     /**
@@ -55,30 +55,30 @@ public final class ConflictUnhandledErrorTest {
     }
 
     /**
-     * When a null error list is provided, the {@link ConflictUnhandledError#findFirst(Class, List)}
+     * When a null error list is provided, the {@link AppSyncConflictUnhandledError#findFirst(Class, List)}
      * factory should return null, meaning that there was no conflict error found in the
      * provided list.
      */
     @Test
     public void noConflictErrorFoundInNullErrorList() {
-        ConflictUnhandledError<BlogOwner> conflictUnhandledError =
-            ConflictUnhandledError.findFirst(BlogOwner.class, null);
+        AppSyncConflictUnhandledError<BlogOwner> conflictUnhandledError =
+            AppSyncConflictUnhandledError.findFirst(BlogOwner.class, null);
         assertNull(conflictUnhandledError);
     }
 
     /**
-     * When an empty list is provided, the {@link ConflictUnhandledError#findFirst(Class, List)}
+     * When an empty list is provided, the {@link AppSyncConflictUnhandledError#findFirst(Class, List)}
      * factory should return null, indicating that there was no conflict error found.
      */
     @Test
     public void noConflictErrorFoundInEmptyErrorList() {
-        ConflictUnhandledError<BlogOwner> conflictUnhandledError =
-            ConflictUnhandledError.findFirst(BlogOwner.class, Collections.emptyList());
+        AppSyncConflictUnhandledError<BlogOwner> conflictUnhandledError =
+            AppSyncConflictUnhandledError.findFirst(BlogOwner.class, Collections.emptyList());
         assertNull(conflictUnhandledError);
     }
 
     /**
-     * When a non-empty list is provided to the {@link ConflictUnhandledError#findFirst(Class, List)}
+     * When a non-empty list is provided to the {@link AppSyncConflictUnhandledError#findFirst(Class, List)}
      * factory, but there are no relevant errors in the list, then null should be returned,
      * indicating that no conflict error was found in the list.
      */
@@ -98,23 +98,25 @@ public final class ConflictUnhandledErrorTest {
                 Collections.emptyMap()
             )
         );
-        ConflictUnhandledError<BlogOwner> conflictUnhandledError =
-            ConflictUnhandledError.findFirst(BlogOwner.class, unrelatedErrors);
+        AppSyncConflictUnhandledError<BlogOwner> conflictUnhandledError =
+            AppSyncConflictUnhandledError.findFirst(BlogOwner.class, unrelatedErrors);
         assertNull(conflictUnhandledError);
     }
 
     /**
-     * When a conflict error *is* present in the list provided to {@link ConflictUnhandledError#findFirst(Class, List)},
-     * then a model for it should be returned from the factory method. That model should contain representation
-     * of the serer version of the model that is currently in conflict.
+     * When a conflict error *is* present in the list provided to
+     * {@link AppSyncConflictUnhandledError#findFirst(Class, List)},
+     * then a model for it should be returned from the factory method.
+     * That model should contain representation of the serer version of
+     * the model that is currently in conflict.
      */
     @Test
     public void conflictErrorExtractedIfPresent() {
         String responseJson = Resources.readAsString("conflict-unhandled-response.json");
         Type type = TypeMaker.getParameterizedType(GraphQLResponse.class, ModelWithMetadata.class, Note.class);
         GraphQLResponse<ModelWithMetadata<Note>> response = gson.fromJson(responseJson, type);
-        ConflictUnhandledError<Note> conflictUnhandledError =
-            ConflictUnhandledError.findFirst(Note.class, response.getErrors());
+        AppSyncConflictUnhandledError<Note> conflictUnhandledError =
+            AppSyncConflictUnhandledError.findFirst(Note.class, response.getErrors());
         assertNotNull(conflictUnhandledError);
 
         // TODO: The JSON document has '1601499066604' as the time. These differ by 26604,

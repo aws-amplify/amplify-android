@@ -108,7 +108,7 @@ public final class DataStoreConfiguration {
         DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
         return builder()
             .errorHandler(errorHandler)
-            .conflictHandler(ApplyRemoteConflictHandler.instance(errorHandler))
+            .conflictHandler(DataStoreConflictHandler.alwaysApplyRemote())
             .syncInterval(DEFAULT_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .syncPageSize(DEFAULT_SYNC_PAGE_SIZE)
             .syncMaxRecords(DEFAULT_SYNC_MAX_RECORDS)
@@ -236,7 +236,7 @@ public final class DataStoreConfiguration {
 
         private Builder() {
             this.errorHandler = DefaultDataStoreErrorHandler.instance();
-            this.conflictHandler = ApplyRemoteConflictHandler.instance(errorHandler);
+            this.conflictHandler = DataStoreConflictHandler.alwaysApplyRemote();
             this.ensureDefaults = false;
         }
 
@@ -378,7 +378,7 @@ public final class DataStoreConfiguration {
                     DefaultDataStoreErrorHandler.instance());
                 conflictHandler = getValueOrDefault(
                     conflictHandler,
-                    ApplyRemoteConflictHandler.instance(errorHandler));
+                    DataStoreConflictHandler.alwaysApplyRemote());
                 syncIntervalInMinutes = getValueOrDefault(syncIntervalInMinutes, DEFAULT_SYNC_INTERVAL_MINUTES);
                 syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
