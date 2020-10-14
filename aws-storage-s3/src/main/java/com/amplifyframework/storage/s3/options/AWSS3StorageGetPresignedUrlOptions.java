@@ -13,45 +13,32 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.options;
+package com.amplifyframework.storage.s3.options;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.storage.options.StorageGetUrlOptions;
+
 /**
- * Options to specify attributes of get URL API invocation.
+ * Options to specify attributes of presigned URL generation from an AWS S3 bucket.
  */
-public class StorageGetUrlOptions extends StorageOptions {
-    private final int expires;
+public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptions {
 
-    /**
-     * Constructs a StorageGetUrlOptions instance with the
-     * attributes from builder instance.
-     * @param builder the builder with configured attributes
-     */
-    protected StorageGetUrlOptions(final Builder<?> builder) {
-        super(builder.getAccessLevel(), builder.getTargetIdentityId());
-        this.expires = builder.getExpires();
-    }
-
-    /**
-     * Gets the number of seconds before the URL expires.
-     * @return number of seconds before the URL expires
-     */
-    public int getExpires() {
-        return expires;
+    private AWSS3StorageGetPresignedUrlOptions(final Builder builder) {
+        super(builder);
     }
 
     /**
      * Returns a new Builder instance that can be used to configure
-     * and build a new immutable instance of StorageGetUrlOptions.
+     * and build a new immutable instance of AWSS3StorageGetPresignedUrlOptions.
      * @return a new builder instance
      */
     @SuppressLint("SyntheticAccessor")
     @NonNull
-    public static Builder<?> builder() {
-        return new Builder<>();
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -65,7 +52,7 @@ public class StorageGetUrlOptions extends StorageOptions {
      *         values in the provided options
      */
     @NonNull
-    public static Builder<?> from(@NonNull StorageGetUrlOptions options) {
+    public static Builder from(@NonNull AWSS3StorageGetPresignedUrlOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
             .targetIdentityId(options.getTargetIdentityId())
@@ -77,30 +64,24 @@ public class StorageGetUrlOptions extends StorageOptions {
      * @return default instance of StorageGetUrlOptions
      */
     @NonNull
-    public static StorageGetUrlOptions defaultInstance() {
+    public static AWSS3StorageGetPresignedUrlOptions defaultInstance() {
         return builder().build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        } else if (!(obj instanceof StorageGetUrlOptions)) {
+        } else if (!(obj instanceof AWSS3StorageGetPresignedUrlOptions)) {
             return false;
         } else {
-            StorageGetUrlOptions that = (StorageGetUrlOptions) obj;
+            AWSS3StorageGetPresignedUrlOptions that = (AWSS3StorageGetPresignedUrlOptions) obj;
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
                     ObjectsCompat.equals(getExpires(), that.getExpires());
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
@@ -110,13 +91,10 @@ public class StorageGetUrlOptions extends StorageOptions {
         );
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
     public String toString() {
-        return "StorageGetUrlOptions {" +
+        return "AWSS3StorageGetPresignedUrlOptions {" +
                 "accessLevel=" + getAccessLevel() +
                 ", targetIdentityId=" + getTargetIdentityId() +
                 ", expires=" + getExpires() +
@@ -125,41 +103,14 @@ public class StorageGetUrlOptions extends StorageOptions {
 
     /**
      * A utility that can be used to configure and construct immutable
-     * instances of the {@link StorageGetUrlOptions}, by chaining
+     * instances of the {@link AWSS3StorageGetPresignedUrlOptions}, by chaining
      * fluent configuration method calls.
-     * @param <B> the type of builder to chain with
      */
-    public static class Builder<B extends Builder<B>> extends StorageOptions.Builder<B, StorageGetUrlOptions> {
-        private int expires;
-
-        /**
-         * Configures the number of seconds left until URL expires on new
-         * StorageGetUrlOptions instances.
-         * @param expires Amount of seconds until URL expires
-         * @return Current Builder instance, for fluent method chaining
-         */
-        @SuppressWarnings({"unchecked", "WeakerAccess"})
-        @NonNull
-        public final B expires(int expires) {
-            this.expires = expires;
-            return (B) this;
-        }
-
-        final int getExpires() {
-            return expires;
-        }
-
-        /**
-         * Constructs and returns a new immutable instance of the
-         * StorageGetUrlOptions, using the configurations that
-         * have been provided the current instance of the Builder.
-         * @return A new immutable instance of StorageGetUrlOptions
-         */
-        @SuppressLint("SyntheticAccessor")
+    public static final class Builder extends StorageGetUrlOptions.Builder<Builder> {
         @Override
         @NonNull
-        public StorageGetUrlOptions build() {
-            return new StorageGetUrlOptions(this);
+        public AWSS3StorageGetPresignedUrlOptions build() {
+            return new AWSS3StorageGetPresignedUrlOptions(this);
         }
     }
 }

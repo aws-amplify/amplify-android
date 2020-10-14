@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,36 +13,32 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.options;
+package com.amplifyframework.storage.s3.options;
 
-import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-/**
- * Options to specify attributes of get API invocation.
- */
-public class StorageDownloadFileOptions extends StorageOptions {
+import com.amplifyframework.storage.options.StorageListOptions;
 
-    /**
-     * Constructs a StorageDownloadFileOptions instance with the
-     * attributes from builder instance.
-     * @param builder the builder with configured attributes
-     */
-    protected StorageDownloadFileOptions(final Builder<?> builder) {
-        super(builder.getAccessLevel(), builder.getTargetIdentityId());
+/**
+ * Options to specify attributes of object listing operation from an AWS S3 bucket.
+ */
+public final class AWSS3StorageListOptions extends StorageListOptions {
+
+    private AWSS3StorageListOptions(final Builder builder) {
+        super(builder);
     }
 
     /**
      * Factory method to create a new instance of the
-     * {@link StorageDownloadFileOptions.Builder}.  The builder can be
+     * {@link Builder}.  The builder can be
      * used to configure properties and then construct a new immutable
-     * instance of the StorageDownloadFileOptions.
-     * @return An instance of the {@link StorageDownloadFileOptions.Builder}
+     * instance of the storage options that are specific to AWS S3.
+     * @return An instance of the {@link Builder}
      */
     @NonNull
-    public static Builder<?> builder() {
-        return new Builder<>();
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -56,40 +52,34 @@ public class StorageDownloadFileOptions extends StorageOptions {
      *         values in the provided options
      */
     @NonNull
-    public static Builder<?> from(@NonNull final StorageDownloadFileOptions options) {
+    public static Builder from(@NonNull final AWSS3StorageListOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
             .targetIdentityId(options.getTargetIdentityId());
     }
 
     /**
-     * Constructs a default instance of the {@link StorageDownloadFileOptions}.
-     * @return default instance of StorageDownloadFileOptions
+     * Constructs a default instance of the {@link AWSS3StorageListOptions}.
+     * @return default instance of AWSS3StorageListOptions
      */
     @NonNull
-    public static StorageDownloadFileOptions defaultInstance() {
+    public static AWSS3StorageListOptions defaultInstance() {
         return builder().build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        } else if (!(obj instanceof StorageDownloadFileOptions)) {
+        } else if (!(obj instanceof AWSS3StorageListOptions)) {
             return false;
         } else {
-            StorageDownloadFileOptions that = (StorageDownloadFileOptions) obj;
+            AWSS3StorageListOptions that = (AWSS3StorageListOptions) obj;
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
@@ -98,35 +88,25 @@ public class StorageDownloadFileOptions extends StorageOptions {
         );
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
     public String toString() {
-        return "StorageDownloadFileOptions {" +
-            "accessLevel=" + getAccessLevel() +
-            ", targetIdentityId=" + getTargetIdentityId() +
-            '}';
+        return "AWSS3StorageListOptions {" +
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                '}';
     }
 
     /**
      * A utility that can be used to configure and construct immutable
-     * instances of the {@link StorageDownloadFileOptions}, by chaining
+     * instances of the {@link AWSS3StorageListOptions}, by chaining
      * fluent configuration method calls.
-     * @param <B> the type of builder to chain with
      */
-    public static class Builder<B extends Builder<B>> extends StorageOptions.Builder<B, StorageDownloadFileOptions> {
-        /**
-         * Returns an instance of StorageDownloadFileOptions with the parameters
-         * specified by this builder.
-         * @return a configured instance of StorageDownloadFileOptions
-         */
-        @SuppressLint("SyntheticAccessor")
+    public static final class Builder extends StorageListOptions.Builder<Builder> {
         @Override
         @NonNull
-        public StorageDownloadFileOptions build() {
-            return new StorageDownloadFileOptions(this);
+        public AWSS3StorageListOptions build() {
+            return new AWSS3StorageListOptions(this);
         }
     }
 }
