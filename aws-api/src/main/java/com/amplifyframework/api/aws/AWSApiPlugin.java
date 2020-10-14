@@ -27,6 +27,7 @@ import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -315,15 +316,20 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 // them.
                 if (ownerRuleWithReadRestriction != null && (
                         readAuthorizedGroups.isEmpty() ||
-                        Collections.disjoint(readAuthorizedGroups, getUserGroups())
+                        Collections.disjoint(readAuthorizedGroups, getUserGroups(
+                                clientDetails.apiConfiguration.getAuthorizationType()
+                        ))
                     )
                 ) {
+                    String key = ownerRuleWithReadRestriction.getOwnerFieldOrDefault();
+                    String type = "String!";
+                    String value = getIdentityValue(
+                            ownerRuleWithReadRestriction.getIdentityClaimOrDefault(),
+                            clientDetails.apiConfiguration.getAuthorizationType()
+                    );
+
                     request = appSyncRequest.newBuilder()
-                            .variable(
-                                ownerRuleWithReadRestriction.getOwnerFieldOrDefault(),
-                                    "String!",
-                                getIdentityValue(ownerRuleWithReadRestriction.getIdentityClaimOrDefault())
-                            )
+                            .variable(key, type, value)
                             .build();
                 }
             } catch (AmplifyException exception) {
@@ -358,17 +364,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             && authRule.getOperationsOrDefault().contains(ModelOperation.READ);
     }
 
-    private String getIdentityValue(String identityClaim) throws ApiException {
-        CognitoUserPoolsAuthProvider cognitoProvider = getAuthProvider();
-
-        String identityValue;
+    private String getIdentityValue(String identityClaim, AuthorizationType authType) throws ApiException {
+        String identityValue = null;
 
         try {
             identityValue = CognitoJWTParser
-                    .getPayload(cognitoProvider.getLatestAuthToken())
+                    .getPayload(getAuthToken(authType))
                     .getString(identityClaim);
         } catch (JSONException error) {
-            identityValue = null;
+            // Could not read identity value from the token...
+            // Exception will be thrown so do nothing for now
         }
 
         if (identityValue == null || identityValue.isEmpty()) {
@@ -383,13 +388,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return identityValue;
     }
 
-    private ArrayList<String> getUserGroups() throws ApiException {
-        CognitoUserPoolsAuthProvider cognitoProvider = getAuthProvider();
+    private ArrayList<String> getUserGroups(AuthorizationType authType) throws ApiException {
+        // TODO: this doesn't work with OIDC right now. Implement custom groups claim.
         ArrayList<String> groups = new ArrayList<>();
         final String GROUPS_KEY = "cognito:groups";
 
         try {
-            JSONObject accessToken = CognitoJWTParser.getPayload(cognitoProvider.getLatestAuthToken());
+            JSONObject accessToken = CognitoJWTParser.getPayload(getAuthToken(authType));
 
             if (accessToken.has(GROUPS_KEY)) {
                 JSONArray jsonGroups = accessToken.getJSONArray(GROUPS_KEY);
@@ -409,20 +414,34 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return groups;
     }
 
-    private CognitoUserPoolsAuthProvider getAuthProvider() throws ApiException {
-        CognitoUserPoolsAuthProvider cognitoProvider = authProvider.getCognitoUserPoolsAuthProvider();
-        if (cognitoProvider == null) {
-            try {
-                cognitoProvider = new DefaultCognitoUserPoolsAuthProvider();
-            } catch (ApiException exception) {
+    private String getAuthToken(AuthorizationType authType) throws ApiException {
+        final String token;
+        switch (authType) {
+            case AMAZON_COGNITO_USER_POOLS:
+                CognitoUserPoolsAuthProvider cognitoProvider = authProvider.getCognitoUserPoolsAuthProvider();
+                if (cognitoProvider == null) {
+                    cognitoProvider = new DefaultCognitoUserPoolsAuthProvider();
+                }
+                return cognitoProvider.getLatestAuthToken();
+            case OPENID_CONNECT:
+                OidcAuthProvider oidcProvider = authProvider.getOidcAuthProvider();
+                if (oidcProvider == null) {
+                    throw new ApiException(
+                        "OidcAuthProvider interface is not implemented.",
+                        "Configure AWSApiPlugin with ApiAuthProviders containing an implementation of " +
+                            "OidcAuthProvider interface that can vend a valid JWT token."
+                    );
+                }
+                return oidcProvider.getLatestAuthToken();
+            case API_KEY:
+            case AWS_IAM:
+            case NONE:
+            default:
                 throw new ApiException(
-                        "Attempted to subscribe to a model with owner based authorization without a Cognito provider",
-                        "Did you add the AWSCognitoAuthPlugin to Amplify before configuring it?"
+                    "Failed to obtain access token from the configured auth provider.",
+                    "Verify that the API is configured with either Cognito User Pools or OpenID Connect."
                 );
-            }
         }
-
-        return cognitoProvider;
     }
 
     @Nullable
