@@ -15,9 +15,11 @@
 
 package com.amplifyframework.core.model;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.Empty;
+import com.amplifyframework.util.Immutable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,12 +32,18 @@ import java.util.List;
  * documentation.</a>
  */
 public final class AuthRule {
+    private static final String DEFAULT_OWNER_FIELD = "owner";
+    private static final String DEFAULT_IDENTITY_CLAIM = "username";
+    private static final String DEFAULT_GROUPS_FIELD = "groups";
+    private static final String DEFAULT_GROUP_CLAIM = "cognito:groups";
+
     private final AuthStrategy authStrategy;
+    private final AuthProvider authProvider;
     private final String ownerField;
     private final String identityClaim;
+    private final String groupsField;
     private final String groupClaim;
     private final List<String> groups;
-    private final String groupsField;
     private final List<ModelOperation> operations;
 
     /**
@@ -45,6 +53,7 @@ public final class AuthRule {
      */
     public AuthRule(com.amplifyframework.core.model.annotations.AuthRule authRule) {
         this.authStrategy = authRule.allow();
+        this.authProvider = authRule.provider();
         this.ownerField = authRule.ownerField();
         this.identityClaim = authRule.identityClaim();
         this.groupClaim = authRule.groupClaim();
@@ -57,39 +66,78 @@ public final class AuthRule {
      * Returns the type of strategy for this {@link AuthRule}.
      * @return the type of strategy for this {@link AuthRule}
      */
+    @NonNull
     public AuthStrategy getAuthStrategy() {
-        return this.authStrategy;
+        return authStrategy;
     }
 
     /**
-     * Used for owner authorization.  Defaults to "owner" when using AuthStrategy.OWNER.
+     * Optional field used to specify the mode of authorization.
+     * Defaults to using Cognito User Pools if none is provided.
+     *
+     * @return the mode of authorization
+     */
+    @NonNull
+    public AuthProvider getAuthProvider() {
+        return authProvider;
+    }
+
+    /**
+     * Used for owner authorization.
+     * Defaults to "owner" when using {@link AuthStrategy#OWNER}.
      *
      * @return name of a {@link ModelField} of type String which specifies the user which should have access
      */
+    @NonNull
     public String getOwnerFieldOrDefault() {
-        return Empty.check(this.ownerField) ? "owner" : this.ownerField;
+        return Empty.check(ownerField)
+                ? DEFAULT_OWNER_FIELD
+                : ownerField;
     }
 
     /**
-     * Used to specify a custom claim.  Defaults to "username" when using AuthStrategy.OWNER.
-     * CLI has been incorrectly generating a value of "cognito:username" so we also check for this incorrect default
-     * value and convert it to the proper default of "username".
+     * Used to specify a custom claim.
+     * Defaults to "username" when using AuthStrategy.OWNER.
+     *
+     * Note: CLI has been incorrectly generating a value of "cognito:username"
+     * so we also check for this incorrect default value and convert it to the
+     * proper default of "username".
      *
      * @return identity claim
      */
+    @NonNull
     public String getIdentityClaimOrDefault() {
-        return Empty.check(this.identityClaim) || "cognito:username".equals(this.identityClaim) ?
-                "username" :
-                this.identityClaim;
+        final String cliGeneratedIdentityClaim = "cognito:username";
+        return Empty.check(identityClaim) || cliGeneratedIdentityClaim.equals(identityClaim)
+                ? DEFAULT_IDENTITY_CLAIM
+                : identityClaim;
     }
 
     /**
-     * Used to specify a custom claim.   Defaults to "cognito:groups" when using AuthStrategy.GROUPS.
+     * Used for dynamic group authorization.
+     * Defaults to "groups" when using AuthStrategy.GROUPS.
+     *
+     * @return name of a {@link ModelField} of type String or array of Strings which specifies a group or list of groups
+     * which should have access.
+     */
+    @NonNull
+    public String getGroupsFieldOrDefault() {
+        return Empty.check(groupsField)
+                ? DEFAULT_GROUPS_FIELD
+                : groupsField;
+    }
+
+    /**
+     * Used to specify a custom claim.
+     * Defaults to "cognito:groups" when using AuthStrategy.GROUPS.
      *
      * @return group claim
      */
-    public String getGroupClaim() {
-        return this.groupClaim;
+    @NonNull
+    public String getGroupClaimOrDefault() {
+        return Empty.check(groupClaim)
+                ? DEFAULT_GROUP_CLAIM
+                : groupClaim;
     }
 
     /**
@@ -97,18 +145,9 @@ public final class AuthRule {
      *
      * @return array of groups which should have access
      */
+    @NonNull
     public List<String> getGroups() {
-        return this.groups;
-    }
-
-    /**
-     * Used for dynamic group authorization.  Defaults to "groups" when using AuthStrategy.GROUPS.
-     *
-     * @return name of a {@link ModelField} of type String or array of Strings which specifies a group or list of groups
-     * which should have access.
-     */
-    public String getGroupsFieldOrDefault() {
-        return Empty.check(this.groupsField) ? "groups" : this.groupsField;
+        return Immutable.of(groups);
     }
 
     /**
@@ -116,15 +155,11 @@ public final class AuthRule {
      * the list are not protected by default.
      * @return list of {@link ModelOperation}s for which this {@link AuthRule} should apply.
      */
+    @NonNull
     public List<ModelOperation> getOperationsOrDefault() {
-        if (Empty.check(this.operations)) {
-            return Arrays.asList(
-                    ModelOperation.CREATE,
-                    ModelOperation.UPDATE,
-                    ModelOperation.DELETE,
-                    ModelOperation.READ);
-        }
-        return this.operations;
+        return Immutable.of(Empty.check(operations)
+                ? Arrays.asList(ModelOperation.values())
+                : operations);
     }
 
     @Override
@@ -139,29 +174,40 @@ public final class AuthRule {
 
         AuthRule authRule = (AuthRule) object;
 
-        return authStrategy == authRule.authStrategy &&
+        return ObjectsCompat.equals(authStrategy, authRule.authStrategy) &&
+                ObjectsCompat.equals(authProvider, authRule.authProvider) &&
                 ObjectsCompat.equals(ownerField, authRule.ownerField) &&
                 ObjectsCompat.equals(identityClaim, authRule.identityClaim) &&
+                ObjectsCompat.equals(groupsField, authRule.groupsField) &&
                 ObjectsCompat.equals(groupClaim, authRule.groupClaim) &&
                 ObjectsCompat.equals(groups, authRule.groups) &&
-                ObjectsCompat.equals(groupsField, authRule.groupsField) &&
                 ObjectsCompat.equals(operations, authRule.operations);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(authStrategy, ownerField, identityClaim, groupClaim, groups, groupsField, operations);
+        return ObjectsCompat.hash(
+                authStrategy,
+                authProvider,
+                ownerField,
+                identityClaim,
+                groupsField,
+                groupClaim,
+                groups,
+                operations
+        );
     }
 
     @Override
     public String toString() {
         return "AuthRule{" +
                 "authStrategy=" + authStrategy +
+                ", authProvider='" + authProvider.getName() + '\'' +
                 ", ownerField='" + ownerField + '\'' +
                 ", identityClaim='" + identityClaim + '\'' +
+                ", groupsField='" + groupsField + '\'' +
                 ", groupClaim='" + groupClaim + '\'' +
                 ", groups=" + groups + '\'' +
-                ", groupsField='" + groupsField + '\'' +
                 ", operations=" + operations + '\'' +
                 '}';
     }

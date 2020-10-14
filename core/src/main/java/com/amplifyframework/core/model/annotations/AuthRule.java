@@ -15,6 +15,7 @@
 
 package com.amplifyframework.core.model.annotations;
 
+import com.amplifyframework.core.model.AuthProvider;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.ModelOperation;
 
@@ -40,28 +41,43 @@ import java.lang.annotation.Target;
 @Target(ElementType.ANNOTATION_TYPE)
 public @interface AuthRule {
     /**
-     * Defines the strategy for this rule.  This is the only required field.
+     * Defines the strategy for this rule. This is the only required field.
      *
      * @return AuthStrategy for this {@link AuthRule}
      */
     AuthStrategy allow();
 
     /**
-     * Used for owner authorization.  Defaults to "owner" when using AuthStrategy.OWNER.
+     * Used to specify the type of authorization being used.
+     *
+     * @return mode of authorization
+     */
+    AuthProvider provider() default AuthProvider.USER_POOLS;
+
+    /**
+     * Used for owner authorization.
      *
      * @return name of a {@link ModelField} of type String which specifies the user which should have access
      */
     String ownerField() default "";
 
     /**
-     * Used to specify a custom claim.  Defaults to "username" when using AuthStrategy.OWNER.
+     * Used to specify a custom claim.
      *
      * @return identity claim
      */
     String identityClaim() default "";
 
     /**
-     * Used to specify a custom claim.   Defaults to "cognito:groups" when using AuthStrategy.GROUPS.
+     * Used for dynamic group authorization.
+     *
+     * @return name of a {@link ModelField} of type String or array of Strings which specifies a group or list of groups
+     * which should have access.
+     */
+    String groupsField() default "";
+
+    /**
+     * Used to specify a custom claim.
      *
      * @return group claim
      */
@@ -75,16 +91,8 @@ public @interface AuthRule {
     String[] groups() default {};
 
     /**
-     * Used for dynamic group authorization.  Defaults to "groups" when using AuthStrategy.GROUPS.
-     *
-     * @return name of a {@link ModelField} of type String or array of Strings which specifies a group or list of groups
-     * which should have access.
-     */
-    String groupsField() default "";
-
-    /**
-     * Specifies which {@link ModelOperation}s are protected by this {@link AuthRule}.  Any operations not included in
-     * the list are not protected by default.
+     * Specifies which {@link ModelOperation}s are protected by this {@link AuthRule}.
+     * Any operations not included in the list are not protected by default.
      * @return list of {@link ModelOperation}s for which this {@link AuthRule} should apply.
      */
     ModelOperation[] operations() default {};
