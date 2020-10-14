@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore;
+package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,33 +24,33 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import java.util.Objects;
 
 /**
- * Contains data pertaining to a conflict between two models and their associated
+ * Represents a conflict between two models and their associated
  * metadata, that has occurred during model synchronization. One was found locally,
  * and another found in the remote system.
  * @param <T> The type of the model instances that conflict (they are both of the same type.)
  */
-public final class DataStoreConflictData<T extends Model> {
+public final class ConflictData<T extends Model> {
     private final ModelWithMetadata<T> local;
     private final ModelWithMetadata<T> remote;
 
-    private DataStoreConflictData(ModelWithMetadata<T> local, ModelWithMetadata<T> remote) {
+    private ConflictData(ModelWithMetadata<T> local, ModelWithMetadata<T> remote) {
         this.local = local;
         this.remote = remote;
     }
 
     /**
-     * Creates a new {@link DataStoreConflictData}.
+     * Creates a new {@link ConflictData}.
      * @param local The instance of a model (and its metadata) that was found locally
      * @param remote The instance of a model (and its metadata) that was found on the server
      * @param <T> The type of the model instances experiencing conflict
      * @return Data about a model conflict
      */
     @NonNull
-    public static <T extends Model> DataStoreConflictData<T> create(
+    public static <T extends Model> ConflictData<T> create(
             @NonNull ModelWithMetadata<T> local, @NonNull ModelWithMetadata<T> remote) {
         Objects.requireNonNull(local);
         Objects.requireNonNull(remote);
-        return new DataStoreConflictData<>(local, remote);
+        return new ConflictData<>(local, remote);
     }
 
     /**
@@ -80,7 +80,7 @@ public final class DataStoreConflictData<T extends Model> {
             return false;
         }
 
-        DataStoreConflictData<?> that = (DataStoreConflictData<?>) thatObject;
+        ConflictData<?> that = (ConflictData<?>) thatObject;
 
         if (!getLocal().equals(that.getLocal())) {
             return false;
