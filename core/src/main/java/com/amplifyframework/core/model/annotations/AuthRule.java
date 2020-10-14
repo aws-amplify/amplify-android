@@ -52,7 +52,7 @@ public @interface AuthRule {
      *
      * @return mode of authorization
      */
-    AuthProvider provider() default AuthProvider.USER_POOLS;
+    String provider() default "";
 
     /**
      * Used for owner authorization.

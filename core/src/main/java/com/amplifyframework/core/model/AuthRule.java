@@ -38,7 +38,7 @@ public final class AuthRule {
     private static final String DEFAULT_GROUP_CLAIM = "cognito:groups";
 
     private final AuthStrategy authStrategy;
-    private final AuthProvider authProvider;
+    private final String authProvider;
     private final String ownerField;
     private final String identityClaim;
     private final String groupsField;
@@ -73,13 +73,24 @@ public final class AuthRule {
 
     /**
      * Optional field used to specify the mode of authorization.
-     * Defaults to using Cognito User Pools if none is provided.
+     * Defaults to {@link AuthProvider#API_KEY} if auth strategy is {@link AuthStrategy#PUBLIC}.
+     * Defaults to {@link AuthProvider#USER_POOLS} for any other auth strategy.
      *
      * @return the mode of authorization
      */
     @NonNull
     public AuthProvider getAuthProvider() {
-        return authProvider;
+        try {
+            return AuthProvider.valueOf(authProvider);
+        } catch (IllegalArgumentException exception) {
+            // Enum value mismatch; return default values
+        }
+
+        if (AuthStrategy.PUBLIC.equals(authStrategy)) {
+            return AuthProvider.API_KEY;
+        } else {
+            return AuthProvider.USER_POOLS;
+        }
     }
 
     /**
@@ -202,7 +213,7 @@ public final class AuthRule {
     public String toString() {
         return "AuthRule{" +
                 "authStrategy=" + authStrategy +
-                ", authProvider='" + authProvider.getName() + '\'' +
+                ", authProvider='" + authProvider + '\'' +
                 ", ownerField='" + ownerField + '\'' +
                 ", identityClaim='" + identityClaim + '\'' +
                 ", groupsField='" + groupsField + '\'' +

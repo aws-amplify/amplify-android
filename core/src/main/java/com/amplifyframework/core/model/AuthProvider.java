@@ -55,7 +55,6 @@ public enum AuthProvider {
 
     /**
      * Uses Cognito User Pools to authenticate.
-     * This is the default mode of authorization.
      * The following strategies are permitted:
      * <ul>
      *     <li>{@link AuthStrategy#OWNER}</li>
