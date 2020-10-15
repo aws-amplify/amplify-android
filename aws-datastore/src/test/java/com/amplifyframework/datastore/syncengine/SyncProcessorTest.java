@@ -128,10 +128,10 @@ public final class SyncProcessorTest {
 
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration
             .builder()
-            .syncIntervalInMinutes(BASE_SYNC_INTERVAL_MINUTES)
+            .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .syncMaxRecords(syncMaxRecords)
             .syncPageSize(1_000)
-            .dataStoreErrorHandler(dataStoreException -> errorHandlerCallCount++)
+            .errorHandler(dataStoreException -> errorHandlerCallCount++)
             .build();
 
         this.syncProcessor = SyncProcessor.builder()

@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Configuration options for {@link AWSDataStorePlugin}.
  */
-@SuppressWarnings("WeakerAccess") // This is a public API. Public methods available to user's package(s).
 public final class DataStoreConfiguration {
     static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
     @VisibleForTesting
@@ -41,26 +40,24 @@ public final class DataStoreConfiguration {
     @VisibleForTesting 
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
 
-    private final DataStoreErrorHandler dataStoreErrorHandler;
-    private final DataStoreConflictHandler dataStoreConflictHandler;
+    private final DataStoreErrorHandler errorHandler;
+    private final DataStoreConflictHandler conflictHandler;
     private final Integer syncMaxRecords;
     private final Integer syncPageSize;
     private Long syncIntervalInMinutes;
-    private Long syncIntervalMs;
 
     private DataStoreConfiguration(
-            DataStoreErrorHandler dataStoreErrorHandler,
-            DataStoreConflictHandler dataStoreConflictHandler,
+            DataStoreErrorHandler errorHandler,
+            DataStoreConflictHandler conflictHandler,
             Long syncIntervalInMinutes,
             Integer syncMaxRecords,
             Integer syncPageSize) {
-        this.dataStoreErrorHandler = dataStoreErrorHandler;
-        this.dataStoreConflictHandler = dataStoreConflictHandler;
+        this.errorHandler = errorHandler;
+        this.conflictHandler = conflictHandler;
         this.syncMaxRecords = syncMaxRecords;
         this.syncPageSize = syncPageSize;
         if (syncIntervalInMinutes != null) {
             this.syncIntervalInMinutes = syncIntervalInMinutes;
-            this.syncIntervalMs = TimeUnit.MINUTES.toMillis(syncIntervalInMinutes);
         }
     }
 
@@ -108,11 +105,11 @@ public final class DataStoreConfiguration {
      */
     @NonNull
     public static DataStoreConfiguration defaults() throws DataStoreException {
-        DataStoreErrorHandler dataStoreErrorHandler = DefaultDataStoreErrorHandler.instance();
+        DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
         return builder()
-            .dataStoreErrorHandler(dataStoreErrorHandler)
-            .dataStoreConflictHandler(ApplyRemoteConflictHandler.instance(dataStoreErrorHandler))
-            .syncIntervalInMinutes(DEFAULT_SYNC_INTERVAL_MINUTES)
+            .errorHandler(errorHandler)
+            .conflictHandler(ApplyRemoteConflictHandler.instance(errorHandler))
+            .syncInterval(DEFAULT_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .syncPageSize(DEFAULT_SYNC_PAGE_SIZE)
             .syncMaxRecords(DEFAULT_SYNC_MAX_RECORDS)
             .build();
@@ -123,8 +120,8 @@ public final class DataStoreConfiguration {
      * @return Data store error handler.
      */
     @NonNull
-    public DataStoreErrorHandler getDataStoreErrorHandler() {
-        return this.dataStoreErrorHandler;
+    public DataStoreErrorHandler getErrorHandler() {
+        return this.errorHandler;
     }
 
     /**
@@ -132,8 +129,8 @@ public final class DataStoreConfiguration {
      * @return Data store conflict handler
      */
     @NonNull
-    public DataStoreConflictHandler getDataStoreConflictHandler() {
-        return this.dataStoreConflictHandler;
+    public DataStoreConflictHandler getConflictHandler() {
+        return this.conflictHandler;
     }
 
     /**
@@ -144,7 +141,7 @@ public final class DataStoreConfiguration {
      */
     @IntRange(from = 0)
     public Long getSyncIntervalMs() {
-        return this.syncIntervalMs;
+        return TimeUnit.MINUTES.toMillis(syncIntervalInMinutes);
     }
 
     /**
@@ -187,10 +184,10 @@ public final class DataStoreConfiguration {
             return false;
         }
         DataStoreConfiguration that = (DataStoreConfiguration) thatObject;
-        if (!ObjectsCompat.equals(getDataStoreErrorHandler(), that.getDataStoreConflictHandler())) {
+        if (!ObjectsCompat.equals(getErrorHandler(), that.getConflictHandler())) {
             return false;
         }
-        if (!ObjectsCompat.equals(getDataStoreConflictHandler(), that.getDataStoreConflictHandler())) {
+        if (!ObjectsCompat.equals(getConflictHandler(), that.getConflictHandler())) {
             return false;
         }
         if (!ObjectsCompat.equals(getSyncMaxRecords(), that.getSyncMaxRecords())) {
@@ -199,33 +196,27 @@ public final class DataStoreConfiguration {
         if (!ObjectsCompat.equals(getSyncPageSize(), that.getSyncPageSize())) {
             return false;
         }
-        if (!ObjectsCompat.equals(getSyncIntervalInMinutes(), that.getSyncIntervalInMinutes())) {
-            return false;
-        }
-        return ObjectsCompat.equals(getSyncIntervalMs(), that.getSyncIntervalMs());
+        return ObjectsCompat.equals(getSyncIntervalInMinutes(), that.getSyncIntervalInMinutes());
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public int hashCode() {
-        int result = getDataStoreErrorHandler() != null ? getDataStoreErrorHandler().hashCode() : 0;
-        result = 31 * result + (getDataStoreConflictHandler() != null ? getDataStoreConflictHandler().hashCode() : 0);
+        int result = getErrorHandler() != null ? getErrorHandler().hashCode() : 0;
+        result = 31 * result + (getConflictHandler() != null ? getConflictHandler().hashCode() : 0);
         result = 31 * result + (getSyncMaxRecords() != null ? getSyncMaxRecords().hashCode() : 0);
         result = 31 * result + (getSyncPageSize() != null ? getSyncPageSize().hashCode() : 0);
         result = 31 * result + (getSyncIntervalInMinutes() != null ? getSyncIntervalInMinutes().hashCode() : 0);
-        result = 31 * result + (getSyncIntervalMs() != null ? getSyncIntervalMs().hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "DataStoreConfiguration{" +
-            "dataStoreErrorHandler=" + dataStoreErrorHandler +
-            ", dataStoreConflictHandler=" + dataStoreConflictHandler +
+            "errorHandler=" + errorHandler +
+            ", conflictHandler=" + conflictHandler +
             ", syncMaxRecords=" + syncMaxRecords +
             ", syncPageSize=" + syncPageSize +
             ", syncIntervalInMinutes=" + syncIntervalInMinutes +
-            ", syncIntervalMs=" + syncIntervalMs +
             '}';
     }
 
@@ -234,8 +225,8 @@ public final class DataStoreConfiguration {
      * configuration methods.
      */
     public static final class Builder {
-        private DataStoreErrorHandler dataStoreErrorHandler;
-        private DataStoreConflictHandler dataStoreConflictHandler;
+        private DataStoreErrorHandler errorHandler;
+        private DataStoreConflictHandler conflictHandler;
         private Long syncIntervalInMinutes;
         private Integer syncMaxRecords;
         private Integer syncPageSize;
@@ -244,8 +235,8 @@ public final class DataStoreConfiguration {
         private DataStoreConfiguration userProvidedConfiguration;
 
         private Builder() {
-            this.dataStoreErrorHandler = DefaultDataStoreErrorHandler.instance();
-            this.dataStoreConflictHandler = ApplyRemoteConflictHandler.instance(dataStoreErrorHandler);
+            this.errorHandler = DefaultDataStoreErrorHandler.instance();
+            this.conflictHandler = ApplyRemoteConflictHandler.instance(errorHandler);
             this.ensureDefaults = false;
         }
 
@@ -259,35 +250,36 @@ public final class DataStoreConfiguration {
         /**
          * A handler that will be invoked whenever there is a conflict between two model instances,
          * one in the local store, and one from the remote server, as received from a sync operation.
-         * @param dataStoreConflictHandler A handler to invoke upon sync conflicts
+         * @param conflictHandler A handler to invoke upon sync conflicts
          * @return Current builder
          */
         @NonNull
-        public Builder dataStoreConflictHandler(@NonNull DataStoreConflictHandler dataStoreConflictHandler) {
-            this.dataStoreConflictHandler = Objects.requireNonNull(dataStoreConflictHandler);
+        public Builder conflictHandler(@NonNull DataStoreConflictHandler conflictHandler) {
+            this.conflictHandler = Objects.requireNonNull(conflictHandler);
             return Builder.this;
         }
 
         /**
          * Sets a handler function to be applied when the DataStore encounters an unrecoverable error
          * in one of its ongoing background operations (model synchronization).
-         * @param dataStoreErrorHandler A handler for unrecoverable background errors
+         * @param errorHandler A handler for unrecoverable background errors
          * @return Current builder instance
          */
         @NonNull
-        public Builder dataStoreErrorHandler(@NonNull DataStoreErrorHandler dataStoreErrorHandler) {
-            this.dataStoreErrorHandler = Objects.requireNonNull(dataStoreErrorHandler);
+        public Builder errorHandler(@NonNull DataStoreErrorHandler errorHandler) {
+            this.errorHandler = Objects.requireNonNull(errorHandler);
             return Builder.this;
         }
 
         /**
          * Sets the duration of time after which delta syncs will not be preferred over base syncs.
-         * @param syncIntervalInMinutes The amount of time that must elapse for delta syncs to not be considered
+         * @param duration The amount of time that must elapse for delta syncs to not be considered
+         * @param timeUnit The time unit of the duration field
          * @return Current builder instance
          */
         @NonNull
-        public Builder syncIntervalInMinutes(@IntRange(from = 0) Long syncIntervalInMinutes) {
-            this.syncIntervalInMinutes = syncIntervalInMinutes;
+        public Builder syncInterval(@IntRange(from = 0) long duration, TimeUnit timeUnit) {
+            this.syncIntervalInMinutes = timeUnit.toMinutes(duration);
             return Builder.this;
         }
 
@@ -332,8 +324,8 @@ public final class DataStoreConfiguration {
                 try {
                     switch (configKey) {
                         case SYNC_INTERVAL_IN_MINUTES:
-                            this.syncIntervalInMinutes(pluginJson
-                                .getLong(ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString()));
+                            long duration = pluginJson.getLong(ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString());
+                            this.syncInterval(duration, TimeUnit.MINUTES);
                             break;
                         case SYNC_MAX_RECORDS:
                             this.syncMaxRecords(pluginJson.getInt(ConfigKey.SYNC_MAX_RECORDS.toString()));
@@ -357,8 +349,8 @@ public final class DataStoreConfiguration {
             if (userProvidedConfiguration == null) {
                 return;
             }
-            dataStoreErrorHandler = userProvidedConfiguration.getDataStoreErrorHandler();
-            dataStoreConflictHandler = userProvidedConfiguration.getDataStoreConflictHandler();
+            errorHandler = userProvidedConfiguration.getErrorHandler();
+            conflictHandler = userProvidedConfiguration.getConflictHandler();
             syncIntervalInMinutes = getValueOrDefault(
                 userProvidedConfiguration.getSyncIntervalInMinutes(),
                 syncIntervalInMinutes);
@@ -381,19 +373,19 @@ public final class DataStoreConfiguration {
             populateSettingsFromJson();
             applyUserProvidedConfiguration();
             if (ensureDefaults) {
-                dataStoreErrorHandler = getValueOrDefault(
-                    dataStoreErrorHandler,
+                errorHandler = getValueOrDefault(
+                    errorHandler,
                     DefaultDataStoreErrorHandler.instance());
-                dataStoreConflictHandler = getValueOrDefault(
-                    dataStoreConflictHandler,
-                    ApplyRemoteConflictHandler.instance(dataStoreErrorHandler));
+                conflictHandler = getValueOrDefault(
+                    conflictHandler,
+                    ApplyRemoteConflictHandler.instance(errorHandler));
                 syncIntervalInMinutes = getValueOrDefault(syncIntervalInMinutes, DEFAULT_SYNC_INTERVAL_MINUTES);
                 syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
             }
             return new DataStoreConfiguration(
-                dataStoreErrorHandler,
-                dataStoreConflictHandler,
+                errorHandler,
+                conflictHandler,
                 syncIntervalInMinutes,
                 syncMaxRecords,
                 syncPageSize

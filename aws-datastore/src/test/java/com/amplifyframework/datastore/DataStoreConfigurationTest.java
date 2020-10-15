@@ -52,8 +52,8 @@ public final class DataStoreConfigurationTest {
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().intValue());
 
-        assertTrue(dataStoreConfiguration.getDataStoreConflictHandler() instanceof ApplyRemoteConflictHandler);
-        assertTrue(dataStoreConfiguration.getDataStoreErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertTrue(dataStoreConfiguration.getConflictHandler() instanceof ApplyRemoteConflictHandler);
+        assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
     }
 
     /**
@@ -76,8 +76,8 @@ public final class DataStoreConfigurationTest {
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().longValue());
 
-        assertTrue(dataStoreConfiguration.getDataStoreConflictHandler() instanceof ApplyRemoteConflictHandler);
-        assertTrue(dataStoreConfiguration.getDataStoreErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertTrue(dataStoreConfiguration.getConflictHandler() instanceof ApplyRemoteConflictHandler);
+        assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
     }
 
     /**
@@ -97,8 +97,8 @@ public final class DataStoreConfigurationTest {
         DataStoreConfiguration configObject = DataStoreConfiguration
             .builder()
             .syncMaxRecords(expectedSyncMaxRecords)
-            .dataStoreConflictHandler(dummyConflictHandler)
-            .dataStoreErrorHandler(errorHandler)
+            .conflictHandler(dummyConflictHandler)
+            .errorHandler(errorHandler)
             .build();
 
         JSONObject jsonConfigFromFile = new JSONObject()
@@ -112,8 +112,8 @@ public final class DataStoreConfigurationTest {
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().longValue());
 
-        assertEquals(dummyConflictHandler, dataStoreConfiguration.getDataStoreConflictHandler());
-        assertEquals(errorHandler, dataStoreConfiguration.getDataStoreErrorHandler());
+        assertEquals(dummyConflictHandler, dataStoreConfiguration.getConflictHandler());
+        assertEquals(errorHandler, dataStoreConfiguration.getErrorHandler());
     }
 
     /**

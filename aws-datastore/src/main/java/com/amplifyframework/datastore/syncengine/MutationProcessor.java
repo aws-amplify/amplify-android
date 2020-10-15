@@ -307,7 +307,7 @@ final class MutationProcessor {
         final DataStoreConflictHandler conflictHandler;
         try {
             DataStoreConfiguration configuration = configurationProvider.getConfiguration();
-            conflictHandler = configuration.getDataStoreConflictHandler();
+            conflictHandler = configuration.getConflictHandler();
         } catch (DataStoreException badConfigurationProvider) {
             return Single.error(badConfigurationProvider);
         }
