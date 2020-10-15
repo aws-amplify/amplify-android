@@ -195,7 +195,7 @@ public final class MutationProcessorTest {
         };
         when(configurationProvider.getConfiguration())
             .thenReturn(DataStoreConfiguration.builder()
-                .dataStoreConflictHandler(handler)
+                .conflictHandler(handler)
                 .build()
             );
 
