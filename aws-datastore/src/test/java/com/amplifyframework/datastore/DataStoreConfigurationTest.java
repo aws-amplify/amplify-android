@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreConfiguration.ConfigKey;
+import com.amplifyframework.datastore.DataStoreConflictHandler.AlwaysApplyRemoteHandler;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,7 +54,7 @@ public final class DataStoreConfigurationTest {
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().intValue());
 
-        assertTrue(dataStoreConfiguration.getConflictHandler() instanceof ApplyRemoteConflictHandler);
+        assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
         assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
     }
 
@@ -68,15 +70,15 @@ public final class DataStoreConfigurationTest {
         Long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
         Integer expectedSyncMaxRecords = 3;
         JSONObject jsonConfigFromFile = new JSONObject()
-            .put(DataStoreConfiguration.ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes)
-            .put(DataStoreConfiguration.ConfigKey.SYNC_MAX_RECORDS.toString(), expectedSyncMaxRecords);
+            .put(ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes)
+            .put(ConfigKey.SYNC_MAX_RECORDS.toString(), expectedSyncMaxRecords);
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.builder(jsonConfigFromFile).build();
         assertEquals(expectedSyncIntervalMs, dataStoreConfiguration.getSyncIntervalMs());
         assertEquals(expectedSyncMaxRecords, dataStoreConfiguration.getSyncMaxRecords());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().longValue());
 
-        assertTrue(dataStoreConfiguration.getConflictHandler() instanceof ApplyRemoteConflictHandler);
+        assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
         assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
     }
 
@@ -102,7 +104,7 @@ public final class DataStoreConfigurationTest {
             .build();
 
         JSONObject jsonConfigFromFile = new JSONObject()
-            .put(DataStoreConfiguration.ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes);
+            .put(ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes);
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration
             .builder(jsonConfigFromFile, configObject)
             .build();
@@ -132,9 +134,10 @@ public final class DataStoreConfigurationTest {
 
     private static final class DummyConflictHandler implements DataStoreConflictHandler {
         @Override
-        public <T extends Model> void resolveConflict(@NonNull DataStoreConflictData<T> conflictData,
-                                                      @NonNull Consumer<DataStoreConflictHandlerResult> onResult) {
-            onResult.accept(DataStoreConflictHandlerResult.RETRY);
+        public void onConflictDetected(
+                @NonNull ConflictData<? extends Model> conflictData,
+                @NonNull Consumer<ConflictResolutionDecision<? extends Model>> onDecision) {
+            onDecision.accept(ConflictResolutionDecision.retry(null));
         }
     }
 }

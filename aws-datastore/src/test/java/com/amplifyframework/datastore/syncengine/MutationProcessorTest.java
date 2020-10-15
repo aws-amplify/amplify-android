@@ -15,19 +15,12 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import androidx.annotation.NonNull;
-
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
-import com.amplifyframework.datastore.DataStoreConflictData;
-import com.amplifyframework.datastore.DataStoreConflictHandler;
-import com.amplifyframework.datastore.DataStoreConflictHandlerResult;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -91,15 +84,14 @@ public final class MutationProcessorTest {
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         this.appSync = mock(AppSync.class);
-        SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
+        ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
             .versionRepository(versionRepository)
-            .syncTimeRegistry(syncTimeRegistry)
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
-            .dataStoreConfigurationProvider(configurationProvider)
+            .conflictResolver(conflictResolver)
             .build();
     }
 
@@ -185,17 +177,11 @@ public final class MutationProcessorTest {
     public void conflictHandlerInvokedForUnhandledConflictError() throws DataStoreException {
         // Arrange a user-provided conflict handler.
         CountDownLatch handlerInvocationsRemainingCount = new CountDownLatch(1);
-        DataStoreConflictHandler handler = new DataStoreConflictHandler() {
-            @Override
-            public <T extends Model> void resolveConflict(
-                    @NonNull DataStoreConflictData<T> conflictData,
-                    @NonNull Consumer<DataStoreConflictHandlerResult> onResult) {
-                handlerInvocationsRemainingCount.countDown();
-            }
-        };
         when(configurationProvider.getConfiguration())
             .thenReturn(DataStoreConfiguration.builder()
-                .conflictHandler(handler)
+                .conflictHandler((conflictData, onDecision) ->
+                    handlerInvocationsRemainingCount.countDown()
+                )
                 .build()
             );
 
