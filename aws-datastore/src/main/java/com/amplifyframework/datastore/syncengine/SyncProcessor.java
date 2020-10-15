@@ -157,7 +157,7 @@ final class SyncProcessor {
             .doOnError(failureToSync -> {
                 LOG.warn("Initial cloud sync failed.", failureToSync);
                 DataStoreErrorHandler dataStoreErrorHandler =
-                    dataStoreConfigurationProvider.getConfiguration().getDataStoreErrorHandler();
+                    dataStoreConfigurationProvider.getConfiguration().getErrorHandler();
                 dataStoreErrorHandler.accept(new DataStoreException(
                     "Initial cloud sync failed.", failureToSync,
                     "Check your internet connection."
