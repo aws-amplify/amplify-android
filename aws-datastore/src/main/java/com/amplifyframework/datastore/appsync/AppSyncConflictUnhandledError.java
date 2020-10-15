@@ -43,10 +43,10 @@ import java.util.Objects;
  *     AppSync Conflict Detection & Sync Errors
  *     </a>
  */
-public final class ConflictUnhandledError<T extends Model> {
+public final class AppSyncConflictUnhandledError<T extends Model> {
     private final ModelWithMetadata<T> serverVersion;
 
-    private ConflictUnhandledError(ModelWithMetadata<T> serverVersion) {
+    private AppSyncConflictUnhandledError(ModelWithMetadata<T> serverVersion) {
         this.serverVersion = serverVersion;
     }
 
@@ -60,7 +60,7 @@ public final class ConflictUnhandledError<T extends Model> {
      *         If there is no ConflictUnhandledError in the list, returns null.
      */
     @Nullable
-    public static <T extends Model> ConflictUnhandledError<T> findFirst(
+    public static <T extends Model> AppSyncConflictUnhandledError<T> findFirst(
             @NonNull Class<T> typeOfConflictingData,
             @Nullable List<GraphQLResponse.Error> errors) {
         if (Empty.check(errors)) {
@@ -82,7 +82,7 @@ public final class ConflictUnhandledError<T extends Model> {
             Type type = TypeMaker.getParameterizedType(ModelWithMetadata.class, typeOfConflictingData);
             String serverVersionJson = gson.toJson(appSyncExtensions.getData());
             ModelWithMetadata<T> modelWithMetadata = gson.fromJson(serverVersionJson, type);
-            return new ConflictUnhandledError<>(Objects.requireNonNull(modelWithMetadata));
+            return new AppSyncConflictUnhandledError<>(Objects.requireNonNull(modelWithMetadata));
         }
 
         return null;
@@ -105,7 +105,7 @@ public final class ConflictUnhandledError<T extends Model> {
             return false;
         }
 
-        ConflictUnhandledError<?> that = (ConflictUnhandledError<?>) thatObject;
+        AppSyncConflictUnhandledError<?> that = (AppSyncConflictUnhandledError<?>) thatObject;
 
         return getServerVersion().equals(that.getServerVersion());
     }
