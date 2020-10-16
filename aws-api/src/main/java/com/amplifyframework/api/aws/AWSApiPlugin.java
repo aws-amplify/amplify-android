@@ -47,6 +47,7 @@ import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.util.UserAgent;
 
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.exceptions.CognitoParameterInvalidException;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -371,7 +372,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             identityValue = CognitoJWTParser
                     .getPayload(getAuthToken(authType))
                     .getString(identityClaim);
-        } catch (JSONException error) {
+        } catch (JSONException | CognitoParameterInvalidException error) {
             // Could not read identity value from the token...
             // Exception will be thrown so do nothing for now
         }
@@ -403,7 +404,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                     groups.add(jsonGroups.getString(i));
                 }
             }
-        } catch (JSONException error) {
+        } catch (JSONException | CognitoParameterInvalidException error) {
             throw new ApiException(
                     "Failed to parse groups from auth rule.",
                     error,
@@ -415,7 +416,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     private String getAuthToken(AuthorizationType authType) throws ApiException {
-        final String token;
         switch (authType) {
             case AMAZON_COGNITO_USER_POOLS:
                 CognitoUserPoolsAuthProvider cognitoProvider = authProvider.getCognitoUserPoolsAuthProvider();
