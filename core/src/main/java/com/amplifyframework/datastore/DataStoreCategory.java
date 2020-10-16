@@ -183,6 +183,16 @@ public final class DataStoreCategory
             onObservationStarted, onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
 
+    @Override
+    public void start(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        getSelectedPlugin().start(onComplete, onError);
+    }
+
+    @Override
+    public void stop(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        getSelectedPlugin().stop(onComplete, onError);
+    }
+
     /**
      * {@inheritDoc}
      */

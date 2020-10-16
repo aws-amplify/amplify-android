@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -50,6 +51,7 @@ import io.reactivex.rxjava3.core.Observable;
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -156,7 +158,13 @@ public final class OrchestratorTest {
         orchestrator.start();
 
         // Try to start it in a new thread.
-        new Thread(() -> orchestrator.start()).start();
+        new Thread(() -> {
+            try {
+                orchestrator.start();
+            } catch (DataStoreException exception) {
+                fail("Error occurred starting the orchestrator." + exception);
+            }
+        }).start();
         // Try to start it again on a current thread.
         orchestrator.start();
 
