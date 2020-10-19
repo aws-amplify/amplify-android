@@ -15,19 +15,31 @@ env:
   shell: /bin/sh
 phases:
   install:
+    runtime-versions:
+      java: corretto8
+      android: 29
     commands:
       - echo 'Install phase starting'
+      - export APP_ID="`aws amplify list-apps --output text --query \"apps[?name == 'InstrumentedTests'].appId\"`"
+      - npm install -g @aws-amplify/cli
     finally:
       - echo 'Install phase completed.'
   pre_build:
     commands:
       - echo 'Pre-build phase starting'
+      - >
+        amplify pull \
+            --amplify "{\"projectName\":\"InstrumentedTestsBackend\",\"appId\":\"$APP_ID\",\"envName\":\"main\",\"defaultEditor\":\"code\"}" \
+            --frontend "{\"frontend\":\"android\",\"config\":{\"ResDir\":\"aws-datastore/src/androidTest/res\"}}" \
+            --providers "{\"awscloudformation\":{\"configLevel\":\"general\",\"useProfile\":false,\"region\":\"us-east-1\"}}" --yes \
+            --yes
     finally:
       - echo 'Pre-build phase completed.'
   build:
     commands:
       - echo 'Build phase starting'
       - JAVA_HOME=$JDK_8_HOME ./gradlew build
+      - JAVA_HOME=$JDK_8_HOME ./gradlew assembleAndroidTest
     finally:
       - echo 'Build phase completed.'
   post_build:
@@ -44,8 +56,8 @@ reports:
       - allTests/*
     discard-paths: yes
     file-format: JUNITXML
-#artifacts:
-#  files:
-#    - '**/*.apk'
-#  name: amplify-android-cat-apks
-#  discard-paths: yes
+artifacts:
+  files:
+    - '**/*.apk'
+  name: AmplifyAndroidCatApks
+  discard-paths: yes
