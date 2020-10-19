@@ -390,7 +390,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     private ArrayList<String> getUserGroups(AuthorizationType authType) throws ApiException {
-        // TODO: this doesn't work with OIDC right now. Implement custom groups claim.
+        // Custom groups claim isn't supported yet.
+        if (!AuthorizationType.AMAZON_COGNITO_USER_POOLS.equals(authType)) {
+            throw new ApiException("Custom groups claim is not supported yet.",
+                    "Please use Amazon Cognito User Pools to authorize your API.");
+        }
+
         ArrayList<String> groups = new ArrayList<>();
         final String GROUPS_KEY = "cognito:groups";
 
