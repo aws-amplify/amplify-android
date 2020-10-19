@@ -82,7 +82,7 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("SameParameterValue")
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:datastore-test");
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:datastore:test");
 
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
     private Context context;
@@ -125,7 +125,7 @@ public final class AWSDataStorePluginTest {
      */
     @Test
     public void startInLocalMode() throws AmplifyException {
-//        //Configure DataStore with an empty config (All defaults)
+        // Configure DataStore with an empty config (All defaults)
         HubAccumulator dataStoreReadyObserver =
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1).start();
         ApiCategory emptyApiCategory = spy(ApiCategory.class);

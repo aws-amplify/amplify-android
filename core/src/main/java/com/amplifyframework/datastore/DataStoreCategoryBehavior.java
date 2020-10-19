@@ -227,8 +227,10 @@ public interface DataStoreCategoryBehavior {
     );
 
     /**
-     * Starts the DataStore.  This only needs to be called if you wish to start eagerly.  If you don't call it,
-     * it will be called automatically prior to executing any other operations (#query, #save, #delete, #observe).
+     * Starts the DataStore's synchronization with a remote system, if DataStore is configured to support
+     * remote synchronization. This only needs to be called if you wish to start the synchronization eagerly.
+     * If you don't call start(), the synchronization will start automatically, prior to executing any other
+     * operations (#query, #save, #delete, #observe).
      *
      * @param onComplete Invoked after DataStore is initialized.  This does not block until subscriptions and
      *                  sync are complete.  To block until sync and subscriptions are complete, use
