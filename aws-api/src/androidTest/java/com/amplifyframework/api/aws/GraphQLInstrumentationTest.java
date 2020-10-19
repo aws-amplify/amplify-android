@@ -123,12 +123,12 @@ public final class GraphQLInstrumentationTest {
     @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void subscriptionReceivesMutationOverCognitoUserPools() throws
             ApiException, JSONException, SynchronousMobileClient.MobileClientException {
-        currentApiName = API_WITH_COGNITO_USER_POOLS;
+        /*currentApiName = API_WITH_COGNITO_USER_POOLS;
         JSONObject credentials = Resources.readAsJson(getApplicationContext(), R.raw.credentials);
         String username = credentials.getString("username");
         String password = credentials.getString("password");
         mobileClient.signIn(username, password);
-        subscriptionReceivesMutation();
+        subscriptionReceivesMutation();*/
     }
 
     /**
