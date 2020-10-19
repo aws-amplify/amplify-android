@@ -236,6 +236,68 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         ));
     }
 
+    private void waitForInitialization(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        Completable.create(emitter -> {
+            categoryInitializationsPending.await();
+            emitter.onComplete();
+        })
+                .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        () -> onComplete.call(),
+                        throwable -> onError.accept(new DataStoreException("Request failed because DataStore is not " +
+                                "initialized.", throwable, "Retry your request."))
+                );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void start(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        waitForInitialization(() -> {
+            try {
+                orchestrator.start();
+            } catch (DataStoreException exception) {
+                onError.accept(exception);
+                return;
+            }
+            onComplete.call();
+        }, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stop(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        waitForInitialization(() -> orchestrator.stop()
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        onComplete::call,
+                        error -> onError.accept(new DataStoreException("Failed to stop DataStore.", error,
+                                "Retry your request."))), onError);
+    }
+
+    /**
+     * Stops all synchronization processes and invokes the clear method of the underlying storage adapter. Any items
+     * pending synchronization in the outbound queue will be lost. Synchronization processes will be restarted on the
+     * next interaction with the DataStore.
+     *
+     * @param onComplete Invoked if the call is successful.
+     * @param onError Invoked if not successful
+     */
+    @SuppressWarnings("unused")
+    @Override
+    public void clear(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        stop(() -> Completable.create(emitter -> sqliteStorageAdapter.clear(emitter::onComplete, emitter::onError))
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(onComplete::call,
+                                throwable -> onError.accept(new DataStoreException("Clear operation failed",
+                                        throwable, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION))),
+                onError);
+    }
+
     /**
      * Terminate use of the plugin.
      */
@@ -443,68 +505,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
         onObservationFailure.accept(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void start(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
-        waitForInitialization(() -> {
-            try {
-                orchestrator.start();
-            } catch (DataStoreException exception) {
-                onError.accept(exception);
-                return;
-            }
-            onComplete.call();
-        }, onError);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void stop(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
-        waitForInitialization(() -> orchestrator.stop()
-            .subscribeOn(Schedulers.io())
-            .subscribe(
-                onComplete::call,
-                error -> onError.accept(new DataStoreException("Failed to stop DataStore.", error,
-                        "Retry your request."))), onError);
-    }
-
-    /**
-     * Stops all synchronization processes and invokes the clear method of the underlying storage adapter. Any items
-     * pending synchronization in the outbound queue will be lost. Synchronization processes will be restarted on the
-     * next interaction with the DataStore.
-     *
-     * @param onComplete Invoked if the call is successful.
-     * @param onError Invoked if not successful
-     */
-    @SuppressWarnings("unused")
-    @Override
-    public void clear(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
-        stop(() -> Completable.create(emitter -> sqliteStorageAdapter.clear(emitter::onComplete, emitter::onError))
-                .subscribeOn(Schedulers.io())
-                .subscribe(onComplete::call,
-                    throwable -> onError.accept(new DataStoreException("Clear operation failed",
-                            throwable, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION))),
-                onError);
-    }
-
-    private void waitForInitialization(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
-        Completable.create(emitter -> {
-            categoryInitializationsPending.await();
-            emitter.onComplete();
-        })
-            .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            .subscribeOn(Schedulers.io())
-            .subscribe(
-                    () -> onComplete.call(),
-                    throwable -> onError.accept(new DataStoreException("Request failed because DataStore is not " +
-                            "initialized.", throwable, "Retry your request."))
-            );
     }
 
     /**
