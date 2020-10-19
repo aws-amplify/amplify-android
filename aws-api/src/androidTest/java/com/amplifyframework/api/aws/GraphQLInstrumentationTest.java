@@ -22,12 +22,10 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
 import com.amplifyframework.testutils.Assets;
-import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,7 +37,6 @@ import java.util.UUID;
 
 import io.reactivex.rxjava3.observers.TestObserver;
 
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 
 /**
