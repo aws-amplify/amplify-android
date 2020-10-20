@@ -25,15 +25,19 @@ Guide](https://docs.amplify.aws/start/q/integration/android).
 
 ## Categories
 
-| Category       | AWS Provider | Description                                |
-|----------------|--------------|--------------------------------------------|
-| Authentication | Cognito      | Building blocks to create auth experiences |
-| Storage        | S3           | Manages content in public, protected, private storage buckets |
-| DataStore      | AppSync      | Programming model for shared and distributed data, with simple online/offline synchronization |
-| API (GraphQL)  | AppSync      | Interact with your GraphQL or AppSync endpoint |
-| API (REST)     | API Gateway  | Sigv4 signing and AWS auth for API Gateway and other REST endpoints |
-| Analytics      | Pinpoint     | Collect Analytics data for your app including tracking user sessions |
-| Predictions    | Various      | Connect your app with machine learning services like NLP, computer vision, TTS, and more. |
+| Category                                                                                        | AWS Provider | Description                                |
+|-------------------------------------------------------------------------------------------------|--------------|--------------------------------------------|
+| **[Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)**      | Cognito      | Building blocks to create auth experiences |
+| **[Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android)**          | S3           | Manages content in public, protected, private storage buckets |
+| **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**      | AppSync      | Programming model for shared and distributed data, with simple online/offline synchronization |
+| **[API (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)** | AppSync      | Interact with your GraphQL or AppSync endpoint |
+| **[API (REST)](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/android)**       | API Gateway  | Sigv4 signing and AWS auth for API Gateway and other REST endpoints |
+| **[Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android)**      | Pinpoint     | Collect Analytics data for your app including tracking user sessions |
+| **[Predictions](https://docs.amplify.aws/lib/predictions/getting-started/q/platform/android)**  | Various*     | Connect your app with machine learning services like NLP, computer vision, TTS, and more. |
+
+\* Predictions utilizes a range of Amazon's Machine Learning services,
+including: Amazon Comprehend, Amazon Polly, Amazon Rekognition, Amazon
+Textract, and Amazon Translate.
 
 ## Platform Support
 
