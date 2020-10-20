@@ -7,45 +7,33 @@
    <img src="https://codecov.io/gh/aws-amplify/amplify-android/branch/main/graph/badge.svg" />
  </a>
 
+-------------------------------------------------------
 
-AWS Amplify provides a high-level interface to perform different
-**categories** of cloud operations. Each category is fulfilled by a
-**plugin**. You specify which plugins to use during setup.
+The Amplify Android library is AWS' preferred mechanism for interacting
+with AWS services from an Android device.
 
-The default plugins that we provide are designed to facilitate interaction with
-Amazon Web Services (AWS). But, the Amplify Framework is designed to be
-extensible to any other backend or service.
+The library provides a high-level interface to perform different
+**categories** of cloud operations. Each category may be fulfilled by a
+**plugin**, which you configure during setup.
+
+The default plugins that we provide are designed to facilitate
+interaction with Amazon Web Services (AWS). But, the Amplify Framework
+is designed to be extensible to any other backend or service.
 
 To familiarize yourself with Amplify, checkout our [Getting Started
 Guide](https://docs.amplify.aws/start/q/integration/android).
 
 ## Categories
 
-- **[Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)**
-  APIs and building blocks for developers who want to create user authentication
-  experiences.
-- **[Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android)**
-  Provides a simple mechanism for managing user content for your app in public,
-  protected or private storage buckets
-- **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**
-  Provides a programming model for leveraging shared and distributed data
-  without writing additional code for offline and online scenarios.
-- **[API
-  (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)**
-  Interact with your GraphQL server or AWS AppSync API with an easy-to-use &
-  configured GraphQL client.
-- **[API
-  (REST)](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/android)**
-  Provides a simple solution when making HTTP requests. It provides an
-  automatic, lightweight signing process which complies with AWS Signature
-  Version 4.
-- **[Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android)**
-  Easily collect analytics data for your app. Analytics data includes user
-  sessions and other custom events.
-- **[Predictions](https://docs.amplify.aws/lib/predictions/getting-started/q/platform/android)**
-  Connect your application with machine learning cloud services to enhance your
-  application with natural language processing, computer vision, text to speech,
-  and more.
+| Category       | AWS Provider | Description                                |
+|----------------|--------------|--------------------------------------------|
+| Authentication | Cognito      | Building blocks to create auth experiences |
+| Storage        | S3           | Manages content in public, protected, private storage buckets |
+| DataStore      | AppSync      | Programming model for shared and distributed data, with simple online/offline syncrhonization |
+| API (GraphQL)  | AppSync      | Interact with your GraphQL or AppSync endpoint |
+| API (REST)     | API Gateway  | Sig4 signing and AWS auth for API Gateway and other REST endpoints |
+| Analytics      | Pinpoint     | Collect Analytics data for your app including tracking user sessions |
+| Predictions    | Various      | Connect your app with machine learning services like NLP, computer vision, TTS, and more. |
 
 ## Platform Support
 
