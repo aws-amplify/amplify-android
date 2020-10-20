@@ -119,8 +119,7 @@ public final class AWSApiPluginTest {
                 .put("endpointType", "GraphQL")
                 .put("endpoint", baseUrl.url())
                 .put("region", "us-east-1")
-                .put("authorizationType", "API_KEY")
-                .put("apiKey", "api-key")
+                .put("authorizationType", "AMAZON_COGNITO_USER_POOLS")
             );
 
         this.plugin = new AWSApiPlugin(ApiAuthProviders.builder()
