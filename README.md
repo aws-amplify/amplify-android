@@ -29,7 +29,7 @@ Guide](https://docs.amplify.aws/start/q/integration/android).
 |----------------|--------------|--------------------------------------------|
 | Authentication | Cognito      | Building blocks to create auth experiences |
 | Storage        | S3           | Manages content in public, protected, private storage buckets |
-| DataStore      | AppSync      | Programming model for shared and distributed data, with simple online/offline syncrhonization |
+| DataStore      | AppSync      | Programming model for shared and distributed data, with simple online/offline synchronization |
 | API (GraphQL)  | AppSync      | Interact with your GraphQL or AppSync endpoint |
 | API (REST)     | API Gateway  | Sigv4 signing and AWS auth for API Gateway and other REST endpoints |
 | Analytics      | Pinpoint     | Collect Analytics data for your app including tracking user sessions |
