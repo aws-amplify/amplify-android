@@ -31,7 +31,7 @@ Guide](https://docs.amplify.aws/start/q/integration/android).
 | Storage        | S3           | Manages content in public, protected, private storage buckets |
 | DataStore      | AppSync      | Programming model for shared and distributed data, with simple online/offline syncrhonization |
 | API (GraphQL)  | AppSync      | Interact with your GraphQL or AppSync endpoint |
-| API (REST)     | API Gateway  | Sig4 signing and AWS auth for API Gateway and other REST endpoints |
+| API (REST)     | API Gateway  | Sigv4 signing and AWS auth for API Gateway and other REST endpoints |
 | Analytics      | Pinpoint     | Collect Analytics data for your app including tracking user sessions |
 | Predictions    | Various      | Connect your app with machine learning services like NLP, computer vision, TTS, and more. |
 
@@ -116,4 +116,3 @@ and we'll get back to you.
 ## Contribute to the Project
 
 Please see the [Contributing Guidelines](./CONTRIBUTING.md).
-
