@@ -247,7 +247,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                         () -> onComplete.call(),
                         throwable -> onError.accept(new DataStoreException("Request failed because DataStore is not " +
                                 "initialized.", throwable, "Retry your request."))
-                );
+            );
     }
 
     /**
@@ -274,9 +274,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         waitForInitialization(() -> orchestrator.stop()
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        onComplete::call,
-                        error -> onError.accept(new DataStoreException("Failed to stop DataStore.", error,
-                                "Retry your request."))), onError);
+                    onComplete::call,
+                    error -> onError.accept(new DataStoreException("Failed to stop DataStore.", error,
+                            "Retry your request."))), onError);
     }
 
     /**
@@ -293,8 +293,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         stop(() -> Completable.create(emitter -> sqliteStorageAdapter.clear(emitter::onComplete, emitter::onError))
                         .subscribeOn(Schedulers.io())
                         .subscribe(onComplete::call,
-                                throwable -> onError.accept(new DataStoreException("Clear operation failed",
-                                        throwable, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION))),
+                            throwable -> onError.accept(new DataStoreException("Clear operation failed",
+                                    throwable, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION))),
                 onError);
     }
 
