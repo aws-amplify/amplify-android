@@ -44,6 +44,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
 
 import java.util.Collections;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Observable;
@@ -149,24 +150,32 @@ public final class OrchestratorTest {
     /**
      * Verify preventing concurrent state transitions from happening.
      * @throws AmplifyException Not expected.
+     * @throws InterruptedException Not expected.
      */
     @SuppressWarnings("unchecked") // Casting any(GraphQLRequest.class)
     @Test
-    public void preventConcurrentStateTransitions() throws AmplifyException {
+    public void preventConcurrentStateTransitions() throws AmplifyException, InterruptedException {
 
         // Arrange: orchestrator is running
         orchestrator.start();
 
         // Try to start it in a new thread.
+        CountDownLatch startOrchestratorInNewThreadLatch = new CountDownLatch(1);
         new Thread(() -> {
             try {
                 orchestrator.start();
+                startOrchestratorInNewThreadLatch.countDown();
             } catch (DataStoreException exception) {
-                fail("Error occurred starting the orchestrator." + exception);
+                // No need to do anything here.  Test will fail down below when latch times out.
             }
         }).start();
+
         // Try to start it again on a current thread.
         orchestrator.start();
+
+        if (!startOrchestratorInNewThreadLatch.await(2, TimeUnit.SECONDS)) {
+            fail("Failed to start orchestrator on a background thread.");
+        }
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         verify(mockApi, times(1)).query(any(GraphQLRequest.class), any(), any());
