@@ -69,7 +69,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the device information
      * screen when the view device information button is pressed.
      */
-    Ignore
+    @Ignore
     public void testNavigationToDeviceInfoScreen() {
         testNavigationOnButtonPress(R.id.device_button, R.id.device_fragment);
     }
@@ -78,7 +78,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the logs screen when
      * the view logs button is pressed.
      */
-    Ignore
+    @Ignore
     public void testNavigationToLogsScreen() {
         testNavigationOnButtonPress(R.id.logs_button, R.id.logs_fragment);
     }
@@ -87,7 +87,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the file issue screen
      * when the file issue button is pressed.
      */
-    Ignore
+    @Ignore
     public void testNavigationToFileIssueScreen() {
         testNavigationOnButtonPress(R.id.file_issue_button, R.id.file_issue_fragment);
     }
