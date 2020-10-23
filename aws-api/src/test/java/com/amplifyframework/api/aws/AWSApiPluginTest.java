@@ -17,34 +17,20 @@ package com.amplifyframework.api.aws;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
-import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelPagination;
 import com.amplifyframework.api.graphql.model.ModelQuery;
-import com.amplifyframework.api.graphql.model.ModelSubscription;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.NoOpConsumer;
-import com.amplifyframework.core.model.AuthStrategy;
-import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelOperation;
-import com.amplifyframework.core.model.annotations.AuthRule;
-import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testutils.Await;
-import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
@@ -56,7 +42,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -72,11 +57,8 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link AWSApiPlugin}.
