@@ -13,10 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework;
+package com.amplifyframework.api.aws.auth;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.aws.ApiAuthProviders;
