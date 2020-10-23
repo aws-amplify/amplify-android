@@ -59,7 +59,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the environment information
      * screen when the view environment information button is pressed.
      */
-    @Ignore
+    @Ignore("DeviceFarm does not appear to recognize ignore at the class level.")
     public void testNavigationToEnvInfoScreen() {
         testNavigationOnButtonPress(R.id.env_button, R.id.environment_fragment);
     }
@@ -68,7 +68,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the device information
      * screen when the view device information button is pressed.
      */
-    @Ignore
+    @Ignore("DeviceFarm does not appear to recognize ignore at the class level.")
     public void testNavigationToDeviceInfoScreen() {
         testNavigationOnButtonPress(R.id.device_button, R.id.device_fragment);
     }
@@ -77,7 +77,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the logs screen when
      * the view logs button is pressed.
      */
-    @Ignore
+    @Ignore("DeviceFarm does not appear to recognize ignore at the class level.")
     public void testNavigationToLogsScreen() {
         testNavigationOnButtonPress(R.id.logs_button, R.id.logs_fragment);
     }
@@ -86,7 +86,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the file issue screen
      * when the file issue button is pressed.
      */
-    @Ignore
+    @Ignore("DeviceFarm does not appear to recognize ignore at the class level.")
     public void testNavigationToFileIssueScreen() {
         testNavigationOnButtonPress(R.id.file_issue_button, R.id.file_issue_fragment);
     }
