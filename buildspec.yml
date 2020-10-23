@@ -18,6 +18,7 @@ phases:
     runtime-versions:
       java: corretto8
       android: 29
+      node: 12
     commands:
       - echo 'Install phase starting'
       - export APP_ID="`aws amplify list-apps --output text --query \"apps[?name == 'InstrumentedTests'].appId\"`"
