@@ -1,6 +1,6 @@
 {
   "query": "subscription OnCreateOwnerAuth($owner: String!) {\n  onCreateOwnerAuth(owner: $owner) {\n    id\n    title\n  }\n}\n",
   "variables": {
-    "owner": "Facebook_100003287976754"
+    "owner": "facebook-test-user"
   }
 }
