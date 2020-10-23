@@ -286,21 +286,14 @@ public final class OwnerBasedAuthTest {
     }
 
     private static final class FakeCognitoAuthProvider implements CognitoUserPoolsAuthProvider {
-        private static final String USERNAME = "Facebook_100003287976754";
-        private static final String ID_TOKEN = "eyJraWQiOiJnMmtYXC8rSXRmNFwvcmwyODhBSTNCMk9kNDVsdEU4" +
-                "ZUtIZmF0RkNRWEVDMmM9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiI2YTRjZjMxMi01MWM5LTQyNjAtYjRh" +
-                "ZC0wMDdjMDdkZDdmMzMiLCJjb2duaXRvOmdyb3VwcyI6WyJ1cy13ZXN0LTJfejVWM1ZQa1h5X0ZhY2Vib29" +
-                "rIiwiQWRtaW4iXSwidG9rZW5fdXNlIjoiYWNjZXNzIiwic2NvcGUiOiJhd3MuY29nbml0by5zaWduaW4udX" +
-                "Nlci5hZG1pbiBwaG9uZSBvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF1dGhfdGltZSI6MTU5OTY4MTk2Mywia" +
-                "XNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLXdlc3QtMi5hbWF6b25hd3MuY29tXC91cy13ZXN0LTJf" +
-                "ejVWM1ZQa1h5IiwiZXhwIjoxNTk5NzU3OTE3LCJpYXQiOjE1OTk3NTQzMTcsInZlcnNpb24iOjIsImp0aSI" +
-                "6ImQyNzYxMDg3LTliNmYtNDYzMS1iYWJjLTY0ZWQzM2UyNGQzMiIsImNsaWVudF9pZCI6IjNjZDdjcGJ1N2" +
-                "huYzlka2xoMmZsamg3am0xIiwidXNlcm5hbWUiOiJGYWNlYm9va18xMDAwMDMyODc5NzY3NTQifQ.FAKE-S" +
-                "IGNATURE";
+        private static final String USERNAME = "facebook-test-user";
 
         @Override
         public String getLatestAuthToken() {
-            return ID_TOKEN;
+            return FakeJWTToken.builder()
+                    .putPayload("username", USERNAME)
+                    .build()
+                    .asString();
         }
 
         @Override
@@ -310,16 +303,14 @@ public final class OwnerBasedAuthTest {
     }
 
     private static final class FakeOidcAuthProvider implements OidcAuthProvider {
-        private static final String SUB = "google-oauth2|112385265530942831934";
-        private static final String ID_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkNxUDlx" +
-                "a1RQa2s5ZHVRN042SWFXVCJ9.eyJodHRwczovL215YXBwLmNvbS9jbGFpbXMvZ3JvdXBzIjpbImFkbWlucy" +
-                "JdLCJpc3MiOiJodHRwczovL3JhcGhraW0udXMuYXV0aDAuY29tLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8M" +
-                "TEyMzg1MjY1NTMwOTQyODMxOTM0IiwiYXVkIjoiNmpSUVJueFd6blg1N3Z5TTQwSmxHZXlGdGcwdnZaMkwi" +
-                "LCJpYXQiOjE2MDMzODU1MDAsImV4cCI6MTYwMzQyMTUwMCwibm9uY2UiOiJub25jZSJ9.FAKE-SIGNATURE";
+        private static final String SUB = "google-test-user";
 
         @Override
         public String getLatestAuthToken() {
-            return ID_TOKEN;
+            return FakeJWTToken.builder()
+                    .putPayload("sub", SUB)
+                    .build()
+                    .asString();
         }
     }
 
@@ -346,4 +337,15 @@ public final class OwnerBasedAuthTest {
 
     @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.GROUPS)})
     private abstract static class Group implements Model {}
+
+    @ModelConfig(authRules = {
+            @AuthRule(allow = AuthStrategy.GROUPS, groupClaim = "http://myapp.com/claims/groups")
+    })
+    private abstract static class GroupCustomClaim implements Model {}
+
+    @ModelConfig(authRules = {
+            @AuthRule(allow = AuthStrategy.GROUPS, groupClaim = "http://app1.com/claims/groups"),
+            @AuthRule(allow = AuthStrategy.GROUPS, groupClaim = "http://app2.com/claims/groups")
+    })
+    private abstract static class GroupMultiClaims implements Model {}
 }
