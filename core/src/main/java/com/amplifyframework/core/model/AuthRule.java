@@ -144,6 +144,8 @@ public final class AuthRule {
      */
     @NonNull
     public List<ModelOperation> getOperationsOrDefault() {
+        // Default to returning a list of every ModelOperation:
+        // CREATE, READ, UPDATE, DELETE
         return Immutable.of(Empty.check(operations)
             ? Arrays.asList(ModelOperation.values())
             : operations);
@@ -161,7 +163,7 @@ public final class AuthRule {
 
         AuthRule authRule = (AuthRule) object;
 
-        return ObjectsCompat.equals(authStrategy, authRule.authStrategy) &&
+        return authStrategy == authRule.authStrategy &&
                 ObjectsCompat.equals(ownerField, authRule.ownerField) &&
                 ObjectsCompat.equals(identityClaim, authRule.identityClaim) &&
                 ObjectsCompat.equals(groupsField, authRule.groupsField) &&
