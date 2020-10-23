@@ -22,7 +22,7 @@ phases:
     commands:
       - echo 'Install phase starting'
       - export APP_ID="`aws amplify list-apps --output text --query \"apps[?name == 'InstrumentedTests'].appId\"`"
-      - npm install -g @aws-amplify/cli
+      - npm install -g @aws-amplify/cli@4.30.0
     finally:
       - echo 'Install phase completed.'
   pre_build:
