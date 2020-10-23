@@ -86,9 +86,9 @@ public final class AuthRule {
      * Used to specify a custom claim.
      * Defaults to "username" when using AuthStrategy.OWNER.
      *
-     * Note: CLI has been incorrectly generating a value of "cognito:username"
-     * so we also check for this incorrect default value and convert it to the
-     * proper default of "username".
+     * Note: An older version of the CLI incorrectly generated a value of "cognito:username"
+     * so we also check for this value and convert it to the proper default of "username" for 
+     * backwards compatibility.
      *
      * @return identity claim
      */
