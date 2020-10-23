@@ -22,6 +22,8 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
+import com.amplifyframework.core.model.AuthRule;
+import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.types.JavaFieldType;
@@ -243,6 +245,12 @@ public final class SelectionSet {
                     result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
                 } else {
                     result.add(new SelectionSet(fieldName, null));
+                }
+                for (AuthRule authRule : schema.getAuthRules()) {
+                    if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+                        result.add(new SelectionSet(authRule.getOwnerFieldOrDefault(), null));
+                        break;
+                    }
                 }
             }
             for (String fieldName : requestOptions.modelMetaFields()) {
