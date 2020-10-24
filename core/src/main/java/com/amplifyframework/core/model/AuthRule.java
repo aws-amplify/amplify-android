@@ -54,6 +54,28 @@ public final class AuthRule {
     }
 
     /**
+     * Construct the AuthRule object from the builder.
+     * For internal use only.
+     */
+    private AuthRule(@NonNull AuthRule.Builder builder) {
+        this.authStrategy = builder.authStrategy;
+        this.ownerField = builder.ownerField;
+        this.identityClaim = builder.identityClaim;
+        this.groupClaim = builder.groupClaim;
+        this.groups = builder.groups;
+        this.groupsField = builder.groupsField;
+        this.operations = builder.operations;
+    }
+
+    /**
+     * Return the builder object.
+     * @return the builder object.
+     */
+    public static AuthRule.Builder builder() {
+        return new AuthRule.Builder();
+    }
+
+    /**
      * Returns the type of strategy for this {@link AuthRule}.
      * @return the type of strategy for this {@link AuthRule}
      */
@@ -160,5 +182,97 @@ public final class AuthRule {
                 ", groupsField='" + groupsField + '\'' +
                 ", operations=" + operations + '\'' +
                 '}';
+    }
+
+    /**
+     * Builder class for {@link AuthRule}.
+     */
+    public static final class Builder {
+        private AuthStrategy authStrategy;
+        private String ownerField;
+        private String identityClaim;
+        private String groupClaim;
+        private List<String> groups;
+        private String groupsField;
+        private List<ModelOperation> operations;
+
+        /**
+         * Sets the auth strategy of this rule.
+         * @param authStrategy AuthStrategy is the type of auth strategy to use.
+         * @return the association model with given name
+         */
+        public AuthRule.Builder authStrategy(AuthStrategy authStrategy) {
+            this.authStrategy = authStrategy;
+            return this;
+        }
+
+        /**
+         * Sets the owner field of this rule.
+         * @param ownerField OwnerField is the owner authorization.
+         * @return the association model with give target name
+         */
+        public AuthRule.Builder ownerField(String ownerField) {
+            this.ownerField = ownerField;
+            return this;
+        }
+
+        /**
+         * Sets the identity claim of this rule.
+         * @param identityClaim IdentityClaim specifies a custom claim.
+         * @return the association model with given associated name
+         */
+        public AuthRule.Builder identityClaim(String identityClaim) {
+            this.identityClaim = identityClaim;
+            return this;
+        }
+
+        /**
+         * Sets the group claim of this rule.
+         * @param groupClaim GroupClaim specified a custom claim.
+         * @return the association model with given associated type
+         */
+        public AuthRule.Builder groupClaim(String groupClaim) {
+            this.groupClaim = groupClaim;
+            return this;
+        }
+        
+        /**
+         * Sets the groups this rule applies to.
+         * @param groups Groups is static group authorization.
+         * @return the association model with given associated type
+         */
+        public AuthRule.Builder groups(List<String> groups) {
+            this.groups = groups;
+            return this;
+        }
+
+        /**
+         * Sets the groupsField of this rule.
+         * @param groupsField GroupsField is for dynamic group authorization.
+         * @return the association model with given associated type
+         */
+        public AuthRule.Builder groupsField(String groupsField) {
+            this.groupsField = groupsField;
+            return this;
+        }
+
+        /**
+         * Sets the operations allowed for this rule.
+         * @param operations Operations specifies which {@link ModelOperation}s are protected by this {@link AuthRule}.
+         * @return the association model with given associated type
+         */
+        public AuthRule.Builder operations(List<ModelOperation> operations) {
+            this.operations = operations;
+            return this;
+        }
+
+        /**
+         * Builds an immutable AuthRule instance using
+         * builder object.
+         * @return AuthRule instance
+         */
+        public AuthRule build() {
+            return new AuthRule(this);
+        }
     }
 }
