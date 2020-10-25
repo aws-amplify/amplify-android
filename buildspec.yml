@@ -27,13 +27,13 @@ phases:
   pre_build:
     commands:
       - echo 'Pre-build phase starting'
+      - JAVA_HOME=$JDK_8_HOME ./gradlew pullInstrumentedTestAmplifyConfig
     finally:
       - echo 'Pre-build phase completed.'
   build:
     commands:
       - echo 'Build phase starting'
       - JAVA_HOME=$JDK_8_HOME ./gradlew build
-#      - JAVA_HOME=$JDK_8_HOME ./gradlew pullInstrumentedTestAmplifyConfig
       - JAVA_HOME=$JDK_8_HOME ./gradlew assembleAndroidTest
     finally:
       - echo 'Build phase completed.'
