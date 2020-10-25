@@ -128,11 +128,10 @@ subprojects { project ->
     }
 
     afterEvaluate {
+        assembleAndroidTest.dependsOn(pullInstrumentedTestAmplifyConfig)
         configureAndroidLibrary(project)
     }
 }
-
-assembleAndroidTest.dependsOn(pullInstrumentedTestAmplifyConfig)
 
 task runCodeBuildScript() {
     // Run from shell with AWS credentials to the account where the instrumented test backends are deployed.
