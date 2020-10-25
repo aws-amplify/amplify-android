@@ -1,6 +1,7 @@
 base_dir=`pwd`
 project_name=$1
 module_name=$2
+echo "base_dir=$base_dir"
 echo "Starting project $project_name"
 tmp_amplify_dir="$module_name/build/amplify_config/$project_name"
 
@@ -21,6 +22,7 @@ amplify pull \
   --frontend "{\"frontend\":\"android\",\"config\":{\"ResDir\":\"config_files\"}}" \
   --providers "{\"awscloudformation\":{\"configLevel\":\"general\",\"useProfile\":false,\"region\":\"us-east-1\"}}" \
   --yes
+echo "Current dir is $(pwd)"
 cp -R ./config_files/* $res_dir
 cd $base_dir
 echo "Completed project $project_name"
