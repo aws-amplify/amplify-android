@@ -1,0 +1,26 @@
+base_dir=`pwd`
+project_name=$1
+module_name=$2
+echo "Starting project $project_name"
+tmp_amplify_dir="$module_name/build/amplify_config/$project_name"
+
+echo "Removing $tmp_amplify_dir"
+rm -rf $tmp_amplify_dir
+
+echo "Creating $tmp_amplify_dir"
+mkdir -p $tmp_amplify_dir
+
+cd $tmp_amplify_dir
+res_dir="$base_dir/$module_name/src/androidTest/res"
+echo "Resource directory for $module_name: $res_dir"
+
+app_id=`aws amplify list-apps --query "apps[?name=='$project_name'].appId" --output text`
+echo "Amplify app_id=$app_id"
+amplify pull \
+  --amplify "{\"projectName\":\"$project_name\",\"appId\":\"$app_id\",\"envName\":\"main\",\"defaultEditor\":\"code\"}" \
+  --frontend "{\"frontend\":\"android\",\"config\":{\"ResDir\":\"config_files\"}}" \
+  --providers "{\"awscloudformation\":{\"configLevel\":\"general\",\"useProfile\":false,\"region\":\"us-east-1\"}}" \
+  --yes
+cp -R ./config_files/* $res_dir
+cd $base_dir
+echo "Completed project $project_name"

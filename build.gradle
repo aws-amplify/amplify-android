@@ -110,9 +110,31 @@ ext {
 }
 
 subprojects { project ->
+    task pullInstrumentedTestAmplifyConfig() {
+        doLast {
+            if (project.hasProperty('instrumentedTestAmplifyBackend')) {
+                def amplifyBackendProjectName = project.instrumentedTestAmplifyBackend
+                println("Getting config files for $amplifyBackendProjectName")
+                def amplifyPullCommand =  "$rootDir.path/scripts/pull_backend_config.sh"
+                exec {
+                    workingDir(rootDir.path)
+                    executable(amplifyPullCommand)
+                    args([amplifyBackendProjectName, project.name])
+                    standardOutput(System.out)
+                }
+            }
+        }
+
+    }
+
     afterEvaluate {
         configureAndroidLibrary(project)
     }
+}
+
+task runCodeBuildScript() {
+    // Run from shell with AWS credentials to the account where the instrumented test backends are deployed.
+    "./scripts/codebuild_build.sh -i aws/codebuild/amazonlinux2-x86_64-standard:3.0  -a build/codebuild-out -s . -d -m -c".execute()
 }
 
 private void configureAndroidLibrary(Project project) {
