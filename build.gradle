@@ -128,7 +128,7 @@ subprojects { project ->
     }
 
     afterEvaluate {
-        preBuild.dependsOn(pullInstrumentedTestAmplifyConfig)
+//        preBuild.dependsOn(pullInstrumentedTestAmplifyConfig)
         configureAndroidLibrary(project)
     }
 }
