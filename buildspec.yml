@@ -33,7 +33,7 @@ phases:
     commands:
       - echo 'Build phase starting'
       - JAVA_HOME=$JDK_8_HOME ./gradlew build
-      - JAVA_HOME=$JDK_8_HOME ./gradlew pullInstrumentedTestAmplifyConfig
+#      - JAVA_HOME=$JDK_8_HOME ./gradlew pullInstrumentedTestAmplifyConfig
       - JAVA_HOME=$JDK_8_HOME ./gradlew assembleAndroidTest
     finally:
       - echo 'Build phase completed.'
