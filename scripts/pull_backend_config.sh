@@ -24,5 +24,6 @@ amplify pull \
   --yes
 echo "Current dir is $(pwd)"
 cp -R ./config_files/* $res_dir
+ls -al $res_dir
 cd $base_dir
 echo "Completed project $project_name"
