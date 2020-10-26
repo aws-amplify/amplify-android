@@ -5,6 +5,14 @@ type OwnerAuth @model
   title: String!
 }
 
+type OwnerAuthExplicit @model
+@auth(rules: [{ allow: owner }])
+{
+  id: ID!
+  title: String!
+  owner: String
+}
+
 
 type OwnerAuthReadUpdateOnly @model
 @auth(rules: [{ allow: owner, operations: [create, delete] }])

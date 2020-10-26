@@ -18,6 +18,8 @@ package com.amplifyframework.api.aws;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
+import com.amplifyframework.testmodels.ownerauth.OwnerAuthExplicit;
 import com.amplifyframework.testmodels.parenting.Parent;
 import com.amplifyframework.testutils.Resources;
 
@@ -55,5 +57,33 @@ public class SelectionSetTest {
                 .requestOptions(new DefaultGraphQLRequestOptions())
                 .build();
         assertEquals(Resources.readAsString("selection-set-parent.txt"), selectionSet.toString() + "\n");
+    }
+
+    /**
+     * Test that owner field is added to selection set when a model has an @{link AuthStrategy.OWNER} auth strategy.
+     * @throws AmplifyException if a ModelSchema can't be derived from OwnerAuth.class
+     */
+    @Test
+    public void ownerFieldAddedForImplicitOwnerAuth() throws AmplifyException {
+        SelectionSet selectionSet = SelectionSet.builder()
+                .modelClass(OwnerAuth.class)
+                .operation(QueryType.GET)
+                .requestOptions(new DefaultGraphQLRequestOptions())
+                .build();
+        assertEquals(Resources.readAsString("selection-set-ownerauth.txt"), selectionSet.toString() + "\n");
+    }
+
+    /**
+     * Test that if owner field is explicitly defined on the model, the selection set is built without any errors.
+     * @throws AmplifyException if a ModelSchema can't be derived from OwnerAuth.class
+     */
+    @Test
+    public void ownerFieldNotAddedForExplicitOwnerAuth() throws AmplifyException {
+        SelectionSet selectionSet = SelectionSet.builder()
+                .modelClass(OwnerAuthExplicit.class)
+                .operation(QueryType.GET)
+                .requestOptions(new DefaultGraphQLRequestOptions())
+                .build();
+        assertEquals(Resources.readAsString("selection-set-ownerauth.txt"), selectionSet.toString() + "\n");
     }
 }

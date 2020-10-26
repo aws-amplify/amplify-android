@@ -22,6 +22,8 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
+import com.amplifyframework.core.model.AuthRule;
+import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.types.JavaFieldType;
@@ -58,19 +60,28 @@ public final class SelectionSet {
     }
 
     /**
+     * Constructor for a leaf node (no children).
+     * @param value String value of the field.
+     */
+    public SelectionSet(String value) {
+        this(value, Collections.emptySet());
+    }
+
+    /**
      * Default constructor.
      * @param value String value of the field
      * @param nodes Set of child nodes
      */
-    public SelectionSet(String value, Set<SelectionSet> nodes) {
+    public SelectionSet(String value, @NonNull Set<SelectionSet> nodes) {
         this.value = value;
-        this.nodes = nodes;
+        this.nodes = Objects.requireNonNull(nodes);
     }
 
     /**
      * Returns child nodes.
      * @return child nodes
      */
+    @NonNull
     public Set<SelectionSet> getNodes() {
         return nodes;
     }
@@ -205,7 +216,7 @@ public final class SelectionSet {
             Set<SelectionSet> paginatedSet = new HashSet<>();
             paginatedSet.add(new SelectionSet(requestOptions.listField(), nodes));
             for (String metaField : requestOptions.paginationFields()) {
-                paginatedSet.add(new SelectionSet(metaField, null));
+                paginatedSet.add(new SelectionSet(metaField));
             }
             return paginatedSet;
         }
@@ -220,7 +231,7 @@ public final class SelectionSet {
             Set<SelectionSet> result = new HashSet<>();
 
             if (depth == 0 && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())) {
-                result.add(new SelectionSet("id", null));
+                result.add(new SelectionSet("id"));
                 return result;
             }
 
@@ -242,11 +253,17 @@ public final class SelectionSet {
                 } else if (isCustomType(field)) {
                     result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
                 } else {
-                    result.add(new SelectionSet(fieldName, null));
+                    result.add(new SelectionSet(fieldName));
+                }
+                for (AuthRule authRule : schema.getAuthRules()) {
+                    if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+                        result.add(new SelectionSet(authRule.getOwnerFieldOrDefault()));
+                        break;
+                    }
                 }
             }
             for (String fieldName : requestOptions.modelMetaFields()) {
-                result.add(new SelectionSet(fieldName, null));
+                result.add(new SelectionSet(fieldName));
             }
             return result;
         }
@@ -263,7 +280,7 @@ public final class SelectionSet {
                 if (isCustomType(field)) {
                     result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
                 } else {
-                    result.add(new SelectionSet(fieldName, null));
+                    result.add(new SelectionSet(fieldName));
                 }
             }
             return result;
