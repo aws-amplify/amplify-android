@@ -395,10 +395,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             }
         } catch (JSONException | CognitoParameterInvalidException error) {
             throw new ApiException(
-                    "Attempted to subscribe to a model with group-based authorization without " + groupClaim + " " +
-                            "which was specified (or defaulted to) as the group claim.",
-                    "If you did not specify a custom groupClaim in your schema, make sure you are logged in. If " +
-                            "you did, check that the value you specified in your schema is present in the access key."
+                    "Failed to parse group claim from the token.",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
         }
 
