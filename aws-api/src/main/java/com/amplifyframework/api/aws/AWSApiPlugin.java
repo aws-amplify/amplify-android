@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -291,7 +292,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             try {
                 AppSyncGraphQLRequest<R> appSyncRequest = (AppSyncGraphQLRequest<R>) request;
                 AuthRule ownerRuleWithReadRestriction = null;
-                ArrayList<String> readAuthorizedGroups = new ArrayList<>();
+                Map<String, List<String>> readAuthorizedGroupsMap = new HashMap<>();
 
                 // Note that we are intentionally supporting only one owner rule with a READ operation at this time.
                 // If there is more than one, the operation will fail because AppSync generates a parameter for each
@@ -308,29 +309,30 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                             return null;
                         }
                     } else if (isReadRestrictingStaticGroup(authRule)) {
-                        readAuthorizedGroups.addAll(authRule.getGroups());
+                        String groupClaim = authRule.getGroupClaimOrDefault();
+                        List<String> groups = authRule.getGroups();
+                        List<String> readAuthorizedGroups = readAuthorizedGroupsMap.get(groupClaim);
+                        if (readAuthorizedGroups != null) {
+                            readAuthorizedGroups.addAll(groups);
+                        } else {
+                            readAuthorizedGroupsMap.put(groupClaim, new ArrayList<>(groups));
+                        }
                     }
                 }
 
                 // We only add the owner parameter to the subscription if there is an owner rule with a READ restriction
                 // and either there are no group auth rules with read access or there are but the user isn't in any of
                 // them.
-                if (ownerRuleWithReadRestriction != null && (
-                        readAuthorizedGroups.isEmpty() ||
-                        Collections.disjoint(readAuthorizedGroups, getUserGroups(
-                                clientDetails.apiConfiguration.getAuthorizationType()
-                        ))
-                    )
-                ) {
+                final AuthorizationType authType = clientDetails
+                        .getApiConfiguration()
+                        .getAuthorizationType();
+                if (ownerRuleWithReadRestriction != null
+                        && userNotInReadRestrictingGroups(readAuthorizedGroupsMap, authType)) {
+                    String idClaim = ownerRuleWithReadRestriction.getIdentityClaimOrDefault();
                     String key = ownerRuleWithReadRestriction.getOwnerFieldOrDefault();
-                    String type = "String!";
-                    String value = getIdentityValue(
-                            ownerRuleWithReadRestriction.getIdentityClaimOrDefault(),
-                            clientDetails.apiConfiguration.getAuthorizationType()
-                    );
-
+                    String value = getIdentityValue(idClaim, authType);
                     request = appSyncRequest.newBuilder()
-                            .variable(key, type, value)
+                            .variable(key, "String!", value)
                             .build();
                 }
             } catch (AmplifyException exception) {
@@ -361,63 +363,61 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     private boolean isReadRestrictingStaticGroup(AuthRule authRule) {
         return AuthStrategy.GROUPS.equals(authRule.getAuthStrategy())
-            && authRule.getGroups() != null && !authRule.getGroups().isEmpty()
+            && !authRule.getGroups().isEmpty()
             && authRule.getOperationsOrDefault().contains(ModelOperation.READ);
     }
 
     private String getIdentityValue(String identityClaim, AuthorizationType authType) throws ApiException {
-        String identityValue = null;
-
         try {
-            identityValue = CognitoJWTParser
+            return CognitoJWTParser
                     .getPayload(getAuthToken(authType))
                     .getString(identityClaim);
         } catch (JSONException | CognitoParameterInvalidException error) {
-            // Could not read identity value from the token...
-            // Exception will be thrown so do nothing for now
-        }
-
-        if (identityValue == null || identityValue.isEmpty()) {
             throw new ApiException(
-                    "Attempted to subscribe to a model with owner based authorization without " + identityClaim + " " +
-                    "which was specified (or defaulted to) as the identity claim.",
+                    "Attempted to subscribe to a model with owner-based authorization without " + identityClaim + " " +
+                            "which was specified (or defaulted to) as the identity claim.",
                     "If you did not specify a custom identityClaim in your schema, make sure you are logged in. If " +
                             "you did, check that the value you specified in your schema is present in the access key."
             );
         }
-
-        return identityValue;
     }
 
-    private ArrayList<String> getUserGroups(AuthorizationType authType) throws ApiException {
-        // Custom groups claim isn't supported yet.
-        if (!AuthorizationType.AMAZON_COGNITO_USER_POOLS.equals(authType)) {
-            throw new ApiException("Custom groups claim is not supported yet.",
-                    "Please use Amazon Cognito User Pools to authorize your API.");
-        }
-
+    private ArrayList<String> getUserGroups(String groupClaim, AuthorizationType authType) throws ApiException {
         ArrayList<String> groups = new ArrayList<>();
-        final String GROUPS_KEY = "cognito:groups";
-
         try {
-            JSONObject accessToken = CognitoJWTParser.getPayload(getAuthToken(authType));
-
-            if (accessToken.has(GROUPS_KEY)) {
-                JSONArray jsonGroups = accessToken.getJSONArray(GROUPS_KEY);
-
-                for (int i = 0; i < jsonGroups.length(); i++) {
-                    groups.add(jsonGroups.getString(i));
+            JSONObject accessToken = CognitoJWTParser
+                    .getPayload(getAuthToken(authType));
+            if (accessToken.has(groupClaim)) {
+                JSONArray jsonGroups = accessToken.getJSONArray(groupClaim);
+                for (int index = 0; index < jsonGroups.length(); index++) {
+                    groups.add(jsonGroups.getString(index));
                 }
             }
         } catch (JSONException | CognitoParameterInvalidException error) {
             throw new ApiException(
-                    "Failed to parse groups from auth rule.",
-                    error,
-                    "This should never happen - see attached exception for more details and report to us on GitHub."
+                    "Attempted to subscribe to a model with group-based authorization without " + groupClaim + " " +
+                            "which was specified (or defaulted to) as the group claim.",
+                    "If you did not specify a custom groupClaim in your schema, make sure you are logged in. If " +
+                            "you did, check that the value you specified in your schema is present in the access key."
             );
         }
 
         return groups;
+    }
+
+    private boolean userNotInReadRestrictingGroups(
+            Map<String, List<String>> readAuthorizedGroupsMap,
+            AuthorizationType authType
+    ) throws ApiException {
+        for (Map.Entry<String, List<String>> entry : readAuthorizedGroupsMap.entrySet()) {
+            String groupClaim = entry.getKey();
+            List<String> readAuthorizedGroups = entry.getValue();
+            List<String> userGroups = getUserGroups(groupClaim, authType);
+            if (!Collections.disjoint(readAuthorizedGroups, userGroups)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private String getAuthToken(AuthorizationType authType) throws ApiException {
