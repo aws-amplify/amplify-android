@@ -17,8 +17,6 @@ apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
-ext.instrumentedTestAmplifyBackend = "ApiInstrumentedTests"
-
 dependencies {
     api project(':core')
     implementation project(':aws-api-appsync')

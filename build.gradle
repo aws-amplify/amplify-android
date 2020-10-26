@@ -110,25 +110,9 @@ ext {
 }
 
 subprojects { project ->
-    task pullInstrumentedTestAmplifyConfig() {
-        doLast {
-            if (project.hasProperty('instrumentedTestAmplifyBackend')) {
-                def amplifyBackendProjectName = project.instrumentedTestAmplifyBackend
-                println("Getting config files for $amplifyBackendProjectName")
-                def amplifyPullCommand =  "$rootDir.path/scripts/pull_backend_config.sh"
-                exec {
-                    workingDir(rootDir.path)
-                    executable(amplifyPullCommand)
-                    args([amplifyBackendProjectName, project.name])
-                    standardOutput(System.out)
-                }
-            }
-        }
 
-    }
 
     afterEvaluate {
-//        preBuild.dependsOn(pullInstrumentedTestAmplifyConfig)
         configureAndroidLibrary(project)
     }
 }
@@ -178,3 +162,4 @@ private void configureAndroidLibrary(Project project) {
         coreLibraryDesugaring dependency.android.desugartools
     }
 }
+apply from: rootProject.file("configuration/instrumentation-tests.gradle")

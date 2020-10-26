@@ -22,10 +22,12 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -37,6 +39,7 @@ import java.util.UUID;
 
 import io.reactivex.rxjava3.observers.TestObserver;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -120,12 +123,12 @@ public final class GraphQLInstrumentationTest {
     @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void subscriptionReceivesMutationOverCognitoUserPools() throws
             ApiException, JSONException, SynchronousMobileClient.MobileClientException {
-        /*currentApiName = API_WITH_COGNITO_USER_POOLS;
+        currentApiName = API_WITH_COGNITO_USER_POOLS;
         JSONObject credentials = Resources.readAsJson(getApplicationContext(), R.raw.credentials);
         String username = credentials.getString("username");
         String password = credentials.getString("password");
         mobileClient.signIn(username, password);
-        subscriptionReceivesMutation();*/
+        subscriptionReceivesMutation();
     }
 
     /**

@@ -17,8 +17,6 @@ apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
-ext.instrumentedTestAmplifyBackend = "InstrumentedTests"
-
 dependencies {
     implementation dependency.androidx.v4support
     implementation dependency.androidx.annotation

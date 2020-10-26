@@ -16,7 +16,7 @@ env:
 phases:
   install:
     runtime-versions:
-      java: corretto8
+      java: openjdk8
       android: 29
       nodejs: 12
     commands:
@@ -30,7 +30,7 @@ phases:
       - |
         if [[ -z "${CONFIG_SOURCE_BUCKET}" ]]; then
           echo 'Pulling config files from Amplify'
-          JAVA_HOME=$JDK_8_HOME ./gradlew pullInstrumentedTestAmplifyConfig
+          JAVA_HOME=$JDK_8_HOME ./gradlew pullBackendConfigFromAmplify
         else
           echo 'Pulling config files from S3'
           ./scripts/pull_backend_config_from_s3 ${CONFIG_SOURCE_BUCKET}
