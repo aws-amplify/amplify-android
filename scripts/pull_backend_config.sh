@@ -12,7 +12,7 @@ echo "Creating $tmp_amplify_dir"
 mkdir -p $tmp_amplify_dir
 
 cd $tmp_amplify_dir
-res_dir="$base_dir/$module_name/src/androidTest/res"
+res_dir="$base_dir/$module_name/src/androidTest/res/raw"
 echo "Resource directory for $module_name: $res_dir"
 
 app_id=`aws amplify list-apps --query "apps[?name=='$project_name'].appId" --output text`
