@@ -114,7 +114,7 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
-    @Test
+    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
     public void testUploadSmallFile() throws Exception {
         File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -126,7 +126,7 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
-    @Test
+    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
     public void testUploadLargeFile() throws Exception {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -140,8 +140,8 @@ public final class AWSS3StorageUploadTest {
      * @throws Exception if upload is not canceled successfully
      *         before timeout
      */
-    @Test
     @SuppressWarnings("unchecked")
+    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
     public void testUploadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -189,8 +189,8 @@ public final class AWSS3StorageUploadTest {
      * @throws Exception if upload is not paused, resumed, and
      *         completed successfully before timeout
      */
-    @Test
     @SuppressWarnings("unchecked")
+    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);
