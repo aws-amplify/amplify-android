@@ -16,7 +16,7 @@ env:
 phases:
   install:
     runtime-versions:
-      java: openjdk8
+#      java: corretto8
       android: 29
       nodejs: 12
     commands:
