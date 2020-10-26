@@ -23,6 +23,7 @@ amplify pull \
   --providers "{\"awscloudformation\":{\"configLevel\":\"general\",\"useProfile\":false,\"region\":\"us-east-1\"}}" \
   --yes
 echo "Current dir is $(pwd)"
+mkdir -p $res_dir
 cp -R ./config_files/* $res_dir
 ls -al $res_dir
 cd $base_dir
