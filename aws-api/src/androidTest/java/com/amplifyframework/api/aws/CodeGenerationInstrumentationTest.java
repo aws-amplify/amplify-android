@@ -52,10 +52,10 @@ import static org.junit.Assert.assertTrue;
  * TODO: document how to configure a remote endpoint that can accomodate this test.
  */
 public final class CodeGenerationInstrumentationTest {
-    private static final String PERSON_API_NAME = "ApiInstrumentedTestsApi";
-    private static final String PROJECT_API_NAME = "ApiInstrumentedTestsApi";
-    private static final String BLOG_API_NAME = "ApiInstrumentedTestsApi";
-    private static final String NOTES_WITH_AUTH_API_NAME = "ApiInstrumentedTestsApi";
+    private static final String PERSON_API_NAME = "personApi";
+    private static final String PROJECT_API_NAME = "projectApi";
+    private static final String BLOG_API_NAME = "blogApi";
+    private static final String NOTES_WITH_AUTH_API_NAME = "notesWithAuthApi";
 
     private static SynchronousApi api;
 
