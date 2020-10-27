@@ -37,6 +37,7 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -116,7 +117,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      *
      * @throws DataStoreException If it is not possible to access the code-generated model provider
      */
-    @SuppressWarnings("unused") // This is a public API.
     public AWSDataStorePlugin() throws DataStoreException {
         this(ModelProviderLocator.locate(), Amplify.API);
     }
@@ -134,7 +134,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      *         If not possible to locate the code-generated model provider,
      *         com.amplifyframework.datastore.generated.model.AmplifyModelProvider.
      */
-    @SuppressWarnings("unused") // It's a public API.
     public AWSDataStorePlugin(@NonNull DataStoreConfiguration userProvidedConfiguration) throws DataStoreException {
         this(
             ModelProviderLocator.locate(),
@@ -150,7 +149,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * then remote synchronization will be performed through {@link Amplify#API}.
      * @param modelProvider Provider of models to be usable by plugin
      */
-    @SuppressWarnings({"unused", "WeakerAccess"}) // This is a public API.
     public AWSDataStorePlugin(@NonNull ModelProvider modelProvider) {
         this(Objects.requireNonNull(modelProvider), Amplify.API);
     }
@@ -245,7 +243,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        () -> onComplete.call(),
+                        onComplete::call,
                         throwable -> onError.accept(new DataStoreException("Request failed because DataStore is not " +
                                 "initialized.", throwable, "Retry your request."))
             );
@@ -288,7 +286,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * @param onComplete Invoked if the call is successful.
      * @param onError Invoked if not successful
      */
-    @SuppressWarnings("unused")
     @Override
     public void clear(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
         stop(() -> Completable.create(emitter -> sqliteStorageAdapter.clear(emitter::onComplete, emitter::onError))
@@ -302,7 +299,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     /**
      * Terminate use of the plugin.
      */
-    @SuppressWarnings("unused")
     synchronized void terminate() {
         try {
             orchestrator.stop()
@@ -410,6 +406,22 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     /**
+     * Query the DataStore to find all items of the requested model (by name).
+     * NOTE: Private method and should not be part of {@link DataStoreCategory}
+     * @param modelName name of the Model to query
+     * @param options Filtering, paging, and sorting options
+     * @param onQueryResults Called when a query successfully returns 0 or more results
+     * @param onQueryFailure Called when a failure interrupts successful completion of a query
+     */
+    public void query(
+            @NonNull String modelName,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Iterator<? extends Model>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure) {
+        start(() -> sqliteStorageAdapter.query(modelName, options, onQueryResults, onQueryFailure), onQueryFailure);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -463,6 +475,42 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                         @SuppressWarnings("unchecked") // This was just checked, right above.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
                         onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
+                    }
+                } catch (DataStoreException dataStoreException) {
+                    onObservationFailure.accept(dataStoreException);
+                }
+            },
+            onObservationFailure,
+            onObservationCompleted
+        )), onObservationFailure);
+    }
+
+    /**
+     * Observe changes to a certain type of item(s) in the DataStore.
+     * @param modelName The name of the model to observe
+     * @param onObservationStarted Called when observation begins
+     * @param onDataStoreItemChange Called 0..n times, whenever there is a change to an
+     *                              item of the requested class
+     * @param onObservationFailure Called if observation of the DataStore terminates
+     *                             with a non-recoverable failure
+     * @param onObservationCompleted Called when observation completes gracefully
+     */
+    public void observe(
+            @NonNull String modelName,
+            @NonNull Consumer<Cancelable> onObservationStarted,
+            @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+        start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+            itemChange -> {
+                try {
+                    if (itemChange.itemClass().equals(SerializedModel.class)) {
+                        if (((SerializedModel) itemChange.item()).getModelName().equals(modelName)) {
+                            @SuppressWarnings("unchecked") // This was just checked, right above.
+                            StorageItemChange<SerializedModel> typedChange =
+                                    (StorageItemChange<SerializedModel>) itemChange;
+                            onDataStoreItemChange.accept(ItemChangeMapper.map(itemChange));
+                        }
                     }
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);

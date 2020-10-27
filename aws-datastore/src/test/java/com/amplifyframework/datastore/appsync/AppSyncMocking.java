@@ -28,13 +28,13 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Varargs;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.mockito.ArgumentMatcher;
-import org.mockito.stubbing.Answer;
 import org.mockito.stubbing.Stubber;
 
 import java.util.Arrays;
@@ -46,12 +46,11 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.when;
 
 /**
  * A utility to mock behaviors of an {@link AppSync} from test code.
  */
-@SuppressWarnings({"UnusedReturnValue", "WeakerAccess", "unused"})
+@SuppressWarnings({"unused", "UnusedReturnValue", "WeakerAccess"})
 public final class AppSyncMocking {
     private AppSyncMocking() {}
 
@@ -155,9 +154,9 @@ public final class AppSyncMocking {
                 @NonNull T model, @NonNull GraphQLResponse<ModelWithMetadata<T>> response) {
             Objects.requireNonNull(model);
             Objects.requireNonNull(response);
-            callOnSuccess(/* onSuccess position = */ 1, response)
+            callOnSuccess(/* onSuccess position = */ 2, response)
                 .when(appSync)
-                .create(eq(model), /* onResponse */ any(), /* onFailure */ any());
+                .create(eq(model), /* schema */ any(), /* onResponse */ any(), /* onFailure */ any());
             return CreateConfigurator.this;
         }
 
@@ -248,12 +247,23 @@ public final class AppSyncMocking {
          */
         public <T extends Model> UpdateConfigurator mockResponse(
                 @NonNull T model, int version, @NonNull GraphQLResponse<ModelWithMetadata<T>> response) {
+            callOnSuccess(/* argument position = */ 4, response)
+                .when(appSync).update(
+                    eq(model),
+                    any() /* schema */,
+                    eq(version),
+                    any() /* predicate */,
+                    any() /* onResponse */,
+                    any() /* onFailure */
+                );
             callOnSuccess(/* argument position = */ 3, response)
-                .when(appSync)
-                .update(eq(model), eq(version), /* predicate */ any(), /* onResponse */ any(), /* onFailure */ any());
-            callOnSuccess(/* argument position = */ 2, response)
-                .when(appSync)
-                .update(eq(model), eq(version), /* onSuccess */ any(), /* onError */ any());
+                .when(appSync).update(
+                    eq(model),
+                    any() /* schema */,
+                    eq(version),
+                    any() /* onSuccess */,
+                    any() /* onError */
+                );
             return UpdateConfigurator.this;
         }
 
@@ -348,7 +358,7 @@ public final class AppSyncMocking {
                 @NonNull T model, int version, @NonNull GraphQLResponse<ModelWithMetadata<T>> response) {
             callOnSuccess(/* onSuccess position = */ 4, response)
                 .when(appSync).delete(
-                    eq(model.getClass()), // Class of the model
+                    any(), // ModelSchema
                     eq(model.getId()), // model ID
                     eq(version), // version
                     any(), // predicate
@@ -357,7 +367,7 @@ public final class AppSyncMocking {
                 );
             callOnSuccess(/* onSuccess position = */ 3, response)
                 .when(appSync).delete(
-                    eq(model.getClass()), // Class of the model
+                    any(), // ModelSchema
                     eq(model.getId()), // model ID
                     eq(version), // version
                     any(), // onResponse
@@ -450,13 +460,12 @@ public final class AppSyncMocking {
         }
 
         private <M extends Model> SyncConfigurator mockBuildSyncRequest() throws DataStoreException {
-            when(appSync.buildSyncRequest(any(), any(), any()))
-                    .thenAnswer((Answer<GraphQLRequest<PaginatedResult<ModelWithMetadata<M>>>>) invocation -> {
-                        Class<M> modelClass = invocation.getArgument(0);
-                        Long lastSync = invocation.getArgument(1);
-                        Integer syncPageSize = invocation.getArgument(2);
-                        return AppSyncRequestFactory.buildSyncRequest(modelClass, lastSync, syncPageSize);
-                    });
+            doAnswer(invocation -> {
+                ModelSchema schema = invocation.getArgument(0);
+                Long lastSync = invocation.getArgument(1);
+                Integer syncPageSize = invocation.getArgument(2);
+                return AppSyncRequestFactory.buildSyncRequest(schema, lastSync, syncPageSize);
+            }).when(appSync).buildSyncRequest(any(), any(), any());
             return this;
         }
 
@@ -520,7 +529,9 @@ public final class AppSyncMocking {
             final Iterable<ModelWithMetadata<M>> items = new HashSet<>(Arrays.asList(responseItems));
             AppSyncGraphQLRequest<PaginatedResult<ModelWithMetadata<M>>> requestForNextResult = null;
             if (nextToken != null) {
-                requestForNextResult = AppSyncRequestFactory.buildSyncRequest(modelClass, null, null)
+                ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+                requestForNextResult =
+                    AppSyncRequestFactory.buildSyncRequest(schema, null, null)
                         .newBuilder()
                         .variable("nextToken", "String", nextToken)
                         .build();
@@ -602,7 +613,7 @@ public final class AppSyncMocking {
 
     /**
      * Configures mock behaviors on an {@link AppSync} instance, to occur when
-     * {@link AppSync#onCreate(Class, Consumer, Consumer, Consumer, Action)} is invoked.
+     * {@link AppSync#onCreate(ModelSchema, Consumer, Consumer, Consumer, Action)} is invoked.
      */
     public static final class OnCreateConfigurator {
         private final AppSync appSync;
@@ -612,7 +623,7 @@ public final class AppSyncMocking {
         }
 
         /**
-         * In response to {@link AppSync#onCreate(Class, Consumer, Consumer, Consumer, Action)} being
+         * In response to {@link AppSync#onCreate(ModelSchema, Consumer, Consumer, Consumer, Action)} being
          * called, the onStart consumer will be called back immediately.
          * @return The current configurator instance, for fluent method chaining
          */
@@ -635,7 +646,7 @@ public final class AppSyncMocking {
 
     /**
      * Configured mocked behaviors on an {@link AppSync} instance,
-     * to be invoked when {@link AppSync#onUpdate(Class, Consumer, Consumer, Consumer, Action)}
+     * to be invoked when {@link AppSync#onUpdate(ModelSchema, Consumer, Consumer, Consumer, Action)}
      * is called.
      */
     public static final class OnUpdateConfigurator {
@@ -646,7 +657,7 @@ public final class AppSyncMocking {
         }
 
         /**
-         * In response to {@link AppSync#onUpdate(Class, Consumer, Consumer, Consumer, Action)} being
+         * In response to {@link AppSync#onUpdate(ModelSchema, Consumer, Consumer, Consumer, Action)} being
          * called, the onStart consumer will be called back immediately.
          * @return The current configurator instance, for fluent method chaining
          */
@@ -668,7 +679,7 @@ public final class AppSyncMocking {
     }
 
     /**
-     * Configures mock behaviors for when {@link AppSync#onDelete(Class, Consumer, Consumer, Consumer, Action)}
+     * Configures mock behaviors for when {@link AppSync#onDelete(ModelSchema, Consumer, Consumer, Consumer, Action)}
      * is called.
      */
     public static final class OnDeleteConfigurator {
@@ -679,7 +690,7 @@ public final class AppSyncMocking {
         }
 
         /**
-         * In response to {@link AppSync#onDelete(Class, Consumer, Consumer, Consumer, Action)} being
+         * In response to {@link AppSync#onDelete(ModelSchema, Consumer, Consumer, Consumer, Action)} being
          * called, the onStart consumer will be called back immediately.
          * @return The current configurator instance, for fluent method chaining
          */

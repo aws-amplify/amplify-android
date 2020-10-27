@@ -16,6 +16,7 @@
 package com.amplifyframework.core.model.types;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.temporal.Temporal;
@@ -97,9 +98,9 @@ public enum JavaFieldType {
      * @param javaFieldType the string representation of the field type.
      * @return the enumeration constant.
      */
-    public static JavaFieldType from(@NonNull Class<?> javaFieldType) {
+    public static JavaFieldType from(@Nullable Class<?> javaFieldType) {
         for (final JavaFieldType type : JavaFieldType.values()) {
-            if (javaFieldType.equals(type.javaFieldType)) {
+            if (type.javaFieldType.equals(javaFieldType)) {
                 return type;
             }
         }

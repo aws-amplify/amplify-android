@@ -155,7 +155,7 @@ final class SubscriptionEndpoint {
 
         Subscription<T> subscription = new Subscription<>(
             onNextItem, onSubscriptionError, onSubscriptionComplete,
-            responseFactory, request.getResponseType()
+            responseFactory, request.getResponseType(), request
         );
         subscriptions.put(subscriptionId, subscription);
         if (subscription.awaitSubscriptionReady()) {
@@ -308,6 +308,7 @@ final class SubscriptionEndpoint {
         private final Action onSubscriptionComplete;
         private final GraphQLResponse.Factory responseFactory;
         private final Type responseType;
+        private final GraphQLRequest<T> request;
         private final CountDownLatch subscriptionReadyAcknowledgment;
         private final CountDownLatch subscriptionCompletionAcknowledgement;
         private boolean failed;
@@ -317,12 +318,14 @@ final class SubscriptionEndpoint {
                 Consumer<ApiException> onSubscriptionError,
                 Action onSubscriptionComplete,
                 GraphQLResponse.Factory responseFactory,
-                Type responseType) {
+                Type responseType,
+                GraphQLRequest<T> request) {
             this.onNextItem = onNextItem;
             this.onSubscriptionError = onSubscriptionError;
             this.onSubscriptionComplete = onSubscriptionComplete;
             this.responseFactory = responseFactory;
             this.responseType = responseType;
+            this.request = request;
             this.subscriptionReadyAcknowledgment = new CountDownLatch(1);
             this.subscriptionCompletionAcknowledgement = new CountDownLatch(1);
             this.failed = false;
@@ -383,7 +386,7 @@ final class SubscriptionEndpoint {
 
         void dispatchNextMessage(String message) {
             try {
-                onNextItem.accept(responseFactory.buildResponse(null, message, responseType));
+                onNextItem.accept(responseFactory.buildResponse(request, message, responseType));
             } catch (ApiException exception) {
                 dispatchError(exception);
             }

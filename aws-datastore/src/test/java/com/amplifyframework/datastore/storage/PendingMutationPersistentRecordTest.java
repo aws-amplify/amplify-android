@@ -49,25 +49,25 @@ public class PendingMutationPersistentRecordTest {
                 .name("id")
                 .targetType("ID")
                 .isRequired(true)
-                .type(String.class)
+                .javaClassForValue(String.class)
                 .build(),
             ModelField.builder()
                 .name("containedModelId")
                 .targetType("String")
                 .isRequired(true)
-                .type(String.class)
+                .javaClassForValue(String.class)
                 .build(),
             ModelField.builder()
                 .name("serializedMutationData")
                 .targetType("String")
                 .isRequired(true)
-                .type(String.class)
+                .javaClassForValue(String.class)
                 .build(),
             ModelField.builder()
                 .name("containedModelClassName")
                 .targetType("String")
                 .isRequired(true)
-                .type(String.class)
+                .javaClassForValue(String.class)
                 .build()
         );
 
@@ -88,6 +88,7 @@ public class PendingMutationPersistentRecordTest {
                 .pluralName("PersistentRecords")
                 .fields(expectedFieldsMap)
                 .indexes(Collections.singletonMap("containedModelClassNameBasedIndex", index))
+                .modelClass(PendingMutation.PersistentRecord.class)
                 .build(),
             // Actual
             ModelSchema.fromModelClass(PendingMutation.PersistentRecord.class)

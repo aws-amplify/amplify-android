@@ -49,6 +49,23 @@ public final class ModelSchemaRegistry {
     }
 
     /**
+     * Registers the modelSchemas provided.
+     * @param modelSchemas the map that contains mapping of ModelName to ModelSchema.
+     */
+    public synchronized void register(@NonNull Map<String, ModelSchema> modelSchemas) {
+        modelSchemaMap.putAll(modelSchemas);
+    }
+
+    /**
+     * Registers the modelSchema for the given modelName.
+     * @param modelName name of the model
+     * @param modelSchema schema of the model to be registered.
+     */
+    public synchronized void register(@NonNull String modelName, @NonNull ModelSchema modelSchema) {
+        modelSchemaMap.put(modelName, modelSchema);
+    }
+
+    /**
      * Retrieve the ModelSchema object for the given Model class.
      * @param classSimpleName name of the Model class retrieved through
      *                        {@link Class#getSimpleName()} method.

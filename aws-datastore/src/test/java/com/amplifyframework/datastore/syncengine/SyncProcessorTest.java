@@ -33,7 +33,7 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.events.ModelSyncedEvent;
 import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
-import com.amplifyframework.datastore.model.CompoundModelProvider;
+import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -58,8 +58,10 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -103,8 +105,10 @@ public final class SyncProcessorTest {
      */
     @Before
     public void setup() throws AmplifyException {
-        this.modelProvider =
-            CompoundModelProvider.of(SystemModelsProviderFactory.create(), AmplifyModelProvider.getInstance());
+        final LinkedHashSet<Class<? extends Model>> modelClasses = new LinkedHashSet<>();
+        modelClasses.addAll(SystemModelsProviderFactory.create().models());
+        modelClasses.addAll(AmplifyModelProvider.getInstance().models());
+        this.modelProvider = SimpleModelProvider.instance(UUID.randomUUID().toString(), modelClasses);
         modelCount = modelProvider.models().size();
 
         this.appSync = mock(AppSync.class);
@@ -233,12 +237,12 @@ public final class SyncProcessorTest {
     /**
      * When {@link SyncProcessor#hydrate()}'s {@link Completable} completes,
      * then the local storage adapter should have all of the remote model state.
-     * @throws DataStoreException On failure interacting with storage adapter
+     * @throws AmplifyException On failure interacting with storage adapter
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @SuppressWarnings("unchecked") // Varied types in Observable.fromArray(...).
     @Test
-    public void localStorageAdapterIsHydratedFromRemoteModelState() throws DataStoreException, InterruptedException {
+    public void localStorageAdapterIsHydratedFromRemoteModelState() throws AmplifyException, InterruptedException {
         // Arrange: drum post is already in the adapter before hydration.
         storageAdapter.save(DRUM_POST.getModel());
 
@@ -336,11 +340,11 @@ public final class SyncProcessorTest {
      * delete a record. But suppose the client is sync'ing for the first time. So, the client
      * doesn't actually need to delete this record. The deletion attempt will fail. But, that's
      * okay. Generally speaking, we want to do a "best effort" to apply the remote updates.
-     * @throws DataStoreException On failure to query items in storage
+     * @throws AmplifyException On failure to query items in storage
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void hydrationContinuesEvenIfOneItemFailsToSync() throws DataStoreException, InterruptedException {
+    public void hydrationContinuesEvenIfOneItemFailsToSync() throws AmplifyException, InterruptedException {
         // The local store does NOT have the drum post to start (or, for that matter, any items.)
         // inMemoryStorageAdapter.items().add(DRUM_POST.getModel());
 
@@ -426,15 +430,15 @@ public final class SyncProcessorTest {
      * When a sync is requested, the last sync time should be considered.
      * If the last sync time is before (nowMs - baseSyncIntervalMs), then a base
      * sync will be performed.
-     * @throws DataStoreException On failure to build GraphQLRequest for sync query
+     * @throws AmplifyException On failure to build GraphQLRequest for sync query
      */
     @Test
-    public void baseSyncRequestedIfLastSyncBeyondInterval() throws DataStoreException {
+    public void baseSyncRequestedIfLastSyncBeyondInterval() throws AmplifyException {
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd too long ago. That is, longer ago than the base sync interval.
         long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
-        Observable.fromIterable(modelProvider.models())
-            .map(modelClass -> LastSyncMetadata.baseSyncedAt(modelClass, longAgoTimeMs))
+        Observable.fromIterable(modelProvider.modelNames())
+            .map(modelName -> LastSyncMetadata.baseSyncedAt(modelName, longAgoTimeMs))
             .blockingForEach(storageAdapter::save);
 
         // Arrange: return some content from the fake AppSync endpoint
@@ -467,15 +471,15 @@ public final class SyncProcessorTest {
      * If the last sync time is after (nowMs - baseSyncIntervalMs) - that is,
      * if the last sync time is within the base sync interval, then a DELTA sync
      * will be performed.
-     * @throws DataStoreException On failure to build GraphQLRequest for sync query.
+     * @throws AmplifyException On failure to build GraphQLRequest for sync query
      */
     @Test
-    public void deltaSyncRequestedIfLastSyncIsRecent() throws DataStoreException {
+    public void deltaSyncRequestedIfLastSyncIsRecent() throws AmplifyException {
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd very recently (within the interval.)
         long recentTimeMs = Time.now();
-        Observable.fromIterable(modelProvider.models())
-            .map(modelClass -> LastSyncMetadata.deltaSyncedAt(modelClass, recentTimeMs))
+        Observable.fromIterable(modelProvider.modelNames())
+            .map(modelName -> LastSyncMetadata.deltaSyncedAt(modelName, recentTimeMs))
             .blockingForEach(storageAdapter::save);
 
         // Arrange: return some content from the fake AppSync endpoint

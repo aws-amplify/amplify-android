@@ -60,7 +60,7 @@ public final class TypeConverter {
             return JavaFieldType.ENUM;
         }
         try {
-            return JavaFieldType.from(field.getType());
+            return JavaFieldType.from(field.getJavaClassForValue());
         } catch (IllegalArgumentException exception) {
             // fallback to custom type, which will result in the field being converted to a JSON string
             return JavaFieldType.CUSTOM_TYPE;

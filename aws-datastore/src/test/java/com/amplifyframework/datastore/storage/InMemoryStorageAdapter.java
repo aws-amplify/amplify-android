@@ -128,6 +128,22 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         onSuccess.accept(result.iterator());
     }
 
+    @Override
+    public void query(
+            @NonNull String modelName,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        final List<Model> result = new ArrayList<>();
+        final QueryPredicate predicate = options.getQueryPredicate();
+        for (Model item : items) {
+            if (modelName.equals(item.getClass().getSimpleName()) && predicate.evaluate(item)) {
+                result.add(item); //TODO, add tests for new query method.
+            }
+        }
+        onSuccess.accept(result.iterator());
+    }
+
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
     public <T extends Model> void delete(

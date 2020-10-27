@@ -15,9 +15,12 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
@@ -73,9 +76,10 @@ public final class MutationProcessorTest {
     /**
      * A {@link MutationProcessor} is being tested. To do so, we arrange mutations into
      * an {@link MutationOutbox}. Fake responses are returned from a mock {@link AppSync}.
+     * @throws AmplifyException When loading ModelSchemaRegistry
      */
     @Before
-    public void setup() {
+    public void setup() throws AmplifyException {
         ShadowLog.stream = System.out;
         LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
         this.synchronousStorageAdapter = SynchronousStorageAdapter.delegatingTo(localStorageAdapter);
@@ -85,9 +89,12 @@ public final class MutationProcessorTest {
         this.appSync = mock(AppSync.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
         ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry.register(Collections.singleton(BlogOwner.class));
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
             .versionRepository(versionRepository)
+            .modelSchemaRegistry(modelSchemaRegistry)
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)
@@ -110,11 +117,10 @@ public final class MutationProcessorTest {
             .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
         // Start listening for publication events.
-        HubAccumulator statusAccumulator = HubAccumulator.create(
-                HubChannel.DATASTORE,
-                isOutboxEmpty(true), // outbox should be empty after processing its only mutation
-                1
-        ).start();
+        // outbox should be empty after processing its only mutation
+        HubAccumulator statusAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, isOutboxEmpty(true), 1)
+                .start();
 
         // Start draining the outbox which has one mutation enqueued,
         // and make sure that outbox status is published to hub.
@@ -159,7 +165,7 @@ public final class MutationProcessorTest {
         assertFalse(mutationOutbox.hasPendingMutation(tony.getId()));
 
         // And that it was passed to AppSync for publication.
-        verify(appSync).create(eq(tony), any(), any());
+        verify(appSync).create(eq(tony), any(), any(), any());
     }
 
     /**
@@ -167,9 +173,10 @@ public final class MutationProcessorTest {
      * error in the GraphQLResponse error list, then the user-provided
      * conflict handler should be invoked.
      * @throws DataStoreException On failure to obtain configuration from the provider
+     * @throws AmplifyException On failure to build {@link ModelSchema}
      */
     @Test
-    public void conflictHandlerInvokedForUnhandledConflictError() throws DataStoreException {
+    public void conflictHandlerInvokedForUnhandledConflictError() throws AmplifyException {
         // Arrange a user-provided conflict handler.
         CountDownLatch handlerInvocationsRemainingCount = new CountDownLatch(1);
         when(configurationProvider.getConfiguration())
@@ -186,7 +193,8 @@ public final class MutationProcessorTest {
             .build();
         ModelMetadata metadata =
             new ModelMetadata(model.getId(), false, 1, Temporal.Timestamp.now());
-        LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(BlogOwner.class, 1_000L);
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(schema.getName(), 1_000L);
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata);
 
         // Enqueue an update in the mutation outbox
