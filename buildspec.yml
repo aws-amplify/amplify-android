@@ -48,7 +48,7 @@ phases:
       - echo 'Post-build phase starting'
       - pwd
       - mkdir -p build/allTests
-      - cp -f ./*/build/test-results/testReleaseUnitTest/*.xml ./build/allTests
+      - cp -f ./*/build/test-results/testDebugUnitTest/*.xml ./build/allTests
     finally:
       - echo 'Post-build phase completed.'
 reports:
