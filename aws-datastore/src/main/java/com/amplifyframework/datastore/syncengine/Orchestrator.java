@@ -321,7 +321,7 @@ public final class Orchestrator {
      * Start syncing models to and from a remote API.
      * @return A Completable that succeeds when API sync is enabled.
      */
-    private Completable startApiSync() {
+    public Completable startApiSync() {
         return Completable.create(emitter -> {
             LOG.info("Starting API synchronization mode.");
 
@@ -380,7 +380,7 @@ public final class Orchestrator {
      * Stop all model synchronization with the remote API.
      * A Completable that ends when API sync is stopped.
      */
-    private Completable stopApiSync() {
+    public Completable stopApiSync() {
         return Completable.fromAction(() -> {
             LOG.info("Stopping synchronization with remote API.");
             subscriptionProcessor.stopAllSubscriptionActivity();
@@ -408,5 +408,9 @@ public final class Orchestrator {
          * The orchestrator maintains components to actively sync data up and down.
          */
         SYNC_VIA_API
+    }
+	
+	public void setTargetMode(Mode syncViaApi) {
+        this.targetMode = ()->syncViaApi;
     }
 }

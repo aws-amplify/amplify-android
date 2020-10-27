@@ -96,7 +96,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             sqliteStorageAdapter,
             AppSyncClient.via(api),
             () -> pluginConfiguration,
-            () -> api.getPlugins().isEmpty() ? Orchestrator.Mode.LOCAL_ONLY : Orchestrator.Mode.SYNC_VIA_API
+			() -> Orchestrator.Mode.LOCAL_ONLY
+            //() -> api.getPlugins().isEmpty() ? Orchestrator.Mode.LOCAL_ONLY : Orchestrator.Mode.SYNC_VIA_API
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
     }
@@ -554,5 +555,20 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             .type(dataStoreItemChangeType)
             .uuid(storageItemChange.changeId().toString())
             .build();
+    }
+	
+    public void setOnlineMode()
+    {
+        //TODO: add check for api.getPlugins().isEmpty() as before and throw a DataStoreException if there is no API registered.
+        this.orchestrator.setTargetMode(Orchestrator.Mode.SYNC_VIA_API);
+        this.orchestrator.startApiSync();
+    }
+
+    public void setOfflineMode()
+    {
+        // I haven't tested if it's possible to set the datastore back to LOCAL_ONLY mode this way
+        // The idea is to set the datastore to offline mode when the network connection is not available
+        this.orchestrator.setTargetMode(Orchestrator.Mode.LOCAL_ONLY);
+        this.orchestrator.stopApiSyncBlocking();
     }
 }
