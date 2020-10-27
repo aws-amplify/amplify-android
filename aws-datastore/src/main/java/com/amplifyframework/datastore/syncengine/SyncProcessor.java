@@ -82,7 +82,9 @@ final class SyncProcessor {
         this.appSync = Objects.requireNonNull(appSync);
         this.merger = Objects.requireNonNull(merger);
         this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
-        this.modelNames = ForEach.inCollection(modelProvider.models(), Class::getSimpleName).toArray(new String[0]);
+        this.modelNames =
+            ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
+                .toArray(new String[0]);
     }
 
     /**
@@ -99,18 +101,16 @@ final class SyncProcessor {
      * @return An Rx {@link Completable} which can be used to perform the operation.
      */
     Completable hydrate() {
-        ModelClassComparator modelClassComparator =
-                new ModelClassComparator(modelProvider, modelSchemaRegistry);
-
         final List<Completable> hydrationTasks = new ArrayList<>();
-        List<Class<? extends Model>> modelClsList =
-            new ArrayList<Class<? extends Model>>(modelProvider.models());
+        List<ModelSchema> modelSchemas = new ArrayList<>(modelProvider.modelSchemas().values());
 
         // And sort them all, according to their model's topological order,
         // So that when we save them, the references will exist.
-        Collections.sort(modelClsList, modelClassComparator::compare);
-        for (Class<? extends Model> clazz : modelClsList) {
-            hydrationTasks.add(createHydrationTask(clazz));
+        TopologicalOrdering ordering =
+            TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
+        Collections.sort(modelSchemas, ordering::compare);
+        for (ModelSchema schema : modelSchemas) {
+            hydrationTasks.add(createHydrationTask(schema));
         }
 
         return Completable.concat(hydrationTasks)
@@ -131,14 +131,14 @@ final class SyncProcessor {
             });
     }
 
-    private Completable createHydrationTask(Class<? extends Model> modelClass) {
-        ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(modelClass);
-        return syncTimeRegistry.lookupLastSyncTime(modelClass)
+    private Completable createHydrationTask(ModelSchema schema) {
+        ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(schema.getName());
+        return syncTimeRegistry.lookupLastSyncTime(schema.getName())
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
             .flatMap(lastSyncTime -> {
                 // Sync all the pages
-                return syncModel(modelClass, lastSyncTime)
+                return syncModel(schema, lastSyncTime)
                     // For each ModelWithMetadata, merge it into the local store.
                     .flatMapCompletable(modelWithMetadata ->
                         merger.merge(modelWithMetadata, metricsAccumulator::increment)
@@ -147,8 +147,8 @@ final class SyncProcessor {
             })
             .flatMapCompletable(syncType -> {
                 Completable syncTimeSaveCompletable = SyncType.DELTA.equals(syncType) ?
-                    syncTimeRegistry.saveLastDeltaSyncTime(modelClass, SyncTime.now()) :
-                    syncTimeRegistry.saveLastBaseSyncTime(modelClass, SyncTime.now());
+                    syncTimeRegistry.saveLastDeltaSyncTime(schema.getName(), SyncTime.now()) :
+                    syncTimeRegistry.saveLastBaseSyncTime(schema.getName(), SyncTime.now());
                 return syncTimeSaveCompletable.andThen(Completable.fromAction(() -> {
                     Amplify.Hub.publish(HubChannel.DATASTORE,
                                         metricsAccumulator.toModelSyncedEvent(syncType).toHubEvent());
@@ -201,20 +201,20 @@ final class SyncProcessor {
      *     perform a *base* sync. A base sync is preformed by passing null.
      *  3. Continue fetching paged results until !hasNextResult() or we have synced the max records.
      *
-     * @param modelClass The model class to sync
+     * @param schema The schema of the model to sync
      * @param syncTime The time of a last successful sync.
      * @param <T> The type of model to sync.
      * @return a stream of all ModelWithMetadata&lt;T&gt; objects from all pages for the provided model.
      * @throws DataStoreException if dataStoreConfigurationProvider.getConfiguration() fails
      */
-    private <T extends Model> Flowable<ModelWithMetadata<T>> syncModel(Class<T> modelClass, SyncTime syncTime)
+    private <T extends Model> Flowable<ModelWithMetadata<T>> syncModel(ModelSchema schema, SyncTime syncTime)
             throws DataStoreException {
         final Long lastSyncTimeAsLong = syncTime.exists() ? syncTime.toLong() : null;
         final Integer syncPageSize = dataStoreConfigurationProvider.getConfiguration().getSyncPageSize();
 
         // Create a BehaviorProcessor, and set the default value to a GraphQLRequest that fetches the first page.
         BehaviorProcessor<GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>> processor =
-                BehaviorProcessor.createDefault(appSync.buildSyncRequest(modelClass, lastSyncTimeAsLong, syncPageSize));
+                BehaviorProcessor.createDefault(appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize));
 
         return processor.concatMap(request -> syncPage(request).toFlowable())
                 .doOnNext(paginatedResult -> {

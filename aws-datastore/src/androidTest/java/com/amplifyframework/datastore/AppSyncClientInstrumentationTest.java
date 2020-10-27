@@ -30,6 +30,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
@@ -61,6 +62,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests the DataStore API Interface.
  */
+@SuppressWarnings("SameParameterValue")
 public final class AppSyncClientInstrumentationTest {
     private static AppSync api;
 
@@ -85,17 +87,22 @@ public final class AppSyncClientInstrumentationTest {
     /**
      * Tests the operations in AppSyncClient.
      * @throws DataStoreException If any call to AppSync endpoint fails to return a response
+     * @throws AmplifyException On failure to obtain ModelSchema
      */
     @Test
     @SuppressWarnings("MethodLength")
-    public void testAllOperations() throws DataStoreException {
-        Long startTimeSeconds = TimeUnit.MILLISECONDS.toSeconds(new Date().getTime());
+    public void testAllOperations() throws AmplifyException {
+        ModelSchema blogOwnerSchema = ModelSchema.fromModelClass(BlogOwner.class);
+        ModelSchema postSchema = ModelSchema.fromModelClass(Post.class);
+        ModelSchema blogSchema = ModelSchema.fromModelClass(Blog.class);
+
+        long startTimeSeconds = TimeUnit.MILLISECONDS.toSeconds(new Date().getTime());
 
         // Create simple model with no relationship
         BlogOwner owner = BlogOwner.builder()
             .name("David")
             .build();
-        ModelWithMetadata<BlogOwner> blogOwnerCreateResult = create(owner);
+        ModelWithMetadata<BlogOwner> blogOwnerCreateResult = create(owner, blogOwnerSchema);
 
         assertEquals(owner, blogOwnerCreateResult.getModel());
         assertEquals(new Integer(1), blogOwnerCreateResult.getSyncMetadata().getVersion());
@@ -104,14 +111,14 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(owner.getId(), blogOwnerCreateResult.getSyncMetadata().getId());
 
         // Subscribe to Blog creations
-        Observable<GraphQLResponse<ModelWithMetadata<Blog>>> blogCreations = onCreate(Blog.class);
+        Observable<GraphQLResponse<ModelWithMetadata<Blog>>> blogCreations = onCreate(blogSchema);
 
         // Now, actually create a Blog
         Blog blog = Blog.builder()
             .name("Create test")
             .owner(owner)
             .build();
-        ModelWithMetadata<Blog> blogCreateResult = create(blog);
+        ModelWithMetadata<Blog> blogCreateResult = create(blog, blogSchema);
 
         // Currently cannot do BlogOwner.justId because it will assign the id to the name field.
         // This is being fixed
@@ -146,8 +153,8 @@ public final class AppSyncClientInstrumentationTest {
             .rating(-1)
             .blog(blog)
             .build();
-        Post post1ModelResult = create(post1).getModel();
-        Post post2ModelResult = create(post2).getModel();
+        Post post1ModelResult = create(post1, postSchema).getModel();
+        Post post2ModelResult = create(post2, postSchema).getModel();
 
         // Results only have blog ID so strip out other information from the original post blog
         assertEquals(
@@ -167,9 +174,9 @@ public final class AppSyncClientInstrumentationTest {
         Blog updatedBlog = blog.copyOfBuilder()
             .name("Updated blog")
             .build();
-        Long updateBlogStartTimeSeconds = TimeUnit.MILLISECONDS.toSeconds(new Date().getTime());
+        long updateBlogStartTimeSeconds = TimeUnit.MILLISECONDS.toSeconds(new Date().getTime());
 
-        ModelWithMetadata<Blog> blogUpdateResult = update(updatedBlog, 1);
+        ModelWithMetadata<Blog> blogUpdateResult = update(updatedBlog, blogSchema, 1);
 
         assertEquals(updatedBlog.getName(), blogUpdateResult.getModel().getName());
         assertEquals(updatedBlog.getOwner().getId(), blogUpdateResult.getModel().getOwner().getId());
@@ -182,7 +189,7 @@ public final class AppSyncClientInstrumentationTest {
         assertTrue(updatedBlogLastChangedAt.getSecondsSinceEpoch() > updateBlogStartTimeSeconds);
 
         // Delete one of the posts
-        ModelWithMetadata<Post> post1DeleteResult = delete(Post.class, post1.getId(), 1);
+        ModelWithMetadata<Post> post1DeleteResult = delete(postSchema, post1.getId(), 1);
         assertEquals(
             post1.copyOfBuilder()
                 .blog(Blog.justId(blog.getId()))
@@ -193,13 +200,13 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(Boolean.TRUE, isDeleted);
 
         // Try to delete a post with a bad version number
-        List<GraphQLResponse.Error> post2DeleteErrors = deleteExpectingResponseErrors(Post.class, post2.getId(), 0);
+        List<GraphQLResponse.Error> post2DeleteErrors = deleteExpectingResponseErrors(postSchema, post2.getId(), 0);
         assertEquals("Conflict resolver rejects mutation.", post2DeleteErrors.get(0).getMessage());
 
         // Run sync on Blogs
         // TODO: This is currently a pretty worthless test - mainly for setting a debug point and manually inspecting
         // When you call sync with a null lastSync it gives only one entry per object (the latest state)
-        Iterable<ModelWithMetadata<Blog>> blogSyncResult = sync(api.buildSyncRequest(Blog.class, null, 1000));
+        Iterable<ModelWithMetadata<Blog>> blogSyncResult = sync(api.buildSyncRequest(blogSchema, null, 1000));
         assertTrue(blogSyncResult.iterator().hasNext());
 
         // Run sync on Posts
@@ -207,7 +214,7 @@ public final class AppSyncClientInstrumentationTest {
         // When you call sync with a lastSyncTime it gives you one entry per version of that object which was created
         // since that time.
         Iterable<ModelWithMetadata<Post>> postSyncResult =
-                sync(api.buildSyncRequest(Post.class, startTimeSeconds, 1000));
+                sync(api.buildSyncRequest(postSchema, startTimeSeconds, 1000));
         assertTrue(postSyncResult.iterator().hasNext());
     }
 
@@ -220,9 +227,10 @@ public final class AppSyncClientInstrumentationTest {
      * @throws DataStoreException If API create call fails to render any response from AppSync endpoint
      */
     @NonNull
-    private <T extends Model> ModelWithMetadata<T> create(@NonNull T model) throws DataStoreException {
+    private <T extends Model> ModelWithMetadata<T> create(
+            @NonNull T model, @NonNull ModelSchema schema) throws DataStoreException {
         return awaitResponseData((onResult, onError) ->
-            api.create(model, onResult, onError));
+            api.create(model, schema, onResult, onError));
     }
 
     /**
@@ -234,22 +242,23 @@ public final class AppSyncClientInstrumentationTest {
      * @throws DataStoreException If API update call fails to render any response from AppSync endpoint
      */
     @NonNull
-    private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version)
+    private <T extends Model> ModelWithMetadata<T> update(
+            @NonNull T model, ModelSchema schema, int version)
         throws DataStoreException {
-        return update(model, version, QueryPredicates.all());
+        return update(model, schema, version, QueryPredicates.all());
     }
 
     @NonNull
     private <T extends Model> ModelWithMetadata<T> update(
-            @NonNull T model, int version, @NonNull QueryPredicate predicate)
+            @NonNull T model, ModelSchema schema, int version, @NonNull QueryPredicate predicate)
             throws DataStoreException {
         return awaitResponseData((onResult, onError) ->
-            api.update(model, version, predicate, onResult, onError));
+            api.update(model, schema, version, predicate, onResult, onError));
     }
 
     /**
      * Deletes an instance of a model.
-     * @param clazz The class of model being deleted
+     * @param schema The schema of model being deleted
      * @param modelId The ID of the model instance to delete
      * @param version The version of the model being deleted as understood by client
      * @param <T> Type of model being deleted
@@ -258,23 +267,23 @@ public final class AppSyncClientInstrumentationTest {
      */
     @NonNull
     private <T extends Model> ModelWithMetadata<T> delete(
-        @NonNull Class<T> clazz, String modelId, int version)
+            @NonNull ModelSchema schema, String modelId, int version)
         throws DataStoreException {
-        return delete(clazz, modelId, version, QueryPredicates.all());
+        return delete(schema, modelId, version, QueryPredicates.all());
     }
 
     @NonNull
     private <T extends Model> ModelWithMetadata<T> delete(
-            @NonNull Class<T> clazz, String modelId, int version, QueryPredicate predicate)
+            @NonNull ModelSchema schema, String modelId, int version, QueryPredicate predicate)
             throws DataStoreException {
         return awaitResponseData((onResult, onError) ->
-            api.delete(clazz, modelId, version, predicate, onResult, onError));
+            api.delete(schema, modelId, version, predicate, onResult, onError));
     }
 
     /**
      * Try to delete an item, but expect it to error.
      * Return the errors that were contained in the GraphQLResponse returned from endpoint.
-     * @param clazz Class of item for which a delete is attempted
+     * @param schema Schema of item for which a delete is attempted
      * @param modelId ID of item for which delete is attempted
      * @param version Version of item for which deleted is attempted
      * @param <T> Type of item for which delete is attempted
@@ -282,11 +291,10 @@ public final class AppSyncClientInstrumentationTest {
      * @throws DataStoreException If API delete call fails to render any response from AppSync endpoint
      */
     private <T extends Model> List<GraphQLResponse.Error> deleteExpectingResponseErrors(
-            @NonNull Class<T> clazz, String modelId, int version)
-            throws DataStoreException {
-        return awaitResponseErrors(
-            (Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResult, Consumer<DataStoreException> onError) ->
-                api.delete(clazz, modelId, version, onResult, onError)
+            @NonNull ModelSchema schema, String modelId, int version) throws DataStoreException {
+        return awaitResponseErrors((Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResult,
+                                    Consumer<DataStoreException> onError) ->
+                api.delete(schema, modelId, version, onResult, onError)
         );
     }
 
@@ -327,13 +335,13 @@ public final class AppSyncClientInstrumentationTest {
         return response.getErrors();
     }
 
-    @SuppressWarnings({"CodeBlock2Expr", "SameParameterValue"})
+    @SuppressWarnings("CodeBlock2Expr")
     private <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onCreate(
-            @NonNull Class<T> clazz) {
+            @NonNull ModelSchema schema) {
         return Observable.create(emitter -> {
             Await.result((onSubscriptionStarted, ignored) -> {
                 Cancelable cancelable = api.onCreate(
-                    clazz,
+                    schema,
                     onSubscriptionStarted::accept,
                     emitter::onNext,
                     emitter::onError,

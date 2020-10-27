@@ -114,6 +114,18 @@ public interface LocalStorageAdapter {
     );
 
     /**
+     * Query the storage for items of a given type.
+     * @param modelName name of the Model to query
+     * @param onSuccess A callback that will be invoked if the query succeeds
+     * @param onError A callback that will be invoked if the query fails with an error
+     */
+    void query(
+            @NonNull String modelName,
+            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    );
+
+    /**
      * Query the storage for items of a given type with specific conditions.
      * @param itemClass Items that have this class will be solicited
      * @param options options, such as predicates, pagination to apply to query
@@ -125,6 +137,20 @@ public interface LocalStorageAdapter {
             @NonNull Class<T> itemClass,
             @NonNull QueryOptions options,
             @NonNull Consumer<Iterator<T>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    );
+
+    /**
+     * Query the storage for items of a given type with specific conditions.
+     * @param modelName name of the Model to query
+     * @param options options, such as predicates, pagination to apply to query
+     * @param onSuccess A callback that will be notified if the query succeeds
+     * @param onError A callback that will be notified if the query fails with an error
+     */
+    void query(
+            @NonNull String modelName,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 

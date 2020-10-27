@@ -41,6 +41,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -181,7 +182,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Any exception raised during this when inspecting the Model classes
                  * through reflection will be notified via the `onError` callback.
                  */
-                modelSchemaRegistry.load(modelsProvider.models());
+                modelSchemaRegistry.register(modelsProvider.modelSchemas());
 
                 /*
                  * Create the CREATE TABLE and CREATE INDEX commands for each of the
@@ -189,7 +190,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * create commands.
                  */
                 this.sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry);
-                CreateSqlCommands createSqlCommands = getCreateCommands(modelsProvider.models());
+                CreateSqlCommands createSqlCommands = getCreateCommands(modelsProvider.modelNames());
                 sqliteStorageHelper = SQLiteStorageHelper.getInstance(
                         context,
                         DATABASE_NAME,
@@ -270,8 +271,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
         threadPool.submit(() -> {
             try {
+                final String modelName = getModelName(item);
                 final ModelSchema modelSchema =
-                    modelSchemaRegistry.getModelSchemaForModelInstance(item);
+                    modelSchemaRegistry.getModelSchemaForModelClass(modelName);
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
                 final SqlCommand sqlCommand;
@@ -288,7 +290,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
                         ? idCheck.and(predicate)
                         : idCheck;
-                    sqlCommand = sqlCommandFactory.updateFor(modelSchema, item, condition);
+                    sqlCommand = sqlCommandFactory.updateFor(modelSchema, condition);
                     if (!sqlCommand.hasCompiledSqlStatement()) {
                         onError.accept(new DataStoreException(
                             "Error in saving the model. No update statement " +
@@ -330,7 +332,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 itemChangeSubject.onError(dataStoreException);
                 onError.accept(dataStoreException);
             } catch (Exception someOtherTypeOfException) {
-                String modelToString = item.getClass().getSimpleName() + "[id=" + item.getId() + "]";
+                String modelToString = getModelName(item) + "[id=" + item.getId() + "]";
                 DataStoreException dataStoreException = new DataStoreException(
                     "Error in saving the model: " + modelToString,
                     someOtherTypeOfException, "See attached exception for details."
@@ -353,6 +355,20 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
         query(itemClass, Where.matchesAll(), onSuccess, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void query(
+            @NonNull String modelName,
+            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        Objects.requireNonNull(modelName);
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+        query(modelName, Where.matchesAll(), onSuccess, onError);
     }
 
     /**
@@ -387,8 +403,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 if (cursor.moveToFirst()) {
                     do {
-                        final Map<String, Object> mapForModel = buildMapForModel(
-                            itemClass, modelSchema, cursor);
+                        final Map<String, Object> mapForModel = buildMapForModel(modelSchema, cursor);
                         models.add(deserializeModelFromRawMap(mapForModel, itemClass));
                     } while (cursor.moveToNext());
                 }
@@ -398,6 +413,58 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 onError.accept(new DataStoreException(
                     "Error in querying the model.", exception,
                     "See attached exception for details."
+                ));
+            }
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void query(
+            @NonNull String modelName,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        Objects.requireNonNull(modelName);
+        Objects.requireNonNull(options);
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+
+        threadPool.submit(() -> {
+            try (Cursor cursor = getQueryAllCursor(modelName, options)) {
+                LOG.debug("Querying item for: " + modelName);
+
+                final Set<Model> models = new HashSet<>();
+                final ModelSchema modelSchema =
+                        modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+
+                if (cursor == null) {
+                    onError.accept(new DataStoreException(
+                            "Error in getting a cursor to the table for class: " + modelName,
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
+                    return;
+                }
+
+                if (cursor.moveToFirst()) {
+                    do {
+                        final Map<String, Object> serializedData = buildMapForModel(modelSchema, cursor);
+                        SerializedModel model = SerializedModel.builder()
+                                .serializedData(serializedData)
+                                .id((String) serializedData.get("id"))
+                                .modelName(modelName)
+                                .build();
+                        models.add(model);
+                    } while (cursor.moveToNext());
+                }
+
+                onSuccess.accept(models.iterator());
+            } catch (Exception exception) {
+                onError.accept(new DataStoreException(
+                        "Error in querying the model.", exception,
+                        "See attached exception for details."
                 ));
             }
         });
@@ -435,7 +502,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
         threadPool.submit(() -> {
             try {
-                final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelInstance(item);
+                final String modelName = getModelName(item);
+                final ModelSchema modelSchema =
+                        modelSchemaRegistry.getModelSchemaForModelClass(modelName);
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
 
@@ -448,7 +517,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
                     ? idCheck.and(predicate)
                     : idCheck;
-                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item, condition);
+                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, condition);
                 if (sqlCommand == null || sqlCommand.sqlStatement() == null
                     || !sqlCommand.hasCompiledSqlStatement()) {
                     onError.accept(new DataStoreException(
@@ -594,12 +663,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         );
     }
 
-    private CreateSqlCommands getCreateCommands(@NonNull Set<Class<? extends Model>> models) {
+    private CreateSqlCommands getCreateCommands(@NonNull Set<String> modelNames) {
         final Set<SqlCommand> createTableCommands = new HashSet<>();
         final Set<SqlCommand> createIndexCommands = new HashSet<>();
-        for (Class<? extends Model> model : models) {
+        for (String modelName : modelNames) {
             final ModelSchema modelSchema =
-                modelSchemaRegistry.getModelSchemaForModelClass(model.getSimpleName());
+                modelSchemaRegistry.getModelSchemaForModelClass(modelName);
             createTableCommands.add(sqlCommandFactory.createTableFor(modelSchema));
             createIndexCommands.addAll(sqlCommandFactory.createIndexesFor(modelSchema));
         }
@@ -617,10 +686,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
         // bind model field values to sql columns
         if (model != null) {
-            final Class<? extends Model> modelClass = model.getClass();
+            String modelName = getModelName(model);
             final SQLiteModelFieldTypeConverter converter =
-                    new SQLiteModelFieldTypeConverter(modelClass, modelSchemaRegistry, gson);
-            final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelInstance(model);
+                    new SQLiteModelFieldTypeConverter(modelName, modelSchemaRegistry, gson);
+            final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
             final Map<String, ModelField> modelFields = schema.getFields();
 
             final List<SQLiteColumn> columns = sqlCommand.getColumns();
@@ -662,13 +731,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     private <T extends Model> Map<String, Object> buildMapForModel(
-            @NonNull Class<T> modelClass,
             @NonNull ModelSchema modelSchema,
             @NonNull Cursor cursor) throws DataStoreException {
         final Map<String, Object> mapForModel = new HashMap<>();
 
         final SQLiteModelFieldTypeConverter modelFieldTypeConverter =
-                new SQLiteModelFieldTypeConverter(modelClass, modelSchemaRegistry, gson);
+                new SQLiteModelFieldTypeConverter(modelSchema.getName(), modelSchemaRegistry, gson);
 
         for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
             final String fieldName = entry.getKey();
@@ -782,6 +850,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull Class<T> itemClass) throws IOException {
         final String modelInJsonFormat = gson.toJson(mapForModel);
         return gson.getAdapter(itemClass).fromJson(modelInJsonFormat);
+    }
+
+    private String getModelName(@NonNull Model model) {
+        if (model.getClass() == SerializedModel.class) {
+            return ((SerializedModel) model).getModelName();
+        } else {
+            return model.getClass().getSimpleName();
+        }
     }
 
     @SuppressWarnings("WeakerAccess")

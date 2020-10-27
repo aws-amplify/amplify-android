@@ -335,7 +335,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @WorkerThread
     @Override
     public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
-                                                  @NonNull T item,
                                                   @NonNull QueryPredicate predicate) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
@@ -388,7 +387,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @NonNull
     @Override
     public <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
-                                                  @NonNull T item,
                                                   @NonNull QueryPredicate predicate) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();

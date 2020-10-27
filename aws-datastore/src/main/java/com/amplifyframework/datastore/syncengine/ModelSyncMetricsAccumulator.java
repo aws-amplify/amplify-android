@@ -18,7 +18,6 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.events.ModelSyncedEvent;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.logging.Logger;
 
@@ -33,20 +32,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class ModelSyncMetricsAccumulator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final Map<StorageItemChange.Type, AtomicInteger> syncMetrics;
-    private final Class<? extends Model> modelClass;
+    private final String modelClassName;
 
     /**
      * Constructor that sets up an observer to watch for mutations
      * made by the sync process on the local DataStore.
-     * @param localStorageAdapter A reference to the implementation of the {@link LocalStorageAdapter}.
-     * @param syncableModels A list of all the syncable models.
+     * @param modelClassName Name of the model for sync.
      */
-    ModelSyncMetricsAccumulator(Class<? extends Model> modelClass) {
+    ModelSyncMetricsAccumulator(String modelClassName) {
         syncMetrics = new ConcurrentHashMap<>();
         syncMetrics.put(StorageItemChange.Type.CREATE, new AtomicInteger(0));
         syncMetrics.put(StorageItemChange.Type.UPDATE, new AtomicInteger(0));
         syncMetrics.put(StorageItemChange.Type.DELETE, new AtomicInteger(0));
-        this.modelClass = modelClass;
+        this.modelClassName = modelClassName;
     }
 
     /**
@@ -55,7 +53,7 @@ final class ModelSyncMetricsAccumulator {
      * @return An instance of {@link ModelSyncedEvent}.
      */
     public ModelSyncedEvent toModelSyncedEvent(SyncType syncType) {
-        return new ModelSyncedEvent(modelClass.getSimpleName(),
+        return new ModelSyncedEvent(modelClassName,
                                     SyncType.BASE.equals(syncType),
                                     syncMetrics.get(StorageItemChange.Type.CREATE).get(),
                                     syncMetrics.get(StorageItemChange.Type.UPDATE).get(),

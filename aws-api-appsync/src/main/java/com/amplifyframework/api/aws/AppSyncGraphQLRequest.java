@@ -228,6 +228,16 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
 
         /**
+         * Sets the {@link ModelSchema} Class and returns this builder.
+         * @param modelSchema the {@link ModelSchema} Class.
+         * @return this builder instance.
+         */
+        public Builder modelSchema(@NonNull ModelSchema modelSchema) {
+            this.modelSchema = Objects.requireNonNull(modelSchema);
+            return Builder.this;
+        }
+
+        /**
          * Sets the {@link Model} Class and returns this builder.
          * @param modelClass the {@link Model} Class.
          * @return this builder instance.
@@ -284,7 +294,6 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
 
         /**
          * Builds an {@link AppSyncGraphQLRequest}.
-         *
          * @param <R> The type of data contained in the GraphQLResponse expected from this request.
          * @return the AppSyncGraphQLRequest
          * @throws AmplifyException if a ModelSchema cannot be created from the provided model class.
@@ -293,19 +302,23 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             Objects.requireNonNull(this.operation);
             Objects.requireNonNull(this.responseType);
 
-            if (modelClass != null) {
-                // Derive modelSchema and selectionSet from modelClass.
+            if (modelClass == null && modelSchema == null) {
+                throw new AmplifyException("Both modelSchema and modelClass cannot be null", "");
+            }
+
+            if (modelSchema == null) {
+                // Derive modelSchema from modelClass if not available
                 modelSchema = ModelSchema.fromModelClass(this.modelClass);
+            }
+            // if this Builder was created via newBuilder(),
+            // selectionSet will already be set, so we can continue on.
+            if (selectionSet == null) {
                 selectionSet = SelectionSet.builder()
+                        .modelSchema(this.modelSchema)
                         .modelClass(this.modelClass)
                         .operation(this.operation)
                         .requestOptions(Objects.requireNonNull(this.requestOptions))
                         .build();
-            } else {
-                // If modelClass is null, we can't derive modelSchema and selectionSet.  However, if this Builder was
-                // created via newBuilder(), those fields will already be set, so we can continue on.
-                Objects.requireNonNull(modelSchema, "modelClass must not be null");
-                Objects.requireNonNull(selectionSet, "modelClass must not be null");
             }
             return new AppSyncGraphQLRequest<>(this);
         }

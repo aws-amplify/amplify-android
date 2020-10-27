@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.model.ModelFieldTypeConverter;
 import com.amplifyframework.datastore.model.ModelHelper;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
@@ -50,23 +51,23 @@ import java.util.concurrent.TimeUnit;
 public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cursor, Model> {
     private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private final Class<? extends Model> modelType;
+    private final String modelName;
     private final ModelSchemaRegistry modelSchemaRegistry;
     private final Gson gson;
     private final Map<String, SQLiteColumn> columns;
 
     SQLiteModelFieldTypeConverter(
-            @NonNull Class<? extends Model> modelType,
+            @NonNull String modelName,
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
             @NonNull Gson gson
     ) {
         this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
         this.gson = Objects.requireNonNull(gson);
-        this.modelType = modelType;
+        this.modelName = modelName;
 
         // load and store the SQL columns for the modelType
         final SQLiteTable sqliteTable = SQLiteTable.fromSchema(
-                modelSchemaRegistry.getModelSchemaForModelClass(modelType.getSimpleName()));
+                modelSchemaRegistry.getModelSchemaForModelClass(modelName));
         this.columns = sqliteTable.getColumns();
     }
 
@@ -144,7 +145,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             final String valueAsString = cursor.getString(columnIndex);
             LOGGER.verbose(String.format(
                     "Attempt to convert value \"%s\" from field %s of type %s from model %s",
-                    valueAsString, field.getName(), field.getType(), modelType.getSimpleName()
+                    valueAsString, field.getName(), field.getType(), modelName
             ));
 
             switch (javaFieldType) {
@@ -179,7 +180,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         } catch (Exception exception) {
             throw new DataStoreException(
                     String.format("Error converting field \"%s\" from model \"%s\"",
-                            field.getName(), modelType.getName()),
+                            field.getName(), modelName),
                     exception,
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
@@ -200,7 +201,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         ModelSchema innerModelSchema = modelSchemaRegistry.getModelSchemaForModelClass(className);
 
         SQLiteModelFieldTypeConverter nestedModelConverter =
-                new SQLiteModelFieldTypeConverter(nestedModelType, modelSchemaRegistry, gson);
+                new SQLiteModelFieldTypeConverter(className, modelSchemaRegistry, gson);
 
         Map<String, Object> mapForInnerModel = new HashMap<>();
         for (Map.Entry<String, ModelField> entry : innerModelSchema.getFields().entrySet()) {
@@ -234,7 +235,12 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
 
     @Override
     public Object convertValueFromTarget(Model model, ModelField field) throws DataStoreException {
-        final Object fieldValue = ModelHelper.getValue(model, field);
+        Object fieldValue;
+        if (model.getClass() == SerializedModel.class) {
+            fieldValue = ((SerializedModel) model).getValue(field);
+        } else {
+            fieldValue = ModelHelper.getValue(model, field);
+        }
         if (fieldValue == null) {
             return null;
         }

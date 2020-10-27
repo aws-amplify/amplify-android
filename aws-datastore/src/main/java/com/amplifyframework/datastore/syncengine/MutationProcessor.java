@@ -21,11 +21,14 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.events.OutboxStatusEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -51,6 +54,7 @@ final class MutationProcessor {
 
     private final Merger merger;
     private final VersionRepository versionRepository;
+    private final ModelSchemaRegistry modelSchemaRegistry;
     private final MutationOutbox mutationOutbox;
     private final AppSync appSync;
     private final ConflictResolver conflictResolver;
@@ -59,6 +63,7 @@ final class MutationProcessor {
     private MutationProcessor(Builder builder) {
         this.merger = Objects.requireNonNull(builder.merger);
         this.versionRepository = Objects.requireNonNull(builder.versionRepository);
+        this.modelSchemaRegistry = Objects.requireNonNull(builder.modelSchemaRegistry);
         this.mutationOutbox = Objects.requireNonNull(builder.mutationOutbox);
         this.appSync = Objects.requireNonNull(builder.appSync);
         this.conflictResolver = Objects.requireNonNull(builder.conflictResolver);
@@ -206,26 +211,33 @@ final class MutationProcessor {
     // For an item in the outbox, dispatch an update mutation
     private <T extends Model> Single<ModelWithMetadata<T>> update(PendingMutation<T> mutation) {
         final T updatedItem = mutation.getMutatedItem();
+        final ModelSchema updatedItemSchema =
+            this.modelSchemaRegistry.getModelSchemaForModelClass(getModelName(updatedItem));
         return versionRepository.findModelVersion(updatedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
-                appSync.update(model, version, mutation.getPredicate(), onSuccess, onError)
+                appSync.update(model, updatedItemSchema, version, mutation.getPredicate(), onSuccess, onError)
             )
         );
     }
 
     // For an item in the outbox, dispatch a create mutation
     private <T extends Model> Single<ModelWithMetadata<T>> create(PendingMutation<T> mutation) {
-        return publishWithStrategy(mutation, appSync::create);
+        final T createdItem = mutation.getMutatedItem();
+        final ModelSchema createdItemSchema =
+            this.modelSchemaRegistry.getModelSchemaForModelClass(getModelName(createdItem));
+        return publishWithStrategy(mutation, (model, onSuccess, onError) ->
+            appSync.create(model, createdItemSchema, onSuccess, onError));
     }
 
     // For an item in the outbox, dispatch a delete mutation
     private <T extends Model> Single<ModelWithMetadata<T>> delete(PendingMutation<T> mutation) {
         final T deletedItem = mutation.getMutatedItem();
-        final Class<T> deletedItemClass = mutation.getClassOfMutatedItem();
+        final ModelSchema deletedItemSchema =
+            this.modelSchemaRegistry.getModelSchemaForModelClass(getModelName(deletedItem));
         return versionRepository.findModelVersion(deletedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
                 appSync.delete(
-                    deletedItemClass, deletedItem.getId(), version, mutation.getPredicate(), onSuccess, onError
+                    deletedItemSchema, deletedItem.getId(), version, mutation.getPredicate(), onSuccess, onError
                 )
             )
         );
@@ -285,6 +297,14 @@ final class MutationProcessor {
         return conflictResolver.resolve(pendingMutation, unhandledConflict);
     }
 
+    private static String getModelName(@NonNull Model model) {
+        if (model.getClass() == SerializedModel.class) {
+            return ((SerializedModel) model).getModelName();
+        } else {
+            return model.getClass().getSimpleName();
+        }
+    }
+
     /**
      * A strategy to publish an item over the network.
      * @param <T> Type of model being published
@@ -306,12 +326,14 @@ final class MutationProcessor {
     static final class Builder implements
             BuilderSteps.MergerStep,
             BuilderSteps.VersionRepositoryStep,
+            BuilderSteps.ModelSchemaRegistryStep,
             BuilderSteps.MutationOutboxStep,
             BuilderSteps.AppSyncStep,
             BuilderSteps.ConflictResolverStep,
             BuilderSteps.BuildStep {
         private Merger merger;
         private VersionRepository versionRepository;
+        private ModelSchemaRegistry modelSchemaRegistry;
         private MutationOutbox mutationOutbox;
         private AppSync appSync;
         private ConflictResolver conflictResolver;
@@ -325,8 +347,15 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.MutationOutboxStep versionRepository(@NonNull VersionRepository versionRepository) {
+        public BuilderSteps.ModelSchemaRegistryStep versionRepository(@NonNull VersionRepository versionRepository) {
             Builder.this.versionRepository = Objects.requireNonNull(versionRepository);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuilderSteps.MutationOutboxStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
+            Builder.this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
             return Builder.this;
         }
 
@@ -366,7 +395,12 @@ final class MutationProcessor {
 
         interface VersionRepositoryStep {
             @NonNull
-            MutationOutboxStep versionRepository(@NonNull VersionRepository versionRepository);
+            ModelSchemaRegistryStep versionRepository(@NonNull VersionRepository versionRepository);
+        }
+
+        interface ModelSchemaRegistryStep {
+            @NonNull
+            MutationOutboxStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry);
         }
 
         interface MutationOutboxStep {

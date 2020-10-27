@@ -15,12 +15,13 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
-import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.MatchAllQueryPredicate;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
@@ -48,13 +49,16 @@ import static org.mockito.Mockito.mock;
 public final class AppSyncMockingTest {
     private static final long TIMEOUT_SECONDS = 2;
 
+    private ModelSchema schema;
     private AppSync appSync;
 
     /**
-     * Sets up an AppSync mock.
+     * Sets up the test.
+     * @throws AmplifyException On failure to build ModelSchema
      */
     @Before
-    public void setup() {
+    public void setup() throws AmplifyException {
+        this.schema = ModelSchema.fromModelClass(BlogOwner.class);
         this.appSync = mock(AppSync.class);
     }
 
@@ -69,7 +73,7 @@ public final class AppSyncMockingTest {
         AppSyncMocking.sync(appSync).mockFailure(failure);
 
         GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> request =
-            appSync.buildSyncRequest(BlogOwner.class, null, 100);
+            appSync.buildSyncRequest(schema, null, 100);
         Single
             .create(emitter -> appSync.sync(request, emitter::onSuccess, emitter::onError))
             .test()
@@ -93,7 +97,7 @@ public final class AppSyncMockingTest {
         // Build a request object. This will itself test the mockSuccessResponse(),
         // since that method configures this call to return a meaningful result.
         GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> request =
-            appSync.buildSyncRequest(BlogOwner.class, null, 100);
+            appSync.buildSyncRequest(schema, null, 100);
 
         // Lastly, when we actually call sync, we should see the expected response,
         // As a result of the mockSuccessResponse() on the AppSyncMocking.
@@ -130,7 +134,7 @@ public final class AppSyncMockingTest {
             new GraphQLResponse<>(StrawMen.JOE, Collections.emptyList());
         Single
             .<GraphQLResponse<ModelWithMetadata<BlogOwner>>>create(emitter ->
-                appSync.create(StrawMen.JOE_MODEL, emitter::onSuccess, emitter::onError)
+                appSync.create(StrawMen.JOE_MODEL, schema, emitter::onSuccess, emitter::onError)
             )
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -150,7 +154,7 @@ public final class AppSyncMockingTest {
         AppSyncMocking.create(appSync).mockErrorResponse(StrawMen.JOE_MODEL, error);
         Single
             .<GraphQLResponse<ModelWithMetadata<BlogOwner>>>create(emitter ->
-                appSync.create(StrawMen.JOE_MODEL, emitter::onSuccess, emitter::onError)
+                appSync.create(StrawMen.JOE_MODEL, schema, emitter::onSuccess, emitter::onError)
             )
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -176,7 +180,7 @@ public final class AppSyncMockingTest {
 
         Single
             .<GraphQLResponse<ModelWithMetadata<BlogOwner>>>create(emitter ->
-                appSync.update(StrawMen.TONY_MODEL, 1, emitter::onSuccess, emitter::onError)
+                appSync.update(StrawMen.TONY_MODEL, schema, 1, emitter::onSuccess, emitter::onError)
             )
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -197,7 +201,7 @@ public final class AppSyncMockingTest {
             .mockErrorResponse(StrawMen.JOE_MODEL, 1, error);
         Single
             .<GraphQLResponse<ModelWithMetadata<BlogOwner>>>create(emitter ->
-                appSync.update(StrawMen.JOE_MODEL, 1, emitter::onSuccess, emitter::onError)
+                appSync.update(StrawMen.JOE_MODEL, schema, 1, emitter::onSuccess, emitter::onError)
             )
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -222,7 +226,7 @@ public final class AppSyncMockingTest {
         Single
             .<GraphQLResponse<ModelWithMetadata<BlogOwner>>>create(emitter ->
                 appSync.delete(
-                    BlogOwner.class,
+                    schema,
                     StrawMen.TONY_MODEL.getId(),
                     1,
                     MatchAllQueryPredicate.instance(),
@@ -249,7 +253,7 @@ public final class AppSyncMockingTest {
             .mockErrorResponse(StrawMen.JOE_MODEL, 1, error);
         Single
             .create(emitter -> appSync.delete(
-                BlogOwner.class,
+                schema,
                 StrawMen.JOE_MODEL.getId(),
                 1,
                 MatchAllQueryPredicate.instance(),
@@ -271,7 +275,7 @@ public final class AppSyncMockingTest {
         AppSyncMocking.onCreate(appSync).callOnStart();
         Completable
             .create(subscriber -> appSync.onCreate(
-                Model.class,
+                schema,
                 subscriptionToken -> subscriber.onComplete(),
                 NoOpConsumer.create(),
                 NoOpConsumer.create(),
@@ -292,7 +296,7 @@ public final class AppSyncMockingTest {
         AppSyncMocking.onUpdate(appSync).callOnStart();
         Completable
             .create(subscriber -> appSync.onUpdate(
-                Model.class,
+                schema,
                 subscriptionToken -> subscriber.onComplete(),
                 NoOpConsumer.create(),
                 NoOpConsumer.create(),
@@ -313,7 +317,7 @@ public final class AppSyncMockingTest {
         AppSyncMocking.onDelete(appSync).callOnStart();
         Completable
             .create(subscriber -> appSync.onDelete(
-                Model.class,
+                schema,
                 subscriptionToken -> subscriber.onComplete(),
                 NoOpConsumer.create(),
                 NoOpConsumer.create(),

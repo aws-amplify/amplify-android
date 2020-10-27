@@ -27,6 +27,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
@@ -97,7 +98,7 @@ final class SubscriptionProcessor {
      * Start subscribing to model mutations.
      */
     synchronized void startSubscriptions() {
-        int subscriptionCount = modelProvider.models().size() * SubscriptionType.values().length;
+        int subscriptionCount = modelProvider.modelNames().size() * SubscriptionType.values().length;
         // Create a latch with the number of subscriptions are requesting. Each of these will be
         // counted down when each subscription's onStarted event is called.
         CountDownLatch latch = new CountDownLatch(subscriptionCount);
@@ -106,11 +107,19 @@ final class SubscriptionProcessor {
         buffer = ReplaySubject.create();
 
         Set<Observable<SubscriptionEvent<? extends Model>>> subscriptions = new HashSet<>();
-        for (Class<? extends Model> clazz : modelProvider.models()) {
+        for (ModelSchema modelSchema : modelProvider.modelSchemas().values()) {
             for (SubscriptionType subscriptionType : SubscriptionType.values()) {
-                subscriptions.add(subscriptionObservable(appSync, subscriptionType, latch, clazz));
+                subscriptions.add(
+                        subscriptionObservable(
+                                appSync,
+                                subscriptionType,
+                                latch,
+                                modelSchema
+                        )
+                );
             }
         }
+
         ongoingOperationsDisposable.add(Observable.merge(subscriptions)
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
@@ -137,7 +146,7 @@ final class SubscriptionProcessor {
                                 HubEvent.create(DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED));
             LOG.info(String.format(Locale.US,
                 "Began buffering subscription events for remote mutations %s to Cloud models of types %s.",
-                modelProvider.models(), Arrays.toString(SubscriptionType.values())
+                modelProvider.modelNames(), Arrays.toString(SubscriptionType.values())
             ));
         } else {
             LOG.warn("Subscription processor failed to start within the expected timeout.");
@@ -161,14 +170,14 @@ final class SubscriptionProcessor {
             subscriptionObservable(AppSync appSync,
                                    SubscriptionType subscriptionType,
                                    CountDownLatch latch,
-                                   Class<T> clazz) {
+                                   ModelSchema modelSchema) {
         return Observable.<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
             SubscriptionMethod method = subscriptionMethodFor(appSync, subscriptionType);
             AtomicReference<String> subscriptionId = new AtomicReference<>();
             Cancelable cancelable = method.subscribe(
-                clazz,
+                modelSchema,
                 token -> {
-                    LOG.debug("Subscription started for " + subscriptionType.name() + " " + clazz.getSimpleName() +
+                    LOG.debug("Subscription started for " + subscriptionType.name() + " " + modelSchema.getName() +
                             " subscriptionId: " + token);
                     subscriptionId.set(token);
                     latch.countDown();
@@ -180,7 +189,7 @@ final class SubscriptionProcessor {
                     // authorized to read a subset of the models.
                     if (!emitter.isDisposed()) {
                         if (isUnauthorizedException(dataStoreException)) {
-                            LOG.warn("Unauthorized failure for " + subscriptionType + " " + clazz.getSimpleName());
+                            LOG.warn("Unauthorized failure for " + subscriptionType + " " + modelSchema.getName());
                         } else {
                             emitter.onError(dataStoreException);
                         }
@@ -201,7 +210,7 @@ final class SubscriptionProcessor {
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         })
         .doOnError(subscriptionError -> LOG.warn("An error occurred on the remote " + subscriptionType.name() +
-                " subscription for model " + clazz.getSimpleName(), subscriptionError)
+                " subscription for model " + modelSchema.getName(), subscriptionError)
         )
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
@@ -292,7 +301,7 @@ final class SubscriptionProcessor {
 
     interface SubscriptionMethod {
         <T extends Model> Cancelable subscribe(
-                @NonNull Class<T> clazz,
+                @NonNull ModelSchema modelSchema,
                 @NonNull Consumer<String> onStart,
                 @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
                 @NonNull Consumer<DataStoreException> onFailure,

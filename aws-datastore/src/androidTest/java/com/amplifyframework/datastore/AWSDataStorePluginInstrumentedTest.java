@@ -26,6 +26,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -158,14 +159,15 @@ public final class AWSDataStorePluginInstrumentedTest {
 
         // Act: externally in the Cloud, someone creates a BlogOwner,
         // that contains a misspelling in the last name
-        GraphQLResponse<ModelWithMetadata<BlogOwner>> createResponse = appSync.create(originalModel);
+        GraphQLResponse<ModelWithMetadata<BlogOwner>> createResponse =
+                appSync.create(originalModel, ModelSchema.fromModelClass(BlogOwner.class));
         ModelMetadata originalMetadata = createResponse.getData().getSyncMetadata();
         assertNotNull(originalMetadata.getVersion());
         int originalVersion = originalMetadata.getVersion();
 
         // Act: externally, the BlogOwner in the Cloud is updated, to correct the entry's last name
         GraphQLResponse<ModelWithMetadata<BlogOwner>> updateResponse =
-            appSync.update(updatedModel, originalVersion);
+            appSync.update(updatedModel, ModelSchema.fromModelClass(BlogOwner.class), originalVersion);
         ModelMetadata newMetadata = updateResponse.getData().getSyncMetadata();
         assertNotNull(newMetadata.getVersion());
         int newVersion = newMetadata.getVersion();

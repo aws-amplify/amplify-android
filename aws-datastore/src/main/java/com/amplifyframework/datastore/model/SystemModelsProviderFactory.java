@@ -51,13 +51,13 @@ public final class SystemModelsProviderFactory {
             // For example, "Post" model was last saved at 1585702708000 milliseconds past the Epoch.
             LastSyncMetadata.class,
 
-            // PersistentModelVersion.class is stores the version of the data schema; that is,
+            // PersistentModelVersion.class stores the version of the data schema; that is,
             // which models exist in the system, and what is their shape. When the structure of
             // the data changes, this should see a version bump.
             PersistentModelVersion.class,
 
             // ModelMetadata.class stores the version of particular instances of a model. Unlike
-            // PersistentModelVersion, which details with the structure of data, ModelMetadata
+            // PersistentModelVersion, which deals with the structure of data, ModelMetadata
             // deals actually with individual object instances, and their states.
             ModelMetadata.class
         );

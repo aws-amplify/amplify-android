@@ -70,6 +70,9 @@ public final class ModelSchema {
     // Specifies the indexes of a Model.
     private final Map<String, ModelIndex> indexes;
 
+    // Class of the model this schema will represent
+    private final Class<? extends Model> modelClass;
+
     // Maintain a sorted copy of all the fields of a Model
     // This is useful so code that uses the sortedFields to generate queries and other
     // persistence-related operations guarantee that the results are always consistent.
@@ -81,13 +84,15 @@ public final class ModelSchema {
             List<AuthRule> authRules,
             Map<String, ModelField> fields,
             Map<String, ModelAssociation> associations,
-            Map<String, ModelIndex> indexes) {
+            Map<String, ModelIndex> indexes,
+            Class<? extends Model> modelClass) {
         this.name = name;
         this.pluralName = pluralName;
         this.authRules = authRules;
         this.fields = fields;
         this.associations = associations;
         this.indexes = indexes;
+        this.modelClass = modelClass;
         this.sortedFields = sortModelFields();
     }
 
@@ -154,6 +159,7 @@ public final class ModelSchema {
                     .fields(fields)
                     .associations(associations)
                     .indexes(indexes)
+                    .modelClass(clazz)
                     .build();
         } catch (Exception exception) {
             throw new AmplifyException(
@@ -296,6 +302,16 @@ public final class ModelSchema {
     }
 
     /**
+     * Returns the class of {@link Model}.
+     *
+     * @return the class of {@link Model}.
+     */
+    @NonNull
+    public Class<? extends Model> getModelClass() {
+        return modelClass;
+    }
+
+    /**
      * Returns a sorted copy of all the fields of a Model.
      *
      * @return list of fieldName and the fieldObject of all
@@ -319,7 +335,8 @@ public final class ModelSchema {
 
         HashMap<String, Object> result = new HashMap<>();
 
-        if (!instance.getClass().getSimpleName().equals(this.getName())) {
+        if (!instance.getClass().getSimpleName().equals(this.getName())
+                && !(instance.getClass().getSimpleName().equals("SerializedModel"))) {
             throw new AmplifyException(
                     "The object provided is not an instance of this Model.",
                     "Please provide an instance of " + this.getName() + " which this is a schema for.");
@@ -350,7 +367,7 @@ public final class ModelSchema {
         }
 
         /**
-         * If the owner field is exists on the model, and the value is null, it should be omitted when performing a
+         * If the owner field exists on the model, and the value is null, it should be omitted when performing a
          * mutation because the AppSync server will automatically populate it using the authentication token provided
          * in the request header.  The logic below filters out the owner field if null for this scenario.
          */
@@ -451,6 +468,7 @@ public final class ModelSchema {
         private final Map<String, ModelField> fields;
         private final Map<String, ModelAssociation> associations;
         private final Map<String, ModelIndex> indexes;
+        private Class<? extends Model> modelClass;
         private String name;
         private String pluralName;
         private final List<AuthRule> authRules;
@@ -540,6 +558,17 @@ public final class ModelSchema {
         }
 
         /**
+         * The class of the Model this schema represents.
+         * @param modelClass the class of the model.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
+            this.modelClass = modelClass;
+            return this;
+        }
+
+        /**
          * Return the ModelSchema object.
          * @return the ModelSchema object.
          */
@@ -553,8 +582,8 @@ public final class ModelSchema {
                 authRules,
                 fields,
                 associations,
-                indexes
-            );
+                indexes,
+                    modelClass);
         }
     }
 }

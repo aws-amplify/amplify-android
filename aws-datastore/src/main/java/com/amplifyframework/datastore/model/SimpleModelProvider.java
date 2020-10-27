@@ -21,9 +21,12 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchema;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -34,11 +37,17 @@ import java.util.UUID;
  */
 public final class SimpleModelProvider implements ModelProvider {
     private final String version;
-    private final LinkedHashSet<Class<? extends Model>> modelClasses;
+    private final LinkedHashSet<Class<? extends Model>> modelClasses = new LinkedHashSet<>();
+    private final Map<String, ModelSchema> modelSchemaMap = new HashMap<>();
 
     private SimpleModelProvider(String version, LinkedHashSet<Class<? extends Model>> modelClasses) {
         this.version = version;
-        this.modelClasses = modelClasses;
+        this.modelClasses.addAll(modelClasses);
+    }
+
+    private SimpleModelProvider(String version, Map<String, ModelSchema> modelSchemaMap) {
+        this.version = version;
+        this.modelSchemaMap.putAll(modelSchemaMap);
     }
 
     /**
@@ -74,6 +83,22 @@ public final class SimpleModelProvider implements ModelProvider {
     }
 
     /**
+     * Creates a simple model provider with model schema. The provider will return the given version
+     * and model classes.
+     * @param version Version of the new model provider to return
+     * @param modelSchemaMap The map of model name to schema that the provider will provide
+     * @return A simple model provider, providing the given versions and model classes
+     */
+    @NonNull
+    public static SimpleModelProvider instance(
+            @NonNull String version,
+            @NonNull Map<String, ModelSchema> modelSchemaMap) {
+        Objects.requireNonNull(version);
+        Objects.requireNonNull(modelSchemaMap);
+        return new SimpleModelProvider(version, modelSchemaMap);
+    }
+
+    /**
      * Creates a {@link SimpleModelProvider} which will provide the given model classes.
      * A random version will be used for the provider.
      * @param modelClasses Classes that the provider will provide
@@ -100,6 +125,16 @@ public final class SimpleModelProvider implements ModelProvider {
     @Override
     public String version() {
         return version;
+    }
+
+    @Override
+    public Map<String, ModelSchema> modelSchemas() {
+        return modelSchemaMap.size() > 0 ? modelSchemaMap : ModelProvider.super.modelSchemas();
+    }
+
+    @Override
+    public Set<String> modelNames() {
+        return modelSchemaMap.size() > 0 ? modelSchemaMap.keySet() : ModelProvider.super.modelNames();
     }
 
     /**

@@ -15,12 +15,14 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -88,10 +90,12 @@ public final class AppSyncClientTest {
             ) -> {
                 try {
                     GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> request =
-                            endpoint.buildSyncRequest(BlogOwner.class, null, null);
+                            endpoint.buildSyncRequest(ModelSchema.fromModelClass(BlogOwner.class), null, null);
                     endpoint.sync(request, onResult, onError);
                 } catch (DataStoreException datastoreException) {
                     onError.accept(datastoreException);
+                } catch (AmplifyException amplifyException) {
+                    // Todo failed converting Model Class to ModelSchema
                 }
             }
         );
@@ -135,9 +139,10 @@ public final class AppSyncClientTest {
     /**
      * Validates date serialization when creating mutation.
      * @throws JSONException from JSONAssert.assertEquals JSON parsing error
+     * @throws AmplifyException from ModelSchema.fromModelClass to convert model to schema
      */
     @Test
-    public void validateSyncQueryWithDates() throws JSONException {
+    public void validateSyncQueryWithDates() throws JSONException, AmplifyException {
         // Act: build a mutation to create a Meeting
         final Meeting meeting = Meeting.builder()
                 .name("meeting1")
@@ -147,7 +152,7 @@ public final class AppSyncClientTest {
                 .time(new Temporal.Time("01:22:33"))
                 .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build();
-        endpoint.update(meeting, null, response -> { }, error -> { });
+        endpoint.update(meeting, ModelSchema.fromModelClass(Meeting.class), null, response -> { }, error -> { });
 
         // Now, capture the request argument on API, so we can see what was passed.
         ArgumentCaptor<GraphQLRequest<ModelWithMetadata<Meeting>>> requestCaptor =

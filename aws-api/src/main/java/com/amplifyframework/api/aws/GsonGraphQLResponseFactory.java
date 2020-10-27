@@ -22,6 +22,8 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
+import com.amplifyframework.datastore.appsync.SerializedModel;
+import com.amplifyframework.datastore.appsync.SerializedModelDeserializer;
 import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.TypeMaker;
 
@@ -61,6 +63,8 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         try {
             Gson responseGson = gson.newBuilder()
                 .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer<>(request))
+                .registerTypeAdapter(SerializedModel.class,
+                    new SerializedModelDeserializer<>((AppSyncGraphQLRequest<T>) request))
                 .create();
             return responseGson.fromJson(responseJson, responseType);
         } catch (JsonSyntaxException jsonSyntaxException) {

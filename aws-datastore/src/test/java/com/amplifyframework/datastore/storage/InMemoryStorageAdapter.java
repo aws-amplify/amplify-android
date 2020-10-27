@@ -121,6 +121,14 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         query(itemClass, Where.matchesAll(), onSuccess, onError);
     }
 
+    @Override
+    public void query(
+            @NonNull String modelName,
+            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        query(modelName, Where.matchesAll(), onSuccess, onError);
+    }
+
     @SuppressWarnings("unchecked") // (T) item *is* checked, via isAssignableFrom().
     @Override
     public <T extends Model> void query(
@@ -134,6 +142,22 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         for (Model item : items) {
             if (itemClass.isAssignableFrom(item.getClass()) && predicate.evaluate(item)) {
                 result.add((T) item);
+            }
+        }
+        onSuccess.accept(result.iterator());
+    }
+
+    @Override
+    public void query(
+            @NonNull String modelName,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        final List<Model> result = new ArrayList<>();
+        final QueryPredicate predicate = options.getQueryPredicate();
+        for (Model item : items) {
+            if (modelName.equals(item.getClass().getSimpleName()) && predicate.evaluate(item)) {
+                result.add(item); //TODO, add tests for new query method.
             }
         }
         onSuccess.accept(result.iterator());
