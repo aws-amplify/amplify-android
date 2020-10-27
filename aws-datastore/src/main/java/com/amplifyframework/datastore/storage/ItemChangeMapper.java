@@ -26,12 +26,15 @@ import com.amplifyframework.datastore.DataStoreItemChange;
  * Utility to map {@link StorageItemChange}s to the customer-visible type, {@link DataStoreItemChange}.
  */
 public final class ItemChangeMapper {
+    private ItemChangeMapper() {}
+
     /**
      * Converts an {@link StorageItemChange} into an {@link DataStoreItemChange}.
      *
      * @param storageItemChange A storage item change
      * @param <T>               Type of data that was changed in the storage layer
      * @return A data store item change representing the change in storage layer
+     * @throws DataStoreException On failure to map corresponding fields for provided data
      */
     public static <T extends Model> DataStoreItemChange<T> map(
             @NonNull StorageItemChange<T> storageItemChange) throws DataStoreException {

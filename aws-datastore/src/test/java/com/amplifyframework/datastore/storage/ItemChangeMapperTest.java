@@ -48,6 +48,7 @@ public final class ItemChangeMapperTest {
             .name("Joe")
             .build();
     }
+
     /**
      * Try to map a {@link StorageItemChange} that is the result of a customer
      * calling {@link DataStoreCategoryBehavior#save(Model, QueryPredicate, Consumer, Consumer)}
@@ -79,6 +80,8 @@ public final class ItemChangeMapperTest {
     /**
      * Try to map a {@link StorageItemChange} that is the result of the cloud
      * deleting a model through a subscription event.
+     * @throws DataStoreException
+     *         Not expected for the arranged data. Would only happen if object under test is faulty.
      */
     @Test
     public void mapCloudDeletion() throws DataStoreException {
