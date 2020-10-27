@@ -38,6 +38,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
+import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
@@ -293,7 +294,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             predicate,
             itemSave -> {
                 try {
-                    onItemSaved.accept(toDataStoreItemChange(itemSave));
+                    onItemSaved.accept(ItemChangeMapper.map(itemSave));
                 } catch (DataStoreException dataStoreException) {
                     onFailureToSave.accept(dataStoreException);
                 }
@@ -327,7 +328,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             StorageItemChange.Initiator.DATA_STORE_API,
             itemDeletion -> {
                 try {
-                    onItemDeleted.accept(toDataStoreItemChange(itemDeletion));
+                    onItemDeleted.accept(ItemChangeMapper.map(itemDeletion));
                 } catch (DataStoreException dataStoreException) {
                     onFailureToDelete.accept(dataStoreException);
                 }
@@ -378,7 +379,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         beforeOperation(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
-                    onDataStoreItemChange.accept(toDataStoreItemChange(itemChange));
+                    onDataStoreItemChange.accept(ItemChangeMapper.map(itemChange));
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
                 }
@@ -401,7 +402,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                     if (itemChange.itemClass().equals(itemClass)) {
                         @SuppressWarnings("unchecked") // This was just checked, right above.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
-                        onDataStoreItemChange.accept(toDataStoreItemChange(typedChange));
+                        onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
                     }
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
@@ -426,7 +427,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                     if (itemChange.itemClass().equals(itemClass) && itemChange.item().getId().equals(uniqueId)) {
                         @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
-                        onDataStoreItemChange.accept(toDataStoreItemChange(typedChange));
+                        onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
                     }
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
@@ -503,56 +504,5 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 LOG.warn("Failed to execute request due to an unexpected error.", throwable);
             }
         }
-    }
-
-    /**
-     * Converts an {@link StorageItemChange} into an {@link DataStoreItemChange}.
-     * @param storageItemChange A storage item change
-     * @param <T> Type of data that was changed in the storage layer
-     * @return A data store item change representing the change in storage layer
-     */
-    private static <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(
-            final StorageItemChange<T> storageItemChange) throws DataStoreException {
-
-        final DataStoreItemChange.Initiator dataStoreItemChangeInitiator;
-        switch (storageItemChange.initiator()) {
-            case SYNC_ENGINE:
-                dataStoreItemChangeInitiator = DataStoreItemChange.Initiator.REMOTE;
-                break;
-            case DATA_STORE_API:
-                dataStoreItemChangeInitiator = DataStoreItemChange.Initiator.LOCAL;
-                break;
-            default:
-                throw new DataStoreException(
-                        "Unknown initiator of storage change: " + storageItemChange.initiator(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                );
-        }
-
-        final DataStoreItemChange.Type dataStoreItemChangeType;
-        switch (storageItemChange.type()) {
-            case DELETE:
-                dataStoreItemChangeType = DataStoreItemChange.Type.DELETE;
-                break;
-            case UPDATE:
-                dataStoreItemChangeType = DataStoreItemChange.Type.UPDATE;
-                break;
-            case CREATE:
-                dataStoreItemChangeType = DataStoreItemChange.Type.CREATE;
-                break;
-            default:
-                throw new DataStoreException(
-                        "Unknown type of storage change: " + storageItemChange.type(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                );
-        }
-
-        return DataStoreItemChange.<T>builder()
-            .initiator(dataStoreItemChangeInitiator)
-            .item(storageItemChange.item())
-            .itemClass(storageItemChange.itemClass())
-            .type(dataStoreItemChangeType)
-            .uuid(storageItemChange.changeId().toString())
-            .build();
     }
 }
