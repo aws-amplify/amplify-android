@@ -29,7 +29,6 @@ import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Latch;
@@ -47,8 +46,8 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.outboxIsEmpty;
-import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isOutboxEmpty;
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isProcessed;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -113,7 +112,7 @@ public final class MutationProcessorTest {
         // Start listening for publication events.
         HubAccumulator statusAccumulator = HubAccumulator.create(
                 HubChannel.DATASTORE,
-                outboxIsEmpty(true), // outbox should be empty after processing its only mutation
+                isOutboxEmpty(true), // outbox should be empty after processing its only mutation
                 1
         ).start();
 
@@ -143,7 +142,7 @@ public final class MutationProcessorTest {
 
         // Start listening for publication events.
         HubAccumulator accumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(tony), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, isProcessed(tony), 1)
                 .start();
 
         PendingMutation<BlogOwner> createTony = PendingMutation.creation(tony, BlogOwner.class);
@@ -154,11 +153,7 @@ public final class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox();
 
         // Assert: the event was published
-        List<HubEvent<?>> events = accumulator.await();
-        assertEquals(1, events.size());
-        @SuppressWarnings("unchecked")
-        PendingMutation<BlogOwner> mutation = (PendingMutation<BlogOwner>) events.get(0).getData();
-        assertEquals(createTony, mutation);
+        assertEquals(1, accumulator.await().size());
 
         // And that it is no longer in the outbox.
         assertFalse(mutationOutbox.hasPendingMutation(tony.getId()));

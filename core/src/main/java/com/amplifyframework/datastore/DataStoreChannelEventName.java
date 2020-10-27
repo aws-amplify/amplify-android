@@ -31,18 +31,9 @@ import java.util.Objects;
  */
 public enum DataStoreChannelEventName {
     /**
-     * An item in the local storage has been published to the cloud.
-     * An event that uses this value for {@link HubEvent#getName()} will contain a model object
-     * in the {@link HubEvent#getData()}.
+     * The DataStore as a whole (not just the sync piece) is ready. At this point all data is available.
      */
-    PUBLISHED_TO_CLOUD("published_to_cloud"),
-
-    /**
-     * A model was updated locally, from a model version that was received from the cloud.
-     * An event that uses this value for {@link HubEvent#getName()} will contain a model object
-     * in the {@link HubEvent#getData()}.
-     */
-    RECEIVED_FROM_CLOUD("received_from_cloud"),
+    READY("ready"),
 
     /**
      * Indicates that the network is active or not.
@@ -51,14 +42,16 @@ public enum DataStoreChannelEventName {
     NETWORK_STATUS("networkStatus"),
 
     /**
-     * The websocket connection has been established and all the graphql subscriptions too.
+     * The WebSocket connection has been established, in addition to all of the GraphQL
+     * subscriptions it hosts.
      */
     SUBSCRIPTIONS_ESTABLISHED("subscriptionsEstablished"),
 
     /**
-     * The DataStore as a whole (not just the sync piece) is ready. At this point all data is available.
+     * The server sent the client data over the WebSocket subscription. The data was
+     * successfully melded back into the local store.
      */
-    READY("ready"),
+    SUBSCRIPTION_DATA_PROCESSED("subscriptionDataProcessed"),
 
     /**
      * Notifies if there are mutations in the outbox.
