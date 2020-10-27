@@ -121,7 +121,7 @@ final class Merger {
      */
     private <T extends Model> void announceSuccessfulMerge(ModelWithMetadata<T> modelWithMetadata) {
         Amplify.Hub.publish(HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.RECEIVED_FROM_CLOUD, modelWithMetadata)
+            HubEvent.create(DataStoreChannelEventName.SUBSCRIPTION_DATA_PROCESSED, modelWithMetadata)
         );
     }
 
@@ -179,23 +179,5 @@ final class Merger {
                 onNotPresent.call();
             }
         }, failure -> onNotPresent.call());
-    }
-
-    /**
-     * The strategy to use while merging. Whether to consider the contents of the mutation
-     * outbox before saving data locally, or, to ignore it.
-     */
-    enum MergeStrategy {
-        /**
-         * When merging, the contents of the mutation outbox will *not* be considered.
-         */
-        IGNORE_PENDING_MUTATIONS,
-
-        /**
-         * When merging, the contents of the mutation outbox will be considered.
-         * If there is already a pending mutation in the mutation outbox, for a model of the
-         * same ID as the model being merged -- then the merge will *not* modify the existing model.
-         */
-        CONSIDER_PENDING_MUTATIONS
     }
 }

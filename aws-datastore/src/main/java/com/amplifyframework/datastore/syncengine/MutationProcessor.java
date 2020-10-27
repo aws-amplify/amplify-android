@@ -136,7 +136,7 @@ final class MutationProcessor {
                     // if there are outstanding mutations in the outbox.
                     mutationOutbox.remove(mutationOutboxItem.getMutationId())
                         .andThen(merger.merge(modelWithMetadata))
-                        .doOnComplete(() -> announceSuccessfulSync(modelWithMetadata))
+                        .doOnComplete(() -> announceMutationProcessed(modelWithMetadata))
                 )
             )
             .doOnComplete(() -> {
@@ -144,22 +144,9 @@ final class MutationProcessor {
                     "Pending mutation was published to cloud successfully, " +
                         "and removed from the mutation outbox: " + mutationOutboxItem
                 );
-                announceSuccessfulPublication(mutationOutboxItem);
                 publishCurrentOutboxStatus();
             })
             .doOnError(error -> LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error));
-    }
-
-    /**
-     * Publish a successfully processed pending mutation to hub.
-     * @param processedMutation A mutation that has been successfully processed and removed from outbox
-     * @param <T> Type of model
-     */
-    private <T extends Model> void announceSuccessfulPublication(PendingMutation<T> processedMutation) {
-        Amplify.Hub.publish(
-            HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation)
-        );
     }
 
     /**
@@ -167,23 +154,21 @@ final class MutationProcessor {
      * @param modelWithMetadata A model that was successfully mutated and its sync metadata
      * @param <T> Type of model
      */
-    private <T extends Model> void announceSuccessfulSync(ModelWithMetadata<T> modelWithMetadata) {
-        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent
-                .fromModelWithMetadata(modelWithMetadata);
-        Amplify.Hub.publish(
-            HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, mutationEvent)
-        );
+    private <T extends Model> void announceMutationProcessed(ModelWithMetadata<T> modelWithMetadata) {
+        OutboxMutationEvent<T> mutationEvent =
+            OutboxMutationEvent.fromModelWithMetadata(modelWithMetadata);
+        HubEvent<OutboxMutationEvent<T>> hubEvent =
+            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, mutationEvent);
+        Amplify.Hub.publish(HubChannel.DATASTORE, hubEvent);
     }
 
     /**
      * Publish current outbox status to hub.
      */
     private void publishCurrentOutboxStatus() {
-        Amplify.Hub.publish(
-                HubChannel.DATASTORE,
-                new OutboxStatusEvent(mutationOutbox.peek() == null).toHubEvent()
-        );
+        HubEvent<OutboxStatusEvent> hubEvent =
+            new OutboxStatusEvent(mutationOutbox.peek() == null).toHubEvent();
+        Amplify.Hub.publish(HubChannel.DATASTORE, hubEvent);
     }
 
     /**
