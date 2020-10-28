@@ -68,9 +68,6 @@ public final class OwnerBasedAuthTest {
     private static final String GRAPHQL_API_WITH_COGNITO = "graphQlApi_cognito";
     private static final String GRAPHQL_API_WITH_OIDC = "graphQlApi_oidc";
 
-    private static final String GROUP_A = "http://myapp1.com/claims/groups";
-    private static final String GROUP_B = "http://myapp2.com/claims/groups";
-
     private MockWebServer webServer;
     private HttpUrl baseUrl;
     private AWSApiPlugin plugin;
@@ -342,19 +339,4 @@ public final class OwnerBasedAuthTest {
 
     @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, identityClaim = "sub") })
     private abstract static class OwnerOidc implements Model {}
-
-    @ModelConfig(authRules = {@AuthRule(allow = AuthStrategy.GROUPS, groups = "Admins", groupClaim = GROUP_A)})
-    private abstract static class GroupOidc implements Model {}
-
-    @ModelConfig(authRules = {
-            @AuthRule(allow = AuthStrategy.OWNER),
-            @AuthRule(allow = AuthStrategy.GROUPS, groups = "Admins")
-    })
-    private abstract static class OwnerGroup implements Model {}
-
-    @ModelConfig(authRules = {
-        @AuthRule(allow = AuthStrategy.GROUPS, groups = "Admins", groupClaim = GROUP_A),
-        @AuthRule(allow = AuthStrategy.GROUPS, groups = "Moderators", groupClaim = GROUP_B)
-    })
-    private abstract static class GroupMultiClaims implements Model {}
 }

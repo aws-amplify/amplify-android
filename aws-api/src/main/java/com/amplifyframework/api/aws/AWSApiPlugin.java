@@ -292,7 +292,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             try {
                 AppSyncGraphQLRequest<R> appSyncRequest = (AppSyncGraphQLRequest<R>) request;
                 AuthRule ownerRuleWithReadRestriction = null;
-                Map<String, List<String>> readAuthorizedGroupsMap = new HashMap<>();
+                Map<String, Set<String>> readAuthorizedGroupsMap = new HashMap<>();
 
                 // Note that we are intentionally supporting only one owner rule with a READ operation at this time.
                 // If there is more than one, the operation will fail because AppSync generates a parameter for each
@@ -309,13 +309,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                             return null;
                         }
                     } else if (isReadRestrictingStaticGroup(authRule)) {
+                        // Group read-restricting groups by the claim name
                         String groupClaim = authRule.getGroupClaimOrDefault();
                         List<String> groups = authRule.getGroups();
-                        List<String> readAuthorizedGroups = readAuthorizedGroupsMap.get(groupClaim);
+                        Set<String> readAuthorizedGroups = readAuthorizedGroupsMap.get(groupClaim);
                         if (readAuthorizedGroups != null) {
                             readAuthorizedGroups.addAll(groups);
                         } else {
-                            readAuthorizedGroupsMap.put(groupClaim, new ArrayList<>(groups));
+                            readAuthorizedGroupsMap.put(groupClaim, new HashSet<>(groups));
                         }
                     }
                 }
@@ -404,14 +405,22 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     private boolean userNotInReadRestrictingGroups(
-            Map<String, List<String>> readAuthorizedGroupsMap,
+            Map<String, Set<String>> readAuthorizedGroupsMap,
             AuthorizationType authType
     ) throws ApiException {
-        for (Map.Entry<String, List<String>> entry : readAuthorizedGroupsMap.entrySet()) {
+        // Iterate through map of "group claim" -> "read-restricting groups from that claim". e.g.
+        // {
+        //   "https://myapp.com/claims/groups" -> {Admins}
+        //   "https://differentapp.com/claims/groups" -> {Moderators, Editors}
+        // }
+        for (Map.Entry<String, Set<String>> entry : readAuthorizedGroupsMap.entrySet()) {
             String groupClaim = entry.getKey();
-            List<String> readAuthorizedGroups = entry.getValue();
+            // Get a list of groups that user belongs in for a given claim.
+            // e.g. [Admins, User]
             List<String> userGroups = getUserGroups(groupClaim, authType);
-            if (!Collections.disjoint(readAuthorizedGroups, userGroups)) {
+            Set<String> readAuthorizedGroups = entry.getValue();
+            // If user belongs in any group for a given group claim, return false.
+            if (!Collections.disjoint(userGroups, readAuthorizedGroups)) {
                 return false;
             }
         }
