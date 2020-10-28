@@ -38,6 +38,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
+import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
@@ -353,7 +354,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             predicate,
             itemSave -> {
                 try {
-                    onItemSaved.accept(toDataStoreItemChange(itemSave));
+                    onItemSaved.accept(ItemChangeMapper.map(itemSave));
                 } catch (DataStoreException dataStoreException) {
                     onFailureToSave.accept(dataStoreException);
                 }
@@ -387,7 +388,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             StorageItemChange.Initiator.DATA_STORE_API,
             itemDeletion -> {
                 try {
-                    onItemDeleted.accept(toDataStoreItemChange(itemDeletion));
+                    onItemDeleted.accept(ItemChangeMapper.map(itemDeletion));
                 } catch (DataStoreException dataStoreException) {
                     onFailureToDelete.accept(dataStoreException);
                 }
@@ -437,7 +438,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
-                    onDataStoreItemChange.accept(toDataStoreItemChange(itemChange));
+                    onDataStoreItemChange.accept(ItemChangeMapper.map(itemChange));
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
                 }
@@ -460,7 +461,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                     if (itemChange.itemClass().equals(itemClass)) {
                         @SuppressWarnings("unchecked") // This was just checked, right above.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
-                        onDataStoreItemChange.accept(toDataStoreItemChange(typedChange));
+                        onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
                     }
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
@@ -485,7 +486,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                     if (itemChange.itemClass().equals(itemClass) && itemChange.item().getId().equals(uniqueId)) {
                         @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
-                        onDataStoreItemChange.accept(toDataStoreItemChange(typedChange));
+                        onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
                     }
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
@@ -508,53 +509,41 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     /**
-     * Converts an {@link StorageItemChange} into an {@link DataStoreItemChange}.
-     * @param storageItemChange A storage item change
-     * @param <T> Type of data that was changed in the storage layer
-     * @return A data store item change representing the change in storage layer
+     * Stops all synchronization processes and invokes
+     * the clear method of the underlying storage
+     * adapter. Any items pending synchronization in the outbound queue will
+     * be lost. Synchronization processes will be restarted on the
+     * next interaction with the DataStore.
+     * @param onComplete Invoked if the call is successful.
+     * @param onError Invoked if not successful
      */
-    private static <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(
-            final StorageItemChange<T> storageItemChange) throws DataStoreException {
-
-        final DataStoreItemChange.Initiator dataStoreItemChangeInitiator;
-        switch (storageItemChange.initiator()) {
-            case SYNC_ENGINE:
-                dataStoreItemChangeInitiator = DataStoreItemChange.Initiator.REMOTE;
-                break;
-            case DATA_STORE_API:
-                dataStoreItemChangeInitiator = DataStoreItemChange.Initiator.LOCAL;
-                break;
-            default:
-                throw new DataStoreException(
-                        "Unknown initiator of storage change: " + storageItemChange.initiator(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                );
+    @SuppressWarnings("unused")
+    @Override
+    public void clear(@NonNull Action onComplete,
+                      @NonNull Consumer<DataStoreException> onError) {
+        // We shouldn't call beforeOperation when clearing the DataStore. The
+        // only thing we have to wait for is the category initialization latch.
+        boolean isCategoryInitialized = false;
+        try {
+            isCategoryInitialized = categoryInitializationsPending.await(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException exception) {
+            LOG.warn("Execution interrupted while waiting for DataStore to be initialized.");
         }
-
-        final DataStoreItemChange.Type dataStoreItemChangeType;
-        switch (storageItemChange.type()) {
-            case DELETE:
-                dataStoreItemChangeType = DataStoreItemChange.Type.DELETE;
-                break;
-            case UPDATE:
-                dataStoreItemChangeType = DataStoreItemChange.Type.UPDATE;
-                break;
-            case CREATE:
-                dataStoreItemChangeType = DataStoreItemChange.Type.CREATE;
-                break;
-            default:
-                throw new DataStoreException(
-                        "Unknown type of storage change: " + storageItemChange.type(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                );
+        if (!isCategoryInitialized) {
+            onError.accept(new DataStoreException("DataStore not ready to be cleared.", "Retry your request."));
+            return;
         }
-
-        return DataStoreItemChange.<T>builder()
-            .initiator(dataStoreItemChangeInitiator)
-            .item(storageItemChange.item())
-            .itemClass(storageItemChange.itemClass())
-            .type(dataStoreItemChangeType)
-            .uuid(storageItemChange.changeId().toString())
-            .build();
+        Disposable disposable = orchestrator.stop()
+            .subscribeOn(Schedulers.io())
+            .andThen(Completable.fromAction(() -> sqliteStorageAdapter.clear(() -> {
+                // Invoke the consumer's callback once the clear operation is finished.
+                onComplete.call();
+                // Kick off the orchestrator asynchronously.
+                orchestrator.start();
+            }, onError)))
+            .subscribe(
+                () -> LOG.debug("Clear operation completed."),
+                throwable -> LOG.warn("Clear operation failed", throwable)
+            );
     }
 }

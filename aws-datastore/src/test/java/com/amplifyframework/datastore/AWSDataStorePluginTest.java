@@ -254,7 +254,7 @@ public final class AWSDataStorePluginTest {
         }).when(mockApiPlugin).mutate(any(), any(), any());
 
         HubAccumulator apiInteractionObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD, 1)
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, 1)
                 .start();
 
         // Save person 1
@@ -368,7 +368,7 @@ public final class AWSDataStorePluginTest {
         assertRemoteSubscriptionsCancelled();
 
         apiInteractionObserver =
-                HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD, 1).start();
+                HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, 1).start();
         HubAccumulator orchestratorInitObserver =
                 HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1).start();
 
