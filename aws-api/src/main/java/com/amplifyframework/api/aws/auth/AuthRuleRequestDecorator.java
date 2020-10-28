@@ -125,10 +125,11 @@ public final class AuthRuleRequestDecorator {
                 return appSyncRequest.newBuilder()
                     .variable(key, "String!", value)
                     .build();
-            } catch (AmplifyException exception) {
+            } catch (AmplifyException error) {
+                // This should not happen normally
                 throw new ApiException(
-                    "Failed to set owner field on AppSyncGraphQLRequest", exception,
-                    "See attached exception for details.");
+                    "Failed to set owner field on AppSyncGraphQLRequest.", error,
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
             }
         }
 
@@ -151,12 +152,17 @@ public final class AuthRuleRequestDecorator {
             return CognitoJWTParser
                     .getPayload(getAuthToken(authType))
                     .getString(identityClaim);
-        } catch (JSONException | CognitoParameterInvalidException error) {
+        } catch (JSONException error) {
             throw new ApiException(
                 "Attempted to subscribe to a model with owner-based authorization without " + identityClaim + " " +
                     "which was specified (or defaulted to) as the identity claim.",
                 "If you did not specify a custom identityClaim in your schema, make sure you are logged in. If " +
                     "you did, check that the value you specified in your schema is present in the access key."
+            );
+        } catch (CognitoParameterInvalidException error) {
+            throw new ApiException(
+                "Failed to parse the ID token for identity claim: " + error.getMessage(),
+                "Please verify the validity of token vended by the registered auth provider."
             );
         }
     }
@@ -172,10 +178,16 @@ public final class AuthRuleRequestDecorator {
                     groups.add(jsonGroups.getString(index));
                 }
             }
-        } catch (JSONException | CognitoParameterInvalidException error) {
+        } catch (JSONException error) {
+            // This should not happen normally
             throw new ApiException(
-                "Failed to parse group claim from the token.",
+                "Failed obtain group claim from the parsed JWT token.", error,
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+            );
+        } catch (CognitoParameterInvalidException error) {
+            throw new ApiException(
+                "Failed to parse the ID token for group claim: " + error.getMessage(),
+                "Please verify the validity of token vended by the registered auth provider."
             );
         }
 
