@@ -21,13 +21,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.aws.auth.AuthRuleProcessor;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
-import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
-import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
-import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -41,7 +38,6 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.hub.HubChannel;
@@ -49,14 +45,12 @@ import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.exceptions.CognitoParameterInvalidException;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,6 +78,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
     private final ExecutorService executorService;
+    private final AuthRuleProcessor authRuleProcessor;
 
     private final Set<String> restApis;
     private final Set<String> gqlApis;
@@ -112,6 +107,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.restApis = new HashSet<>();
         this.gqlApis = new HashSet<>();
         this.executorService = Executors.newCachedThreadPool();
+        this.authRuleProcessor = new AuthRuleProcessor(authProvider);
     }
 
     @NonNull
@@ -277,70 +273,23 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull Action onSubscriptionComplete) {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            onSubscriptionFailure.accept(
-                    new ApiException(
-                            "No client information for API named " + apiName,
-                            "Check your amplify configuration to make sure there " +
-                                    "is a correctly configured section for " + apiName
-                    )
-            );
+            onSubscriptionFailure.accept(new ApiException(
+                    "No client information for API named " + apiName,
+                    "Check your amplify configuration to make sure there " +
+                            "is a correctly configured section for " + apiName
+            ));
             return null;
         }
 
         GraphQLRequest<R> request = graphQLRequest;
-        if (request instanceof AppSyncGraphQLRequest) {
-            try {
-                AppSyncGraphQLRequest<R> appSyncRequest = (AppSyncGraphQLRequest<R>) request;
-                AuthRule ownerRuleWithReadRestriction = null;
-                Map<String, Set<String>> readAuthorizedGroupsMap = new HashMap<>();
+        AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
 
-                // Note that we are intentionally supporting only one owner rule with a READ operation at this time.
-                // If there is more than one, the operation will fail because AppSync generates a parameter for each
-                // one. The question then is which one do we pass. JavaScript currently doesn't support this use case
-                // and it's not clear what a good solution would be until AppSync supports real time filters.
-                for (AuthRule authRule : appSyncRequest.getModelSchema().getAuthRules()) {
-                    if (isReadRestrictingOwner(authRule)) {
-                        if (ownerRuleWithReadRestriction == null) {
-                            ownerRuleWithReadRestriction = authRule;
-                        } else {
-                            onSubscriptionFailure.accept(new ApiException("Detected multiple owner type auth rules " +
-                                    "with a READ operation", "We currently do not support this use case. Please " +
-                                    "limit your type to just one owner auth rule with a READ operation restriction."));
-                            return null;
-                        }
-                    } else if (isReadRestrictingStaticGroup(authRule)) {
-                        // Group read-restricting groups by the claim name
-                        String groupClaim = authRule.getGroupClaimOrDefault();
-                        List<String> groups = authRule.getGroups();
-                        Set<String> readAuthorizedGroups = readAuthorizedGroupsMap.get(groupClaim);
-                        if (readAuthorizedGroups != null) {
-                            readAuthorizedGroups.addAll(groups);
-                        } else {
-                            readAuthorizedGroupsMap.put(groupClaim, new HashSet<>(groups));
-                        }
-                    }
-                }
-
-                // We only add the owner parameter to the subscription if there is an owner rule with a READ restriction
-                // and either there are no group auth rules with read access or there are but the user isn't in any of
-                // them.
-                final AuthorizationType authType = clientDetails
-                        .getApiConfiguration()
-                        .getAuthorizationType();
-                if (ownerRuleWithReadRestriction != null
-                        && userNotInReadRestrictingGroups(readAuthorizedGroupsMap, authType)) {
-                    String idClaim = ownerRuleWithReadRestriction.getIdentityClaimOrDefault();
-                    String key = ownerRuleWithReadRestriction.getOwnerFieldOrDefault();
-                    String value = getIdentityValue(idClaim, authType);
-                    request = appSyncRequest.newBuilder()
-                            .variable(key, "String!", value)
-                            .build();
-                }
-            } catch (AmplifyException exception) {
-                onSubscriptionFailure.accept(new ApiException("Failed to set owner field on AppSyncGraphQLRequest",
-                        exception, "See attached exception for details."));
-                return null;
-            }
+        // Decorate the request according to the auth rule parameters.
+        try {
+            request = authRuleProcessor.process(request, authType);
+        } catch (ApiException exception) {
+            onSubscriptionFailure.accept(exception);
+            return null;
         }
 
         SubscriptionOperation<R> operation = SubscriptionOperation.<R>builder()
@@ -355,105 +304,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             .build();
         operation.start();
         return operation;
-    }
-
-    private boolean isReadRestrictingOwner(AuthRule authRule) {
-        return AuthStrategy.OWNER.equals(authRule.getAuthStrategy())
-            && authRule.getOperationsOrDefault().contains(ModelOperation.READ);
-    }
-
-    private boolean isReadRestrictingStaticGroup(AuthRule authRule) {
-        return AuthStrategy.GROUPS.equals(authRule.getAuthStrategy())
-            && !authRule.getGroups().isEmpty()
-            && authRule.getOperationsOrDefault().contains(ModelOperation.READ);
-    }
-
-    private String getIdentityValue(String identityClaim, AuthorizationType authType) throws ApiException {
-        try {
-            return CognitoJWTParser
-                    .getPayload(getAuthToken(authType))
-                    .getString(identityClaim);
-        } catch (JSONException | CognitoParameterInvalidException error) {
-            throw new ApiException(
-                    "Attempted to subscribe to a model with owner-based authorization without " + identityClaim + " " +
-                            "which was specified (or defaulted to) as the identity claim.",
-                    "If you did not specify a custom identityClaim in your schema, make sure you are logged in. If " +
-                            "you did, check that the value you specified in your schema is present in the access key."
-            );
-        }
-    }
-
-    private ArrayList<String> getUserGroups(String groupClaim, AuthorizationType authType) throws ApiException {
-        ArrayList<String> groups = new ArrayList<>();
-        try {
-            JSONObject accessToken = CognitoJWTParser
-                    .getPayload(getAuthToken(authType));
-            if (accessToken.has(groupClaim)) {
-                JSONArray jsonGroups = accessToken.getJSONArray(groupClaim);
-                for (int index = 0; index < jsonGroups.length(); index++) {
-                    groups.add(jsonGroups.getString(index));
-                }
-            }
-        } catch (JSONException | CognitoParameterInvalidException error) {
-            throw new ApiException(
-                    "Failed to parse group claim from the token.",
-                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-            );
-        }
-
-        return groups;
-    }
-
-    private boolean userNotInReadRestrictingGroups(
-            Map<String, Set<String>> readAuthorizedGroupsMap,
-            AuthorizationType authType
-    ) throws ApiException {
-        // Iterate through map of "group claim" -> "read-restricting groups from that claim". e.g.
-        // {
-        //   "https://myapp.com/claims/groups" -> {Admins}
-        //   "https://differentapp.com/claims/groups" -> {Moderators, Editors}
-        // }
-        for (Map.Entry<String, Set<String>> entry : readAuthorizedGroupsMap.entrySet()) {
-            String groupClaim = entry.getKey();
-            // Get a list of groups that user belongs in for a given claim.
-            // e.g. [Admins, User]
-            List<String> userGroups = getUserGroups(groupClaim, authType);
-            Set<String> readAuthorizedGroups = entry.getValue();
-            // If user belongs in any group for a given group claim, return false.
-            if (!Collections.disjoint(userGroups, readAuthorizedGroups)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private String getAuthToken(AuthorizationType authType) throws ApiException {
-        switch (authType) {
-            case AMAZON_COGNITO_USER_POOLS:
-                CognitoUserPoolsAuthProvider cognitoProvider = authProvider.getCognitoUserPoolsAuthProvider();
-                if (cognitoProvider == null) {
-                    cognitoProvider = new DefaultCognitoUserPoolsAuthProvider();
-                }
-                return cognitoProvider.getLatestAuthToken();
-            case OPENID_CONNECT:
-                OidcAuthProvider oidcProvider = authProvider.getOidcAuthProvider();
-                if (oidcProvider == null) {
-                    throw new ApiException(
-                        "OidcAuthProvider interface is not implemented.",
-                        "Configure AWSApiPlugin with ApiAuthProviders containing an implementation of " +
-                            "OidcAuthProvider interface that can vend a valid JWT token."
-                    );
-                }
-                return oidcProvider.getLatestAuthToken();
-            case API_KEY:
-            case AWS_IAM:
-            case NONE:
-            default:
-                throw new ApiException(
-                    "Failed to obtain access token from the configured auth provider.",
-                    "Verify that the API is configured with either Cognito User Pools or OpenID Connect."
-                );
-        }
     }
 
     @Nullable
