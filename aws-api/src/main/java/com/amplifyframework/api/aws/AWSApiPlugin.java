@@ -23,7 +23,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
-import com.amplifyframework.api.aws.auth.AuthRuleProcessor;
+import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
@@ -38,14 +38,9 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.model.AuthStrategy;
-import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.util.UserAgent;
 
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.exceptions.CognitoParameterInvalidException;
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -54,7 +49,6 @@ import java.net.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -78,7 +72,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
     private final ExecutorService executorService;
-    private final AuthRuleProcessor authRuleProcessor;
+    private final AuthRuleRequestDecorator requestDecorator;
 
     private final Set<String> restApis;
     private final Set<String> gqlApis;
@@ -107,7 +101,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.restApis = new HashSet<>();
         this.gqlApis = new HashSet<>();
         this.executorService = Executors.newCachedThreadPool();
-        this.authRuleProcessor = new AuthRuleProcessor(authProvider);
+        this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
     }
 
     @NonNull
@@ -288,7 +282,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             AuthorizationType authType = clientDetails
                     .getApiConfiguration()
                     .getAuthorizationType();
-            authDecoratedRequest = authRuleProcessor.process(graphQLRequest, authType);
+            authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
         } catch (ApiException exception) {
             onSubscriptionFailure.accept(exception);
             return null;

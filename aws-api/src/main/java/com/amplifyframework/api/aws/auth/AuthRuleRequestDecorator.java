@@ -49,14 +49,14 @@ import java.util.Set;
  * Processor that can decorate an AppSync-compliant GraphQL request with additional variables
  * that are required for owner-based or group-based authorization.
  */
-public final class AuthRuleProcessor {
+public final class AuthRuleRequestDecorator {
     private final ApiAuthProviders authProvider;
 
     /**
      * Constructs a new instance of GraphQL request's auth rule processor.
      * @param authProvider the auth providers to authorize requests
      */
-    public AuthRuleProcessor(@NonNull ApiAuthProviders authProvider) {
+    public AuthRuleRequestDecorator(@NonNull ApiAuthProviders authProvider) {
         this.authProvider = Objects.requireNonNull(authProvider);
     }
 
@@ -73,7 +73,7 @@ public final class AuthRuleProcessor {
      * @throws ApiException If an error is encountered while processing the auth rules associated
      *          with the request or if the authorization fails
      */
-    public <R> GraphQLRequest<R> process(
+    public <R> GraphQLRequest<R> decorate(
             @NonNull GraphQLRequest<R> request,
             @NonNull AuthorizationType authType
     ) throws ApiException {
