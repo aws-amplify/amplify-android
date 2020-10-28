@@ -309,10 +309,15 @@ public final class OwnerBasedAuthTest {
         public String getLatestAuthToken() {
             return FakeJWTToken.builder()
                     .putPayload("sub", SUB)
+                    .putPayload("http://app1.com/claims/groups", "[\"Admins\"]")
+                    .putPayload("http://app2.com/claims/groups", "[\"Editors\"]")
                     .build()
                     .asString();
         }
     }
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.PUBLIC) })
+    private abstract static class Public implements Model {}
 
     @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
     private abstract static class Owner implements Model {}
@@ -329,23 +334,9 @@ public final class OwnerBasedAuthTest {
     @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, operations = ModelOperation.DELETE)})
     private abstract static class OwnerDelete implements Model {}
 
-    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, identityClaim = "sub") })
-    private abstract static class OwnerOidc implements Model {}
-
-    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.PUBLIC) })
-    private abstract static class Public implements Model {}
-
-    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.GROUPS)})
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.GROUPS, groups = "Admins") })
     private abstract static class Group implements Model {}
 
-    @ModelConfig(authRules = {
-            @AuthRule(allow = AuthStrategy.GROUPS, groupClaim = "http://myapp.com/claims/groups")
-    })
-    private abstract static class GroupCustomClaim implements Model {}
-
-    @ModelConfig(authRules = {
-            @AuthRule(allow = AuthStrategy.GROUPS, groupClaim = "http://app1.com/claims/groups"),
-            @AuthRule(allow = AuthStrategy.GROUPS, groupClaim = "http://app2.com/claims/groups")
-    })
-    private abstract static class GroupMultiClaims implements Model {}
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER, identityClaim = "sub") })
+    private abstract static class OwnerOidc implements Model {}
 }
