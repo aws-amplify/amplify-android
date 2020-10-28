@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
-import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
@@ -47,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Observable;
 
-import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isProcessed;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -125,8 +124,8 @@ public final class OrchestratorTest {
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         HubAccumulator accumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(susan), 1)
-                          .start();
+            HubAccumulator.create(HubChannel.DATASTORE, isProcessed(susan), 1)
+                  .start();
         // Act: Put BlogOwner into storage, and wait for it to complete.
         SynchronousStorageAdapter.delegatingTo(localStorageAdapter).save(susan);
 
@@ -135,8 +134,9 @@ public final class OrchestratorTest {
             Collections.singletonList(susan),
             Observable.fromIterable(accumulator.await(10, TimeUnit.SECONDS))
                 .map(HubEvent::getData)
-                .map(data -> (PendingMutation<BlogOwner>) data)
-                .map(PendingMutation::getMutatedItem)
+                .map(data -> (OutboxMutationEvent<BlogOwner>) data)
+                .map(OutboxMutationEvent::getElement)
+                .map(ModelWithMetadata::getModel)
                 .toList()
                 .blockingGet()
         );
@@ -146,12 +146,9 @@ public final class OrchestratorTest {
 
     /**
      * Verify preventing concurrent state transitions from happening.
-     * @throws AmplifyException Not expected.
      */
-    @SuppressWarnings("unchecked") // Casting any(GraphQLRequest.class)
     @Test
-    public void preventConcurrentStateTransitions() throws AmplifyException {
-
+    public void preventConcurrentStateTransitions() {
         // Arrange: orchestrator is running
         orchestrator.start();
 
@@ -161,7 +158,7 @@ public final class OrchestratorTest {
         orchestrator.start();
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
-        verify(mockApi, times(1)).query(any(GraphQLRequest.class), any(), any());
+        verify(mockApi, times(1)).query(any(), any(), any());
 
         assertTrue(orchestrator.stop().blockingAwait(5, TimeUnit.SECONDS));
     }
