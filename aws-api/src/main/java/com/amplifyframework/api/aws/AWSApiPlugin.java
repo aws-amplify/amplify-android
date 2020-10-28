@@ -281,12 +281,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             return null;
         }
 
-        GraphQLRequest<R> request = graphQLRequest;
-        AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
+        final GraphQLRequest<R> authDecoratedRequest;
 
         // Decorate the request according to the auth rule parameters.
         try {
-            request = authRuleProcessor.process(request, authType);
+            AuthorizationType authType = clientDetails
+                    .getApiConfiguration()
+                    .getAuthorizationType();
+            authDecoratedRequest = authRuleProcessor.process(graphQLRequest, authType);
         } catch (ApiException exception) {
             onSubscriptionFailure.accept(exception);
             return null;
@@ -294,7 +296,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         SubscriptionOperation<R> operation = SubscriptionOperation.<R>builder()
             .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
-            .graphQlRequest(request)
+            .graphQlRequest(authDecoratedRequest)
             .responseFactory(gqlResponseFactory)
             .executorService(executorService)
             .onSubscriptionStart(onSubscriptionEstablished)
