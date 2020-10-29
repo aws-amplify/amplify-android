@@ -20,7 +20,6 @@ phases:
       nodejs: 12
     commands:
       - echo 'Install phase starting'
-      - npm install -g @aws-amplify/cli@4.30.0
     finally:
       - echo 'Install phase completed.'
   pre_build:
@@ -48,8 +47,3 @@ reports:
       - build/allTests/*
     discard-paths: yes
     file-format: JUNITXML
-artifacts:
-  files:
-    - '**/*.apk'
-  name: AmplifyAndroidCatApks
-  discard-paths: yes
