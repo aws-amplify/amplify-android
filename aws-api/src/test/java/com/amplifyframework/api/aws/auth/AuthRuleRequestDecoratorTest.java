@@ -204,6 +204,11 @@ public final class AuthRuleRequestDecoratorTest {
         }
     }
 
+    /**
+     * Verify owner argument is added if model contains both owner-based and group-based
+     * authorization and the user is not in any read-restricted group.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
     @Test
     public void ownerArgumentAddedIfOwnerIsNotInGroupWithUserPools() throws AmplifyException {
         final AuthorizationType mode = AuthorizationType.AMAZON_COGNITO_USER_POOLS;
@@ -212,12 +217,19 @@ public final class AuthRuleRequestDecoratorTest {
         // OwnerNotInGroup class uses combined owner and group-based auth,
         // but user is not in the read-restricted group.
         for (SubscriptionType subscriptionType : SubscriptionType.values()) {
-            GraphQLRequest<OwnerNotInGroup> originalRequest = createRequest(OwnerNotInGroup.class, subscriptionType);
-            GraphQLRequest<OwnerNotInGroup> modifiedRequest = decorator.decorate(originalRequest, mode);
+            GraphQLRequest<OwnerNotInGroup> originalRequest =
+                    createRequest(OwnerNotInGroup.class, subscriptionType);
+            GraphQLRequest<OwnerNotInGroup> modifiedRequest =
+                    decorator.decorate(originalRequest, mode);
             assertEquals(expectedOwner, getOwnerField(modifiedRequest));
         }
     }
 
+    /**
+     * Verify owner argument is NOT added if model contains both owner-based and group-based
+     * authorization and the user is in any of the read-restricted groups.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
     @Test
     public void ownerArgumentNotAddedIfOwnerIsInGroupWithUserPools() throws AmplifyException {
         final AuthorizationType mode = AuthorizationType.AMAZON_COGNITO_USER_POOLS;
@@ -225,12 +237,19 @@ public final class AuthRuleRequestDecoratorTest {
         // OwnerInGroup class uses combined owner and group-based auth,
         // and user is in the read-restricted group.
         for (SubscriptionType subscriptionType : SubscriptionType.values()) {
-            GraphQLRequest<OwnerInGroup> originalRequest = createRequest(OwnerInGroup.class, subscriptionType);
-            GraphQLRequest<OwnerInGroup> modifiedRequest = decorator.decorate(originalRequest, mode);
+            GraphQLRequest<OwnerInGroup> originalRequest =
+                    createRequest(OwnerInGroup.class, subscriptionType);
+            GraphQLRequest<OwnerInGroup> modifiedRequest =
+                    decorator.decorate(originalRequest, mode);
             assertNull(getOwnerField(modifiedRequest));
         }
     }
 
+    /**
+     * Verify owner argument is added if model contains both owner-based and group-based
+     * authorization and the user is not in any read-restricted group.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
     @Test
     public void ownerArgumentAddedIfOwnerIsNotInCustomGroup() throws AmplifyException {
         final AuthorizationType mode = AuthorizationType.OPENID_CONNECT;
@@ -239,12 +258,19 @@ public final class AuthRuleRequestDecoratorTest {
         // OwnerNotInCustomGroup class uses combined owner and group-based auth,
         // but user is not in the read-restricted custom group.
         for (SubscriptionType subscriptionType : SubscriptionType.values()) {
-            GraphQLRequest<OwnerNotInCustomGroup> originalRequest = createRequest(OwnerNotInCustomGroup.class, subscriptionType);
-            GraphQLRequest<OwnerNotInCustomGroup> modifiedRequest = decorator.decorate(originalRequest, mode);
+            GraphQLRequest<OwnerNotInCustomGroup> originalRequest =
+                    createRequest(OwnerNotInCustomGroup.class, subscriptionType);
+            GraphQLRequest<OwnerNotInCustomGroup> modifiedRequest =
+                    decorator.decorate(originalRequest, mode);
             assertEquals(expectedOwner, getOwnerField(modifiedRequest));
         }
     }
 
+    /**
+     * Verify owner argument is NOT added if model contains both owner-based and group-based
+     * authorization and the user is in any of the read-restricted groups.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
     @Test
     public void ownerArgumentNotAddedIfOwnerIsInCustomGroup() throws AmplifyException {
         final AuthorizationType mode = AuthorizationType.OPENID_CONNECT;
@@ -252,8 +278,10 @@ public final class AuthRuleRequestDecoratorTest {
         // OwnerInCustomGroup class uses combined owner and group-based auth,
         // and user is in the read-restricted custom group.
         for (SubscriptionType subscriptionType : SubscriptionType.values()) {
-            GraphQLRequest<OwnerInCustomGroup> originalRequest = createRequest(OwnerInCustomGroup.class, subscriptionType);
-            GraphQLRequest<OwnerInCustomGroup> modifiedRequest = decorator.decorate(originalRequest, mode);
+            GraphQLRequest<OwnerInCustomGroup> originalRequest =
+                    createRequest(OwnerInCustomGroup.class, subscriptionType);
+            GraphQLRequest<OwnerInCustomGroup> modifiedRequest =
+                    decorator.decorate(originalRequest, mode);
             assertNull(getOwnerField(modifiedRequest));
         }
     }
