@@ -117,14 +117,14 @@ public final class FakeJWTToken {
          * @return this builder instance
          */
         @NonNull
-        public Builder putPayload(@NonNull String key, @NonNull String value) {
+        public Builder putPayload(@NonNull String key, @NonNull Object value) {
             Objects.requireNonNull(key);
             Objects.requireNonNull(value);
             try {
                 payload.put(key, value);
             } catch (JSONException exception) {
                 payload.remove(key);
-                return putHeader(key, value);
+                return putPayload(key, value);
             }
             return this;
         }
