@@ -177,6 +177,23 @@ public interface RxDataStoreCategoryBehavior {
     );
 
     /**
+     * Starts the DataStore.  This only needs to be called if you wish to start eagerly.  If you don't call it,
+     * it will be called automatically prior to executing any other operations (#query, #save, #delete, #observe).
+     *
+     * @return A {@link Completable} which emits success after DataStore is initialized.  This does not block until
+     * subscriptions and sync are complete.  To block until sync and subscriptions are complete, use
+     * Amplify.Hub.subscribe to listen for the DataStoreChannelEventName.READY event on HubChannel.DATASTORE.
+     */
+    Completable start();
+
+    /**
+     * Stops the underlying DataStore, resetting the plugin to the initialized state.
+     *
+     *  @return A {@link Completable} which emits success upon successful stop of DataStore, emits an error, otherwise
+     */
+    Completable stop();
+
+    /**
      * Resets the underlying DataStore to its pre-initialized state such that no data remains on the local
      * device. Every implementation of this behavior may have its own interpretation of what clear means.
      * This is meant to be a destructive operation that allows for safe disposal of data stored locally.

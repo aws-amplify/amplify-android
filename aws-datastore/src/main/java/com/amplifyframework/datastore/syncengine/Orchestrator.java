@@ -155,8 +155,9 @@ public final class Orchestrator {
     /**
      * Start performing sync operations between the local storage adapter
      * and the remote GraphQL endpoint.
+     * @throws DataStoreException on failure to aquire start stop lock.
      */
-    public synchronized void start() {
+    public synchronized void start() throws DataStoreException {
         if (tryAcquireStartStopLock(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
             disposables.add(transitionCompletable()
                 .doOnSubscribe(subscriber -> {
@@ -170,7 +171,7 @@ public final class Orchestrator {
                     }
                 })
                 .doOnError(failure -> {
-                    LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.", failure);
+                    LOG.warn("Failed to start orchestrator.", failure);
                 })
                 .doOnDispose(() -> LOG.debug("Orchestrator disposed a transition."))
                 .doFinally(startStopSemaphore::release)
@@ -178,7 +179,8 @@ public final class Orchestrator {
                 .subscribe()
             );
         } else {
-            LOG.warn("Unable to acquire orchestrator lock. Transition currently in progress.");
+            throw new DataStoreException("Unable to acquire orchestrator lock. Transition currently in " +
+                    "progress.", "Retry your request");
         }
     }
 
