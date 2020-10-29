@@ -23,6 +23,7 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -44,6 +45,7 @@ import org.robolectric.shadows.ShadowLog;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isProcessed;
@@ -146,16 +148,28 @@ public final class OrchestratorTest {
 
     /**
      * Verify preventing concurrent state transitions from happening.
+     * @throws AmplifyException Not expected.
      */
     @Test
-    public void preventConcurrentStateTransitions() {
+    public void preventConcurrentStateTransitions() throws AmplifyException {
         // Arrange: orchestrator is running
         orchestrator.start();
 
         // Try to start it in a new thread.
-        new Thread(() -> orchestrator.start()).start();
-        // Try to start it again on a current thread.
-        orchestrator.start();
+        boolean success = Completable.create(emitter -> {
+            new Thread(() -> {
+                try {
+                    orchestrator.start();
+                    emitter.onComplete();
+                } catch (DataStoreException exception) {
+                    emitter.onError(exception);
+                }
+            }).start();
+
+            // Try to start it again on the current thread.
+            orchestrator.start();
+        }).blockingAwait(5, TimeUnit.SECONDS);
+        assertTrue("Failed to start orchestrator on a background thread", success);
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         verify(mockApi, times(1)).query(any(), any(), any());

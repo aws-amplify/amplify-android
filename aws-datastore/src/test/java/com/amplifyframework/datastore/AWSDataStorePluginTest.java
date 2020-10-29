@@ -41,6 +41,7 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.HubAccumulator;
@@ -56,7 +57,9 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.rxjava3.core.Observable;
@@ -79,6 +82,8 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("SameParameterValue")
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:datastore:test");
+
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
     private Context context;
     private ModelProvider modelProvider;
@@ -102,13 +107,25 @@ public final class AWSDataStorePluginTest {
     }
 
     /**
-     * Configuring and initializing the plugin succeeds without freezing or
-     * crashing the calling thread. Basic. 🙄
+     * Configuring and initializing the plugin succeeds without freezing or crashing the calling thread. Basic. 🙄
+     * @throws AmplifyException On failure to configure or initialize plugin.
+     */
+    @Test
+    public void configureAndInitialize() throws AmplifyException {
+        //Configure DataStore with an empty config (All defaults)
+        ApiCategory emptyApiCategory = spy(ApiCategory.class);
+        AWSDataStorePlugin standAloneDataStorePlugin = new AWSDataStorePlugin(modelProvider, emptyApiCategory);
+        standAloneDataStorePlugin.configure(new JSONObject(), context);
+        standAloneDataStorePlugin.initialize(context);
+    }
+
+    /**
+     * Starting the plugin in local mode (no API plugin) works without freezing or crashing the calling thread.
      * @throws AmplifyException Not expected; on failure to configure of initialize plugin.
      */
     @Test
-    public void configureAndInitializeInLocalMode() throws AmplifyException {
-        //Configure DataStore with an empty config (All defaults)
+    public void startInLocalMode() throws AmplifyException {
+        // Configure DataStore with an empty config (All defaults)
         HubAccumulator dataStoreReadyObserver =
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
@@ -117,9 +134,10 @@ public final class AWSDataStorePluginTest {
         SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(standAloneDataStorePlugin);
         standAloneDataStorePlugin.configure(new JSONObject(), context);
         standAloneDataStorePlugin.initialize(context);
-
         // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
+
+        synchronousDataStore.start();
 
         dataStoreReadyObserver.await();
         assertSyncProcessorNotStarted(emptyApiCategory);
@@ -132,13 +150,12 @@ public final class AWSDataStorePluginTest {
     }
 
     /**
-     * Configuring and initialization the plugin when in API sync mode succeeds without
-     * freezing or crashing the calling thread.
+     * Starting the plugin when in API sync mode succeeds without freezing or crashing the calling thread.
      * @throws JSONException on failure to arrange plugin config
      * @throws AmplifyException on failure to arrange API plugin via Amplify facade
      */
     @Test
-    public void configureAndInitializeInApiMode() throws JSONException, AmplifyException {
+    public void startInApiMode() throws JSONException, AmplifyException {
         HubAccumulator dataStoreReadyObserver =
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
@@ -152,8 +169,13 @@ public final class AWSDataStorePluginTest {
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
         AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
+        // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
+        Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
+
+        synchronousDataStore.start();
 
         dataStoreReadyObserver.await();
         subscriptionsEstablishedObserver.await();
@@ -204,7 +226,7 @@ public final class AWSDataStorePluginTest {
      * @throws AmplifyException on failure to arrange API plugin via Amplify facade
      */
     @Test
-    public void clearStopsSyncUntilNextInteraction() throws AmplifyException, JSONException {
+    public void clearStopsSyncAndDeletesDatabase() throws AmplifyException, JSONException {
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
         JSONObject dataStorePluginJson = new JSONObject()
@@ -216,12 +238,6 @@ public final class AWSDataStorePluginTest {
 
         // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
-
-        HubAccumulator orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
-                .start();
-        orchestratorInitObserver.await();
-        assertRemoteSubscriptionsStarted();
 
         // Setup objects
         Person person1 = createPerson("Test", "Dummy I");
@@ -261,29 +277,122 @@ public final class AWSDataStorePluginTest {
             return mock(GraphQLOperation.class);
         }).when(mockApiPlugin).mutate(any(), any(), any());
 
-        orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
-                .start();
-
+        // Do the thing!
         synchronousDataStore.clear();
-        assertRemoteSubscriptionsCancelled();
 
-        orchestratorInitObserver.await();
-        assertRemoteSubscriptionsStarted();
+        assertRemoteSubscriptionsCancelled();
 
         apiInteractionObserver =
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, 1)
                 .start();
+        HubAccumulator orchestratorInitObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
+                .start();
 
-        // Save person 2
+        // Interact with the DataStore after the clear
         synchronousDataStore.save(person2);
+
+        // Verify person 2 was published to the cloud
+        apiInteractionObserver.await();
+
+        // Verify the orchestrator started back up and subscriptions are active.
+        orchestratorInitObserver.await();
+        assertRemoteSubscriptionsStarted();
+
         Person result2 = synchronousDataStore.get(Person.class, person2.getId());
         assertEquals(person2, result2);
 
-        apiInteractionObserver.await();
-
         verify(mockApiCategory, atLeastOnce())
             .mutate(argThat(getMatcherFor(person2)), any(), any());
+    }
+
+    /**
+     * Verify that when the stop method is called, the following happens
+     * - All remote synchronization processes are stopped
+     * - On the next interaction with the DataStore, the synchronization processes are restarted.
+     * @throws JSONException on failure to arrange plugin config
+     * @throws AmplifyException on failure to arrange API plugin via Amplify facade
+     */
+    @Test
+    public void stopStopsSyncUntilNextInteraction() throws AmplifyException, JSONException {
+        ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
+        ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
+        JSONObject dataStorePluginJson = new JSONObject()
+                .put("syncIntervalInMinutes", 60);
+        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
+        awsDataStorePlugin.configure(dataStorePluginJson, context);
+        awsDataStorePlugin.initialize(context);
+
+        // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
+        Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
+
+        // Setup objects
+        Person person1 = createPerson("Test", "Dummy I");
+        Person person2 = createPerson("Test", "Dummy II");
+
+        // Mock responses for person 1
+        doAnswer(invocation -> {
+            int indexOfResponseConsumer = 1;
+            Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
+                    invocation.getArgument(indexOfResponseConsumer);
+            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now());
+            ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
+            onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
+            return mock(GraphQLOperation.class);
+        }).when(mockApiPlugin).mutate(any(), any(), any());
+
+        HubAccumulator apiInteractionObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, 1)
+                .start();
+
+        // Save person 1
+        synchronousDataStore.save(person1);
+        Person result1 = synchronousDataStore.get(Person.class, person1.getId());
+        assertEquals(person1, result1);
+
+        apiInteractionObserver.await();
+        verify(mockApiCategory).mutate(argThat(getMatcherFor(person1)), any(), any());
+
+        // Mock responses for person 2
+        doAnswer(invocation -> {
+            int indexOfResponseConsumer = 1;
+            Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
+                    invocation.getArgument(indexOfResponseConsumer);
+            ModelMetadata modelMetadata = new ModelMetadata(person2.getId(), false, 1, Temporal.Timestamp.now());
+            ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person2, modelMetadata);
+            onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
+            return mock(GraphQLOperation.class);
+        }).when(mockApiPlugin).mutate(any(), any(), any());
+
+        // Do the thing!
+        synchronousDataStore.stop();
+
+        assertRemoteSubscriptionsCancelled();
+
+        apiInteractionObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, 1)
+                .start();
+        HubAccumulator orchestratorInitObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
+                .start();
+
+        // Interact with the DataStore after the stop
+        synchronousDataStore.save(person2);
+
+        // Verify person 2 was published to the cloud
+        apiInteractionObserver.await();
+
+        // Verify the orchestrator started back up and subscriptions are active.
+        orchestratorInitObserver.await();
+        assertRemoteSubscriptionsStarted();
+
+        // Verify person 1 and 2 are in the DataStore
+        List<Person> results = synchronousDataStore.list(Person.class);
+        assertEquals(Arrays.asList(person1, person2), results);
+
+        verify(mockApiCategory, atLeastOnce())
+                .mutate(argThat(getMatcherFor(person2)), any(), any());
     }
 
     private void assertRemoteSubscriptionsCancelled() {
