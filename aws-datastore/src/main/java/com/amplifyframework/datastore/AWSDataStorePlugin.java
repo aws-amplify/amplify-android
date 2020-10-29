@@ -507,43 +507,4 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Action onObservationCompleted) {
         onObservationFailure.accept(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
     }
-
-    /**
-     * Stops all synchronization processes and invokes
-     * the clear method of the underlying storage
-     * adapter. Any items pending synchronization in the outbound queue will
-     * be lost. Synchronization processes will be restarted on the
-     * next interaction with the DataStore.
-     * @param onComplete Invoked if the call is successful.
-     * @param onError Invoked if not successful
-     */
-    @SuppressWarnings("unused")
-    @Override
-    public void clear(@NonNull Action onComplete,
-                      @NonNull Consumer<DataStoreException> onError) {
-        // We shouldn't call beforeOperation when clearing the DataStore. The
-        // only thing we have to wait for is the category initialization latch.
-        boolean isCategoryInitialized = false;
-        try {
-            isCategoryInitialized = categoryInitializationsPending.await(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException exception) {
-            LOG.warn("Execution interrupted while waiting for DataStore to be initialized.");
-        }
-        if (!isCategoryInitialized) {
-            onError.accept(new DataStoreException("DataStore not ready to be cleared.", "Retry your request."));
-            return;
-        }
-        Disposable disposable = orchestrator.stop()
-            .subscribeOn(Schedulers.io())
-            .andThen(Completable.fromAction(() -> sqliteStorageAdapter.clear(() -> {
-                // Invoke the consumer's callback once the clear operation is finished.
-                onComplete.call();
-                // Kick off the orchestrator asynchronously.
-                orchestrator.start();
-            }, onError)))
-            .subscribe(
-                () -> LOG.debug("Clear operation completed."),
-                throwable -> LOG.warn("Clear operation failed", throwable)
-            );
-    }
 }

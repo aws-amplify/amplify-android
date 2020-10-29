@@ -127,7 +127,8 @@ public final class AWSDataStorePluginTest {
     public void startInLocalMode() throws AmplifyException {
         // Configure DataStore with an empty config (All defaults)
         HubAccumulator dataStoreReadyObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1).start();
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
+                .start();
         ApiCategory emptyApiCategory = spy(ApiCategory.class);
         AWSDataStorePlugin standAloneDataStorePlugin = new AWSDataStorePlugin(modelProvider, emptyApiCategory);
         SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(standAloneDataStorePlugin);
@@ -282,9 +283,11 @@ public final class AWSDataStorePluginTest {
         assertRemoteSubscriptionsCancelled();
 
         apiInteractionObserver =
-                HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD, 1).start();
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, 1)
+                .start();
         HubAccumulator orchestratorInitObserver =
-                HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1).start();
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
+                .start();
 
         // Interact with the DataStore after the clear
         synchronousDataStore.save(person2);
@@ -340,8 +343,8 @@ public final class AWSDataStorePluginTest {
         }).when(mockApiPlugin).mutate(any(), any(), any());
 
         HubAccumulator apiInteractionObserver =
-                HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD, 1)
-                        .start();
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, 1)
+                .start();
 
         // Save person 1
         synchronousDataStore.save(person1);
@@ -368,9 +371,11 @@ public final class AWSDataStorePluginTest {
         assertRemoteSubscriptionsCancelled();
 
         apiInteractionObserver =
-                HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, 1).start();
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, 1)
+                .start();
         HubAccumulator orchestratorInitObserver =
-                HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1).start();
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
+                .start();
 
         // Interact with the DataStore after the stop
         synchronousDataStore.save(person2);
