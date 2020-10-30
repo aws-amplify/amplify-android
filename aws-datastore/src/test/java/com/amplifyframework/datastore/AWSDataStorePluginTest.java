@@ -106,7 +106,7 @@ public final class AWSDataStorePluginTest {
      * crashing the calling thread. Basic. 🙄
      * @throws AmplifyException Not expected; on failure to configure of initialize plugin.
      */
-    @Ignore("Needs investigation as it fails sporadically.")
+    @Test
     public void configureAndInitializeInLocalMode() throws AmplifyException {
         //Configure DataStore with an empty config (All defaults)
         HubAccumulator dataStoreReadyObserver =
