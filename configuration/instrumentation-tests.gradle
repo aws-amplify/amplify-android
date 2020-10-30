@@ -14,8 +14,7 @@ subprojects {
                 doLast {
                     exec {
                         commandLine("$rootDir.path/scripts/run_test_in_devicefarm.sh")
-                        //TODO: Get the device pool in the script
-                        args(["Single Google Pixel 3 XL (Android 10)", project.name])
+                        args([project.name])
                     }
                 }
             }

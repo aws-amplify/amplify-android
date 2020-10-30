@@ -1,7 +1,7 @@
 #!/bin/bash
 project_arn=$DEVICEFARM_PROJECT_ARN
-device_pool_name=$1
-module_name=$2
+device_pool_arn=$DEVICEFARM_POOL_ARN
+module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
 
@@ -9,8 +9,10 @@ if [[ -z "${project_arn}" ]]; then
   echo "DEVICEFARM_PROJECT_ARN environment variable not set."
   exit 1
 fi
-# Get the device pool arn for the name passed in
-device_pool_arn=`aws devicefarm list-device-pools --arn=$project_arn --region="us-west-2" --query="devicePools[?name=='$device_pool_name'].arn" --output=text`
+if [[ -z "${device_pool_arn}" ]]; then
+  echo "DEVICEFARM_POOL_ARN environment variable not set."
+  exit 1
+fi
 
 # Function to setup the app uploads in device farm
 function createUpload {
