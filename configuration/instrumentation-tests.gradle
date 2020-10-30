@@ -7,6 +7,21 @@ def module_backends = [
     'aws-api': 'ApiInstrumentedTests'
 ]
 
+subprojects {
+    afterEvaluate { project ->
+        if (module_backends.containsKey(project.name)) {
+            task runTestsInDeviceFarm {
+                doLast {
+                    exec {
+                        commandLine("$rootDir.path/scripts/run_test_in_devicefarm.sh")
+                        //TODO: Get the device pool in the script
+                        args(["$System.env.DEVICEFARM_PROJECT_ARN", "Single Google Pixel 3 XL (Android 10)", project.name])
+                    }
+                }
+            }
+        }
+    }
+}
 
 
 task pullBackendConfigFromAmplify(description: "Pulls backend configurations from Amplify project.") {
