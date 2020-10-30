@@ -4,10 +4,10 @@ version: 0.2
 # terms, it allows us to configure the actions executed when a build is triggered by a commit to the
 # amplify-android GitHub repository.
 #
-# For the purposes of this repo, we're simply running a build by using "./gradlew build"
-# command and in the post-build phase, we consolidate the JUnit report files in one location.
-# In the reports section, we're instructing CodeBuild to publish those reports which can be
-# viewed in the AWS CodeBuild console (Future work will be to publish those to Github for easier access).
+# The CodeBuild project configuration in this file performs the following:
+# - Copying integration test config files from a bucket OR using the amplify CLI to retrieve them from a set
+#   of know projects.
+# - Generates APK files for instrumented tests
 #
 # [1] - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
 # [2] - https://docs.aws.amazon.com/codebuild/latest/userguide/planning.html
@@ -50,12 +50,6 @@ phases:
       - cp -f ./*/build/test-results/testDebugUnitTest/*.xml ./build/allTests
     finally:
       - echo 'Post-build phase completed.'
-reports:
-  amplify-android-unit-tests:
-    files:
-      - build/allTests/*
-    discard-paths: yes
-    file-format: JUNITXML
 artifacts:
   files:
     - '**/*.apk'
