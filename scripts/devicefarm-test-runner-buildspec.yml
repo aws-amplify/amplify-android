@@ -20,7 +20,6 @@ phases:
       nodejs: 12
     commands:
       - echo 'Install phase starting'
-      - npm install -g jq
     finally:
       - echo 'Install phase completed.'
   pre_build:
