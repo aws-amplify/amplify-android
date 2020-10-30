@@ -4,7 +4,11 @@ Need to create backends for s3, pinpoint, predictions, core
  */
 def module_backends = [
     'aws-datastore':'InstrumentedTests',
-    'aws-api': 'ApiInstrumentedTests'
+    'aws-api': 'ApiInstrumentedTests',
+    'aws-storage-s3': 'NONE',
+    'aws-analytics-pinpoint': 'NONE',
+    'aws-predictions': 'NONE',
+    'core':'NONE'
 ]
 
 subprojects {
