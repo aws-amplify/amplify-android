@@ -20,6 +20,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.util.Immutable;
 
 import java.util.List;
 import java.util.Objects;
@@ -81,7 +82,7 @@ public class DataStoreException extends AmplifyException {
          */
         @NonNull
         public List<GraphQLResponse.Error> getErrors() {
-            return errors;
+            return Immutable.of(errors);
         }
 
         @Override
