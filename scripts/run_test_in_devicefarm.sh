@@ -1,10 +1,14 @@
 #!/bin/bash
-project_arn=$1
-device_pool_name=$2
-module_name=$3
+project_arn=$DEVICEFARM_PROJECT_ARN
+device_pool_name=$1
+module_name=$2
 file_name="$module_name-debug-androidTest.apk"
 full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
 
+if [[ -z "${project_arn}" ]]; then
+  echo "DEVICEFARM_PROJECT_ARN environment variable not set."
+  exit 1
+fi
 # Get the device pool arn for the name passed in
 device_pool_arn=`aws devicefarm list-device-pools --arn=$project_arn --region="us-west-2" --query="devicePools[?name=='$device_pool_name'].arn" --output=text`
 
