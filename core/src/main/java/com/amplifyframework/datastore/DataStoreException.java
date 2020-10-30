@@ -16,13 +16,18 @@
 package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.graphql.GraphQLResponse;
+
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Exception thrown by DataStore category plugins.
  */
-public final class DataStoreException extends AmplifyException {
+public class DataStoreException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,5 +55,62 @@ public final class DataStoreException extends AmplifyException {
             @NonNull final String recoverySuggestion
     ) {
         super(message, recoverySuggestion);
+    }
+
+    /**
+     * Exception thrown by DataStore category plugins used to represent a GraphQLResponse containing errors.
+     */
+    public static final class GraphQLResponseException extends DataStoreException {
+        private static final long serialVersionUID = 1L;
+
+        private final List<GraphQLResponse.Error> errors;
+
+        /**
+         * Constructs a new exception using the provided message and list of errors.
+         * @param message Explains the reason for the exception
+         * @param errors List of errors from GraphQLResponse
+         */
+        public GraphQLResponseException(String message, @NonNull List<GraphQLResponse.Error> errors) {
+            super(message, "See attached list of GraphQLResponse.Error objects.");
+            this.errors = Objects.requireNonNull(errors);
+        }
+
+        /**
+         * Returns the errors.
+         * @return the errors.
+         */
+        @NonNull
+        public List<GraphQLResponse.Error> getErrors() {
+            return errors;
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) {
+                return true;
+            }
+            if (object == null || getClass() != object.getClass()) {
+                return false;
+            }
+            if (!super.equals(object)) {
+                return false;
+            }
+            GraphQLResponseException that = (GraphQLResponseException) object;
+            return ObjectsCompat.equals(errors, that.errors);
+        }
+
+        @Override
+        public int hashCode() {
+            return ObjectsCompat.hash(super.hashCode(), errors);
+        }
+
+        @Override
+        public String toString() {
+            return "GraphQLResponseException{" +
+                    "message=" + getMessage() +
+                    ", errors=" + errors +
+                    ", recoverySuggestion=" + getRecoverySuggestion() +
+                    '}';
+        }
     }
 }

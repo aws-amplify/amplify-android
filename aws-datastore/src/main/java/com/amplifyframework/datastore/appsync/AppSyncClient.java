@@ -281,9 +281,9 @@ public final class AppSyncClient implements AppSync {
 
         final Consumer<GraphQLResponse<ModelWithMetadata<T>>> responseConsumer = response -> {
             if (response.hasErrors()) {
-                onSubscriptionFailure.accept(new DataStoreException(
-                    "Bad subscription data for " + clazz.getSimpleName() + ": " + response.getErrors(),
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                onSubscriptionFailure.accept(new DataStoreException.GraphQLResponseException(
+                    "Subscription error for " + clazz.getSimpleName() + ": " + response.getErrors(),
+                    response.getErrors()
                 ));
             } else {
                 onNextResponse.accept(response);
