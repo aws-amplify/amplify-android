@@ -86,7 +86,8 @@ public final class HubAccumulator {
     /**
      * Creates a {@link HubAccumulator} that accumulates events arriving on a particular channel,
      * whose event name is the given enum value (as string). For example, the accumulator
-     * created as below will match all events with name {@link DataStoreChannelEventName#PUBLISHED_TO_CLOUD}:
+     * created as below will match all events with name
+     * {@link DataStoreChannelEventName#OUTBOX_MUTATION_PROCESSED}:
      *
      *   HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISH_TO_CLOUD);
      *

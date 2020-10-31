@@ -127,6 +127,16 @@ final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
     }
 
     @Override
+    public Completable start() {
+        return VoidBehaviors.toCompletable(dataStore::start);
+    }
+
+    @Override
+    public Completable stop() {
+        return VoidBehaviors.toCompletable(dataStore::stop);
+    }
+
+    @Override
     public Completable clear() {
         return VoidBehaviors.toCompletable(dataStore::clear);
     }

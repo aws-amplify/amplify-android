@@ -45,6 +45,7 @@ import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOper
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadFileOperation;
+import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
@@ -314,7 +315,9 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                         : defaultAccessLevel,
                 options.getTargetIdentityId(),
                 options.getContentType(),
-                options.getServerSideEncryption(),
+                options instanceof AWSS3StorageUploadFileOptions
+                        ? ((AWSS3StorageUploadFileOptions) options).getServerSideEncryption()
+                        : ServerSideEncryption.NONE,
                 options.getMetadata()
         );
 

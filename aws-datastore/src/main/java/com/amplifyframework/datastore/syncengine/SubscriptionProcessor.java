@@ -31,6 +31,7 @@ import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
+import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -38,6 +39,7 @@ import com.amplifyframework.logging.Logger;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
@@ -142,8 +144,20 @@ final class SubscriptionProcessor {
         }
     }
 
+    private boolean isUnauthorizedException(DataStoreException exception) {
+        if (exception instanceof DataStoreException.GraphQLResponseException) {
+            List<GraphQLResponse.Error> errors = ((DataStoreException.GraphQLResponseException) exception).getErrors();
+            GraphQLResponse.Error firstError = errors.get(0);
+            AppSyncExtensions extensions = new AppSyncExtensions(firstError.getExtensions());
+            if (AppSyncExtensions.AppSyncErrorType.UNAUTHORIZED.equals(extensions.getErrorType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @SuppressWarnings("unchecked") // (Class<T>) modelWithMetadata.getModel().getClass()
-    private static <T extends Model> Observable<SubscriptionEvent<? extends Model>>
+    private <T extends Model> Observable<SubscriptionEvent<? extends Model>>
             subscriptionObservable(AppSync appSync,
                                    SubscriptionType subscriptionType,
                                    CountDownLatch latch,
@@ -154,21 +168,25 @@ final class SubscriptionProcessor {
             Cancelable cancelable = method.subscribe(
                 clazz,
                 token -> {
-                    LOG.debug("Subscription started for " + token);
+                    LOG.debug("Subscription started for " + subscriptionType.name() + " " + clazz.getSimpleName() +
+                            " subscriptionId: " + token);
                     subscriptionId.set(token);
                     latch.countDown();
                 },
                 emitter::onNext,
-                throwable -> {
-                    // Only call onError if the Observable hasn't been disposed and if
-                    // the subscription was actually started at one point (which we determine by whether
-                    // the subscriptionId is null or not.)
+                dataStoreException -> {
+                    // Only call onError if the Observable hasn't been disposed and it's not an Unauthorized error.
+                    // Unauthorized errors are ignored, so that DataStore can still be used even if the user is only
+                    // authorized to read a subset of the models.
                     if (!emitter.isDisposed()) {
-                        LOG.debug("Invoking subscription onError emitter.");
-                        emitter.onError(throwable);
+                        if (isUnauthorizedException(dataStoreException)) {
+                            LOG.warn("Unauthorized failure for " + subscriptionType + " " + clazz.getSimpleName());
+                        } else {
+                            emitter.onError(dataStoreException);
+                        }
                     }
                     if (latch.getCount() != 0) {
-                        LOG.debug("Releasing latch due to an error.");
+                        LOG.warn("Releasing latch due to an error: " + dataStoreException.getMessage());
                         latch.countDown();
                     }
                 },
@@ -182,11 +200,8 @@ final class SubscriptionProcessor {
             // this means means closing the underlying network connection.
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         })
-        .doOnError(subscriptionError ->
-            LOG.warn(String.format(Locale.US,
-                "An error occurred on the remote %s subscription for model %s.",
-                clazz.getSimpleName(), subscriptionType.name()
-            ), subscriptionError)
+        .doOnError(subscriptionError -> LOG.warn("An error occurred on the remote " + subscriptionType.name() +
+                " subscription for model " + clazz.getSimpleName(), subscriptionError)
         )
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())

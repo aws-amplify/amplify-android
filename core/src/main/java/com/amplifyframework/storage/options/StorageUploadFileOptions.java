@@ -18,8 +18,8 @@ package com.amplifyframework.storage.options;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.storage.StorageServerSideEncryption;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
@@ -29,15 +29,18 @@ import java.util.Objects;
 /**
  * Options to specify attributes of put API invocation.
  */
-public final class StorageUploadFileOptions extends StorageOptions {
+public class StorageUploadFileOptions extends StorageOptions {
     private final String contentType;
-    private final StorageServerSideEncryption serverSideEncryption;
     private final Map<String, String> metadata;
 
-    private StorageUploadFileOptions(final Builder builder) {
+    /**
+     * Constructs a StorageUploadFileOptions instance with the
+     * attributes from builder instance.
+     * @param builder the builder with configured attributes
+     */
+    protected StorageUploadFileOptions(final Builder<?> builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
         this.contentType = builder.getContentType();
-        this.serverSideEncryption = builder.getServerSideEncryption();
         this.metadata = builder.getMetadata();
     }
 
@@ -48,15 +51,6 @@ public final class StorageUploadFileOptions extends StorageOptions {
     @Nullable
     public String getContentType() {
         return contentType;
-    }
-
-    /**
-     * Server side encryption algorithm.
-     * @return Server side encryption algorithm
-     */
-    @NonNull
-    public StorageServerSideEncryption getServerSideEncryption() {
-        return serverSideEncryption;
     }
 
     /**
@@ -75,8 +69,8 @@ public final class StorageUploadFileOptions extends StorageOptions {
      */
     @SuppressLint("SyntheticAccessor")
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
     /**
@@ -90,11 +84,12 @@ public final class StorageUploadFileOptions extends StorageOptions {
      *         values in the provided options
      */
     @NonNull
-    public static Builder from(@NonNull final StorageUploadFileOptions options) {
-        return builder().accessLevel(options.getAccessLevel())
-                .targetIdentityId(options.getTargetIdentityId())
-                .contentType(options.getContentType())
-                .metadata(options.getMetadata());
+    public static Builder<?> from(@NonNull final StorageUploadFileOptions options) {
+        return builder()
+            .accessLevel(options.getAccessLevel())
+            .targetIdentityId(options.getTargetIdentityId())
+            .contentType(options.getContentType())
+            .metadata(options.getMetadata());
     }
 
     /**
@@ -107,17 +102,65 @@ public final class StorageUploadFileOptions extends StorageOptions {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof StorageUploadFileOptions)) {
+            return false;
+        } else {
+            StorageUploadFileOptions that = (StorageUploadFileOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getContentType(), that.getContentType()) &&
+                    ObjectsCompat.equals(getMetadata(), that.getMetadata());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId(),
+                getContentType(),
+                getMetadata()
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public String toString() {
+        return "StorageUploadFileOptions {" +
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                ", contentType=" + getContentType() +
+                ", metadata=" + getMetadata() +
+                '}';
+    }
+
+    /**
      * Use to configure and build immutable instances of the
      * StorageUploadFileOptions, using fluent of property configuration
      * methods.
+     * @param <B> the type of builder to chain with
      */
-    public static final class Builder extends StorageOptions.Builder<Builder, StorageUploadFileOptions> {
+    @SuppressWarnings({"unchecked", "WeakerAccess"})
+    public static class Builder<B extends Builder<B>> extends StorageOptions.Builder<B, StorageUploadFileOptions> {
         private String contentType;
-        private StorageServerSideEncryption serverSideEncryption;
         private Map<String, String> metadata;
 
-        private Builder() {
-            this.serverSideEncryption = StorageServerSideEncryption.NONE;
+        /**
+         * Constructs a new Builder for StorageUploadFileOptions.
+         */
+        protected Builder() {
             this.metadata = new HashMap<>();
         }
 
@@ -126,23 +169,10 @@ public final class StorageUploadFileOptions extends StorageOptions {
          * @param contentType Content type
          * @return Current Builder instance for fluent chaining
          */
-        @SuppressWarnings("WeakerAccess")
         @NonNull
-        public Builder contentType(@Nullable String contentType) {
+        public final B contentType(@Nullable String contentType) {
             this.contentType = contentType;
-            return this;
-        }
-
-        /**
-         * Configures the server side encryption algorithm for a new StorageUploadFileOptions instance.
-         * @param serverSideEncryption server side encryption algorithm
-         * @return Current Builder instance for fluent chaining
-         */
-        @SuppressWarnings("WeakerAccess")
-        @NonNull
-        public Builder serverSideEncryption(@NonNull StorageServerSideEncryption serverSideEncryption) {
-            this.serverSideEncryption = Objects.requireNonNull(serverSideEncryption);
-            return this;
+            return (B) this;
         }
 
         /**
@@ -151,23 +181,18 @@ public final class StorageUploadFileOptions extends StorageOptions {
          * @return Current Builder instance for fluent method chaining
          */
         @NonNull
-        public Builder metadata(@NonNull Map<String, String> metadata) {
+        public final B metadata(@NonNull Map<String, String> metadata) {
             this.metadata = new HashMap<>(Objects.requireNonNull(metadata));
-            return this;
+            return (B) this;
         }
 
         @Nullable
-        String getContentType() {
+        final String getContentType() {
             return contentType;
         }
 
         @NonNull
-        StorageServerSideEncryption getServerSideEncryption() {
-            return serverSideEncryption;
-        }
-
-        @NonNull
-        Map<String, String> getMetadata() {
+        final Map<String, String> getMetadata() {
             return Immutable.of(metadata);
         }
 

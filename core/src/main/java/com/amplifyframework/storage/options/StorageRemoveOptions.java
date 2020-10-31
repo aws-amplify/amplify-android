@@ -17,13 +17,19 @@ package com.amplifyframework.storage.options;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Options to specify attributes of remove API invocation.
  */
-public final class StorageRemoveOptions extends StorageOptions {
+public class StorageRemoveOptions extends StorageOptions {
 
-    private StorageRemoveOptions(final Builder builder) {
+    /**
+     * Constructs a StorageRemoveOptions instance with the
+     * attributes from builder instance.
+     * @param builder the builder with configured attributes
+     */
+    protected StorageRemoveOptions(final Builder<?> builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
     }
 
@@ -35,8 +41,8 @@ public final class StorageRemoveOptions extends StorageOptions {
      * @return An instance of the {@link StorageRemoveOptions.Builder}
      */
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
     /**
@@ -50,9 +56,10 @@ public final class StorageRemoveOptions extends StorageOptions {
      *         values in the provided options
      */
     @NonNull
-    public static Builder from(@NonNull final StorageRemoveOptions options) {
-        return builder().accessLevel(options.getAccessLevel())
-                .targetIdentityId(options.getTargetIdentityId());
+    public static Builder<?> from(@NonNull final StorageRemoveOptions options) {
+        return builder()
+            .accessLevel(options.getAccessLevel())
+            .targetIdentityId(options.getTargetIdentityId());
     }
 
     /**
@@ -65,11 +72,56 @@ public final class StorageRemoveOptions extends StorageOptions {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof StorageRemoveOptions)) {
+            return false;
+        } else {
+            StorageRemoveOptions that = (StorageRemoveOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId()
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public String toString() {
+        return "StorageRemoveOptions {" +
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                '}';
+    }
+
+    /**
      * A utility that can be used to configure and construct immutable
      * instances of the {@link StorageRemoveOptions}, by chaining
      * fluent configuration method calls.
+     * @param <B> the type of builder to chain with
      */
-    public static final class Builder extends StorageOptions.Builder<Builder, StorageRemoveOptions> {
+    public static class Builder<B extends Builder<B>> extends StorageOptions.Builder<B, StorageRemoveOptions> {
+        /**
+         * Returns an instance of StorageRemoveOptions with the parameters
+         * specified by this builder.
+         * @return a configured instance of StorageRemoveOptions
+         */
         @SuppressLint("SyntheticAccessor")
         @Override
         @NonNull

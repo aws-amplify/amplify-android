@@ -40,6 +40,8 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.observers.TestObserver;
 
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isEnqueued;
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isOutboxEmpty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -83,11 +85,10 @@ public final class PersistentMutationOutboxTest {
         PendingMutation<BlogOwner> createRaphael = PendingMutation.creation(raphael, BlogOwner.class);
 
         // Start listening for publication events.
-        HubAccumulator statusAccumulator = HubAccumulator.create(
-                HubChannel.DATASTORE,
-                TestHubEventFilters.outboxIsEmpty(false), // outbox should not be empty
-                1
-        ).start();
+        // outbox should not be empty
+        HubAccumulator statusAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, isOutboxEmpty(false), 1)
+                .start();
 
         // Enqueue an save for a Raphael BlogOwner object,
         // and make sure that outbox status is published to hub.
@@ -111,11 +112,9 @@ public final class PersistentMutationOutboxTest {
             .name("Jameson Williams")
             .build();
         PendingMutation<BlogOwner> createJameson = PendingMutation.creation(jameson, BlogOwner.class);
-        HubAccumulator savedMutationsAccumulator = HubAccumulator.create(
-                HubChannel.DATASTORE,
-                TestHubEventFilters.saveOf(jameson),
-                1
-        ).start();
+        HubAccumulator savedMutationsAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, isEnqueued(jameson), 1)
+                .start();
 
         // Enqueue an save for a Jameson BlogOwner object,
         // and make sure that it calls back onComplete().
@@ -272,10 +271,10 @@ public final class PersistentMutationOutboxTest {
         storage.save(joe);
 
         TimeBasedUuid mutationId = TimeBasedUuid.create();
-        @SuppressWarnings("unused") // This is the point of this field.
         PendingMutation<BlogOwner> unrelatedMutation = PendingMutation.instance(
             mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, QueryPredicates.all()
         );
+        storage.save(converter.toRecord(unrelatedMutation));
 
         assertFalse(mutationOutbox.hasPendingMutation(joeId));
         assertFalse(mutationOutbox.hasPendingMutation(mutationId.toString()));

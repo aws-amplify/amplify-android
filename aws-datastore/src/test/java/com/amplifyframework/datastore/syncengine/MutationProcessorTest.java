@@ -15,19 +15,12 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import androidx.annotation.NonNull;
-
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
-import com.amplifyframework.datastore.DataStoreConflictData;
-import com.amplifyframework.datastore.DataStoreConflictHandler;
-import com.amplifyframework.datastore.DataStoreConflictHandlerResult;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -36,7 +29,6 @@ import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Latch;
@@ -54,8 +46,8 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.outboxIsEmpty;
-import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isOutboxEmpty;
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isProcessed;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -91,15 +83,14 @@ public final class MutationProcessorTest {
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         this.appSync = mock(AppSync.class);
-        SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
+        ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
             .versionRepository(versionRepository)
-            .syncTimeRegistry(syncTimeRegistry)
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
-            .dataStoreConfigurationProvider(configurationProvider)
+            .conflictResolver(conflictResolver)
             .build();
     }
 
@@ -121,7 +112,7 @@ public final class MutationProcessorTest {
         // Start listening for publication events.
         HubAccumulator statusAccumulator = HubAccumulator.create(
                 HubChannel.DATASTORE,
-                outboxIsEmpty(true), // outbox should be empty after processing its only mutation
+                isOutboxEmpty(true), // outbox should be empty after processing its only mutation
                 1
         ).start();
 
@@ -151,7 +142,7 @@ public final class MutationProcessorTest {
 
         // Start listening for publication events.
         HubAccumulator accumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(tony), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, isProcessed(tony), 1)
                 .start();
 
         PendingMutation<BlogOwner> createTony = PendingMutation.creation(tony, BlogOwner.class);
@@ -162,11 +153,7 @@ public final class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox();
 
         // Assert: the event was published
-        List<HubEvent<?>> events = accumulator.await();
-        assertEquals(1, events.size());
-        @SuppressWarnings("unchecked")
-        PendingMutation<BlogOwner> mutation = (PendingMutation<BlogOwner>) events.get(0).getData();
-        assertEquals(createTony, mutation);
+        assertEquals(1, accumulator.await().size());
 
         // And that it is no longer in the outbox.
         assertFalse(mutationOutbox.hasPendingMutation(tony.getId()));
@@ -185,17 +172,11 @@ public final class MutationProcessorTest {
     public void conflictHandlerInvokedForUnhandledConflictError() throws DataStoreException {
         // Arrange a user-provided conflict handler.
         CountDownLatch handlerInvocationsRemainingCount = new CountDownLatch(1);
-        DataStoreConflictHandler handler = new DataStoreConflictHandler() {
-            @Override
-            public <T extends Model> void resolveConflict(
-                    @NonNull DataStoreConflictData<T> conflictData,
-                    @NonNull Consumer<DataStoreConflictHandlerResult> onResult) {
-                handlerInvocationsRemainingCount.countDown();
-            }
-        };
         when(configurationProvider.getConfiguration())
             .thenReturn(DataStoreConfiguration.builder()
-                .dataStoreConflictHandler(handler)
+                .conflictHandler((conflictData, onDecision) ->
+                    handlerInvocationsRemainingCount.countDown()
+                )
                 .build()
             );
 

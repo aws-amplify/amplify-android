@@ -24,11 +24,11 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
-import com.amplifyframework.storage.StorageServerSideEncryption;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
+import com.amplifyframework.storage.s3.ServerSideEncryption;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3Keys;
@@ -111,8 +111,8 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         objectMetadata.setUserMetadata(getRequest().getMetadata());
         objectMetadata.setContentType(getRequest().getContentType());
 
-        StorageServerSideEncryption storageServerSideEncryption = getRequest().getServerSideEncryption();
-        if (!StorageServerSideEncryption.NONE.equals(storageServerSideEncryption)) {
+        ServerSideEncryption storageServerSideEncryption = getRequest().getServerSideEncryption();
+        if (!ServerSideEncryption.NONE.equals(storageServerSideEncryption)) {
             objectMetadata.setSSEAlgorithm(storageServerSideEncryption.getName());
         }
 

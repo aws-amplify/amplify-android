@@ -19,7 +19,7 @@ import com.amplifyframework.api.graphql.GsonResponseAdapters;
 import com.amplifyframework.core.model.query.predicate.GsonPredicateAdapters;
 import com.amplifyframework.core.model.temporal.GsonTemporalAdapters;
 import com.amplifyframework.core.model.types.GsonJavaTypeAdapters;
-import com.amplifyframework.datastore.appsync.ModelWithMetadataDeserializer;
+import com.amplifyframework.datastore.appsync.ModelWithMetadataAdapter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,7 +50,7 @@ public final class GsonFactory {
         GsonJavaTypeAdapters.register(builder);
         GsonPredicateAdapters.register(builder);
         GsonResponseAdapters.register(builder);
-        ModelWithMetadataDeserializer.register(builder);
+        ModelWithMetadataAdapter.register(builder);
         return builder.create();
     }
 }

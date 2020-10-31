@@ -16,29 +16,21 @@
 package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
-import com.amplifyframework.datastore.DataStoreConfiguration;
-import com.amplifyframework.datastore.DataStoreConfigurationProvider;
-import com.amplifyframework.datastore.DataStoreConflictData;
-import com.amplifyframework.datastore.DataStoreConflictHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
-import com.amplifyframework.datastore.appsync.ConflictUnhandledError;
-import com.amplifyframework.datastore.appsync.ModelMetadata;
+import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.events.OutboxStatusEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -59,19 +51,17 @@ final class MutationProcessor {
 
     private final Merger merger;
     private final VersionRepository versionRepository;
-    private final SyncTimeRegistry syncTimeRegistry;
     private final MutationOutbox mutationOutbox;
     private final AppSync appSync;
-    private final DataStoreConfigurationProvider configurationProvider;
+    private final ConflictResolver conflictResolver;
     private final CompositeDisposable ongoingOperationsDisposable;
 
     private MutationProcessor(Builder builder) {
         this.merger = Objects.requireNonNull(builder.merger);
         this.versionRepository = Objects.requireNonNull(builder.versionRepository);
-        this.syncTimeRegistry = Objects.requireNonNull(builder.syncTimeRegistry);
         this.mutationOutbox = Objects.requireNonNull(builder.mutationOutbox);
         this.appSync = Objects.requireNonNull(builder.appSync);
-        this.configurationProvider = Objects.requireNonNull(builder.dataStoreConfigurationProvider);
+        this.conflictResolver = Objects.requireNonNull(builder.conflictResolver);
         this.ongoingOperationsDisposable = new CompositeDisposable();
     }
 
@@ -146,7 +136,7 @@ final class MutationProcessor {
                     // if there are outstanding mutations in the outbox.
                     mutationOutbox.remove(mutationOutboxItem.getMutationId())
                         .andThen(merger.merge(modelWithMetadata))
-                        .doOnComplete(() -> announceSuccessfulSync(modelWithMetadata))
+                        .doOnComplete(() -> announceMutationProcessed(modelWithMetadata))
                 )
             )
             .doOnComplete(() -> {
@@ -154,22 +144,9 @@ final class MutationProcessor {
                     "Pending mutation was published to cloud successfully, " +
                         "and removed from the mutation outbox: " + mutationOutboxItem
                 );
-                announceSuccessfulPublication(mutationOutboxItem);
                 publishCurrentOutboxStatus();
             })
             .doOnError(error -> LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error));
-    }
-
-    /**
-     * Publish a successfully processed pending mutation to hub.
-     * @param processedMutation A mutation that has been successfully processed and removed from outbox
-     * @param <T> Type of model
-     */
-    private <T extends Model> void announceSuccessfulPublication(PendingMutation<T> processedMutation) {
-        Amplify.Hub.publish(
-            HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation)
-        );
     }
 
     /**
@@ -177,23 +154,21 @@ final class MutationProcessor {
      * @param modelWithMetadata A model that was successfully mutated and its sync metadata
      * @param <T> Type of model
      */
-    private <T extends Model> void announceSuccessfulSync(ModelWithMetadata<T> modelWithMetadata) {
-        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent
-                .fromModelWithMetadata(modelWithMetadata);
-        Amplify.Hub.publish(
-            HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, mutationEvent)
-        );
+    private <T extends Model> void announceMutationProcessed(ModelWithMetadata<T> modelWithMetadata) {
+        OutboxMutationEvent<T> mutationEvent =
+            OutboxMutationEvent.fromModelWithMetadata(modelWithMetadata);
+        HubEvent<OutboxMutationEvent<T>> hubEvent =
+            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, mutationEvent);
+        Amplify.Hub.publish(HubChannel.DATASTORE, hubEvent);
     }
 
     /**
      * Publish current outbox status to hub.
      */
     private void publishCurrentOutboxStatus() {
-        Amplify.Hub.publish(
-                HubChannel.DATASTORE,
-                new OutboxStatusEvent(mutationOutbox.peek() == null).toHubEvent()
-        );
+        HubEvent<OutboxStatusEvent> hubEvent =
+            new OutboxStatusEvent(mutationOutbox.peek() == null).toHubEvent();
+        Amplify.Hub.publish(HubChannel.DATASTORE, hubEvent);
     }
 
     /**
@@ -232,7 +207,7 @@ final class MutationProcessor {
     private <T extends Model> Single<ModelWithMetadata<T>> update(PendingMutation<T> mutation) {
         final T updatedItem = mutation.getMutatedItem();
         return versionRepository.findModelVersion(updatedItem).flatMap(version ->
-            publishWithStrategy(version, mutation, (model, onSuccess, onError) ->
+            publishWithStrategy(mutation, (model, onSuccess, onError) ->
                 appSync.update(model, version, mutation.getPredicate(), onSuccess, onError)
             )
         );
@@ -240,7 +215,7 @@ final class MutationProcessor {
 
     // For an item in the outbox, dispatch a create mutation
     private <T extends Model> Single<ModelWithMetadata<T>> create(PendingMutation<T> mutation) {
-        return publishWithStrategy(null, mutation, appSync::create);
+        return publishWithStrategy(mutation, appSync::create);
     }
 
     // For an item in the outbox, dispatch a delete mutation
@@ -248,7 +223,7 @@ final class MutationProcessor {
         final T deletedItem = mutation.getMutatedItem();
         final Class<T> deletedItemClass = mutation.getClassOfMutatedItem();
         return versionRepository.findModelVersion(deletedItem).flatMap(version ->
-            publishWithStrategy(version, mutation, (model, onSuccess, onError) ->
+            publishWithStrategy(mutation, (model, onSuccess, onError) ->
                 appSync.delete(
                     deletedItemClass, deletedItem.getId(), version, mutation.getPredicate(), onSuccess, onError
                 )
@@ -258,8 +233,6 @@ final class MutationProcessor {
 
     /**
      * For an pending mutation, publish mutated item using a publication strategy.
-     * @param version The version of the local data being modified, null
-     *                 if there is no known version.
      * @param mutation A mutation that is waiting to be published
      * @param publicationStrategy A strategy to publish the mutated item
      * @param <T> The model type of the item
@@ -268,7 +241,6 @@ final class MutationProcessor {
      */
     @NonNull
     private <T extends Model> Single<ModelWithMetadata<T>> publishWithStrategy(
-            @Nullable Integer version,
             @NonNull PendingMutation<T> mutation,
             @NonNull PublicationStrategy<T> publicationStrategy) {
         return Single
@@ -280,72 +252,37 @@ final class MutationProcessor {
                 if (!response.hasErrors() && response.hasData()) {
                     return Single.just(response.getData());
                 } else {
-                    return handleResponseErrors(version, mutation, response.getErrors());
+                    return handleResponseErrors(mutation, response.getErrors());
                 }
             });
     }
 
-    @NonNull
+    /**
+     * Handle errors that come back from AppSync while attempting to publish a mutation.
+     * @param <T> Type of model for which a publication had response errors
+     * @return A ModelWithMetadata representing the data as AppSync understands it;
+     *         the MutationProcessor should apply this data into the local store,
+     *         in a later step.
+     */
     private <T extends Model> Single<ModelWithMetadata<T>> handleResponseErrors(
-            @Nullable Integer version,
-            @NonNull PendingMutation<T> mutation,
-            @Nullable List<GraphQLResponse.Error> errors) {
+            PendingMutation<T> pendingMutation,
+            List<GraphQLResponse.Error> errors) {
         // At this point, we know something wrong. Check if the mutation failed
         // due to ConflictUnhandled. If so, invoke our user-provided handler
         // to try and recover. We don't know how to resolve other types of errors,
         // so we just bubble those out in a DataStoreException.
-        Class<T> modelClazz = mutation.getClassOfMutatedItem();
-        ConflictUnhandledError<T> unhandledConflict = ConflictUnhandledError.findFirst(modelClazz, errors);
+        Class<T> modelClazz = pendingMutation.getClassOfMutatedItem();
+        AppSyncConflictUnhandledError<T> unhandledConflict =
+            AppSyncConflictUnhandledError.findFirst(modelClazz, errors);
         if (unhandledConflict == null) {
             return Single.error(new DataStoreException(
-                "Mutation failed. Failed mutation = " + mutation + ". " +
+                "Mutation failed. Failed mutation = " + pendingMutation + ". " +
                     "AppSync response contained errors = " + errors,
                 "Verify that your AppSync endpoint is able to store " + modelClazz + " models."
             ));
         }
 
-        final DataStoreConflictHandler conflictHandler;
-        try {
-            DataStoreConfiguration configuration = configurationProvider.getConfiguration();
-            conflictHandler = configuration.getDataStoreConflictHandler();
-        } catch (DataStoreException badConfigurationProvider) {
-            return Single.error(badConfigurationProvider);
-        }
-
-        // Convert the local PendingMutation to the same ModelWithMetadata shape that's
-        // used for synchronized data.
-        boolean isDeletedLocally = PendingMutation.Type.DELETE.equals(mutation.getMutationType());
-        T localModel = mutation.getMutatedItem();
-        return syncTimeRegistry.lookupLastSyncTime(modelClazz)
-            .map(SyncTime::toLong)
-            .map(Date::new)
-            .map(Temporal.Timestamp::new)
-            .flatMap(lastChangedAt -> {
-                ModelMetadata localMetadata =
-                    new ModelMetadata(localModel.getId(), isDeletedLocally, version, lastChangedAt);
-                ModelWithMetadata<T> localCopy = new ModelWithMetadata<>(localModel, localMetadata);
-                ModelWithMetadata<T> serverCopy = unhandledConflict.getServerVersion();
-                DataStoreConflictData<T> conflictData = DataStoreConflictData.create(localCopy, serverCopy);
-                return resolveConflict(conflictHandler, conflictData);
-            });
-    }
-
-    @NonNull
-    private <T extends Model> Single<ModelWithMetadata<T>> resolveConflict(
-            @NonNull DataStoreConflictHandler conflictHandler, @NonNull DataStoreConflictData<T> conflictData) {
-        return Single.create(subscriber -> conflictHandler.resolveConflict(conflictData, electedStrategy -> {
-            switch (electedStrategy) {
-                case RETRY:
-                case RETRY_LOCAL:
-                case APPLY_REMOTE:
-                default:
-                    subscriber.onError(new DataStoreException(
-                        "Attempted to resolve a conflict using strategy = " + electedStrategy,
-                        "But this strategy is not implemented."
-                    ));
-                    break;
-            }
-        }));
+        return conflictResolver.resolve(pendingMutation, unhandledConflict);
     }
 
     /**
@@ -369,17 +306,15 @@ final class MutationProcessor {
     static final class Builder implements
             BuilderSteps.MergerStep,
             BuilderSteps.VersionRepositoryStep,
-            BuilderSteps.SyncTimeRegistryStep,
             BuilderSteps.MutationOutboxStep,
             BuilderSteps.AppSyncStep,
-            BuilderSteps.DataStoreConfigurationProviderStep,
+            BuilderSteps.ConflictResolverStep,
             BuilderSteps.BuildStep {
         private Merger merger;
         private VersionRepository versionRepository;
-        private SyncTimeRegistry syncTimeRegistry;
         private MutationOutbox mutationOutbox;
         private AppSync appSync;
-        private DataStoreConfigurationProvider dataStoreConfigurationProvider;
+        private ConflictResolver conflictResolver;
 
         @NonNull
         @Override
@@ -390,15 +325,8 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.SyncTimeRegistryStep versionRepository(@NonNull VersionRepository versionRepository) {
+        public BuilderSteps.MutationOutboxStep versionRepository(@NonNull VersionRepository versionRepository) {
             Builder.this.versionRepository = Objects.requireNonNull(versionRepository);
-            return Builder.this;
-        }
-
-        @NonNull
-        @Override
-        public BuilderSteps.MutationOutboxStep syncTimeRegistry(@NonNull SyncTimeRegistry syncTimeRegistry) {
-            Builder.this.syncTimeRegistry = Objects.requireNonNull(syncTimeRegistry);
             return Builder.this;
         }
 
@@ -411,16 +339,15 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.DataStoreConfigurationProviderStep appSync(@NonNull AppSync appSync) {
+        public BuilderSteps.ConflictResolverStep appSync(@NonNull AppSync appSync) {
             Builder.this.appSync = Objects.requireNonNull(appSync);
             return Builder.this;
         }
 
         @NonNull
         @Override
-        public BuilderSteps.BuildStep dataStoreConfigurationProvider(
-                @NonNull DataStoreConfigurationProvider dataStoreConfigurationProvider) {
-            Builder.this.dataStoreConfigurationProvider = Objects.requireNonNull(dataStoreConfigurationProvider);
+        public BuilderSteps.BuildStep conflictResolver(@NonNull ConflictResolver conflictResolver) {
+            this.conflictResolver = Objects.requireNonNull(conflictResolver);
             return Builder.this;
         }
 
@@ -439,12 +366,7 @@ final class MutationProcessor {
 
         interface VersionRepositoryStep {
             @NonNull
-            SyncTimeRegistryStep versionRepository(@NonNull VersionRepository versionRepository);
-        }
-
-        interface SyncTimeRegistryStep {
-            @NonNull
-            MutationOutboxStep syncTimeRegistry(@NonNull SyncTimeRegistry syncTimeRegistry);
+            MutationOutboxStep versionRepository(@NonNull VersionRepository versionRepository);
         }
 
         interface MutationOutboxStep {
@@ -454,13 +376,12 @@ final class MutationProcessor {
 
         interface AppSyncStep {
             @NonNull
-            DataStoreConfigurationProviderStep appSync(@NonNull AppSync appSync);
+            ConflictResolverStep appSync(@NonNull AppSync appSync);
         }
 
-        interface DataStoreConfigurationProviderStep {
+        interface ConflictResolverStep {
             @NonNull
-            BuildStep dataStoreConfigurationProvider(
-                @NonNull DataStoreConfigurationProvider conflictHandlerProvider);
+            BuildStep conflictResolver(@NonNull ConflictResolver conflictResolver);
         }
 
         interface BuildStep {

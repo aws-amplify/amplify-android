@@ -30,7 +30,7 @@ import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.appsync.SynchronousAppSync;
-import com.amplifyframework.datastore.syncengine.PendingMutation;
+import com.amplifyframework.datastore.syncengine.OutboxMutationEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.HubEventFilter;
@@ -197,34 +197,42 @@ public final class AWSDataStorePluginInstrumentedTest {
     private <T extends Model> HubEventFilter publicationOf(T model) {
         return event -> {
             DataStoreChannelEventName actualEventName = DataStoreChannelEventName.fromString(event.getName());
-            if (!DataStoreChannelEventName.PUBLISHED_TO_CLOUD.equals(actualEventName)) {
+            if (!DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED.equals(actualEventName)) {
                 return false;
             }
-            @SuppressWarnings("unchecked")
-            PendingMutation<T> pendingMutation = (PendingMutation<T>) event.getData();
-            if (pendingMutation == null) {
-                return false;
-            } else if (!model.getClass().isAssignableFrom(pendingMutation.getMutatedItem().getClass())) {
-                return false;
-            }
-            return model.getId().equals(pendingMutation.getMutatedItem().getId());
+            return hasModelData(model, (OutboxMutationEvent<? extends Model>) event.getData());
         };
     }
 
     private <T extends Model> HubEventFilter receiptOf(T model) {
         return event -> {
             DataStoreChannelEventName actualEventName = DataStoreChannelEventName.fromString(event.getName());
-            if (!DataStoreChannelEventName.RECEIVED_FROM_CLOUD.equals(actualEventName)) {
+            if (!DataStoreChannelEventName.SUBSCRIPTION_DATA_PROCESSED.equals(actualEventName)) {
                 return false;
             }
-            @SuppressWarnings("unchecked")
-            ModelWithMetadata<T> modelWithMetadata = (ModelWithMetadata<T>) event.getData();
-            if (modelWithMetadata == null) {
-                return false;
-            } else if (!model.getClass().isAssignableFrom(modelWithMetadata.getModel().getClass())) {
-                return false;
-            }
-            return model.getId().equals(modelWithMetadata.getModel().getId());
+            return hasModelData(model, (ModelWithMetadata<? extends Model>) event.getData());
         };
+    }
+
+    private static <T extends Model> boolean hasModelData(
+            T model, OutboxMutationEvent<? extends Model> mutationEvent) {
+        if (mutationEvent == null) {
+            return false;
+        }
+        if (!model.getClass().isAssignableFrom(mutationEvent.getModel())) {
+            return false;
+        }
+        String actualId = mutationEvent.getElement().getModel().getId();
+        return model.getId().equals(actualId);
+    }
+
+    private static <T extends Model> boolean hasModelData(
+            T model, ModelWithMetadata<? extends Model> modelWithMetadata) {
+        if (modelWithMetadata == null) {
+            return false;
+        } else if (!model.getClass().isAssignableFrom(modelWithMetadata.getModel().getClass())) {
+            return false;
+        }
+        return model.getId().equals(modelWithMetadata.getModel().getId());
     }
 }

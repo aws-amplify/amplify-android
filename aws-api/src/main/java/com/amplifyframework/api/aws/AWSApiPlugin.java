@@ -21,12 +21,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
-import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
-import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -40,21 +38,14 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.model.AuthRule;
-import com.amplifyframework.core.model.AuthStrategy;
-import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.util.UserAgent;
 
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -81,6 +72,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
     private final ExecutorService executorService;
+    private final AuthRuleRequestDecorator requestDecorator;
 
     private final Set<String> restApis;
     private final Set<String> gqlApis;
@@ -109,6 +101,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.restApis = new HashSet<>();
         this.gqlApis = new HashSet<>();
         this.executorService = Executors.newCachedThreadPool();
+        this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
     }
 
     @NonNull
@@ -274,68 +267,30 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull Action onSubscriptionComplete) {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            onSubscriptionFailure.accept(
-                    new ApiException(
-                            "No client information for API named " + apiName,
-                            "Check your amplify configuration to make sure there " +
-                                    "is a correctly configured section for " + apiName
-                    )
-            );
+            onSubscriptionFailure.accept(new ApiException(
+                    "No client information for API named " + apiName,
+                    "Check your amplify configuration to make sure there " +
+                            "is a correctly configured section for " + apiName
+            ));
             return null;
         }
 
-        GraphQLRequest<R> request = graphQLRequest;
-        if (request instanceof AppSyncGraphQLRequest) {
-            try {
-                AppSyncGraphQLRequest<R> appSyncRequest = (AppSyncGraphQLRequest<R>) request;
-                AuthRule ownerRuleWithReadRestriction = null;
-                ArrayList<String> readAuthorizedGroups = new ArrayList<>();
+        final GraphQLRequest<R> authDecoratedRequest;
 
-                // Note that we are intentionally supporting only one owner rule with a READ operation at this time.
-                // If there is more than one, the operation will fail because AppSync generates a parameter for each
-                // one. The question then is which one do we pass. JavaScript currently doesn't support this use case
-                // and it's not clear what a good solution would be until AppSync supports real time filters.
-                for (AuthRule authRule : appSyncRequest.getModelSchema().getAuthRules()) {
-                    if (isReadRestrictingOwner(authRule)) {
-                        if (ownerRuleWithReadRestriction == null) {
-                            ownerRuleWithReadRestriction = authRule;
-                        } else {
-                            onSubscriptionFailure.accept(new ApiException("Detected multiple owner type auth rules " +
-                                    "with a READ operation", "We currently do not support this use case. Please " +
-                                    "limit your type to just one owner auth rule with a READ operation restriction."));
-                            return null;
-                        }
-                    } else if (isReadRestrictingStaticGroup(authRule)) {
-                        readAuthorizedGroups.addAll(authRule.getGroups());
-                    }
-                }
-
-                // We only add the owner parameter to the subscription if there is an owner rule with a READ restriction
-                // and either there are no group auth rules with read access or there are but the user isn't in any of
-                // them.
-                if (ownerRuleWithReadRestriction != null && (
-                        readAuthorizedGroups.isEmpty() ||
-                        Collections.disjoint(readAuthorizedGroups, getUserGroups())
-                    )
-                ) {
-                    request = appSyncRequest.newBuilder()
-                            .variable(
-                                ownerRuleWithReadRestriction.getOwnerFieldOrDefault(),
-                                    "String!",
-                                getIdentityValue(ownerRuleWithReadRestriction.getIdentityClaimOrDefault())
-                            )
-                            .build();
-                }
-            } catch (AmplifyException exception) {
-                onSubscriptionFailure.accept(new ApiException("Failed to set owner field on AppSyncGraphQLRequest",
-                        exception, "See attached exception for details."));
-                return null;
-            }
+        // Decorate the request according to the auth rule parameters.
+        try {
+            AuthorizationType authType = clientDetails
+                    .getApiConfiguration()
+                    .getAuthorizationType();
+            authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
+        } catch (ApiException exception) {
+            onSubscriptionFailure.accept(exception);
+            return null;
         }
 
         SubscriptionOperation<R> operation = SubscriptionOperation.<R>builder()
             .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
-            .graphQlRequest(request)
+            .graphQlRequest(authDecoratedRequest)
             .responseFactory(gqlResponseFactory)
             .executorService(executorService)
             .onSubscriptionStart(onSubscriptionEstablished)
@@ -345,84 +300,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             .build();
         operation.start();
         return operation;
-    }
-
-    private boolean isReadRestrictingOwner(AuthRule authRule) {
-        return AuthStrategy.OWNER.equals(authRule.getAuthStrategy())
-            && authRule.getOperationsOrDefault().contains(ModelOperation.READ);
-    }
-
-    private boolean isReadRestrictingStaticGroup(AuthRule authRule) {
-        return AuthStrategy.GROUPS.equals(authRule.getAuthStrategy())
-            && authRule.getGroups() != null && !authRule.getGroups().isEmpty()
-            && authRule.getOperationsOrDefault().contains(ModelOperation.READ);
-    }
-
-    private String getIdentityValue(String identityClaim) throws ApiException {
-        CognitoUserPoolsAuthProvider cognitoProvider = getAuthProvider();
-
-        String identityValue;
-
-        try {
-            identityValue = CognitoJWTParser
-                    .getPayload(cognitoProvider.getLatestAuthToken())
-                    .getString(identityClaim);
-        } catch (JSONException error) {
-            identityValue = null;
-        }
-
-        if (identityValue == null || identityValue.isEmpty()) {
-            throw new ApiException(
-                    "Attempted to subscribe to a model with owner based authorization without " + identityClaim + " " +
-                    "which was specified (or defaulted to) as the identity claim.",
-                    "If you did not specify a custom identityClaim in your schema, make sure you are logged in. If " +
-                            "you did, check that the value you specified in your schema is present in the access key."
-            );
-        }
-
-        return identityValue;
-    }
-
-    private ArrayList<String> getUserGroups() throws ApiException {
-        CognitoUserPoolsAuthProvider cognitoProvider = getAuthProvider();
-        ArrayList<String> groups = new ArrayList<>();
-        final String GROUPS_KEY = "cognito:groups";
-
-        try {
-            JSONObject accessToken = CognitoJWTParser.getPayload(cognitoProvider.getLatestAuthToken());
-
-            if (accessToken.has(GROUPS_KEY)) {
-                JSONArray jsonGroups = accessToken.getJSONArray(GROUPS_KEY);
-
-                for (int i = 0; i < jsonGroups.length(); i++) {
-                    groups.add(jsonGroups.getString(i));
-                }
-            }
-        } catch (JSONException error) {
-            throw new ApiException(
-                    "Failed to parse groups from auth rule.",
-                    error,
-                    "This should never happen - see attached exception for more details and report to us on GitHub."
-            );
-        }
-
-        return groups;
-    }
-
-    private CognitoUserPoolsAuthProvider getAuthProvider() throws ApiException {
-        CognitoUserPoolsAuthProvider cognitoProvider = authProvider.getCognitoUserPoolsAuthProvider();
-        if (cognitoProvider == null) {
-            try {
-                cognitoProvider = new DefaultCognitoUserPoolsAuthProvider();
-            } catch (ApiException exception) {
-                throw new ApiException(
-                        "Attempted to subscribe to a model with owner based authorization without a Cognito provider",
-                        "Did you add the AWSCognitoAuthPlugin to Amplify before configuring it?"
-                );
-            }
-        }
-
-        return cognitoProvider;
     }
 
     @Nullable

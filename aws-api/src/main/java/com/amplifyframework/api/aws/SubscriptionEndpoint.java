@@ -178,6 +178,13 @@ final class SubscriptionEndpoint {
         }
     }
 
+    private void notifySubscriptionFailure(final String subscriptionId) {
+        Subscription<?> subscription = subscriptions.get(subscriptionId);
+        if (subscription != null && pendingSubscriptionIds.remove(subscriptionId)) {
+            subscription.acknowledgeSubscriptionFailure();
+        }
+    }
+
     private void notifyAllSubscriptionsCompleted() {
         // TODO: if the connection closes, but our subscription didn't ask for that,
         //  is that a failure, from its standpoint? Or not?
@@ -303,6 +310,7 @@ final class SubscriptionEndpoint {
         private final Type responseType;
         private final CountDownLatch subscriptionReadyAcknowledgment;
         private final CountDownLatch subscriptionCompletionAcknowledgement;
+        private boolean failed;
 
         Subscription(
                 Consumer<GraphQLResponse<T>> onNextItem,
@@ -317,9 +325,15 @@ final class SubscriptionEndpoint {
             this.responseType = responseType;
             this.subscriptionReadyAcknowledgment = new CountDownLatch(1);
             this.subscriptionCompletionAcknowledgement = new CountDownLatch(1);
+            this.failed = false;
         }
 
         void acknowledgeSubscriptionReady() {
+            subscriptionReadyAcknowledgment.countDown();
+        }
+
+        void acknowledgeSubscriptionFailure() {
+            failed = true;
             subscriptionReadyAcknowledgment.countDown();
         }
 
@@ -327,17 +341,19 @@ final class SubscriptionEndpoint {
             try {
                 if (!subscriptionReadyAcknowledgment.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
                     dispatchError(new ApiException(
-                        "Subscription not acknowledged.",
+                        "Timed out waiting for subscription start_ack.",
                         AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
                     return false;
+                } else if (failed) {
+                    // An error was already dispatched at the time of failure, so don't dispatch a second one.
+                    return false;
                 }
             } catch (InterruptedException interruptedException) {
-                dispatchError(new ApiException(
-                    "Failure awaiting subscription acknowledgement.",
-                    interruptedException,
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
-                ));
+                // Triggered when the Future created in SubscriptionOperation is cancelled, which happens when the
+                // subscription Observable is disposed, which happens when a SUBSCRIPTION_ERROR occurs.  Don't dispatch
+                // any error because the caller has likely already been disposed.
+                LOG.warn("Thread interrupted awaiting subscription acknowledgement.", interruptedException);
                 return false;
             }
 
@@ -486,13 +502,12 @@ final class SubscriptionEndpoint {
         public Connection waitForConnectionReady() {
             try {
                 if (!connectionResponse.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
-                    LOG.warn("Timed out waiting for connection.");
-                    return new Connection("Timed out waiting for connection.");
+                    LOG.warn("Timed out waiting for connection acknowledgement.");
+                    return new Connection("Timed out waiting for connection acknowledgement.");
                 }
             } catch (InterruptedException exception) {
-                // If the thread where the request was running was killed.
-                LOG.warn("Connection attempt interrupted.");
-                return new Connection("Subscription was terminated.");
+                LOG.warn("Thread interrupted waiting for connection acknowledgement");
+                return new Connection("Thread interrupted waiting for connection acknowledgement");
             }
             LOG.debug("Current endpoint status: " + endpointStatus.get());
             return new Connection();
@@ -542,6 +557,9 @@ final class SubscriptionEndpoint {
                         timeoutWatchdog.reset();
                         break;
                     case SUBSCRIPTION_ERROR:
+                        notifySubscriptionFailure(jsonMessage.getString("id"));
+                        notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
+                        break;
                     case SUBSCRIPTION_DATA:
                         notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
                         break;

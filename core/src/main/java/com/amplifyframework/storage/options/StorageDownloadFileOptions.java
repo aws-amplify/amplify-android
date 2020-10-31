@@ -17,13 +17,19 @@ package com.amplifyframework.storage.options;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Options to specify attributes of get API invocation.
  */
-public final class StorageDownloadFileOptions extends StorageOptions {
+public class StorageDownloadFileOptions extends StorageOptions {
 
-    private StorageDownloadFileOptions(final Builder builder) {
+    /**
+     * Constructs a StorageDownloadFileOptions instance with the
+     * attributes from builder instance.
+     * @param builder the builder with configured attributes
+     */
+    protected StorageDownloadFileOptions(final Builder<?> builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
     }
 
@@ -35,8 +41,8 @@ public final class StorageDownloadFileOptions extends StorageOptions {
      * @return An instance of the {@link StorageDownloadFileOptions.Builder}
      */
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
     /**
@@ -50,9 +56,10 @@ public final class StorageDownloadFileOptions extends StorageOptions {
      *         values in the provided options
      */
     @NonNull
-    public static Builder from(@NonNull final StorageDownloadFileOptions options) {
-        return builder().accessLevel(options.getAccessLevel())
-                .targetIdentityId(options.getTargetIdentityId());
+    public static Builder<?> from(@NonNull final StorageDownloadFileOptions options) {
+        return builder()
+            .accessLevel(options.getAccessLevel())
+            .targetIdentityId(options.getTargetIdentityId());
     }
 
     /**
@@ -65,11 +72,56 @@ public final class StorageDownloadFileOptions extends StorageOptions {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!(obj instanceof StorageDownloadFileOptions)) {
+            return false;
+        } else {
+            StorageDownloadFileOptions that = (StorageDownloadFileOptions) obj;
+            return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getAccessLevel(),
+                getTargetIdentityId()
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public String toString() {
+        return "StorageDownloadFileOptions {" +
+            "accessLevel=" + getAccessLevel() +
+            ", targetIdentityId=" + getTargetIdentityId() +
+            '}';
+    }
+
+    /**
      * A utility that can be used to configure and construct immutable
      * instances of the {@link StorageDownloadFileOptions}, by chaining
      * fluent configuration method calls.
+     * @param <B> the type of builder to chain with
      */
-    public static final class Builder extends StorageOptions.Builder<Builder, StorageDownloadFileOptions> {
+    public static class Builder<B extends Builder<B>> extends StorageOptions.Builder<B, StorageDownloadFileOptions> {
+        /**
+         * Returns an instance of StorageDownloadFileOptions with the parameters
+         * specified by this builder.
+         * @return a configured instance of StorageDownloadFileOptions
+         */
         @SuppressLint("SyntheticAccessor")
         @Override
         @NonNull
