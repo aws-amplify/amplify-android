@@ -174,15 +174,13 @@ public final class AppSyncGraphQLRequestFactory {
      * @return a valid {@link GraphQLRequest} instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
      */
-    @SuppressWarnings("unchecked")
     public static <R, T extends Model> GraphQLRequest<R> buildMutation(
             T model,
             QueryPredicate predicate,
             MutationType type
     ) {
         try {
-            // model is of type T so this is a safe cast - hence the warning suppression
-            Class<T> modelClass = (Class<T>) model.getClass();
+            Class<? extends Model> modelClass = model.getClass();
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
             String graphQlTypeName = schema.getName();
 
@@ -192,11 +190,10 @@ public final class AppSyncGraphQLRequestFactory {
                     .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(modelClass);
 
-            String inputType = new StringBuilder()
-                .append(Casing.capitalize(type.toString()))
-                .append(Casing.capitalizeFirst(graphQlTypeName))
-                .append("Input!")
-                .toString(); // CreateTodoInput
+            String inputType =
+                    Casing.capitalize(type.toString()) +
+                    Casing.capitalizeFirst(graphQlTypeName) +
+                    "Input!"; // CreateTodoInput
 
             if (MutationType.DELETE.equals(type)) {
                 builder.variable("input", inputType, Collections.singletonMap("id", model.getId()));
@@ -205,11 +202,10 @@ public final class AppSyncGraphQLRequestFactory {
             }
 
             if (!QueryPredicates.all().equals(predicate)) {
-                String conditionType = new StringBuilder()
-                    .append("Model")
-                    .append(Casing.capitalizeFirst(graphQlTypeName))
-                    .append("ConditionInput")
-                    .toString();
+                String conditionType =
+                        "Model" +
+                        Casing.capitalizeFirst(graphQlTypeName) +
+                        "ConditionInput";
                 builder.variable("condition", conditionType, parsePredicate(predicate));
             }
 
@@ -232,7 +228,6 @@ public final class AppSyncGraphQLRequestFactory {
      * @return a valid {@link GraphQLRequest} instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
      */
-    @SuppressWarnings("SameParameterValue")
     public static <R, T extends Model> GraphQLRequest<R> buildSubscription(
             Class<T> modelClass,
             SubscriptionType subscriptionType
@@ -254,7 +249,7 @@ public final class AppSyncGraphQLRequestFactory {
 
     private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) {
         if (queryPredicate instanceof QueryPredicateOperation) {
-            QueryPredicateOperation<?> qpo = (QueryPredicateOperation) queryPredicate;
+            QueryPredicateOperation<?> qpo = (QueryPredicateOperation<?>) queryPredicate;
             QueryOperator<?> op = qpo.operator();
             return Collections.singletonMap(
                     qpo.field(),
@@ -323,17 +318,17 @@ public final class AppSyncGraphQLRequestFactory {
             case EQUAL:
                 return ((EqualQueryOperator) qOp).value();
             case LESS_OR_EQUAL:
-                return ((LessOrEqualQueryOperator) qOp).value();
+                return ((LessOrEqualQueryOperator<?>) qOp).value();
             case LESS_THAN:
-                return ((LessThanQueryOperator) qOp).value();
+                return ((LessThanQueryOperator<?>) qOp).value();
             case GREATER_OR_EQUAL:
-                return ((GreaterOrEqualQueryOperator) qOp).value();
+                return ((GreaterOrEqualQueryOperator<?>) qOp).value();
             case GREATER_THAN:
-                return ((GreaterThanQueryOperator) qOp).value();
+                return ((GreaterThanQueryOperator<?>) qOp).value();
             case CONTAINS:
                 return ((ContainsQueryOperator) qOp).value();
             case BETWEEN:
-                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator) qOp;
+                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator<?>) qOp;
                 return Arrays.asList(betweenOp.start(), betweenOp.end());
             case BEGINS_WITH:
                 return ((BeginsWithQueryOperator) qOp).value();

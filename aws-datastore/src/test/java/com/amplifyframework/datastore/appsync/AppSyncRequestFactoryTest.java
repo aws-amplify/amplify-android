@@ -153,17 +153,17 @@ public final class AppSyncRequestFactoryTest {
     /**
      * Checks that the predicate expression matches the expected value.
      * @throws DataStoreException If the output does not match.
-     * @throws JSONException from JSONAssert.assertEquals.
      */
     @Test
     public void validatePredicateGeneration() throws DataStoreException {
-        Map<String, Object> predicate = AppSyncRequestFactory.parsePredicate(BlogOwner.NAME.eq("Test Dummy"));
+        Map<String, Object> predicate =
+            AppSyncRequestFactory.parsePredicate(BlogOwner.NAME.eq("Test Dummy"));
         assertEquals(
             "{name={eq=Test Dummy}}",
             predicate.toString()
         );
 
-        predicate = AppSyncRequestFactory.parsePredicate(
+        AppSyncRequestFactory.parsePredicate(
             Blog.NAME.beginsWith("A day in the life of a...").and(Blog.OWNER.eq("DUMMY_OWNER_ID"))
         );
     }

@@ -55,6 +55,7 @@ public final class SelectionSet {
      * Copy constructor.
      * @param selectionSet node to copy
      */
+    @SuppressWarnings("CopyConstructorMissesField") // It is cloned, by recursion
     public SelectionSet(SelectionSet selectionSet) {
         this(selectionSet.value, new HashSet<>(selectionSet.nodes));
     }
@@ -206,7 +207,7 @@ public final class SelectionSet {
          *  - "nextToken"
          *
          * @param node a root node, with a value of null, and pagination fields
-         * @return
+         * @return A selection set
          */
         private SelectionSet wrapPagination(SelectionSet node) {
             return new SelectionSet(null, wrapPagination(node.getNodes()));
@@ -271,7 +272,7 @@ public final class SelectionSet {
         /**
          * We handle customType fields differently as DEPTH does not apply here.
          * @param clazz class we wish to build selection set for
-         * @return
+         * @return A set of selection sets
          */
         private Set<SelectionSet> getNestedCustomTypeFields(Class<?> clazz) {
             Set<SelectionSet> result = new HashSet<>();
@@ -289,7 +290,7 @@ public final class SelectionSet {
         /**
          * Helper to determine if field is a custom type. If custom types we need to build nested selection set.
          * @param field field we wish to check
-         * @return
+         * @return True if the field is of a custom type
          */
         private static boolean isCustomType(@NonNull Field field) {
             Class<?> cls = getClassForField(field);
@@ -307,13 +308,13 @@ public final class SelectionSet {
 
         /**
          * Get the class of a field. If field is a collection, it returns the Generic type
-         * @return
+         * @return The class of the field
          */
         static Class<?> getClassForField(Field field) {
             Class<?> typeClass;
             if (Collection.class.isAssignableFrom(field.getType())) {
                 ParameterizedType listType = (ParameterizedType) field.getGenericType();
-                typeClass = (Class) listType.getActualTypeArguments()[0];
+                typeClass = (Class<?>) listType.getActualTypeArguments()[0];
             } else {
                 typeClass = field.getType();
             }
