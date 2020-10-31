@@ -115,7 +115,6 @@ public final class AppSyncRequestFactoryTest {
     /**
      * Checks that we're getting the expected output for a mutation with predicate.
      * @throws DataStoreException If the output does not match.
-     * @throws AmplifyException On failure to parse ModelSchema from model class
      * @throws JSONException from JSONAssert.assertEquals.
      */
     @Test
@@ -132,7 +131,6 @@ public final class AppSyncRequestFactoryTest {
     /**
      * Checks that we're getting the expected output for a mutation with predicate.
      * @throws DataStoreException If the output does not match.
-     * @throws AmplifyException On failure to parse ModelSchema from model class
      * @throws JSONException from JSONAssert.assertEquals.
      */
     @Test
@@ -166,7 +164,6 @@ public final class AppSyncRequestFactoryTest {
 
     /**
      * Checks that the predicate expression matches the expected value.
-     * @throws AmplifyException On failure to parse ModelSchema from model class
      * @throws DataStoreException If the output does not match.
      */
     @Test

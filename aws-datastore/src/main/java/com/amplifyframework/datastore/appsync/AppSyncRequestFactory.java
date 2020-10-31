@@ -78,7 +78,7 @@ final class AppSyncRequestFactory {
      * @throws DataStoreException On Failure to inspect
      */
     @NonNull
-    static <T, M extends Model> AppSyncGraphQLRequest<T> buildSyncRequest(
+    static <T> AppSyncGraphQLRequest<T> buildSyncRequest(
             @NonNull final ModelSchema modelSchema,
             @Nullable final Long lastSync,
             @Nullable final Integer limit)
@@ -109,7 +109,7 @@ final class AppSyncRequestFactory {
         }
     }
 
-    static <T, M extends Model> AppSyncGraphQLRequest<T> buildSubscriptionRequest(
+    static <T> AppSyncGraphQLRequest<T> buildSubscriptionRequest(
             ModelSchema modelSchema,
             SubscriptionType subscriptionType) throws DataStoreException {
         try {
@@ -138,10 +138,9 @@ final class AppSyncRequestFactory {
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildUpdateRequest(
             M model, Integer version, QueryPredicate predicate) throws DataStoreException {
         Class<M> modelClass = (Class<M>) model.getClass();
-        Map<String, Object> inputMap = new HashMap<>();
         try {
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-            inputMap.putAll(schema.getMapOfFieldNameAndValues(model));
+            Map<String, Object> inputMap = new HashMap<>(schema.getMapOfFieldNameAndValues(model));
             inputMap.put("_version", version);
             return buildMutation(schema, inputMap, predicate, MutationType.UPDATE);
 
@@ -151,7 +150,6 @@ final class AppSyncRequestFactory {
         }
     }
 
-    @SuppressWarnings("unchecked") // cast to (Class<M>)
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildCreationRequest(
             M model, ModelSchema modelSchema)
             throws DataStoreException {
@@ -167,7 +165,7 @@ final class AppSyncRequestFactory {
 
     static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
         if (queryPredicate instanceof QueryPredicateOperation) {
-            QueryPredicateOperation<?> qpo = (QueryPredicateOperation) queryPredicate;
+            QueryPredicateOperation<?> qpo = (QueryPredicateOperation<?>) queryPredicate;
             QueryOperator<?> op = qpo.operator();
             return Collections.singletonMap(
                 qpo.field(),
@@ -239,17 +237,17 @@ final class AppSyncRequestFactory {
             case EQUAL:
                 return ((EqualQueryOperator) qOp).value();
             case LESS_OR_EQUAL:
-                return ((LessOrEqualQueryOperator) qOp).value();
+                return ((LessOrEqualQueryOperator<?>) qOp).value();
             case LESS_THAN:
-                return ((LessThanQueryOperator) qOp).value();
+                return ((LessThanQueryOperator<?>) qOp).value();
             case GREATER_OR_EQUAL:
-                return ((GreaterOrEqualQueryOperator) qOp).value();
+                return ((GreaterOrEqualQueryOperator<?>) qOp).value();
             case GREATER_THAN:
-                return ((GreaterThanQueryOperator) qOp).value();
+                return ((GreaterThanQueryOperator<?>) qOp).value();
             case CONTAINS:
                 return ((ContainsQueryOperator) qOp).value();
             case BETWEEN:
-                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator) qOp;
+                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator<?>) qOp;
                 return Arrays.asList(betweenOp.start(), betweenOp.end());
             case BEGINS_WITH:
                 return ((BeginsWithQueryOperator) qOp).value();
@@ -283,20 +281,18 @@ final class AppSyncRequestFactory {
                     .requestOptions(new DataStoreGraphQLRequestOptions())
                     .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, schema.getModelClass()));
 
-            String inputType = new StringBuilder()
-                    .append(Casing.capitalize(mutationType.toString()))
-                    .append(Casing.capitalizeFirst(graphQlTypeName))
-                    .append("Input!")
-                    .toString(); // CreateTodoInput
+            String inputType =
+                    Casing.capitalize(mutationType.toString()) +
+                    Casing.capitalizeFirst(graphQlTypeName) +
+                    "Input!"; // CreateTodoInput
 
             builder.variable("input", inputType, inputMap);
 
             if (!QueryPredicates.all().equals(predicate)) {
-                String conditionType = new StringBuilder()
-                        .append("Model")
-                        .append(Casing.capitalizeFirst(graphQlTypeName))
-                        .append("ConditionInput")
-                        .toString();
+                String conditionType =
+                        "Model" +
+                        Casing.capitalizeFirst(graphQlTypeName) +
+                        "ConditionInput";
                 builder.variable("condition", conditionType, parsePredicate(predicate));
             }
             return builder.build();
