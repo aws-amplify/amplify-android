@@ -80,5 +80,5 @@ if [ "$result" = "PASSED" ]
 then
   exit 0
 fi
-# Otherwise, exit with a non-zero
+# Otherwise, exit with a non-zero.
 exit 1
