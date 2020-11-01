@@ -73,7 +73,7 @@ public final class FieldFinder {
         Class<?> fieldContainerClazz = clazz;
         while (fieldContainerClazz != null) {
             for (Field field : fieldContainerClazz.getDeclaredFields()) {
-                /**
+                /*
                  * In Android 21+, java.lang.Object has two transient fields, shadow$_klass_ and shadow$_monitor_.
                  * They are not actually present when running unit tests, but only when running on an Android device.
                  * We don't care about them, so we will filter them out by ignoring all transient fields.

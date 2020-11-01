@@ -50,7 +50,6 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
 
     /**
      * Constructor for AppSyncGraphQLRequest.
-     * @throw AmplifyException if a ModelSchema can't be derived from the provided model class
      */
     private AppSyncGraphQLRequest(Builder builder) {
         super(builder.responseType, new GsonVariablesSerializer());
@@ -116,7 +115,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         String modelName = Casing.capitalizeFirst(modelSchema.getName());
         if (QueryType.LIST.equals(operation)) {
             // The list operation name is pluralized by simply adding 's' to the end.
-            modelName = modelName += "s";
+            modelName += "s";
         } else if (QueryType.SYNC.equals(operation)) {
             // The sync operation name is pluralized using pluralize.js, which uses more complex pluralization rules
             // than simply adding an 's' at the end (e.g. baby > babies, person > people, etc).  This pluralized name
@@ -124,26 +123,22 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             modelName = Casing.capitalizeFirst(modelSchema.getPluralName());
         }
 
-        String operationString = new StringBuilder()
-                .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.CAMEL_CASE)
-                        .convert(operation.toString()))
-                .append(modelName)
-                .append(inputParameterString)
-                .append(selectionSet.toString("  "))
-                .toString();
+        String operationString =
+                Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE)
+                    .to(Casing.CaseType.CAMEL_CASE)
+                    .convert(operation.toString()) +
+                modelName +
+                inputParameterString +
+                selectionSet.toString("  ");
 
-        String queryString = new StringBuilder()
-                .append(operation.getOperationType().getName())
-                .append(" ")
-                .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.PASCAL_CASE)
-                        .convert(operation.toString()))
-                .append(modelName)
-                .append(inputTypeString)
-                .append(Wrap.inPrettyBraces(operationString, "", "  "))
-                .append("\n")
-                .toString();
-
-        return queryString;
+        return operation.getOperationType().getName() +
+                " " +
+                Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.PASCAL_CASE)
+                    .convert(operation.toString()) +
+                modelName +
+                inputTypeString +
+                Wrap.inPrettyBraces(operationString, "", "  ") +
+                "\n";
     }
 
     @Override
