@@ -131,7 +131,7 @@ public final class ModelAssociation {
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
+        int result = name.hashCode();
         result = 31 * result + (targetName != null ? targetName.hashCode() : 0);
         result = 31 * result + (associatedName != null ? associatedName.hashCode() : 0);
         result = 31 * result + (associatedType != null ? associatedType.hashCode() : 0);
@@ -141,11 +141,11 @@ public final class ModelAssociation {
     @Override
     public String toString() {
         return "ModelAssociation{" +
-                "name=\'" + name + "\'" +
-                ", targetName=\'" + targetName + "\'" +
-                ", associatedName=\'" + associatedName + "\'" +
-                ", associatedType=\'" + associatedType + "\'" +
-                '}';
+            "name='" + name + '\'' +
+            ", targetName='" + targetName + '\'' +
+            ", associatedName='" + associatedName + '\'' +
+            ", associatedType='" + associatedType + '\'' +
+            '}';
     }
 
     /**
