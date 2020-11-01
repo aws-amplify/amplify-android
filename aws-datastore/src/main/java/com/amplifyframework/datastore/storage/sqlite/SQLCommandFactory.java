@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -30,7 +29,6 @@ import java.util.Set;
  * {@link ModelSchema} and the {@link com.amplifyframework.core.model.Model}.
  */
 interface SQLCommandFactory {
-
     /**
      * Generates the CREATE TABLE SQL command from the {@link ModelSchema}.
      * @param modelSchema the schema of a {@link com.amplifyframework.core.model.Model}
@@ -75,25 +73,19 @@ interface SQLCommandFactory {
      * prepared statement that can be bound later with inputs.
      *
      * @param modelSchema schema of the model
-     * @param item the model instance
-     * @param <T> type of the model
      * @return the SQL command that encapsulates the UPDATE command
      */
     @NonNull
-    <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
-                                           @NonNull T item,
-                                           @NonNull QueryPredicate predicate) throws DataStoreException;
+    SqlCommand updateFor(@NonNull ModelSchema modelSchema,
+                         @NonNull QueryPredicate predicate) throws DataStoreException;
 
     /**
      * Generates the DELETE command in a raw string representation.
      *
      * @param modelSchema schema of the model
-     * @param item the model instance
-     * @param <T> type of the model
      * @return the SQL command that encapsulates the DELETE command
      */
     @NonNull
-    <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
-                                           @NonNull T item,
-                                           @NonNull QueryPredicate predicate) throws DataStoreException;
+    SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
+                         @NonNull QueryPredicate predicate) throws DataStoreException;
 }
