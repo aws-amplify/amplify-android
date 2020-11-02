@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange.Initiator;
@@ -66,6 +67,7 @@ final class SyncTimeRegistry {
             localStorageAdapter.save(
                 metadata,
                 Initiator.SYNC_ENGINE,
+                QueryPredicates.all(),
                 saveResult -> emitter.onComplete(),
                 emitter::onError
             )
@@ -82,6 +84,7 @@ final class SyncTimeRegistry {
             localStorageAdapter.save(
                 metadata,
                 Initiator.SYNC_ENGINE,
+                QueryPredicates.all(),
                 saveResult -> emitter.onComplete(),
                 emitter::onError
             )

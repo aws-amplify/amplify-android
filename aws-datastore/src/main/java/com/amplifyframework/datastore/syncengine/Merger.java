@@ -154,6 +154,7 @@ final class Merger {
             localStorageAdapter.save(
                 model,
                 StorageItemChange.Initiator.SYNC_ENGINE,
+                QueryPredicates.all(),
                 storageItemChange -> {
                     onStorageItemChange.accept(storageItemChange);
                     emitter.onComplete();

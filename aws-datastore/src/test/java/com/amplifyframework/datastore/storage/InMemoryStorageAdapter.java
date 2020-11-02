@@ -66,16 +66,6 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     ) {
     }
 
-    @Override
-    public <T extends Model> void save(
-            @NonNull final T item,
-            @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull final Consumer<DataStoreException> onError
-    ) {
-        save(item, initiator, QueryPredicates.all(), onSuccess, onError);
-    }
-
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
     public <T extends Model> void save(
