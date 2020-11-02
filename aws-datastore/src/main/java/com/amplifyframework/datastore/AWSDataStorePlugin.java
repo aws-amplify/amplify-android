@@ -386,6 +386,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         start(() -> sqliteStorageAdapter.delete(
             item,
             StorageItemChange.Initiator.DATA_STORE_API,
+            predicate,
             itemDeletion -> {
                 try {
                     onItemDeleted.accept(ItemChangeMapper.map(itemDeletion));

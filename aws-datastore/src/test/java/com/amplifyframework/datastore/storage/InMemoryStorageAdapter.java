@@ -139,16 +139,6 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         onSuccess.accept(result.iterator());
     }
 
-    @Override
-    public <T extends Model> void delete(
-            @NonNull final T item,
-            @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull final Consumer<DataStoreException> onError
-    ) {
-        delete(item, initiator, QueryPredicates.all(), onSuccess, onError);
-    }
-
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
     public <T extends Model> void delete(
