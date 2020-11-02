@@ -89,7 +89,7 @@ public final class SubscriptionProcessorTest {
 
     private static List<Class<? extends Model>> sortedModels(ModelProvider modelProvider) throws AmplifyException {
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.load(modelProvider.models());
+        modelSchemaRegistry.register(modelProvider.models());
         TopologicalOrdering topologicalOrdering =
             TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
         Comparator<Class<? extends Model>> comparator = (one, two) -> {

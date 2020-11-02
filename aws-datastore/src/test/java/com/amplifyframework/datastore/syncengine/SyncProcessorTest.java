@@ -116,7 +116,7 @@ public final class SyncProcessorTest {
     private void initSyncProcessor(int syncMaxRecords) throws AmplifyException {
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();
-        modelSchemaRegistry.load(modelProvider.models());
+        modelSchemaRegistry.register(modelProvider.models());
 
         InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
         this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
