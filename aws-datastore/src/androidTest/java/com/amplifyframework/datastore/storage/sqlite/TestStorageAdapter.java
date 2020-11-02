@@ -47,7 +47,7 @@ final class TestStorageAdapter {
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();
         try {
-            modelSchemaRegistry.load(modelProvider.models());
+            modelSchemaRegistry.register(modelProvider.models());
         } catch (AmplifyException modelSchemaLoadingFailure) {
             throw new RuntimeException(modelSchemaLoadingFailure);
         }
