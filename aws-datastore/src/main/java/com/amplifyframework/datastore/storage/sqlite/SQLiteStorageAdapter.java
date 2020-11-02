@@ -288,7 +288,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
                         ? idCheck.and(predicate)
                         : idCheck;
-                    sqlCommand = sqlCommandFactory.updateFor(modelSchema, item, condition);
+                    sqlCommand = sqlCommandFactory.updateFor(modelSchema, condition);
                     if (!sqlCommand.hasCompiledSqlStatement()) {
                         onError.accept(new DataStoreException(
                             "Error in saving the model. No update statement " +
@@ -448,9 +448,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
                     ? idCheck.and(predicate)
                     : idCheck;
-                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item, condition);
-                if (sqlCommand == null || sqlCommand.sqlStatement() == null
-                    || !sqlCommand.hasCompiledSqlStatement()) {
+                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, condition);
+                if (sqlCommand.sqlStatement() == null || !sqlCommand.hasCompiledSqlStatement()) {
                     onError.accept(new DataStoreException(
                         "No delete statement found for the Model: " + modelSchema.getName(),
                         AmplifyException.TODO_RECOVERY_SUGGESTION
