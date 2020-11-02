@@ -36,11 +36,11 @@ public final class ModelSchemaRegistry {
     }
 
     /**
-     * Create the ModelSchema objects for all Model classes.
+     * Computes ModelSchema for each of the provided models, and registers them.
      * @param models the set that contains all the Model classes.
      * @throws AmplifyException if unable to create a Model Schema for a model
      */
-    public synchronized void load(@NonNull Set<Class<? extends Model>> models) throws AmplifyException {
+    public synchronized void register(@NonNull Set<Class<? extends Model>> models) throws AmplifyException {
         for (Class<? extends Model> modelClass : models) {
             final String modelClassName = modelClass.getSimpleName();
             final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);

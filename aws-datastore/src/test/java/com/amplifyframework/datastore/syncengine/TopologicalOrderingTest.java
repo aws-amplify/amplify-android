@@ -46,7 +46,7 @@ public final class TopologicalOrderingTest {
 
         final ModelSchemaRegistry registry = ModelSchemaRegistry.instance();
         registry.clear();
-        registry.load(provider.models());
+        registry.register(provider.models());
 
         // Find the schema that the registry created for each of the models.
         ModelSchema commentSchema = findSchema(registry, Comment.class);

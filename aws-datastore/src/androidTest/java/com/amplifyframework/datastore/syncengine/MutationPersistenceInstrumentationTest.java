@@ -74,7 +74,7 @@ public final class MutationPersistenceInstrumentationTest {
         ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();
-        modelSchemaRegistry.load(modelProvider.models());
+        modelSchemaRegistry.register(modelProvider.models());
 
         LocalStorageAdapter localStorageAdapter =
             SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
