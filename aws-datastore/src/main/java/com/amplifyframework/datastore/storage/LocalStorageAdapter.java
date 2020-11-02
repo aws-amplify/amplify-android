@@ -66,22 +66,6 @@ public interface LocalStorageAdapter {
     );
 
     /**
-     * Save an item into local storage. A {@link Consumer} will be invoked when the
-     * save operation is completed, to notify the caller of success or error.
-     * @param <T> The type of the item being stored
-     * @param item the item to save into the repository
-     * @param initiator An identification of the actor who initiated this save
-     * @param onSuccess A callback that will be invoked if the save succeeds
-     * @param onError A callback that will be invoked if the save fails with an error
-     */
-    <T extends Model> void save(
-            @NonNull T item,
-            @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError
-    );
-
-    /**
      * Save an item into local storage only if the data being overwritten meets the
      * specific conditions. A {@link Consumer} will be invoked when the
      * save operation is completed, to notify the caller of success or failure.

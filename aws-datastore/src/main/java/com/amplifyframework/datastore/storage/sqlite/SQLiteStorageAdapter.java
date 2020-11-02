@@ -243,22 +243,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError) {
-        Objects.requireNonNull(item);
-        Objects.requireNonNull(initiator);
-        Objects.requireNonNull(onSuccess);
-        Objects.requireNonNull(onError);
-        save(item, initiator, QueryPredicates.all(), onSuccess, onError);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <T extends Model> void save(
-            @NonNull T item,
-            @NonNull StorageItemChange.Initiator initiator,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError) {
