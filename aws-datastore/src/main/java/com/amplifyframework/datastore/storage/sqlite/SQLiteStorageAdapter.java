@@ -406,19 +406,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * {@inheritDoc}
      */
-    @Override
-    public <T extends Model> void delete(
-            @NonNull T item,
-            @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError
-    ) {
-        delete(item, initiator, QueryPredicates.all(), onSuccess, onError);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @SuppressWarnings("unchecked") // item.getClass() has Class<?>, but we assume Class<T>
     @Override
     public <T extends Model> void delete(
@@ -430,6 +417,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     ) {
         Objects.requireNonNull(item);
         Objects.requireNonNull(initiator);
+        Objects.requireNonNull(predicate);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
 

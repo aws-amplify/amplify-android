@@ -151,6 +151,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
             storage.delete(
                 converter.toRecord(pendingMutation),
                 StorageItemChange.Initiator.SYNC_ENGINE,
+                QueryPredicates.all(),
                 ignored -> {
                     mutationQueue.removeById(pendingMutation.getMutationId());
                     inFlightMutations.remove(pendingMutationId);
