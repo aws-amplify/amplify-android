@@ -320,7 +320,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append(")");
         final String preparedInsertStatement = stringBuilder.toString();
         final SQLiteStatement compiledInsertStatement =
-                databaseConnectionHandle.compileStatement(preparedInsertStatement);
+                databaseConnectionHandle == null ?
+                null : databaseConnectionHandle.compileStatement(preparedInsertStatement);
         return new SqlCommand(table.getName(), preparedInsertStatement, columns,
                 Collections.emptyList(), compiledInsertStatement);
     }
@@ -334,9 +335,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @NonNull
     @WorkerThread
     @Override
-    public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
-                                                  @NonNull T item,
-                                                  @NonNull QueryPredicate predicate) throws DataStoreException {
+    public SqlCommand updateFor(@NonNull ModelSchema modelSchema,
+                                @NonNull QueryPredicate predicate) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("UPDATE")
@@ -373,7 +373,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         final String preparedUpdateStatement = stringBuilder.toString();
         final SQLiteStatement compiledUpdateStatement =
-                databaseConnectionHandle.compileStatement(preparedUpdateStatement);
+                databaseConnectionHandle == null ?
+                null : databaseConnectionHandle.compileStatement(preparedUpdateStatement);
         return new SqlCommand(table.getName(),
                 preparedUpdateStatement,
                 columns,
@@ -387,24 +388,23 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      */
     @NonNull
     @Override
-    public <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
-                                                  @NonNull T item,
-                                                  @NonNull QueryPredicate predicate) throws DataStoreException {
+    public SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
+                                @NonNull QueryPredicate predicate) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
-        final StringBuilder stringBuilder = new StringBuilder();
         final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
-        stringBuilder.append("DELETE FROM")
-                .append(SqlKeyword.DELIMITER)
-                .append(Wrap.inBackticks(table.getName()))
-                .append(SqlKeyword.DELIMITER)
-                .append(SqlKeyword.WHERE)
-                .append(SqlKeyword.DELIMITER)
-                .append(sqlPredicate)
-                .append(";");
 
-        final String preparedDeleteStatement = stringBuilder.toString();
+        final String preparedDeleteStatement =
+                "DELETE FROM" +
+                SqlKeyword.DELIMITER +
+                Wrap.inBackticks(table.getName()) +
+                SqlKeyword.DELIMITER +
+                SqlKeyword.WHERE +
+                SqlKeyword.DELIMITER +
+                sqlPredicate +
+                ";";
         final SQLiteStatement compiledDeleteStatement =
-                databaseConnectionHandle.compileStatement(preparedDeleteStatement);
+                databaseConnectionHandle == null ?
+                null : databaseConnectionHandle.compileStatement(preparedDeleteStatement);
         return new SqlCommand(table.getName(),
                 preparedDeleteStatement,
                 Collections.emptyList(),
