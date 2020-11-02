@@ -23,6 +23,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -135,6 +136,7 @@ final class Merger {
                 () -> localStorageAdapter.delete(
                     model,
                     StorageItemChange.Initiator.SYNC_ENGINE,
+                    QueryPredicates.all(),
                     storageItemChange -> {
                         onStorageItemChange.accept(storageItemChange);
                         emitter.onComplete();
