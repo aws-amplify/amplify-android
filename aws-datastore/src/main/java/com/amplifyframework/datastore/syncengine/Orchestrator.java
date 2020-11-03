@@ -159,6 +159,10 @@ public final class Orchestrator {
      */
     public synchronized void start() throws DataStoreException {
         if (tryAcquireStartStopLock(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            if (isStarted()) {
+                startStopSemaphore.release();
+                return;
+            }
             disposables.add(transitionCompletable()
                 .doOnSubscribe(subscriber -> {
                     LOG.info("Starting the orchestrator.");
