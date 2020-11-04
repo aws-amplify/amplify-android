@@ -95,7 +95,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         // Initialize StorageAdapter with models
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();
-        modelSchemaRegistry.load(modelProvider.models());
+        modelSchemaRegistry.register(modelProvider.models());
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         List<ModelSchema> firstResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,

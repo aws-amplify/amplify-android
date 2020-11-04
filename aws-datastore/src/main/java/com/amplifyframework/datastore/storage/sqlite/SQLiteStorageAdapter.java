@@ -181,7 +181,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Any exception raised during this when inspecting the Model classes
                  * through reflection will be notified via the `onError` callback.
                  */
-                modelSchemaRegistry.load(modelsProvider.models());
+                modelSchemaRegistry.register(modelsProvider.models());
 
                 /*
                  * Create the CREATE TABLE and CREATE INDEX commands for each of the
@@ -243,22 +243,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError) {
-        Objects.requireNonNull(item);
-        Objects.requireNonNull(initiator);
-        Objects.requireNonNull(onSuccess);
-        Objects.requireNonNull(onError);
-        save(item, initiator, QueryPredicates.all(), onSuccess, onError);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <T extends Model> void save(
-            @NonNull T item,
-            @NonNull StorageItemChange.Initiator initiator,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError) {
@@ -288,7 +272,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
                         ? idCheck.and(predicate)
                         : idCheck;
-                    sqlCommand = sqlCommandFactory.updateFor(modelSchema, item, condition);
+                    sqlCommand = sqlCommandFactory.updateFor(modelSchema, condition);
                     if (!sqlCommand.hasCompiledSqlStatement()) {
                         onError.accept(new DataStoreException(
                             "Error in saving the model. No update statement " +
@@ -406,19 +390,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * {@inheritDoc}
      */
-    @Override
-    public <T extends Model> void delete(
-            @NonNull T item,
-            @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError
-    ) {
-        delete(item, initiator, QueryPredicates.all(), onSuccess, onError);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @SuppressWarnings("unchecked") // item.getClass() has Class<?>, but we assume Class<T>
     @Override
     public <T extends Model> void delete(
@@ -430,6 +401,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     ) {
         Objects.requireNonNull(item);
         Objects.requireNonNull(initiator);
+        Objects.requireNonNull(predicate);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
 
@@ -448,9 +420,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
                     ? idCheck.and(predicate)
                     : idCheck;
-                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item, condition);
-                if (sqlCommand == null || sqlCommand.sqlStatement() == null
-                    || !sqlCommand.hasCompiledSqlStatement()) {
+                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, condition);
+                if (sqlCommand.sqlStatement() == null || !sqlCommand.hasCompiledSqlStatement()) {
                     onError.accept(new DataStoreException(
                         "No delete statement found for the Model: " + modelSchema.getName(),
                         AmplifyException.TODO_RECOVERY_SUGGESTION

@@ -34,9 +34,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,11 +68,6 @@ public final class ModelSchema {
     // Specifies the indexes of a Model.
     private final Map<String, ModelIndex> indexes;
 
-    // Maintain a sorted copy of all the fields of a Model
-    // This is useful so code that uses the sortedFields to generate queries and other
-    // persistence-related operations guarantee that the results are always consistent.
-    private final List<ModelField> sortedFields;
-
     private ModelSchema(
             String name,
             String pluralName,
@@ -88,7 +81,6 @@ public final class ModelSchema {
         this.fields = fields;
         this.associations = associations;
         this.indexes = indexes;
-        this.sortedFields = sortModelFields();
     }
 
     /**
@@ -296,18 +288,6 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns a sorted copy of all the fields of a Model.
-     *
-     * @return list of fieldName and the fieldObject of all
-     *          the fields of the model in sorted order.
-     */
-    @SuppressWarnings("unused")
-    @NonNull
-    public List<ModelField> getSortedFields() {
-        return Immutable.of(sortedFields);
-    }
-
-    /**
      * Creates a map of the fields in this schema to the actual values in the provided object.
      * @param instance An instance of this model populated with values to map
      * @return a map of the target fields in the schema to the actual values in the provided object
@@ -349,7 +329,7 @@ public final class ModelSchema {
             }
         }
 
-        /**
+        /*
          * If the owner field is exists on the model, and the value is null, it should be omitted when performing a
          * mutation because the AppSync server will automatically populate it using the authentication token provided
          * in the request header.  The logic below filters out the owner field if null for this scenario.
@@ -364,41 +344,6 @@ public final class ModelSchema {
         }
 
         return result;
-    }
-
-    private List<ModelField> sortModelFields() {
-        if (fields == null) {
-            return null;
-        }
-
-        // Create a list from elements of sortedFields
-        final List<ModelField> modelFieldEntries = new LinkedList<>(fields.values());
-
-        // Returns an array of the values sorted by some pre-defined rules:
-        //
-        // 1. ID comes always first
-        // 2. The other sortedFields are sorted alphabetically
-        //
-        // This is useful so code that uses the sortedFields to generate queries and other
-        // persistence-related operations guarantee that the results are always consistent.
-        Collections.sort(modelFieldEntries, (fieldOne, fieldOther) -> {
-
-            if (fieldOne.isId()) {
-                return -1;
-            }
-            if (fieldOther.isId()) {
-                return 1;
-            }
-            if (associations.containsKey(fieldOne.getName()) && !associations.containsKey(fieldOther.getName())) {
-                return 1;
-            }
-            if (associations.containsKey(fieldOther.getName()) && !associations.containsKey(fieldOne.getName())) {
-                return -1;
-            }
-            return fieldOne.getName().compareTo(fieldOther.getName());
-        });
-
-        return modelFieldEntries;
     }
 
     @Override

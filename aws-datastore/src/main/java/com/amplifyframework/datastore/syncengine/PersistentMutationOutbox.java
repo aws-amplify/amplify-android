@@ -113,6 +113,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
             storage.save(
                 converter.toRecord(pendingMutation),
                 StorageItemChange.Initiator.SYNC_ENGINE,
+                QueryPredicates.all(),
                 saved -> {
                     // The return value is StorageItemChange, referring to a PersistentRecord
                     // that was saved. We could "unwrap" a PendingMutation from that PersistentRecord,
@@ -151,6 +152,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
             storage.delete(
                 converter.toRecord(pendingMutation),
                 StorageItemChange.Initiator.SYNC_ENGINE,
+                QueryPredicates.all(),
                 ignored -> {
                     mutationQueue.removeById(pendingMutation.getMutationId());
                     inFlightMutations.remove(pendingMutationId);

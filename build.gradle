@@ -155,3 +155,4 @@ private void configureAndroidLibrary(Project project) {
         coreLibraryDesugaring dependency.android.desugartools
     }
 }
+apply from: rootProject.file("configuration/instrumentation-tests.gradle")

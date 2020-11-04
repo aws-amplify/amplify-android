@@ -174,7 +174,13 @@ public final class AppSyncExtensions {
         /**
          * An internal error occurred.
          */
-        INTERNAL_FAILURE("InternalFailure");
+        INTERNAL_FAILURE("InternalFailure"),
+
+        /**
+         * An Unauthorized error will occur if the provided credentials are not authorized for the
+         * requested operation.
+         */
+        UNAUTHORIZED("Unauthorized");
 
         private final String value;
 
