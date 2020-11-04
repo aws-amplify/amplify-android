@@ -105,7 +105,7 @@ public final class DataStoreConfiguration {
      */
     @NonNull
     public static DataStoreConfiguration defaults() throws DataStoreException {
-        DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
+        DataStoreErrorHandler errorHandler = DataStoreErrorHandler.defaultHandler();
         return builder()
             .errorHandler(errorHandler)
             .conflictHandler(DataStoreConflictHandler.alwaysApplyRemote())
@@ -235,7 +235,7 @@ public final class DataStoreConfiguration {
         private DataStoreConfiguration userProvidedConfiguration;
 
         private Builder() {
-            this.errorHandler = DefaultDataStoreErrorHandler.instance();
+            this.errorHandler = DataStoreErrorHandler.defaultHandler();
             this.conflictHandler = DataStoreConflictHandler.alwaysApplyRemote();
             this.ensureDefaults = false;
         }
@@ -375,7 +375,7 @@ public final class DataStoreConfiguration {
             if (ensureDefaults) {
                 errorHandler = getValueOrDefault(
                     errorHandler,
-                    DefaultDataStoreErrorHandler.instance());
+                    DataStoreErrorHandler.defaultHandler());
                 conflictHandler = getValueOrDefault(
                     conflictHandler,
                     DataStoreConflictHandler.alwaysApplyRemote());

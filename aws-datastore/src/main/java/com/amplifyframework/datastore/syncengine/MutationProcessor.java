@@ -54,6 +54,7 @@ final class MutationProcessor {
     private final MutationOutbox mutationOutbox;
     private final AppSync appSync;
     private final ConflictResolver conflictResolver;
+    private final MutationErrorHandler errorHandler;
     private final CompositeDisposable ongoingOperationsDisposable;
 
     private MutationProcessor(Builder builder) {
@@ -62,6 +63,7 @@ final class MutationProcessor {
         this.mutationOutbox = Objects.requireNonNull(builder.mutationOutbox);
         this.appSync = Objects.requireNonNull(builder.appSync);
         this.conflictResolver = Objects.requireNonNull(builder.conflictResolver);
+        this.errorHandler = Objects.requireNonNull(builder.errorHandler);
         this.ongoingOperationsDisposable = new CompositeDisposable();
     }
 
@@ -269,20 +271,16 @@ final class MutationProcessor {
             List<GraphQLResponse.Error> errors) {
         // At this point, we know something wrong. Check if the mutation failed
         // due to ConflictUnhandled. If so, invoke our user-provided handler
-        // to try and recover. We don't know how to resolve other types of errors,
-        // so we just bubble those out in a DataStoreException.
+        // to try and recover.
+        // For any other type of error, invoke the user-provided error handler
+        // before de-queuing the mutation and emitting a failure.
         Class<T> modelClazz = pendingMutation.getClassOfMutatedItem();
         AppSyncConflictUnhandledError<T> unhandledConflict =
             AppSyncConflictUnhandledError.findFirst(modelClazz, errors);
-        if (unhandledConflict == null) {
-            return Single.error(new DataStoreException(
-                "Mutation failed. Failed mutation = " + pendingMutation + ". " +
-                    "AppSync response contained errors = " + errors,
-                "Verify that your AppSync endpoint is able to store " + modelClazz + " models."
-            ));
+        if (unhandledConflict != null) {
+            return conflictResolver.resolve(pendingMutation, unhandledConflict);
         }
-
-        return conflictResolver.resolve(pendingMutation, unhandledConflict);
+        return errorHandler.onError(pendingMutation, errors);
     }
 
     /**
@@ -309,12 +307,14 @@ final class MutationProcessor {
             BuilderSteps.MutationOutboxStep,
             BuilderSteps.AppSyncStep,
             BuilderSteps.ConflictResolverStep,
+            BuilderSteps.ErrorHandlerStep,
             BuilderSteps.BuildStep {
         private Merger merger;
         private VersionRepository versionRepository;
         private MutationOutbox mutationOutbox;
         private AppSync appSync;
         private ConflictResolver conflictResolver;
+        private MutationErrorHandler errorHandler;
 
         @NonNull
         @Override
@@ -346,8 +346,15 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.BuildStep conflictResolver(@NonNull ConflictResolver conflictResolver) {
+        public BuilderSteps.ErrorHandlerStep conflictResolver(@NonNull ConflictResolver conflictResolver) {
             this.conflictResolver = Objects.requireNonNull(conflictResolver);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuilderSteps.BuildStep errorHandler(@NonNull MutationErrorHandler errorHandler) {
+            this.errorHandler = Objects.requireNonNull(errorHandler);
             return Builder.this;
         }
 
@@ -381,7 +388,12 @@ final class MutationProcessor {
 
         interface ConflictResolverStep {
             @NonNull
-            BuildStep conflictResolver(@NonNull ConflictResolver conflictResolver);
+            ErrorHandlerStep conflictResolver(@NonNull ConflictResolver conflictResolver);
+        }
+
+        interface ErrorHandlerStep {
+            @NonNull
+            BuildStep errorHandler(@NonNull MutationErrorHandler errorHandler);
         }
 
         interface BuildStep {

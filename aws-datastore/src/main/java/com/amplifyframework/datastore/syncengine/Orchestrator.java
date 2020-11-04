@@ -103,6 +103,7 @@ public final class Orchestrator {
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
         ConflictResolver conflictResolver = new ConflictResolver(dataStoreConfigurationProvider, appSync);
+        MutationErrorHandler errorHandler = new MutationErrorHandler(dataStoreConfigurationProvider, mutationOutbox);
 
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
@@ -110,6 +111,7 @@ public final class Orchestrator {
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)
+            .errorHandler(errorHandler)
             .build();
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)

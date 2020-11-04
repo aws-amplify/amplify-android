@@ -21,6 +21,8 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreConfiguration.ConfigKey;
 import com.amplifyframework.datastore.DataStoreConflictHandler.AlwaysApplyRemoteHandler;
+import com.amplifyframework.datastore.DataStoreErrorHandler.DefaultDataStoreErrorHandler;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -94,7 +96,7 @@ public final class DataStoreConfigurationTest {
         Long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
         Integer expectedSyncMaxRecords = 3;
         DummyConflictHandler dummyConflictHandler = new DummyConflictHandler();
-        DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
+        DataStoreErrorHandler errorHandler = DataStoreErrorHandler.defaultHandler();
 
         DataStoreConfiguration configObject = DataStoreConfiguration
             .builder()
@@ -137,7 +139,7 @@ public final class DataStoreConfigurationTest {
         public void onConflictDetected(
                 @NonNull ConflictData<? extends Model> conflictData,
                 @NonNull Consumer<ConflictResolutionDecision<? extends Model>> onDecision) {
-            onDecision.accept(ConflictResolutionDecision.retry(null));
+            onDecision.accept(ConflictResolutionDecision.retry(RandomString::string));
         }
     }
 }

@@ -154,15 +154,9 @@ final class SyncProcessor {
                                         metricsAccumulator.toModelSyncedEvent(syncType).toHubEvent());
                 }));
             })
-            .doOnError(failureToSync -> {
-                LOG.warn("Initial cloud sync failed.", failureToSync);
-                DataStoreErrorHandler dataStoreErrorHandler =
-                    dataStoreConfigurationProvider.getConfiguration().getErrorHandler();
-                dataStoreErrorHandler.accept(new DataStoreException(
-                    "Initial cloud sync failed.", failureToSync,
-                    "Check your internet connection."
-                ));
-            })
+            .doOnError(failureToSync ->
+                LOG.warn("Initial cloud sync failed.", failureToSync)
+            )
             .doOnComplete(() ->
                 LOG.info("Successfully sync'd down model state from cloud.")
             );

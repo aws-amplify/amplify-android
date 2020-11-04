@@ -142,7 +142,39 @@ public final class AppSyncExtensions {
          * Example: Conflict resolution with an Optimistic Concurrency conflict handler.
          * Or, Lambda conflict handler returned with REJECT.
          */
-        CONFLICT_UNHANDLED("ConflictUnhandled");
+        CONFLICT_UNHANDLED("ConflictUnhandled"),
+
+        /**
+         * An internal error occurs when trying to resolve a conflict.
+         * Example: Lambda conflict handler returned a malformed response. Or, cannot invoke Lambda
+         * conflict handler because the supplied resource LambdaConflictHandlerArn is not found.
+         */
+        CONFLICT_ERROR("ConflictError"),
+
+        /**
+         * Max retry attempts were reached for conflict resolution.
+         * Example: Too many concurrent requests on the same object. Before the conflict is resolved,
+         * the object is updated to a new version by another client.
+         */
+        MAX_CONFLICTS("MaxConflicts"),
+
+        /**
+         * Client tries to update metadata fields (_version, _ttl, _lastChangedAt, _deleted).
+         * Example: Client tries to update _version of an object with an update mutation.
+         */
+        BAD_REQUEST("BadRequest"),
+
+        /**
+         * Failed to write delta sync record.
+         * Example: Mutation succeeded, but an internal error occurred when trying to write to the
+         * delta sync table.
+         */
+        DELTA_SYNC_WRITE_ERROR("DeltaSyncWriteError"),
+
+        /**
+         * An internal error occurred.
+         */
+        INTERNAL_FAILURE("InternalFailure");
 
         private final String value;
 
