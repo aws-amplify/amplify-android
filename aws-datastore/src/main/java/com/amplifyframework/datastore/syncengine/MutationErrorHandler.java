@@ -22,6 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreError;
 import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions;
@@ -72,14 +73,14 @@ final class MutationErrorHandler {
                 )));
     }
 
-    private <T extends Model> DataStoreErrorHandler.SyncError<T> firstError(
+    private <T extends Model> DataStoreError<T> firstError(
             PendingMutation<T> pendingMutation,
             List<GraphQLResponse.Error> errors
     ) throws DataStoreException {
         for (GraphQLResponse.Error error : errors) {
             T local = pendingMutation.getMutatedItem();
             T remote = parseRemote(error, pendingMutation.getClassOfMutatedItem());
-            return new DataStoreErrorHandler.SyncError<>(error, local, remote);
+            return new DataStoreError<>(error, local, remote);
         }
         throw new DataStoreException("Server response did not contain any error.",
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
