@@ -85,12 +85,14 @@ public final class MutationProcessorTest {
         this.appSync = mock(AppSync.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
         ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
+        MutationErrorHandler errorHandler = new MutationErrorHandler(configurationProvider, mutationOutbox);
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
             .versionRepository(versionRepository)
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)
+            .errorHandler(errorHandler)
             .build();
     }
 
@@ -212,6 +214,48 @@ public final class MutationProcessorTest {
         extensions.put("data", serverModelData);
         GraphQLResponse.Error error =
             new GraphQLResponse.Error(message, locations, paths, extensions);
+
+        AppSyncMocking.update(appSync).mockErrorResponse(model, 1, error);
+
+        // Start the mutation processor.
+        mutationProcessor.startDrainingMutationOutbox();
+
+        // Wait for the conflict handler to be called.
+        Latch.await(handlerInvocationsRemainingCount);
+    }
+
+    /**
+     * If the AppSync response to the mutation contains not-empty GraphQLResponse error
+     * list without any ConflictUnhandled error, then the user-provided error handler
+     * should be invoked.
+     * @throws DataStoreException On failure to obtain configuration from the provider
+     */
+    @Test
+    public void errorHandlerInvokedForError() throws DataStoreException {
+        // Arrange a user-provided error handler.
+        CountDownLatch handlerInvocationsRemainingCount = new CountDownLatch(1);
+        when(configurationProvider.getConfiguration())
+            .thenReturn(DataStoreConfiguration.builder()
+                .errorHandler(error -> handlerInvocationsRemainingCount.countDown())
+                .build());
+
+        // Save a model and its metadata
+        BlogOwner model = BlogOwner.builder()
+            .name("Lorem Ipsum")
+            .build();
+        ModelMetadata metadata = new ModelMetadata(model.getId(), false, 1, Temporal.Timestamp.now());
+        synchronousStorageAdapter.save(model, metadata);
+
+        // Enqueue an update in the mutation outbox
+        assertTrue(mutationOutbox
+            .enqueue(PendingMutation.update(model, BlogOwner.class))
+            .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        );
+
+        // When AppSync receives that update, have it respond with an Unauthorized Error.
+        String message = "Unauthorized operation.";
+        Map<String, Object> extensions = Collections.singletonMap("errorType", "Unauthorized");
+        GraphQLResponse.Error error = new GraphQLResponse.Error(message, null, null, extensions);
 
         AppSyncMocking.update(appSync).mockErrorResponse(model, 1, error);
 
