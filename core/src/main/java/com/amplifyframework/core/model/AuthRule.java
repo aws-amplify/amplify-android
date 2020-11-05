@@ -15,12 +15,15 @@
 
 package com.amplifyframework.core.model;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.Empty;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * {@link AuthRule} is used define an authorization rule for who can access and operate against a
@@ -194,15 +197,16 @@ public final class AuthRule {
         private String groupClaim;
         private List<String> groups;
         private String groupsField;
-        private List<ModelOperation> operations;
+        private List<ModelOperation> operations = new ArrayList<>();
 
         /**
          * Sets the auth strategy of this rule.
          * @param authStrategy AuthStrategy is the type of auth strategy to use.
          * @return the association model with given name
          */
-        public AuthRule.Builder authStrategy(AuthStrategy authStrategy) {
-            this.authStrategy = authStrategy;
+        @NonNull
+        public AuthRule.Builder authStrategy(@NonNull AuthStrategy authStrategy) {
+            this.authStrategy = Objects.requireNonNull(authStrategy);
             return this;
         }
 
@@ -211,8 +215,9 @@ public final class AuthRule {
          * @param ownerField OwnerField is the owner authorization.
          * @return the association model with give target name
          */
-        public AuthRule.Builder ownerField(String ownerField) {
-            this.ownerField = ownerField;
+        @NonNull
+        public AuthRule.Builder ownerField(@NonNull String ownerField) {
+            this.ownerField = Objects.requireNonNull(ownerField);
             return this;
         }
 
@@ -221,8 +226,9 @@ public final class AuthRule {
          * @param identityClaim IdentityClaim specifies a custom claim.
          * @return the association model with given associated name
          */
-        public AuthRule.Builder identityClaim(String identityClaim) {
-            this.identityClaim = identityClaim;
+        @NonNull
+        public AuthRule.Builder identityClaim(@NonNull String identityClaim) {
+            this.identityClaim = Objects.requireNonNull(identityClaim);
             return this;
         }
 
@@ -231,8 +237,9 @@ public final class AuthRule {
          * @param groupClaim GroupClaim specified a custom claim.
          * @return the association model with given associated type
          */
-        public AuthRule.Builder groupClaim(String groupClaim) {
-            this.groupClaim = groupClaim;
+        @NonNull
+        public AuthRule.Builder groupClaim(@NonNull String groupClaim) {
+            this.groupClaim = Objects.requireNonNull(groupClaim);
             return this;
         }
         
@@ -241,8 +248,9 @@ public final class AuthRule {
          * @param groups Groups is static group authorization.
          * @return the association model with given associated type
          */
-        public AuthRule.Builder groups(List<String> groups) {
-            this.groups = groups;
+        @NonNull
+        public AuthRule.Builder groups(@NonNull List<String> groups) {
+            this.groups = Objects.requireNonNull(groups);
             return this;
         }
 
@@ -251,8 +259,9 @@ public final class AuthRule {
          * @param groupsField GroupsField is for dynamic group authorization.
          * @return the association model with given associated type
          */
-        public AuthRule.Builder groupsField(String groupsField) {
-            this.groupsField = groupsField;
+        @NonNull
+        public AuthRule.Builder groupsField(@NonNull String groupsField) {
+            this.groupsField = Objects.requireNonNull(groupsField);
             return this;
         }
 
@@ -261,8 +270,9 @@ public final class AuthRule {
          * @param operations Operations specifies which {@link ModelOperation}s are protected by this {@link AuthRule}.
          * @return the association model with given associated type
          */
-        public AuthRule.Builder operations(List<ModelOperation> operations) {
-            this.operations = operations;
+        @NonNull
+        public AuthRule.Builder operations(@NonNull List<ModelOperation> operations) {
+            this.operations = Objects.requireNonNull(operations);
             return this;
         }
 
@@ -272,6 +282,7 @@ public final class AuthRule {
          * @return AuthRule instance
          */
         public AuthRule build() {
+            Objects.requireNonNull(this.authStrategy);
             return new AuthRule(this);
         }
     }
