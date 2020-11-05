@@ -50,6 +50,7 @@ import com.amplifyframework.util.ForEach;
 import com.amplifyframework.util.Time;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -508,6 +509,7 @@ public final class SyncProcessorTest {
      * @throws DataStoreException On failure to build GraphQLRequest for sync query.
      */
     @Test
+    @Ignore("Custom error handler no longer handles initial cloud sync failures.")
     public void userProvidedErrorCallbackInvokedOnFailure() throws DataStoreException {
         // Arrange: mock failure when invoking hydrate on the mock object.
         AppSyncMocking.sync(appSync)
