@@ -74,6 +74,7 @@ public final class AuthRule {
      * Return the builder object.
      * @return the builder object.
      */
+    @NonNull
     public static AuthRule.Builder builder() {
         return new AuthRule.Builder();
     }
