@@ -281,6 +281,7 @@ public final class AuthRule {
          * builder object.
          * @return AuthRule instance
          */
+        @NonNull
         public AuthRule build() {
             Objects.requireNonNull(this.authStrategy);
             return new AuthRule(this);
