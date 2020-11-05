@@ -21,8 +21,10 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * {@link AuthRule} is used define an authorization rule for who can access and operate against a
@@ -58,6 +60,29 @@ public final class AuthRule {
         this.groups = Arrays.asList(authRule.groups());
         this.groupsField = authRule.groupsField();
         this.operations = Arrays.asList(authRule.operations());
+    }
+
+    /**
+     * Construct the AuthRule object from the builder.
+     * For internal use only.
+     */
+    private AuthRule(@NonNull AuthRule.Builder builder) {
+        this.authStrategy = builder.authStrategy;
+        this.ownerField = builder.ownerField;
+        this.identityClaim = builder.identityClaim;
+        this.groupClaim = builder.groupClaim;
+        this.groups = builder.groups;
+        this.groupsField = builder.groupsField;
+        this.operations = builder.operations;
+    }
+
+    /**
+     * Return the builder object.
+     * @return the builder object.
+     */
+    @NonNull
+    public static AuthRule.Builder builder() {
+        return new AuthRule.Builder();
     }
 
     /**
@@ -196,5 +221,106 @@ public final class AuthRule {
                 ", groups=" + groups + '\'' +
                 ", operations=" + operations + '\'' +
                 '}';
+    }
+
+    /**
+     * Builder class for {@link AuthRule}.
+     */
+    public static final class Builder {
+        private AuthStrategy authStrategy;
+        private String ownerField;
+        private String identityClaim;
+        private String groupClaim;
+        private List<String> groups;
+        private String groupsField;
+        private List<ModelOperation> operations = new ArrayList<>();
+
+        /**
+         * Sets the auth strategy of this rule.
+         * @param authStrategy AuthStrategy is the type of auth strategy to use.
+         * @return the association model with given name
+         */
+        @NonNull
+        public AuthRule.Builder authStrategy(@NonNull AuthStrategy authStrategy) {
+            this.authStrategy = Objects.requireNonNull(authStrategy);
+            return this;
+        }
+
+        /**
+         * Sets the owner field of this rule.
+         * @param ownerField OwnerField is the owner authorization.
+         * @return the association model with give target name
+         */
+        @NonNull
+        public AuthRule.Builder ownerField(@NonNull String ownerField) {
+            this.ownerField = Objects.requireNonNull(ownerField);
+            return this;
+        }
+
+        /**
+         * Sets the identity claim of this rule.
+         * @param identityClaim IdentityClaim specifies a custom claim.
+         * @return the association model with given associated name
+         */
+        @NonNull
+        public AuthRule.Builder identityClaim(@NonNull String identityClaim) {
+            this.identityClaim = Objects.requireNonNull(identityClaim);
+            return this;
+        }
+
+        /**
+         * Sets the group claim of this rule.
+         * @param groupClaim GroupClaim specified a custom claim.
+         * @return the association model with given associated type
+         */
+        @NonNull
+        public AuthRule.Builder groupClaim(@NonNull String groupClaim) {
+            this.groupClaim = Objects.requireNonNull(groupClaim);
+            return this;
+        }
+        
+        /**
+         * Sets the groups this rule applies to.
+         * @param groups Groups is static group authorization.
+         * @return the association model with given associated type
+         */
+        @NonNull
+        public AuthRule.Builder groups(@NonNull List<String> groups) {
+            this.groups = Objects.requireNonNull(groups);
+            return this;
+        }
+
+        /**
+         * Sets the groupsField of this rule.
+         * @param groupsField GroupsField is for dynamic group authorization.
+         * @return the association model with given associated type
+         */
+        @NonNull
+        public AuthRule.Builder groupsField(@NonNull String groupsField) {
+            this.groupsField = Objects.requireNonNull(groupsField);
+            return this;
+        }
+
+        /**
+         * Sets the operations allowed for this rule.
+         * @param operations Operations specifies which {@link ModelOperation}s are protected by this {@link AuthRule}.
+         * @return the association model with given associated type
+         */
+        @NonNull
+        public AuthRule.Builder operations(@NonNull List<ModelOperation> operations) {
+            this.operations = Objects.requireNonNull(operations);
+            return this;
+        }
+
+        /**
+         * Builds an immutable AuthRule instance using
+         * builder object.
+         * @return AuthRule instance
+         */
+        @NonNull
+        public AuthRule build() {
+            Objects.requireNonNull(this.authStrategy);
+            return new AuthRule(this);
+        }
     }
 }
