@@ -23,7 +23,9 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.logging.Logger;
 
 /**
- * Just a type-alias for a consumer of DataStoreException.
+ * Interface to enable custom error handling when encountered with an error from the
+ * GraphQL server. Will be invoked while publishing a mutation for any GraphQL error
+ * that is not of ConflictUnhandled type, which will be handled by {@link DataStoreConflictHandler}.
  */
 public interface DataStoreErrorHandler extends Consumer<DataStoreError<? extends Model>> {
     /**
@@ -35,6 +37,10 @@ public interface DataStoreErrorHandler extends Consumer<DataStoreError<? extends
         return new DefaultDataStoreErrorHandler();
     }
 
+    /**
+     * Default instance for handling error response from the GraphQL server. Error message
+     * is logged, but no further action is taken.
+     */
     final class DefaultDataStoreErrorHandler implements DataStoreErrorHandler {
         private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 

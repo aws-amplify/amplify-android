@@ -26,7 +26,6 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.ArrayList;
