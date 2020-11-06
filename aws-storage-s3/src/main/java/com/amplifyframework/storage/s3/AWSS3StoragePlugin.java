@@ -45,12 +45,15 @@ import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOper
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.options.AWSS3StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageUploadInputStreamRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 import com.amplifyframework.storage.s3.service.StorageService;
 
@@ -60,6 +63,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -323,6 +327,62 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
         AWSS3StorageUploadFileOperation operation = new AWSS3StorageUploadFileOperation(
             storageService, cognitoAuthProvider, request, onProgress, onSuccess, onError
+        );
+        operation.start();
+
+        return operation;
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadFileOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        StorageUploadFileOptions options = StorageUploadFileOptions.defaultInstance();
+        return uploadInputStream(key, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadFileOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return uploadInputStream(key, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadFileOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        AWSS3StorageUploadInputStreamRequest request = new AWSS3StorageUploadInputStreamRequest(
+                key,
+                local,
+                options.getAccessLevel() != null
+                        ? options.getAccessLevel()
+                        : defaultAccessLevel,
+                options.getTargetIdentityId(),
+                options.getContentType(),
+                options instanceof AWSS3StorageUploadInputStreamOptions
+                        ? ((AWSS3StorageUploadInputStreamOptions) options).getServerSideEncryption()
+                        : ServerSideEncryption.NONE,
+                options.getMetadata()
+        );
+
+        AWSS3StorageUploadInputStreamOperation operation = new AWSS3StorageUploadInputStreamOperation(
+                storageService, cognitoAuthProvider, request, onProgress, onSuccess, onError
         );
         operation.start();
 

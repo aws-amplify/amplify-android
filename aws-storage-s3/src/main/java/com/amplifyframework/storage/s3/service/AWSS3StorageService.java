@@ -29,6 +29,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferService;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
+import com.amazonaws.mobileconnectors.s3.transferutility.UploadOptions;
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
@@ -38,6 +39,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -145,6 +148,27 @@ public final class AWSS3StorageService implements StorageService {
     ) {
         startServiceIfNotAlreadyStarted();
         return transferUtility.upload(bucket, serviceKey, file, metadata);
+    }
+
+    /**
+     * Begin uploading an inputStream.
+     * @param serviceKey S3 service key
+     * @param inputStream Target inputStream
+     * @param metadata Object metadata to associate with upload
+     * @return A transfer observer
+     * @throws IOException An IOException thrown during the process writing an inputStream into a file
+     */
+    @NonNull
+    public TransferObserver uploadInputStream(
+            @NonNull String serviceKey,
+            @NonNull InputStream inputStream,
+            @NonNull ObjectMetadata metadata
+    ) throws IOException {
+        startServiceIfNotAlreadyStarted();
+        return transferUtility.upload(serviceKey, inputStream, UploadOptions.builder()
+                                                                            .bucket(bucket)
+                                                                            .objectMetadata(metadata)
+                                                                            .build());
     }
 
     /**

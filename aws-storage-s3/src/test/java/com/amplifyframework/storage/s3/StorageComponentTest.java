@@ -41,8 +41,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -256,6 +258,42 @@ public final class StorageComponentTest {
                         storage.uploadFile(
                                 toRemoteKey,
                                 fromLocalFile,
+                                onResult,
+                                onError
+                        )
+                );
+
+        assertEquals(toRemoteKey, result.getKey());
+    }
+
+    /**
+     * Test that calling upload inputStream method from Storage category correctly
+     * invokes the registered AWSS3StoragePlugin instance and returns a
+     * {@link StorageUploadFileResult} with correct remote key.
+     *
+     * @throws Exception when an error is encountered while uploading
+     */
+    @Test
+    public void testUploadInputStreamGetsKey() throws Exception {
+        final String toRemoteKey = RandomString.string();
+        final InputStream inputStream = new ByteArrayInputStream("test data".getBytes());
+
+        TransferObserver observer = mock(TransferObserver.class);
+        when(storageService.uploadInputStream(anyString(), any(InputStream.class), any(ObjectMetadata.class)))
+                .thenReturn(observer);
+
+        doAnswer(invocation -> {
+            TransferListener listener = invocation.getArgument(0);
+            listener.onStateChanged(0, TransferState.COMPLETED);
+            return null;
+        }).when(observer)
+                .setTransferListener(any(TransferListener.class));
+
+        StorageUploadFileResult result =
+                Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
+                        storage.uploadInputStream(
+                                toRemoteKey,
+                                inputStream,
                                 onResult,
                                 onError
                         )

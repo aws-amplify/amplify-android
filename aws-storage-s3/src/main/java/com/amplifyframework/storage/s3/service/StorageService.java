@@ -25,6 +25,8 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 
@@ -63,6 +65,20 @@ public interface StorageService {
     TransferObserver uploadFile(@NonNull String serviceKey,
                                 @NonNull File file,
                                 @NonNull ObjectMetadata metadata);
+
+    /**
+     * Begin uploading an inputStream to a key in storage and return an observer
+     * to monitor upload progress. This item will be stored with specified
+     * metadata.
+     * @param serviceKey key to uniquely label item in storage
+     * @param inputStream inputStream to upload
+     * @param metadata metadata to attach to uploaded item
+     * @return An instance of {@link TransferObserver} to monitor upload
+     * @throws IOException An IOException thrown during the process writing an inputStream into a file
+     */
+    TransferObserver uploadInputStream(@NonNull String serviceKey,
+                                       @NonNull InputStream inputStream,
+                                       @NonNull ObjectMetadata metadata) throws IOException;
 
     /**
      * Returns a list of items from provided path inside the storage.

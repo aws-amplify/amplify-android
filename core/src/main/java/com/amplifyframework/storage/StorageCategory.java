@@ -38,6 +38,7 @@ import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 
 import java.io.File;
+import java.io.InputStream;
 
 /**
  * Defines the Client API consumed by the application.
@@ -141,6 +142,42 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull Consumer<StorageException> onError
     ) {
         return getSelectedPlugin().uploadFile(key, local, options, onProgress, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadFileOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return getSelectedPlugin().uploadInputStream(key, local, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadFileOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return getSelectedPlugin().uploadInputStream(key, local, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadFileOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return getSelectedPlugin().uploadInputStream(key, local, options, onProgress, onSuccess, onError);
     }
 
     @NonNull
