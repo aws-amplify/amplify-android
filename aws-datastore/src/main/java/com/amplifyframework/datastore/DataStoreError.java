@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.core.model.Model;
 
 import java.util.Objects;
@@ -32,28 +33,34 @@ import java.util.Objects;
  */
 public final class DataStoreError<M extends Model> {
     private final GraphQLResponse.Error error;
+    private final Operation operation;
     private final M local;
     private final M remote;
 
     /**
      * Constructs a new error instance containing details regarding
      * a failed publication to the cloud and involved models.
-     * @param error the error response from the server
-     * @param local the local model pending mutation
-     * @param remote the remote model if applicable
+     *
+     * @param error     the error response from the server
+     * @param operation the type of operation
+     * @param local     the local model pending mutation
+     * @param remote    the remote model if applicable
      */
     public DataStoreError(
             @NonNull GraphQLResponse.Error error,
+            @NonNull Operation operation,
             @Nullable M local,
             @Nullable M remote
     ) {
         this.error = Objects.requireNonNull(error);
+        this.operation = Objects.requireNonNull(operation);
         this.local = local;
         this.remote = remote;
     }
 
     /**
      * Gets the error from GraphQL server response.
+     *
      * @return the GraphQL response error.
      */
     @NonNull
@@ -62,7 +69,23 @@ public final class DataStoreError<M extends Model> {
     }
 
     /**
+     * Gets the type of GraphQL operation that triggered this error.
+     *
+     * Note: The operation type will always be {@link com.amplifyframework.api.graphql.OperationType#MUTATION},
+     * so it can be safely cast to {@link com.amplifyframework.api.graphql.MutationType}.
+     * This method returns an {@link Operation} interface for the time
+     * being for future-proofing.
+     *
+     * @return the GraphQL operation type.
+     */
+    @NonNull
+    public Operation getOperation() {
+        return operation;
+    }
+
+    /**
      * Gets the local item that was pending mutation.
+     *
      * @return the local model.
      */
     @Nullable
@@ -73,10 +96,41 @@ public final class DataStoreError<M extends Model> {
     /**
      * Gets the remote item in the server if provided by the
      * error payload.
+     *
      * @return the remote model.
      */
     @Nullable
     public M getRemote() {
         return remote;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        DataStoreError<?> that = (DataStoreError<?>) obj;
+        return error.equals(that.error) &&
+                operation.equals(that.operation) &&
+                Objects.equals(local, that.local) &&
+                Objects.equals(remote, that.remote);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(error, operation, local, remote);
+    }
+
+    @Override
+    public String toString() {
+        return "DataStoreError{" +
+                "error=" + error +
+                ", operation=" + operation +
+                ", local=" + local +
+                ", remote=" + remote +
+                '}';
     }
 }

@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
@@ -77,10 +79,27 @@ final class MutationErrorHandler {
             PendingMutation<T> pendingMutation,
             List<GraphQLResponse.Error> errors
     ) throws DataStoreException {
+        final Operation op;
+        switch (pendingMutation.getMutationType()) {
+            case CREATE:
+                op = MutationType.CREATE;
+                break;
+            case UPDATE:
+                op = MutationType.UPDATE;
+                break;
+            case DELETE:
+                op = MutationType.DELETE;
+                break;
+            default:
+                throw new DataStoreException(
+                    "Mutation type was not specified.",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                );
+        }
         for (GraphQLResponse.Error error : errors) {
             T local = pendingMutation.getMutatedItem();
             T remote = parseRemote(error, pendingMutation.getClassOfMutatedItem());
-            return new DataStoreError<>(error, local, remote);
+            return new DataStoreError<>(error, op, local, remote);
         }
         throw new DataStoreException("Server response did not contain any error.",
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);

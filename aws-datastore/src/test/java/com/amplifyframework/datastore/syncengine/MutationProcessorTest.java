@@ -18,6 +18,8 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
@@ -236,11 +238,13 @@ public final class MutationProcessorTest {
     @Test
     public void errorHandlerInvokedForPublicationError() throws DataStoreException {
         // Arrange a user-provided error handler.
+        AtomicReference<Operation> atomicOp = new AtomicReference<>();
         AtomicReference<Model> atomicModel = new AtomicReference<>();
         CountDownLatch handlerInvocationsRemainingCount = new CountDownLatch(1);
         when(configurationProvider.getConfiguration())
             .thenReturn(DataStoreConfiguration.builder()
                 .errorHandler(error -> {
+                    atomicOp.set(error.getOperation());
                     atomicModel.set(error.getRemote());
                     handlerInvocationsRemainingCount.countDown();
                 })
@@ -279,7 +283,11 @@ public final class MutationProcessorTest {
         // Wait for the conflict handler to be called.
         Latch.await(handlerInvocationsRemainingCount);
 
-        // Assert that remote model was parsed from the error response
+        // Assert that correct operation type is captured.
+        assertNotNull(atomicOp.get());
+        assertEquals(MutationType.UPDATE, atomicOp.get());
+
+        // Assert that remote model is parsed from error response.
         assertNotNull(atomicModel.get());
         assertTrue(atomicModel.get() instanceof BlogOwner);
         BlogOwner remote = (BlogOwner) atomicModel.get();
