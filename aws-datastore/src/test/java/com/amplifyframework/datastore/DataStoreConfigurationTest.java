@@ -21,7 +21,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreConfiguration.ConfigKey;
 import com.amplifyframework.datastore.DataStoreConflictHandler.AlwaysApplyRemoteHandler;
-import com.amplifyframework.datastore.DataStoreErrorHandler.DefaultDataStoreErrorHandler;
+import com.amplifyframework.datastore.DataStoreErrorHandler.LoggingErrorHandler;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
@@ -57,7 +57,7 @@ public final class DataStoreConfigurationTest {
             dataStoreConfiguration.getSyncPageSize().intValue());
 
         assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
-        assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertTrue(dataStoreConfiguration.getErrorHandler() instanceof LoggingErrorHandler);
     }
 
     /**
@@ -81,7 +81,7 @@ public final class DataStoreConfigurationTest {
             dataStoreConfiguration.getSyncPageSize().longValue());
 
         assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
-        assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertTrue(dataStoreConfiguration.getErrorHandler() instanceof LoggingErrorHandler);
     }
 
     /**

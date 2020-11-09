@@ -29,22 +29,22 @@ import com.amplifyframework.logging.Logger;
  */
 public interface DataStoreErrorHandler extends Consumer<DataStoreError<? extends Model>> {
     /**
-     * Gets a new instance of the {@link DefaultDataStoreErrorHandler}.
-     * @return A new {@link DefaultDataStoreErrorHandler}
+     * Gets a new instance of the {@link LoggingErrorHandler}.
+     * @return A new {@link LoggingErrorHandler}
      */
     @NonNull
     static DataStoreErrorHandler defaultHandler() {
-        return new DefaultDataStoreErrorHandler();
+        return new LoggingErrorHandler();
     }
 
     /**
      * Default instance for handling error response from the GraphQL server. Error message
      * is logged, but no further action is taken.
      */
-    final class DefaultDataStoreErrorHandler implements DataStoreErrorHandler {
+    final class LoggingErrorHandler implements DataStoreErrorHandler {
         private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-        private DefaultDataStoreErrorHandler() {}
+        private LoggingErrorHandler() {}
 
         @Override
         public void accept(@NonNull DataStoreError<? extends Model> error) {

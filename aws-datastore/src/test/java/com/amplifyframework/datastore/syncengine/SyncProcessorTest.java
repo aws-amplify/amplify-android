@@ -505,28 +505,6 @@ public final class SyncProcessorTest {
     }
 
     /**
-     * Verify that the user-provided onError callback (if specified) is invoked if initial sync fails.
-     * @throws DataStoreException On failure to build GraphQLRequest for sync query.
-     */
-    @Test
-    @Ignore("Custom error handler no longer handles initial cloud sync failures.")
-    public void userProvidedErrorCallbackInvokedOnFailure() throws DataStoreException {
-        // Arrange: mock failure when invoking hydrate on the mock object.
-        AppSyncMocking.sync(appSync)
-            .mockFailure(new DataStoreException("Something timed out during sync.", "Nothing to do."));
-
-        // Act: call hydrate.
-        assertTrue(
-            syncProcessor.hydrate()
-                .onErrorComplete()
-                .blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        );
-
-        // Assert: sync process failed the first time the api threw an error
-        assertEquals(1, errorHandlerCallCount);
-    }
-
-    /**
      * Validate that all records are synced, via pagination.
      * @throws AmplifyException on error building sync request for next page.
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer

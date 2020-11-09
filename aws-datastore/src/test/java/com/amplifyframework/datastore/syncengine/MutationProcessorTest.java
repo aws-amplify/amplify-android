@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
@@ -45,11 +46,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isOutboxEmpty;
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isProcessed;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
@@ -231,17 +234,21 @@ public final class MutationProcessorTest {
      * @throws DataStoreException On failure to obtain configuration from the provider
      */
     @Test
-    public void errorHandlerInvokedForError() throws DataStoreException {
+    public void errorHandlerInvokedForPublicationError() throws DataStoreException {
         // Arrange a user-provided error handler.
+        AtomicReference<Model> atomicModel = new AtomicReference<>();
         CountDownLatch handlerInvocationsRemainingCount = new CountDownLatch(1);
         when(configurationProvider.getConfiguration())
             .thenReturn(DataStoreConfiguration.builder()
-                .errorHandler(error -> handlerInvocationsRemainingCount.countDown())
+                .errorHandler(error -> {
+                    atomicModel.set(error.getRemote());
+                    handlerInvocationsRemainingCount.countDown();
+                })
                 .build());
 
         // Save a model and its metadata
         BlogOwner model = BlogOwner.builder()
-            .name("Lorem Ipsum")
+            .name("Local")
             .build();
         ModelMetadata metadata = new ModelMetadata(model.getId(), false, 1, Temporal.Timestamp.now());
         synchronousStorageAdapter.save(model, metadata);
@@ -252,9 +259,16 @@ public final class MutationProcessorTest {
             .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
         );
 
+        // Fields that represent the "server's" understanding of the model state
+        Map<String, Object> serverModelData = new HashMap<>();
+        serverModelData.put("id", model.getId());
+        serverModelData.put("name", "Remote");
+
         // When AppSync receives that update, have it respond with an Unauthorized Error.
         String message = "Unauthorized operation.";
-        Map<String, Object> extensions = Collections.singletonMap("errorType", "Unauthorized");
+        Map<String, Object> extensions = new HashMap<>();
+        extensions.put("errorType", "Unauthorized");
+        extensions.put("data", serverModelData);
         GraphQLResponse.Error error = new GraphQLResponse.Error(message, null, null, extensions);
 
         AppSyncMocking.update(appSync).mockErrorResponse(model, 1, error);
@@ -264,5 +278,12 @@ public final class MutationProcessorTest {
 
         // Wait for the conflict handler to be called.
         Latch.await(handlerInvocationsRemainingCount);
+
+        // Assert that remote model was parsed from the error response
+        assertNotNull(atomicModel.get());
+        assertTrue(atomicModel.get() instanceof BlogOwner);
+        BlogOwner remote = (BlogOwner) atomicModel.get();
+        assertEquals(serverModelData.get("id"), remote.getId());
+        assertEquals(serverModelData.get("name"), remote.getName());
     }
 }
