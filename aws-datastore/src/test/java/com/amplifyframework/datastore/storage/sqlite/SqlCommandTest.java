@@ -157,7 +157,7 @@ public class SqlCommandTest {
      * Verifies that the correct SQL bindings are generated when specifying the
      * {@link Page#startingAt(int)} and {@link QueryPaginationInput#withLimit(Integer)}
      * page details.
-     * @throws DataStoreException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)} 
+     * @throws DataStoreException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
      */
     @Test
     public void queryWithCustomPaginationInput() throws DataStoreException {

@@ -162,34 +162,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
 
         // Joins the foreign keys
-        // LEFT JOIN if foreign key is optional, INNER JOIN otherwise.
-        final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
-        while (foreignKeyIterator.hasNext()) {
-            final SQLiteColumn foreignKey = foreignKeyIterator.next();
-            final String ownedTableName = foreignKey.getOwnedType();
-            final ModelSchema ownedSchema = modelSchemaRegistry.getModelSchemaForModelClass(ownedTableName);
-            final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
-
-            columns.addAll(ownedTable.getSortedColumns());
-
-            SqlKeyword joinType = foreignKey.isNonNull()
-                    ? SqlKeyword.INNER_JOIN
-                    : SqlKeyword.LEFT_JOIN;
-
-            joinStatement.append(joinType)
-                    .append(SqlKeyword.DELIMITER)
-                    .append(Wrap.inBackticks(ownedTableName))
-                    .append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.ON)
-                    .append(SqlKeyword.DELIMITER)
-                    .append(foreignKey.getQuotedColumnName())
-                    .append(SqlKeyword.EQUAL)
-                    .append(ownedTable.getPrimaryKeyColumnName());
-
-            if (foreignKeyIterator.hasNext()) {
-                joinStatement.append(SqlKeyword.DELIMITER);
-            }
-        }
+        recursivelyBuildJoins(table, columns, joinStatement);
 
         // Convert columns to comma-separated column names
         Iterator<SQLiteColumn> columnsIterator = columns.iterator();
@@ -238,21 +211,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append(sqlPredicate);
         }
 
-        // Append pagination
-        final QueryPaginationInput paginationInput = options.getPaginationInput();
-        if (paginationInput != null) {
-            rawQuery.append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.LIMIT)
-                    .append(SqlKeyword.DELIMITER)
-                    .append("?")
-                    .append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.OFFSET)
-                    .append(SqlKeyword.DELIMITER)
-                    .append("?");
-            bindings.add(paginationInput.getLimit());
-            bindings.add(paginationInput.getPage() * paginationInput.getLimit());
-        }
-
         // Append order by
         final List<QuerySortBy> sortByList = options.getSortBy();
         if (sortByList != null) {
@@ -272,6 +230,21 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                             .append(SqlKeyword.DELIMITER);
                 }
             }
+        }
+
+        // Append pagination after order by
+        final QueryPaginationInput paginationInput = options.getPaginationInput();
+        if (paginationInput != null) {
+            rawQuery.append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.LIMIT)
+                .append(SqlKeyword.DELIMITER)
+                .append("?")
+                .append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.OFFSET)
+                .append(SqlKeyword.DELIMITER)
+                .append("?");
+            bindings.add(paginationInput.getLimit());
+            bindings.add(paginationInput.getPage() * paginationInput.getLimit());
         }
 
         rawQuery.append(";");
@@ -411,6 +384,46 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 sqlPredicate.getBindings(),
                 compiledDeleteStatement
         );
+    }
+
+    /**
+     * Recursively build joins for multilevel nested joins.
+     *
+     */
+    private void recursivelyBuildJoins(SQLiteTable table, List<SQLiteColumn> columns,
+                                       StringBuilder joinStatement) {
+        // Joins the foreign keys
+        // LEFT JOIN if foreign key is optional, INNER JOIN otherwise.
+        final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
+        while (foreignKeyIterator.hasNext()) {
+            final SQLiteColumn foreignKey = foreignKeyIterator.next();
+            final String ownedTableName = foreignKey.getOwnedType();
+            final ModelSchema ownedSchema = modelSchemaRegistry.getModelSchemaForModelClass(ownedTableName);
+            final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
+
+            columns.addAll(ownedTable.getSortedColumns());
+
+            SqlKeyword joinType = foreignKey.isNonNull()
+                ? SqlKeyword.INNER_JOIN
+                : SqlKeyword.LEFT_JOIN;
+
+            joinStatement.append(joinType)
+                .append(SqlKeyword.DELIMITER)
+                .append(Wrap.inBackticks(ownedTableName))
+                .append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.ON)
+                .append(SqlKeyword.DELIMITER)
+                .append(foreignKey.getQuotedColumnName())
+                .append(SqlKeyword.EQUAL)
+                .append(ownedTable.getPrimaryKeyColumnName());
+
+            if (foreignKeyIterator.hasNext()) {
+                joinStatement.append(SqlKeyword.DELIMITER);
+            }
+
+            // important that this comes last to maintain the order of the joins
+            recursivelyBuildJoins(ownedTable, columns, joinStatement);
+        }
     }
 
     // Utility method to parse columns in CREATE TABLE

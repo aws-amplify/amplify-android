@@ -24,6 +24,7 @@ import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 
@@ -144,6 +145,46 @@ public final class SQLiteStorageAdapterQueryTest {
 
         final List<Blog> blogs = adapter.query(Blog.class);
         assertTrue(blogs.contains(blog));
+    }
+
+    /**
+     * Test that querying the saved item with a foreign key
+     * also populates that instance variable with object.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void querySavedDataWithMultiLevelJoins() throws DataStoreException {
+        final BlogOwner blogOwner = BlogOwner.builder()
+            .name("Alan Turing")
+            .build();
+
+        final Blog blog = Blog.builder()
+            .name("Alan's Software Blog")
+            .owner(blogOwner)
+            .build();
+
+        final Post post = Post.builder()
+            .title("Alan's first post")
+            .status(PostStatus.ACTIVE)
+            .rating(2)
+            .blog(blog)
+            .build();
+
+        final Comment comment = Comment.builder()
+            .content("Alan's first comment")
+            .post(post)
+            .build();
+
+        adapter.save(blogOwner);
+        adapter.save(blog);
+        adapter.save(post);
+        adapter.save(comment);
+
+        final List<Comment> comments = adapter.query(Comment.class);
+        assertTrue(comments.contains(comment));
+        assertEquals(comments.get(0).getPost(), post);
+        assertEquals(comments.get(0).getPost().getBlog(), blog);
+        assertEquals(comments.get(0).getPost().getBlog().getOwner(), blogOwner);
     }
 
     /**
