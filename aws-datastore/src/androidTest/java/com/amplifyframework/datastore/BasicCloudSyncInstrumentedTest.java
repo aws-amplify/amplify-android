@@ -23,17 +23,18 @@ import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.appsync.SynchronousAppSync;
-import com.amplifyframework.datastore.syncengine.OutboxMutationEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
-import com.amplifyframework.hub.HubEventFilter;
+import com.amplifyframework.logging.AndroidLoggingPlugin;
+import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -48,10 +49,13 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Observable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static com.amplifyframework.datastore.DataStoreHubEventFilters.publicationOf;
+import static com.amplifyframework.datastore.DataStoreHubEventFilters.receiptOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -61,8 +65,17 @@ import static org.junit.Assert.assertNotNull;
  * which were defined by the schema in:
  * testmodels/src/main/java/com/amplifyframework/testmodels/commentsblog/schema.graphql.
  */
-@Ignore("This test is not reliably passing right now.")
-public final class AWSDataStorePluginInstrumentedTest {
+@Ignore(
+    "Over time, this test will create a large DynamoDB table. Even if we delete the content " +
+    "through the AppSyncClient utility, the database will have lots of tombstone'd rows. " +
+    "These entries will be synced, the next time this test runs, and the DataStore initializes. " +
+    "After several runs, that sync will grow large and timeout the test, before the test can " +
+    "run any business logic. A manual workaround exists, by running this cleanup script: " +
+    "https://gist.github.com/jamesonwilliams/c76169676cb99c51d997ef0817eb9278#quikscript-to-clear-appsync-tables"
+)
+public final class BasicCloudSyncInstrumentedTest {
+    private static final int TIMEOUT_SECONDS = 10;
+
     private SynchronousApi api;
     private SynchronousAppSync appSync;
     private SynchronousDataStore dataStore;
@@ -76,25 +89,33 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     @Before
     public void setup() throws AmplifyException {
+        Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
+
         StrictMode.enable();
         Context context = getApplicationContext();
         @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfiguration");
 
         // Setup an API
+        CategoryConfiguration apiCategoryConfiguration =
+            AmplifyConfiguration.fromConfigFile(context, configResourceId)
+                .forCategoryType(CategoryType.API);
         ApiCategory apiCategory = new ApiCategory();
         apiCategory.addPlugin(new AWSApiPlugin());
-        apiCategory.configure(AmplifyConfiguration.fromConfigFile(context, configResourceId)
-            .forCategoryType(CategoryType.API), context);
+        apiCategory.configure(apiCategoryConfiguration, context);
 
+        // To arrange and verify state, we need to access the supporting AppSync API
         api = SynchronousApi.delegatingTo(apiCategory);
         appSync = SynchronousAppSync.using(AppSyncClient.via(apiCategory));
-        dataStore = SynchronousDataStore.delegatingTo(DataStoreCategoryConfigurator.begin()
+
+        DataStoreCategory dataStoreCategory = DataStoreCategoryConfigurator.begin()
             .api(apiCategory)
             .clearDatabase(true)
             .context(context)
             .modelProvider(AmplifyModelProvider.getInstance())
             .resourceId(configResourceId)
-            .finish());
+            .timeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .finish();
+        dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
     }
 
     /**
@@ -105,21 +126,22 @@ public final class AWSDataStorePluginInstrumentedTest {
      * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
      *                          {@link DataStoreCategoryConfigurator}
      */
+    @Ignore("Operational challenges as described in class-level @Ignore.")
     @Test
-    @Ignore("This test is not reliably passing right now.")
     public void syncUpToCloudIsWorking() throws AmplifyException {
         // Start listening for model publication events on the Hub.
         BlogOwner localCharley = BlogOwner.builder()
             .name("Charley Crockett")
             .build();
         HubAccumulator publishedMutationsAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(localCharley), 1).start();
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(localCharley), 1)
+                .start();
 
         // Save Charley Crockett, a guy who has a blog, into the DataStore.
         dataStore.save(localCharley);
 
         // Wait for a Hub event telling us that our Charley model got published to the cloud.
-        publishedMutationsAccumulator.await();
+        publishedMutationsAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Try to get Charley from the backend.
         BlogOwner remoteCharley = api.get(BlogOwner.class, localCharley.getId());
@@ -138,9 +160,9 @@ public final class AWSDataStorePluginInstrumentedTest {
      * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
      *                          {@link DataStoreCategoryConfigurator}
      */
+    @Ignore("Operational challenges as described in class-level @Ignore.")
     @SuppressWarnings("unchecked") // Unwrapping hub event data
     @Test
-    @Ignore("This test is not reliably passing right now.")
     public void syncDownFromCloudIsWorking() throws AmplifyException {
         // Arrange two models up front, so we can know their IDs for other arrangments.
         // First is Jameson with a typo. We create him.
@@ -155,8 +177,9 @@ public final class AWSDataStorePluginInstrumentedTest {
         // Now, start watching the Hub for notifications that we received and processed models
         // from the Cloud. Look specifically for events relating to the model with the above ID.
         // We expected 2: a creation, and an update.
-        HubAccumulator receiptAcummulator =
-            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(originalModel), 2).start();
+        HubAccumulator receiptAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(originalModel), 2)
+                .start();
 
         // Act: externally in the Cloud, someone creates a BlogOwner,
         // that contains a misspelling in the last name
@@ -174,7 +197,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         assertEquals(originalVersion + 1, newVersion);
 
         // Wait for the events to show up on Hub.
-        List<HubEvent<?>> seenEvents = receiptAcummulator.await();
+        List<HubEvent<?>> seenEvents = receiptAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Another HubEvent tells us that an update occurred in the Cloud;
         // the update was applied locally, to an existing BlogOwner.
@@ -192,47 +215,5 @@ public final class AWSDataStorePluginInstrumentedTest {
         BlogOwner owner = dataStore.get(BlogOwner.class, originalModel.getId());
         assertEquals("Jameson Williams", owner.getName());
         assertEquals(originalModel.getId(), owner.getId());
-    }
-
-    private <T extends Model> HubEventFilter publicationOf(T model) {
-        return event -> {
-            DataStoreChannelEventName actualEventName = DataStoreChannelEventName.fromString(event.getName());
-            if (!DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED.equals(actualEventName)) {
-                return false;
-            }
-            return hasModelData(model, (OutboxMutationEvent<? extends Model>) event.getData());
-        };
-    }
-
-    private <T extends Model> HubEventFilter receiptOf(T model) {
-        return event -> {
-            DataStoreChannelEventName actualEventName = DataStoreChannelEventName.fromString(event.getName());
-            if (!DataStoreChannelEventName.SUBSCRIPTION_DATA_PROCESSED.equals(actualEventName)) {
-                return false;
-            }
-            return hasModelData(model, (ModelWithMetadata<? extends Model>) event.getData());
-        };
-    }
-
-    private static <T extends Model> boolean hasModelData(
-            T model, OutboxMutationEvent<? extends Model> mutationEvent) {
-        if (mutationEvent == null) {
-            return false;
-        }
-        if (!model.getClass().isAssignableFrom(mutationEvent.getModel())) {
-            return false;
-        }
-        String actualId = mutationEvent.getElement().getModel().getId();
-        return model.getId().equals(actualId);
-    }
-
-    private static <T extends Model> boolean hasModelData(
-            T model, ModelWithMetadata<? extends Model> modelWithMetadata) {
-        if (modelWithMetadata == null) {
-            return false;
-        } else if (!model.getClass().isAssignableFrom(modelWithMetadata.getModel().getClass())) {
-            return false;
-        }
-        return model.getId().equals(modelWithMetadata.getModel().getId());
     }
 }
