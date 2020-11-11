@@ -16,20 +16,23 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.InitializationStatus;
+import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.HubAccumulator;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 final class DataStoreCategoryConfigurator {
     private Context context;
@@ -37,6 +40,8 @@ final class DataStoreCategoryConfigurator {
     private ModelProvider modelProvider;
     private ApiCategory api;
     private boolean clearRequested;
+    private int timeoutAmount;
+    private TimeUnit timeoutUnit;
 
     private DataStoreCategoryConfigurator() {}
 
@@ -77,6 +82,15 @@ final class DataStoreCategoryConfigurator {
     }
 
     @NonNull
+    DataStoreCategoryConfigurator timeout(
+            @IntRange(from = 0) int amount,
+            @SuppressWarnings("SameParameterValue") @NonNull TimeUnit timeUnit) {
+        this.timeoutAmount = amount;
+        this.timeoutUnit = Objects.requireNonNull(timeUnit);
+        return DataStoreCategoryConfigurator.this;
+    }
+
+    @NonNull
     DataStoreCategory finish() throws AmplifyException {
         // Make sure everything was supplied.
         Objects.requireNonNull(context);
@@ -93,7 +107,7 @@ final class DataStoreCategoryConfigurator {
 
     private DataStoreCategory buildCategory() throws AmplifyException {
         HubAccumulator initializationObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, InitializationStatus.SUCCEEDED, 1)
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
 
         CategoryConfiguration dataStoreConfiguration =
@@ -105,8 +119,9 @@ final class DataStoreCategoryConfigurator {
         dataStoreCategory.addPlugin(awsDataStorePlugin);
         dataStoreCategory.configure(dataStoreConfiguration, context);
         dataStoreCategory.initialize(context);
+        dataStoreCategory.start(EmptyAction.create(), NoOpConsumer.create());
 
-        initializationObserver.await();
+        initializationObserver.await(timeoutAmount, timeoutUnit);
 
         return dataStoreCategory;
     }

@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A utility to facilitate synchronous calls to the Amplify DataStore category.
@@ -39,7 +38,6 @@ import java.util.concurrent.TimeUnit;
  * that a DataStore operation has completed with some kind of terminal result.
  */
 public final class SynchronousDataStore {
-    private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private final DataStoreCategoryBehavior asyncDelegate;
 
     private SynchronousDataStore(DataStoreCategoryBehavior asyncDelegate) {
