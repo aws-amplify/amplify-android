@@ -242,8 +242,7 @@ public final class SQLiteStorageAdapterQueryTest {
     @Test
     public void querySavedDataWithStringPredicates() throws DataStoreException {
         final List<Post> savedModels = new ArrayList<>();
-
-
+        
         BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
         adapter.save(blogOwner);
         Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
