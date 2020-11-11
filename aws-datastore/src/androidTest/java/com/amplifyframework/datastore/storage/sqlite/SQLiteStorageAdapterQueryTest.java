@@ -196,11 +196,18 @@ public final class SQLiteStorageAdapterQueryTest {
     public void querySavedDataWithNumericalPredicates() throws DataStoreException {
         final List<Post> savedModels = new ArrayList<>();
         final int numModels = 10;
+
+        BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
+        adapter.save(blogOwner);
+        Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
+        adapter.save(blog);
+
         for (int counter = 0; counter < numModels; counter++) {
             final Post post = Post.builder()
                 .title("titlePrefix:" + counter)
                 .status(PostStatus.INACTIVE)
                 .rating(counter)
+                .blog(blog)
                 .build();
             adapter.save(post);
             savedModels.add(post);
@@ -235,12 +242,20 @@ public final class SQLiteStorageAdapterQueryTest {
     @Test
     public void querySavedDataWithStringPredicates() throws DataStoreException {
         final List<Post> savedModels = new ArrayList<>();
+
+
+        BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
+        adapter.save(blogOwner);
+        Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
+        adapter.save(blog);
+
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
             final Post post = Post.builder()
                 .title(counter + "-title")
                 .status(PostStatus.INACTIVE)
                 .rating(counter)
+                .blog(blog)
                 .build();
             adapter.save(post);
             savedModels.add(post);
