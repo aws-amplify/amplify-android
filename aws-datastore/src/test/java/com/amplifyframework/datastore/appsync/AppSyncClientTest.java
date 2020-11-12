@@ -79,10 +79,11 @@ public final class AppSyncClientTest {
      * Validates the construction of a base-sync query.
      * @throws JSONException On bad request JSON found in API category call
      * @throws DataStoreException If no valid response returned from AppSync endpoint during sync
+     * @throws AmplifyException On failure to arrange model schema
      */
     @Test
-    public void validateBaseSyncQueryGen() throws JSONException, DataStoreException {
-        //noinspection CodeBlock2Expr
+    public void validateBaseSyncQueryGen() throws JSONException, AmplifyException {
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         Await.result(
             (
                 Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<BlogOwner>>>> onResult,
@@ -90,12 +91,10 @@ public final class AppSyncClientTest {
             ) -> {
                 try {
                     GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> request =
-                            endpoint.buildSyncRequest(ModelSchema.fromModelClass(BlogOwner.class), null, null);
+                            endpoint.buildSyncRequest(schema, null, null);
                     endpoint.sync(request, onResult, onError);
                 } catch (DataStoreException datastoreException) {
                     onError.accept(datastoreException);
-                } catch (AmplifyException amplifyException) {
-                    // Todo failed converting Model Class to ModelSchema
                 }
             }
         );

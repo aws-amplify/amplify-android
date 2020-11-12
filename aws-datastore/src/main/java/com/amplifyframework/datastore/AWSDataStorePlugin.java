@@ -407,7 +407,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     /**
      * Query the DataStore to find all items of the requested model (by name).
-     * NOTE: Private method and should not be part of {@link DataStoreCategory}
+     * NOTE: This private method is used only by hybrid platforms (Flutter, React Native),
+     * and should not be included into the {@link DataStoreCategory} spec.
      * @param modelName name of the Model to query
      * @param options Filtering, paging, and sorting options
      * @param onQueryResults Called when a query successfully returns 0 or more results

@@ -149,10 +149,11 @@ final class SyncProcessor {
                 Completable syncTimeSaveCompletable = SyncType.DELTA.equals(syncType) ?
                     syncTimeRegistry.saveLastDeltaSyncTime(schema.getName(), SyncTime.now()) :
                     syncTimeRegistry.saveLastBaseSyncTime(schema.getName(), SyncTime.now());
-                return syncTimeSaveCompletable.andThen(Completable.fromAction(() -> {
-                    Amplify.Hub.publish(HubChannel.DATASTORE,
-                                        metricsAccumulator.toModelSyncedEvent(syncType).toHubEvent());
-                }));
+                return syncTimeSaveCompletable.andThen(Completable.fromAction(() ->
+                    Amplify.Hub.publish(
+                        HubChannel.DATASTORE, metricsAccumulator.toModelSyncedEvent(syncType).toHubEvent()
+                    )
+                ));
             })
             .doOnError(failureToSync -> {
                 LOG.warn("Initial cloud sync failed.", failureToSync);
@@ -359,36 +360,5 @@ final class SyncProcessor {
     interface BuildStep {
         @NonNull
         SyncProcessor build();
-    }
-
-    /**
-     * Compares to {@link ModelWithMetadata}, according to the topological order
-     * of the {@link Model} within each. Topological order is determined by the
-     * {@link TopologicalOrdering} utility.
-     */
-    private static final class ModelClassComparator {
-        private final ModelSchemaRegistry modelSchemaRegistry;
-        private final TopologicalOrdering topologicalOrdering;
-
-        ModelClassComparator(ModelProvider modelProvider, ModelSchemaRegistry modelSchemaRegistry) {
-            this.modelSchemaRegistry = modelSchemaRegistry;
-            this.topologicalOrdering =
-                    TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
-        }
-
-        private <M extends Class<? extends Model>> int compare(M left, M right) {
-            return topologicalOrdering.compare(schemaFor(left), schemaFor(right));
-        }
-
-        /**
-         * Gets the model schema for a model.
-         * @param modelCls A model with metadata about it
-         * @param <M> Type for ModelWithMetadata containing arbitrary model instances
-         * @return Model Schema for model
-         */
-        @NonNull
-        private <M extends Class<? extends Model>> ModelSchema schemaFor(M modelCls) {
-            return modelSchemaRegistry.getModelSchemaForModelClass(modelCls.getSimpleName());
-        }
     }
 }
