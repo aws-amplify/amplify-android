@@ -57,7 +57,7 @@ public final class HybridOfflineInstrumentationTest {
     private ModelSchema blogSchema;
 
     /**
-     * Configures an AWSDataStorePlugin which is connected to a remote AppSync endpoint,
+     * Configures an AWSDataStorePlugin which only operates offline (not connected to any remote backend),
      * and is able to warehouse the commentsblog family of models.
      * @throws AmplifyException In a variety of scenarios where setup fails
      */
