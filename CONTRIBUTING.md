@@ -332,7 +332,7 @@ To run a __specific__ test:
 
 ```shell
 test='com.amplifyframework.api.aws.RestApiInstrumentationTest#getRequestWithIAM'
-./gradlew :cAT -Pandroid.testInstrumentationRunnerArguments.class="$test"
+./gradlew cAT -Pandroid.testInstrumentationRunnerArguments.class="$test"
 ```
 
 To run __all__ tests:
@@ -488,7 +488,7 @@ adb logcat -c
 
 # Run a particular test.
 test='com.amplifyframework.api.aws.RestApiInstrumentationTest#getRequestWithIAM'
-./gradlew :cAT -Pandroid.testInstrumentationRunnerArguments.class="$test"
+./gradlew cAT -Pandroid.testInstrumentationRunnerArguments.class="$test"
 
 # Dump the device logs to your debugging file.
 adb logcat -d > device-logs-during-test.log
