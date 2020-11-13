@@ -1,0 +1,69 @@
+{
+  "id": "3d128fdd-17a8-45ea-a166-44f6712b86f4",
+  "modelSchema": {
+    "name": "Blog",
+    "pluralName": "Blogs",
+    "authRules": [],
+    "fields": {
+      "id": {
+        "name": "id",
+        "javaClassForValue": "java.lang.String",
+        "targetType": "ID",
+        "isRequired": true,
+        "isArray": false,
+        "isEnum": false,
+        "isModel": false,
+        "authRules": []
+      },
+      "name": {
+        "name": "name",
+        "javaClassForValue": "java.lang.String",
+        "targetType": "String",
+        "isRequired": true,
+        "isArray": false,
+        "isEnum": false,
+        "isModel": false,
+        "authRules": []
+      },
+      "owner": {
+        "name": "owner",
+        "javaClassForValue": "com.amplifyframework.core.model.Model",
+        "targetType": "BlogOwner",
+        "isRequired": true,
+        "isArray": false,
+        "isEnum": false,
+        "isModel": true,
+        "authRules": []
+      },
+      "posts": {
+        "name": "posts",
+        "javaClassForValue": "java.util.List",
+        "targetType": "Post",
+        "isRequired": false,
+        "isArray": true,
+        "isEnum": false,
+        "isModel": false,
+        "authRules": []
+      }
+    },
+    "associations": {
+      "owner": {
+        "name": "BelongsTo",
+        "targetName": "blogOwnerId",
+        "associatedType": "BlogOwner"
+      },
+      "posts": {
+        "name": "HasMany",
+        "associatedName": "blog",
+        "associatedType": "Post"
+      }
+    },
+    "indexes": {},
+    "modelClass": "com.amplifyframework.core.model.Model"
+  },
+  "serializedData": {
+    "owner": "2cb080ce-bc93-44c6-aa77-f985af311afa",
+    "name": "A fine blog",
+    "id": "3d128fdd-17a8-45ea-a166-44f6712b86f4"
+  }
+}

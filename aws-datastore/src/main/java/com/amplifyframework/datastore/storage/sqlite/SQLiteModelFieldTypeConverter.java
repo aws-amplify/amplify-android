@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.model.ModelFieldTypeConverter;
 import com.amplifyframework.datastore.model.ModelHelper;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
@@ -50,24 +51,20 @@ import java.util.concurrent.TimeUnit;
 public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cursor, Model> {
     private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private final Class<? extends Model> modelType;
+    private final ModelSchema parentSchema;
     private final ModelSchemaRegistry modelSchemaRegistry;
     private final Gson gson;
     private final Map<String, SQLiteColumn> columns;
 
     SQLiteModelFieldTypeConverter(
-            @NonNull Class<? extends Model> modelType,
+            @NonNull ModelSchema parentSchema,
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
             @NonNull Gson gson
     ) {
+        this.parentSchema = Objects.requireNonNull(parentSchema);
         this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
         this.gson = Objects.requireNonNull(gson);
-        this.modelType = modelType;
-
-        // load and store the SQL columns for the modelType
-        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(
-                modelSchemaRegistry.getModelSchemaForModelClass(modelType.getSimpleName()));
-        this.columns = sqliteTable.getColumns();
+        this.columns = SQLiteTable.fromSchema(parentSchema).getColumns();
     }
 
     /**
@@ -103,7 +100,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             case MODEL:
                 return ((Model) value).getId();
             case ENUM:
-                return ((Enum) value).name();
+                return ((Enum<?>) value).name();
             case CUSTOM_TYPE:
                 return gson.toJson(value);
             case DATE:
@@ -118,6 +115,14 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", fieldType));
                 return null;
         }
+    }
+
+    Map<String, Object> buildMapForModel(@NonNull Cursor cursor) throws DataStoreException {
+        final Map<String, Object> mapForModel = new HashMap<>();
+        for (Map.Entry<String, ModelField> entry : parentSchema.getFields().entrySet()) {
+            mapForModel.put(entry.getKey(), convertValueFromSource(cursor, entry.getValue()));
+        }
+        return mapForModel;
     }
 
     @Override
@@ -143,8 +148,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
 
             final String valueAsString = cursor.getString(columnIndex);
             LOGGER.verbose(String.format(
-                    "Attempt to convert value \"%s\" from field %s of type %s from model %s",
-                    valueAsString, field.getName(), field.getType(), modelType.getSimpleName()
+                    "Attempt to convert value \"%s\" from field %s of type %s in model %s",
+                    valueAsString, field.getName(), field.getTargetType(), parentSchema.getName()
             ));
 
             switch (javaFieldType) {
@@ -179,7 +184,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         } catch (Exception exception) {
             throw new DataStoreException(
                     String.format("Error converting field \"%s\" from model \"%s\"",
-                            field.getName(), modelType.getName()),
+                    field.getName(), parentSchema.getName()),
                     exception,
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
@@ -187,54 +192,40 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
     }
 
     private Object convertModelAssociationToTarget(
-            @NonNull Cursor cursor,
-            @NonNull ModelField field
-    ) throws DataStoreException {
+            @NonNull Cursor cursor, @NonNull ModelField field) throws DataStoreException {
         // Eager load model if the necessary columns are present inside the cursor.
         // At the time of implementation, cursor should have been joined with these
         // columns IF AND ONLY IF the model is a foreign key to the inner model.
-        // value has Class<?>, but we want Class<? extends Model>
-        @SuppressWarnings("unchecked")
-        Class<? extends Model> nestedModelType = (Class<? extends Model>) field.getType();
-        String className = nestedModelType.getSimpleName();
-        ModelSchema innerModelSchema = modelSchemaRegistry.getModelSchemaForModelClass(className);
-
+        ModelSchema innerModelSchema =
+            modelSchemaRegistry.getModelSchemaForModelClass(field.getTargetType());
         SQLiteModelFieldTypeConverter nestedModelConverter =
-                new SQLiteModelFieldTypeConverter(nestedModelType, modelSchemaRegistry, gson);
-
-        Map<String, Object> mapForInnerModel = new HashMap<>();
-        for (Map.Entry<String, ModelField> entry : innerModelSchema.getFields().entrySet()) {
-            mapForInnerModel.put(entry.getKey(), nestedModelConverter.convertValueFromSource(cursor, entry.getValue()));
-        }
-        final String modelInJsonFormat = gson.toJson(mapForInnerModel);
-        try {
-            return gson.getAdapter(nestedModelType).fromJson(modelInJsonFormat);
-        } catch (IOException exception) {
-            LOGGER.warn(
-                    String.format("Error converting from JSON value to %s", nestedModelType.getSimpleName()),
-                    exception
-            );
-            return null;
-        }
+            new SQLiteModelFieldTypeConverter(innerModelSchema, modelSchemaRegistry, gson);
+        return nestedModelConverter.buildMapForModel(cursor);
     }
 
     private Object convertCustomTypeToTarget(Cursor cursor, ModelField field, int columnIndex) throws IOException {
         final String stringValue = cursor.getString(columnIndex);
-        return gson.getAdapter(field.getType()).fromJson(stringValue);
+        return gson.getAdapter(Objects.requireNonNull(field.getJavaClassForValue()))
+            .fromJson(stringValue);
     }
 
     @SuppressWarnings("unchecked")
     private <E extends Enum<E>> E convertEnumValueToTarget(
-            @NonNull final String value,
-            @NonNull ModelField field
-    ) {
-        Class<E> enumClazz = (Class<E>) field.getType().asSubclass(Enum.class);
+            @NonNull final String value, @NonNull ModelField field) {
+        Class<E> enumClazz = (Class<E>)
+            Objects.requireNonNull(field.getJavaClassForValue())
+                .asSubclass(Enum.class);
         return Enum.valueOf(enumClazz, value);
     }
 
     @Override
     public Object convertValueFromTarget(Model model, ModelField field) throws DataStoreException {
-        final Object fieldValue = ModelHelper.getValue(model, field);
+        Object fieldValue;
+        if (model.getClass() == SerializedModel.class) {
+            fieldValue = ((SerializedModel) model).getValue(field);
+        } else {
+            fieldValue = ModelHelper.getValue(model, field);
+        }
         if (fieldValue == null) {
             return null;
         }

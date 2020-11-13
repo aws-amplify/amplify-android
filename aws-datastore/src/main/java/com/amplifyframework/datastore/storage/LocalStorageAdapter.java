@@ -113,6 +113,20 @@ public interface LocalStorageAdapter {
     );
 
     /**
+     * Query the storage for items of a given type with specific conditions.
+     * @param modelName name of the Model to query
+     * @param options options, such as predicates, pagination to apply to query
+     * @param onSuccess A callback that will be notified if the query succeeds
+     * @param onError A callback that will be notified if the query fails with an error
+     */
+    void query(
+            @NonNull String modelName,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    );
+
+    /**
      * Deletes an item from storage only if the data being deleted meets the
      * specific conditions. A {@link Consumer} will be invoked when the
      * save operation is completed, to notify the caller of success or failure.

@@ -16,6 +16,7 @@
 package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import java.util.ArrayList;
@@ -30,9 +31,8 @@ public final class ModelField {
     // of the Model class.
     private final String name;
 
-    // Type of the field is the data type of the instance variables
-    // of the Model class.
-    private final Class<?> type;
+    // The Java class for the field value.
+    private final Class<?> javaClassForValue;
 
     // The type of the field in the target. For example: type of the
     // field in the GraphQL target.
@@ -59,7 +59,7 @@ public final class ModelField {
      */
     private ModelField(@NonNull ModelFieldBuilder builder) {
         this.name = builder.name;
-        this.type = builder.type;
+        this.javaClassForValue = builder.javaClassForValue;
         this.targetType = builder.targetType;
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
@@ -85,11 +85,12 @@ public final class ModelField {
     }
 
     /**
-     * Returns the data type of the instance variable of the Model class.
-     * @return Data type of the instance variable of the Model class.
+     * Returns the Java class of the value of this field, if available.
+     * @return The Java class of the field, if available.
      */
-    public Class<?> getType() {
-        return type;
+    @Nullable
+    public Class<?> getJavaClassForValue() {
+        return javaClassForValue;
     }
 
     /**
@@ -180,7 +181,7 @@ public final class ModelField {
         if (!ObjectsCompat.equals(name, that.name)) {
             return false;
         }
-        if (!ObjectsCompat.equals(type, that.type)) {
+        if (!ObjectsCompat.equals(javaClassForValue, that.javaClassForValue)) {
             return false;
         }
         return ObjectsCompat.equals(targetType, that.targetType);
@@ -189,7 +190,7 @@ public final class ModelField {
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (javaClassForValue != null ? javaClassForValue.hashCode() : 0);
         result = 31 * result + (targetType != null ? targetType.hashCode() : 0);
         result = 31 * result + (isRequired ? 1 : 0);
         result = 31 * result + (isArray ? 1 : 0);
@@ -202,7 +203,7 @@ public final class ModelField {
     public String toString() {
         return "ModelField{" +
             "name='" + name + '\'' +
-            ", type='" + type + '\'' +
+            ", type='" + javaClassForValue + '\'' +
             ", targetType='" + targetType + '\'' +
             ", isRequired=" + isRequired +
             ", isArray=" + isArray +
@@ -219,9 +220,8 @@ public final class ModelField {
         // of the Model class.
         private String name;
 
-        // Type of the field is the data type of the instance variables
-        // of the Model class.
-        private Class<?> type;
+        // Java class for the field value, e.g. "java.lang.Integer".
+        private Class<?> javaClassForValue;
 
         // The data targetType of the field.
         private String targetType;
@@ -253,12 +253,20 @@ public final class ModelField {
         }
 
         /**
-         * Set the type of the field.
-         * @param type Type of the field is the type of the instance variable of the Model class.
+         * Sets the Java class for the field value, e.g. "java.lang.Integer".
+         *
+         * If the field value is a custom Java model, or is an enumeration type,
+         * this must the class name, e.g.,
+         * "com.amplifyframework.datastore.generated.model.Weekday".
+         *
+         * If the field value is a model, but there is no Java type available (such as when
+         * the schema is generated from Flutter or React Native), you may pass "null".
+         *
+         * @param javaClassForValue The java class of the value
          * @return the builder object
          */
-        public ModelFieldBuilder type(Class<?> type) {
-            this.type = type;
+        public ModelFieldBuilder javaClassForValue(@Nullable Class<?> javaClassForValue) {
+            this.javaClassForValue = javaClassForValue;
             return this;
         }
 

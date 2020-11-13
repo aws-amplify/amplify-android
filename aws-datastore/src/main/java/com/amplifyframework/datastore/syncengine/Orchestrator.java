@@ -107,6 +107,7 @@ public final class Orchestrator {
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
             .versionRepository(versionRepository)
+            .modelSchemaRegistry(modelSchemaRegistry)
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)

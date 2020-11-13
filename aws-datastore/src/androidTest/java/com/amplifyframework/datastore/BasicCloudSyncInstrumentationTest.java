@@ -27,6 +27,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -73,7 +74,7 @@ import static org.junit.Assert.assertNotNull;
     "run any business logic. A manual workaround exists, by running this cleanup script: " +
     "https://gist.github.com/jamesonwilliams/c76169676cb99c51d997ef0817eb9278#quikscript-to-clear-appsync-tables"
 )
-public final class BasicCloudSyncInstrumentedTest {
+public final class BasicCloudSyncInstrumentationTest {
     private static final int TIMEOUT_SECONDS = 10;
 
     private SynchronousApi api;
@@ -126,7 +127,7 @@ public final class BasicCloudSyncInstrumentedTest {
      * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
      *                          {@link DataStoreCategoryConfigurator}
      */
-    @Ignore("Operational challenges as described in class-level @Ignore.")
+    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Test
     public void syncUpToCloudIsWorking() throws AmplifyException {
         // Start listening for model publication events on the Hub.
@@ -160,7 +161,7 @@ public final class BasicCloudSyncInstrumentedTest {
      * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
      *                          {@link DataStoreCategoryConfigurator}
      */
-    @Ignore("Operational challenges as described in class-level @Ignore.")
+    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @SuppressWarnings("unchecked") // Unwrapping hub event data
     @Test
     public void syncDownFromCloudIsWorking() throws AmplifyException {
@@ -183,14 +184,15 @@ public final class BasicCloudSyncInstrumentedTest {
 
         // Act: externally in the Cloud, someone creates a BlogOwner,
         // that contains a misspelling in the last name
-        GraphQLResponse<ModelWithMetadata<BlogOwner>> createResponse = appSync.create(originalModel);
+        GraphQLResponse<ModelWithMetadata<BlogOwner>> createResponse =
+                appSync.create(originalModel, ModelSchema.fromModelClass(BlogOwner.class));
         ModelMetadata originalMetadata = createResponse.getData().getSyncMetadata();
         assertNotNull(originalMetadata.getVersion());
         int originalVersion = originalMetadata.getVersion();
 
         // Act: externally, the BlogOwner in the Cloud is updated, to correct the entry's last name
         GraphQLResponse<ModelWithMetadata<BlogOwner>> updateResponse =
-            appSync.update(updatedModel, originalVersion);
+            appSync.update(updatedModel, ModelSchema.fromModelClass(BlogOwner.class), originalVersion);
         ModelMetadata newMetadata = updateResponse.getData().getSyncMetadata();
         assertNotNull(newMetadata.getVersion());
         int newVersion = newMetadata.getVersion();

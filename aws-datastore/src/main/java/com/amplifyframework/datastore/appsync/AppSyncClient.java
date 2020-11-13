@@ -31,6 +31,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -71,10 +72,10 @@ public final class AppSyncClient implements AppSync {
     @NonNull
     @Override
     public <T extends Model> GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> buildSyncRequest(
-            @NonNull Class<T> modelClass,
+            @NonNull ModelSchema modelSchema,
             @Nullable Long lastSync,
             @Nullable Integer syncPageSize) throws DataStoreException {
-        return AppSyncRequestFactory.buildSyncRequest(modelClass, lastSync, syncPageSize);
+        return AppSyncRequestFactory.buildSyncRequest(modelSchema, lastSync, syncPageSize);
     }
 
     @NonNull
@@ -112,10 +113,12 @@ public final class AppSyncClient implements AppSync {
     @Override
     public <T extends Model> Cancelable create(
             @NonNull T model,
+            @NonNull ModelSchema modelSchema,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final GraphQLRequest<ModelWithMetadata<T>> request = AppSyncRequestFactory.buildCreationRequest(model);
+            final GraphQLRequest<ModelWithMetadata<T>> request =
+                    AppSyncRequestFactory.buildCreationRequest(model, modelSchema);
             return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(
@@ -131,6 +134,7 @@ public final class AppSyncClient implements AppSync {
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      *
      * @param model      An instance of the Model with the values to mutate
+     * @param modelSchema The schema of the object being deleted
      * @param version    The version of the model we have
      * @param onResponse Invoked when response data is available.
      * @param onFailure  Invoked on failure to obtain response data
@@ -140,10 +144,11 @@ public final class AppSyncClient implements AppSync {
     @Override
     public <T extends Model> Cancelable update(
             @NonNull T model,
+            @NonNull ModelSchema modelSchema,
             @NonNull Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
-        return update(model, version, QueryPredicates.all(), onResponse, onFailure);
+        return update(model, modelSchema, version, QueryPredicates.all(), onResponse, onFailure);
     }
 
     @SuppressWarnings("unchecked") // (Class<T>)
@@ -151,6 +156,7 @@ public final class AppSyncClient implements AppSync {
     @Override
     public <T extends Model> Cancelable update(
             @NonNull T model,
+            @NonNull ModelSchema modelSchema,
             @NonNull Integer version,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
@@ -172,28 +178,28 @@ public final class AppSyncClient implements AppSync {
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      *
-     * @param clazz      The class of the object being deleted
-     * @param objectId   ID id of the object to delete
-     * @param version    The version of the model we have
-     * @param onResponse Invoked when response data is available.
-     * @param onFailure  Invoked on failure to obtain response data
+     * @param modelSchema The schema of the object being deleted
+     * @param objectId    ID id of the object to delete
+     * @param version     The version of the model we have
+     * @param onResponse  Invoked when response data is available.
+     * @param onFailure   Invoked on failure to obtain response data
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
     @NonNull
     @Override
     public <T extends Model> Cancelable delete(
-            @NonNull Class<T> clazz,
+            @NonNull ModelSchema modelSchema,
             @NonNull String objectId,
             @NonNull Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
-        return delete(clazz, objectId, version, QueryPredicates.all(), onResponse, onFailure);
+        return delete(modelSchema, objectId, version, QueryPredicates.all(), onResponse, onFailure);
     }
 
     @NonNull
     @Override
     public <T extends Model> Cancelable delete(
-            @NonNull Class<T> clazz,
+            @NonNull ModelSchema modelSchema,
             @NonNull String objectId,
             @NonNull Integer version,
             @NonNull QueryPredicate predicate,
@@ -201,7 +207,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
             final GraphQLRequest<ModelWithMetadata<T>> request =
-                    AppSyncRequestFactory.buildDeletionRequest(clazz, objectId, version, predicate);
+                    AppSyncRequestFactory.buildDeletionRequest(modelSchema, objectId, version, predicate);
             return mutation(request, onResponse, onFailure);
         } catch (DataStoreException dataStoreException) {
             onFailure.accept(dataStoreException);
@@ -213,14 +219,14 @@ public final class AppSyncClient implements AppSync {
     @NonNull
     @Override
     public <T extends Model> Cancelable onCreate(
-            @NonNull Class<T> modelClass,
+            @NonNull ModelSchema modelSchema,
             @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             @NonNull Consumer<DataStoreException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted) {
         return subscription(
             SubscriptionType.ON_CREATE,
-            modelClass,
+            modelSchema,
             onSubscriptionStarted,
             onNextResponse,
             onSubscriptionFailure,
@@ -231,14 +237,14 @@ public final class AppSyncClient implements AppSync {
     @NonNull
     @Override
     public <T extends Model> Cancelable onUpdate(
-            @NonNull Class<T> modelClass,
+            @NonNull ModelSchema modelSchema,
             @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             @NonNull Consumer<DataStoreException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted) {
         return subscription(
             SubscriptionType.ON_UPDATE,
-            modelClass,
+            modelSchema,
             onSubscriptionStarted,
             onNextResponse,
             onSubscriptionFailure,
@@ -249,14 +255,14 @@ public final class AppSyncClient implements AppSync {
     @NonNull
     @Override
     public <T extends Model> Cancelable onDelete(
-            @NonNull Class<T> modelClass,
+            @NonNull ModelSchema modelSchema,
             @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             @NonNull Consumer<DataStoreException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted) {
         return subscription(
             SubscriptionType.ON_DELETE,
-            modelClass,
+            modelSchema,
             onSubscriptionStarted,
             onNextResponse,
             onSubscriptionFailure,
@@ -266,14 +272,14 @@ public final class AppSyncClient implements AppSync {
 
     private <T extends Model> Cancelable subscription(
             SubscriptionType subscriptionType,
-            Class<T> clazz,
+            ModelSchema modelSchema,
             Consumer<String> onSubscriptionStarted,
             Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             Consumer<DataStoreException> onSubscriptionFailure,
             Action onSubscriptionCompleted) {
         final GraphQLRequest<ModelWithMetadata<T>> request;
         try {
-            request = AppSyncRequestFactory.buildSubscriptionRequest(clazz, subscriptionType);
+            request = AppSyncRequestFactory.buildSubscriptionRequest(modelSchema, subscriptionType);
         } catch (DataStoreException requestGenerationException) {
             onSubscriptionFailure.accept(requestGenerationException);
             return new NoOpCancelable();
@@ -282,7 +288,7 @@ public final class AppSyncClient implements AppSync {
         final Consumer<GraphQLResponse<ModelWithMetadata<T>>> responseConsumer = response -> {
             if (response.hasErrors()) {
                 onSubscriptionFailure.accept(new DataStoreException.GraphQLResponseException(
-                    "Subscription error for " + clazz.getSimpleName() + ": " + response.getErrors(),
+                    "Subscription error for " + modelSchema.getName() + ": " + response.getErrors(),
                     response.getErrors()
                 ));
             } else {
