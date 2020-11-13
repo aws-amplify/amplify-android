@@ -159,7 +159,8 @@ public final class ConflictResolverTest {
             .assertValue(versionFromAppSyncResponse);
 
         // The handler should have called up to AppSync to update hte model
-        verify(appSync).update(eq(localModel), eq(metadata.getVersion()), any(), any());
+        verify(appSync)
+            .update(eq(localModel), any(), eq(metadata.getVersion()), any(), any());
     }
 
     /**
@@ -213,7 +214,7 @@ public final class ConflictResolverTest {
 
         // Verify that the update API was invoked
         verify(appSync)
-            .update(eq(customModel), eq(remoteMetadata.getVersion()), any(), any());
+            .update(eq(customModel), any(), eq(remoteMetadata.getVersion()), any(), any());
     }
 
     /**

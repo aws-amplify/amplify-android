@@ -68,19 +68,17 @@ public final class ModelSchema {
     // Specifies the indexes of a Model.
     private final Map<String, ModelIndex> indexes;
 
-    private ModelSchema(
-            String name,
-            String pluralName,
-            List<AuthRule> authRules,
-            Map<String, ModelField> fields,
-            Map<String, ModelAssociation> associations,
-            Map<String, ModelIndex> indexes) {
-        this.name = name;
-        this.pluralName = pluralName;
-        this.authRules = authRules;
-        this.fields = fields;
-        this.associations = associations;
-        this.indexes = indexes;
+    // Class of the model this schema will represent
+    private final Class<? extends Model> modelClass;
+
+    private ModelSchema(Builder builder) {
+        this.name = builder.name;
+        this.pluralName = builder.pluralName;
+        this.authRules = builder.authRules;
+        this.fields = builder.fields;
+        this.associations = builder.associations;
+        this.indexes = builder.indexes;
+        this.modelClass = builder.modelClass;
     }
 
     /**
@@ -146,6 +144,7 @@ public final class ModelSchema {
                     .fields(fields)
                     .associations(associations)
                     .indexes(indexes)
+                    .modelClass(clazz)
                     .build();
         } catch (Exception exception) {
             throw new AmplifyException(
@@ -170,7 +169,7 @@ public final class ModelSchema {
             }
             return ModelField.builder()
                     .name(fieldName)
-                    .type(fieldType)
+                    .javaClassForValue(fieldType)
                     .targetType(targetType.isEmpty() ? fieldType.getSimpleName() : targetType)
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
@@ -288,6 +287,16 @@ public final class ModelSchema {
     }
 
     /**
+     * Returns the class of {@link Model}.
+     *
+     * @return the class of {@link Model}.
+     */
+    @NonNull
+    public Class<? extends Model> getModelClass() {
+        return modelClass;
+    }
+
+    /**
      * Creates a map of the fields in this schema to the actual values in the provided object.
      * @param instance An instance of this model populated with values to map
      * @return a map of the target fields in the schema to the actual values in the provided object
@@ -299,7 +308,8 @@ public final class ModelSchema {
 
         HashMap<String, Object> result = new HashMap<>();
 
-        if (!instance.getClass().getSimpleName().equals(this.getName())) {
+        if (!instance.getClass().getSimpleName().equals(this.getName())
+                && !(instance.getClass().getSimpleName().equals("SerializedModel"))) {
             throw new AmplifyException(
                     "The object provided is not an instance of this Model.",
                     "Please provide an instance of " + this.getName() + " which this is a schema for.");
@@ -330,7 +340,7 @@ public final class ModelSchema {
         }
 
         /*
-         * If the owner field is exists on the model, and the value is null, it should be omitted when performing a
+         * If the owner field exists on the model, and the value is null, it should be omitted when performing a
          * mutation because the AppSync server will automatically populate it using the authentication token provided
          * in the request header.  The logic below filters out the owner field if null for this scenario.
          */
@@ -354,13 +364,13 @@ public final class ModelSchema {
             return false;
         } else {
             ModelSchema that = (ModelSchema) obj;
-
             return ObjectsCompat.equals(getName(), that.getName()) &&
                 ObjectsCompat.equals(getPluralName(), that.getPluralName()) &&
                 ObjectsCompat.equals(getAuthRules(), that.getAuthRules()) &&
                 ObjectsCompat.equals(getFields(), that.getFields()) &&
                 ObjectsCompat.equals(getAssociations(), that.getAssociations()) &&
-                ObjectsCompat.equals(getIndexes(), that.getIndexes());
+                ObjectsCompat.equals(getIndexes(), that.getIndexes()) &&
+                ObjectsCompat.equals(getModelClass(), that.getModelClass());
         }
     }
 
@@ -372,7 +382,8 @@ public final class ModelSchema {
                 getAuthRules(),
                 getFields(),
                 getAssociations(),
-                getIndexes()
+                getIndexes(),
+                getModelClass()
         );
     }
 
@@ -381,10 +392,11 @@ public final class ModelSchema {
         return "ModelSchema{" +
             "name='" + name + '\'' +
             ", pluralName='" + pluralName + '\'' +
-            ", authRules='" + authRules + '\'' +
+            ", authRules=" + authRules +
             ", fields=" + fields +
-            ", associations" + associations +
+            ", associations=" + associations +
             ", indexes=" + indexes +
+            ", modelClass=" + modelClass +
             '}';
     }
 
@@ -396,6 +408,7 @@ public final class ModelSchema {
         private final Map<String, ModelField> fields;
         private final Map<String, ModelAssociation> associations;
         private final Map<String, ModelIndex> indexes;
+        private Class<? extends Model> modelClass;
         private String name;
         private String pluralName;
         private final List<AuthRule> authRules;
@@ -485,6 +498,17 @@ public final class ModelSchema {
         }
 
         /**
+         * The class of the Model this schema represents.
+         * @param modelClass the class of the model.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
+            this.modelClass = modelClass;
+            return this;
+        }
+
+        /**
          * Return the ModelSchema object.
          * @return the ModelSchema object.
          */
@@ -492,14 +516,7 @@ public final class ModelSchema {
         @NonNull
         public ModelSchema build() {
             Objects.requireNonNull(name);
-            return new ModelSchema(
-                name,
-                pluralName,
-                authRules,
-                fields,
-                associations,
-                indexes
-            );
+            return new ModelSchema(Builder.this);
         }
     }
 }

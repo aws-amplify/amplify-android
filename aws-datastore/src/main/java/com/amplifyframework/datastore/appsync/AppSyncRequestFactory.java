@@ -62,7 +62,6 @@ import java.util.Map;
  * and AppSync-specific field names (`_version`, `_deleted`, etc.)
  */
 final class AppSyncRequestFactory {
-
     private AppSyncRequestFactory() {}
 
     /**
@@ -70,7 +69,7 @@ final class AppSyncRequestFactory {
      * If you provide lastSyncTime, it builds a delta sync, where the delta is computed
      * against the provided time. Otherwise, if you provide a null lastSyncTime, a
      * request doc is generated for a base sync.
-     * @param modelClass Class for which we want to sync.
+     * @param modelSchema Schema Class for which we want to sync.
      * @param lastSync The last time synced. If not provided, do a base query.
      *                 If provided, do a delta query.
      * @param <T> The type of objects we are syncing
@@ -78,19 +77,22 @@ final class AppSyncRequestFactory {
      * @throws DataStoreException On Failure to inspect
      */
     @NonNull
-    static <T, M extends Model> AppSyncGraphQLRequest<T> buildSyncRequest(
-            @NonNull final Class<M> modelClass,
+    static <T> AppSyncGraphQLRequest<T> buildSyncRequest(
+            @NonNull final ModelSchema modelSchema,
             @Nullable final Long lastSync,
             @Nullable final Integer limit)
             throws DataStoreException {
-
         try {
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
-                    .modelClass(modelClass)
+                    .modelClass(modelSchema.getModelClass())
+                    .modelSchema(modelSchema)
                     .operation(QueryType.SYNC)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
-                    .responseType(TypeMaker.getParameterizedType(
-                            PaginatedResult.class, ModelWithMetadata.class, modelClass));
+                    .responseType(
+                            TypeMaker.getParameterizedType(
+                                    PaginatedResult.class,
+                                    ModelWithMetadata.class,
+                                    modelSchema.getModelClass()));
             if (lastSync != null) {
                 builder.variable("lastSync", "AWSTimestamp", lastSync);
             }
@@ -105,14 +107,16 @@ final class AppSyncRequestFactory {
         }
     }
 
-    static <T, M extends Model> AppSyncGraphQLRequest<T> buildSubscriptionRequest(
-            Class<M> modelClass, SubscriptionType subscriptionType) throws DataStoreException {
+    static <T> AppSyncGraphQLRequest<T> buildSubscriptionRequest(
+            ModelSchema modelSchema,
+            SubscriptionType subscriptionType) throws DataStoreException {
         try {
             return AppSyncGraphQLRequest.builder()
-                    .modelClass(modelClass)
+                    .modelClass(modelSchema.getModelClass())
+                    .modelSchema(modelSchema)
                     .operation(subscriptionType)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
-                    .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, modelClass))
+                    .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, modelSchema.getModelClass()))
                     .build();
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
@@ -121,11 +125,11 @@ final class AppSyncRequestFactory {
     }
 
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildDeletionRequest(
-            Class<M> modelClass, String objectId, Integer version, QueryPredicate predicate) throws DataStoreException {
+            ModelSchema schema, String objectId, Integer version, QueryPredicate predicate) throws DataStoreException {
         Map<String, Object> inputMap = new HashMap<>();
         inputMap.put("id", objectId);
         inputMap.put("_version", version);
-        return buildMutation(modelClass, inputMap, predicate, MutationType.DELETE);
+        return buildMutation(schema, inputMap, predicate, MutationType.DELETE);
     }
 
     @SuppressWarnings("unchecked") // cast to (Class<M>)
@@ -134,9 +138,15 @@ final class AppSyncRequestFactory {
         Class<M> modelClass = (Class<M>) model.getClass();
         try {
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-            Map<String, Object> inputMap = new HashMap<>(schema.getMapOfFieldNameAndValues(model));
+            Map<String, Object> inputMap = new HashMap<>();
+            if (model instanceof SerializedModel) {
+                SerializedModel serializedModel = (SerializedModel) model;
+                inputMap.putAll(serializedModel.getSerializedData());
+            } else {
+                inputMap.putAll(schema.getMapOfFieldNameAndValues(model));
+            }
             inputMap.put("_version", version);
-            return buildMutation(modelClass, inputMap, predicate, MutationType.UPDATE);
+            return buildMutation(schema, inputMap, predicate, MutationType.UPDATE);
 
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
@@ -144,14 +154,18 @@ final class AppSyncRequestFactory {
         }
     }
 
-    @SuppressWarnings("unchecked") // cast to (Class<M>)
-    static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildCreationRequest(M model)
+    static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildCreationRequest(
+            M model, ModelSchema modelSchema)
             throws DataStoreException {
-        Class<M> modelClass = (Class<M>) model.getClass();
         try {
-            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-            Map<String, Object> inputMap = schema.getMapOfFieldNameAndValues(model);
-            return buildMutation(modelClass, inputMap, QueryPredicates.all(), MutationType.CREATE);
+            Map<String, Object> inputMap = new HashMap<>();
+            if (model instanceof SerializedModel) {
+                SerializedModel serializedModel = (SerializedModel) model;
+                inputMap.putAll(serializedModel.getSerializedData());
+            } else {
+                inputMap.putAll(modelSchema.getMapOfFieldNameAndValues(model));
+            }
+            return buildMutation(modelSchema, inputMap, QueryPredicates.all(), MutationType.CREATE);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
@@ -258,25 +272,24 @@ final class AppSyncRequestFactory {
 
     /**
      * Builds a mutation.
-     * @param modelClass the model instance type
+     * @param schema the model schema for the mutation
      * @param mutationType Type of mutation, e.g. {@link MutationType#CREATE}
      * @param <M> Type of model being mutated
      * @return Mutation doc
      */
-    private static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildMutation(Class<M> modelClass,
+    private static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildMutation(
+                                                               ModelSchema schema,
                                                                Map<String, Object> inputMap,
                                                                QueryPredicate predicate,
                                                                MutationType mutationType) throws DataStoreException {
         try {
-            // model is of type T so this is a safe cast - hence the warning suppression
-            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
             String graphQlTypeName = schema.getName();
-
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
-                    .modelClass(modelClass)
+                    .modelClass(schema.getModelClass())
+                    .modelSchema(schema)
                     .operation(mutationType)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
-                    .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, modelClass));
+                    .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, schema.getModelClass()));
 
             String inputType =
                     Casing.capitalize(mutationType.toString()) +

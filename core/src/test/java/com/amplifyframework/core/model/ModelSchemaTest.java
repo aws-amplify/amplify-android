@@ -52,34 +52,34 @@ public final class ModelSchemaTest {
         expectedFields.put("id", ModelField.builder()
             .targetType("ID")
             .name("id")
-            .type(String.class)
+            .javaClassForValue(String.class)
             .isRequired(true)
             .build());
         expectedFields.put("first_name", ModelField.builder()
             .targetType("String")
             .name("first_name")
-            .type(String.class)
+            .javaClassForValue(String.class)
             .isRequired(true)
             .build());
         expectedFields.put("last_name", ModelField.builder()
             .targetType("String")
             .name("last_name")
-            .type(String.class)
+            .javaClassForValue(String.class)
             .isRequired(true)
             .build());
         expectedFields.put("dob", ModelField.builder()
             .targetType("AWSDate")
             .name("dob")
-            .type(Temporal.Date.class)
+            .javaClassForValue(Temporal.Date.class)
             .build());
         expectedFields.put("age", ModelField.builder()
             .targetType("Int")
             .name("age")
-            .type(Integer.class)
+            .javaClassForValue(Integer.class)
             .build());
         expectedFields.put("relationship", ModelField.builder()
             .name("relationship")
-            .type(MaritalStatus.class)
+            .javaClassForValue(MaritalStatus.class)
             .targetType("MaritalStatus")
             .isEnum(true)
             .build());
@@ -93,6 +93,7 @@ public final class ModelSchemaTest {
             .fields(expectedFields)
             .indexes(Collections.singletonMap("first_name_and_age_based_index", expectedModelIndex))
             .name("Person")
+            .modelClass(Person.class)
             .build();
         ModelSchema actualModelSchema = ModelSchema.fromModelClass(Person.class);
         assertEquals(expectedModelSchema, actualModelSchema);

@@ -103,7 +103,7 @@ public final class AWSDataStorePluginTest {
         modelProvider = spy(AmplifyCliGeneratedModelProvider.singletonInstance());
         subscriptionCancelledCounter = new AtomicInteger();
         subscriptionStartedCounter = new AtomicInteger();
-        modelCount = modelProvider.models().size();
+        modelCount = modelProvider.modelNames().size();
     }
 
     /**

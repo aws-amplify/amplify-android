@@ -1,0 +1,56 @@
+{
+  "name": "BlogOwner",
+  "pluralName": "BlogOwners",
+  "authRules": [],
+  "fields": {
+    "id": {
+      "name": "id",
+      "javaClassForValue": "java.lang.String",
+      "targetType": "ID",
+      "isRequired": true,
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "authRules": []
+    },
+    "name": {
+      "name": "name",
+      "javaClassForValue": "java.lang.String",
+      "targetType": "String",
+      "isRequired": true,
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "authRules": []
+    },
+    "owner": {
+      "name": "blog",
+      "javaClassForValue": "com.amplifyframework.core.model.Model",
+      "targetType": "Blog",
+      "isRequired": false,
+      "isArray": false,
+      "isEnum": false,
+      "isModel": true,
+      "authRules": []
+    },
+    "wea": {
+      "name": "wea",
+      "javaClassForValue": "java.lang.String",
+      "targetType": "String",
+      "isRequired": false,
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "authRules": []
+    }
+  },
+  "associations": {
+    "blog": {
+      "name": "HasOne",
+      "associatedName": "owner",
+      "associatedType": "Blog"
+    }
+  },
+  "indexes": {},
+  "modelClass": "com.amplifyframework.core.model.Model"
+}

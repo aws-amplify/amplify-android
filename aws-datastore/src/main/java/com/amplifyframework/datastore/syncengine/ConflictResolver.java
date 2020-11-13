@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreConflictHandler;
 import com.amplifyframework.datastore.DataStoreConflictHandler.ConflictData;
@@ -109,9 +110,10 @@ final class ConflictResolver {
     @NonNull
     private <T extends Model> Single<ModelWithMetadata<T>> publish(@NonNull T model, int version) {
         return Single
-            .<GraphQLResponse<ModelWithMetadata<T>>>create(emitter ->
-                appSync.update(model, version, emitter::onSuccess, emitter::onError)
-            )
+            .<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
+                final ModelSchema schema = ModelSchema.fromModelClass(model.getClass());
+                appSync.update(model, schema, version, emitter::onSuccess, emitter::onError);
+            })
             .flatMap(response -> {
                 if (response.hasErrors() || !response.hasData()) {
                     return Single.error(new DataStoreException(

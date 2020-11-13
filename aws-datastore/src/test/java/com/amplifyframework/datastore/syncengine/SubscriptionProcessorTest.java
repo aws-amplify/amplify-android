@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.syncengine;
 
 import android.util.Pair;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
@@ -46,7 +45,6 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,37 +67,32 @@ import static org.mockito.Mockito.mock;
 public final class SubscriptionProcessorTest {
     private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
 
-    private List<Class<? extends Model>> models;
+    private List<ModelSchema> modelSchemas;
     private AppSync appSync;
     private Merger merger;
     private SubscriptionProcessor subscriptionProcessor;
+    private ModelSchemaRegistry modelSchemaRegistry;
 
     /**
      * Sets up an {@link SubscriptionProcessor} and associated test dependencies.
-     * @throws AmplifyException On failure to load model schema registry
      */
     @Before
-    public void setup() throws AmplifyException {
+    public void setup() {
         ModelProvider modelProvider = AmplifyModelProvider.getInstance();
-        this.models = sortedModels(modelProvider);
+        modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry.register(modelProvider.modelSchemas());
+        this.modelSchemas = sortedModels(modelProvider);
         this.appSync = mock(AppSync.class);
         this.merger = mock(Merger.class);
         this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
     }
 
-    private static List<Class<? extends Model>> sortedModels(ModelProvider modelProvider) throws AmplifyException {
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.register(modelProvider.models());
+    private List<ModelSchema> sortedModels(ModelProvider modelProvider) {
         TopologicalOrdering topologicalOrdering =
             TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
-        Comparator<Class<? extends Model>> comparator = (one, two) -> {
-            ModelSchema schemaOne = modelSchemaRegistry.getModelSchemaForModelClass(one.getSimpleName());
-            ModelSchema schemaTwo = modelSchemaRegistry.getModelSchemaForModelClass(two.getSimpleName());
-            return topologicalOrdering.compare(schemaOne, schemaTwo);
-        };
-        List<Class<? extends Model>> models = new ArrayList<>(modelProvider.models());
-        Collections.sort(models, comparator);
-        return models;
+        List<ModelSchema> modelSchemas = new ArrayList<>(modelProvider.modelSchemas().values());
+        Collections.sort(modelSchemas, topologicalOrdering::compare);
+        return modelSchemas;
     }
 
     /**
@@ -110,11 +103,11 @@ public final class SubscriptionProcessorTest {
     public void appSyncInvokedWhenSubscriptionsStarted() {
         // For every Class-SubscriptionType pairing, use a CountDownLatch
         // to tell whether or not we've "seen" a subscription event for it.
-        Map<Pair<Class<? extends Model>, SubscriptionType>, CountDownLatch> seen = new HashMap<>();
+        Map<Pair<ModelSchema, SubscriptionType>, CountDownLatch> seen = new HashMap<>();
         // Build a stream of such pairs.
-        Observable.fromIterable(models)
-            .flatMap(model -> Observable.fromArray(SubscriptionType.values())
-                .map(value -> Pair.create(model, value)))
+        Observable.fromIterable(modelSchemas)
+            .flatMap(modelSchema -> Observable.fromArray(SubscriptionType.values())
+                .map(value -> Pair.create(modelSchema, value)))
             .blockingForEach(pair -> {
                 // For each one, store a latch. Add a mocking behavior to count down
                 // the latch when the subscription API is hit, for that class and subscription type.
@@ -147,7 +140,7 @@ public final class SubscriptionProcessorTest {
     @Test
     public void dataMergedWhenBufferDrained() throws DataStoreException, InterruptedException {
         // By default, start the subscriptions up.
-        arrangeStartedSubscriptions(appSync, models, SubscriptionType.values());
+        arrangeStartedSubscriptions(appSync, modelSchemas, SubscriptionType.values());
 
         // Arrange some subscription data
         BlogOwner model = BlogOwner.builder()
@@ -156,7 +149,10 @@ public final class SubscriptionProcessorTest {
         ModelMetadata modelMetadata = new ModelMetadata(model.getId(), false, 1, Temporal.Timestamp.now());
         ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(model, modelMetadata);
         GraphQLResponse<ModelWithMetadata<BlogOwner>> response = new GraphQLResponse<>(modelWithMetadata, null);
-        arrangeDataEmittingSubscription(appSync, BlogOwner.class, SubscriptionType.ON_CREATE, response);
+        arrangeDataEmittingSubscription(appSync,
+                modelSchemaRegistry.getModelSchemaForModelInstance(model),
+                SubscriptionType.ON_CREATE,
+                response);
 
         // Merge will be invoked for the subcription data, when we start draining...
         CountDownLatch latch = new CountDownLatch(1);
@@ -176,7 +172,7 @@ public final class SubscriptionProcessorTest {
     @SuppressWarnings("SameParameterValue")
     private static <T extends Model> void arrangeDataEmittingSubscription(
             AppSync appSync,
-            Class<T> clazz,
+            ModelSchema modelSchema,
             SubscriptionType subscriptionType,
             GraphQLResponse<ModelWithMetadata<T>> response) throws DataStoreException {
         Answer<Cancelable> answer = invocation -> {
@@ -190,38 +186,38 @@ public final class SubscriptionProcessorTest {
 
             return new NoOpCancelable();
         };
-        arrangeSubscription(appSync, answer, clazz, subscriptionType);
+        arrangeSubscription(appSync, answer, modelSchema, subscriptionType);
     }
 
     private static void arrangeStartedSubscriptions(
-        AppSync appSync, List<Class<? extends Model>> classes, SubscriptionType[] subscriptionTypes) {
+        AppSync appSync, List<ModelSchema> modelSchemas, SubscriptionType[] subscriptionTypes) {
         Answer<Cancelable> answer = invocation -> {
             final int startConsumerIndex = 1;
             Consumer<String> onStart = invocation.getArgument(startConsumerIndex);
             onStart.accept(RandomString.string());
             return new NoOpCancelable();
         };
-        arrangeSubscriptions(appSync, answer, classes, subscriptionTypes);
+        arrangeSubscriptions(appSync, answer, modelSchemas, subscriptionTypes);
     }
 
     private static void arrangeSubscriptions(
             AppSync appSync,
             Answer<Cancelable> answer,
-            List<Class<? extends Model>> classes,
+            List<ModelSchema> modelSchemas,
             SubscriptionType[] subscriptionTypes) {
-        Observable.fromIterable(classes)
-            .flatMap(modelClass -> Observable.fromArray(subscriptionTypes)
-                .map(subscriptionType -> Pair.create(modelClass, subscriptionType)))
+        Observable.fromIterable(modelSchemas)
+            .flatMap(modelSchema -> Observable.fromArray(subscriptionTypes)
+                .map(subscriptionType -> Pair.create(modelSchema, subscriptionType)))
             .blockingForEach(pair -> arrangeSubscription(appSync, answer, pair.first, pair.second));
     }
 
     private static <T extends Model> void arrangeSubscription(
-            AppSync appSync, Answer<Cancelable> answer, Class<T> clazz, SubscriptionType subscriptionType)
+            AppSync appSync, Answer<Cancelable> answer, ModelSchema modelSchema, SubscriptionType subscriptionType)
             throws DataStoreException {
         AppSync stub = doAnswer(answer).when(appSync);
         SubscriptionProcessor.SubscriptionMethod method =
             SubscriptionProcessor.subscriptionMethodFor(stub, subscriptionType);
-        method.subscribe(eq(clazz), anyConsumer(), anyConsumer(), anyConsumer(), anyAction());
+        method.subscribe(eq(modelSchema), anyConsumer(), anyConsumer(), anyConsumer(), anyAction());
     }
 
     private static Action anyAction() {

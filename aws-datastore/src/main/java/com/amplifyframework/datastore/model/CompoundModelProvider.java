@@ -19,8 +19,10 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchema;
 
-import java.util.LinkedHashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -54,14 +56,14 @@ public final class CompoundModelProvider implements ModelProvider {
      */
     @NonNull
     public static CompoundModelProvider of(@NonNull ModelProvider... modelProviders) {
-        final LinkedHashSet<Class<? extends Model>> modelClasses = new LinkedHashSet<>();
+        final Map<String, ModelSchema> modelSchemaMap = new HashMap<>();
         StringBuilder componentVersionBuffer = new StringBuilder();
         for (ModelProvider componentProvider : modelProviders) {
             componentVersionBuffer.append(componentProvider.version());
-            modelClasses.addAll(componentProvider.models());
+            modelSchemaMap.putAll(componentProvider.modelSchemas());
         }
         String version = UUID.nameUUIDFromBytes(componentVersionBuffer.toString().getBytes()).toString();
-        SimpleModelProvider delegateProvider = SimpleModelProvider.instance(version, modelClasses);
+        SimpleModelProvider delegateProvider = SimpleModelProvider.instance(version, modelSchemaMap);
         return new CompoundModelProvider(delegateProvider);
     }
 
@@ -69,6 +71,16 @@ public final class CompoundModelProvider implements ModelProvider {
     @Override
     public Set<Class<? extends Model>> models() {
         return delegateProvider.models();
+    }
+
+    @Override
+    public Map<String, ModelSchema> modelSchemas() {
+        return delegateProvider.modelSchemas();
+    }
+
+    @Override
+    public Set<String> modelNames() {
+        return delegateProvider.modelNames();
     }
 
     @NonNull
