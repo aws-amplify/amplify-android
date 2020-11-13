@@ -177,9 +177,10 @@ public final class DataStoreConfiguration {
     }
 
     /**
-     * Returns a QueryPredicate that should be used to filter the data that is synced.
+     * Returns a QueryPredicate that should be used to filter data received from AppSync,
+     * either during a base sync or over the real-time subscription.
      * @param modelClass Class of the {@link Model}.
-     * @return a QueryPredicate that should be used to filter the data that is synced.
+     * @return a QueryPredicate that should be used to filter the data received from AppSync
      */
     @NonNull
     public QueryPredicate getSyncQueryPredicate(Class<? extends Model> modelClass) {
