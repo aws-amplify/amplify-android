@@ -25,11 +25,13 @@ import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
@@ -146,7 +148,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
-    public StorageUploadFileOperation<?> uploadInputStream(
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
@@ -157,10 +159,10 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
-    public StorageUploadFileOperation<?> uploadInputStream(
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
-            @NonNull StorageUploadFileOptions options,
+            @NonNull StorageUploadInputStreamOptions options,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
@@ -169,10 +171,10 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
-    public StorageUploadFileOperation<?> uploadInputStream(
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
-            @NonNull StorageUploadFileOptions options,
+            @NonNull StorageUploadInputStreamOptions options,
             @NonNull Consumer<StorageTransferProgress> onProgress,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError

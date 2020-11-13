@@ -153,10 +153,10 @@ public final class AWSS3StorageService implements StorageService {
     /**
      * Begin uploading an inputStream.
      * @param serviceKey S3 service key
-     * @param inputStream Target inputStream
+     * @param inputStream Target InputStream
      * @param metadata Object metadata to associate with upload
      * @return A transfer observer
-     * @throws IOException An IOException thrown during the process writing an inputStream into a file
+     * @throws IOException An IOException thrown during the process writing an InputStream into a file
      */
     @NonNull
     public TransferObserver uploadInputStream(
@@ -165,10 +165,11 @@ public final class AWSS3StorageService implements StorageService {
             @NonNull ObjectMetadata metadata
     ) throws IOException {
         startServiceIfNotAlreadyStarted();
-        return transferUtility.upload(serviceKey, inputStream, UploadOptions.builder()
-                                                                            .bucket(bucket)
-                                                                            .objectMetadata(metadata)
-                                                                            .build());
+        UploadOptions uploadOptions = UploadOptions.builder()
+                                                    .bucket(bucket)
+                                                    .objectMetadata(metadata)
+                                                    .build();
+        return transferUtility.upload(serviceKey, inputStream, uploadOptions);
     }
 
     /**

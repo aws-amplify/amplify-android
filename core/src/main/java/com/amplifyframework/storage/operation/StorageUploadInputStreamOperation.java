@@ -18,17 +18,17 @@ package com.amplifyframework.storage.operation;
 import androidx.annotation.Nullable;
 
 /**
- * Base operation type for upload file behavior on the Storage category.
+ * Base operation type for upload InputStream behavior on the Storage category.
  *
  * @param <R> type of the request object
  */
-public abstract class StorageUploadFileOperation<R> extends StorageUploadOperation<R> {
+public abstract class StorageUploadInputStreamOperation<R> extends StorageUploadOperation<R> {
 
     /**
      * Constructs a new AmplifyOperation.
      * @param amplifyOperationRequest The request object of the operation
      */
-    public StorageUploadFileOperation(@Nullable R amplifyOperationRequest) {
+    public StorageUploadInputStreamOperation(@Nullable R amplifyOperationRequest) {
         super(amplifyOperationRequest);
     }
 }

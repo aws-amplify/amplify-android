@@ -20,22 +20,22 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 /**
- * Options to specify attributes of put StorageUploadFile API invocation.
+ * Options to specify attributes of put StorageUploadInputStream API invocation.
  */
-public class StorageUploadFileOptions extends StorageUploadOptions {
+public class StorageUploadInputStreamOptions extends StorageUploadOptions {
 
     /**
-     * Constructs a StorageUploadFileOptions instance with the
+     * Constructs a StorageUploadInputStreamOptions instance with the
      * attributes from builder instance.
      * @param builder the builder with configured attributes
      */
-    protected StorageUploadFileOptions(final Builder<?> builder) {
+    protected StorageUploadInputStreamOptions(final Builder<?> builder) {
         super(builder);
     }
 
     /**
      * Returns a new Builder instance that can be used to configure
-     * and build a new immutable instance of StorageUploadFileOptions.
+     * and build a new immutable instance of StorageUploadInputStreamOptions.
      * @return a new builder instance
      */
     @SuppressLint("SyntheticAccessor")
@@ -55,7 +55,7 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
      *         values in the provided options
      */
     @NonNull
-    public static Builder<?> from(@NonNull final StorageUploadFileOptions options) {
+    public static Builder<?> from(@NonNull final StorageUploadInputStreamOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
             .targetIdentityId(options.getTargetIdentityId())
@@ -64,11 +64,11 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
     }
 
     /**
-     * Creates a new default instance of the StorageUploadFileOptions.
+     * Creates a new default instance of the StorageUploadInputStreamOptions.
      * @return default storage put options
      */
     @NonNull
-    public static StorageUploadFileOptions defaultInstance() {
+    public static StorageUploadInputStreamOptions defaultInstance() {
         return builder().build();
     }
 
@@ -79,10 +79,10 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        } else if (!(obj instanceof StorageUploadFileOptions)) {
+        } else if (!(obj instanceof StorageUploadInputStreamOptions)) {
             return false;
         } else {
-            StorageUploadFileOptions that = (StorageUploadFileOptions) obj;
+            StorageUploadInputStreamOptions that = (StorageUploadInputStreamOptions) obj;
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
                     ObjectsCompat.equals(getContentType(), that.getContentType()) &&
@@ -109,7 +109,7 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
     @NonNull
     @Override
     public String toString() {
-        return "StorageUploadFileOptions {" +
+        return "StorageUploadInputStreamOptions {" +
                 "accessLevel=" + getAccessLevel() +
                 ", targetIdentityId=" + getTargetIdentityId() +
                 ", contentType=" + getContentType() +
@@ -119,32 +119,31 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
 
     /**
      * Use to configure and build immutable instances of the
-     * StorageUploadFileOptions, using fluent of property configuration
+     * StorageUploadInputStreamOptions, using fluent of property configuration
      * methods.
      * @param <B> the type of builder to chain with
      */
     @SuppressWarnings({"unchecked", "WeakerAccess"})
-    public static class Builder<B extends Builder<B>>
-            extends StorageUploadOptions.Builder<B, StorageUploadFileOptions> {
-
+    public static class Builder<B extends StorageUploadInputStreamOptions.Builder<B>>
+            extends StorageUploadOptions.Builder<B, StorageUploadInputStreamOptions> {
         /**
-         * Constructs a new Builder for StorageUploadFileOptions.
+         * Constructs a new Builder for StorageUploadInputStreamOptions.
          */
         protected Builder() {
             super();
         }
 
         /**
-         * Builds a new immutable StorageUploadFileOptions instance,
+         * Builds a new immutable StorageUploadInputStreamOptions instance,
          * based on the configuration options that have been previously
          * set on this Builder instance.
-         * @return A new immutable StorageUploadFileOptions instance
+         * @return A new immutable StorageUploadInputStreamOptions instance
          */
         @SuppressLint("SyntheticAccessor")
         @Override
         @NonNull
-        public StorageUploadFileOptions build() {
-            return new StorageUploadFileOptions(this);
+        public StorageUploadInputStreamOptions build() {
+            return new StorageUploadInputStreamOptions(this);
         }
     }
 }

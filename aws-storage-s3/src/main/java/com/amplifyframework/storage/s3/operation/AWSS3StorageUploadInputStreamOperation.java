@@ -24,7 +24,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
-import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
@@ -38,14 +38,15 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
 /**
- * An operation to upload an inputStream from AWS S3.
+ * An operation to upload an InputStream from AWS S3.
  */
 public final class AWSS3StorageUploadInputStreamOperation
-        extends StorageUploadFileOperation<AWSS3StorageUploadInputStreamRequest> {
+        extends StorageUploadInputStreamOperation<AWSS3StorageUploadInputStreamRequest> {
     private final StorageService storageService;
     private final CognitoAuthProvider cognitoAuthProvider;
     private final Consumer<StorageTransferProgress> onProgress;
@@ -121,10 +122,10 @@ public final class AWSS3StorageUploadInputStreamOperation
         try {
             transferObserver = storageService.uploadInputStream(serviceKey, inputStream, objectMetadata);
             transferObserver.setTransferListener(new UploadTransferListener());
-        } catch (Exception exception) {
+        } catch (IOException ioException) {
             onError.accept(new StorageException(
                     "Issue uploading inputStream.",
-                    exception,
+                    ioException,
                     "See included exception for more details and suggestions to fix."
             ));
         }

@@ -18,7 +18,7 @@ package com.amplifyframework.storage.s3.options;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
 
 import java.util.Objects;
@@ -26,7 +26,7 @@ import java.util.Objects;
 /**
  * Options to specify attributes of object upload operation to an AWS S3 bucket.
  */
-public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadFileOptions {
+public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInputStreamOptions {
     private final ServerSideEncryption serverSideEncryption;
 
     private AWSS3StorageUploadInputStreamOptions(final Builder builder) {
@@ -77,7 +77,7 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadFil
 
     /**
      * Constructs a default instance of the {@link AWSS3StorageUploadInputStreamOptions}.
-     * @return default instance of AWSS3StorageUploadFileOptions
+     * @return default instance of AWSS3StorageUploadInputStreamOptions
      */
     @NonNull
     public static AWSS3StorageUploadInputStreamOptions defaultInstance() {
@@ -128,7 +128,7 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadFil
      * instances of the {@link AWSS3StorageUploadInputStreamOptions}, by chaining
      * fluent configuration method calls.
      */
-    public static final class Builder extends StorageUploadFileOptions.Builder<Builder> {
+    public static final class Builder extends StorageUploadInputStreamOptions.Builder<Builder> {
         private ServerSideEncryption serverSideEncryption;
 
         private Builder() {
@@ -137,7 +137,7 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadFil
         }
 
         /**
-         * Configures the server side encryption algorithm for a new AWSS3StorageUploadFileOptions instance.
+         * Configures the server side encryption algorithm for a new AWSS3StorageUploadInputStreamOptions instance.
          * @param serverSideEncryption server side encryption algorithm
          * @return Current Builder instance for fluent chaining
          */

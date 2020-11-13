@@ -22,21 +22,13 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Parameters to provide to S3 that describe a request to upload a
- * file.
+ * Parameters to provide to S3 that describe a request to upload a file.
  */
-public final class AWSS3StorageUploadFileRequest {
-    private final String key;
+public final class AWSS3StorageUploadFileRequest extends AWSS3StorageUploadRequest {
     private final File local;
-    private final StorageAccessLevel accessLevel;
-    private final String targetIdentityId;
-    private final String contentType;
-    private final ServerSideEncryption serverSideEncryption;
-    private final Map<String, String> metadata;
 
     /**
      * Constructs a new AWSS3StorageUploadFileRequest.
@@ -58,25 +50,8 @@ public final class AWSS3StorageUploadFileRequest {
             @NonNull ServerSideEncryption serverSideEncryption,
             @Nullable Map<String, String> metadata
     ) {
-        this.key = key;
+        super(key, accessLevel, targetIdentityId, contentType, serverSideEncryption, metadata);
         this.local = local;
-        this.accessLevel = accessLevel;
-        this.targetIdentityId = targetIdentityId;
-        this.contentType = contentType;
-        this.serverSideEncryption = serverSideEncryption;
-        this.metadata = new HashMap<>();
-        if (metadata != null) {
-            this.metadata.putAll(metadata);
-        }
-    }
-
-    /**
-     * Gets the storage key.
-     * @return key
-     */
-    @NonNull
-    public String getKey() {
-        return key;
     }
 
     /**
@@ -86,51 +61,6 @@ public final class AWSS3StorageUploadFileRequest {
     @NonNull
     public File getLocal() {
         return local;
-    }
-
-    /**
-     * Gets the access level.
-     * @return Access level
-     */
-    @NonNull
-    public StorageAccessLevel getAccessLevel() {
-        return accessLevel;
-    }
-
-    /**
-     * Gets the target identity id override. If null, the operation gets the default, current user's identity ID.
-     * @return target identity id override
-     */
-    @Nullable
-    public String getTargetIdentityId() {
-        return targetIdentityId;
-    }
-
-    /**
-     * Gets the content type.
-     * @return content type
-     */
-    @Nullable
-    public String getContentType() {
-        return contentType;
-    }
-
-    /**
-     * Gets the server side encryption algorithm.
-     * @return server side encryption algorithm
-     */
-    @NonNull
-    public ServerSideEncryption getServerSideEncryption() {
-        return serverSideEncryption;
-    }
-
-    /**
-     * Gets the metadata.
-     * @return metadata
-     */
-    @NonNull
-    public Map<String, String> getMetadata() {
-        return metadata;
     }
 }
 

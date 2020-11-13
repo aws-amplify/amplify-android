@@ -67,14 +67,15 @@ public interface StorageService {
                                 @NonNull ObjectMetadata metadata);
 
     /**
-     * Begin uploading an inputStream to a key in storage and return an observer
+     * Begin uploading an InputStream to a key in storage and return an observer
      * to monitor upload progress. This item will be stored with specified
      * metadata.
      * @param serviceKey key to uniquely label item in storage
-     * @param inputStream inputStream to upload
+     * @param inputStream InputStream from which to read content
      * @param metadata metadata to attach to uploaded item
      * @return An instance of {@link TransferObserver} to monitor upload
-     * @throws IOException An IOException thrown during the process writing an inputStream into a file
+     * @throws IOException on error reading the InputStream, or saving it to a temporary
+     *         File before the upload begins.
      */
     TransferObserver uploadInputStream(@NonNull String serviceKey,
                                        @NonNull InputStream inputStream,

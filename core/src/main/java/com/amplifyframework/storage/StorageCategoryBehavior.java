@@ -23,11 +23,13 @@ import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
@@ -206,14 +208,14 @@ public interface StorageCategoryBehavior {
      * Upload a local InputStream, storing it as a remote resource.
      * Register consumers to obtain the results of the upload.
      * @param key the unique identifier of the object in storage
-     * @param local the local inputStream
+     * @param local the local InputStream
      * @param onSuccess Called if operation completed successfully and furnishes a result
      * @param onError Called if an error occurs during operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
     @NonNull
-    StorageUploadFileOperation<?> uploadInputStream(
+    StorageUploadInputStreamOperation<?> uploadInputStream(
         @NonNull String key,
         @NonNull InputStream local,
         @NonNull Consumer<StorageUploadFileResult> onSuccess,
@@ -225,17 +227,17 @@ public interface StorageCategoryBehavior {
      * Register consumers to observe results of upload request,
      * as well as intermediary progress updates.
      * @param key the unique identifier of the object in storage
-     * @param local the local inputStream
+     * @param local the local InputStream
      * @param options parameters specific to plugin behavior
      * @param onSuccess Called if operation completed successfully and furnishes a result
      * @param onError Called if an error occurs during operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
-    StorageUploadFileOperation<?> uploadInputStream(
+    StorageUploadInputStreamOperation<?> uploadInputStream(
         @NonNull String key,
         @NonNull InputStream local,
-        @NonNull StorageUploadFileOptions options,
+        @NonNull StorageUploadInputStreamOptions options,
         @NonNull Consumer<StorageUploadFileResult> onSuccess,
         @NonNull Consumer<StorageException> onError);
 
@@ -244,7 +246,7 @@ public interface StorageCategoryBehavior {
      * Specify options such as the access level the file should have.
      * Register consumers to observe results of upload request.
      * @param key the unique identifier of the object in storage
-     * @param local the local inputStream
+     * @param local the local InputStream
      * @param options parameters specific to plugin behavior
      * @param onProgress Called periodically to provides updates on upload progress
      * @param onSuccess Called if operation completed successfully and furnishes a result
@@ -253,10 +255,10 @@ public interface StorageCategoryBehavior {
      *         actions related to the execution of the work
      */
     @NonNull
-    StorageUploadFileOperation<?> uploadInputStream(
+    StorageUploadInputStreamOperation<?> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
-            @NonNull StorageUploadFileOptions options,
+            @NonNull StorageUploadInputStreamOptions options,
             @NonNull Consumer<StorageTransferProgress> onProgress,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError);

@@ -28,20 +28,25 @@ import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.testutils.random.RandomBytes;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -65,6 +70,7 @@ public final class RxStorageBindingTest {
     private RxStorageCategoryBehavior rxStorage;
     private StoragePlugin<?> delegate;
     private File localFile;
+    private InputStream localInputStream;
     private String remoteKey;
 
     /**
@@ -93,6 +99,7 @@ public final class RxStorageBindingTest {
     @Before
     public void createRandomRequestParams() throws IOException {
         localFile = File.createTempFile("random", "data");
+        localInputStream = new ByteArrayInputStream(RandomBytes.bytes());
         remoteKey = RandomString.string();
     }
 
@@ -208,7 +215,49 @@ public final class RxStorageBindingTest {
         testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         testObserver.assertValues(result);
         testProgressObserver.assertValueCount(5);
+    }
 
+    /**
+     * When {@link StorageCategoryBehavior#uploadInputStream(String, InputStream, Consumer, Consumer)} returns
+     * a {@link StorageUploadFileResult}, then the {@link Single} returned by
+     * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should emit that result.
+     * @throws InterruptedException Not expected.
+     */
+    @Test
+    public void uploadInputStreamReturnsResult() throws InterruptedException {
+        StorageUploadFileResult result = StorageUploadFileResult.fromKey(remoteKey);
+        doAnswer(invocation -> {
+            // 0 key, 1 local, 2 options, 3 onProgress, 4 onResult, 5 onError
+            final int indexOfResultConsumer = 4;
+            final int indexOfProgressConsumer = 3;
+            Consumer<StorageUploadFileResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
+            Consumer<StorageTransferProgress> progressConsumer = invocation.getArgument(indexOfProgressConsumer);
+
+            Observable.interval(100, TimeUnit.MILLISECONDS)
+                    .take(5)
+                    .flatMapCompletable(aLong -> {
+                        progressConsumer.accept(new StorageTransferProgress(aLong, 500));
+                        return Completable.complete();
+                    })
+                    .doOnComplete(() -> {
+                        resultConsumer.accept(result);
+                    })
+                    .subscribe();
+            return mock(StorageUploadInputStreamOperation.class);
+        }).when(delegate).uploadInputStream(eq(remoteKey),
+                eq(localInputStream),
+                any(StorageUploadInputStreamOptions.class),
+                anyConsumer(),
+                anyConsumer(),
+                anyConsumer());
+
+        RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> rxOperation =
+                rxStorage.uploadInputStream(remoteKey, localInputStream);
+        TestObserver<StorageUploadFileResult> testObserver = rxOperation.observeResult().test();
+        TestObserver<StorageTransferProgress> testProgressObserver = rxOperation.observeProgress().test();
+        testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        testObserver.assertValues(result);
+        testProgressObserver.assertValueCount(5);
     }
 
     /**
@@ -237,6 +286,34 @@ public final class RxStorageBindingTest {
             .observeResult()
             .test()
             .assertError(error);
+    }
+
+    /**
+     * When {@link StorageCategoryBehavior#uploadInputStream(String, InputStream, Consumer, Consumer)} returns
+     * an {@link StorageException}, then the {@link Single} returned by
+     * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should emit a {@link StorageException}.
+     */
+    @Test
+    public void uploadInputStreamReturnsError() {
+        StorageException error = new StorageException("Error uploading.", "Expected.");
+        doAnswer(invocation -> {
+            // 0 key, 1 local, 2 options, 3 onProgress 4 onResult, 5 onError
+            final int indexOfResultConsumer = 5;
+            Consumer<StorageException> errorConsumer = invocation.getArgument(indexOfResultConsumer);
+            errorConsumer.accept(error);
+            return mock(StorageUploadInputStreamOperation.class);
+        }).when(delegate).uploadInputStream(eq(remoteKey),
+                eq(localInputStream),
+                any(StorageUploadInputStreamOptions.class),
+                anyConsumer(),
+                anyConsumer(),
+                anyConsumer());
+
+        rxStorage
+                .uploadInputStream(remoteKey, localInputStream)
+                .observeResult()
+                .test()
+                .assertError(error);
     }
 
     /**
