@@ -29,12 +29,15 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Varargs;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.mockito.ArgumentMatcher;
+import org.mockito.stubbing.Answer;
 import org.mockito.stubbing.Stubber;
 
 import java.util.Arrays;
@@ -464,8 +467,9 @@ public final class AppSyncMocking {
                 ModelSchema schema = invocation.getArgument(0);
                 Long lastSync = invocation.getArgument(1);
                 Integer syncPageSize = invocation.getArgument(2);
-                return AppSyncRequestFactory.buildSyncRequest(schema, lastSync, syncPageSize);
-            }).when(appSync).buildSyncRequest(any(), any(), any());
+                QueryPredicate queryPredicate = invocation.getArgument(3);
+                return AppSyncRequestFactory.buildSyncRequest(schema, lastSync, syncPageSize, queryPredicate);
+            }).when(appSync).buildSyncRequest(any(), any(), any(), any());
             return this;
         }
 
@@ -531,7 +535,7 @@ public final class AppSyncMocking {
             if (nextToken != null) {
                 ModelSchema schema = ModelSchema.fromModelClass(modelClass);
                 requestForNextResult =
-                    AppSyncRequestFactory.buildSyncRequest(schema, null, null)
+                    AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all())
                         .newBuilder()
                         .variable("nextToken", "String", nextToken)
                         .build();

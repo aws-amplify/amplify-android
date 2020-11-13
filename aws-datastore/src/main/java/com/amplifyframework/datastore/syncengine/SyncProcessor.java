@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
@@ -88,10 +89,10 @@ final class SyncProcessor {
     }
 
     /**
-     * Gets a builder of {@link SyncProcessor}.
-     * @return A {@link SyncProcessor.Builder} instance
+     * Returns a step builder to begin construction of a new {@link SyncProcessor} instance.
+     * @return The first step in a sequence of steps to build an instance of the sync processor
      */
-    public static Builder builder() {
+    public static ModelProviderStep builder() {
         return new Builder();
     }
 
@@ -212,10 +213,12 @@ final class SyncProcessor {
             throws DataStoreException {
         final Long lastSyncTimeAsLong = syncTime.exists() ? syncTime.toLong() : null;
         final Integer syncPageSize = dataStoreConfigurationProvider.getConfiguration().getSyncPageSize();
-
+        QueryPredicate predicate =
+                dataStoreConfigurationProvider.getConfiguration().getSyncQueryPredicate(schema.getModelClass());
         // Create a BehaviorProcessor, and set the default value to a GraphQLRequest that fetches the first page.
         BehaviorProcessor<GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>> processor =
-                BehaviorProcessor.createDefault(appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize));
+                BehaviorProcessor.createDefault(
+                        appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate));
 
         return processor.concatMap(request -> syncPage(request).toFlowable())
                 .doOnNext(paginatedResult -> {

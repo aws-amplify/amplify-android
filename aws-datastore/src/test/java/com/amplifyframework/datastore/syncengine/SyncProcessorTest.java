@@ -136,6 +136,7 @@ public final class SyncProcessorTest {
             .syncMaxRecords(syncMaxRecords)
             .syncPageSize(1_000)
             .errorHandler(dataStoreException -> errorHandlerCallCount++)
+            .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
             .build();
 
         this.syncProcessor = SyncProcessor.builder()
@@ -505,6 +506,30 @@ public final class SyncProcessorTest {
         for (GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> capturedValue : capturedValues) {
             assertEquals(recentTimeMs, capturedValue.getVariables().get("lastSync"));
         }
+    }
+
+    /**
+     * Verify that the syncExpressions from the DataStoreConfiguration are applied to the sync request.
+     * @throws DataStoreException On failure interacting with storage adapter
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     */
+    @Test
+    public void syncExpressionsAppliedOnSyncRequest() throws DataStoreException, InterruptedException {
+        // Arrange some responses from AppSync
+        AppSyncMocking.sync(appSync)
+                .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
+                .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
+
+        // Act: hydrate the local store.
+        TestObserver<Void> hydrationObserver = syncProcessor.hydrate().test();
+
+        // Assert that hydration completed without error.
+        assertTrue(hydrationObserver.await(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        hydrationObserver.assertNoErrors();
+        hydrationObserver.assertComplete();
+
+        // Mock the AppSync interface, and verify that it gets calls with the expected predicate
+        verify(appSync, times(1)).buildSyncRequest(BlogOwner.class, null, 1_000, BlogOwner.NAME.beginsWith("J"));
     }
 
     /**

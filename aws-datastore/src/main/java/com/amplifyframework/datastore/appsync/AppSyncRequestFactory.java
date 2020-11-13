@@ -80,7 +80,8 @@ final class AppSyncRequestFactory {
     static <T> AppSyncGraphQLRequest<T> buildSyncRequest(
             @NonNull final ModelSchema modelSchema,
             @Nullable final Long lastSync,
-            @Nullable final Integer limit)
+            @Nullable final Integer limit,
+            @NonNull final QueryPredicate predicate)
             throws DataStoreException {
         try {
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
@@ -99,7 +100,11 @@ final class AppSyncRequestFactory {
             if (limit != null) {
                 builder.variable("limit", "Int", limit);
             }
-
+            if (!QueryPredicates.all().equals(predicate)) {
+                String modelName = ModelSchema.fromModelClass(modelClass).getName();
+                String filterType = "Model" + Casing.capitalizeFirst(modelName) + "FilterInput";
+                builder.variable("filter", filterType, parsePredicate(predicate));
+            }
             return builder.build();
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
@@ -170,7 +175,6 @@ final class AppSyncRequestFactory {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
         }
-
     }
 
     static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {

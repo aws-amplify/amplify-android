@@ -120,7 +120,12 @@ public final class Orchestrator {
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .build();
-        this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
+        this.subscriptionProcessor = SubscriptionProcessor.builder()
+                .appSync(appSync)
+                .modelProvider(modelProvider)
+                .merger(merger)
+                .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
+                .build();
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
         this.currentMode = new AtomicReference<>(Mode.STOPPED);
         this.targetMode = targetMode;

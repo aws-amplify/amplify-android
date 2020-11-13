@@ -206,7 +206,8 @@ public final class AppSyncClientInstrumentationTest {
         // Run sync on Blogs
         // TODO: This is currently a pretty worthless test - mainly for setting a debug point and manually inspecting
         // When you call sync with a null lastSync it gives only one entry per object (the latest state)
-        Iterable<ModelWithMetadata<Blog>> blogSyncResult = sync(api.buildSyncRequest(blogSchema, null, 1000));
+        Iterable<ModelWithMetadata<Blog>> blogSyncResult =
+                sync(api.buildSyncRequest(blogSchema, null, 1000, QueryPredicates.all()));
         assertTrue(blogSyncResult.iterator().hasNext());
 
         // Run sync on Posts
@@ -214,7 +215,7 @@ public final class AppSyncClientInstrumentationTest {
         // When you call sync with a lastSyncTime it gives you one entry per version of that object which was created
         // since that time.
         Iterable<ModelWithMetadata<Post>> postSyncResult =
-                sync(api.buildSyncRequest(postSchema, startTimeSeconds, 1000));
+                sync(api.buildSyncRequest(postSchema, startTimeSeconds, 1000, QueryPredicates.all()));
         assertTrue(postSyncResult.iterator().hasNext());
     }
 
