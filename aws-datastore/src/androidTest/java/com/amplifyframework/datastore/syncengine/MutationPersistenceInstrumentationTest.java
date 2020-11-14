@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -51,6 +52,7 @@ import static org.junit.Assert.assertTrue;
 public final class MutationPersistenceInstrumentationTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
+    private ModelSchemaRegistry modelSchemaRegistry;
     private PendingMutation.Converter converter;
     private SynchronousStorageAdapter storage;
 
@@ -72,7 +74,7 @@ public final class MutationPersistenceInstrumentationTest {
         getApplicationContext().deleteDatabase(DATABASE_NAME);
 
         ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();
         modelSchemaRegistry.register(modelProvider.models());
 
@@ -114,8 +116,9 @@ public final class MutationPersistenceInstrumentationTest {
             .name("Tony Daniels")
             .build();
 
-        final PendingMutation<BlogOwner> originalTonyCreation =
-            PendingMutation.creation(tonyDaniels, BlogOwner.class);
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        PendingMutation<BlogOwner> originalTonyCreation =
+            PendingMutation.creation(tonyDaniels, schema);
 
         // Save the creation mutation for Tony, as a PersistentRecord object.
         PendingMutation.PersistentRecord originalTonyCreationAsRecord =
@@ -139,7 +142,7 @@ public final class MutationPersistenceInstrumentationTest {
     }
 
     /**
-     * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, Consumer, Consumer)}
+     * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, QueryPredicate, Consumer, Consumer)}
      * is called to save a {@link PendingMutation.PersistentRecord}, we should see an event emitted on the
      * {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)}'s item consumer.
      * @throws DataStoreException On failure to convert received value out of record format, or
@@ -155,7 +158,8 @@ public final class MutationPersistenceInstrumentationTest {
         BlogOwner juan = BlogOwner.builder()
             .name("Juan Gonzales")
             .build();
-        PendingMutation<BlogOwner> change = PendingMutation.creation(juan, BlogOwner.class);
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        PendingMutation<BlogOwner> change = PendingMutation.creation(juan, schema);
         PendingMutation.PersistentRecord thingWeSaved = converter.toRecord(change);
 
         // Wait for it to save...
@@ -176,7 +180,7 @@ public final class MutationPersistenceInstrumentationTest {
     }
 
     /**
-     * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, Consumer, Consumer)}
+     * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, QueryPredicate, Consumer, Consumer)}
      * is called to save a {@link PendingMutation.PersistentRecord}, we should expect to observe a change event
      * /containing/ that record within it. It will be received by the value consumer of
      * {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)}.
@@ -196,8 +200,9 @@ public final class MutationPersistenceInstrumentationTest {
         BlogOwner joeLastNameMisspelled = BlogOwner.builder()
             .name("Joe Sweeneyy")
             .build();
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         PendingMutation<BlogOwner> createJoeWrongLastName =
-            PendingMutation.creation(joeLastNameMisspelled, BlogOwner.class);
+            PendingMutation.creation(joeLastNameMisspelled, schema);
 
         // Save our saveJoeWrongLastName change item, as a PersistentRecord.
         PendingMutation.PersistentRecord createJoeWrongLastNameAsRecord =
@@ -210,7 +215,7 @@ public final class MutationPersistenceInstrumentationTest {
             .id(joeLastNameMisspelled.getId())
             .build();
         PendingMutation<BlogOwner> createJoeCorrectLastName =
-            PendingMutation.creation(joeWithLastNameFix, BlogOwner.class);
+            PendingMutation.creation(joeWithLastNameFix, schema);
 
         // Save an update (same model type, same unique ID) to the mutation we saved previously.
         PendingMutation.PersistentRecord createJoeCorrectLastNameAsRecord =
@@ -242,7 +247,8 @@ public final class MutationPersistenceInstrumentationTest {
         BlogOwner beatrice = BlogOwner.builder()
             .name("Beatrice Stone")
             .build();
-        PendingMutation<BlogOwner> createBeatrice = PendingMutation.creation(beatrice, BlogOwner.class);
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        PendingMutation<BlogOwner> createBeatrice = PendingMutation.creation(beatrice, schema);
         PendingMutation.PersistentRecord createBeatriceRecord = converter.toRecord(createBeatrice);
         storage.save(createBeatriceRecord);
 

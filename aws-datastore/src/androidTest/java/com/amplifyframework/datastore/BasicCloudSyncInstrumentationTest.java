@@ -33,7 +33,6 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.appsync.SynchronousAppSync;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
@@ -48,17 +47,12 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import io.reactivex.rxjava3.core.Observable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static com.amplifyframework.datastore.DataStoreHubEventFilters.publicationOf;
 import static com.amplifyframework.datastore.DataStoreHubEventFilters.receiptOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests the functions of {@link AWSDataStorePlugin}.
@@ -88,6 +82,7 @@ public final class BasicCloudSyncInstrumentationTest {
      * {@link AWSDataStorePlugin}, which is the thing we're actually testing.
      * @throws AmplifyException On failure to read config, setup API or DataStore categories
      */
+    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Before
     public void setup() throws AmplifyException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
@@ -154,7 +149,7 @@ public final class BasicCloudSyncInstrumentationTest {
 
     /**
      * The sync engine should receive mutations for its managed models, through its
-     * subscriptions. When we change a model remotely, the sync engine should respond
+     * subscriptions. When we create a model remotely, the sync engine should respond
      * by processing the subscription event and saving the model locally.
      * @throws DataStoreException On failure to query the local data store for
      *                            local presence of arranged data (second step)
@@ -162,60 +157,30 @@ public final class BasicCloudSyncInstrumentationTest {
      *                          {@link DataStoreCategoryConfigurator}
      */
     @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
-    @SuppressWarnings("unchecked") // Unwrapping hub event data
     @Test
     public void syncDownFromCloudIsWorking() throws AmplifyException {
-        // Arrange two models up front, so we can know their IDs for other arrangments.
-        // First is Jameson with a typo. We create him.
-        // Second is Jameson with typo fixed -- we update the original with this record.
-        BlogOwner originalModel = BlogOwner.builder()
-            .name("Jameson Willlllliams")
-            .build();
-        BlogOwner updatedModel = originalModel.copyOfBuilder() // This uses the same model ID
-            .name("Jameson Williams") // But with corrected name
+        // This model will get saved to the cloud.
+        BlogOwner jameson = BlogOwner.builder()
+            .name("Jameson Williams")
             .build();
 
-        // Now, start watching the Hub for notifications that we received and processed models
-        // from the Cloud. Look specifically for events relating to the model with the above ID.
-        // We expected 2: a creation, and an update.
+        // Start watching locally, to see if it shows up on the client.
         HubAccumulator receiptAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(originalModel), 2)
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(jameson), 1)
                 .start();
 
-        // Act: externally in the Cloud, someone creates a BlogOwner,
-        // that contains a misspelling in the last name
-        GraphQLResponse<ModelWithMetadata<BlogOwner>> createResponse =
-                appSync.create(originalModel, ModelSchema.fromModelClass(BlogOwner.class));
-        ModelMetadata originalMetadata = createResponse.getData().getSyncMetadata();
-        assertNotNull(originalMetadata.getVersion());
-        int originalVersion = originalMetadata.getVersion();
-
-        // Act: externally, the BlogOwner in the Cloud is updated, to correct the entry's last name
-        GraphQLResponse<ModelWithMetadata<BlogOwner>> updateResponse =
-            appSync.update(updatedModel, ModelSchema.fromModelClass(BlogOwner.class), originalVersion);
-        ModelMetadata newMetadata = updateResponse.getData().getSyncMetadata();
-        assertNotNull(newMetadata.getVersion());
-        int newVersion = newMetadata.getVersion();
-        assertEquals(originalVersion + 1, newVersion);
+        // Act: create the model in the cloud
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        GraphQLResponse<ModelWithMetadata<BlogOwner>> createResponse = appSync.create(jameson, schema);
+        ModelMetadata metadata = createResponse.getData().getSyncMetadata();
+        assertEquals(Integer.valueOf(1), metadata.getVersion());
 
         // Wait for the events to show up on Hub.
-        List<HubEvent<?>> seenEvents = receiptAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        receiptAccumulator.awaitFirst(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // Another HubEvent tells us that an update occurred in the Cloud;
-        // the update was applied locally, to an existing BlogOwner.
-        assertEquals(
-            Arrays.asList(originalModel, updatedModel),
-            Observable.fromIterable(seenEvents)
-                .map(HubEvent::getData)
-                .map(data -> (ModelWithMetadata<BlogOwner>) data)
-                .map(ModelWithMetadata::getModel)
-                .toList()
-                .blockingGet()
-        );
-
-        // Jameson should be in the local DataStore, and last name should be updated.
-        BlogOwner owner = dataStore.get(BlogOwner.class, originalModel.getId());
+        // Jameson should be in the local DataStore.
+        BlogOwner owner = dataStore.get(BlogOwner.class, jameson.getId());
         assertEquals("Jameson Williams", owner.getName());
-        assertEquals(originalModel.getId(), owner.getId());
+        assertEquals(jameson.getId(), owner.getId());
     }
 }

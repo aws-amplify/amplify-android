@@ -301,12 +301,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 }
 
                 saveModel(item, modelSchema, sqlCommand, modelConflictStrategy);
-                @SuppressWarnings("unchecked")
-                // item.getClass() is Class<? extends Model>, builder wants Class<T>.
                 final StorageItemChange<T> change = StorageItemChange.<T>builder()
                     .changeId(item.getId())
                     .item(item)
-                    .itemClass((Class<T>) item.getClass())
+                    .modelSchema(modelSchema)
                     .type(type)
                     .predicate(predicate)
                     .initiator(initiator)
@@ -463,7 +461,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked") // item.getClass() has Class<?>, but we assume Class<T>
     @Override
     public <T extends Model> void delete(
             @NonNull T item,
@@ -525,7 +522,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final StorageItemChange<T> change = StorageItemChange.<T>builder()
                     .changeId(item.getId())
                     .item(item)
-                    .itemClass((Class<T>) item.getClass())
+                    .modelSchema(modelSchema)
                     .type(StorageItemChange.Type.DELETE)
                     .predicate(predicate)
                     .initiator(initiator)

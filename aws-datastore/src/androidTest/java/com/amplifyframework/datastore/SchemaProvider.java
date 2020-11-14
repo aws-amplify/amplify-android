@@ -15,6 +15,10 @@
 
 package com.amplifyframework.datastore;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
@@ -24,6 +28,7 @@ import com.amplifyframework.util.Immutable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -49,7 +54,10 @@ final class SchemaProvider implements ModelProvider {
      * @param schemas A variable-argument list of schema that the created provider should vend
      * @return A SchemaProvider
      */
-    static SchemaProvider of(String version, ModelSchema... schemas) {
+    @NonNull
+    static SchemaProvider of(@NonNull String version, @NonNull ModelSchema... schemas) {
+        Objects.requireNonNull(version);
+        Objects.requireNonNull(schemas);
         Map<String, ModelSchema> map = new HashMap<>();
         for (ModelSchema schema : schemas) {
             map.put(schema.getName(), schema);
@@ -63,7 +71,9 @@ final class SchemaProvider implements ModelProvider {
      * @param schemas A variable-argument list of schema that the created provider should vend
      * @return A SchemaProvider
      */
-    static SchemaProvider of(ModelSchema... schemas) {
+    @NonNull
+    static SchemaProvider of(@NonNull ModelSchema... schemas) {
+        Objects.requireNonNull(schemas);
         return of(randomVersion(), schemas);
     }
 
@@ -73,7 +83,9 @@ final class SchemaProvider implements ModelProvider {
      * @param modelOnlyProvider A provider which provides only models
      * @return A provider which provides only schema
      */
-    static SchemaProvider from(ModelProvider modelOnlyProvider) throws AmplifyException {
+    @NonNull
+    static SchemaProvider from(@NonNull ModelProvider modelOnlyProvider) throws AmplifyException {
+        Objects.requireNonNull(modelOnlyProvider);
         Map<String, ModelSchema> schemas = new HashMap<>();
         for (Class<? extends Model> clazz : modelOnlyProvider.models()) {
             ModelSchema schema = ModelSchema.fromModelClass(clazz);
@@ -104,5 +116,31 @@ final class SchemaProvider implements ModelProvider {
 
     private static String randomVersion() {
         return UUID.randomUUID().toString();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+        SchemaProvider that = (SchemaProvider) thatObject;
+        return this.version.equals(that.version) && this.schemas.equals(that.schemas);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(version, schemas);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "SchemaProvider{" +
+            "version='" + version + '\'' +
+            ", schemas=" + schemas +
+            '}';
     }
 }

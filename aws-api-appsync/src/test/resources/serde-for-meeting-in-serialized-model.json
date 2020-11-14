@@ -68,7 +68,7 @@
     },
     "associations": {},
     "indexes": {},
-    "modelClass": "com.amplifyframework.core.model.Model"
+    "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel"
   },
   "serializedData": {
     "date": "2020-11-05Z",

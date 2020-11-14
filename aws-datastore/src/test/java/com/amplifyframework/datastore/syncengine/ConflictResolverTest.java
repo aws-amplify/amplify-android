@@ -17,8 +17,10 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
@@ -50,15 +52,18 @@ import static org.mockito.Mockito.when;
 public final class ConflictResolverTest {
     private static final long TIMEOUT_SECONDS = 5;
 
+    private ModelSchema schema;
     private DataStoreConfigurationProvider configurationProvider;
     private AppSync appSync;
     private ConflictResolver resolver;
 
     /**
      * Arranges an {@link ConflictResolver} against which to run tests.
+     * @throws AmplifyException on failure to arrange schema
      */
     @Before
-    public void setup() {
+    public void setup() throws AmplifyException {
+        this.schema = ModelSchema.fromModelClass(BlogOwner.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
         this.appSync = mock(AppSync.class);
         this.resolver = new ConflictResolver(configurationProvider, appSync);
@@ -84,7 +89,7 @@ public final class ConflictResolverTest {
         BlogOwner localSusan = BlogOwner.builder()
             .name("Local Susan")
             .build();
-        PendingMutation<BlogOwner> mutation = PendingMutation.update(localSusan, BlogOwner.class);
+        PendingMutation<BlogOwner> mutation = PendingMutation.update(localSusan, schema);
 
         // Arrange some server data, that is in conflict
         BlogOwner serverSusan = localSusan.copyOfBuilder()
@@ -131,7 +136,7 @@ public final class ConflictResolverTest {
         BlogOwner localModel = BlogOwner.builder()
             .name("Local Blogger")
             .build();
-        PendingMutation<BlogOwner> mutation = PendingMutation.update(localModel, BlogOwner.class);
+        PendingMutation<BlogOwner> mutation = PendingMutation.update(localModel, schema);
 
         // Arrange server state for the model, in conflict to local data
         BlogOwner serverModel = localModel.copyOfBuilder()
@@ -176,7 +181,7 @@ public final class ConflictResolverTest {
         BlogOwner localModel = BlogOwner.builder()
             .name("Local model")
             .build();
-        PendingMutation<BlogOwner> mutation = PendingMutation.update(localModel, BlogOwner.class);
+        PendingMutation<BlogOwner> mutation = PendingMutation.update(localModel, schema);
 
         // Arrange a server model
         BlogOwner remoteModel = localModel.copyOfBuilder()

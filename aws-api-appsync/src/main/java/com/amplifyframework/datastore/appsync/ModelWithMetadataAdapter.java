@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.appsync;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.util.GsonObjectConverter;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -60,7 +61,15 @@ public final class ModelWithMetadataAdapter implements
             throw new JsonParseException("Expected a parameterized type during ModelWithMetadata deserialization.");
         }
 
-        Model model = context.deserialize(json, modelClassType);
+        final Model model;
+        if (modelClassType == SerializedModel.class) {
+            model = SerializedModel.builder()
+                .serializedData(GsonObjectConverter.toMap((JsonObject) json))
+                .modelSchema(null)
+                .build();
+        } else {
+            model = context.deserialize(json, modelClassType);
+        }
         ModelMetadata metadata = context.deserialize(json, ModelMetadata.class);
         return new ModelWithMetadata<>(model, metadata);
     }

@@ -35,7 +35,6 @@ import com.amplifyframework.datastore.appsync.SynchronousAppSync;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
-import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
@@ -82,8 +81,9 @@ import static org.junit.Assert.assertTrue;
     "https://gist.github.com/jamesonwilliams/c76169676cb99c51d997ef0817eb9278#quikscript-to-clear-appsync-tables"
 )
 public final class HybridCloudSyncInstrumentationTest {
-    private static final int TIMEOUT_SECONDS = 10;
+    private static final int TIMEOUT_SECONDS = 15;
 
+    private SchemaProvider schemaProvider;
     private SynchronousApi api;
     private SynchronousAppSync appSync;
     private SynchronousDataStore normalBehaviors;
@@ -116,11 +116,12 @@ public final class HybridCloudSyncInstrumentationTest {
         api = SynchronousApi.delegatingTo(apiCategory);
         appSync = SynchronousAppSync.using(AppSyncClient.via(apiCategory));
 
+        schemaProvider = SchemaLoader.loadFromAssetsDirectory("schemas/commentsblog");
         DataStoreCategory dataStoreCategory = DataStoreCategoryConfigurator.begin()
             .api(apiCategory)
             .clearDatabase(true)
             .context(context)
-            .modelProvider(SchemaProvider.from(AmplifyModelProvider.getInstance()))
+            .modelProvider(schemaProvider)
             .resourceId(configResourceId)
             .timeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .finish();
@@ -139,10 +140,8 @@ public final class HybridCloudSyncInstrumentationTest {
     @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Test
     public void serializedModelIsSyncedToCloud() throws AmplifyException {
-        // Arrange the schema for the mode class. Note: the hybrid platform
-        // has to build one piece by piece, they can't infer from BlogOwner.class
-        // we generate the schema this way since it saves us lots of work, in this test.
-        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        String modelName = BlogOwner.class.getSimpleName();
+        ModelSchema schema = schemaProvider.modelSchemas().get(modelName);
 
         // Some model -- we will use this to construct a SerializedModel that can be saved
         // and also to query for native models, the make sure that still works, after the save.
@@ -198,7 +197,8 @@ public final class HybridCloudSyncInstrumentationTest {
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Agent Texas")
             .build();
-        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        String modelName = BlogOwner.class.getSimpleName();
+        ModelSchema schema = schemaProvider.modelSchemas().get(modelName);
 
         HubAccumulator receiptAccumulator =
             HubAccumulator.create(HubChannel.DATASTORE, receiptOf(blogOwner), 1)

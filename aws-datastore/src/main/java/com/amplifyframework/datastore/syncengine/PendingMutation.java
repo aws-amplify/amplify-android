@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
@@ -42,19 +43,19 @@ import java.util.UUID;
 @SuppressWarnings("SameParameterValue")
 public final class PendingMutation<T extends Model> implements Comparable<PendingMutation<? extends Model>> {
     private final T mutatedItem;
-    private final Class<T> classOfMutatedItem;
+    private final ModelSchema modelSchema;
     private final Type mutationType;
     private final TimeBasedUuid mutationId;
-    private QueryPredicate predicate;
+    private final QueryPredicate predicate;
 
     private PendingMutation(TimeBasedUuid mutationId,
                             T mutatedItem,
-                            Class<T> classOfMutatedItem,
+                            ModelSchema modelSchema,
                             Type mutationType,
                             QueryPredicate predicate) {
         this.mutationId = mutationId;
         this.mutatedItem = mutatedItem;
-        this.classOfMutatedItem = classOfMutatedItem;
+        this.modelSchema = modelSchema;
         this.mutationType = mutationType;
         this.predicate = predicate;
     }
@@ -64,7 +65,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param mutationId A globally-unique, *time-based* ID for this mutation event;
      *                   the ID is used for temporal ordering of mutations
      * @param mutatedItem The item that undergone a mutation
-     * @param classOfMutatedItem The class of the item that has undergone mutation
+     * @param modelSchema Schema for model
      * @param mutationType Type of mutation
      * @param predicate A condition to be used when updating the remote store
      * @param <T> The type of the item that has undergone mutation
@@ -74,13 +75,13 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     static <T extends Model> PendingMutation<T> instance(
             @NonNull TimeBasedUuid mutationId,
             @NonNull T mutatedItem,
-            @NonNull Class<T> classOfMutatedItem,
+            @NonNull ModelSchema modelSchema,
             @NonNull Type mutationType,
             @NonNull QueryPredicate predicate) {
         return new PendingMutation<>(
             Objects.requireNonNull(mutationId),
             Objects.requireNonNull(mutatedItem),
-            Objects.requireNonNull(classOfMutatedItem),
+            Objects.requireNonNull(modelSchema),
             Objects.requireNonNull(mutationType),
             Objects.requireNonNull(predicate)
         );
@@ -89,86 +90,86 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     /**
      * Creates a {@link PendingMutation}, using a newly generated mutation ID.
      * @param mutatedItem The item that undergone a mutation
-     * @param classOfMutatedItem The class of the item that has undergone mutation
+     * @param modelSchema Model schema
      * @param mutationType Type of mutation
      * @param predicate A condition to be used when updating the remote store
-     * @param <T> The type of the item that has undergone mutation
+     * @param <T> The type of created model
      * @return A {@link PendingMutation}
      */
     @NonNull
-    static <T extends Model> PendingMutation<T> instance(@NonNull T mutatedItem,
-                                                          @NonNull Class<T> classOfMutatedItem,
-                                                          @NonNull Type mutationType,
-                                                          @NonNull QueryPredicate predicate) {
-        return instance(TimeBasedUuid.create(), mutatedItem, classOfMutatedItem, mutationType, predicate);
+    static <T extends Model> PendingMutation<T> instance(
+            @NonNull T mutatedItem,
+            @NonNull ModelSchema modelSchema,
+            @NonNull Type mutationType,
+            @NonNull QueryPredicate predicate) {
+        return instance(TimeBasedUuid.create(), mutatedItem, modelSchema, mutationType, predicate);
     }
 
     /**
      * Creates a {@link PendingMutation} that represents the creation of a model.
      * @param createdItem The model that was created
-     * @param classOfCreatedItem The class of the created model
+     * @param modelSchema Schema for model
      * @param <T> The type of created model
      * @return A PendingMutation representing the model creation
      */
     @NonNull
-    static <T extends Model> PendingMutation<T> creation(@NonNull T createdItem, @NonNull Class<T> classOfCreatedItem) {
-        return instance(createdItem, classOfCreatedItem, Type.CREATE, QueryPredicates.all());
+    static <T extends Model> PendingMutation<T> creation(
+            @NonNull T createdItem, @NonNull ModelSchema modelSchema) {
+        return instance(createdItem, modelSchema, Type.CREATE, QueryPredicates.all());
     }
 
     /**
      * Creates a {@link PendingMutation} that represents an update to a model.
      * @param updatedItem The model that was updated
-     * @param classOfUpdatedItem The class of the updated model
+     * @param modelSchema The schema for the updated model
      * @param <T> The type of updated model
      * @return A PendingMutation representing the model update
      */
     @NonNull
-    static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem,
-                                                       @NonNull Class<T> classOfUpdatedItem) {
-        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, QueryPredicates.all());
+    static <T extends Model> PendingMutation<T> update(
+            @NonNull T updatedItem, @NonNull ModelSchema modelSchema) {
+        return instance(updatedItem, modelSchema, Type.UPDATE, QueryPredicates.all());
     }
 
     /**
      * Creates a {@link PendingMutation} that represents an update to a model.
      * @param updatedItem The model that was updated
-     * @param classOfUpdatedItem The class of the updated model
+     * @param modelSchema The schema for the updated model
      * @param predicate A condition to be used when updating the remote store
      * @param <T> The type of updated model
      * @return A PendingMutation representing the model update
      */
     @NonNull
-    static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem,
-                                                       @NonNull Class<T> classOfUpdatedItem,
-                                                       @NonNull QueryPredicate predicate) {
-        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, predicate);
+    static <T extends Model> PendingMutation<T> update(
+            @NonNull T updatedItem, @NonNull ModelSchema modelSchema, @NonNull QueryPredicate predicate) {
+        return instance(updatedItem, modelSchema, Type.UPDATE, predicate);
     }
 
     /**
      * Creates a {@link PendingMutation} that represents the deletion of a model.
      * @param deletedItem The model that was deleted
-     * @param classOfDeletedItem The class of the deleted model
+     * @param modelSchema The schema of the deleted model
      * @param <T> The type of model that was deleted
      * @return A PendingMutation representing the model deletion
      */
     @NonNull
-    static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem,
-                                                         @NonNull Class<T> classOfDeletedItem) {
-        return instance(deletedItem, classOfDeletedItem, Type.DELETE, QueryPredicates.all());
+    static <T extends Model> PendingMutation<T> deletion(
+            @NonNull T deletedItem, @NonNull ModelSchema modelSchema) {
+        return instance(deletedItem, modelSchema, Type.DELETE, QueryPredicates.all());
     }
 
     /**
      * Creates a {@link PendingMutation} that represents the deletion of a model.
      * @param deletedItem The model that was deleted
-     * @param classOfDeletedItem The class of the deleted model
+     * @param modelSchema The schema of the deleted model
      * @param <T> The type of model that was deleted
      * @param predicate A condition to be used when updating the remote store
      * @return A PendingMutation representing the model deletion
      */
     @NonNull
-    static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem,
-                                                         @NonNull Class<T> classOfDeletedItem,
-                                                         @NonNull QueryPredicate predicate) {
-        return instance(deletedItem, classOfDeletedItem, Type.DELETE, predicate);
+    static <T extends Model> PendingMutation<T> deletion(
+            @NonNull T deletedItem, @NonNull ModelSchema modelSchema, @NonNull QueryPredicate predicate) {
+        return instance(deletedItem, modelSchema, Type.DELETE, predicate);
     }
 
     /**
@@ -190,12 +191,12 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     }
 
     /**
-     * Gets the class of the item that been mutated.
-     * @return Class of the item that has been mutated
+     * Gets the schema of the item that been mutated.
+     * @return Schema of the item that has been mutated
      */
     @NonNull
-    Class<T> getClassOfMutatedItem() {
-        return classOfMutatedItem;
+    ModelSchema getModelSchema() {
+        return modelSchema;
     }
 
     /**
@@ -225,7 +226,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
 
         return ObjectsCompat.equals(mutationId, that.mutationId) &&
             ObjectsCompat.equals(mutatedItem, that.mutatedItem) &&
-            ObjectsCompat.equals(classOfMutatedItem, that.classOfMutatedItem) &&
+            ObjectsCompat.equals(modelSchema, that.modelSchema) &&
             ObjectsCompat.equals(mutationType, that.mutationType) &&
             ObjectsCompat.equals(predicate, that.predicate);
     }
@@ -234,7 +235,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     public int hashCode() {
         int result = mutationId.hashCode();
         result = 31 * result + mutatedItem.hashCode();
-        result = 31 * result + classOfMutatedItem.hashCode();
+        result = 31 * result + modelSchema.hashCode();
         result = 31 * result + mutationType.hashCode();
         result = 31 * result + predicate.hashCode();
         return result;
@@ -245,7 +246,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     public String toString() {
         return "PendingMutation{" +
             "mutatedItem=" + mutatedItem +
-            ", classOfMutatedItem=" + classOfMutatedItem +
+            ", modelSchema=" + modelSchema +
             ", mutationType=" + mutationType +
             ", mutationId=" + mutationId +
             ", predicate=" + predicate +
@@ -332,7 +333,6 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          * @return The ID of the model, that would be returned if that model were
          *         extracted from the record, and {@link Model#getId()} were called. on it.
          */
-        @SuppressWarnings("unused")
         @NonNull
         String getContainedModelId() {
             return this.containedModelId;

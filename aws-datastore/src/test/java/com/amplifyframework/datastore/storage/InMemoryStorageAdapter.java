@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
@@ -65,7 +66,6 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     ) {
     }
 
-    @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
     public <T extends Model> void save(
             @NonNull final T item,
@@ -88,11 +88,19 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
                 items.remove(index);
             }
         }
-
+        final ModelSchema schema;
+        try {
+            schema = ModelSchema.fromModelClass(item.getClass());
+        } catch (AmplifyException schemaBuildFailure) {
+            onError.accept(new DataStoreException(
+                "Failed to build model schema.", schemaBuildFailure, "Verify your model."
+            ));
+            return;
+        }
         items.add(item);
         StorageItemChange<T> change = StorageItemChange.<T>builder()
             .item(item)
-            .itemClass((Class<T>) item.getClass())
+            .modelSchema(schema)
             .type(type)
             .predicate(predicate)
             .initiator(initiator)
@@ -163,6 +171,15 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         }
         Model savedItem = items.remove(index);
 
+        final ModelSchema schema;
+        try {
+            schema = ModelSchema.fromModelClass(item.getClass());
+        } catch (AmplifyException schemaBuildFailure) {
+            onError.accept(new DataStoreException(
+                "Failed to build model schema.", schemaBuildFailure, "Verify your model."
+            ));
+            return;
+        }
         if (!predicate.evaluate(savedItem)) {
             onError.accept(new DataStoreException(
                     "Conditional check failed.",
@@ -171,7 +188,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         }
         StorageItemChange<T> deletion = StorageItemChange.<T>builder()
             .item((T) savedItem)
-            .itemClass((Class<T>) savedItem.getClass())
+            .modelSchema(schema)
             .type(StorageItemChange.Type.DELETE)
             .predicate(predicate)
             .initiator(initiator)

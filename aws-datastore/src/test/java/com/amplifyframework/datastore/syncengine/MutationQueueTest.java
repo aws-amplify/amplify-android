@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Before;
@@ -31,14 +33,16 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class MutationQueueTest {
-
+    private ModelSchema schema;
     private MutationQueue mutationQueue;
 
     /**
      * Set up the object under test.
+     * @throws AmplifyException On failure to arrange model schema
      */
     @Before
-    public void setup() {
+    public void setup() throws AmplifyException {
+        schema = ModelSchema.fromModelClass(BlogOwner.class);
         mutationQueue = new MutationQueue();
     }
 
@@ -52,7 +56,7 @@ public final class MutationQueueTest {
         BlogOwner qing = BlogOwner.builder()
                 .name("Qing Zhong")
                 .build();
-        PendingMutation<BlogOwner> createQing = PendingMutation.creation(qing, BlogOwner.class);
+        PendingMutation<BlogOwner> createQing = PendingMutation.creation(qing, schema);
         mutationQueue.add(createQing);
 
         assertEquals(mutationQueue.size(), 1);
@@ -71,7 +75,7 @@ public final class MutationQueueTest {
         BlogOwner qing = BlogOwner.builder()
                 .name("Qing Zhong")
                 .build();
-        PendingMutation<BlogOwner> createQing = PendingMutation.creation(qing, BlogOwner.class);
+        PendingMutation<BlogOwner> createQing = PendingMutation.creation(qing, schema);
         mutationQueue.add(createQing);
         assertEquals(mutationQueue.size(), 1);
         mutationQueue.remove(createQing);
@@ -89,7 +93,7 @@ public final class MutationQueueTest {
         BlogOwner qing = BlogOwner.builder()
                 .name("Qing Zhong")
                 .build();
-        PendingMutation<BlogOwner> createQing = PendingMutation.creation(qing, BlogOwner.class);
+        PendingMutation<BlogOwner> createQing = PendingMutation.creation(qing, schema);
 
         mutationQueue.add(createQing);
         assertEquals(mutationQueue.size(), 1);
@@ -107,12 +111,12 @@ public final class MutationQueueTest {
         BlogOwner qing = BlogOwner.builder()
                 .name("Qing Zhong")
                 .build();
-        PendingMutation<BlogOwner> createQing = PendingMutation.creation(qing, BlogOwner.class);
+        PendingMutation<BlogOwner> createQing = PendingMutation.creation(qing, schema);
 
         BlogOwner tony = BlogOwner.builder()
                 .name("The Real Papa Tony")
                 .build();
-        PendingMutation<BlogOwner> createTony = PendingMutation.creation(tony, BlogOwner.class);
+        PendingMutation<BlogOwner> createTony = PendingMutation.creation(tony, schema);
 
         mutationQueue.add(createQing);
         mutationQueue.add(createTony);

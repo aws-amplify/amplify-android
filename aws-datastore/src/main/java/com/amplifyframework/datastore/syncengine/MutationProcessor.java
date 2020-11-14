@@ -276,6 +276,7 @@ final class MutationProcessor {
      *         the MutationProcessor should apply this data into the local store,
      *         in a later step.
      */
+    @SuppressWarnings("unchecked")
     private <T extends Model> Single<ModelWithMetadata<T>> handleResponseErrors(
             PendingMutation<T> pendingMutation,
             List<GraphQLResponse.Error> errors) {
@@ -283,7 +284,7 @@ final class MutationProcessor {
         // due to ConflictUnhandled. If so, invoke our user-provided handler
         // to try and recover. We don't know how to resolve other types of errors,
         // so we just bubble those out in a DataStoreException.
-        Class<T> modelClazz = pendingMutation.getClassOfMutatedItem();
+        Class<T> modelClazz = (Class<T>) pendingMutation.getModelSchema().getModelClass();
         AppSyncConflictUnhandledError<T> unhandledConflict =
             AppSyncConflictUnhandledError.findFirst(modelClazz, errors);
         if (unhandledConflict == null) {

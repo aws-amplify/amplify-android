@@ -19,6 +19,7 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 
 import java.util.Objects;
@@ -30,12 +31,12 @@ import java.util.Objects;
  */
 final class SubscriptionEvent<T extends Model> {
     private final ModelWithMetadata<T> modelWithMetadata;
-    private final Class<T> modelClass;
+    private final ModelSchema modelSchema;
     private final Type type;
 
-    private SubscriptionEvent(ModelWithMetadata<T> modelWithMetadata, Class<T> modelClass, Type type) {
+    private SubscriptionEvent(ModelWithMetadata<T> modelWithMetadata, ModelSchema modelSchema, Type type) {
         this.modelWithMetadata = modelWithMetadata;
-        this.modelClass = modelClass;
+        this.modelSchema = modelSchema;
         this.type = type;
     }
 
@@ -44,13 +45,11 @@ final class SubscriptionEvent<T extends Model> {
         return modelWithMetadata;
     }
 
-    @SuppressWarnings("unused")
     @NonNull
-    Class<T> modelClass() {
-        return modelClass;
+    ModelSchema modelSchema() {
+        return modelSchema;
     }
 
-    @SuppressWarnings("unused")
     @NonNull
     Type type() {
         return type;
@@ -63,7 +62,7 @@ final class SubscriptionEvent<T extends Model> {
 
     static final class Builder<T extends Model> {
         private ModelWithMetadata<T> modelWithMetadata;
-        private Class<T> modelClass;
+        private ModelSchema modelSchema;
         private Type type;
 
         @NonNull
@@ -73,8 +72,8 @@ final class SubscriptionEvent<T extends Model> {
         }
 
         @NonNull
-        Builder<T> modelClass(@NonNull Class<T> modelClass) {
-            this.modelClass = Objects.requireNonNull(modelClass);
+        Builder<T> modelSchema(@NonNull ModelSchema modelSchema) {
+            this.modelSchema = Objects.requireNonNull(modelSchema);
             return this;
         }
 
@@ -87,7 +86,7 @@ final class SubscriptionEvent<T extends Model> {
         @SuppressLint("SyntheticAccessor")
         @NonNull
         SubscriptionEvent<T> build() {
-            return new SubscriptionEvent<>(modelWithMetadata, modelClass, type);
+            return new SubscriptionEvent<>(modelWithMetadata, modelSchema, type);
         }
     }
 
