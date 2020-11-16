@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreConfiguration.ConfigKey;
 import com.amplifyframework.datastore.DataStoreConflictHandler.AlwaysApplyRemoteHandler;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -100,7 +101,7 @@ public final class DataStoreConfigurationTest {
         DummyConflictHandler dummyConflictHandler = new DummyConflictHandler();
         DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
 
-        DataStoreSyncExpression syncExpression = () -> BlogOwner.ID.beginsWith("a");
+        DataStoreSyncExpression syncExpression = () -> BlogOwner.ID.beginsWith(RandomString.string());
         DataStoreConfiguration configObject = DataStoreConfiguration
             .builder()
             .syncMaxRecords(expectedSyncMaxRecords)

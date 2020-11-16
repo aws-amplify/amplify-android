@@ -26,6 +26,7 @@ import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
 import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
 import com.amplifyframework.core.model.query.predicate.ContainsQueryOperator;
@@ -101,8 +102,7 @@ final class AppSyncRequestFactory {
                 builder.variable("limit", "Int", limit);
             }
             if (!QueryPredicates.all().equals(predicate)) {
-                String modelName = ModelSchema.fromModelClass(modelClass).getName();
-                String filterType = "Model" + Casing.capitalizeFirst(modelName) + "FilterInput";
+                String filterType = "Model" + Casing.capitalizeFirst(modelClass.getSimpleName()) + "FilterInput";
                 builder.variable("filter", filterType, parsePredicate(predicate));
             }
             return builder.build();

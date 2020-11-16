@@ -79,10 +79,10 @@ final class SubscriptionProcessor {
      * @param builder A SubscriptionProcessor Builder.
      */
     private SubscriptionProcessor(Builder builder) {
-        this.appSync = Objects.requireNonNull(builder.appSync);
-        this.modelProvider = Objects.requireNonNull(builder.modelProvider);
-        this.merger = Objects.requireNonNull(builder.merger);
-        this.dataStoreConfigurationProvider = Objects.requireNonNull(builder.dataStoreConfigurationProvider);
+        this.appSync = builder.appSync;
+        this.modelProvider = builder.modelProvider;
+        this.merger = builder.merger;
+        this.dataStoreConfigurationProvider = builder.dataStoreConfigurationProvider;
         this.ongoingOperationsDisposable = new CompositeDisposable();
 
         // Operation times out after 10 seconds. If there are more than 5 models,
@@ -346,7 +346,7 @@ final class SubscriptionProcessor {
         @NonNull
         @Override
         public BuildStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfigurationProvider) {
-            this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
+            this.dataStoreConfigurationProvider = Objects.requireNonNull(dataStoreConfigurationProvider);
             return Builder.this;
         }
 
