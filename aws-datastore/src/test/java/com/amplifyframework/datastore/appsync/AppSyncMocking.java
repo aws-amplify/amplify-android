@@ -37,7 +37,6 @@ import com.amplifyframework.testutils.Varargs;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.mockito.ArgumentMatcher;
-import org.mockito.stubbing.Answer;
 import org.mockito.stubbing.Stubber;
 
 import java.util.Arrays;
