@@ -282,10 +282,10 @@ public final class RxStorageBindingTest {
                                      anyConsumer());
 
         rxStorage
-            .uploadFile(remoteKey, localFile)
-            .observeResult()
-            .test()
-            .assertError(error);
+                .uploadFile(remoteKey, localFile)
+                .observeResult()
+                .test()
+                .assertError(error);
     }
 
     /**
@@ -303,11 +303,11 @@ public final class RxStorageBindingTest {
             errorConsumer.accept(error);
             return mock(StorageUploadInputStreamOperation.class);
         }).when(delegate).uploadInputStream(eq(remoteKey),
-                eq(localInputStream),
-                any(StorageUploadInputStreamOptions.class),
-                anyConsumer(),
-                anyConsumer(),
-                anyConsumer());
+                                            eq(localInputStream),
+                                            any(StorageUploadInputStreamOptions.class),
+                                            anyConsumer(),
+                                            anyConsumer(),
+                                            anyConsumer());
 
         rxStorage
                 .uploadInputStream(remoteKey, localInputStream)
