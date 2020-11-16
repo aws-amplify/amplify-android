@@ -86,7 +86,8 @@ public final class SubscriptionProcessorTest {
         this.modelSchemas = sortedModels(modelProvider);
         this.appSync = mock(AppSync.class);
         this.merger = mock(Merger.class);
-        this.subscriptionProcessor = SubscriptionProcessor.builder().appSync(appSync)
+        this.subscriptionProcessor = SubscriptionProcessor.builder()
+                .appSync(appSync)
                 .modelProvider(modelProvider)
                 .merger(merger)
                 .dataStoreConfigurationProvider(() -> DataStoreConfiguration.builder()
