@@ -214,7 +214,7 @@ final class SyncProcessor {
         final Long lastSyncTimeAsLong = syncTime.exists() ? syncTime.toLong() : null;
         final Integer syncPageSize = dataStoreConfigurationProvider.getConfiguration().getSyncPageSize();
         QueryPredicate predicate =
-                dataStoreConfigurationProvider.getConfiguration().getSyncQueryPredicate(schema.getModelClass());
+                dataStoreConfigurationProvider.getConfiguration().getSyncQueryPredicate(schema.getName());
         // Create a BehaviorProcessor, and set the default value to a GraphQLRequest that fetches the first page.
         BehaviorProcessor<GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>> processor =
                 BehaviorProcessor.createDefault(

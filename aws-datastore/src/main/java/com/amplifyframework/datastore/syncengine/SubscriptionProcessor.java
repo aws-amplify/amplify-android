@@ -214,8 +214,8 @@ final class SubscriptionProcessor {
         .observeOn(Schedulers.io())
         .map(SubscriptionProcessor::unwrapResponse)
         .filter(modelWithMetadata -> {
-            Class<? extends Model> clazz = modelSchema.getModelClass();
-            QueryPredicate predicate = dataStoreConfigurationProvider.getConfiguration().getSyncQueryPredicate(clazz);
+            QueryPredicate predicate =
+                    dataStoreConfigurationProvider.getConfiguration().getSyncQueryPredicate(modelSchema.getName());
             return predicate.evaluate(modelWithMetadata.getModel());
         })
         .map(modelWithMetadata -> SubscriptionEvent.<T>builder()

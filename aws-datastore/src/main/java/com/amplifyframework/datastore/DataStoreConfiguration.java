@@ -50,7 +50,7 @@ public final class DataStoreConfiguration {
     private final DataStoreConflictHandler conflictHandler;
     private final Integer syncMaxRecords;
     private final Integer syncPageSize;
-    private final Map<Class<? extends Model>, DataStoreSyncExpression> syncExpressions;
+    private final Map<String, DataStoreSyncExpression> syncExpressions;
     private final Long syncIntervalInMinutes;
 
     private DataStoreConfiguration(Builder builder) {
@@ -179,12 +179,12 @@ public final class DataStoreConfiguration {
     /**
      * Returns a QueryPredicate that should be used to filter data received from AppSync,
      * either during a base sync or over the real-time subscription.
-     * @param modelClass Class of the {@link Model}.
+     * @param modelName class name of the {@link Model}.
      * @return a QueryPredicate that should be used to filter the data received from AppSync
      */
     @NonNull
-    public QueryPredicate getSyncQueryPredicate(Class<? extends Model> modelClass) {
-        DataStoreSyncExpression expression = syncExpressions.get(modelClass);
+    public QueryPredicate getSyncQueryPredicate(String modelName) {
+        DataStoreSyncExpression expression = syncExpressions.get(modelName);
         if (expression != null) {
             return expression.resolvePredicate();
         }
@@ -196,7 +196,7 @@ public final class DataStoreConfiguration {
      * @return the Map of all {@link DataStoreSyncExpression}s used for filtering the data that is synced.
      */
     @NonNull
-    public Map<Class<? extends Model>, DataStoreSyncExpression> getSyncExpressions() {
+    public Map<String, DataStoreSyncExpression> getSyncExpressions() {
         return this.syncExpressions;
     }
 
@@ -263,7 +263,7 @@ public final class DataStoreConfiguration {
         private Long syncIntervalInMinutes;
         private Integer syncMaxRecords;
         private Integer syncPageSize;
-        private Map<Class<? extends Model>, DataStoreSyncExpression> syncExpressions;
+        private Map<String, DataStoreSyncExpression> syncExpressions;
         private boolean ensureDefaults;
         private JSONObject pluginJson;
         private DataStoreConfiguration userProvidedConfiguration;
@@ -351,7 +351,7 @@ public final class DataStoreConfiguration {
         public Builder syncExpression(@NonNull Class<? extends Model> modelClass,
                                       @NonNull DataStoreSyncExpression syncExpression) {
             this.syncExpressions.put(
-                    Objects.requireNonNull(modelClass),
+                    Objects.requireNonNull(modelClass).getSimpleName(),
                     Objects.requireNonNull(syncExpression)
             );
             return Builder.this;
