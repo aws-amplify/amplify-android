@@ -22,8 +22,6 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -177,23 +175,9 @@ public final class DataStoreConfiguration {
     }
 
     /**
-     * Returns a QueryPredicate that should be used to filter data received from AppSync,
-     * either during a base sync or over the real-time subscription.
-     * @param modelName class name of the {@link Model}.
-     * @return a QueryPredicate that should be used to filter the data received from AppSync
-     */
-    @NonNull
-    public QueryPredicate getSyncQueryPredicate(String modelName) {
-        DataStoreSyncExpression expression = syncExpressions.get(modelName);
-        if (expression != null) {
-            return expression.resolvePredicate();
-        }
-        return QueryPredicates.all();
-    }
-
-    /**
-     * Returns the Map of all {@link DataStoreSyncExpression}s used for filtering the data that is synced.
-     * @return the Map of all {@link DataStoreSyncExpression}s used for filtering the data that is synced.
+     * Returns the Map of all {@link DataStoreSyncExpression}s used to filter data received from AppSync, either during
+     * a sync or over the real-time subscription.
+     * @return the Map of all {@link DataStoreSyncExpression}s.
      */
     @NonNull
     public Map<String, DataStoreSyncExpression> getSyncExpressions() {

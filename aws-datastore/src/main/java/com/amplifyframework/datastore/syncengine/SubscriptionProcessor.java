@@ -31,7 +31,6 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
-import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions;
@@ -69,7 +68,7 @@ final class SubscriptionProcessor {
     private final AppSync appSync;
     private final ModelProvider modelProvider;
     private final Merger merger;
-    private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
+    private final QueryPredicateProvider queryPredicateProvider;
     private final CompositeDisposable ongoingOperationsDisposable;
     private final long adjustedTimeoutSeconds;
     private ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
@@ -82,7 +81,7 @@ final class SubscriptionProcessor {
         this.appSync = builder.appSync;
         this.modelProvider = builder.modelProvider;
         this.merger = builder.merger;
-        this.dataStoreConfigurationProvider = builder.dataStoreConfigurationProvider;
+        this.queryPredicateProvider = builder.queryPredicateProvider;
         this.ongoingOperationsDisposable = new CompositeDisposable();
 
         // Operation times out after 10 seconds. If there are more than 5 models,
@@ -214,8 +213,7 @@ final class SubscriptionProcessor {
         .observeOn(Schedulers.io())
         .map(SubscriptionProcessor::unwrapResponse)
         .filter(modelWithMetadata -> {
-            QueryPredicate predicate =
-                    dataStoreConfigurationProvider.getConfiguration().getSyncQueryPredicate(modelSchema.getName());
+            QueryPredicate predicate = queryPredicateProvider.getPredicate(modelSchema.getName());
             return predicate.evaluate(modelWithMetadata.getModel());
         })
         .map(modelWithMetadata -> SubscriptionEvent.<T>builder()
@@ -316,11 +314,11 @@ final class SubscriptionProcessor {
      * Builds instances of {@link SubscriptionProcessor}s.
      */
     public static final class Builder implements AppSyncStep, ModelProviderStep, MergerStep,
-            DataStoreConfigurationProviderStep, BuildStep {
+            QueryPredicateProviderStep, BuildStep {
         private AppSync appSync;
         private ModelProvider modelProvider;
         private Merger merger;
-        private DataStoreConfigurationProvider dataStoreConfigurationProvider;
+        private QueryPredicateProvider queryPredicateProvider;
 
         @NonNull
         @Override
@@ -338,15 +336,15 @@ final class SubscriptionProcessor {
 
         @NonNull
         @Override
-        public DataStoreConfigurationProviderStep merger(@NonNull Merger merger) {
+        public QueryPredicateProviderStep merger(@NonNull Merger merger) {
             this.merger = Objects.requireNonNull(merger);
             return Builder.this;
         }
 
         @NonNull
         @Override
-        public BuildStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfigurationProvider) {
-            this.dataStoreConfigurationProvider = Objects.requireNonNull(dataStoreConfigurationProvider);
+        public BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
+            this.queryPredicateProvider = Objects.requireNonNull(queryPredicateProvider);
             return Builder.this;
         }
 
@@ -369,12 +367,12 @@ final class SubscriptionProcessor {
 
     interface MergerStep {
         @NonNull
-        DataStoreConfigurationProviderStep merger(@NonNull Merger merger);
+        QueryPredicateProviderStep merger(@NonNull Merger merger);
     }
 
-    interface DataStoreConfigurationProviderStep {
+    interface QueryPredicateProviderStep {
         @NonNull
-        BuildStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfiguration);
+        BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
     }
 
     interface BuildStep {

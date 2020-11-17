@@ -60,6 +60,7 @@ public final class Orchestrator {
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
     private final MutationProcessor mutationProcessor;
+    private final QueryPredicateProvider queryPredicateProvider;
     private final StorageObserver storageObserver;
     private final Supplier<Mode> targetMode;
     private final AtomicReference<Mode> currentMode;
@@ -103,6 +104,7 @@ public final class Orchestrator {
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
         ConflictResolver conflictResolver = new ConflictResolver(dataStoreConfigurationProvider, appSync);
+        this.queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
 
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
@@ -119,12 +121,13 @@ public final class Orchestrator {
             .appSync(appSync)
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
+            .queryPredicateProvider(queryPredicateProvider)
             .build();
         this.subscriptionProcessor = SubscriptionProcessor.builder()
                 .appSync(appSync)
                 .modelProvider(modelProvider)
                 .merger(merger)
-                .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
+                .queryPredicateProvider(queryPredicateProvider)
                 .build();
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
         this.currentMode = new AtomicReference<>(Mode.STOPPED);
@@ -336,6 +339,11 @@ public final class Orchestrator {
     private Completable startApiSync() {
         return Completable.create(emitter -> {
             LOG.info("Starting API synchronization mode.");
+
+            // Resolve any client provided DataStoreSyncExpressions, before starting sync and subscriptions, once each
+            // time DataStore starts.  The QueryPredicateProvider caches the resolved QueryPredicates, which are then
+            // used to filter data received from AppSync.
+            queryPredicateProvider.resolvePredicates();
 
             subscriptionProcessor.startSubscriptions();
 

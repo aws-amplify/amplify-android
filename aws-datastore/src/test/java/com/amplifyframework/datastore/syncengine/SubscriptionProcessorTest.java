@@ -77,22 +77,26 @@ public final class SubscriptionProcessorTest {
 
     /**
      * Sets up an {@link SubscriptionProcessor} and associated test dependencies.
+     * @throws DataStoreException on error building the {@link DataStoreConfiguration}
      */
     @Before
-    public void setup() {
+    public void setup() throws DataStoreException {
         ModelProvider modelProvider = AmplifyModelProvider.getInstance();
         modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.register(modelProvider.modelSchemas());
         this.modelSchemas = sortedModels(modelProvider);
         this.appSync = mock(AppSync.class);
         this.merger = mock(Merger.class);
+        DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.builder()
+                .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("John"))
+                .build();
+        QueryPredicateProvider queryPredicateProvider = new QueryPredicateProvider(() -> dataStoreConfiguration);
+        queryPredicateProvider.resolvePredicates();
         this.subscriptionProcessor = SubscriptionProcessor.builder()
                 .appSync(appSync)
                 .modelProvider(modelProvider)
                 .merger(merger)
-                .dataStoreConfigurationProvider(() -> DataStoreConfiguration.builder()
-                        .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("John"))
-                        .build())
+                .queryPredicateProvider(queryPredicateProvider)
                 .build();
     }
 

@@ -123,7 +123,7 @@ public final class DataStoreConfigurationTest {
 
         assertEquals(dummyConflictHandler, dataStoreConfiguration.getConflictHandler());
         assertEquals(errorHandler, dataStoreConfiguration.getErrorHandler());
-        assertEquals(Collections.singletonMap(BlogOwner.class, syncExpression),
+        assertEquals(Collections.singletonMap(BlogOwner.class.getSimpleName(), syncExpression),
                 dataStoreConfiguration.getSyncExpressions());
     }
 

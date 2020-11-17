@@ -69,20 +69,16 @@ final class SyncProcessor {
     private final Merger merger;
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
     private final String[] modelNames;
+    private final QueryPredicateProvider queryPredicateProvider;
 
-    private SyncProcessor(
-            ModelProvider modelProvider,
-            ModelSchemaRegistry modelSchemaRegistry,
-            SyncTimeRegistry syncTimeRegistry,
-            AppSync appSync,
-            Merger merger,
-            DataStoreConfigurationProvider dataStoreConfigurationProvider) {
-        this.modelProvider = Objects.requireNonNull(modelProvider);
-        this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
-        this.syncTimeRegistry = Objects.requireNonNull(syncTimeRegistry);
-        this.appSync = Objects.requireNonNull(appSync);
-        this.merger = Objects.requireNonNull(merger);
-        this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
+    private SyncProcessor(Builder builder) {
+        this.modelProvider = builder.modelProvider;
+        this.modelSchemaRegistry = builder.modelSchemaRegistry;
+        this.syncTimeRegistry = builder.syncTimeRegistry;
+        this.appSync = builder.appSync;
+        this.merger = builder.merger;
+        this.dataStoreConfigurationProvider = builder.dataStoreConfigurationProvider;
+        this.queryPredicateProvider = builder.queryPredicateProvider;
         this.modelNames =
             ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
                 .toArray(new String[0]);
@@ -213,8 +209,7 @@ final class SyncProcessor {
             throws DataStoreException {
         final Long lastSyncTimeAsLong = syncTime.exists() ? syncTime.toLong() : null;
         final Integer syncPageSize = dataStoreConfigurationProvider.getConfiguration().getSyncPageSize();
-        QueryPredicate predicate =
-                dataStoreConfigurationProvider.getConfiguration().getSyncQueryPredicate(schema.getName());
+        QueryPredicate predicate = queryPredicateProvider.getPredicate(schema.getName());
         // Create a BehaviorProcessor, and set the default value to a GraphQLRequest that fetches the first page.
         BehaviorProcessor<GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>> processor =
                 BehaviorProcessor.createDefault(
@@ -265,13 +260,15 @@ final class SyncProcessor {
      * Builds instances of {@link SyncProcessor}s.
      */
     public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep,
-            SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep, BuildStep {
+            SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep,
+            QueryPredicateProviderStep, BuildStep {
         private ModelProvider modelProvider;
         private ModelSchemaRegistry modelSchemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
         private AppSync appSync;
         private Merger merger;
         private DataStoreConfigurationProvider dataStoreConfigurationProvider;
+        private QueryPredicateProvider queryPredicateProvider;
 
         @NonNull
         @Override
@@ -310,7 +307,7 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BuildStep dataStoreConfigurationProvider(
+        public QueryPredicateProviderStep dataStoreConfigurationProvider(
             DataStoreConfigurationProvider dataStoreConfigurationProvider) {
             this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
             return Builder.this;
@@ -318,15 +315,15 @@ final class SyncProcessor {
 
         @NonNull
         @Override
+        public BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
+            this.queryPredicateProvider = Objects.requireNonNull(queryPredicateProvider);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
         public SyncProcessor build() {
-            return new SyncProcessor(
-                modelProvider,
-                modelSchemaRegistry,
-                syncTimeRegistry,
-                appSync,
-                merger,
-                dataStoreConfigurationProvider
-            );
+            return new SyncProcessor(this);
         }
     }
 
@@ -357,7 +354,13 @@ final class SyncProcessor {
 
     interface DataStoreConfigurationProviderStep {
         @NonNull
-        BuildStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfiguration);
+        QueryPredicateProviderStep dataStoreConfigurationProvider(
+                DataStoreConfigurationProvider dataStoreConfiguration);
+    }
+
+    interface QueryPredicateProviderStep {
+        @NonNull
+        BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
     }
 
     interface BuildStep {
