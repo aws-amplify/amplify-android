@@ -54,8 +54,7 @@ import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
-import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
-import com.amplifyframework.storage.s3.request.AWSS3StorageUploadInputStreamRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 import com.amplifyframework.storage.s3.service.StorageService;
 
@@ -313,7 +312,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        AWSS3StorageUploadFileRequest request = new AWSS3StorageUploadFileRequest(
+        AWSS3StorageUploadRequest<File> request = new AWSS3StorageUploadRequest<>(
                 key,
                 local,
                 options.getAccessLevel() != null
@@ -369,7 +368,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        AWSS3StorageUploadInputStreamRequest request = new AWSS3StorageUploadInputStreamRequest(
+        AWSS3StorageUploadRequest<InputStream> request = new AWSS3StorageUploadRequest<>(
                 key,
                 local,
                 options.getAccessLevel() != null

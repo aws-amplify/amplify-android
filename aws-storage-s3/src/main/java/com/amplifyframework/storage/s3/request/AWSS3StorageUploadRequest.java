@@ -27,8 +27,9 @@ import java.util.Map;
 /**
  * Parameters to provide to S3 that describe a request to upload.
  */
-public class AWSS3StorageUploadRequest {
+public final class AWSS3StorageUploadRequest<L> {
     private final String key;
+    private final L local;
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final String contentType;
@@ -38,6 +39,7 @@ public class AWSS3StorageUploadRequest {
     /**
      * Constructs a new AWSS3StorageUploadRequest.
      * @param key key for item to upload
+     * @param local object to upload (e.g. File or InputStream)
      * @param accessLevel Storage access level
      * @param targetIdentityId If set, this should override the current user's identity ID.
      *                         If null, the operation will fetch the current identity ID.
@@ -47,6 +49,7 @@ public class AWSS3StorageUploadRequest {
      */
     public AWSS3StorageUploadRequest(
             @NonNull String key,
+            @NonNull L local,
             @NonNull StorageAccessLevel accessLevel,
             @Nullable String targetIdentityId,
             @Nullable String contentType,
@@ -54,6 +57,7 @@ public class AWSS3StorageUploadRequest {
             @Nullable Map<String, String> metadata
     ) {
         this.key = key;
+        this.local = local;
         this.accessLevel = accessLevel;
         this.targetIdentityId = targetIdentityId;
         this.contentType = contentType;
@@ -71,6 +75,15 @@ public class AWSS3StorageUploadRequest {
     @NonNull
     public String getKey() {
         return key;
+    }
+
+    /**
+     * Returns the local object to be uploaded (e.g. File or InputStream).
+     * @return the local object to be uploaded (e.g. File or InputStream).
+     */
+    @NonNull
+    public L getLocal() {
+        return local;
     }
 
     /**
