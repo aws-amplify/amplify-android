@@ -29,7 +29,7 @@ import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
-import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3Keys;
 
@@ -44,7 +44,7 @@ import java.util.Objects;
 /**
  * An operation to upload a file from AWS S3.
  */
-public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation<AWSS3StorageUploadFileRequest> {
+public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation<AWSS3StorageUploadRequest<File>> {
     private final StorageService storageService;
     private final CognitoAuthProvider cognitoAuthProvider;
     private final Consumer<StorageTransferProgress> onProgress;
@@ -64,7 +64,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
     public AWSS3StorageUploadFileOperation(
             @NonNull StorageService storageService,
             @NonNull CognitoAuthProvider cognitoAuthProvider,
-            @NonNull AWSS3StorageUploadFileRequest request,
+            @NonNull AWSS3StorageUploadRequest<File> request,
             @NonNull Consumer<StorageTransferProgress> onProgress,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
