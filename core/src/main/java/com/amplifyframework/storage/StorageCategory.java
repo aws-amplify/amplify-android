@@ -38,6 +38,7 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
 import java.io.File;
 import java.io.InputStream;
@@ -151,7 +152,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     public StorageUploadInputStreamOperation<?> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
-            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         return getSelectedPlugin().uploadInputStream(key, local, onSuccess, onError);
@@ -163,7 +164,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull String key,
             @NonNull InputStream local,
             @NonNull StorageUploadInputStreamOptions options,
-            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         return getSelectedPlugin().uploadInputStream(key, local, options, onSuccess, onError);
@@ -176,7 +177,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull InputStream local,
             @NonNull StorageUploadInputStreamOptions options,
             @NonNull Consumer<StorageTransferProgress> onProgress,
-            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         return getSelectedPlugin().uploadInputStream(key, local, options, onProgress, onSuccess, onError);

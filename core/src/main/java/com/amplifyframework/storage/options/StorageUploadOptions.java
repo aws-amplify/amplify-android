@@ -36,7 +36,7 @@ public abstract class StorageUploadOptions extends StorageOptions {
      * Upload options for Storage.
      * @param builder A builder to pass storage options
      * @param <B>     the type of builder to chain with
-     * @param <O>     the type of StorageUploadOptions to chain with
+     * @param <O>     the type of StorageUploadOptions
      */
     protected <B extends Builder<B, O>, O extends StorageUploadOptions>
         StorageUploadOptions(final Builder<B, O> builder) {

@@ -21,23 +21,22 @@ import androidx.core.util.ObjectsCompat;
 import java.util.Objects;
 
 /**
- * The result of a file upload operation in the Storage category.
+ * The result of a InputStream upload operation in the Storage category.
  */
-public final class StorageUploadFileResult extends StorageUploadResult {
+public final class StorageUploadInputStreamResult extends StorageUploadResult {
 
-    private StorageUploadFileResult(String key) {
+    private StorageUploadInputStreamResult(String key) {
         super(key);
     }
 
     /**
      * Creates a new StorageUploadFileResult from a storage item key.
-     *
      * @param key Key for an item that was uploaded successfully
      * @return A storage upload result containing the item key
      */
     @NonNull
-    public static StorageUploadFileResult fromKey(@NonNull String key) {
-        return new StorageUploadFileResult(Objects.requireNonNull(key));
+    public static StorageUploadInputStreamResult fromKey(@NonNull String key) {
+        return new StorageUploadInputStreamResult(Objects.requireNonNull(key));
     }
 
     @Override
@@ -49,7 +48,7 @@ public final class StorageUploadFileResult extends StorageUploadResult {
             return false;
         }
 
-        StorageUploadFileResult that = (StorageUploadFileResult) thatObject;
+        StorageUploadInputStreamResult that = (StorageUploadInputStreamResult) thatObject;
 
         return ObjectsCompat.equals(super.getKey(), that.getKey());
     }

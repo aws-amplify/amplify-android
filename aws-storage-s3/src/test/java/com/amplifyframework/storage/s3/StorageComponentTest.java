@@ -25,6 +25,7 @@ import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.random.RandomBytes;
@@ -290,8 +291,8 @@ public final class StorageComponentTest {
         }).when(observer)
                 .setTransferListener(any(TransferListener.class));
 
-        StorageUploadFileResult result =
-                Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
+        StorageUploadInputStreamResult result =
+                Await.<StorageUploadInputStreamResult, StorageException>result((onResult, onError) ->
                         storage.uploadInputStream(
                                 toRemoteKey,
                                 inputStream,
@@ -371,7 +372,7 @@ public final class StorageComponentTest {
                 .setTransferListener(any(TransferListener.class));
 
         StorageException error =
-                Await.<StorageUploadFileResult, StorageException>error((onResult, onError) ->
+                Await.<StorageUploadInputStreamResult, StorageException>error((onResult, onError) ->
                         storage.uploadInputStream(
                                 toRemoteKey,
                                 inputStream,

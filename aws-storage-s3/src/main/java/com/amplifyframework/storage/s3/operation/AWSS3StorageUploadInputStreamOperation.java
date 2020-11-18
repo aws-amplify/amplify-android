@@ -26,7 +26,7 @@ import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.result.StorageTransferProgress;
-import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
@@ -50,7 +50,7 @@ public final class AWSS3StorageUploadInputStreamOperation
     private final StorageService storageService;
     private final CognitoAuthProvider cognitoAuthProvider;
     private final Consumer<StorageTransferProgress> onProgress;
-    private final Consumer<StorageUploadFileResult> onSuccess;
+    private final Consumer<StorageUploadInputStreamResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
 
@@ -68,7 +68,7 @@ public final class AWSS3StorageUploadInputStreamOperation
             @NonNull CognitoAuthProvider cognitoAuthProvider,
             @NonNull AWSS3StorageUploadRequest<InputStream> request,
             @NonNull Consumer<StorageTransferProgress> onProgress,
-            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         super(Objects.requireNonNull(request));
@@ -138,7 +138,8 @@ public final class AWSS3StorageUploadInputStreamOperation
                 storageService.cancelTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                        "Something went wrong while attempting to cancel your AWS S3 Storage upload file operation",
+                        "Something went wrong while attempting to cancel your AWS S3 Storage " +
+                                "upload input stream operation",
                         exception,
                         "See attached exception for more information and suggestions"
                 ));
@@ -153,7 +154,8 @@ public final class AWSS3StorageUploadInputStreamOperation
                 storageService.pauseTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                        "Something went wrong while attempting to pause your AWS S3 Storage upload file operation",
+                        "Something went wrong while attempting to pause your AWS S3 Storage " +
+                                "upload input stream operation",
                         exception,
                         "See attached exception for more information and suggestions"
                 ));
@@ -168,7 +170,8 @@ public final class AWSS3StorageUploadInputStreamOperation
                 storageService.resumeTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                        "Something went wrong while attempting to resume your AWS S3 Storage upload file operation",
+                        "Something went wrong while attempting to resume your AWS S3 Storage " +
+                                "upload input stream operation",
                         exception,
                         "See attached exception for more information and suggestions"
                 ));
@@ -184,7 +187,7 @@ public final class AWSS3StorageUploadInputStreamOperation
                     HubEvent.create(StorageChannelEventName.UPLOAD_STATE, state.name()));
             switch (state) {
                 case COMPLETED:
-                    onSuccess.accept(StorageUploadFileResult.fromKey(getRequest().getKey()));
+                    onSuccess.accept(StorageUploadInputStreamResult.fromKey(getRequest().getKey()));
                     return;
                 case FAILED:
                     onError.accept(new StorageException(
@@ -207,7 +210,7 @@ public final class AWSS3StorageUploadInputStreamOperation
             Amplify.Hub.publish(HubChannel.STORAGE,
                     HubEvent.create(StorageChannelEventName.UPLOAD_ERROR, exception));
             onError.accept(new StorageException(
-                    "Something went wrong with your AWS S3 Storage upload file operation",
+                    "Something went wrong with your AWS S3 Storage upload input stream operation",
                     exception,
                     "See attached exception for more information and suggestions"
             ));

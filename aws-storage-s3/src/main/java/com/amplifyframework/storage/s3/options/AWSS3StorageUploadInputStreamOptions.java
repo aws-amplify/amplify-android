@@ -31,7 +31,7 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
 
     private AWSS3StorageUploadInputStreamOptions(final Builder builder) {
         super(builder);
-        this.serverSideEncryption = builder.getServerSideEncryption();
+        this.serverSideEncryption = builder.serverSideEncryption;
     }
 
     /**
@@ -145,11 +145,6 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
         public Builder serverSideEncryption(@NonNull ServerSideEncryption serverSideEncryption) {
             this.serverSideEncryption = Objects.requireNonNull(serverSideEncryption);
             return this;
-        }
-
-        @NonNull
-        ServerSideEncryption getServerSideEncryption() {
-            return serverSideEncryption;
         }
 
         @Override

@@ -31,6 +31,7 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
 import java.io.File;
 import java.io.InputStream;
@@ -113,7 +114,7 @@ public interface RxStorageCategoryBehavior {
      *         by disposing the single subscription.
      */
     @NonNull
-    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> uploadInputStream(
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local
     );
@@ -128,7 +129,7 @@ public interface RxStorageCategoryBehavior {
      *         by disposing the single subscription.
      */
     @NonNull
-    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> uploadInputStream(
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
             @NonNull StorageUploadInputStreamOptions options

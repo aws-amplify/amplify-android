@@ -37,6 +37,7 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.testutils.random.RandomBytes;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -219,18 +220,18 @@ public final class RxStorageBindingTest {
 
     /**
      * When {@link StorageCategoryBehavior#uploadInputStream(String, InputStream, Consumer, Consumer)} returns
-     * a {@link StorageUploadFileResult}, then the {@link Single} returned by
+     * a {@link StorageUploadInputStreamResult}, then the {@link Single} returned by
      * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should emit that result.
      * @throws InterruptedException Not expected.
      */
     @Test
     public void uploadInputStreamReturnsResult() throws InterruptedException {
-        StorageUploadFileResult result = StorageUploadFileResult.fromKey(remoteKey);
+        StorageUploadInputStreamResult result = StorageUploadInputStreamResult.fromKey(remoteKey);
         doAnswer(invocation -> {
             // 0 key, 1 local, 2 options, 3 onProgress, 4 onResult, 5 onError
             final int indexOfResultConsumer = 4;
             final int indexOfProgressConsumer = 3;
-            Consumer<StorageUploadFileResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
+            Consumer<StorageUploadInputStreamResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
             Consumer<StorageTransferProgress> progressConsumer = invocation.getArgument(indexOfProgressConsumer);
 
             Observable.interval(100, TimeUnit.MILLISECONDS)
@@ -251,9 +252,9 @@ public final class RxStorageBindingTest {
                 anyConsumer(),
                 anyConsumer());
 
-        RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> rxOperation =
+        RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> rxOperation =
                 rxStorage.uploadInputStream(remoteKey, localInputStream);
-        TestObserver<StorageUploadFileResult> testObserver = rxOperation.observeResult().test();
+        TestObserver<StorageUploadInputStreamResult> testObserver = rxOperation.observeResult().test();
         TestObserver<StorageTransferProgress> testProgressObserver = rxOperation.observeProgress().test();
         testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         testObserver.assertValues(result);

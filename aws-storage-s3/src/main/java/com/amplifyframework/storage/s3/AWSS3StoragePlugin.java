@@ -42,6 +42,7 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
@@ -339,7 +340,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     public StorageUploadInputStreamOperation<?> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
-            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         StorageUploadInputStreamOptions options = StorageUploadInputStreamOptions.defaultInstance();
@@ -352,7 +353,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull String key,
             @NonNull InputStream local,
             @NonNull StorageUploadInputStreamOptions options,
-            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         return uploadInputStream(key, local, options, NoOpConsumer.create(), onSuccess, onError);
@@ -365,7 +366,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull InputStream local,
             @NonNull StorageUploadInputStreamOptions options,
             @NonNull Consumer<StorageTransferProgress> onProgress,
-            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         AWSS3StorageUploadRequest<InputStream> request = new AWSS3StorageUploadRequest<>(

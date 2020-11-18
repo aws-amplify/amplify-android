@@ -36,6 +36,7 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
 import java.io.File;
 import java.io.InputStream;
@@ -218,7 +219,7 @@ public interface StorageCategoryBehavior {
     StorageUploadInputStreamOperation<?> uploadInputStream(
         @NonNull String key,
         @NonNull InputStream local,
-        @NonNull Consumer<StorageUploadFileResult> onSuccess,
+        @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
         @NonNull Consumer<StorageException> onError);
 
     /**
@@ -238,7 +239,7 @@ public interface StorageCategoryBehavior {
         @NonNull String key,
         @NonNull InputStream local,
         @NonNull StorageUploadInputStreamOptions options,
-        @NonNull Consumer<StorageUploadFileResult> onSuccess,
+        @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
         @NonNull Consumer<StorageException> onError);
 
     /**
@@ -260,7 +261,7 @@ public interface StorageCategoryBehavior {
             @NonNull InputStream local,
             @NonNull StorageUploadInputStreamOptions options,
             @NonNull Consumer<StorageTransferProgress> onProgress,
-            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError);
 
     /**

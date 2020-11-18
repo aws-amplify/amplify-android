@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 /**
- * Options to specify attributes of put StorageUploadFile API invocation.
+ * Options to specify attributes of put API invocation.
  */
 public class StorageUploadFileOptions extends StorageUploadOptions {
 
@@ -126,13 +126,6 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
     @SuppressWarnings({"unchecked", "WeakerAccess"})
     public static class Builder<B extends Builder<B>>
             extends StorageUploadOptions.Builder<B, StorageUploadFileOptions> {
-
-        /**
-         * Constructs a new Builder for StorageUploadFileOptions.
-         */
-        protected Builder() {
-            super();
-        }
 
         /**
          * Builds a new immutable StorageUploadFileOptions instance,

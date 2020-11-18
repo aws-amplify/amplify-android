@@ -126,12 +126,6 @@ public class StorageUploadInputStreamOptions extends StorageUploadOptions {
     @SuppressWarnings({"unchecked", "WeakerAccess"})
     public static class Builder<B extends StorageUploadInputStreamOptions.Builder<B>>
             extends StorageUploadOptions.Builder<B, StorageUploadInputStreamOptions> {
-        /**
-         * Constructs a new Builder for StorageUploadInputStreamOptions.
-         */
-        protected Builder() {
-            super();
-        }
 
         /**
          * Builds a new immutable StorageUploadInputStreamOptions instance,

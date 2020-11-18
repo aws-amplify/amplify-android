@@ -35,6 +35,7 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
 import java.io.File;
 import java.io.InputStream;
@@ -93,14 +94,14 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
-    public RxProgressAwareSingleOperation<StorageUploadFileResult> uploadInputStream(
+    public RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
             @NonNull String key, @NonNull InputStream local) {
         return uploadInputStream(key, local, StorageUploadInputStreamOptions.defaultInstance());
     }
 
     @NonNull
     @Override
-    public RxProgressAwareSingleOperation<StorageUploadFileResult> uploadInputStream(
+    public RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
             @NonNull String key, @NonNull InputStream local, @NonNull StorageUploadInputStreamOptions options) {
         return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) -> {
             return storage.uploadInputStream(key, local, options, onProgress, onResult, onError);
