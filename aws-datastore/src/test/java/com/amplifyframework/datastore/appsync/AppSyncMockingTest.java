@@ -23,6 +23,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.MatchAllQueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSyncMocking.SyncConfigurator;
@@ -73,7 +74,7 @@ public final class AppSyncMockingTest {
         AppSyncMocking.sync(appSync).mockFailure(failure);
 
         GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> request =
-            appSync.buildSyncRequest(schema, null, 100);
+            appSync.buildSyncRequest(schema, null, 100, QueryPredicates.all());
         Single
             .create(emitter -> appSync.sync(request, emitter::onSuccess, emitter::onError))
             .test()
@@ -97,7 +98,7 @@ public final class AppSyncMockingTest {
         // Build a request object. This will itself test the mockSuccessResponse(),
         // since that method configures this call to return a meaningful result.
         GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> request =
-            appSync.buildSyncRequest(schema, null, 100);
+            appSync.buildSyncRequest(schema, null, 100, QueryPredicates.all());
 
         // Lastly, when we actually call sync, we should see the expected response,
         // As a result of the mockSuccessResponse() on the AppSyncMocking.

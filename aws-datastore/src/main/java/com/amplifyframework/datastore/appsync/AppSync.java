@@ -54,6 +54,7 @@ public interface AppSync {
      * @param modelSchema The schema of the Model we are listening on
      * @param lastSync The time you last synced - all changes since this time are retrieved.
      * @param syncPageSize limit for number of records to return per page.
+     * @param queryPredicate QueryPredicate to filter the records returned.
      * @return A {@link GraphQLRequest} for making a sync query
      * @throws DataStoreException on error building GraphQLRequest due to inability to obtain model schema.
      */
@@ -61,7 +62,8 @@ public interface AppSync {
     <T extends Model> GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> buildSyncRequest(
             @NonNull ModelSchema modelSchema,
             @Nullable Long lastSync,
-            @Nullable Integer syncPageSize
+            @Nullable Integer syncPageSize,
+            @NonNull QueryPredicate queryPredicate
     ) throws DataStoreException;
 
     /**

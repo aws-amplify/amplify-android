@@ -28,6 +28,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
@@ -68,23 +69,20 @@ final class SubscriptionProcessor {
     private final AppSync appSync;
     private final ModelProvider modelProvider;
     private final Merger merger;
+    private final QueryPredicateProvider queryPredicateProvider;
     private final CompositeDisposable ongoingOperationsDisposable;
     private final long adjustedTimeoutSeconds;
     private ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
 
     /**
      * Constructs a new SubscriptionProcessor.
-     * @param appSync An App Sync endpoint from which to receive subscription events
-     * @param modelProvider The processor will subscribe to changes for these types of models
-     * @param merger A merger, to apply data back into local storage
+     * @param builder A SubscriptionProcessor Builder.
      */
-    SubscriptionProcessor(
-            @NonNull AppSync appSync,
-            @NonNull ModelProvider modelProvider,
-            @NonNull Merger merger) {
-        this.appSync = Objects.requireNonNull(appSync);
-        this.modelProvider = Objects.requireNonNull(modelProvider);
-        this.merger = Objects.requireNonNull(merger);
+    private SubscriptionProcessor(Builder builder) {
+        this.appSync = builder.appSync;
+        this.modelProvider = builder.modelProvider;
+        this.merger = builder.merger;
+        this.queryPredicateProvider = builder.queryPredicateProvider;
         this.ongoingOperationsDisposable = new CompositeDisposable();
 
         // Operation times out after 10 seconds. If there are more than 5 models,
@@ -93,6 +91,14 @@ final class SubscriptionProcessor {
             NETWORK_OP_TIMEOUT_SECONDS,
             TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
         );
+    }
+
+    /**
+     * Returns a step builder to begin construction of a new {@link SubscriptionProcessor} instance.
+     * @return  The first step in a sequence of steps to build an instance of the subscription processor.
+     */
+    public static AppSyncStep builder() {
+        return new Builder();
     }
 
     /**
@@ -197,7 +203,7 @@ final class SubscriptionProcessor {
             );
             // When the observable is disposed, we need to call cancel() on the subscription
             // so it can properly dispose of resources if necessary. For the AWS API plugin,
-            // this means means closing the underlying network connection.
+            // this means closing the underlying network connection.
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         })
         .doOnError(subscriptionError -> LOG.warn("An error occurred on the remote " + subscriptionType.name() +
@@ -206,6 +212,10 @@ final class SubscriptionProcessor {
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
         .map(SubscriptionProcessor::unwrapResponse)
+        .filter(modelWithMetadata -> {
+            QueryPredicate predicate = queryPredicateProvider.getPredicate(modelSchema.getName());
+            return predicate.evaluate(modelWithMetadata.getModel());
+        })
         .map(modelWithMetadata -> SubscriptionEvent.<T>builder()
             .type(fromSubscriptionType(subscriptionType))
             .modelWithMetadata(modelWithMetadata)
@@ -310,5 +320,75 @@ final class SubscriptionProcessor {
                 @NonNull Consumer<DataStoreException> onFailure,
                 @NonNull Action onComplete
         );
+    }
+
+    /**
+     * Builds instances of {@link SubscriptionProcessor}s.
+     */
+    public static final class Builder implements AppSyncStep, ModelProviderStep, MergerStep,
+            QueryPredicateProviderStep, BuildStep {
+        private AppSync appSync;
+        private ModelProvider modelProvider;
+        private Merger merger;
+        private QueryPredicateProvider queryPredicateProvider;
+
+        @NonNull
+        @Override
+        public ModelProviderStep appSync(@NonNull AppSync appSync) {
+            this.appSync = Objects.requireNonNull(appSync);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public MergerStep modelProvider(@NonNull ModelProvider modelProvider) {
+            this.modelProvider = Objects.requireNonNull(modelProvider);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public QueryPredicateProviderStep merger(@NonNull Merger merger) {
+            this.merger = Objects.requireNonNull(merger);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
+            this.queryPredicateProvider = Objects.requireNonNull(queryPredicateProvider);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public SubscriptionProcessor build() {
+            return new SubscriptionProcessor(this);
+        }
+    }
+
+    interface AppSyncStep {
+        @NonNull
+        ModelProviderStep appSync(@NonNull AppSync appSync);
+    }
+
+    interface ModelProviderStep {
+        @NonNull
+        MergerStep modelProvider(@NonNull ModelProvider modelProvider);
+    }
+
+    interface MergerStep {
+        @NonNull
+        QueryPredicateProviderStep merger(@NonNull Merger merger);
+    }
+
+    interface QueryPredicateProviderStep {
+        @NonNull
+        BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
+    }
+
+    interface BuildStep {
+        @NonNull
+        SubscriptionProcessor build();
     }
 }

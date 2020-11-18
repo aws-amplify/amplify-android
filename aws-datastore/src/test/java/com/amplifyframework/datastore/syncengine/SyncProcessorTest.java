@@ -22,10 +22,12 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
+import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -130,13 +132,17 @@ public final class SyncProcessorTest {
         final VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
         final Merger merger = new Merger(mutationOutbox, versionRepository, inMemoryStorageAdapter);
 
-        DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration
+        DataStoreConfigurationProvider dataStoreConfigurationProvider = () -> DataStoreConfiguration
             .builder()
             .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .syncMaxRecords(syncMaxRecords)
             .syncPageSize(1_000)
             .errorHandler(dataStoreException -> errorHandlerCallCount++)
+            .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
             .build();
+
+        QueryPredicateProvider queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
+        queryPredicateProvider.resolvePredicates();
 
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
@@ -144,7 +150,8 @@ public final class SyncProcessorTest {
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
-            .dataStoreConfigurationProvider(() -> dataStoreConfiguration)
+            .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
+            .queryPredicateProvider(queryPredicateProvider)
             .build();
     }
 
@@ -505,6 +512,31 @@ public final class SyncProcessorTest {
         for (GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> capturedValue : capturedValues) {
             assertEquals(recentTimeMs, capturedValue.getVariables().get("lastSync"));
         }
+    }
+
+    /**
+     * Verify that the syncExpressions from the DataStoreConfiguration are applied to the sync request.
+     * @throws AmplifyException On failure interacting with storage adapter
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     */
+    @Test
+    public void syncExpressionsAppliedOnSyncRequest() throws AmplifyException, InterruptedException {
+        // Arrange some responses from AppSync
+        AppSyncMocking.sync(appSync)
+                .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
+                .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
+
+        // Act: hydrate the local store.
+        TestObserver<Void> hydrationObserver = syncProcessor.hydrate().test();
+
+        // Assert that hydration completed without error.
+        assertTrue(hydrationObserver.await(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        hydrationObserver.assertNoErrors();
+        hydrationObserver.assertComplete();
+
+        // Mock the AppSync interface, and verify that it gets calls with the expected predicate
+        ModelSchema blogOwnerSchema = ModelSchema.fromModelClass(BlogOwner.class);
+        verify(appSync, times(1)).buildSyncRequest(blogOwnerSchema, null, 1_000, BlogOwner.NAME.beginsWith("J"));
     }
 
     /**

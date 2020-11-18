@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
@@ -54,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -75,16 +77,27 @@ public final class SubscriptionProcessorTest {
 
     /**
      * Sets up an {@link SubscriptionProcessor} and associated test dependencies.
+     * @throws DataStoreException on error building the {@link DataStoreConfiguration}
      */
     @Before
-    public void setup() {
+    public void setup() throws DataStoreException {
         ModelProvider modelProvider = AmplifyModelProvider.getInstance();
         modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.register(modelProvider.modelSchemas());
         this.modelSchemas = sortedModels(modelProvider);
         this.appSync = mock(AppSync.class);
         this.merger = mock(Merger.class);
-        this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
+        DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.builder()
+                .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("John"))
+                .build();
+        QueryPredicateProvider queryPredicateProvider = new QueryPredicateProvider(() -> dataStoreConfiguration);
+        queryPredicateProvider.resolvePredicates();
+        this.subscriptionProcessor = SubscriptionProcessor.builder()
+                .appSync(appSync)
+                .modelProvider(modelProvider)
+                .merger(merger)
+                .queryPredicateProvider(queryPredicateProvider)
+                .build();
     }
 
     private List<ModelSchema> sortedModels(ModelProvider modelProvider) {
@@ -139,12 +152,36 @@ public final class SubscriptionProcessorTest {
      */
     @Test
     public void dataMergedWhenBufferDrained() throws DataStoreException, InterruptedException {
+        assertTrue(isDataMergedWhenBufferDrainedForBlogOwnerNamed("John P. Stetson, Jr."));
+    }
+
+    /**
+     * Verify that data not matching the configured sync query predicate does NOT get merged.  Since
+     * DataStoreConfiguration built in {@link #setup()} has a syncExpression specifying that the BlogOwner name
+     * must start with "John", this test verifies that a BlogOwner named "Paul Hudson" does NOT get merged.
+     * @throws DataStoreException On failure to arrange mocking
+     * @throws InterruptedException On failure to await latch
+     */
+    @Test
+    public void dataIsFilteredIfSyncExpressionExists() throws DataStoreException, InterruptedException {
+        assertFalse(isDataMergedWhenBufferDrainedForBlogOwnerNamed("Paul Hudson"));
+    }
+
+    /**
+     * Return whether a response with a BlogOwner with the given name gets merged with the merger.
+     * @param name name of the BlogOwner returned in the subscription
+     * @return whether the data was merged
+     * @throws DataStoreException On failure to arrange mocking
+     * @throws InterruptedException On failure to await latch
+     */
+    private boolean isDataMergedWhenBufferDrainedForBlogOwnerNamed(String name) 
+            throws DataStoreException, InterruptedException {
         // By default, start the subscriptions up.
         arrangeStartedSubscriptions(appSync, modelSchemas, SubscriptionType.values());
 
         // Arrange some subscription data
         BlogOwner model = BlogOwner.builder()
-            .name("John P. Stetson, Jr.")
+            .name(name)
             .build();
         ModelMetadata modelMetadata = new ModelMetadata(model.getId(), false, 1, Temporal.Timestamp.now());
         ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(model, modelMetadata);
@@ -159,14 +196,14 @@ public final class SubscriptionProcessorTest {
         doAnswer(invocation -> {
             latch.countDown();
             return Completable.complete();
-        }).when(merger).merge(eq(modelWithMetadata));
+        }).when(merger).merge(eq(response.getData()));
 
         // Start draining....
         subscriptionProcessor.startSubscriptions();
         subscriptionProcessor.startDrainingMutationBuffer(EmptyAction.create());
 
         // Was the data merged?
-        assertTrue(latch.await(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        return latch.await(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("SameParameterValue")

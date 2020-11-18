@@ -23,6 +23,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -91,7 +92,7 @@ public final class AppSyncClientTest {
             ) -> {
                 try {
                     GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> request =
-                            endpoint.buildSyncRequest(schema, null, null);
+                            endpoint.buildSyncRequest(schema, null, null, QueryPredicates.all());
                     endpoint.sync(request, onResult, onError);
                 } catch (DataStoreException datastoreException) {
                     onError.accept(datastoreException);
@@ -136,12 +137,25 @@ public final class AppSyncClientTest {
     }
 
     /**
+     * Validates sync query is constructed with all expected variables.
+     * @throws AmplifyException On failure to build the sync request.
+     * @throws JSONException from JSONAssert.assertEquals JSON parsing error
+     */
+    @Test
+    public void validateSyncQueryIsBuiltWithLimitLastSyncAndFilter() throws AmplifyException, JSONException {
+        ModelSchema modelSchema = ModelSchema.fromModelClass(BlogOwner.class);
+        GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> request = endpoint
+                .buildSyncRequest(modelSchema, 123_412_341L, 342, BlogOwner.NAME.beginsWith("J"));
+        JSONAssert.assertEquals(Resources.readAsString("sync-request-with-predicate.txt"), request.getContent(), true);
+    }
+
+    /**
      * Validates date serialization when creating mutation.
      * @throws JSONException from JSONAssert.assertEquals JSON parsing error
      * @throws AmplifyException from ModelSchema.fromModelClass to convert model to schema
      */
     @Test
-    public void validateSyncQueryWithDates() throws JSONException, AmplifyException {
+    public void validateUpdateMutationWithDates() throws JSONException, AmplifyException {
         // Act: build a mutation to create a Meeting
         final Meeting meeting = Meeting.builder()
                 .name("meeting1")
