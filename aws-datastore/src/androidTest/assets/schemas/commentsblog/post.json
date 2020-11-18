@@ -1,0 +1,96 @@
+{
+    "associations": {
+        "authors": {
+            "associatedName": "post",
+            "associatedType": "PostAuthorJoin",
+            "name": "HasMany"
+        },
+        "blog": {
+            "associatedType": "Blog",
+            "name": "BelongsTo",
+            "targetName": "postBlogId"
+        },
+        "comments": {
+            "associatedName": "post",
+            "associatedType": "Comment",
+            "name": "HasMany"
+        }
+    },
+    "authRules": [],
+    "fields": {
+        "authors": {
+            "authRules": [],
+            "isArray": true,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": false,
+            "javaClassForValue": "java.util.List",
+            "name": "authors",
+            "targetType": "PostAuthorJoin"
+        },
+        "blog": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": true,
+            "isRequired": false,
+            "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
+            "name": "blog",
+            "targetType": "Blog"
+        },
+        "comments": {
+            "authRules": [],
+            "isArray": true,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": false,
+            "javaClassForValue": "java.util.List",
+            "name": "comments",
+            "targetType": "Comment"
+        },
+        "id": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "id",
+            "targetType": "ID"
+        },
+        "rating": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.Integer",
+            "name": "rating",
+            "targetType": "Int"
+        },
+        "status": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": true,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
+            "name": "status",
+            "targetType": "PostStatus"
+        },
+        "title": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "title",
+            "targetType": "String"
+        }
+    },
+    "indexes": {},
+    "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel",
+    "name": "Post",
+    "pluralName": "Posts"
+}

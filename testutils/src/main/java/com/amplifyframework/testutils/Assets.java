@@ -18,12 +18,15 @@ package com.amplifyframework.testutils;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A little utility read the contents of the androidTest assets
@@ -33,8 +36,7 @@ public final class Assets {
     /**
      * Dis-allows instantiation of this test utility.
      */
-    private Assets() {
-    }
+    private Assets() {}
 
     /**
      * Reads a test asset as a string.
@@ -79,5 +81,30 @@ public final class Assets {
             throw new RuntimeException("Failed to load asset " + name, ioException);
         }
     }
-}
 
+    /**
+     * Lists the files in the assets directory.
+     * @param path Directory path under assets/.
+     * @return A list of files found
+     */
+    @NonNull
+    public static List<String> list(String path) {
+        Context context = ApplicationProvider.getApplicationContext();
+        String[] list;
+        try {
+            list = context.getAssets().list(path);
+        } catch (IOException listFailure) {
+            throw new RuntimeException(listFailure);
+        }
+        List<String> files = new ArrayList<>();
+        if (list.length == 0) {
+            files.add(path);
+            return files;
+        }
+        // We're in a folder.
+        for (String file : list) {
+            files.addAll(list(path + "/" + file));
+        }
+        return files;
+    }
+}

@@ -76,6 +76,16 @@ public final class ModelSchemaRegistry {
     }
 
     /**
+     * Retrieve the ModelSchema object for the given Model class.
+     * @param modelClass A model class
+     * @param <T> Type of item for which a schema is being built
+     * @return the ModelSchema object for the given Model class.
+     */
+    public synchronized <T extends Model> ModelSchema getModelSchemaForModelClass(@NonNull Class<T> modelClass) {
+        return modelSchemaMap.get(modelClass.getSimpleName());
+    }
+
+    /**
      * Retrieve the ModelSchema object for the given Model instance.
      * @param modelInstance instance of the Model class
      * @param <T> type of the model instance

@@ -27,7 +27,7 @@
       },
       "owner": {
         "name": "owner",
-        "javaClassForValue": "com.amplifyframework.core.model.Model",
+        "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
         "targetType": "BlogOwner",
         "isRequired": true,
         "isArray": false,
@@ -59,7 +59,7 @@
       }
     },
     "indexes": {},
-    "modelClass": "com.amplifyframework.core.model.Model"
+    "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel"
   },
   "serializedData": {
     "owner": "2cb080ce-bc93-44c6-aa77-f985af311afa",

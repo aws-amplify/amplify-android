@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.appsync;
 
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
@@ -27,6 +26,7 @@ import com.amplifyframework.testutils.Resources;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,14 +75,10 @@ public final class SerializedModelAdapterTest {
             .modelSchema(modelSchemaForMeeting())
             .build();
 
-        String expectedJson =
-            Resources.readAsString("serde-for-meeting-in-serialized-model.json");
-
-        JSONAssert.assertEquals(
-            expectedJson,
-            gson.toJson(serializedModel),
-            true
-        );
+        String expectedResourcePath = "serde-for-meeting-in-serialized-model.json";
+        String expectedJson = Resources.readAsJson(expectedResourcePath).toString(2);
+        String actualJson = new JSONObject(gson.toJson(serializedModel)).toString(2);
+        JSONAssert.assertEquals(expectedJson, actualJson, true);
 
         SerializedModel recovered = gson.fromJson(expectedJson, SerializedModel.class);
         Assert.assertEquals(serializedModel, recovered);
@@ -112,14 +108,11 @@ public final class SerializedModelAdapterTest {
             .modelSchema(modelSchemaForBlog())
             .build();
 
-        String expectedJson =
-            Resources.readAsString("serde-for-blog-in-serialized-model.json");
+        String resourcePath = "serde-for-blog-in-serialized-model.json";
+        String expectedJson = new JSONObject(Resources.readAsString(resourcePath)).toString(2);
+        String actualJson = new JSONObject(gson.toJson(blogAsSerializedModel)).toString(2);
 
-        JSONAssert.assertEquals(
-            expectedJson,
-            gson.toJson(blogAsSerializedModel),
-            true
-        );
+        Assert.assertEquals(expectedJson, actualJson);
 
         SerializedModel recovered = gson.fromJson(expectedJson, SerializedModel.class);
         Assert.assertEquals(blogAsSerializedModel, recovered);
@@ -166,7 +159,7 @@ public final class SerializedModelAdapterTest {
             .fields(fields)
             .associations(Collections.emptyMap())
             .indexes(Collections.emptyMap())
-            .modelClass(Model.class)
+            .modelClass(SerializedModel.class)
             .build();
     }
 
@@ -186,7 +179,7 @@ public final class SerializedModelAdapterTest {
             .build());
         fields.put("owner", ModelField.builder()
             .name("owner")
-            .javaClassForValue(Model.class)
+            .javaClassForValue(SerializedModel.class)
             .targetType("BlogOwner")
             .isRequired(true)
             .isModel(true)
@@ -218,7 +211,7 @@ public final class SerializedModelAdapterTest {
             .fields(fields)
             .associations(associations)
             .indexes(Collections.emptyMap())
-            .modelClass(Model.class)
+            .modelClass(SerializedModel.class)
             .build();
     }
 }

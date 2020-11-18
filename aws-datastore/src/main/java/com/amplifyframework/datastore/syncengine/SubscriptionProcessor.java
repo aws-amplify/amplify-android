@@ -34,6 +34,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -156,7 +157,6 @@ final class SubscriptionProcessor {
         return false;
     }
 
-    @SuppressWarnings("unchecked") // (Class<T>) modelWithMetadata.getModel().getClass()
     private <T extends Model> Observable<SubscriptionEvent<? extends Model>>
             subscriptionObservable(AppSync appSync,
                                    SubscriptionType subscriptionType,
@@ -209,7 +209,7 @@ final class SubscriptionProcessor {
         .map(modelWithMetadata -> SubscriptionEvent.<T>builder()
             .type(fromSubscriptionType(subscriptionType))
             .modelWithMetadata(modelWithMetadata)
-            .modelClass((Class<T>) modelWithMetadata.getModel().getClass())
+            .modelSchema(modelSchema)
             .build()
         );
     }
@@ -224,7 +224,19 @@ final class SubscriptionProcessor {
                 .doOnSubscribe(disposable ->
                     LOG.info("Starting processing subscription data buffer.")
                 )
-                .flatMapCompletable(mutation -> merger.merge(mutation.modelWithMetadata()))
+                .flatMapCompletable(mutation -> {
+                    ModelWithMetadata<? extends Model> original = mutation.modelWithMetadata();
+                    if (original.getModel() instanceof SerializedModel) {
+                        SerializedModel originalModel = (SerializedModel) original.getModel();
+                        SerializedModel newModel = SerializedModel.builder()
+                            .serializedData(originalModel.getSerializedData())
+                            .modelSchema(mutation.modelSchema())
+                            .build();
+                        return merger.merge(new ModelWithMetadata<>(newModel, original.getSyncMetadata()));
+                    } else {
+                        return merger.merge(original);
+                    }
+                })
                 .doOnError(failure -> LOG.warn("Reading subscriptions buffer has failed.", failure))
                 .doOnComplete(() -> LOG.warn("Reading from subscriptions buffer is completed."))
                 .onErrorComplete()

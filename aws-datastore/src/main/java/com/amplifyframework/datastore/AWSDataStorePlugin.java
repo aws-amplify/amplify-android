@@ -472,7 +472,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
-                    if (itemChange.itemClass().equals(itemClass)) {
+                    if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName())) {
                         @SuppressWarnings("unchecked") // This was just checked, right above.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
                         onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
@@ -505,7 +505,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
-                    if (itemChange.itemClass().equals(SerializedModel.class)) {
+                    if (itemChange.modelSchema().getModelClass().equals(SerializedModel.class)) {
                         if (((SerializedModel) itemChange.item()).getModelName().equals(modelName)) {
                             @SuppressWarnings("unchecked") // This was just checked, right above.
                             StorageItemChange<SerializedModel> typedChange =
@@ -533,7 +533,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
-                    if (itemChange.itemClass().equals(itemClass) && itemChange.item().getId().equals(uniqueId)) {
+                    if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName()) &&
+                            itemChange.item().getId().equals(uniqueId)) {
                         @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
                         onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));

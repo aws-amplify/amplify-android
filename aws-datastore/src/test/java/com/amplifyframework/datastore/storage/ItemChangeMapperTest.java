@@ -15,8 +15,10 @@
 
 package com.amplifyframework.datastore.storage;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
@@ -55,9 +57,10 @@ public final class ItemChangeMapperTest {
      * to update an existing model.
      * @throws DataStoreException
      *         Not expected for the arranged data. Would only happen if object under test is faulty.
+     * @throws AmplifyException On failure to arrange model schema
      */
     @Test
-    public void mapCustomerUpdate() throws DataStoreException {
+    public void mapCustomerUpdate() throws AmplifyException {
         assertEquals(
             DataStoreItemChange.<BlogOwner>builder()
                 .initiator(DataStoreItemChange.Initiator.LOCAL)
@@ -70,7 +73,7 @@ public final class ItemChangeMapperTest {
                 .changeId(changeId)
                 .initiator(StorageItemChange.Initiator.DATA_STORE_API)
                 .item(joe)
-                .itemClass(BlogOwner.class)
+                .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
                 .predicate(QueryPredicates.all())
                 .type(StorageItemChange.Type.UPDATE)
                 .build())
@@ -82,9 +85,10 @@ public final class ItemChangeMapperTest {
      * deleting a model through a subscription event.
      * @throws DataStoreException
      *         Not expected for the arranged data. Would only happen if object under test is faulty.
+     * @throws AmplifyException On failure to arrange model schema
      */
     @Test
-    public void mapCloudDeletion() throws DataStoreException {
+    public void mapCloudDeletion() throws AmplifyException {
         assertEquals(
             DataStoreItemChange.<BlogOwner>builder()
                 .initiator(DataStoreItemChange.Initiator.REMOTE)
@@ -97,7 +101,7 @@ public final class ItemChangeMapperTest {
                 .changeId(changeId)
                 .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
                 .item(joe)
-                .itemClass(BlogOwner.class)
+                .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
                 .predicate(QueryPredicates.all())
                 .type(StorageItemChange.Type.DELETE)
                 .build())

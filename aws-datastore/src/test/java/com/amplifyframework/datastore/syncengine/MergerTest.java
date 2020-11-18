@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
@@ -192,9 +194,10 @@ public final class MergerTest {
      * then that item shall NOT be merged.
      * @throws DataStoreException On failure to arrange data into store
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws AmplifyException On failure to arrange model schema
      */
     @Test
-    public void itemIsNotMergedWhenOutboxHasPendingMutation() throws DataStoreException, InterruptedException {
+    public void itemIsNotMergedWhenOutboxHasPendingMutation() throws AmplifyException, InterruptedException {
         // Arrange: some model with a well known ID exists on the system.
         // We pretend that the user has recently updated it via the DataStore update() API.
         String knownId = RandomString.string();
@@ -206,8 +209,9 @@ public final class MergerTest {
             new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now());
         storageAdapter.save(blogOwner, localMetadata);
 
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         PendingMutation<BlogOwner> pendingMutation = PendingMutation.instance(
-            blogOwner, BlogOwner.class, PendingMutation.Type.CREATE, QueryPredicates.all()
+            blogOwner, schema, PendingMutation.Type.CREATE, QueryPredicates.all()
         );
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(pendingMutation).test();
         enqueueObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);

@@ -15,7 +15,9 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
@@ -36,9 +38,10 @@ import static org.junit.Assert.assertEquals;
 public final class PendingMutationTest {
     /**
      * It is possible to sort pending mutations according to their TimeBasedUUID field.
+     * @throws AmplifyException On failure to arrange model schema
      */
     @Test
-    public void pendingMutationsAreComparable() {
+    public void pendingMutationsAreComparable() throws AmplifyException {
         // First, create a bunch of pending mutations.
         final List<PendingMutation<? extends Model>> expectedOrder = new ArrayList<>();
         final int desiredQuantity = 10;
@@ -49,14 +52,16 @@ public final class PendingMutationTest {
                 BlogOwner blogger = BlogOwner.builder()
                     .name(String.format(Locale.US, "Blogger #%d", index))
                     .build();
-                expectedOrder.add(PendingMutation.creation(blogger, BlogOwner.class));
+                ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+                expectedOrder.add(PendingMutation.creation(blogger, schema));
             } else {
                 Post post = Post.builder()
                     .title(String.format(Locale.US, "Title #%d", index))
                     .status(PostStatus.ACTIVE)
                     .rating(5)
                     .build();
-                expectedOrder.add(PendingMutation.creation(post, Post.class));
+                ModelSchema schema = ModelSchema.fromModelClass(Post.class);
+                expectedOrder.add(PendingMutation.creation(post, schema));
             }
         }
 

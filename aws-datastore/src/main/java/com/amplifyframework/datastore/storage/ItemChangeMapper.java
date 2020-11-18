@@ -36,12 +36,13 @@ public final class ItemChangeMapper {
      * @return A data store item change representing the change in storage layer
      * @throws DataStoreException On failure to map corresponding fields for provided data
      */
+    @SuppressWarnings("unchecked")
     public static <T extends Model> DataStoreItemChange<T> map(
             @NonNull StorageItemChange<T> storageItemChange) throws DataStoreException {
         return DataStoreItemChange.<T>builder()
             .initiator(map(storageItemChange.initiator()))
             .item(storageItemChange.item())
-            .itemClass(storageItemChange.itemClass())
+            .itemClass((Class<T>) storageItemChange.modelSchema().getModelClass())
             .type(map(storageItemChange.type()))
             .uuid(storageItemChange.changeId().toString())
             .build();
