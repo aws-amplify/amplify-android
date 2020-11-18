@@ -19,6 +19,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -60,7 +61,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         JSONAssert.assertEquals(
             Resources.readAsString("base-sync-request-document-for-blog-owner.txt"),
-            AppSyncRequestFactory.buildSyncRequest(schema, null, null).getContent(),
+            AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all()).getContent(),
             true
         );
     }
@@ -75,9 +76,9 @@ public final class AppSyncRequestFactoryTest {
     public void validateCustomTypeRequestGenerationForBaseSync() throws AmplifyException, JSONException {
         ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
-                Resources.readAsString("base-sync-request-document-for-parent.txt"),
-                AppSyncRequestFactory.buildSyncRequest(schema, null, null).getContent(),
-                true
+            Resources.readAsString("base-sync-request-document-for-parent.txt"),
+            AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all()).getContent(),
+            true
         );
     }
 
@@ -91,8 +92,8 @@ public final class AppSyncRequestFactoryTest {
     public void validateRequestGenerationForDeltaSync() throws AmplifyException, JSONException {
         ModelSchema schema = ModelSchema.fromModelClass(Post.class);
         JSONAssert.assertEquals(Resources.readAsString("delta-sync-request-document-for-post.txt"),
-                AppSyncRequestFactory.buildSyncRequest(schema, 123123123L, null).getContent(),
-                true);
+            AppSyncRequestFactory.buildSyncRequest(schema, 123123123L, null, QueryPredicates.all()).getContent(),
+            true);
     }
 
     /**
@@ -106,7 +107,7 @@ public final class AppSyncRequestFactoryTest {
         Integer limit = 1000;
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         final GraphQLRequest<Iterable<Post>> request =
-                AppSyncRequestFactory.buildSyncRequest(schema, null, limit);
+                AppSyncRequestFactory.buildSyncRequest(schema, null, limit, QueryPredicates.all());
         JSONAssert.assertEquals(Resources.readAsString("base-sync-request-paginating-blog-owners.txt"),
                 request.getContent(),
                 true);

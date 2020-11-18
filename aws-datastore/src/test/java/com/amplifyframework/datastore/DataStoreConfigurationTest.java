@@ -21,6 +21,8 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreConfiguration.ConfigKey;
 import com.amplifyframework.datastore.DataStoreConflictHandler.AlwaysApplyRemoteHandler;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,6 +30,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -56,6 +59,7 @@ public final class DataStoreConfigurationTest {
 
         assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
         assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertEquals(Collections.emptyMap(), dataStoreConfiguration.getSyncExpressions());
     }
 
     /**
@@ -80,11 +84,12 @@ public final class DataStoreConfigurationTest {
 
         assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
         assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertEquals(Collections.emptyMap(), dataStoreConfiguration.getSyncExpressions());
     }
 
     /**
      * When building a configuration from both a config file and a configuration object,
-     * default values should be overriden, and the provided ones shall be used, instead.
+     * default values should be overridden, and the provided ones shall be used, instead.
      * @throws JSONException While arranging config file JSON
      * @throws DataStoreException While building DataStoreConfiguration instances via build()
      */
@@ -96,11 +101,13 @@ public final class DataStoreConfigurationTest {
         DummyConflictHandler dummyConflictHandler = new DummyConflictHandler();
         DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
 
+        DataStoreSyncExpression syncExpression = () -> BlogOwner.ID.beginsWith(RandomString.string());
         DataStoreConfiguration configObject = DataStoreConfiguration
             .builder()
             .syncMaxRecords(expectedSyncMaxRecords)
             .conflictHandler(dummyConflictHandler)
             .errorHandler(errorHandler)
+            .syncExpression(BlogOwner.class, syncExpression)
             .build();
 
         JSONObject jsonConfigFromFile = new JSONObject()
@@ -116,6 +123,8 @@ public final class DataStoreConfigurationTest {
 
         assertEquals(dummyConflictHandler, dataStoreConfiguration.getConflictHandler());
         assertEquals(errorHandler, dataStoreConfiguration.getErrorHandler());
+        assertEquals(Collections.singletonMap(BlogOwner.class.getSimpleName(), syncExpression),
+                dataStoreConfiguration.getSyncExpressions());
     }
 
     /**

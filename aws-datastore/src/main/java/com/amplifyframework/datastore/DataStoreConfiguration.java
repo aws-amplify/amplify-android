@@ -21,10 +21,14 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.model.Model;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -44,21 +48,16 @@ public final class DataStoreConfiguration {
     private final DataStoreConflictHandler conflictHandler;
     private final Integer syncMaxRecords;
     private final Integer syncPageSize;
-    private Long syncIntervalInMinutes;
+    private final Map<String, DataStoreSyncExpression> syncExpressions;
+    private final Long syncIntervalInMinutes;
 
-    private DataStoreConfiguration(
-            DataStoreErrorHandler errorHandler,
-            DataStoreConflictHandler conflictHandler,
-            Long syncIntervalInMinutes,
-            Integer syncMaxRecords,
-            Integer syncPageSize) {
-        this.errorHandler = errorHandler;
-        this.conflictHandler = conflictHandler;
-        this.syncMaxRecords = syncMaxRecords;
-        this.syncPageSize = syncPageSize;
-        if (syncIntervalInMinutes != null) {
-            this.syncIntervalInMinutes = syncIntervalInMinutes;
-        }
+    private DataStoreConfiguration(Builder builder) {
+        this.errorHandler = builder.errorHandler;
+        this.conflictHandler = builder.conflictHandler;
+        this.syncMaxRecords = builder.syncMaxRecords;
+        this.syncPageSize = builder.syncPageSize;
+        this.syncIntervalInMinutes = builder.syncIntervalInMinutes;
+        this.syncExpressions = builder.syncExpressions;
     }
 
     /**
@@ -175,6 +174,16 @@ public final class DataStoreConfiguration {
         return this.syncPageSize;
     }
 
+    /**
+     * Returns the Map of all {@link DataStoreSyncExpression}s used to filter data received from AppSync, either during
+     * a sync or over the real-time subscription.
+     * @return the Map of all {@link DataStoreSyncExpression}s.
+     */
+    @NonNull
+    public Map<String, DataStoreSyncExpression> getSyncExpressions() {
+        return this.syncExpressions;
+    }
+
     @Override
     public boolean equals(@Nullable Object thatObject) {
         if (this == thatObject) {
@@ -196,7 +205,13 @@ public final class DataStoreConfiguration {
         if (!ObjectsCompat.equals(getSyncPageSize(), that.getSyncPageSize())) {
             return false;
         }
-        return ObjectsCompat.equals(getSyncIntervalInMinutes(), that.getSyncIntervalInMinutes());
+        if (!ObjectsCompat.equals(getSyncIntervalInMinutes(), that.getSyncIntervalInMinutes())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getSyncExpressions(), that.getSyncExpressions())) {
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -206,6 +221,7 @@ public final class DataStoreConfiguration {
         result = 31 * result + (getSyncMaxRecords() != null ? getSyncMaxRecords().hashCode() : 0);
         result = 31 * result + (getSyncPageSize() != null ? getSyncPageSize().hashCode() : 0);
         result = 31 * result + (getSyncIntervalInMinutes() != null ? getSyncIntervalInMinutes().hashCode() : 0);
+        result = 31 * result + (getSyncExpressions() != null ? getSyncExpressions().hashCode() : 0);
         return result;
     }
 
@@ -217,6 +233,7 @@ public final class DataStoreConfiguration {
             ", syncMaxRecords=" + syncMaxRecords +
             ", syncPageSize=" + syncPageSize +
             ", syncIntervalInMinutes=" + syncIntervalInMinutes +
+            ", syncExpressions=" + syncExpressions +
             '}';
     }
 
@@ -230,6 +247,7 @@ public final class DataStoreConfiguration {
         private Long syncIntervalInMinutes;
         private Integer syncMaxRecords;
         private Integer syncPageSize;
+        private Map<String, DataStoreSyncExpression> syncExpressions;
         private boolean ensureDefaults;
         private JSONObject pluginJson;
         private DataStoreConfiguration userProvidedConfiguration;
@@ -237,6 +255,7 @@ public final class DataStoreConfiguration {
         private Builder() {
             this.errorHandler = DefaultDataStoreErrorHandler.instance();
             this.conflictHandler = DataStoreConflictHandler.alwaysApplyRemote();
+            this.syncExpressions = new HashMap<>();
             this.ensureDefaults = false;
         }
 
@@ -305,6 +324,23 @@ public final class DataStoreConfiguration {
             return Builder.this;
         }
 
+        /**
+         * Sets a sync expression for a particular model to filter which data is synced locally.  The expression
+         * is evaluated each time DataStore is started.  The QueryPredicate is applied on both sync and subscriptions.
+         * @param modelClass the model class for which the filter applies
+         * @param syncExpression DataStoreSyncExpression that should be used to filter the data that is synced.
+         * @return Current builder
+         */
+        @NonNull
+        public Builder syncExpression(@NonNull Class<? extends Model> modelClass,
+                                      @NonNull DataStoreSyncExpression syncExpression) {
+            this.syncExpressions.put(
+                    Objects.requireNonNull(modelClass).getSimpleName(),
+                    Objects.requireNonNull(syncExpression)
+            );
+            return Builder.this;
+        }
+
         private void populateSettingsFromJson() throws DataStoreException {
             if (pluginJson == null) {
                 return;
@@ -356,6 +392,7 @@ public final class DataStoreConfiguration {
                 syncIntervalInMinutes);
             syncMaxRecords = getValueOrDefault(userProvidedConfiguration.getSyncMaxRecords(), syncMaxRecords);
             syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
+            syncExpressions = userProvidedConfiguration.getSyncExpressions();
         }
 
         private static <T> T getValueOrDefault(T value, T defaultValue) {
@@ -383,13 +420,7 @@ public final class DataStoreConfiguration {
                 syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
             }
-            return new DataStoreConfiguration(
-                errorHandler,
-                conflictHandler,
-                syncIntervalInMinutes,
-                syncMaxRecords,
-                syncPageSize
-            );
+            return new DataStoreConfiguration(this);
         }
     }
 
