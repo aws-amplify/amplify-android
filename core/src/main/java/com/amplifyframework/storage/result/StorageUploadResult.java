@@ -21,25 +21,39 @@ import androidx.core.util.ObjectsCompat;
 import java.util.Objects;
 
 /**
- * The result of a file upload operation in the Storage category.
+ * The result of an upload operation in the Storage category.
  */
-public final class StorageUploadFileResult extends StorageUploadResult {
+public class StorageUploadResult {
+    private final String key;
 
-    private StorageUploadFileResult(String key) {
-        super(key);
+    StorageUploadResult(String key) {
+        this.key = key;
     }
 
     /**
-     * Creates a new StorageUploadFileResult from a storage item key.
-     *
+     * Creates a new StorageUploadResult from a storage item key.
      * @param key Key for an item that was uploaded successfully
      * @return A storage upload result containing the item key
      */
     @NonNull
-    public static StorageUploadFileResult fromKey(@NonNull String key) {
-        return new StorageUploadFileResult(Objects.requireNonNull(key));
+    public static StorageUploadResult fromKey(@NonNull String key) {
+        return new StorageUploadResult(Objects.requireNonNull(key));
     }
 
+    /**
+     * Gets the key for the item was successfully uploaded.
+     * @return Key for item that was uploaded
+     */
+    @NonNull
+    public String getKey() {
+        return key;
+    }
+
+    /**
+     * Compare StorageUploadResult with another Object.
+     * @param thatObject the Object be compared with
+     * @return true if equals, else false
+     */
     @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
@@ -49,13 +63,17 @@ public final class StorageUploadFileResult extends StorageUploadResult {
             return false;
         }
 
-        StorageUploadFileResult that = (StorageUploadFileResult) thatObject;
+        StorageUploadResult that = (StorageUploadResult) thatObject;
 
-        return ObjectsCompat.equals(super.getKey(), that.getKey());
+        return ObjectsCompat.equals(key, that.key);
     }
 
+    /**
+     * Get hashCode.
+     * @return hashCode
+     */
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return key != null ? key.hashCode() : 0;
     }
 }

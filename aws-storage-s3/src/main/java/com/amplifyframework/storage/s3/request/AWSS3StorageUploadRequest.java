@@ -21,17 +21,16 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Parameters to provide to S3 that describe a request to upload a
- * file.
+ * Parameters to provide to S3 that describe a request to upload.
+ * @param <L> object to upload (e.g. File or InputStream)
  */
-public final class AWSS3StorageUploadFileRequest {
+public final class AWSS3StorageUploadRequest<L> {
     private final String key;
-    private final File local;
+    private final L local;
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final String contentType;
@@ -39,9 +38,9 @@ public final class AWSS3StorageUploadFileRequest {
     private final Map<String, String> metadata;
 
     /**
-     * Constructs a new AWSS3StorageUploadFileRequest.
+     * Constructs a new AWSS3StorageUploadRequest.
      * @param key key for item to upload
-     * @param local File to upload
+     * @param local object to upload (e.g. File or InputStream)
      * @param accessLevel Storage access level
      * @param targetIdentityId If set, this should override the current user's identity ID.
      *                         If null, the operation will fetch the current identity ID.
@@ -49,9 +48,9 @@ public final class AWSS3StorageUploadFileRequest {
      * @param serverSideEncryption server side encryption type for the current storage bucket
      * @param metadata Metadata for the object to store
      */
-    public AWSS3StorageUploadFileRequest(
+    public AWSS3StorageUploadRequest(
             @NonNull String key,
-            @NonNull File local,
+            @NonNull L local,
             @NonNull StorageAccessLevel accessLevel,
             @Nullable String targetIdentityId,
             @Nullable String contentType,
@@ -80,11 +79,11 @@ public final class AWSS3StorageUploadFileRequest {
     }
 
     /**
-     * Gets the file to upload.
-     * @return local file path
+     * Returns the local object to be uploaded (e.g. File or InputStream).
+     * @return the local object to be uploaded (e.g. File or InputStream).
      */
     @NonNull
-    public File getLocal() {
+    public L getLocal() {
         return local;
     }
 

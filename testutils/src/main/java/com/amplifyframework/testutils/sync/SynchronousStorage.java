@@ -25,13 +25,16 @@ import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.testutils.Await;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -149,6 +152,46 @@ public final class SynchronousStorage {
     ) throws StorageException {
         return Await.<StorageUploadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.uploadFile(key, local, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Upload an InputStream synchronously and return the result of operation.
+     *
+     * @param key     Key to uniquely identify the InputStream
+     * @param local   InputStream to upload
+     * @param options Upload options
+     * @return Upload operation result
+     * @throws StorageException if upload fails or times out
+     */
+    @NonNull
+    public StorageUploadInputStreamResult uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options
+    ) throws StorageException {
+        return uploadInputStream(key, local, options, STORAGE_OPERATION_TIMEOUT_MS);
+    }
+
+    /**
+     * Upload an InputStream synchronously and return the result of operation.
+     *
+     * @param key       Key to uniquely identify the InputStream
+     * @param local     InputStream to upload
+     * @param options   Upload options
+     * @param timeoutMs Custom time-out duration in milliseconds
+     * @return Upload operation result
+     * @throws StorageException if upload fails or times out
+     */
+    @NonNull
+    public StorageUploadInputStreamResult uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            long timeoutMs
+    ) throws StorageException {
+        return Await.<StorageUploadInputStreamResult, StorageException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.uploadInputStream(key, local, options, onResult, onError)
         );
     }
 

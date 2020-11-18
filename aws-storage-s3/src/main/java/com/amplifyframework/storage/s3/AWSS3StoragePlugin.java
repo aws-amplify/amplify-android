@@ -29,28 +29,33 @@ import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.options.AWSS3StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
-import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 import com.amplifyframework.storage.s3.service.StorageService;
 
@@ -60,6 +65,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -307,7 +313,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        AWSS3StorageUploadFileRequest request = new AWSS3StorageUploadFileRequest(
+        AWSS3StorageUploadRequest<File> request = new AWSS3StorageUploadRequest<>(
                 key,
                 local,
                 options.getAccessLevel() != null
@@ -323,6 +329,62 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
         AWSS3StorageUploadFileOperation operation = new AWSS3StorageUploadFileOperation(
             storageService, cognitoAuthProvider, request, onProgress, onSuccess, onError
+        );
+        operation.start();
+
+        return operation;
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        StorageUploadInputStreamOptions options = StorageUploadInputStreamOptions.defaultInstance();
+        return uploadInputStream(key, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return uploadInputStream(key, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        AWSS3StorageUploadRequest<InputStream> request = new AWSS3StorageUploadRequest<>(
+                key,
+                local,
+                options.getAccessLevel() != null
+                        ? options.getAccessLevel()
+                        : defaultAccessLevel,
+                options.getTargetIdentityId(),
+                options.getContentType(),
+                options instanceof AWSS3StorageUploadInputStreamOptions
+                        ? ((AWSS3StorageUploadInputStreamOptions) options).getServerSideEncryption()
+                        : ServerSideEncryption.NONE,
+                options.getMetadata()
+        );
+
+        AWSS3StorageUploadInputStreamOperation operation = new AWSS3StorageUploadInputStreamOperation(
+                storageService, cognitoAuthProvider, request, onProgress, onSuccess, onError
         );
         operation.start();
 

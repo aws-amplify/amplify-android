@@ -25,13 +25,16 @@ import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
 import java.io.File;
+import java.io.InputStream;
 
 import io.reactivex.rxjava3.core.Single;
 
@@ -100,6 +103,36 @@ public interface RxStorageCategoryBehavior {
             @NonNull String key,
             @NonNull File local,
             @NonNull StorageUploadFileOptions options
+    );
+
+    /**
+     * Upload an InputStream.
+     * @param key Remote key of the file containing the InputStream content
+     * @param local Local InputStream from which to read contents
+     * @return A single which emits an upload result on success, or an error on failure.
+     *         The upload does not begin until subscription. You can cancel the upload
+     *         by disposing the single subscription.
+     */
+    @NonNull
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local
+    );
+
+    /**
+     * Upload an InputStream.
+     * @param key Remote key of the file containing the InputStream content
+     * @param local Local InputStream from which to read contents
+     * @param options Additional upload options
+     * @return A single which emits an upload result on success, or an error on failure.
+     *         The upload does not begin until subscription. You can cancel the upload
+     *         by disposing the single subscription.
+     */
+    @NonNull
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options
     );
 
     /**

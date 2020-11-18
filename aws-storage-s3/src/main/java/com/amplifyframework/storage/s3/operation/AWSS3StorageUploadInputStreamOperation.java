@@ -24,9 +24,9 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
-import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.result.StorageTransferProgress;
-import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
@@ -38,22 +38,24 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
-import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Objects;
 
 /**
- * An operation to upload a file from AWS S3.
+ * An operation to upload an InputStream from AWS S3.
  */
-public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation<AWSS3StorageUploadRequest<File>> {
+public final class AWSS3StorageUploadInputStreamOperation
+        extends StorageUploadInputStreamOperation<AWSS3StorageUploadRequest<InputStream>> {
     private final StorageService storageService;
     private final CognitoAuthProvider cognitoAuthProvider;
     private final Consumer<StorageTransferProgress> onProgress;
-    private final Consumer<StorageUploadFileResult> onSuccess;
+    private final Consumer<StorageUploadInputStreamResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
 
     /**
-     * Constructs a new AWSS3StorageUploadFileOperation.
+     * Constructs a new AWSS3StorageUploadInputStreamOperation.
      * @param storageService S3 client wrapper
      * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
      * @param request upload request parameters
@@ -61,12 +63,12 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
      * @param onSuccess Will be notified when results of upload are available
      * @param onError Notified when upload fails with an error
      */
-    public AWSS3StorageUploadFileOperation(
+    public AWSS3StorageUploadInputStreamOperation(
             @NonNull StorageService storageService,
             @NonNull CognitoAuthProvider cognitoAuthProvider,
-            @NonNull AWSS3StorageUploadRequest<File> request,
+            @NonNull AWSS3StorageUploadRequest<InputStream> request,
             @NonNull Consumer<StorageTransferProgress> onProgress,
-            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         super(Objects.requireNonNull(request));
@@ -103,8 +105,8 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 getRequest().getKey()
         );
 
-        // Grab the file to upload...
-        File file = getRequest().getLocal();
+        // Grab the inputStream to upload...
+        InputStream inputStream = getRequest().getLocal();
 
         // Set up the metadata
         ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -118,13 +120,13 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
 
         // Upload!
         try {
-            transferObserver = storageService.uploadFile(serviceKey, file, objectMetadata);
+            transferObserver = storageService.uploadInputStream(serviceKey, inputStream, objectMetadata);
             transferObserver.setTransferListener(new UploadTransferListener());
-        } catch (Exception exception) {
+        } catch (IOException ioException) {
             onError.accept(new StorageException(
-                "Issue uploading file.",
-                exception,
-                "See included exception for more details and suggestions to fix."
+                    "Issue uploading inputStream.",
+                    ioException,
+                    "See included exception for more details and suggestions to fix."
             ));
         }
     }
@@ -136,9 +138,10 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 storageService.cancelTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                    "Something went wrong while attempting to cancel your AWS S3 Storage upload file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
+                        "Something went wrong while attempting to cancel your AWS S3 Storage " +
+                                "upload input stream operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
                 ));
             }
         }
@@ -151,9 +154,10 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 storageService.pauseTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                    "Something went wrong while attempting to pause your AWS S3 Storage upload file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
+                        "Something went wrong while attempting to pause your AWS S3 Storage " +
+                                "upload input stream operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
                 ));
             }
         }
@@ -166,9 +170,10 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 storageService.resumeTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                    "Something went wrong while attempting to resume your AWS S3 Storage upload file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
+                        "Something went wrong while attempting to resume your AWS S3 Storage " +
+                                "upload input stream operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
                 ));
             }
         }
@@ -182,7 +187,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                     HubEvent.create(StorageChannelEventName.UPLOAD_STATE, state.name()));
             switch (state) {
                 case COMPLETED:
-                    onSuccess.accept(StorageUploadFileResult.fromKey(getRequest().getKey()));
+                    onSuccess.accept(StorageUploadInputStreamResult.fromKey(getRequest().getKey()));
                     return;
                 case FAILED:
                     onError.accept(new StorageException(
@@ -205,7 +210,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             Amplify.Hub.publish(HubChannel.STORAGE,
                     HubEvent.create(StorageChannelEventName.UPLOAD_ERROR, exception));
             onError.accept(new StorageException(
-                    "Something went wrong with your AWS S3 Storage upload file operation",
+                    "Something went wrong with your AWS S3 Storage upload input stream operation",
                     exception,
                     "See attached exception for more information and suggestions"
             ));
