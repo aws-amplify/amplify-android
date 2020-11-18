@@ -139,7 +139,7 @@ public final class SQLiteStorageAdapterClearTest {
 
     private void assertObserverReceivedRecord(BlogOwner blogger) {
         for (StorageItemChange<? extends Model> owner : observer.values()) {
-            if (BlogOwner.class.isAssignableFrom(owner.itemClass()) &&
+            if (BlogOwner.class.isAssignableFrom(owner.modelSchema().getModelClass()) &&
                     blogger.equals((owner.item()))) {
                 return;
             }

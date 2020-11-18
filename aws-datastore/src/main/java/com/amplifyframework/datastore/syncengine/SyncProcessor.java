@@ -33,6 +33,7 @@ import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -140,9 +141,20 @@ final class SyncProcessor {
                 // Sync all the pages
                 return syncModel(schema, lastSyncTime)
                     // For each ModelWithMetadata, merge it into the local store.
-                    .flatMapCompletable(modelWithMetadata ->
-                        merger.merge(modelWithMetadata, metricsAccumulator::increment)
-                    )
+                    .flatMapCompletable(original -> {
+                        ModelWithMetadata<? extends Model> updated;
+                        if (original.getModel() instanceof SerializedModel) {
+                            SerializedModel originalModel = (SerializedModel) original.getModel();
+                            SerializedModel newModel = SerializedModel.builder()
+                                .serializedData(originalModel.getSerializedData())
+                                .modelSchema(schema)
+                                .build();
+                            updated = new ModelWithMetadata<>(newModel, original.getSyncMetadata());
+                        } else {
+                            updated = original;
+                        }
+                        return merger.merge(updated, metricsAccumulator::increment);
+                    })
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
             })
             .flatMapCompletable(syncType -> {

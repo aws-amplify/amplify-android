@@ -63,8 +63,8 @@ public final class HybridOfflineInstrumentationTest {
      */
     @Before
     public void setupPlugin() throws AmplifyException {
-        blogOwnerSchema = schemaFrom("serialized-model-schema-for-blog-owner.json");
-        blogSchema = schemaFrom("serialized-model-schema-for-blog.json");
+        blogOwnerSchema = schemaFrom("schemas/commentsblog/blog-owner.json");
+        blogSchema = schemaFrom("schemas/commentsblog/blog.json");
         SchemaProvider schemaProvider = SchemaProvider.of(blogOwnerSchema, blogSchema);
 
         getApplicationContext().deleteDatabase("AmplifyDatastore.db");

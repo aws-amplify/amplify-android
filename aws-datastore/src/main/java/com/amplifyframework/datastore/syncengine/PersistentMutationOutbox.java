@@ -22,6 +22,7 @@ import androidx.annotation.VisibleForTesting;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
@@ -376,8 +377,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
             // Now, it will have the contents of the incoming update mutation.
             TimeBasedUuid id = existing.getMutationId();
             T item = incoming.getMutatedItem();
-            Class<T> clazz = incoming.getClassOfMutatedItem();
-            return save(PendingMutation.instance(id, item, clazz, type, predicate))
+            ModelSchema schema = incoming.getModelSchema();
+            return save(PendingMutation.instance(id, item, schema, type, predicate))
                 .andThen(notifyContentAvailable());
         }
 

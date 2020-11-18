@@ -67,20 +67,18 @@ public final class DataStoreHubEventFilters {
         if (mutationEvent == null) {
             return false;
         }
-        if (!model.getClass().isAssignableFrom(mutationEvent.getModel())) {
-            return false;
-        }
         String actualId = mutationEvent.getElement().getModel().getId();
-        return model.getId().equals(actualId);
+        String desiredId = model.getId();
+        return desiredId.equals(actualId);
     }
 
     private static <T extends Model> boolean hasModelData(
         T model, ModelWithMetadata<? extends Model> modelWithMetadata) {
         if (modelWithMetadata == null) {
             return false;
-        } else if (!model.getClass().isAssignableFrom(modelWithMetadata.getModel().getClass())) {
-            return false;
         }
-        return model.getId().equals(modelWithMetadata.getModel().getId());
+        String actualId = modelWithMetadata.getModel().getId();
+        String desiredId = model.getId();
+        return desiredId.equals(actualId);
     }
 }

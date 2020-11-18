@@ -81,11 +81,11 @@ final class StorageObserver {
     private <T extends Model> PendingMutation<T> toPendingMutation(StorageItemChange<T> change) {
         switch (change.type()) {
             case CREATE:
-                return PendingMutation.creation(change.item(), change.itemClass());
+                return PendingMutation.creation(change.item(), change.modelSchema());
             case UPDATE:
-                return PendingMutation.update(change.item(), change.itemClass(), change.predicate());
+                return PendingMutation.update(change.item(), change.modelSchema(), change.predicate());
             case DELETE:
-                return PendingMutation.deletion(change.item(), change.itemClass(), change.predicate());
+                return PendingMutation.deletion(change.item(), change.modelSchema(), change.predicate());
             default:
                 throw new IllegalStateException("Unknown mutation type = " + change.type());
         }

@@ -67,6 +67,7 @@ import static org.mockito.Mockito.when;
 public final class MutationProcessorTest {
     private static final long TIMEOUT_SECONDS = 5;
 
+    private ModelSchemaRegistry modelSchemaRegistry;
     private SynchronousStorageAdapter synchronousStorageAdapter;
     private MutationOutbox mutationOutbox;
     private AppSync appSync;
@@ -89,7 +90,7 @@ public final class MutationProcessorTest {
         this.appSync = mock(AppSync.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
         ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.register(Collections.singleton(BlogOwner.class));
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
@@ -109,7 +110,8 @@ public final class MutationProcessorTest {
         BlogOwner raphael = BlogOwner.builder()
                 .name("Raphael Kim")
                 .build();
-        PendingMutation<BlogOwner> createRaphael = PendingMutation.creation(raphael, BlogOwner.class);
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        PendingMutation<BlogOwner> createRaphael = PendingMutation.creation(raphael, schema);
 
         // Mock up a response from AppSync and enqueue a mutation.
         AppSyncMocking.create(appSync).mockSuccessResponse(raphael);
@@ -151,7 +153,8 @@ public final class MutationProcessorTest {
             HubAccumulator.create(HubChannel.DATASTORE, isProcessed(tony), 1)
                 .start();
 
-        PendingMutation<BlogOwner> createTony = PendingMutation.creation(tony, BlogOwner.class);
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        PendingMutation<BlogOwner> createTony = PendingMutation.creation(tony, schema);
         assertTrue(mutationOutbox.enqueue(createTony)
             .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
@@ -193,13 +196,13 @@ public final class MutationProcessorTest {
             .build();
         ModelMetadata metadata =
             new ModelMetadata(model.getId(), false, 1, Temporal.Timestamp.now());
-        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(schema.getName(), 1_000L);
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata);
 
         // Enqueue an update in the mutation outbox
         assertTrue(mutationOutbox
-            .enqueue(PendingMutation.update(model, BlogOwner.class))
+            .enqueue(PendingMutation.update(model, schema))
             .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
         // Fields that represent the "server's" understanding of the model state
