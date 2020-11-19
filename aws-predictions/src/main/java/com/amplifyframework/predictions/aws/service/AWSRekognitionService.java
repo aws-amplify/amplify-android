@@ -65,6 +65,7 @@ import com.amazonaws.services.rekognition.model.Face;
 import com.amazonaws.services.rekognition.model.FaceDetail;
 import com.amazonaws.services.rekognition.model.FaceMatch;
 import com.amazonaws.services.rekognition.model.Image;
+import com.amazonaws.services.rekognition.model.Instance;
 import com.amazonaws.services.rekognition.model.ModerationLabel;
 import com.amazonaws.services.rekognition.model.Parent;
 import com.amazonaws.services.rekognition.model.RecognizeCelebritiesRequest;
@@ -205,10 +206,15 @@ final class AWSRekognitionService {
             for (Parent parent : rekognitionLabel.getParents()) {
                 parents.add(parent.getName());
             }
+            List<RectF> boxes = new ArrayList<>();
+            for (Instance instance : rekognitionLabel.getInstances()) {
+                boxes.add(RekognitionResultTransformers.fromBoundingBox(instance.getBoundingBox()));
+            }
             Label amplifyLabel = Label.builder()
                     .value(rekognitionLabel.getName())
                     .confidence(rekognitionLabel.getConfidence())
                     .parentLabels(parents)
+                    .boxes(boxes)
                     .build();
             labels.add(amplifyLabel);
         }

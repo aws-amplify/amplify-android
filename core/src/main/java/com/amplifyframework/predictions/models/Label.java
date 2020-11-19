@@ -15,7 +15,10 @@
 
 package com.amplifyframework.predictions.models;
 
+import android.graphics.RectF;
 import androidx.annotation.NonNull;
+
+import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +37,12 @@ public final class Label extends ImageFeature<String> {
     public static final String FEATURE_TYPE = Label.class.getSimpleName();
 
     private final List<String> parentLabels;
+    private final List<RectF> boxes;
 
     private Label(final Builder builder) {
         super(builder);
         this.parentLabels = builder.getParentLabels();
+        this.boxes = builder.getBoxes();
     }
 
     @Override
@@ -67,6 +72,16 @@ public final class Label extends ImageFeature<String> {
     }
 
     /**
+     * Gets the list of bounding boxes containing objects for
+     * this label.
+     * @return the list of bounding boxes
+     */
+    @NonNull
+    public List<RectF> getBoxes() {
+        return boxes;
+    }
+
+    /**
      * Gets a builder to construct label feature.
      * @return a new builder
      */
@@ -80,9 +95,11 @@ public final class Label extends ImageFeature<String> {
      */
     public static final class Builder extends ImageFeature.Builder<Builder, Label, String> {
         private List<String> parentLabels;
+        private List<RectF> boxes;
 
         private Builder() {
             this.parentLabels = new ArrayList<>();
+            this.boxes = new ArrayList<>();
         }
 
         /**
@@ -107,6 +124,17 @@ public final class Label extends ImageFeature<String> {
         }
 
         /**
+         * Sets the list of bounding boxes and return this builder.
+         * @param boxes the list of bounding boxes
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder boxes(@NonNull List<RectF> boxes) {
+            this.boxes = Objects.requireNonNull(boxes);
+            return this;
+        }
+
+        /**
          * Construct a new instance of {@link Label} from
          * the values assigned to this builder.
          * @return An instance of {@link Label}
@@ -118,7 +146,12 @@ public final class Label extends ImageFeature<String> {
 
         @NonNull
         List<String> getParentLabels() {
-            return Objects.requireNonNull(parentLabels);
+            return Objects.requireNonNull(Immutable.of(parentLabels));
+        }
+
+        @NonNull
+        List<RectF> getBoxes() {
+            return Objects.requireNonNull(Immutable.of(boxes));
         }
     }
 }
