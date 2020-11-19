@@ -18,6 +18,8 @@ package com.amplifyframework.predictions.models;
 import android.graphics.RectF;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.util.Immutable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -144,12 +146,12 @@ public final class Label extends ImageFeature<String> {
 
         @NonNull
         List<String> getParentLabels() {
-            return Objects.requireNonNull(parentLabels);
+            return Objects.requireNonNull(Immutable.of(parentLabels));
         }
 
         @NonNull
         List<RectF> getBoxes() {
-            return Objects.requireNonNull(boxes);
+            return Objects.requireNonNull(Immutable.of(boxes));
         }
     }
 }
