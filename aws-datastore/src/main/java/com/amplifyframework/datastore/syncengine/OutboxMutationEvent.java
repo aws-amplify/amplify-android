@@ -23,6 +23,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.hub.HubEvent;
 
 import java.util.Objects;
 
@@ -31,7 +32,7 @@ import java.util.Objects;
  * and {@link DataStoreChannelEventName#OUTBOX_MUTATION_PROCESSED} event.
  * @param <M> The class type of the model in the mutation outbox.
  */
-public final class OutboxMutationEvent<M extends Model> {
+public final class OutboxMutationEvent<M extends Model> implements HubEvent.Data<OutboxMutationEvent<M>> {
     private final Class<M> model;
     private final ModelWithMetadata<M> element;
 
@@ -99,6 +100,14 @@ public final class OutboxMutationEvent<M extends Model> {
     @NonNull
     public ModelWithMetadata<M> getElement() {
         return element;
+    }
+
+    @Override
+    public HubEvent<OutboxMutationEvent<M>> toHubEvent() {
+        if (getElement().getSyncMetadata().getVersion() == null) {
+            return HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED, this);
+        }
+        return HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, this);
     }
 
     @Override
