@@ -20,7 +20,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.1'
+        classpath 'com.android.tools.build:gradle:4.1.1'
     }
 }
 
@@ -56,7 +56,7 @@ ext {
     navigationVersion = '2.3.1'
     dependency = [
         android: [
-            desugartools: 'com.android.tools:desugar_jdk_libs:1.0.9',
+            desugartools: 'com.android.tools:desugar_jdk_libs:1.1.1',
         ],
         androidx: [
             v4support: 'androidx.legacy:legacy-support-v4:1.0.0',
@@ -124,8 +124,8 @@ private void configureAndroidLibrary(Project project) {
             multiDexEnabled true
             minSdkVersion rootProject.ext.minSdkVersion
             targetSdkVersion rootProject.ext.targetSdkVersion
-            versionCode rootProject.findProperty('VERSION_CODE').toInteger()
-            versionName rootProject.findProperty('VERSION_NAME')
+            buildConfigField 'int', 'VERSION_CODE', rootProject.findProperty('VERSION_CODE')
+            buildConfigField 'String', 'VERSION_NAME', "\"${rootProject.findProperty('VERSION_NAME')}\""
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
             consumerProguardFiles rootProject.file('configuration/consumer-rules.pro')
 
