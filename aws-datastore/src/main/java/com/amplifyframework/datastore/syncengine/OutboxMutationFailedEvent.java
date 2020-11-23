@@ -55,6 +55,7 @@ public final class OutboxMutationFailedEvent<M extends Model>
      * @param errors the list of graphQL errors that caused the failure
      * @param <M> Class type of the model.
      * @return Outbox mutation error event.
+     * @throws DataStoreException if unexpected mutation type
      */
     @NonNull
     public static <M extends Model> OutboxMutationFailedEvent<M> create(

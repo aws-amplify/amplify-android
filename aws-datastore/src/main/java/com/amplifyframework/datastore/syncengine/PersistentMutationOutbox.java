@@ -25,13 +25,11 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
-import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.events.OutboxStatusEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.HashSet;
@@ -44,7 +42,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.reactivex.rxjava3.subjects.Subject;
 
-/*
+/**
  * The {@link MutationOutbox} is a persistently-backed in-order staging ground
  * for changes that have already occurred in the storage adapter, and need
  * to be synchronized with a remote GraphQL API, via (a) GraphQL mutation(s).

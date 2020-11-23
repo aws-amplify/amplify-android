@@ -165,7 +165,7 @@ final class MutationProcessor {
     }
 
     /**
-     *
+     * Publish hub event to indicate that mutation failed to publish.
      */
     private <T extends Model> void announceMutationFailed(
             PendingMutation<T> pendingMutation,
