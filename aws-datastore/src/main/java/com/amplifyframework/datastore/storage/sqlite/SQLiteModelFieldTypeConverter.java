@@ -98,8 +98,15 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 boolean booleanValue = (boolean) value;
                 return booleanValue ? 1L : 0L;
             case MODEL:
+                if (value instanceof Map) {
+                    Map<?, ?> map = (Map<?, ?>) value;
+                    return (String) map.get("id");
+                }
                 return ((Model) value).getId();
             case ENUM:
+                if (value instanceof String) {
+                    return (String) value;
+                }
                 return ((Enum<?>) value).name();
             case CUSTOM_TYPE:
                 return gson.toJson(value);
