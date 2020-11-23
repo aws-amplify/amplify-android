@@ -51,7 +51,6 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.TestObserver;
@@ -123,13 +122,8 @@ public final class RxStorageBindingTest {
 
             Observable.interval(100, TimeUnit.MILLISECONDS)
                       .take(5)
-                      .flatMapCompletable(aLong -> {
-                          progressConsumer.accept(new StorageTransferProgress(aLong, 500));
-                          return Completable.complete();
-                      })
-                      .doOnComplete(() -> {
-                          resultConsumer.accept(result);
-                      })
+                      .doOnNext(aLong -> progressConsumer.accept(new StorageTransferProgress(aLong, 500)))
+                      .doOnComplete(() -> resultConsumer.accept(result))
                       .subscribe();
             return mock(StorageDownloadFileOperation.class);
         }).when(delegate).downloadFile(eq(remoteKey),
@@ -193,13 +187,8 @@ public final class RxStorageBindingTest {
 
             Observable.interval(100, TimeUnit.MILLISECONDS)
                       .take(5)
-                      .flatMapCompletable(aLong -> {
-                          progressConsumer.accept(new StorageTransferProgress(aLong, 500));
-                          return Completable.complete();
-                      })
-                      .doOnComplete(() -> {
-                          resultConsumer.accept(result);
-                      })
+                      .doOnNext(aLong -> progressConsumer.accept(new StorageTransferProgress(aLong, 500)))
+                      .doOnComplete(() -> resultConsumer.accept(result))
                       .subscribe();
             return mock(StorageUploadFileOperation.class);
         }).when(delegate).uploadFile(eq(remoteKey),
@@ -236,13 +225,8 @@ public final class RxStorageBindingTest {
 
             Observable.interval(100, TimeUnit.MILLISECONDS)
                     .take(5)
-                    .flatMapCompletable(aLong -> {
-                        progressConsumer.accept(new StorageTransferProgress(aLong, 500));
-                        return Completable.complete();
-                    })
-                    .doOnComplete(() -> {
-                        resultConsumer.accept(result);
-                    })
+                    .doOnNext(aLong -> progressConsumer.accept(new StorageTransferProgress(aLong, 500)))
+                    .doOnComplete(() -> resultConsumer.accept(result))
                     .subscribe();
             return mock(StorageUploadInputStreamOperation.class);
         }).when(delegate).uploadInputStream(eq(remoteKey),
