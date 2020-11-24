@@ -139,6 +139,7 @@ public final class RxStorageBindingTest {
         TestObserver<StorageTransferProgress> testProgressObserver = rxOperation.observeProgress().test();
         testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         testObserver.assertValues(result);
+        testProgressObserver.awaitCount(5);
         testProgressObserver.assertValueCount(5);
     }
 
@@ -204,6 +205,7 @@ public final class RxStorageBindingTest {
         TestObserver<StorageTransferProgress> testProgressObserver = rxOperation.observeProgress().test();
         testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         testObserver.assertValues(result);
+        testProgressObserver.awaitCount(5);
         testProgressObserver.assertValueCount(5);
     }
 
@@ -242,6 +244,7 @@ public final class RxStorageBindingTest {
         TestObserver<StorageTransferProgress> testProgressObserver = rxOperation.observeProgress().test();
         testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         testObserver.assertValues(result);
+        testProgressObserver.awaitCount(5);
         testProgressObserver.assertValueCount(5);
     }
 
