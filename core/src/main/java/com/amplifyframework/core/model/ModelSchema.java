@@ -34,7 +34,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -294,66 +293,6 @@ public final class ModelSchema {
     @NonNull
     public Class<? extends Model> getModelClass() {
         return modelClass;
-    }
-
-    /**
-     * Creates a map of the fields in this schema to the actual values in the provided object.
-     * @param instance An instance of this model populated with values to map
-     * @return a map of the target fields in the schema to the actual values in the provided object
-     * @throws AmplifyException if the object does not match the fields in this schema
-     */
-    @NonNull
-    public Map<String, Object> getMapOfFieldNameAndValues(@NonNull Model instance) throws AmplifyException {
-        Objects.requireNonNull(instance);
-
-        HashMap<String, Object> result = new HashMap<>();
-
-        if (!instance.getClass().getSimpleName().equals(this.getName())
-                && !(instance.getClass().getSimpleName().equals("SerializedModel"))) {
-            throw new AmplifyException(
-                    "The object provided is not an instance of this Model.",
-                    "Please provide an instance of " + this.getName() + " which this is a schema for.");
-        }
-
-        for (ModelField modelField : this.fields.values()) {
-            try {
-                Field privateField = instance.getClass().getDeclaredField(modelField.getName());
-                privateField.setAccessible(true);
-
-                final ModelAssociation association = associations.get(modelField.getName());
-                if (association == null) {
-                    result.put(modelField.getName(), privateField.get(instance));
-                } else if (association.isOwner()) {
-                    // All ModelAssociation targets are required to be instances of Model so this is a safe cast
-                    Model target = (Model) Objects.requireNonNull(privateField.get(instance));
-                    result.put(association.getTargetName(), target.getId());
-                }
-                // Ignore if field is associated, but is not a "belongsTo" relationship
-            } catch (Exception exception) {
-                throw new AmplifyException("An invalid field was provided - " +
-                        modelField.getName() +
-                        " is not present in " +
-                        instance.getClass().getSimpleName(),
-                        exception,
-                        "Check if this model schema is a correct representation of the fields in the provided Object");
-            }
-        }
-
-        /*
-         * If the owner field exists on the model, and the value is null, it should be omitted when performing a
-         * mutation because the AppSync server will automatically populate it using the authentication token provided
-         * in the request header.  The logic below filters out the owner field if null for this scenario.
-         */
-        for (AuthRule authRule : getAuthRules()) {
-            if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
-                String ownerField = authRule.getOwnerFieldOrDefault();
-                if (result.containsKey(ownerField) && result.get(ownerField) == null) {
-                    result.remove(ownerField);
-                }
-            }
-        }
-
-        return result;
     }
 
     @Override

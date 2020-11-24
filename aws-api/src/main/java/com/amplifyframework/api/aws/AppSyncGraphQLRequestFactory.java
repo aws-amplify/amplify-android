@@ -15,13 +15,19 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.model.AuthRule;
+import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelAssociation;
+import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
 import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
@@ -40,13 +46,16 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Converts provided model or class type into a request container
@@ -198,7 +207,7 @@ public final class AppSyncGraphQLRequestFactory {
             if (MutationType.DELETE.equals(type)) {
                 builder.variable("input", inputType, Collections.singletonMap("id", model.getId()));
             } else {
-                builder.variable("input", inputType, schema.getMapOfFieldNameAndValues(model));
+                builder.variable("input", inputType, getMapOfFieldNameAndValues(schema, model));
             }
 
             if (!QueryPredicates.all().equals(predicate)) {
@@ -338,5 +347,53 @@ public final class AppSyncGraphQLRequestFactory {
                     "has been created which is not implemented yet."
                 );
         }
+    }
+
+    private static Map<String, Object> getMapOfFieldNameAndValues(
+            @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
+        if (!instance.getClass().getSimpleName().equals(schema.getName())) {
+            throw new AmplifyException(
+                "The object provided is not an instance of " + schema.getName() + ".",
+                "Please provide an instance of " + schema.getName() + " that matches the schema type."
+            );
+        }
+        final Map<String, Object> result = new HashMap<>();
+        for (ModelField modelField : schema.getFields().values()) {
+            String fieldName = modelField.getName();
+            try {
+                Field privateField = instance.getClass().getDeclaredField(modelField.getName());
+                privateField.setAccessible(true);
+                Object fieldValue = privateField.get(instance);
+                final ModelAssociation association = schema.getAssociations().get(fieldName);
+                if (association == null) {
+                    result.put(fieldName, fieldValue);
+                } else if (association.isOwner()) {
+                    Model target = (Model) Objects.requireNonNull(fieldValue);
+                    result.put(association.getTargetName(), target.getId());
+                }
+                // Ignore if field is associated, but is not a "belongsTo" relationship
+            } catch (Exception exception) {
+                throw new AmplifyException(
+                    "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
+                    exception,
+                    "Check if this model schema is a correct representation of the fields in the provided Object");
+            }
+        }
+
+        /*
+         * If the owner field exists on the model, and the value is null, it should be omitted when performing a
+         * mutation because the AppSync server will automatically populate it using the authentication token provided
+         * in the request header.  The logic below filters out the owner field if null for this scenario.
+         */
+        for (AuthRule authRule : schema.getAuthRules()) {
+            if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+                String ownerField = authRule.getOwnerFieldOrDefault();
+                if (result.containsKey(ownerField) && result.get(ownerField) == null) {
+                    result.remove(ownerField);
+                }
+            }
+        }
+
+        return result;
     }
 }
