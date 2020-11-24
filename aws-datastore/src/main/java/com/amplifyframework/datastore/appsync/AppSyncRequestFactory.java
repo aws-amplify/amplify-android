@@ -24,7 +24,11 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.model.AuthRule;
+import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelAssociation;
+import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
 import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
@@ -44,6 +48,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -112,8 +117,7 @@ final class AppSyncRequestFactory {
     }
 
     static <T> AppSyncGraphQLRequest<T> buildSubscriptionRequest(
-            ModelSchema modelSchema,
-            SubscriptionType subscriptionType) throws DataStoreException {
+            ModelSchema modelSchema, SubscriptionType subscriptionType) throws DataStoreException {
         try {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(modelSchema.getModelClass())
@@ -129,29 +133,21 @@ final class AppSyncRequestFactory {
     }
 
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildDeletionRequest(
-            ModelSchema schema, String objectId, Integer version, QueryPredicate predicate) throws DataStoreException {
+            ModelSchema schema, String objectId, Integer version, QueryPredicate predicate)
+            throws DataStoreException {
         Map<String, Object> inputMap = new HashMap<>();
         inputMap.put("id", objectId);
         inputMap.put("_version", version);
         return buildMutation(schema, inputMap, predicate, MutationType.DELETE);
     }
 
-    @SuppressWarnings("unchecked") // cast to (Class<M>)
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildUpdateRequest(
-            M model, Integer version, QueryPredicate predicate) throws DataStoreException {
-        Class<M> modelClass = (Class<M>) model.getClass();
+            ModelSchema schema, M model, Integer version, QueryPredicate predicate) throws DataStoreException {
         try {
-            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
             Map<String, Object> inputMap = new HashMap<>();
-            if (model instanceof SerializedModel) {
-                SerializedModel serializedModel = (SerializedModel) model;
-                inputMap.putAll(serializedModel.getSerializedData());
-            } else {
-                inputMap.putAll(schema.getMapOfFieldNameAndValues(model));
-            }
             inputMap.put("_version", version);
+            inputMap.putAll(getMapOfFieldNameAndValues(schema, model));
             return buildMutation(schema, inputMap, predicate, MutationType.UPDATE);
-
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
@@ -159,17 +155,10 @@ final class AppSyncRequestFactory {
     }
 
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildCreationRequest(
-            M model, ModelSchema modelSchema)
-            throws DataStoreException {
+            ModelSchema schema, M model) throws DataStoreException {
         try {
-            Map<String, Object> inputMap = new HashMap<>();
-            if (model instanceof SerializedModel) {
-                SerializedModel serializedModel = (SerializedModel) model;
-                inputMap.putAll(serializedModel.getSerializedData());
-            } else {
-                inputMap.putAll(modelSchema.getMapOfFieldNameAndValues(model));
-            }
-            return buildMutation(modelSchema, inputMap, QueryPredicates.all(), MutationType.CREATE);
+            Map<String, Object> inputMap = getMapOfFieldNameAndValues(schema, model);
+            return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
@@ -281,10 +270,8 @@ final class AppSyncRequestFactory {
      * @return Mutation doc
      */
     private static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildMutation(
-                                                               ModelSchema schema,
-                                                               Map<String, Object> inputMap,
-                                                               QueryPredicate predicate,
-                                                               MutationType mutationType) throws DataStoreException {
+            ModelSchema schema, Map<String, Object> inputMap, QueryPredicate predicate, MutationType mutationType)
+            throws DataStoreException {
         try {
             String graphQlTypeName = schema.getName();
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
@@ -314,5 +301,82 @@ final class AppSyncRequestFactory {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
         }
+    }
+
+    private static Map<String, Object> getMapOfFieldNameAndValues(
+            @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
+        boolean isSerializedModel = instance instanceof SerializedModel;
+        boolean hasMatchingModelName = instance.getClass().getSimpleName().equals(schema.getName());
+        if (!(hasMatchingModelName || isSerializedModel)) {
+            throw new AmplifyException(
+                "The object provided is not an instance of " + schema.getName() + ".",
+                "Please provide an instance of " + schema.getName() + " that matches the schema type."
+            );
+        }
+
+        Map<String, Object> result = new HashMap<>(extractFieldLevelData(schema, instance));
+
+        /*
+         * If the owner field exists on the model, and the value is null, it should be omitted when performing a
+         * mutation because the AppSync server will automatically populate it using the authentication token provided
+         * in the request header.  The logic below filters out the owner field if null for this scenario.
+         */
+        for (AuthRule authRule : schema.getAuthRules()) {
+            if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+                String ownerField = authRule.getOwnerFieldOrDefault();
+                if (result.containsKey(ownerField) && result.get(ownerField) == null) {
+                    result.remove(ownerField);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static Map<String, Object> extractFieldLevelData(
+            ModelSchema schema, Model instance) throws AmplifyException {
+        final Map<String, Object> result = new HashMap<>();
+        for (ModelField modelField : schema.getFields().values()) {
+            String fieldName = modelField.getName();
+            try {
+                final ModelAssociation association = schema.getAssociations().get(fieldName);
+                if (association == null) {
+                    result.put(fieldName, extractFieldValue(modelField, instance));
+                } else if (association.isOwner()) {
+                    result.put(association.getTargetName(), extractAssociateId(modelField, instance));
+                }
+                // Ignore if field is associated, but is not a "belongsTo" relationship
+            } catch (Exception exception) {
+                throw new AmplifyException(
+                    "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
+                    exception,
+                    "Check if this model schema is a correct representation of the fields in the provided Object");
+            }
+        }
+        return result;
+    }
+
+    private static Object extractAssociateId(ModelField modelField, Model instance)
+            throws NoSuchFieldException, IllegalAccessException {
+        final Object fieldValue = extractFieldValue(modelField, instance);
+        if (modelField.isModel() && fieldValue instanceof Model) {
+            return ((Model) fieldValue).getId();
+        } else if (modelField.isModel() && fieldValue instanceof Map) {
+            return ((Map<?, ?>) fieldValue).get("id");
+        } else {
+            throw new IllegalStateException("Associated data is not Model or Map.");
+        }
+    }
+
+    private static Object extractFieldValue(ModelField modelField, Model instance)
+            throws NoSuchFieldException, IllegalAccessException {
+        if (instance instanceof SerializedModel) {
+            SerializedModel serializedModel = (SerializedModel) instance;
+            Map<String, Object> serializedData = serializedModel.getSerializedData();
+            return serializedData.get(modelField.getName());
+        }
+        Field privateField = instance.getClass().getDeclaredField(modelField.getName());
+        privateField.setAccessible(true);
+        return privateField.get(instance);
     }
 }
