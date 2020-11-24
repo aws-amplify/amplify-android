@@ -109,7 +109,6 @@ public final class AppSyncClient implements AppSync {
         return new NoOpCancelable();
     }
 
-    @SuppressWarnings("unchecked") // (Class<T>)
     @NonNull
     @Override
     public <T extends Model> Cancelable create(
@@ -119,7 +118,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
             final GraphQLRequest<ModelWithMetadata<T>> request =
-                    AppSyncRequestFactory.buildCreationRequest(model, modelSchema);
+                    AppSyncRequestFactory.buildCreationRequest(modelSchema, model);
             return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(
@@ -152,7 +151,6 @@ public final class AppSyncClient implements AppSync {
         return update(model, modelSchema, version, QueryPredicates.all(), onResponse, onFailure);
     }
 
-    @SuppressWarnings("unchecked") // (Class<T>)
     @NonNull
     @Override
     public <T extends Model> Cancelable update(
@@ -164,7 +162,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
             final GraphQLRequest<ModelWithMetadata<T>> request =
-                    AppSyncRequestFactory.buildUpdateRequest(model, version, predicate);
+                    AppSyncRequestFactory.buildUpdateRequest(modelSchema, model, version, predicate);
             return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(
