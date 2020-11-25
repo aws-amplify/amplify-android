@@ -312,7 +312,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 itemChangeSubject.onNext(change);
                 onSuccess.accept(change);
             } catch (DataStoreException dataStoreException) {
-                itemChangeSubject.onError(dataStoreException);
                 onError.accept(dataStoreException);
             } catch (Exception someOtherTypeOfException) {
                 String modelToString = getModelName(item) + "[id=" + item.getId() + "]";
@@ -320,7 +319,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     "Error in saving the model: " + modelToString,
                     someOtherTypeOfException, "See attached exception for details."
                 );
-                itemChangeSubject.onError(dataStoreException);
                 onError.accept(dataStoreException);
             }
         });
@@ -530,14 +528,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 itemChangeSubject.onNext(change);
                 onSuccess.accept(change);
             } catch (DataStoreException dataStoreException) {
-                itemChangeSubject.onError(dataStoreException);
                 onError.accept(dataStoreException);
             } catch (Exception someOtherTypeOfException) {
                 DataStoreException dataStoreException = new DataStoreException(
                     "Error in deleting the model.", someOtherTypeOfException,
                     "See attached exception for details."
                 );
-                itemChangeSubject.onError(dataStoreException);
                 onError.accept(dataStoreException);
             }
         });
