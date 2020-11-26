@@ -39,6 +39,7 @@ import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.Empty;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -157,6 +158,9 @@ final class SubscriptionProcessor {
         if (exception instanceof DataStoreException.GraphQLResponseException) {
             List<GraphQLResponse.Error> errors = ((DataStoreException.GraphQLResponseException) exception).getErrors();
             GraphQLResponse.Error firstError = errors.get(0);
+            if (Empty.check(firstError.getExtensions())) {
+                return false;
+            }
             AppSyncExtensions extensions = new AppSyncExtensions(firstError.getExtensions());
             return AppSyncExtensions.AppSyncErrorType.UNAUTHORIZED.equals(extensions.getErrorType());
         }
