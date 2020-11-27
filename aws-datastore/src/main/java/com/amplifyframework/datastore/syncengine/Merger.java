@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
@@ -132,7 +133,7 @@ final class Merger {
             // First, check if the thing exists.
             // If we don't, we'll get an exception saying basically,
             // "failed to delete a non-existing thing."
-            ifPresent(model.getClass(), model.getId(),
+            ifPresent(model,
                 () -> localStorageAdapter.delete(
                     model,
                     StorageItemChange.Initiator.SYNC_ENGINE,
@@ -165,17 +166,20 @@ final class Merger {
     }
 
     /**
-     * If the DataStore contains an item of the given class and with the given ID,
-     * then perform an action. Otherwise, perform some other action.
-     * @param clazz Search for this class in the DataStore
-     * @param modelId Search for an item with this ID in the DataStore
+     * If the DataStore contains a model instance, then perform an action.
+     * Otherwise, perform some other action.
+     * @param model A model that might exist in local storage
      * @param onPresent If there is a match, perform this action
      * @param onNotPresent If there is NOT a match, perform this action as a fallback
-     * @param <T> The type of item being searched
      */
-    private <T extends Model> void ifPresent(
-            Class<T> clazz, String modelId, Action onPresent, Action onNotPresent) {
-        localStorageAdapter.query(clazz, Where.id(modelId), iterator -> {
+    private void ifPresent(Model model, Action onPresent, Action onNotPresent) {
+        final String modelName;
+        if (model instanceof SerializedModel) {
+            modelName = ((SerializedModel) model).getModelName();
+        } else {
+            modelName = model.getClass().getSimpleName();
+        }
+        localStorageAdapter.query(modelName, Where.id(model.getId()), iterator -> {
             if (iterator.hasNext()) {
                 onPresent.call();
             } else {
