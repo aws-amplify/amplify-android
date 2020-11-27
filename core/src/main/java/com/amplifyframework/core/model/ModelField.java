@@ -203,7 +203,7 @@ public final class ModelField {
     public String toString() {
         return "ModelField{" +
             "name='" + name + '\'' +
-            ", type='" + javaClassForValue + '\'' +
+            ", javaClassForValue='" + javaClassForValue + '\'' +
             ", targetType='" + targetType + '\'' +
             ", isRequired=" + isRequired +
             ", isArray=" + isArray +
