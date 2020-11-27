@@ -82,7 +82,7 @@ import static org.junit.Assert.assertTrue;
     "run any business logic. A manual workaround exists, by running this cleanup script: " +
     "https://gist.github.com/jamesonwilliams/c76169676cb99c51d997ef0817eb9278#quikscript-to-clear-appsync-tables"
 )
-public final class HybridCloudSyncInstrumentationTest {
+public final class HybridAssociationSyncInstrumentationTest {
     private static final int TIMEOUT_SECONDS = 30;
 
     private SchemaProvider schemaProvider;
@@ -98,6 +98,7 @@ public final class HybridCloudSyncInstrumentationTest {
      * test process with global state. We need an *instance* of the DataStore.
      * @throws AmplifyException On failure to configure Amplify, API/DataStore categories.
      */
+    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Before
     public void setup() throws AmplifyException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
