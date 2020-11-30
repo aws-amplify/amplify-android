@@ -150,7 +150,16 @@ final class MutationProcessor {
                 );
                 publishCurrentOutboxStatus();
             })
-            .doOnError(error -> LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error));
+            .doOnError(error -> {
+                LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error);
+                if (error instanceof DataStoreException.GraphQLResponseException) {
+                    DataStoreException.GraphQLResponseException appSyncError =
+                            (DataStoreException.GraphQLResponseException) error;
+                    // Publish to hub before removing failed mutation from the outbox.
+                    announceMutationFailed(mutationOutboxItem, appSyncError.getErrors());
+                    mutationOutbox.remove(mutationOutboxItem.getMutationId());
+                }
+            });
     }
 
     /**
@@ -304,16 +313,10 @@ final class MutationProcessor {
         // error to Hub and remove pending mutation from outbox.
         // This helps unclog the mutation outbox by removing a failing
         // mutation from the queue.
-        return Completable.fromAction(() -> announceMutationFailed(pendingMutation, errors))
-            .doOnError(error -> LOG.warn("Failed to create an outboxMutationFailedEvent. ", error))
-            .andThen(mutationOutbox.remove(pendingMutation.getMutationId()))
-            .andThen(Single.error(new DataStoreException(
-                    "Mutation failed. Failed mutation = " + pendingMutation + ". " +
-                            "AppSync response contained errors = " + errors,
-                    "Verify that your AppSync endpoint is able to store " +
-                            pendingMutation.getMutatedItem() + "."
-            )));
-
+        return Single.error(new DataStoreException.GraphQLResponseException(
+            "Mutation failed. Failed mutation = " + pendingMutation + ". " +
+                "AppSync response contained errors = " + errors, errors
+        ));
     }
 
     private static String getModelName(@NonNull Model model) {
