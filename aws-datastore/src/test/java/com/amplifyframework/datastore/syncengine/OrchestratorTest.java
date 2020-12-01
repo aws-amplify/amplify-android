@@ -138,7 +138,7 @@ public final class OrchestratorTest {
                 .map(HubEvent::getData)
                 .map(data -> (OutboxMutationEvent<BlogOwner>) data)
                 .map(OutboxMutationEvent::getElement)
-                .map(ModelWithMetadata::getModel)
+                .map(OutboxMutationEvent.OutboxMutationEventElement::getModel)
                 .toList()
                 .blockingGet()
         );
