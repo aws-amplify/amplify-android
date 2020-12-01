@@ -15,11 +15,8 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.events.ModelSyncedEvent;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.logging.Logger;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * by operation type for a given model.
  */
 final class ModelSyncMetricsAccumulator {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final Map<StorageItemChange.Type, AtomicInteger> syncMetrics;
     private final String modelClassName;
 
@@ -62,9 +58,9 @@ final class ModelSyncMetricsAccumulator {
 
     /**
      * Increments the counter for a given change type.
-     * @param itemChange The change type to increment.
+     * @param changeType The change type to increment.
      */
-    public void increment(StorageItemChange<? extends Model> itemChange) {
-        syncMetrics.get(itemChange.type()).incrementAndGet();
+    public void increment(StorageItemChange.Type changeType) {
+        syncMetrics.get(changeType).incrementAndGet();
     }
 }
