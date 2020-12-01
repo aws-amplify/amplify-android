@@ -150,12 +150,9 @@ final class MutationProcessor {
                 );
                 publishCurrentOutboxStatus();
             })
-            .doOnError(error -> {
-                LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error);
-            })
             // If caused by an AppSync error, then publish it to hub, swallow,
             // and then remove from the outbox to unblock the queue.
-            // Otherwise, pass it through and bubble it up further.
+            // Otherwise, pass it through.
             .onErrorResumeNext(error -> {
                 if (error instanceof DataStoreException.GraphQLResponseException) {
                     DataStoreException.GraphQLResponseException appSyncError =
@@ -164,6 +161,10 @@ final class MutationProcessor {
                         .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, appSyncError));
                 }
                 return Completable.error(error);
+            })
+            // Finally, catch all.
+            .doOnError(error -> {
+                LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error);
             });
     }
 
@@ -318,10 +319,9 @@ final class MutationProcessor {
             return conflictResolver.resolve(pendingMutation, unhandledConflict);
         }
 
-        // If error was not due to ConflictUnhandled, then just publish
-        // error to Hub and remove pending mutation from outbox.
-        // This helps unclog the mutation outbox by removing a failing
-        // mutation from the queue.
+        // If error was not due to ConflictUnhandled, then mark it as an AppSync
+        // error and bubble it up further to be taken care of inside
+        // processOutboxItem() method.
         return Single.error(new DataStoreException.GraphQLResponseException(
             "Mutation failed. Failed mutation = " + pendingMutation + ". " +
                 "AppSync response contained errors = " + errors, errors
