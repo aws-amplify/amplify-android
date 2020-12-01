@@ -47,7 +47,7 @@ final class TestHubEventFilters {
         if (mutationEvent == null) {
             return false;
         }
-        if (!model.getClass().isAssignableFrom(mutationEvent.getModel())) {
+        if (!model.getClass().getSimpleName().equals(mutationEvent.getModelName())) {
             return false;
         }
         String actualId = mutationEvent.getElement().getModel().getId();
