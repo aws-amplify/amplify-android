@@ -15,10 +15,17 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
@@ -40,6 +47,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -120,12 +128,15 @@ public final class AppSyncRequestFactoryTest {
      * @throws JSONException from JSONAssert.assertEquals.
      */
     @Test
-    public void validateUpdateWithPredicateGeneration() throws DataStoreException, JSONException {
+    public void validateUpdateWithPredicateGeneration() throws AmplifyException, JSONException {
         String blogOwnerId = "926d7ee8-4ea5-40c0-8e62-3fb80b2a2edd";
         BlogOwner owner = BlogOwner.builder().name("John Doe").id(blogOwnerId).build();
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        AppSyncGraphQLRequest<?> request =
+            AppSyncRequestFactory.buildUpdateRequest(schema, owner, 42, BlogOwner.WEA.contains("ther"));
         JSONAssert.assertEquals(
             Resources.readAsString("update-blog-owner-with-predicate.txt"),
-                AppSyncRequestFactory.buildUpdateRequest(owner, 42, BlogOwner.WEA.contains("ther")).getContent(),
+            request.getContent(),
             true
         );
     }
@@ -137,10 +148,12 @@ public final class AppSyncRequestFactoryTest {
      * @throws JSONException from JSONAssert.assertEquals.
      */
     @Test
-    public void validateUpdateNestedCustomTypeWithPredicateGeneration() throws DataStoreException, JSONException {
+    public void validateUpdateNestedCustomTypeWithPredicateGeneration() throws AmplifyException, JSONException {
+        ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
                 Resources.readAsString("update-parent-with-predicate.txt"),
                 AppSyncRequestFactory.buildUpdateRequest(
+                        schema,
                         buildTestParentModel(),
                         42,
                         Parent.NAME.contains("Jane Doe")
@@ -167,7 +180,6 @@ public final class AppSyncRequestFactoryTest {
 
     /**
      * Checks that the predicate expression matches the expected value.
-     * @throws AmplifyException On failure to parse ModelSchema from model class
      * @throws DataStoreException If the output does not match.
      */
     @Test
@@ -269,7 +281,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Comment.class);
         JSONAssert.assertEquals(
             Resources.readAsString("create-comment-request.txt"),
-            AppSyncRequestFactory.buildCreationRequest(comment, schema).getContent(),
+            AppSyncRequestFactory.buildCreationRequest(schema, comment).getContent(),
             true
         );
     }
@@ -282,13 +294,11 @@ public final class AppSyncRequestFactoryTest {
      */
     @Test
     public void validateMutationGenerationOnCreateNestedCustomType() throws AmplifyException, JSONException {
+        ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
-                Resources.readAsString("create-parent-request.txt"),
-                AppSyncRequestFactory.buildCreationRequest(
-                    buildTestParentModel(),
-                    ModelSchema.fromModelClass(Parent.class
-                    )).getContent(),
-                true
+            Resources.readAsString("create-parent-request.txt"),
+            AppSyncRequestFactory.buildCreationRequest(schema, buildTestParentModel()).getContent(),
+            true
         );
     }
 
@@ -320,5 +330,81 @@ public final class AppSyncRequestFactoryTest {
                 .children(Arrays.asList(child1, child2))
                 .id("426f8e8d-ea0f-4839-a73f-6a2a38565ba1")
                 .build();
+    }
+
+
+    /**
+     * Verify that the owner field is removed if the value is null.
+     * @throws AmplifyException On failure to build schema
+     */
+    @Test
+    public void ownerFieldIsRemovedIfNull() throws AmplifyException {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "111");
+        expected.put("description", "Mop the floor");
+        expected.put("_version", 1);
+
+        // Act
+        Todo todo = new Todo("111", "Mop the floor", null);
+        ModelSchema schema = ModelSchema.fromModelClass(Todo.class);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> actual = (Map<String, Object>)
+            AppSyncRequestFactory.buildUpdateRequest(schema, todo, 1, QueryPredicates.all())
+                .getVariables()
+                .get("input");
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+    /**
+     * Verify that the owner field is NOT removed if the value is set.
+     * @throws AmplifyException On failure to build schema
+     */
+    @Test
+    public void ownerFieldIsNotRemovedIfSet() throws AmplifyException {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "111");
+        expected.put("description", "Mop the floor");
+        expected.put("owner", "johndoe");
+
+        // Act
+        Todo todo = new Todo("111", "Mop the floor", "johndoe");
+        ModelSchema schema = ModelSchema.fromModelClass(Todo.class);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> actual = (Map<String, Object>)
+            AppSyncRequestFactory.buildCreationRequest(schema, todo)
+                .getVariables()
+                .get("input");
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
+    static final class Todo implements Model {
+        @com.amplifyframework.core.model.annotations.ModelField(targetType = "ID", isRequired = true)
+        private final String id;
+
+        @com.amplifyframework.core.model.annotations.ModelField(isRequired = true)
+        private final String description;
+
+        @com.amplifyframework.core.model.annotations.ModelField
+        private final String owner;
+
+        @SuppressWarnings("ParameterName") // checkstyle wants variable names to be >2 chars, but id is only 2.
+        Todo(String id, String description, String owner) {
+            this.id = id;
+            this.description = description;
+            this.owner = owner;
+        }
+
+        @NonNull
+        @Override
+        public String getId() {
+            return "111";
+        }
     }
 }

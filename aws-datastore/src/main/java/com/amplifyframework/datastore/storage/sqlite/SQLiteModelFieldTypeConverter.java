@@ -98,18 +98,23 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 boolean booleanValue = (boolean) value;
                 return booleanValue ? 1L : 0L;
             case MODEL:
-                return ((Model) value).getId();
+                return value instanceof Map ? ((Map<?, ?>) value).get("id") : ((Model) value).getId();
             case ENUM:
-                return ((Enum<?>) value).name();
+                return value instanceof String ? value : ((Enum<?>) value).name();
             case CUSTOM_TYPE:
                 return gson.toJson(value);
             case DATE:
-                return ((Temporal.Date) value).format();
+                return value instanceof String ? value : ((Temporal.Date) value).format();
             case DATE_TIME:
-                return ((Temporal.DateTime) value).format();
+                return value instanceof String ? value : ((Temporal.DateTime) value).format();
             case TIME:
-                return ((Temporal.Time) value).format();
+                return value instanceof String ? value : ((Temporal.Time) value).format();
             case TIMESTAMP:
+                if (value instanceof Integer) {
+                    return ((Integer) value).longValue();
+                } else if (value instanceof Long) {
+                    return value;
+                }
                 return ((Temporal.Timestamp) value).getSecondsSinceEpoch();
             default:
                 LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", fieldType));

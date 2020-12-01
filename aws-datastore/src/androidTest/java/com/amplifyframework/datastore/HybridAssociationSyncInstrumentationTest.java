@@ -46,6 +46,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,7 @@ import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static com.amplifyframework.datastore.DataStoreHubEventFilters.publicationOf;
 import static com.amplifyframework.datastore.DataStoreHubEventFilters.receiptOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -80,8 +82,8 @@ import static org.junit.Assert.assertTrue;
     "run any business logic. A manual workaround exists, by running this cleanup script: " +
     "https://gist.github.com/jamesonwilliams/c76169676cb99c51d997ef0817eb9278#quikscript-to-clear-appsync-tables"
 )
-public final class HybridCloudSyncInstrumentationTest {
-    private static final int TIMEOUT_SECONDS = 15;
+public final class HybridAssociationSyncInstrumentationTest {
+    private static final int TIMEOUT_SECONDS = 30;
 
     private SchemaProvider schemaProvider;
     private SynchronousApi api;
@@ -96,6 +98,7 @@ public final class HybridCloudSyncInstrumentationTest {
      * test process with global state. We need an *instance* of the DataStore.
      * @throws AmplifyException On failure to configure Amplify, API/DataStore categories.
      */
+    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Before
     public void setup() throws AmplifyException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
@@ -132,103 +135,146 @@ public final class HybridCloudSyncInstrumentationTest {
     }
 
     /**
-     * When we save an {@link SerializedModel}, we should find that data in the cloud,
-     * shortly there-after.
+     * When we save {@link SerializedModel}s, we should find them in the cloud,
+     * shortly there-after. Saving associated serialized models will work.
      * @throws AmplifyException For a variety of reasons, including failure to build schema,
      *                          or bad interaction with API or DataStore
      */
     @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Test
-    public void serializedModelIsSyncedToCloud() throws AmplifyException {
-        String modelName = BlogOwner.class.getSimpleName();
-        ModelSchema schema = schemaProvider.modelSchemas().get(modelName);
-
-        // Some model -- we will use this to construct a SerializedModel that can be saved
-        // and also to query for native models, the make sure that still works, after the save.
-        BlogOwner blogOwner = BlogOwner.builder()
+    public void associatedModelsAreSyncedUpToCloud() throws AmplifyException {
+        // First up, we're going to save a "leaf" model, a BlogOwner.
+        String ownerModelName = BlogOwner.class.getSimpleName();
+        ModelSchema ownerSchema = schemaProvider.modelSchemas().get(ownerModelName);
+        assertNotNull(ownerSchema);
+        BlogOwner owner = BlogOwner.builder()
             .name("Guillermo Esteban")
             .build();
-
-        // Create a serialized model based on the Java model's data
-        Map<String, Object> serializedData = new HashMap<>();
-        serializedData.put("id", blogOwner.getId());
-        serializedData.put("name", blogOwner.getName());
-        SerializedModel serializedModel = SerializedModel.builder()
-            .serializedData(serializedData)
-            .modelSchema(schema)
+        Map<String, Object> ownerData = new HashMap<>();
+        ownerData.put("id", owner.getId());
+        ownerData.put("name", owner.getName());
+        SerializedModel serializedOwner = SerializedModel.builder()
+            .serializedData(ownerData)
+            .modelSchema(ownerSchema)
             .build();
 
         // Setup an accumulator so we know when there has been a publication.
-        // TODO: this says publicationOf(blogOwner), but it will need to say something without a type
-        HubAccumulator publicationAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(blogOwner), 1)
+        HubAccumulator ownerAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(owner), 1)
                 .start();
+        hybridBehaviors.save(serializedOwner);
+        ownerAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // This is the main test action, where we save a serially model locally.
-        hybridBehaviors.save(serializedModel);
-
-        // Now, we wait for the above change to propagate to the backend.
-        publicationAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // A few final steps. Let's validate that we can find the model locally
-        // by searching for it by model name
-        List<SerializedModel> allCurrentSerializedModels = hybridBehaviors.list(schema.getName());
-        assertTrue(allCurrentSerializedModels.contains(serializedModel));
-
-        // And that we can find it when searching using the Java-model-based API
+        // Validate that the Blog Owner was saved locally, and in the cloud.
+        List<SerializedModel> allCurrentSerializedOwners = hybridBehaviors.list(ownerSchema.getName());
+        assertTrue(allCurrentSerializedOwners.contains(serializedOwner));
         List<BlogOwner> allCurrentBlogOwners = normalBehaviors.list(BlogOwner.class);
-        assertTrue(allCurrentBlogOwners.contains(blogOwner));
+        assertTrue(allCurrentBlogOwners.contains(owner));
+        assertEquals(owner, api.get(BlogOwner.class, owner.getId()));
 
-        // Lastly, let's just double check it's actually present in the AppSync backend.
-        assertEquals(blogOwner, api.get(BlogOwner.class, blogOwner.getId()));
+        // Now, we're going to save a type with a connection.
+
+        // Build a blog, and its serialized form. Blog has association to a BlogOwner.
+        Blog blog = Blog.builder()
+            .name("A wonderful blog")
+            .owner(owner)
+            .build();
+        Map<String, Object> blogData = new HashMap<>();
+        blogData.put("id", blog.getId());
+        blogData.put("name", blog.getName());
+        blogData.put("owner", SerializedModel.builder()
+            .serializedData(Collections.singletonMap("id", owner.getId()))
+            .modelSchema(null)
+            .build());
+        String blogSchemaName = Blog.class.getSimpleName();
+        ModelSchema blogSchema = schemaProvider.modelSchemas().get(blogSchemaName);
+        assertNotNull(blogSchema);
+        SerializedModel serializedBlog = SerializedModel.builder()
+            .serializedData(blogData)
+            .modelSchema(blogSchema)
+            .build();
+
+        // Save the blog
+        HubAccumulator blogAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(blog), 1)
+                .start();
+        hybridBehaviors.save(serializedBlog);
+        blogAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Validate that we find the blog locally, and on the remote system.
+        List<SerializedModel> allCurrentSerializedBlogs = hybridBehaviors.list(blogSchema.getName());
+        assertTrue(allCurrentSerializedBlogs.contains(serializedBlog));
+        List<Blog> allCurrentBlogs = normalBehaviors.list(Blog.class);
+        assertTrue(allCurrentBlogs.contains(blog));
+        Blog foundBlog = api.get(Blog.class, blog.getId());
+        assertEquals(blog, foundBlog);
+        assertEquals(owner.getId(), foundBlog.getOwner().getId());
     }
 
     /**
      * When the cloud sees an update to its data, the new data should be reflected in the
-     * local store. What's more, we should be able to query for the updated by its model name,
-     * and expect to see the result, that way.
+     * local store. What's more, we should be able to query for the updated data by its model names,
+     * and expect to see the result, that way. This should hold for associated models, too.
      * @throws AmplifyException For a variety of reasons, including failure to build schema,
      *                          or bad interaction with API or DataStore
      */
     @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Test
-    public void modelSyncedDownFromCloudCanBeQueried() throws AmplifyException {
-        // Arrange a model and a schema
-        BlogOwner blogOwner = BlogOwner.builder()
+    public void associatedModelAreSyncedDownFromCloud() throws AmplifyException {
+        // Create a BlogOwner on the remote system,
+        // and wait for it to trickle back to the client.
+        BlogOwner owner = BlogOwner.builder()
             .name("Agent Texas")
             .build();
-        String modelName = BlogOwner.class.getSimpleName();
-        ModelSchema schema = schemaProvider.modelSchemas().get(modelName);
-
-        HubAccumulator receiptAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(blogOwner), 1)
+        String ownerModelName = BlogOwner.class.getSimpleName();
+        ModelSchema ownerSchema = schemaProvider.modelSchemas().get(ownerModelName);
+        assertNotNull(ownerSchema);
+        HubAccumulator ownerAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(owner), 1)
                 .start();
+        appSync.create(owner, ownerSchema);
+        ownerAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        // Save the model to the backend.
-        appSync.create(blogOwner, schema);
-
-        // Wait for the client to receive it over its active subscription
-        receiptAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Query the hybrid behaviors for the current hybrid models
-        // (Later, we'll verify that the backend change is represented in these.)
-        List<SerializedModel> allCurrentSerializedModels = hybridBehaviors.list(schema.getName());
-
-        // Create a SerializedModel that has the same content as the
-        // model that was published.
-        Map<String, Object> serializedData = new HashMap<>();
-        serializedData.put("id", blogOwner.getId());
-        serializedData.put("name", blogOwner.getName());
-
-        // Expect to find a representation of the new model, in this list.
-        assertTrue(allCurrentSerializedModels.contains(SerializedModel.builder()
-            .serializedData(serializedData)
-            .modelSchema(schema)
+        // Now, validate that we see the data locally, when we query for serialized models
+        // and by Java BlogOwners.
+        Map<String, Object> expectedOwnerData = new HashMap<>();
+        expectedOwnerData.put("id", owner.getId());
+        expectedOwnerData.put("name", owner.getName());
+        List<SerializedModel> actualSerializedOwners = hybridBehaviors.list(ownerSchema.getName());
+        assertTrue(actualSerializedOwners.contains(SerializedModel.builder()
+            .serializedData(expectedOwnerData)
+            .modelSchema(ownerSchema)
             .build()));
+        assertTrue(normalBehaviors.list(BlogOwner.class).contains(owner));
 
-        // We should also be able to find the Java-language representation of the model
-        // (There should be on difference in using the hybrid query vs. the native query.)
-        List<BlogOwner> allCurrentBlogOwners = normalBehaviors.list(BlogOwner.class);
-        assertTrue(allCurrentBlogOwners.contains(blogOwner));
+        // Now, remotely save a model that has an association to the owner above.
+        Blog blog = Blog.builder()
+            .name("Blog about Texas")
+            .owner(owner)
+            .build();
+        String blogModelName = Blog.class.getSimpleName();
+        ModelSchema blogSchema = schemaProvider.modelSchemas().get(blogModelName);
+        assertNotNull(blogSchema);
+        HubAccumulator blogAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(blog), 1)
+                .start();
+        appSync.create(blog, blogSchema);
+        blogAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Validate that we can find the newly associated model locally, now.
+        Map<String, Object> expectedBlogData = new HashMap<>();
+        expectedBlogData.put("id", blog.getId());
+        expectedBlogData.put("name", blog.getName());
+        expectedBlogData.put("owner", SerializedModel.builder()
+            .serializedData(Collections.singletonMap("id", owner.getId()))
+            .modelSchema(null)
+            .build()
+        );
+        List<SerializedModel> expectedSerializedBlogs = hybridBehaviors.list(blogSchema.getName());
+        assertTrue(expectedSerializedBlogs.contains(SerializedModel.builder()
+            .serializedData(expectedBlogData)
+            .modelSchema(blogSchema)
+            .build()));
+        assertTrue(normalBehaviors.list(Blog.class).contains(blog));
     }
 }

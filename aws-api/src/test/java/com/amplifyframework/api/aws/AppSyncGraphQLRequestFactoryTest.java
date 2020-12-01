@@ -15,9 +15,15 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
@@ -32,7 +38,11 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests the {@link AppSyncGraphQLRequestFactory}.
@@ -155,5 +165,75 @@ public final class AppSyncGraphQLRequestFactoryTest {
         // Assert: expected is actual
         JSONAssert.assertEquals(Resources.readAsString("create-meeting1.txt"),
                 requestToCreateMeeting1.getContent(), true);
+    }
+
+    /**
+     * Verify that the owner field is removed if the value is null.
+     */
+    @Test
+    public void ownerFieldIsRemovedIfNull() {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "111");
+        expected.put("description", "Mop the floor");
+
+        // Act
+        Todo todo = new Todo("111", "Mop the floor", null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> actual = (Map<String, Object>)
+            AppSyncGraphQLRequestFactory.buildMutation(todo, QueryPredicates.all(), MutationType.CREATE)
+                .getVariables()
+                .get("input");
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+    /**
+     * Verify that the owner field is NOT removed if the value is set..
+     */
+    @Test
+    public void ownerFieldIsNotRemovedIfSet() {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "111");
+        expected.put("description", "Mop the floor");
+        expected.put("owner", "johndoe");
+
+        // Act
+        Todo todo = new Todo("111", "Mop the floor", "johndoe");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> actual = (Map<String, Object>)
+            AppSyncGraphQLRequestFactory.buildMutation(todo, QueryPredicates.all(), MutationType.CREATE)
+                .getVariables()
+                .get("input");
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
+    static final class Todo implements Model {
+        @com.amplifyframework.core.model.annotations.ModelField(targetType = "ID", isRequired = true)
+        private final String id;
+
+        @com.amplifyframework.core.model.annotations.ModelField(isRequired = true)
+        private final String description;
+
+        @com.amplifyframework.core.model.annotations.ModelField
+        private final String owner;
+
+        @SuppressWarnings("ParameterName") // checkstyle wants variable names to be >2 chars, but id is only 2.
+        Todo(String id, String description, String owner) {
+            this.id = id;
+            this.description = description;
+            this.owner = owner;
+        }
+
+        @NonNull
+        @Override
+        public String getId() {
+            return "111";
+        }
     }
 }

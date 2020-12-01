@@ -17,12 +17,10 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
@@ -74,13 +72,14 @@ final class Merger {
 
     /**
      * Merge an item back into the local store, using a default strategy.
+     * TODO: Change this method to return a Maybe, and remove the Consumer argument.
      * @param modelWithMetadata A model, combined with metadata about it
-     * @param storageItemChangeConsumer A callback invoked when the merge method saves or deletes the model.
+     * @param changeTypeConsumer A callback invoked when the merge method saves or deletes the model.
      * @param <T> Type of model
      * @return A completable operation to merge the model
      */
-    <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata,
-                                        Consumer<StorageItemChange<T>> storageItemChangeConsumer) {
+    <T extends Model> Completable merge(
+            ModelWithMetadata<T> modelWithMetadata, Consumer<StorageItemChange.Type> changeTypeConsumer) {
         ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
         boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
         int incomingVersion = metadata.getVersion() == null ? -1 : metadata.getVersion();
@@ -102,7 +101,7 @@ final class Merger {
             .filter(currentVersion -> currentVersion == -1 || incomingVersion > currentVersion)
             // If we should merge, then do so now, starting with the model data.
             .flatMapCompletable(shouldMerge ->
-                (isDelete ? delete(model, storageItemChangeConsumer) : save(model, storageItemChangeConsumer))
+                (isDelete ? delete(model, changeTypeConsumer) : save(model, changeTypeConsumer))
                     .andThen(save(metadata, NoOpConsumer.create()))
             )
             // Let the world know that we've done a good thing.
@@ -127,60 +126,35 @@ final class Merger {
     }
 
     // Delete a model.
-    private <T extends Model> Completable delete(T model, Consumer<StorageItemChange<T>> onStorageItemChange) {
-        return Completable.defer(() -> Completable.create(emitter -> {
-            // First, check if the thing exists.
-            // If we don't, we'll get an exception saying basically,
-            // "failed to delete a non-existing thing."
-            ifPresent(model.getClass(), model.getId(),
-                () -> localStorageAdapter.delete(
-                    model,
-                    StorageItemChange.Initiator.SYNC_ENGINE,
-                    QueryPredicates.all(),
-                    storageItemChange -> {
-                        onStorageItemChange.accept(storageItemChange);
-                        emitter.onComplete();
-                    },
-                    emitter::onError
-                ),
-                emitter::onComplete
-            );
-        }));
+    private <T extends Model> Completable delete(T model, Consumer<StorageItemChange.Type> changeTypeConsumer) {
+        return Completable.create(emitter ->
+            localStorageAdapter.delete(model, StorageItemChange.Initiator.SYNC_ENGINE, QueryPredicates.all(),
+                storageItemChange -> {
+                    changeTypeConsumer.accept(storageItemChange.type());
+                    emitter.onComplete();
+                },
+                failure -> {
+                    LOG.verbose(
+                        "Failed to delete a model while merging. Perhaps it was already gone? "
+                        + android.util.Log.getStackTraceString(failure)
+                    );
+                    changeTypeConsumer.accept(StorageItemChange.Type.DELETE);
+                    emitter.onComplete();
+                }
+            )
+        );
     }
 
     // Create or update a model.
-    private <T extends Model> Completable save(T model, Consumer<StorageItemChange<T>> onStorageItemChange) {
-        return Completable.defer(() -> Completable.create(emitter ->
-            localStorageAdapter.save(
-                model,
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                QueryPredicates.all(),
+    private <T extends Model> Completable save(T model, Consumer<StorageItemChange.Type> changeTypeConsumer) {
+        return Completable.create(emitter ->
+            localStorageAdapter.save(model, StorageItemChange.Initiator.SYNC_ENGINE, QueryPredicates.all(),
                 storageItemChange -> {
-                    onStorageItemChange.accept(storageItemChange);
+                    changeTypeConsumer.accept(storageItemChange.type());
                     emitter.onComplete();
                 },
                 emitter::onError
             )
-        ));
-    }
-
-    /**
-     * If the DataStore contains an item of the given class and with the given ID,
-     * then perform an action. Otherwise, perform some other action.
-     * @param clazz Search for this class in the DataStore
-     * @param modelId Search for an item with this ID in the DataStore
-     * @param onPresent If there is a match, perform this action
-     * @param onNotPresent If there is NOT a match, perform this action as a fallback
-     * @param <T> The type of item being searched
-     */
-    private <T extends Model> void ifPresent(
-            Class<T> clazz, String modelId, Action onPresent, Action onNotPresent) {
-        localStorageAdapter.query(clazz, Where.id(modelId), iterator -> {
-            if (iterator.hasNext()) {
-                onPresent.call();
-            } else {
-                onNotPresent.call();
-            }
-        }, failure -> onNotPresent.call());
+        );
     }
 }

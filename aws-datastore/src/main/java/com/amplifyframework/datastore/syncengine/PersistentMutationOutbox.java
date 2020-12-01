@@ -121,7 +121,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     // the pendingMutation, directly.
                     mutationQueue.updateExistingQueueItemOrAppendNew(pendingMutation.getMutationId(), pendingMutation);
                     LOG.info("Successfully enqueued " + pendingMutation);
-                    announceSuccessfulSave(pendingMutation);
+                    announceEventEnqueued(pendingMutation);
                     publishCurrentOutboxStatus();
                     semaphore.release();
                     subscriber.onComplete();
@@ -236,13 +236,12 @@ final class PersistentMutationOutbox implements MutationOutbox {
     }
 
     /**
-     * Publish a successfully enqueued mutation to hub.
+     * Announce over hub that a mutation has been enqueued to the outbox.
      * @param pendingMutation A mutation that has been successfully enqueued to outbox
      * @param <T> Type of model
      */
-    private <T extends Model> void announceSuccessfulSave(PendingMutation<T> pendingMutation) {
-        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent
-                .fromModel(pendingMutation.getMutatedItem());
+    private <T extends Model> void announceEventEnqueued(PendingMutation<T> pendingMutation) {
+        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent.fromPendingMutation(pendingMutation);
         Amplify.Hub.publish(HubChannel.DATASTORE, mutationEvent.toHubEvent());
     }
 

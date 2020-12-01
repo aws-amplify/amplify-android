@@ -101,13 +101,45 @@ public final class GsonJavaTypeAdapters {
                     jsonReader.nextNull();
                     return null;
                 }
-                final Class<?> clazz;
+                String classString = jsonReader.nextString();
                 try {
-                    clazz = Class.forName(jsonReader.nextString());
+                    return Class.forName(classString);
                 } catch (ClassNotFoundException exception) {
-                    throw new IOException(exception);
+                    // Class.forName() doesn't support primitives.
+                    // So, we'll try that next, before giving up.
                 }
-                return clazz;
+                try {
+                    return boxForPrimitiveLabel(classString);
+                } catch (IllegalArgumentException illegalArgumentException) {
+                    // At this point, we've tried to load the class,
+                    // and also tried to box up a primitive, but neither have worked.
+                    throw new IOException("Unable to deserialize class for " + classString);
+                }
+            }
+
+            private static Class<?> boxForPrimitiveLabel(String primitiveLabel) {
+                switch (primitiveLabel) {
+                    case "boolean":
+                        return Boolean.class;
+                    case "byte":
+                        return Byte.class;
+                    case "short":
+                        return Short.class;
+                    case "int":
+                        return Integer.class;
+                    case "long":
+                        return Long.class;
+                    case "float":
+                        return Float.class;
+                    case "double":
+                        return Double.class;
+                    case "char":
+                        return Character.class;
+                    case "void":
+                        return Void.class;
+                    default:
+                        throw new IllegalArgumentException("No primitive with name = " + primitiveLabel);
+                }
             }
         }
     }
