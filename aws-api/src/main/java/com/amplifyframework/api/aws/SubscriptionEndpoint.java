@@ -209,9 +209,8 @@ final class SubscriptionEndpoint {
     private void notifyError(Throwable error) {
         for (Subscription<?> dispatcher : new HashSet<>(subscriptions.values())) {
             dispatcher.dispatchError(new ApiException(
-                    "Subscription failed.",
-                    error,
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                "Subscription failed.", error,
+                "Check your Internet connection. Is your device online?"
             ));
         }
     }
@@ -345,7 +344,7 @@ final class SubscriptionEndpoint {
                 if (!subscriptionReadyAcknowledgment.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
                     dispatchError(new ApiException(
                         "Timed out waiting for subscription start_ack.",
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                        "Check your Internet connection. Is your device online?"
                     ));
                     return false;
                 } else if (failed) {
