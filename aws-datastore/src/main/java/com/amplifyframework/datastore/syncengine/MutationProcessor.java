@@ -152,13 +152,18 @@ final class MutationProcessor {
             })
             .doOnError(error -> {
                 LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error);
+            })
+            // If caused by an AppSync error, then publish it to hub, swallow,
+            // and then remove from the outbox to unblock the queue.
+            // Otherwise, pass it through and bubble it up further.
+            .onErrorResumeNext(error -> {
                 if (error instanceof DataStoreException.GraphQLResponseException) {
                     DataStoreException.GraphQLResponseException appSyncError =
-                            (DataStoreException.GraphQLResponseException) error;
-                    // Publish to hub before removing failed mutation from the outbox.
-                    announceMutationFailed(mutationOutboxItem, appSyncError.getErrors());
-                    mutationOutbox.remove(mutationOutboxItem.getMutationId());
+                        (DataStoreException.GraphQLResponseException) error;
+                    return mutationOutbox.remove(mutationOutboxItem.getMutationId())
+                        .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, appSyncError));
                 }
+                return Completable.error(error);
             });
     }
 
@@ -175,11 +180,15 @@ final class MutationProcessor {
 
     /**
      * Publish hub event to indicate that mutation failed to publish.
+     * @param pendingMutation Pending mutation that triggered AppSync error response
+     * @param error Exception containing AppSync errors
+     * @param <T> Type of model
      */
     private <T extends Model> void announceMutationFailed(
             PendingMutation<T> pendingMutation,
-            List<GraphQLResponse.Error> errors
+            DataStoreException.GraphQLResponseException error
     ) throws DataStoreException {
+        List<GraphQLResponse.Error> errors = error.getErrors();
         OutboxMutationFailedEvent<T> errorEvent =
                 OutboxMutationFailedEvent.create(pendingMutation, errors);
         Amplify.Hub.publish(HubChannel.DATASTORE, errorEvent.toHubEvent());

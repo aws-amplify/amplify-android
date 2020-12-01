@@ -50,6 +50,8 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.rxjava3.core.Completable;
+
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isOutboxEmpty;
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isProcessed;
 import static org.junit.Assert.assertEquals;
@@ -58,6 +60,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -256,12 +259,8 @@ public final class MutationProcessorTest {
                 .enqueue(PendingMutation.update(model, schema))
                 .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
-        // When AppSync receives that update, have it respond with an Unauthorized Error.
-        String message = "Unauthorized operation.";
-        Map<String, Object> extensions = new HashMap<>();
-        extensions.put("errorType", "Unauthorized");
-        GraphQLResponse.Error error = new GraphQLResponse.Error(message, null, null, extensions);
-        AppSyncMocking.update(appSync).mockErrorResponse(model, 1, error);
+        // When AppSync receives that update, have it respond with an error.
+        AppSyncMocking.update(appSync).mockErrorResponse(model, 1);
 
         // Start listening for publication events.
         HubAccumulator errorAccumulator = HubAccumulator.create(
@@ -273,5 +272,47 @@ public final class MutationProcessorTest {
         // Start the mutation processor and wait for hub event.
         mutationProcessor.startDrainingMutationOutbox();
         errorAccumulator.await();
+    }
+
+    /**
+     * If error is caused by AppSync response, then the mutation outbox continues to
+     * drain without getting blocked.
+     * @throws DataStoreException On failure to save models
+     */
+    @Test
+    public void canDrainMutationOutboxOnPublicationError() throws DataStoreException {
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+
+        // We will attempt to "sync" 10 models.
+        final int maxAttempts = 10;
+        for (int attempt = 0; attempt < maxAttempts; attempt++) {
+            BlogOwner model = BlogOwner.builder()
+                .name("Blogger #" + attempt)
+                .build();
+            synchronousStorageAdapter.save(model);
+
+            // Every other model triggers an AppSync error response.
+            if (attempt % 2 == 0) {
+                AppSyncMocking.create(appSync).mockErrorResponse(model);
+            } else {
+                AppSyncMocking.create(appSync).mockSuccessResponse(model);
+            }
+
+            // Enqueue a creation in the mutation outbox
+            assertTrue(mutationOutbox
+                .enqueue(PendingMutation.creation(model, schema))
+                .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        }
+
+        // Start listening for Mutation Outbox Empty event.
+        HubAccumulator accumulator = HubAccumulator.create(
+            HubChannel.DATASTORE,
+            isOutboxEmpty(true),
+            1
+        ).start();
+
+        // Start draining the outbox.
+        mutationProcessor.startDrainingMutationOutbox();
+        accumulator.await();
     }
 }
