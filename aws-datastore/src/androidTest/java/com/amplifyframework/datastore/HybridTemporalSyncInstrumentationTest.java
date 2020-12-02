@@ -137,7 +137,7 @@ public final class HybridTemporalSyncInstrumentationTest {
             .modelSchema(modelSchema)
             .build();
         HubAccumulator publicationAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(sentModel), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelSchema.getName(), sentModel.getId()), 1)
                 .start();
         hybridBehaviors.save(sentModel);
         publicationAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -162,7 +162,7 @@ public final class HybridTemporalSyncInstrumentationTest {
         // Save a meeting, remotely. Wait for it to show up locally.
         Meeting meeting = createMeeting();
         HubAccumulator receiptAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(meeting), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(meeting.getId()), 1)
                 .start();
         appSync.create(meeting, modelSchema);
         receiptAccumulator.awaitFirst(TIMEOUT_SECONDS, TimeUnit.SECONDS);

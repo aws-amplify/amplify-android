@@ -141,7 +141,10 @@ final class MutationProcessor {
                     // if there are outstanding mutations in the outbox.
                     mutationOutbox.remove(mutationOutboxItem.getMutationId())
                         .andThen(merger.merge(modelWithMetadata))
-                        .doOnComplete(() -> announceMutationProcessed(modelWithMetadata))
+                        .doOnComplete(() -> {
+                            String modelName = mutationOutboxItem.getModelSchema().getName();
+                            announceMutationProcessed(modelName, modelWithMetadata);
+                        })
                 )
             )
             .doOnComplete(() -> {
@@ -159,9 +162,9 @@ final class MutationProcessor {
      * @param modelWithMetadata A model that was successfully mutated and its sync metadata
      * @param <T> Type of model
      */
-    private <T extends Model> void announceMutationProcessed(ModelWithMetadata<T> modelWithMetadata) {
-        OutboxMutationEvent<T> mutationEvent =
-            OutboxMutationEvent.fromModelWithMetadata(modelWithMetadata);
+    private <T extends Model> void announceMutationProcessed(
+            String modelName, ModelWithMetadata<T> modelWithMetadata) {
+        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent.create(modelName, modelWithMetadata);
         HubEvent<OutboxMutationEvent<T>> hubEvent =
             HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, mutationEvent);
         Amplify.Hub.publish(HubChannel.DATASTORE, hubEvent);
