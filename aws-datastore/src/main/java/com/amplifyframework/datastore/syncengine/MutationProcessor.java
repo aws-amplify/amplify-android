@@ -23,6 +23,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
@@ -140,7 +141,10 @@ final class MutationProcessor {
                     // if there are outstanding mutations in the outbox.
                     mutationOutbox.remove(mutationOutboxItem.getMutationId())
                         .andThen(merger.merge(modelWithMetadata))
-                        .doOnComplete(() -> announceMutationProcessed(modelWithMetadata))
+                        .doOnComplete(() -> {
+                            String modelName = mutationOutboxItem.getModelSchema().getName();
+                            announceMutationProcessed(modelName, modelWithMetadata);
+                        })
                 )
             )
             .doOnComplete(() -> {
@@ -173,9 +177,11 @@ final class MutationProcessor {
      * @param modelWithMetadata A model that was successfully mutated and its sync metadata
      * @param <T> Type of model
      */
-    private <T extends Model> void announceMutationProcessed(ModelWithMetadata<T> modelWithMetadata) {
-        OutboxMutationEvent<T> mutationEvent =
-            OutboxMutationEvent.fromModelWithMetadata(modelWithMetadata);
+    private <T extends Model> void announceMutationProcessed(
+            String modelName,
+            ModelWithMetadata<T> modelWithMetadata
+    ) {
+        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent.create(modelName, modelWithMetadata);
         Amplify.Hub.publish(HubChannel.DATASTORE, mutationEvent.toHubEvent());
     }
 
@@ -188,7 +194,7 @@ final class MutationProcessor {
     private <T extends Model> void announceMutationFailed(
             PendingMutation<T> pendingMutation,
             DataStoreException.GraphQLResponseException error
-    ) throws DataStoreException {
+    ) {
         List<GraphQLResponse.Error> errors = error.getErrors();
         OutboxMutationFailedEvent<T> errorEvent =
                 OutboxMutationFailedEvent.create(pendingMutation, errors);

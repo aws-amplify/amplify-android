@@ -160,7 +160,7 @@ public final class HybridAssociationSyncInstrumentationTest {
 
         // Setup an accumulator so we know when there has been a publication.
         HubAccumulator ownerAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(owner), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(ownerModelName, owner.getId()), 1)
                 .start();
         hybridBehaviors.save(serializedOwner);
         ownerAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -196,7 +196,7 @@ public final class HybridAssociationSyncInstrumentationTest {
 
         // Save the blog
         HubAccumulator blogAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(blog), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(blogSchemaName, blog.getId()), 1)
                 .start();
         hybridBehaviors.save(serializedBlog);
         blogAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -230,7 +230,7 @@ public final class HybridAssociationSyncInstrumentationTest {
         ModelSchema ownerSchema = schemaProvider.modelSchemas().get(ownerModelName);
         assertNotNull(ownerSchema);
         HubAccumulator ownerAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(owner), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(owner.getId()), 1)
                 .start();
         appSync.create(owner, ownerSchema);
         ownerAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -256,7 +256,7 @@ public final class HybridAssociationSyncInstrumentationTest {
         ModelSchema blogSchema = schemaProvider.modelSchemas().get(blogModelName);
         assertNotNull(blogSchema);
         HubAccumulator blogAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(blog), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(blog.getId()), 1)
                 .start();
         appSync.create(blog, blogSchema);
         blogAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);

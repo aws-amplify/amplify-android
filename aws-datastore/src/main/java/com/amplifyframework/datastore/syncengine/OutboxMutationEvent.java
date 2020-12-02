@@ -24,7 +24,6 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.hub.HubEvent;
 
 import java.util.Objects;
@@ -34,7 +33,8 @@ import java.util.Objects;
  * and {@link DataStoreChannelEventName#OUTBOX_MUTATION_PROCESSED} event.
  * @param <M> The class type of the model in the mutation outbox.
  */
-public final class OutboxMutationEvent<M extends Model> implements HubEvent.Data<OutboxMutationEvent<M>> {
+public final class OutboxMutationEvent<M extends Model>
+        implements HubEvent.Data<OutboxMutationEvent<M>> {
     private final String modelName;
     private final OutboxMutationEventElement<M> element;
 
@@ -65,27 +65,24 @@ public final class OutboxMutationEvent<M extends Model> implements HubEvent.Data
      * sync metadata.
      * This format will be used for representing a pending mutation that has
      * successfully undergone cloud publication.
+     * @param modelName Name of the model that has been processed (e.g., "Blog".)
      * @param modelWithMetadata Processed model with its sync metadata.
      * @param <M> Class type of the model.
      * @return Outbox mutation event with sync metadata.
      */
     @NonNull
-    public static <M extends Model> OutboxMutationEvent<M> fromModelWithMetadata(
-            @NonNull ModelWithMetadata<M> modelWithMetadata) {
+    public static <M extends Model> OutboxMutationEvent<M> create(
+            @NonNull String modelName, @NonNull ModelWithMetadata<M> modelWithMetadata) {
+        Objects.requireNonNull(modelName);
         Objects.requireNonNull(modelWithMetadata);
-        final M model = modelWithMetadata.getModel();
 
-        final String modelName;
-        if (model instanceof SerializedModel) {
-            modelName = ((SerializedModel) model).getModelName();
-        } else {
-            modelName = model.getClass().getSimpleName();
-        }
-
+        M model = modelWithMetadata.getModel();
         ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
+
         Integer version = metadata.getVersion();
         Temporal.Timestamp lastChangedAt = metadata.getLastChangedAt();
         Boolean deleted = metadata.isDeleted();
+
         OutboxMutationEventElement<M> element =
             new OutboxMutationEventElement<>(model, version, lastChangedAt, deleted);
 
@@ -110,14 +107,6 @@ public final class OutboxMutationEvent<M extends Model> implements HubEvent.Data
     @NonNull
     public OutboxMutationEventElement<M> getElement() {
         return element;
-    }
-
-    @Override
-    public HubEvent<OutboxMutationEvent<M>> toHubEvent() {
-        if (getElement().getVersion() == null) {
-            return HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED, this);
-        }
-        return HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, this);
     }
 
     @Override
@@ -149,6 +138,14 @@ public final class OutboxMutationEvent<M extends Model> implements HubEvent.Data
                 "modelName='" + modelName + '\'' +
                 ", element='" + element + '\'' +
                 '}';
+    }
+
+    @Override
+    public HubEvent<OutboxMutationEvent<M>> toHubEvent() {
+        if (getElement().getVersion() == null) {
+            return HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED, this);
+        }
+        return HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, this);
     }
 
     /**
