@@ -129,8 +129,9 @@ public final class BasicCloudSyncInstrumentationTest {
         BlogOwner localCharley = BlogOwner.builder()
             .name("Charley Crockett")
             .build();
+        String modelName = BlogOwner.class.getSimpleName();
         HubAccumulator publishedMutationsAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(localCharley), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, localCharley.getId()), 1)
                 .start();
 
         // Save Charley Crockett, a guy who has a blog, into the DataStore.
@@ -166,7 +167,7 @@ public final class BasicCloudSyncInstrumentationTest {
 
         // Start watching locally, to see if it shows up on the client.
         HubAccumulator receiptAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(jameson), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(jameson.getId()), 1)
                 .start();
 
         // Act: create the model in the cloud
