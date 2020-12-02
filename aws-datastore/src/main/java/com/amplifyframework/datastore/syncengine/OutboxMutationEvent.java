@@ -24,7 +24,6 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.appsync.SerializedModel;
 
 import java.util.Objects;
 
@@ -64,27 +63,24 @@ public final class OutboxMutationEvent<M extends Model> {
      * sync metadata.
      * This format will be used for representing a pending mutation that has
      * successfully undergone cloud publication.
+     * @param modelName Name of the model that has been processed (e.g., "Blog".)
      * @param modelWithMetadata Processed model with its sync metadata.
      * @param <M> Class type of the model.
      * @return Outbox mutation event with sync metadata.
      */
     @NonNull
-    public static <M extends Model> OutboxMutationEvent<M> fromModelWithMetadata(
-            @NonNull ModelWithMetadata<M> modelWithMetadata) {
+    public static <M extends Model> OutboxMutationEvent<M> create(
+            @NonNull String modelName, @NonNull ModelWithMetadata<M> modelWithMetadata) {
+        Objects.requireNonNull(modelName);
         Objects.requireNonNull(modelWithMetadata);
-        final M model = modelWithMetadata.getModel();
 
-        final String modelName;
-        if (model instanceof SerializedModel) {
-            modelName = ((SerializedModel) model).getModelName();
-        } else {
-            modelName = model.getClass().getSimpleName();
-        }
-
+        M model = modelWithMetadata.getModel();
         ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
+
         Integer version = metadata.getVersion();
         Temporal.Timestamp lastChangedAt = metadata.getLastChangedAt();
         Boolean deleted = metadata.isDeleted();
+
         OutboxMutationEventElement<M> element =
             new OutboxMutationEventElement<>(model, version, lastChangedAt, deleted);
 

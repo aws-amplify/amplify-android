@@ -31,16 +31,23 @@ public final class DataStoreHubEventFilters {
      * Creates a filter that catches events from the mutation processor.
      * Events will pass if they mention the provided model by its name and ID,
      * and state that it has successfully been published off of the mutation queue.
-     * @param model A model to watch for on the Hub
-     * @param <T> The type of the model
+     * @param modelName Model name, e.g. "Post"
+     * @param modelId The ID of a model instance that might be published
      * @return A filter that watches for publication of the provided model.
      */
-    public static <T extends Model> HubEventFilter publicationOf(T model) {
+    public static HubEventFilter publicationOf(String modelName, String modelId) {
         return event -> {
             if (!DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED.toString().equals(event.getName())) {
                 return false;
             }
-            return DataStoreHubEventFilters.hasModelData(model, (OutboxMutationEvent<? extends Model>) event.getData());
+            if (!(event.getData() instanceof OutboxMutationEvent)) {
+                return false;
+            }
+            OutboxMutationEvent<? extends Model> outboxMutationEvent =
+                (OutboxMutationEvent<? extends Model>) event.getData();
+
+            return modelId.equals(outboxMutationEvent.getElement().getModel().getId()) &&
+                modelName.equals(outboxMutationEvent.getModelName());
         };
     }
 
@@ -49,36 +56,20 @@ public final class DataStoreHubEventFilters {
      * Creates a filter that catches events from the subscription processor.
      * Events will pass if they mention the provided model by its name and ID,
      * and state that it has successfully been received over a subscription.
-     * @param model The model to watch for
-     * @param <T> Type of that model
+     * @param modelId ID of the model instance that may be received
      * @return A filter that watches for receive of the provided model
      */
-    public static <T extends Model> HubEventFilter receiptOf(T model) {
+    public static HubEventFilter receiptOf(String modelId) {
         return event -> {
             if (!DataStoreChannelEventName.SUBSCRIPTION_DATA_PROCESSED.toString().equals(event.getName())) {
                 return false;
             }
-            return DataStoreHubEventFilters.hasModelData(model, (ModelWithMetadata<? extends Model>) event.getData());
+            if (!(event.getData() instanceof ModelWithMetadata)) {
+                return false;
+            }
+            ModelWithMetadata<? extends Model> modelWithMetadata =
+                (ModelWithMetadata<? extends Model>) event.getData();
+            return modelId.equals(modelWithMetadata.getModel().getId());
         };
-    }
-
-    private static <T extends Model> boolean hasModelData(
-        T model, OutboxMutationEvent<? extends Model> mutationEvent) {
-        if (mutationEvent == null) {
-            return false;
-        }
-        String actualId = mutationEvent.getElement().getModel().getId();
-        String desiredId = model.getId();
-        return desiredId.equals(actualId);
-    }
-
-    private static <T extends Model> boolean hasModelData(
-        T model, ModelWithMetadata<? extends Model> modelWithMetadata) {
-        if (modelWithMetadata == null) {
-            return false;
-        }
-        String actualId = modelWithMetadata.getModel().getId();
-        String desiredId = model.getId();
-        return desiredId.equals(actualId);
     }
 }
