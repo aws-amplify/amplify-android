@@ -348,6 +348,8 @@ public final class SelectionSet {
             return typeClass;
         }
 
+        // TODO: this method is tech debt. We added it to support usage of the library from Flutter.
+        // This version of the method needs to be unified with getModelFields(Class<? extends Model> clazz, int depth).
         private Set<SelectionSet> getModelFields(ModelSchema modelSchema, int depth) {
             if (depth < 0) {
                 return new HashSet<>();
@@ -375,6 +377,12 @@ public final class SelectionSet {
                     }
                 } else {
                     result.add(new SelectionSet(fieldName));
+                }
+                for (AuthRule authRule : modelSchema.getAuthRules()) {
+                    if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+                        result.add(new SelectionSet(authRule.getOwnerFieldOrDefault()));
+                        break;
+                    }
                 }
             }
             for (String fieldName : requestOptions.modelMetaFields()) {
