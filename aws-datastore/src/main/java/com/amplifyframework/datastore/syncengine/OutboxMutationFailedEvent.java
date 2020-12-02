@@ -16,16 +16,16 @@
 package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
-import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.hub.HubEvent;
-import com.amplifyframework.util.Immutable;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,16 +35,16 @@ import java.util.Objects;
  */
 public final class OutboxMutationFailedEvent<M extends Model>
         implements HubEvent.Data<OutboxMutationFailedEvent<M>> {
-    private final List<GraphQLResponse.Error> errors;
+    private final MutationErrorType errorType;
     private final MutationType operation;
     private final M model;
 
     private OutboxMutationFailedEvent(
-        List<GraphQLResponse.Error> errors,
-        MutationType operation,
-        M model
+            MutationErrorType errorType,
+            MutationType operation,
+            M model
     ) {
-        this.errors = errors;
+        this.errorType = errorType;
         this.operation = operation;
         this.model = model;
     }
@@ -55,46 +55,31 @@ public final class OutboxMutationFailedEvent<M extends Model>
      * @param errors the list of graphQL errors that caused the failure
      * @param <M> Class type of the model.
      * @return Outbox mutation error event.
-     * @throws DataStoreException if unexpected mutation type
      */
     @NonNull
     public static <M extends Model> OutboxMutationFailedEvent<M> create(
             @NonNull PendingMutation<M> pendingMutation,
             @NonNull List<GraphQLResponse.Error> errors
-    ) throws DataStoreException {
+    ) {
         Objects.requireNonNull(pendingMutation);
         Objects.requireNonNull(errors);
-        final MutationType opType;
-        switch (pendingMutation.getMutationType()) {
-            case CREATE:
-                opType = MutationType.CREATE;
-                break;
-            case UPDATE:
-                opType = MutationType.UPDATE;
-                break;
-            case DELETE:
-                opType = MutationType.DELETE;
-                break;
-            default:
-                throw new DataStoreException(
-                    "Invalid operation type.",
-                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-                );
-        }
-        return new OutboxMutationFailedEvent<>(errors, opType, pendingMutation.getMutatedItem());
+        MutationErrorType errorType = MutationErrorType.fromGraphQLErrors(errors);
+        String operation = pendingMutation.getMutationType().name();
+        MutationType opType = MutationType.valueOf(operation);
+        return new OutboxMutationFailedEvent<>(errorType, opType, pendingMutation.getMutatedItem());
     }
 
     /**
-     * Returns the list of graphQL errors that caused publication failure.
-     * @return the list of graphQL error responses.
+     * Returns the type of error that caused mutation publication to fail.
+     * @return the type of error from the cloud.
      */
     @NonNull
-    public List<GraphQLResponse.Error> getErrors() {
-        return Immutable.of(errors);
+    public MutationErrorType getErrorType() {
+        return errorType;
     }
 
     /**
-     * Gets the graphQL mutation type.
+     * Gets the mutation type.
      * @return the mutation type
      */
     @NonNull
@@ -111,8 +96,83 @@ public final class OutboxMutationFailedEvent<M extends Model>
         return model;
     }
 
+    /**
+     * Gets the name of the model.
+     * @return the model name
+     */
+    @NonNull
+    public String getModelName() {
+        return model.getClass().getSimpleName();
+    }
+
     @Override
     public HubEvent<OutboxMutationFailedEvent<M>> toHubEvent() {
         return HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_FAILED, this);
+    }
+
+    @Override
+    public String toString() {
+        return "OutboxMutationFailedEvent{" +
+                "errorType=" + errorType +
+                ", operation=" + operation +
+                ", model=" + model +
+                ", modelName=" + getModelName() +
+                '}';
+    }
+
+    /**
+     * Categorization of error types that caused a mutation publication to fail.
+     */
+    public enum MutationErrorType {
+        /**
+         * The mutation operation is not authorized for the user.
+         */
+        UNAUTHORIZED("Unauthorized"),
+
+        /**
+         * Fallback type for any error that is yet to be categorized.
+         */
+        UNKNOWN("Unknown");
+
+        private final String value;
+
+        MutationErrorType(String value) {
+            this.value = value;
+        }
+
+        /**
+         * Get the value of error type received from cloud.
+         * @return value of error type received from cloud
+         */
+        @NonNull
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * Returns an enum value of matching error type value.
+         * @param value the type of error that caused mutation publication failure
+         * @return An enum value of matching error type. If there is no match,
+         *          then return {@link MutationErrorType#UNKNOWN}.
+         */
+        @NonNull
+        public static MutationErrorType fromErrorType(@Nullable String value) {
+            try {
+                return MutationErrorType.valueOf(value);
+            } catch (IllegalArgumentException exception) {
+                return UNKNOWN;
+            }
+        }
+
+        // Look at the first error to extract error type.
+        private static MutationErrorType fromGraphQLErrors(List<GraphQLResponse.Error> errors) {
+            Iterator<GraphQLResponse.Error> iterator = errors.iterator();
+            if (iterator.hasNext()) {
+                GraphQLResponse.Error firstError = iterator.next();
+                AppSyncExtensions extensions = new AppSyncExtensions(firstError.getExtensions());
+                return fromErrorType(extensions.getErrorType().getValue());
+            }
+            return UNKNOWN;
+        }
     }
 }
