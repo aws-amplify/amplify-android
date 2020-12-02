@@ -6,16 +6,27 @@
     _version
     authors {
       items {
+        _deleted
+        _lastChangedAt
+        _version
         id
       }
       nextToken
       startedAt
     }
     blog {
+      _deleted
+      _lastChangedAt
+      _version
       id
+      name
     }
     comments {
       items {
+        _deleted
+        _lastChangedAt
+        _version
+        content
         id
       }
       nextToken

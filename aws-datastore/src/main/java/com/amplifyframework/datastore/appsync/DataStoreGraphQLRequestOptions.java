@@ -18,7 +18,6 @@ package com.amplifyframework.datastore.appsync;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.aws.GraphQLRequestOptions;
-import com.amplifyframework.api.aws.LeafSerializationBehavior;
 
 import java.util.Arrays;
 import java.util.List;
@@ -55,11 +54,5 @@ public final class DataStoreGraphQLRequestOptions implements GraphQLRequestOptio
     @Override
     public int maxDepth() {
         return 1;
-    }
-
-    @NonNull
-    @Override
-    public LeafSerializationBehavior leafSerializationBehavior() {
-        return LeafSerializationBehavior.JUST_ID;
     }
 }

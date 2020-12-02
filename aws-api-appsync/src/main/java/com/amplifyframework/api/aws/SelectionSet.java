@@ -172,6 +172,7 @@ public final class SelectionSet {
         private Class<? extends Model> modelClass;
         private Operation operation;
         private GraphQLRequestOptions requestOptions;
+        private ModelSchemaRegistry modelSchemaRegistry;
         private ModelSchema modelSchema;
 
         Builder() { }
@@ -183,6 +184,11 @@ public final class SelectionSet {
 
         public Builder modelSchema(@NonNull ModelSchema modelSchema) {
             this.modelSchema = Objects.requireNonNull(modelSchema);
+            return Builder.this;
+        }
+
+        public Builder modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
+            this.modelSchemaRegistry = modelSchemaRegistry;
             return Builder.this;
         }
 
@@ -247,7 +253,7 @@ public final class SelectionSet {
          * @param clazz Class from which to build selection set
          * @param depth Number of children deep to explore
          * @return Selection Set
-         * @throws AmplifyException On faiulre to build selection set
+         * @throws AmplifyException On failure to build selection set
          */
         @SuppressWarnings("unchecked") // Cast to Class<Model>
         private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth)
@@ -257,12 +263,6 @@ public final class SelectionSet {
             }
 
             Set<SelectionSet> result = new HashSet<>();
-
-            if (depth == 0 && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())) {
-                result.add(new SelectionSet("id"));
-                return result;
-            }
-
             ModelSchema schema = ModelSchema.fromModelClass(clazz);
             for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
                 String fieldName = field.getName();
@@ -355,18 +355,14 @@ public final class SelectionSet {
                 return new HashSet<>();
             }
             Set<SelectionSet> result = new HashSet<>();
-            if (depth == 0 && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())) {
-                result.add(new SelectionSet("id"));
-                return result;
-            }
             for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
                 String fieldName = entry.getKey();
                 ModelAssociation association = modelSchema.getAssociations().get(fieldName);
                 if (association != null) {
                     if (depth >= 1) {
                         String associatedModelName = association.getAssociatedType();
-                        ModelSchema associateModelSchema = ModelSchemaRegistry.instance()
-                                .getModelSchemaForModelClass(associatedModelName);
+                        ModelSchema associateModelSchema =
+                            modelSchemaRegistry.getModelSchemaForModelClass(associatedModelName);
                         Set<SelectionSet> fields;
                         if (entry.getValue().isArray()) { // If modelField is an Array
                             fields = wrapPagination(getModelFields(associateModelSchema, depth - 1));

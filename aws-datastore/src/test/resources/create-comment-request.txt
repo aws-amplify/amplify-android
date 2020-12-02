@@ -7,7 +7,13 @@
     content
     id
     post {
+      _deleted
+      _lastChangedAt
+      _version
       id
+      rating
+      status
+      title
     }
   }
 }

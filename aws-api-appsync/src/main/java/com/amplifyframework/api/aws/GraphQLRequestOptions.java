@@ -62,11 +62,4 @@ public interface GraphQLRequestOptions {
      * @return the maximum depth to traverse a {@link Model} when building the {@link SelectionSet}.
      */
     int maxDepth();
-
-    /**
-     * Returns LeafSelectionBehavior, which defines how to serialize leaf nodes when building the {@link SelectionSet}.
-     * @return LeafSelectionBehavior, which defines how to serialize leaf nodes when building the {@link SelectionSet}.
-     */
-    @NonNull
-    LeafSerializationBehavior leafSerializationBehavior();
 }

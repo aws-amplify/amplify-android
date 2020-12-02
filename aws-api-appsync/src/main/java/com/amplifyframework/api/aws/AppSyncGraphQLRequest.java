@@ -25,6 +25,7 @@ import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;
@@ -42,6 +43,7 @@ import java.util.Objects;
  * @param <R> The type of data contained in the GraphQLResponse expected from this request.
  */
 public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
+    private final ModelSchemaRegistry modelSchemaRegistry;
     private final ModelSchema modelSchema;
     private final Operation operation;
     private final SelectionSet selectionSet;
@@ -53,11 +55,20 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      */
     private AppSyncGraphQLRequest(Builder builder) {
         super(builder.responseType, new GsonVariablesSerializer());
+        this.modelSchemaRegistry = builder.modelSchemaRegistry;
         this.modelSchema = builder.modelSchema;
         this.operation = builder.operation;
         this.selectionSet = builder.selectionSet;
         this.variables = Immutable.of(builder.variables);
         this.variableTypes = Immutable.of(builder.variableTypes);
+    }
+
+    /**
+     * Returns the {@link ModelSchemaRegistry} for this request.
+     * @return the {@link ModelSchemaRegistry} for this request.
+     */
+    public ModelSchemaRegistry getModelSchemaRegistry() {
+        return modelSchemaRegistry;
     }
 
     /**
@@ -154,7 +165,8 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             return false;
         }
         AppSyncGraphQLRequest<?> that = (AppSyncGraphQLRequest<?>) object;
-        return ObjectsCompat.equals(modelSchema, that.modelSchema) &&
+        return ObjectsCompat.equals(modelSchemaRegistry, that.modelSchemaRegistry) &&
+                ObjectsCompat.equals(modelSchema, that.modelSchema) &&
                 ObjectsCompat.equals(operation, that.operation) &&
                 ObjectsCompat.equals(selectionSet, that.selectionSet) &&
                 ObjectsCompat.equals(variables, that.variables) &&
@@ -163,13 +175,22 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(super.hashCode(), modelSchema, operation, selectionSet, variables, variableTypes);
+        return ObjectsCompat.hash(
+            super.hashCode(),
+            modelSchemaRegistry,
+            modelSchema,
+            operation,
+            selectionSet,
+            variables,
+            variableTypes
+        );
     }
 
     @Override
     public String toString() {
         return "AppSyncGraphQLRequest{" +
-                "modelSchema=" + modelSchema +
+                ", modelSchemaRegistry=" + modelSchemaRegistry +
+                ", modelSchema=" + modelSchema +
                 ", operation=" + operation +
                 ", selectionSet=" + selectionSet +
                 ", variables=" + variables +
@@ -200,6 +221,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      */
     public static final class Builder {
         private Class<? extends Model> modelClass;
+        private ModelSchemaRegistry modelSchemaRegistry;
         private ModelSchema modelSchema;
         private Operation operation;
         private GraphQLRequestOptions requestOptions;
@@ -211,15 +233,27 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         Builder() {
             this.variables = new HashMap<>();
             this.variableTypes = new HashMap<>();
+            this.modelSchemaRegistry = ModelSchemaRegistry.instance();
         }
 
         <R> Builder(AppSyncGraphQLRequest<R> request) {
+            this.modelSchemaRegistry = request.modelSchemaRegistry;
             this.modelSchema = request.modelSchema;
             this.operation = request.operation;
             this.responseType = request.getResponseType();
             this.selectionSet = new SelectionSet(request.selectionSet);
             this.variables = new HashMap<>(request.variables);
             this.variableTypes = new HashMap<>(request.variableTypes);
+        }
+
+        /**
+         * Sets the {@link ModelSchemaRegistry}.
+         * @param modelSchemaRegistry A registry of all the model schema being used by the system
+         * @return A Builder to continue fluent construction
+         */
+        public Builder modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
+            this.modelSchemaRegistry = modelSchemaRegistry;
+            return Builder.this;
         }
 
         /**
@@ -296,6 +330,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         public <R> AppSyncGraphQLRequest<R> build() throws AmplifyException {
             Objects.requireNonNull(this.operation);
             Objects.requireNonNull(this.responseType);
+            Objects.requireNonNull(this.modelSchemaRegistry);
 
             // TODO: if the modelClass is contained within the modelSchema,
             // why can't we just extract it from the ModelSchema, instead of
@@ -315,6 +350,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             // selectionSet will already be set, so we can continue on.
             if (selectionSet == null) {
                 selectionSet = SelectionSet.builder()
+                        .modelSchemaRegistry(modelSchemaRegistry)
                         .modelSchema(this.modelSchema)
                         .modelClass(this.modelClass)
                         .operation(this.operation)

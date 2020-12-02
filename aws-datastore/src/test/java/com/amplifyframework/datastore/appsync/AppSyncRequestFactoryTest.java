@@ -41,6 +41,7 @@ import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -57,6 +58,15 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(RobolectricTestRunner.class) // Adds Android library to make TextUtils.join available for tests.
 public final class AppSyncRequestFactoryTest {
+    private AppSyncRequestFactory appSyncRequestFactory;
+
+    /**
+     * Setup an instance of the object under test, an {@link AppSyncRequestFactory}.
+     */
+    @Before
+    public void setup() {
+        this.appSyncRequestFactory = new AppSyncRequestFactory();
+    }
 
     /**
      * Validates the construction of a base-sync query document.
@@ -69,7 +79,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         JSONAssert.assertEquals(
             Resources.readAsString("base-sync-request-document-for-blog-owner.txt"),
-            AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all()).getContent(),
+            appSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all()).getContent(),
             true
         );
     }
@@ -85,7 +95,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
             Resources.readAsString("base-sync-request-document-for-parent.txt"),
-            AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all()).getContent(),
+            appSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all()).getContent(),
             true
         );
     }
@@ -100,7 +110,7 @@ public final class AppSyncRequestFactoryTest {
     public void validateRequestGenerationForDeltaSync() throws AmplifyException, JSONException {
         ModelSchema schema = ModelSchema.fromModelClass(Post.class);
         JSONAssert.assertEquals(Resources.readAsString("delta-sync-request-document-for-post.txt"),
-            AppSyncRequestFactory.buildSyncRequest(schema, 123123123L, null, QueryPredicates.all()).getContent(),
+            appSyncRequestFactory.buildSyncRequest(schema, 123123123L, null, QueryPredicates.all()).getContent(),
             true);
     }
 
@@ -115,7 +125,7 @@ public final class AppSyncRequestFactoryTest {
         Integer limit = 1000;
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         final GraphQLRequest<Iterable<Post>> request =
-                AppSyncRequestFactory.buildSyncRequest(schema, null, limit, QueryPredicates.all());
+                appSyncRequestFactory.buildSyncRequest(schema, null, limit, QueryPredicates.all());
         JSONAssert.assertEquals(Resources.readAsString("base-sync-request-paginating-blog-owners.txt"),
                 request.getContent(),
                 true);
@@ -133,7 +143,7 @@ public final class AppSyncRequestFactoryTest {
         BlogOwner owner = BlogOwner.builder().name("John Doe").id(blogOwnerId).build();
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         AppSyncGraphQLRequest<?> request =
-            AppSyncRequestFactory.buildUpdateRequest(schema, owner, 42, BlogOwner.WEA.contains("ther"));
+            appSyncRequestFactory.buildUpdateRequest(schema, owner, 42, BlogOwner.WEA.contains("ther"));
         JSONAssert.assertEquals(
             Resources.readAsString("update-blog-owner-with-predicate.txt"),
             request.getContent(),
@@ -152,7 +162,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
                 Resources.readAsString("update-parent-with-predicate.txt"),
-                AppSyncRequestFactory.buildUpdateRequest(
+                appSyncRequestFactory.buildUpdateRequest(
                         schema,
                         buildTestParentModel(),
                         42,
@@ -173,7 +183,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Person.class);
         JSONAssert.assertEquals(
             Resources.readAsString("delete-person-with-predicate.txt"),
-            AppSyncRequestFactory.buildDeletionRequest(schema, "123", 456, Person.AGE.gt(40)).getContent(),
+            appSyncRequestFactory.buildDeletionRequest(schema, "123", 456, Person.AGE.gt(40)).getContent(),
             true
         );
     }
@@ -190,7 +200,6 @@ public final class AppSyncRequestFactoryTest {
             "{name={eq=Test Dummy}}",
             predicate.toString()
         );
-
         AppSyncRequestFactory.parsePredicate(
             Blog.NAME.beginsWith("A day in the life of a...").and(Blog.OWNER.eq("DUMMY_OWNER_ID"))
         );
@@ -208,7 +217,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Blog.class);
         JSONAssert.assertEquals(
             Resources.readAsString("on-create-request-for-blog.txt"),
-            AppSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_CREATE).getContent(),
+            appSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_CREATE).getContent(),
             true
         );
     }
@@ -225,7 +234,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
             Resources.readAsString("on-create-request-for-parent.txt"),
-            AppSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_CREATE).getContent(),
+            appSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_CREATE).getContent(),
             true
         );
     }
@@ -242,7 +251,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Post.class);
         JSONAssert.assertEquals(
             Resources.readAsString("on-update-request-for-post.txt"),
-            AppSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_UPDATE).getContent(),
+            appSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_UPDATE).getContent(),
             true
         );
     }
@@ -259,7 +268,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         JSONAssert.assertEquals(
             Resources.readAsString("on-delete-request-for-blog-owner.txt"),
-            AppSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_DELETE).getContent(),
+            appSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_DELETE).getContent(),
             true
         );
     }
@@ -281,7 +290,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Comment.class);
         JSONAssert.assertEquals(
             Resources.readAsString("create-comment-request.txt"),
-            AppSyncRequestFactory.buildCreationRequest(schema, comment).getContent(),
+            appSyncRequestFactory.buildCreationRequest(schema, comment).getContent(),
             true
         );
     }
@@ -297,7 +306,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
             Resources.readAsString("create-parent-request.txt"),
-            AppSyncRequestFactory.buildCreationRequest(schema, buildTestParentModel()).getContent(),
+            appSyncRequestFactory.buildCreationRequest(schema, buildTestParentModel()).getContent(),
             true
         );
     }
@@ -350,7 +359,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Todo.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> actual = (Map<String, Object>)
-            AppSyncRequestFactory.buildUpdateRequest(schema, todo, 1, QueryPredicates.all())
+            appSyncRequestFactory.buildUpdateRequest(schema, todo, 1, QueryPredicates.all())
                 .getVariables()
                 .get("input");
 
@@ -375,7 +384,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Todo.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> actual = (Map<String, Object>)
-            AppSyncRequestFactory.buildCreationRequest(schema, todo)
+            appSyncRequestFactory.buildCreationRequest(schema, todo)
                 .getVariables()
                 .get("input");
 

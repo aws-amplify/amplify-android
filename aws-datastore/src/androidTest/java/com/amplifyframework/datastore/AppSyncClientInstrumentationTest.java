@@ -31,6 +31,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
@@ -81,7 +82,7 @@ public final class AppSyncClientInstrumentationTest {
             .forCategoryType(CategoryType.API), context);
         asyncDelegate.initialize(context);
 
-        api = AppSyncClient.via(asyncDelegate);
+        api = AppSyncClient.create(ModelSchemaRegistry.instance(), asyncDelegate);
     }
 
     /**

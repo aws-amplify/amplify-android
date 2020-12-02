@@ -28,6 +28,7 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.SerializedModel;
@@ -115,10 +116,6 @@ public final class HybridAssociationSyncInstrumentationTest {
         apiCategory.addPlugin(new AWSApiPlugin());
         apiCategory.configure(apiCategoryConfiguration, context);
 
-        // To arrange and verify state, we need to access the supporting AppSync API
-        api = SynchronousApi.delegatingTo(apiCategory);
-        appSync = SynchronousAppSync.using(AppSyncClient.via(apiCategory));
-
         schemaProvider = SchemaLoader.loadFromAssetsDirectory("schemas/commentsblog");
         DataStoreCategory dataStoreCategory = DataStoreCategoryConfigurator.begin()
             .api(apiCategory)
@@ -132,6 +129,12 @@ public final class HybridAssociationSyncInstrumentationTest {
             (AWSDataStorePlugin) dataStoreCategory.getPlugin("awsDataStorePlugin");
         normalBehaviors = SynchronousDataStore.delegatingTo(dataStoreCategory);
         hybridBehaviors = SynchronousHybridBehaviors.delegatingTo(plugin);
+
+        // To arrange and verify state, we need to access the supporting AppSync API
+        api = SynchronousApi.delegatingTo(apiCategory);
+        ModelSchemaRegistry registry = ModelSchemaRegistry.instance();
+        registry.register(schemaProvider.modelSchemas());
+        appSync = SynchronousAppSync.using(AppSyncClient.create(registry, apiCategory));
     }
 
     /**

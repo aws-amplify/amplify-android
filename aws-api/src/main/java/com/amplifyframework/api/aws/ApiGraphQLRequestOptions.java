@@ -49,10 +49,4 @@ public final class ApiGraphQLRequestOptions implements GraphQLRequestOptions {
     public int maxDepth() {
         return 2;
     }
-
-    @NonNull
-    @Override
-    public LeafSerializationBehavior leafSerializationBehavior() {
-        return LeafSerializationBehavior.ALL_FIELDS;
-    }
 }

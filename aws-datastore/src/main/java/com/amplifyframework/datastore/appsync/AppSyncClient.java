@@ -32,6 +32,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -48,25 +49,34 @@ import com.amplifyframework.datastore.DataStoreException;
  * assumptions about the structure of data types (unique IDs, versioning information), etc.
  */
 public final class AppSyncClient implements AppSync {
+    private final AppSyncRequestFactory appSyncRequestFactory;
     private final GraphQLBehavior api;
 
-    /**
-     * Constructs a new AppSyncClient.
-     * @param api The API Category, configured with a DataStore API
-     */
-    private AppSyncClient(GraphQLBehavior api) {
+    private AppSyncClient(AppSyncRequestFactory appSyncRequestFactory, GraphQLBehavior api) {
+        this.appSyncRequestFactory = appSyncRequestFactory;
         this.api = api;
     }
 
     /**
-     * Obtain an instance of the AppSyncAPI, which uses the Amplify API category
-     * as its backing implementation for GraphQL behaviors.
+     * Obtain an instance of the AppSyncAPI.
+     * @param registry A Model schema registry
+     * @param api GraphQL api behavior through which this app sync client will talk
+     * @return An App Sync API instance
+     */
+    @NonNull
+    public static AppSyncClient create(@NonNull GraphQLBehavior api, @NonNull ModelSchemaRegistry registry) {
+        AppSyncRequestFactory appSyncRequestFactory = new AppSyncRequestFactory(registry);
+        return new AppSyncClient(appSyncRequestFactory, api);
+    }
+
+    /**
+     * Obtain an instance of the AppSyncAPI.
      * @param api GraphQL api behavior through which this app sync client will talk
      * @return An App Sync API instance
      */
     @NonNull
     public static AppSyncClient via(@NonNull GraphQLBehavior api) {
-        return new AppSyncClient(api);
+        return new AppSyncClient(new AppSyncRequestFactory(), api);
     }
 
     @NonNull
@@ -76,7 +86,7 @@ public final class AppSyncClient implements AppSync {
             @Nullable Long lastSync,
             @Nullable Integer syncPageSize,
             @NonNull QueryPredicate queryPredicate) throws DataStoreException {
-        return AppSyncRequestFactory.buildSyncRequest(modelSchema, lastSync, syncPageSize, queryPredicate);
+        return appSyncRequestFactory.buildSyncRequest(modelSchema, lastSync, syncPageSize, queryPredicate);
     }
 
     @NonNull
@@ -118,7 +128,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
             final GraphQLRequest<ModelWithMetadata<T>> request =
-                    AppSyncRequestFactory.buildCreationRequest(modelSchema, model);
+                appSyncRequestFactory.buildCreationRequest(modelSchema, model);
             return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(
@@ -162,7 +172,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
             final GraphQLRequest<ModelWithMetadata<T>> request =
-                    AppSyncRequestFactory.buildUpdateRequest(modelSchema, model, version, predicate);
+                appSyncRequestFactory.buildUpdateRequest(modelSchema, model, version, predicate);
             return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(
@@ -206,7 +216,7 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
             final GraphQLRequest<ModelWithMetadata<T>> request =
-                    AppSyncRequestFactory.buildDeletionRequest(modelSchema, objectId, version, predicate);
+                appSyncRequestFactory.buildDeletionRequest(modelSchema, objectId, version, predicate);
             return mutation(request, onResponse, onFailure);
         } catch (DataStoreException dataStoreException) {
             onFailure.accept(dataStoreException);
@@ -278,7 +288,7 @@ public final class AppSyncClient implements AppSync {
             Action onSubscriptionCompleted) {
         final GraphQLRequest<ModelWithMetadata<T>> request;
         try {
-            request = AppSyncRequestFactory.buildSubscriptionRequest(modelSchema, subscriptionType);
+            request = appSyncRequestFactory.buildSubscriptionRequest(modelSchema, subscriptionType);
         } catch (DataStoreException requestGenerationException) {
             onSubscriptionFailure.accept(requestGenerationException);
             return new NoOpCancelable();

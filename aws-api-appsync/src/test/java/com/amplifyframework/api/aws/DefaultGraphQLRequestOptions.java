@@ -46,10 +46,4 @@ public final class DefaultGraphQLRequestOptions implements GraphQLRequestOptions
     public int maxDepth() {
         return 2;
     }
-
-    @NonNull
-    @Override
-    public LeafSerializationBehavior leafSerializationBehavior() {
-        return LeafSerializationBehavior.ALL_FIELDS;
-    }
 }

@@ -449,6 +449,7 @@ public final class AppSyncMocking {
      */
     public static final class SyncConfigurator {
         private final AppSync appSync;
+        private final AppSyncRequestFactory appSyncRequestFactory;
 
         /**
          * Constructs a new SyncConfigurator.
@@ -457,6 +458,7 @@ public final class AppSyncMocking {
          */
         SyncConfigurator(AppSync appSync) throws DataStoreException {
             this.appSync = appSync;
+            this.appSyncRequestFactory = new AppSyncRequestFactory();
             this.mockBuildSyncRequest();
             this.mockSuccessResponses();
         }
@@ -467,7 +469,7 @@ public final class AppSyncMocking {
                 Long lastSync = invocation.getArgument(1);
                 Integer syncPageSize = invocation.getArgument(2);
                 QueryPredicate queryPredicate = invocation.getArgument(3);
-                return AppSyncRequestFactory.buildSyncRequest(schema, lastSync, syncPageSize, queryPredicate);
+                return appSyncRequestFactory.buildSyncRequest(schema, lastSync, syncPageSize, queryPredicate);
             }).when(appSync).buildSyncRequest(any(), any(), any(), any());
             return this;
         }
@@ -534,7 +536,7 @@ public final class AppSyncMocking {
             if (nextToken != null) {
                 ModelSchema schema = ModelSchema.fromModelClass(modelClass);
                 requestForNextResult =
-                    AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all())
+                    appSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all())
                         .newBuilder()
                         .variable("nextToken", "String", nextToken)
                         .build();

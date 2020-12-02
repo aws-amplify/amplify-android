@@ -7,11 +7,22 @@
     id
     name
     owner {
+      _deleted
+      _lastChangedAt
+      _version
       id
+      name
+      wea
     }
     posts {
       items {
+        _deleted
+        _lastChangedAt
+        _version
         id
+        rating
+        status
+        title
       }
       nextToken
       startedAt

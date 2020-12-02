@@ -16,6 +16,8 @@
 package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.util.Immutable;
@@ -118,5 +120,30 @@ public final class ModelSchemaRegistry {
      */
     public void clear() {
         this.modelSchemaMap.clear();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+        ModelSchemaRegistry registry = (ModelSchemaRegistry) thatObject;
+        return getModelSchemaMap().equals(registry.getModelSchemaMap());
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(getModelSchemaMap());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "ModelSchemaRegistry{" +
+            "modelSchemaMap=" + modelSchemaMap +
+            '}';
     }
 }

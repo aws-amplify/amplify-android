@@ -30,6 +30,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
 import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
 import com.amplifyframework.core.model.query.predicate.ContainsQueryOperator;
@@ -56,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A factory to generate requests against an AppSync endpoint.
@@ -67,7 +69,22 @@ import java.util.Map;
  * and AppSync-specific field names (`_version`, `_deleted`, etc.)
  */
 final class AppSyncRequestFactory {
-    private AppSyncRequestFactory() {}
+    private final ModelSchemaRegistry modelSchemaRegistry;
+
+    /**
+     * Constructs an AppSyncRequestFactory using an empty schema registry.
+     */
+    AppSyncRequestFactory() {
+        this.modelSchemaRegistry = ModelSchemaRegistry.instance();
+    }
+
+    /**
+     * Constructs an AppSyncRequestFactory.
+     * @param modelSchemaRegistry A model schema registry
+     */
+    AppSyncRequestFactory(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
+        this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
+    }
 
     /**
      * Builds the query document for base and delta sync.
@@ -82,7 +99,7 @@ final class AppSyncRequestFactory {
      * @throws DataStoreException On Failure to inspect
      */
     @NonNull
-    static <T> AppSyncGraphQLRequest<T> buildSyncRequest(
+    <T> AppSyncGraphQLRequest<T> buildSyncRequest(
             @NonNull final ModelSchema modelSchema,
             @Nullable final Long lastSync,
             @Nullable final Integer limit,
@@ -90,6 +107,7 @@ final class AppSyncRequestFactory {
             throws DataStoreException {
         try {
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
+                    .modelSchemaRegistry(modelSchemaRegistry)
                     .modelClass(modelSchema.getModelClass())
                     .modelSchema(modelSchema)
                     .operation(QueryType.SYNC)
@@ -116,10 +134,11 @@ final class AppSyncRequestFactory {
         }
     }
 
-    static <T> AppSyncGraphQLRequest<T> buildSubscriptionRequest(
+    <T> AppSyncGraphQLRequest<T> buildSubscriptionRequest(
             ModelSchema modelSchema, SubscriptionType subscriptionType) throws DataStoreException {
         try {
             return AppSyncGraphQLRequest.builder()
+                    .modelSchemaRegistry(modelSchemaRegistry)
                     .modelClass(modelSchema.getModelClass())
                     .modelSchema(modelSchema)
                     .operation(subscriptionType)
@@ -132,7 +151,7 @@ final class AppSyncRequestFactory {
         }
     }
 
-    static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildDeletionRequest(
+    <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildDeletionRequest(
             ModelSchema schema, String objectId, Integer version, QueryPredicate predicate)
             throws DataStoreException {
         Map<String, Object> inputMap = new HashMap<>();
@@ -141,7 +160,7 @@ final class AppSyncRequestFactory {
         return buildMutation(schema, inputMap, predicate, MutationType.DELETE);
     }
 
-    static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildUpdateRequest(
+    <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildUpdateRequest(
             ModelSchema schema, M model, Integer version, QueryPredicate predicate) throws DataStoreException {
         try {
             Map<String, Object> inputMap = new HashMap<>();
@@ -154,7 +173,7 @@ final class AppSyncRequestFactory {
         }
     }
 
-    static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildCreationRequest(
+    <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildCreationRequest(
             ModelSchema schema, M model) throws DataStoreException {
         try {
             Map<String, Object> inputMap = getMapOfFieldNameAndValues(schema, model);
@@ -269,12 +288,13 @@ final class AppSyncRequestFactory {
      * @param <M> Type of model being mutated
      * @return Mutation doc
      */
-    private static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildMutation(
+    private <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildMutation(
             ModelSchema schema, Map<String, Object> inputMap, QueryPredicate predicate, MutationType mutationType)
             throws DataStoreException {
         try {
             String graphQlTypeName = schema.getName();
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
+                    .modelSchemaRegistry(modelSchemaRegistry)
                     .modelClass(schema.getModelClass())
                     .modelSchema(schema)
                     .operation(mutationType)

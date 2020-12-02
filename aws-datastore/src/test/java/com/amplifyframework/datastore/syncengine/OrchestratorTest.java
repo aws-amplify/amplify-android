@@ -83,23 +83,23 @@ public final class OrchestratorTest {
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED, 1)
                           .start();
 
-        ModelMetadata metadata = new ModelMetadata(susan.getId(),
-                                                   false,
-                                                   1,
-                                                   Temporal.Timestamp.now());
+        ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry.clear();
+        modelSchemaRegistry.register(modelProvider.models());
+
+        ModelMetadata metadata =
+            new ModelMetadata(susan.getId(), false, 1, Temporal.Timestamp.now());
         ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(susan, metadata);
         // Mock behaviors from for the API category
         mockApi = mock(GraphQLBehavior.class);
         ApiMocking.mockSubscriptionStart(mockApi);
         ApiMocking.mockSuccessfulMutation(mockApi, susan.getId(), modelWithMetadata);
         ApiMocking.mockSuccessfulQuery(mockApi, modelWithMetadata);
-        AppSyncClient appSync = AppSyncClient.via(mockApi);
+
+        AppSyncClient appSync = AppSyncClient.create(mockApi, modelSchemaRegistry);
 
         localStorageAdapter = InMemoryStorageAdapter.create();
-        ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.clear();
-        modelSchemaRegistry.register(modelProvider.models());
 
         orchestrator =
             new Orchestrator(modelProvider,
