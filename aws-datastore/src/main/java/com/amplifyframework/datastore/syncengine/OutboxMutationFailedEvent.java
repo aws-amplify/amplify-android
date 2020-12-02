@@ -25,7 +25,6 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.hub.HubEvent;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,15 +36,18 @@ public final class OutboxMutationFailedEvent<M extends Model>
         implements HubEvent.Data<OutboxMutationFailedEvent<M>> {
     private final MutationErrorType errorType;
     private final MutationType operation;
+    private final String modelName;
     private final M model;
 
     private OutboxMutationFailedEvent(
             MutationErrorType errorType,
             MutationType operation,
+            String modelName,
             M model
     ) {
         this.errorType = errorType;
         this.operation = operation;
+        this.modelName = modelName;
         this.model = model;
     }
 
@@ -63,10 +65,12 @@ public final class OutboxMutationFailedEvent<M extends Model>
     ) {
         Objects.requireNonNull(pendingMutation);
         Objects.requireNonNull(errors);
-        MutationErrorType errorType = MutationErrorType.fromGraphQLErrors(errors);
+        MutationErrorType errorType = MutationErrorType.fromGraphQlErrors(errors);
         String operation = pendingMutation.getMutationType().name();
         MutationType opType = MutationType.valueOf(operation);
-        return new OutboxMutationFailedEvent<>(errorType, opType, pendingMutation.getMutatedItem());
+        String name = pendingMutation.getModelSchema().getName();
+        M model = pendingMutation.getMutatedItem();
+        return new OutboxMutationFailedEvent<>(errorType, opType, name, model);
     }
 
     /**
@@ -102,7 +106,7 @@ public final class OutboxMutationFailedEvent<M extends Model>
      */
     @NonNull
     public String getModelName() {
-        return model.getClass().getSimpleName();
+        return modelName;
     }
 
     @Override
@@ -115,8 +119,8 @@ public final class OutboxMutationFailedEvent<M extends Model>
         return "OutboxMutationFailedEvent{" +
                 "errorType=" + errorType +
                 ", operation=" + operation +
+                ", modelName=" + modelName +
                 ", model=" + model +
-                ", modelName=" + getModelName() +
                 '}';
     }
 
@@ -156,23 +160,24 @@ public final class OutboxMutationFailedEvent<M extends Model>
          *          then return {@link MutationErrorType#UNKNOWN}.
          */
         @NonNull
-        public static MutationErrorType fromErrorType(@Nullable String value) {
-            try {
-                return MutationErrorType.valueOf(value);
-            } catch (IllegalArgumentException exception) {
-                return UNKNOWN;
+        public static MutationErrorType enumerate(@Nullable String value) {
+            for (MutationErrorType type : MutationErrorType.values()) {
+                if (type.getValue().equals(value)) {
+                    return type;
+                }
             }
+            return UNKNOWN;
         }
 
         // Look at the first error to extract error type.
-        private static MutationErrorType fromGraphQLErrors(List<GraphQLResponse.Error> errors) {
-            Iterator<GraphQLResponse.Error> iterator = errors.iterator();
-            if (iterator.hasNext()) {
-                GraphQLResponse.Error firstError = iterator.next();
+        private static MutationErrorType fromGraphQlErrors(List<GraphQLResponse.Error> errors) {
+            try {
+                GraphQLResponse.Error firstError = errors.get(0);
                 AppSyncExtensions extensions = new AppSyncExtensions(firstError.getExtensions());
-                return fromErrorType(extensions.getErrorType().getValue());
+                return enumerate(extensions.getErrorType().getValue());
+            } catch (RuntimeException parsingError) {
+                return UNKNOWN;
             }
-            return UNKNOWN;
         }
     }
 }
