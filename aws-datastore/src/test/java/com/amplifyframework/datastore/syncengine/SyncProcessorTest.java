@@ -111,7 +111,7 @@ public final class SyncProcessorTest {
         modelClasses.addAll(SystemModelsProviderFactory.create().models());
         modelClasses.addAll(AmplifyModelProvider.getInstance().models());
         this.modelProvider = SimpleModelProvider.instance(UUID.randomUUID().toString(), modelClasses);
-        modelCount = modelProvider.models().size();
+        modelCount = modelProvider.modelNames().size();
 
         this.appSync = mock(AppSync.class);
         this.errorHandlerCallCount = 0;
