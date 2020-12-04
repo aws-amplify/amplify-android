@@ -153,7 +153,8 @@ class AmplifyTools implements Plugin<Project> {
                         commandLine amplify, 'init',
                                 '--amplify', amplifyConfig,
                                 '--providers', providersConfig,
-                                '--yes'
+                                '--yes',
+                                '--forcePush'
                     }
                 }
             }
