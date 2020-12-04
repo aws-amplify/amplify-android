@@ -17,6 +17,12 @@ package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.QueryType;
+import com.amplifyframework.core.model.AuthRule;
+import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.ModelOperation;
+import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuthExplicit;
@@ -26,6 +32,11 @@ import com.amplifyframework.testutils.Resources;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -70,6 +81,57 @@ public class SelectionSetTest {
                 .operation(QueryType.GET)
                 .requestOptions(new DefaultGraphQLRequestOptions())
                 .build();
+        assertEquals(Resources.readAsString("selection-set-ownerauth.txt"), selectionSet.toString() + "\n");
+    }
+
+    /**
+     * As in {@link #ownerFieldAddedForImplicitOwnerAuth()}, tests that owner field is added to
+     * selection set when a model has an {@link AuthStrategy#OWNER} auth strategy, and the owner is
+     * implicit. The difference in this test is that the {@link SelectionSet} is built directly
+     * from a {@link ModelSchema} instead of an Java model class.
+     * @throws AmplifyException on failure to build selection set (not expected)
+     */
+    @Test
+    public void ownerFieldAddedForImplicitOwnerAuthWhenUsingSchema() throws AmplifyException {
+        ModelField modelId = ModelField.builder()
+            .isRequired(true)
+            .targetType("ID")
+            .javaClassForValue(String.class)
+            .build();
+        ModelField title = ModelField.builder()
+            .isRequired(true)
+            .targetType("String")
+            .javaClassForValue(String.class)
+            .build();
+        Map<String, ModelField> fields = new HashMap<>();
+        fields.put("id", modelId);
+        fields.put("title", title);
+
+        ModelSchema schema = ModelSchema.builder()
+            .name("OwnerAuth")
+            .pluralName("OwnerAuths")
+            .modelClass(SerializedModel.class)
+            .fields(fields)
+            .authRules(Collections.singletonList(AuthRule.builder()
+                .authStrategy(AuthStrategy.OWNER)
+                .identityClaim("cognito:username")
+                .ownerField("owner")
+                .operations(Arrays.asList(
+                    ModelOperation.CREATE,
+                    ModelOperation.UPDATE,
+                    ModelOperation.DELETE,
+                    ModelOperation.READ
+                ))
+                .build()
+            ))
+            .build();
+
+        SelectionSet selectionSet = SelectionSet.builder()
+            .modelClass(SerializedModel.class) // Note: this is different from the above test.
+            .modelSchema(schema) // Note: this test passes an explicit schema, instead of relying on modelClass().
+            .operation(QueryType.GET)
+            .requestOptions(new DefaultGraphQLRequestOptions())
+            .build();
         assertEquals(Resources.readAsString("selection-set-ownerauth.txt"), selectionSet.toString() + "\n");
     }
 
