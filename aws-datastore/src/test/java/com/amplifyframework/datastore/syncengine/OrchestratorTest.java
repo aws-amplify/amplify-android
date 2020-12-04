@@ -23,7 +23,6 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
-import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -80,7 +79,7 @@ public final class OrchestratorTest {
 
         // SUBSCRIPTIONS_ESTABLISHED indicates that the orchestrator is up and running.
         orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED, 1)
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SYNC_QUERIES_READY, 1)
                           .start();
 
         ModelMetadata metadata = new ModelMetadata(susan.getId(),
@@ -107,7 +106,7 @@ public final class OrchestratorTest {
                 localStorageAdapter,
                 appSync,
                 DataStoreConfiguration::defaults,
-                () -> Orchestrator.Mode.SYNC_VIA_API
+                () -> true
             );
     }
 
@@ -122,7 +121,7 @@ public final class OrchestratorTest {
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
         // Arrange: orchestrator is running
-        orchestrator.start();
+        orchestrator.start().subscribe();
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         HubAccumulator accumulator =
@@ -148,26 +147,20 @@ public final class OrchestratorTest {
 
     /**
      * Verify preventing concurrent state transitions from happening.
-     * @throws AmplifyException Not expected.
      */
     @Test
-    public void preventConcurrentStateTransitions() throws AmplifyException {
+    public void preventConcurrentStateTransitions() {
         // Arrange: orchestrator is running
-        orchestrator.start();
+        orchestrator.start().subscribe();
 
         // Try to start it in a new thread.
         boolean success = Completable.create(emitter -> {
-            new Thread(() -> {
-                try {
-                    orchestrator.start();
-                    emitter.onComplete();
-                } catch (DataStoreException exception) {
-                    emitter.onError(exception);
-                }
-            }).start();
+            new Thread(() -> orchestrator.start()
+                .subscribe(emitter::onComplete, emitter::onError)
+            ).start();
 
             // Try to start it again on the current thread.
-            orchestrator.start();
+            orchestrator.start().subscribe();
         }).blockingAwait(5, TimeUnit.SECONDS);
         assertTrue("Failed to start orchestrator on a background thread", success);
 
