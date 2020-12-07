@@ -1009,7 +1009,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         @NonNull Consumer<AuthException> onException
     ) {
         HostedUIOptions.Builder optionsBuilder = HostedUIOptions.builder();
-        SignInUIOptions.Builder signInUIOptionsBuilders = SignInUIOptions.builder();
+        SignInUIOptions.Builder signInUIOptionsBuilder = SignInUIOptions.builder();
 
         if (options != null) {
             if (options.getScopes() != null) {
@@ -1032,7 +1032,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 AWSCognitoAuthWebUISignInOptions cognitoOptions = (AWSCognitoAuthWebUISignInOptions) options;
                 optionsBuilder.idpIdentifier(cognitoOptions.getIdpIdentifier())
                         .federationProviderName(cognitoOptions.getFederationProviderName());
-                signInUIOptionsBuilders.browserPackage(cognitoOptions.getBrowserPackage());
+                signInUIOptionsBuilder.browserPackage(cognitoOptions.getBrowserPackage());
             }
 
             if (authProvider != null) {
@@ -1040,7 +1040,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             }
         }
 
-        SignInUIOptions signInUIOptions = signInUIOptionsBuilders
+        SignInUIOptions signInUIOptions = signInUIOptionsBuilder
                 .hostedUIOptions(optionsBuilder.build())
                 .build();
 

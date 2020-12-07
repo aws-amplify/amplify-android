@@ -22,13 +22,13 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 
 /**
- * Cognito extension of sign in options to add the platform specific fields.
+ * Cognito extension of sign out options to add the platform specific fields.
  */
 public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
     private final String browserPackage;
 
     /**
-     * Advanced options for signing in.
+     * Advanced options for signing out.
      * @param globalSignOut Sign out of all devices (do not use when signing out of a WebUI experience)
      * @param browserPackage Specify which browser package should be used for signing out of an account which was signed
      *                      into with a web UI experience (example value: "org.mozilla.firefox").
@@ -109,7 +109,7 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
          * (e.g. "org.mozilla.firefox") in the case of an account which was signed in to from a web UI experience.
          * Defaults to the Chrome package if not set.
          *
-         * @param browserPackage String specifying the browser to open custom tabs.
+         * @param browserPackage String specifying the browser package to perform the web sign out action.
          * @return the instance of the builder.
          */
         public CognitoBuilder browserPackage(@NonNull String browserPackage) {

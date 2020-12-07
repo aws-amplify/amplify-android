@@ -191,7 +191,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
          * This can optionally be set to specify which browser package should perform the sign in action
          * (e.g. "org.mozilla.firefox"). Defaults to the Chrome package if not set.
          *
-         * @param browserPackage String specifying the browser to open custom tabs.
+         * @param browserPackage String specifying the browser package to perform the web sign in action.
          * @return the instance of the builder.
          */
         public CognitoBuilder browserPackage(@NonNull String browserPackage) {
