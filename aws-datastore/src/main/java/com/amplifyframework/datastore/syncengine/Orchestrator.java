@@ -60,8 +60,8 @@ public final class Orchestrator {
     private final MutationProcessor mutationProcessor;
     private final QueryPredicateProvider queryPredicateProvider;
     private final StorageObserver storageObserver;
-    private final boolean apiSyncEnabled;
-    private final AtomicReference<Mode> currentMode;
+    private final Supplier<State> targetState;
+    private final AtomicReference<State> currentState;
     private final MutationOutbox mutationOutbox;
     private final CompositeDisposable disposables;
     private final Scheduler startStopScheduler;
@@ -83,7 +83,7 @@ public final class Orchestrator {
      *        {@link AWSDataStorePlugin}'s constructor, the plugin is not fully configured yet.
      *        The reference to the variable returned by the provider only get set after the plugin's
      *        {@link AWSDataStorePlugin#configure(JSONObject, Context)} is invoked by Amplify.
-     * @param apiSyncEnabled true if the local DataStore should be synced with an API.
+     * @param targetState The desired state of operation - online, or offline
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
@@ -91,7 +91,7 @@ public final class Orchestrator {
             @NonNull final LocalStorageAdapter localStorageAdapter,
             @NonNull final AppSync appSync,
             @NonNull final DataStoreConfigurationProvider dataStoreConfigurationProvider,
-            @NonNull final Supplier<Boolean> apiSyncEnabled) {
+            @NonNull final Supplier<State> targetState) {
         Objects.requireNonNull(modelSchemaRegistry);
         Objects.requireNonNull(modelProvider);
         Objects.requireNonNull(appSync);
@@ -128,8 +128,8 @@ public final class Orchestrator {
                 .queryPredicateProvider(queryPredicateProvider)
                 .build();
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
-        this.currentMode = new AtomicReference<>(Mode.STOPPED);
-        this.apiSyncEnabled = apiSyncEnabled.get();
+        this.currentState = new AtomicReference<>(State.STOPPED);
+        this.targetState = targetState;
         this.disposables = new CompositeDisposable();
         this.startStopScheduler = Schedulers.single();
 
@@ -140,6 +140,7 @@ public final class Orchestrator {
             TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
         );
         this.startStopSemaphore = new Semaphore(1);
+
     }
 
     /**
@@ -148,7 +149,19 @@ public final class Orchestrator {
      *      and started (asynchronously) the transition to SYNC_VIA_API, if an API is available.
      */
     public synchronized Completable start() {
-        return performSynchronized(Completable.fromAction(this::transitionToStarted));
+        return performSynchronized(Completable.fromAction(() -> {
+            switch (targetState.get()) {
+                case LOCAL_ONLY:
+                    transitionToLocalOnly();
+                    break;
+                case SYNC_VIA_API:
+                    transitionToApiSync();
+                    break;
+                case STOPPED:
+                default:
+                    break;
+            }
+        }));
     }
 
     /**
@@ -164,57 +177,75 @@ public final class Orchestrator {
         LOG.debug("Attempting to acquire lock. Permits available = " + permitAvailable);
         try {
             if (!startStopSemaphore.tryAcquire(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                return Completable.error(new DataStoreException("Timed out acquiring lock.",
+                return Completable.error(new DataStoreException("Timed out acquiring orchestrator lock.",
                         "Retry your request."));
             }
         } catch (InterruptedException exception) {
-            return Completable.error(new DataStoreException("Interrupted while acquiring lock.",
+            return Completable.error(new DataStoreException("Interrupted while acquiring orchestrator lock.",
                     "Retry your request."));
         }
-        LOG.debug("Lock acquired.");
+        LOG.info("Orchestrator lock acquired.");
         return completable.doFinally(() -> {
             startStopSemaphore.release();
-            LOG.debug("Lock released.");
+            LOG.info("Orchestrator lock released.");
         });
     }
 
-    private void transitionToStarted() throws DataStoreException {
-        switch (currentMode.get()) {
-            case STOPPED:
-                LOG.info("Starting the orchestrator.");
-                startObservingStorageChanges();
-                if (apiSyncEnabled) {
-                    startApiSync();
-                } else {
-                    LOG.info("Started the orchestrator in local only mode.");
-                    publishReadyEvent();
-                }
-                break;
-            case LOCAL_ONLY:
-                if (apiSyncEnabled) {
-                    startApiSync();
-                }
-                break;
-            case SYNC_STARTING:
-            case SYNC_VIA_API:
-            default:
-                break;
-        }
+    private DataStoreException unknownStateError(State state) {
+        return new DataStoreException(
+                "Orchestrator state machine made reference to unknown state = " + state.name(),
+                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+        );
     }
 
     private Completable transitionToStopped() {
-        LOG.info("DataStore orchestrator stopping. Current mode = " + currentMode.get().name());
+        LOG.info("DataStore orchestrator stopping. Current mode = " + currentState.get().name());
         disposables.clear();
-        switch (currentMode.get()) {
+        switch (currentState.get()) {
             case SYNC_VIA_API:
-            case SYNC_STARTING:
                 return stopApiSync().doFinally(this::stopObservingStorageChanges);
             case LOCAL_ONLY:
                 stopObservingStorageChanges();
                 return Completable.complete();
             case STOPPED:
-            default:
                 return Completable.complete();
+            default:
+                return Completable.error(unknownStateError(currentState.get()));
+
+        }
+    }
+
+    private void transitionToLocalOnly() throws DataStoreException {
+        switch (currentState.get()) {
+            case STOPPED:
+                LOG.info("Starting the orchestrator.");
+                startObservingStorageChanges();
+                publishReadyEvent();
+                break;
+            case LOCAL_ONLY:
+                break;
+            case SYNC_VIA_API:
+                stopApiSyncBlocking();
+                break;
+            default:
+                throw unknownStateError(currentState.get());
+        }
+    }
+
+    private void transitionToApiSync() throws DataStoreException {
+        switch (currentState.get()) {
+            case SYNC_VIA_API:
+                break;
+            case LOCAL_ONLY:
+                startApiSync();
+                break;
+            case STOPPED:
+                LOG.info("Starting the orchestrator.");
+                startObservingStorageChanges();
+                startApiSync();
+                break;
+            default:
+                throw unknownStateError(currentState.get());
         }
     }
 
@@ -228,7 +259,8 @@ public final class Orchestrator {
             boolean subscribed = mutationOutbox.load()
                 .andThen(Completable.create(emitter -> {
                     storageObserver.startObservingStorageChanges(emitter::onComplete);
-                    currentMode.set(Mode.LOCAL_ONLY);
+                    LOG.info("Setting currentState to LOCAL_ONLY");
+                    currentState.set(State.LOCAL_ONLY);
                 })).blockingAwait(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             if (!subscribed) {
                 throw new TimeoutException("Timed out while preparing local-only mode.");
@@ -245,7 +277,8 @@ public final class Orchestrator {
     private void stopObservingStorageChanges() {
         LOG.info("Stopping observation of local storage changes.");
         storageObserver.stopObservingStorageChanges();
-        currentMode.set(Mode.STOPPED);
+        LOG.info("Setting currentState to STOPPED");
+        currentState.set(State.STOPPED);
     }
 
     /**
@@ -253,6 +286,8 @@ public final class Orchestrator {
      * @return A Completable that succeeds when API sync is enabled.
      */
     private void startApiSync() {
+        LOG.info("Setting currentState to SYNC_VIA_API");
+        currentState.set(State.SYNC_VIA_API);
         disposables.add(startApiSyncCompletable()
             .doOnComplete(() -> {
                 LOG.info("Started the orchestrator in API sync mode.");
@@ -266,7 +301,6 @@ public final class Orchestrator {
 
     private Completable startApiSyncCompletable() {
         return Completable.create(emitter -> {
-            currentMode.set(Mode.SYNC_STARTING);
             LOG.info("Starting API synchronization mode.");
 
             // Resolve any client provided DataStoreSyncExpressions, before starting sync and subscriptions, once each
@@ -301,8 +335,6 @@ public final class Orchestrator {
 
             LOG.debug("Draining subscription buffer...");
             subscriptionProcessor.startDrainingMutationBuffer(this::stopApiSyncBlocking);
-
-            currentMode.set(Mode.SYNC_VIA_API);
             emitter.onComplete();
         })
         .doOnError(error -> {
@@ -340,13 +372,13 @@ public final class Orchestrator {
             mutationProcessor.stopDrainingMutationOutbox();
         })
         .onErrorComplete()
-        .doOnComplete(() -> currentMode.set(Mode.LOCAL_ONLY));
+        .doOnComplete(() -> currentState.set(State.LOCAL_ONLY));
     }
 
     /**
      * The current state of the Orchestrator.
      */
-    public enum Mode {
+    public enum State {
         /**
          * The sync orchestrator is fully stopped.
          */
@@ -356,11 +388,6 @@ public final class Orchestrator {
          * The orchestrator will enqueue mutations into a holding pen, to sync with server, later.
          */
         LOCAL_ONLY,
-
-        /**
-         * Transitioning from LOCAL_ONLY to SYNC_VIA_API.
-         */
-        SYNC_STARTING,
 
         /**
          * The orchestrator maintains components to actively sync data up and down.

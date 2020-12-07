@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
@@ -31,6 +32,7 @@ import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.mocks.ApiMocking;
@@ -60,6 +62,8 @@ import static org.mockito.Mockito.verify;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private Orchestrator orchestrator;
     private HubAccumulator orchestratorInitObserver;
     private GraphQLBehavior mockApi;
@@ -77,7 +81,7 @@ public final class OrchestratorTest {
         // Arrange: create a BlogOwner
         susan = BlogOwner.builder().name("Susan Quimby").build();
 
-        // SUBSCRIPTIONS_ESTABLISHED indicates that the orchestrator is up and running.
+        // SYNC_QUERIES_READY indicates that the sync queries have completed.
         orchestratorInitObserver =
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SYNC_QUERIES_READY, 1)
                           .start();
@@ -106,7 +110,7 @@ public final class OrchestratorTest {
                 localStorageAdapter,
                 appSync,
                 DataStoreConfiguration::defaults,
-                () -> true
+                () -> Orchestrator.State.SYNC_VIA_API
             );
     }
 
@@ -121,7 +125,7 @@ public final class OrchestratorTest {
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
         // Arrange: orchestrator is running
-        orchestrator.start().subscribe();
+        orchestrator.start().test();
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         HubAccumulator accumulator =
@@ -151,7 +155,7 @@ public final class OrchestratorTest {
     @Test
     public void preventConcurrentStateTransitions() {
         // Arrange: orchestrator is running
-        orchestrator.start().subscribe();
+        orchestrator.start().test();
 
         // Try to start it in a new thread.
         boolean success = Completable.create(emitter -> {
@@ -160,7 +164,7 @@ public final class OrchestratorTest {
             ).start();
 
             // Try to start it again on the current thread.
-            orchestrator.start().subscribe();
+            orchestrator.start().test();
         }).blockingAwait(5, TimeUnit.SECONDS);
         assertTrue("Failed to start orchestrator on a background thread", success);
 
