@@ -31,6 +31,7 @@ import java.util.Map;
 public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptions {
     private final String idpIdentifier;
     private final String federationProviderName;
+    private final String browserPackage;
 
     /**
      * Advanced options for signing in via a hosted web ui.
@@ -41,6 +42,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
      * @param idpIdentifier The IdentityProvider identifier if using multiple instances of same identity provider.
      * @param federationProviderName If federating with Cognito Identity and using a provider lik Auth0 specify the
      *                               provider name, e.g. .auth0.com
+     * @param browserPackage Specify which browser package should be used for web sign in (e.g. "org.mozilla.firefox").
+     *                       Defaults to the Chrome package if not specified.
      */
     protected AWSCognitoAuthWebUISignInOptions(
             List<String> scopes,
@@ -48,11 +51,13 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
             Map<String, String> signOutQueryParameters,
             Map<String, String> tokenQueryParameters,
             String idpIdentifier,
-            String federationProviderName
+            String federationProviderName,
+            String browserPackage
     ) {
         super(scopes, signInQueryParameters, signOutQueryParameters, tokenQueryParameters);
         this.idpIdentifier = idpIdentifier;
         this.federationProviderName = federationProviderName;
+        this.browserPackage = browserPackage;
     }
 
     /**
@@ -74,6 +79,15 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
     }
 
     /**
+     * Optional browser package override to choose a browser app other than Chrome to launch web sign in.
+     * @return optional browser package override to choose a browser app other than Chrome to launch web sign in.
+     */
+    @Nullable
+    public String getBrowserPackage() {
+        return browserPackage;
+    }
+
+    /**
      * Returns a builder for this object.
      * @return a builder for this object.
      */
@@ -90,7 +104,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                 getSignOutQueryParameters(),
                 getTokenQueryParameters(),
                 getIdpIdentifier(),
-                getFederationProviderName()
+                getFederationProviderName(),
+                getBrowserPackage()
         );
     }
 
@@ -107,7 +122,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                     ObjectsCompat.equals(getSignOutQueryParameters(), webUISignInOptions.getSignOutQueryParameters()) &&
                     ObjectsCompat.equals(getTokenQueryParameters(), webUISignInOptions.getTokenQueryParameters()) &&
                     ObjectsCompat.equals(getIdpIdentifier(), webUISignInOptions.getIdpIdentifier()) &&
-                    ObjectsCompat.equals(getFederationProviderName(), webUISignInOptions.getFederationProviderName());
+                    ObjectsCompat.equals(getFederationProviderName(), webUISignInOptions.getFederationProviderName()) &&
+                    ObjectsCompat.equals(getBrowserPackage(), webUISignInOptions.getBrowserPackage());
         }
     }
 
@@ -120,6 +136,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                 ", tokenQueryParameters=" + getTokenQueryParameters() +
                 ", idpIdentifier=" + getIdpIdentifier() +
                 ", federationProviderName=" + getFederationProviderName() +
+                ", browserPackage=" + getBrowserPackage() +
                 '}';
     }
 
@@ -129,6 +146,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private String idpIdentifier;
         private String federationProviderName;
+        private String browserPackage;
 
         /**
          * Constructs the builder.
@@ -170,6 +188,18 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
         }
 
         /**
+         * This can optionally be set to specify which browser package should perform the sign in action
+         * (e.g. "org.mozilla.firefox"). Defaults to the Chrome package if not set.
+         *
+         * @param browserPackage String specifying the browser to open custom tabs.
+         * @return the instance of the builder.
+         */
+        public CognitoBuilder browserPackage(@NonNull String browserPackage) {
+            this.browserPackage = browserPackage;
+            return this;
+        }
+
+        /**
          * Build the object.
          * @return a new instance of AWSCognitoAuthWebUISignInOptions.
          */
@@ -181,7 +211,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                     Immutable.of(super.getSignOutQueryParameters()),
                     Immutable.of(super.getTokenQueryParameters()),
                     idpIdentifier,
-                    federationProviderName
+                    federationProviderName,
+                    browserPackage
             );
         }
     }

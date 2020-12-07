@@ -28,6 +28,7 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthSignInOptions;
+import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
@@ -387,6 +388,21 @@ public final class SynchronousAuth {
     public void signOut() throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.signOut(
+                    () -> onResult.accept(new Object()),
+                    onError
+                )
+        );
+    }
+
+    /**
+     * Sign out synchronously with options.
+     * @param options Advanced options for signing out
+     * @throws AuthException exception
+     */
+    public void signOut(AuthSignOutOptions options) throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.signOut(
+                    options,
                     () -> onResult.accept(new Object()),
                     onError
                 )

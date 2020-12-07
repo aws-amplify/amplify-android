@@ -34,6 +34,7 @@ import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
 import com.amplifyframework.auth.cognito.util.AuthProviderConverter;
@@ -932,7 +933,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                             // already and tries to sign out globally here. In which case, we just complete the
                             // global sign out by locally signing them out here.
                             if (error instanceof NotAuthorizedException) {
-                                signOutLocally(onSuccess, onError);
+                                signOutLocally(options, onSuccess, onError);
                             } else {
                                 // Any other runtime exception means global sign out failed for another reason
                                 // (e.g. device offline), in which case we pass that error back to the customer.
@@ -946,7 +947,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     }
             );
         } else {
-            signOutLocally(onSuccess, onError);
+            signOutLocally(options, onSuccess, onError);
         }
     }
 
@@ -962,9 +963,19 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         return BuildConfig.VERSION_NAME;
     }
 
-    private void signOutLocally(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
+    private void signOutLocally(
+            @NonNull AuthSignOutOptions options,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError) {
+        SignOutOptions.Builder signOutOptionsBuilder =
+                SignOutOptions.builder().signOutGlobally(false).invalidateTokens(true);
+
+        if (options instanceof AWSCognitoAuthSignOutOptions) {
+            signOutOptionsBuilder.browserPackage(((AWSCognitoAuthSignOutOptions) options).getBrowserPackage());
+        }
+
         awsMobileClient.signOut(
-                SignOutOptions.builder().signOutGlobally(false).invalidateTokens(true).build(),
+                signOutOptionsBuilder.build(),
                 new Callback<Void>() {
                     @Override
                     public void onResult(Void result) {
@@ -998,6 +1009,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         @NonNull Consumer<AuthException> onException
     ) {
         HostedUIOptions.Builder optionsBuilder = HostedUIOptions.builder();
+        SignInUIOptions.Builder signInUIOptionsBuilders = SignInUIOptions.builder();
 
         if (options != null) {
             if (options.getScopes() != null) {
@@ -1020,6 +1032,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 AWSCognitoAuthWebUISignInOptions cognitoOptions = (AWSCognitoAuthWebUISignInOptions) options;
                 optionsBuilder.idpIdentifier(cognitoOptions.getIdpIdentifier())
                         .federationProviderName(cognitoOptions.getFederationProviderName());
+                signInUIOptionsBuilders.browserPackage(cognitoOptions.getBrowserPackage());
             }
 
             if (authProvider != null) {
@@ -1027,7 +1040,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             }
         }
 
-        SignInUIOptions signInUIOptions = SignInUIOptions.builder()
+        SignInUIOptions signInUIOptions = signInUIOptionsBuilders
                 .hostedUIOptions(optionsBuilder.build())
                 .build();
 
