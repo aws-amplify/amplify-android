@@ -18,12 +18,12 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
-import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -32,6 +32,7 @@ import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.mocks.ApiMocking;
@@ -61,6 +62,8 @@ import static org.mockito.Mockito.verify;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore:test");
+
     private Orchestrator orchestrator;
     private HubAccumulator orchestratorInitObserver;
     private GraphQLBehavior mockApi;
@@ -78,9 +81,9 @@ public final class OrchestratorTest {
         // Arrange: create a BlogOwner
         susan = BlogOwner.builder().name("Susan Quimby").build();
 
-        // SUBSCRIPTIONS_ESTABLISHED indicates that the orchestrator is up and running.
+        // SYNC_QUERIES_READY indicates that the sync queries have completed.
         orchestratorInitObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED, 1)
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SYNC_QUERIES_READY, 1)
                           .start();
 
         ModelMetadata metadata = new ModelMetadata(susan.getId(),
@@ -107,7 +110,7 @@ public final class OrchestratorTest {
                 localStorageAdapter,
                 appSync,
                 DataStoreConfiguration::defaults,
-                () -> Orchestrator.Mode.SYNC_VIA_API
+                () -> Orchestrator.State.SYNC_VIA_API
             );
     }
 
@@ -122,7 +125,7 @@ public final class OrchestratorTest {
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
         // Arrange: orchestrator is running
-        orchestrator.start();
+        orchestrator.start().test();
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         HubAccumulator accumulator =
@@ -148,26 +151,20 @@ public final class OrchestratorTest {
 
     /**
      * Verify preventing concurrent state transitions from happening.
-     * @throws AmplifyException Not expected.
      */
     @Test
-    public void preventConcurrentStateTransitions() throws AmplifyException {
+    public void preventConcurrentStateTransitions() {
         // Arrange: orchestrator is running
-        orchestrator.start();
+        orchestrator.start().test();
 
         // Try to start it in a new thread.
         boolean success = Completable.create(emitter -> {
-            new Thread(() -> {
-                try {
-                    orchestrator.start();
-                    emitter.onComplete();
-                } catch (DataStoreException exception) {
-                    emitter.onError(exception);
-                }
-            }).start();
+            new Thread(() -> orchestrator.start()
+                .subscribe(emitter::onComplete, emitter::onError)
+            ).start();
 
             // Try to start it again on the current thread.
-            orchestrator.start();
+            orchestrator.start().test();
         }).blockingAwait(5, TimeUnit.SECONDS);
         assertTrue("Failed to start orchestrator on a background thread", success);
 
