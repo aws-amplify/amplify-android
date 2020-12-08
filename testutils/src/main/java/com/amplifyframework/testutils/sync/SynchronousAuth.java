@@ -37,6 +37,7 @@ import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.VoidResult;
 
 import java.util.List;
 import java.util.Map;
@@ -245,7 +246,7 @@ public final class SynchronousAuth {
                 asyncDelegate.confirmResetPassword(
                     newPassword,
                     confirmationCode,
-                    () -> onResult.accept(new Object()),
+                    () -> onResult.accept(VoidResult.instance()),
                     onError
                 )
         );
@@ -267,7 +268,7 @@ public final class SynchronousAuth {
      */
     public void rememberDevice() throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.rememberDevice(() -> onResult.accept(new Object()), onError)
+                asyncDelegate.rememberDevice(() -> onResult.accept(VoidResult.instance()), onError)
         );
     }
 
@@ -277,7 +278,7 @@ public final class SynchronousAuth {
      */
     public void forgetDevice() throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.forgetDevice(() -> onResult.accept(new Object()), onError)
+                asyncDelegate.forgetDevice(() -> onResult.accept(VoidResult.instance()), onError)
         );
     }
 
@@ -288,7 +289,7 @@ public final class SynchronousAuth {
      */
     public void forgetDevice(@NonNull AuthDevice device) throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.forgetDevice(device, () -> onResult.accept(new Object()), onError)
+                asyncDelegate.forgetDevice(device, () -> onResult.accept(VoidResult.instance()), onError)
         );
     }
 
@@ -312,7 +313,8 @@ public final class SynchronousAuth {
             @NonNull String newPassword
     ) throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.updatePassword(oldPassword, newPassword, () -> onResult.accept(new Object()), onError)
+                asyncDelegate.updatePassword(oldPassword, newPassword,
+                    () -> onResult.accept(VoidResult.instance()), onError)
         );
     }
 
@@ -376,7 +378,7 @@ public final class SynchronousAuth {
                                      @NonNull String confirmationCode) throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) -> {
             asyncDelegate.confirmUserAttribute(
-                    attributeKey, confirmationCode, () -> onResult.accept(new Object()), onError
+                    attributeKey, confirmationCode, () -> onResult.accept(VoidResult.instance()), onError
             );
         });
     }
@@ -388,7 +390,7 @@ public final class SynchronousAuth {
     public void signOut() throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.signOut(
-                    () -> onResult.accept(new Object()),
+                    () -> onResult.accept(VoidResult.instance()),
                     onError
                 )
         );
@@ -403,7 +405,7 @@ public final class SynchronousAuth {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.signOut(
                     options,
-                    () -> onResult.accept(new Object()),
+                    () -> onResult.accept(VoidResult.instance()),
                     onError
                 )
         );
