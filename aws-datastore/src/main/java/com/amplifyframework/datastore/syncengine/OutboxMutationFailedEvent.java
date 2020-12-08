@@ -51,6 +51,31 @@ public final class OutboxMutationFailedEvent<M extends Model>
         this.model = model;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        OutboxMutationFailedEvent<?> that = (OutboxMutationFailedEvent<?>) obj;
+        return getErrorType() == that.getErrorType() &&
+            getOperation() == that.getOperation() &&
+            getModelName().equals(that.getModelName()) &&
+            getModel().equals(that.getModel());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            getErrorType(),
+            getOperation(),
+            getModelName(),
+            getModel()
+        );
+    }
+
     /**
      * Constructs an outbox mutation error event.
      * @param pendingMutation pending mutation that failed to publish
