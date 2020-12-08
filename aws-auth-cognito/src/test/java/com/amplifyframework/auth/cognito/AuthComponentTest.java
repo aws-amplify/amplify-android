@@ -30,6 +30,7 @@ import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
@@ -427,6 +428,7 @@ public final class AuthComponentTest {
         Activity activity = new Activity();
         String federationProviderName = "testFedProvider";
         String idpIdentifier = "testIdpID";
+        String browserPackage = "org.mozilla.firefox";
         List<String> scopes = Collections.singletonList("scope");
         Map<String, String> signInMap = Collections.singletonMap("signInKey", "signInVal");
         Map<String, String> signOutMap = Collections.singletonMap("signOutKey", "signOutVal");
@@ -442,6 +444,7 @@ public final class AuthComponentTest {
                         .signInQueryParameters(signInMap)
                         .signOutQueryParameters(signOutMap)
                         .tokenQueryParameters(tokensMap)
+                        .browserPackage(browserPackage)
                         .build()
         );
         assertTrue(result.isSignInComplete());
@@ -450,11 +453,13 @@ public final class AuthComponentTest {
 
         ArgumentCaptor<SignInUIOptions> optionsCaptor = ArgumentCaptor.forClass(SignInUIOptions.class);
         verify(mobileClient).showSignIn(eq(activity), optionsCaptor.capture(), any());
-        HostedUIOptions hostedUIOptions = optionsCaptor.getValue().getHostedUIOptions();
+        SignInUIOptions signInUIOptions = optionsCaptor.getValue();
+        HostedUIOptions hostedUIOptions = signInUIOptions.getHostedUIOptions();
         assertNotNull(hostedUIOptions);
         assertNull(hostedUIOptions.getIdentityProvider());
         assertEquals(federationProviderName, hostedUIOptions.getFederationProviderName());
         assertEquals(idpIdentifier, hostedUIOptions.getIdpIdentifier());
+        assertEquals(browserPackage, signInUIOptions.getBrowserPackage());
         assertArrayEquals(scopes.toArray(), hostedUIOptions.getScopes());
         assertEquals(signInMap, hostedUIOptions.getSignInQueryParameters());
         assertEquals(signOutMap, hostedUIOptions.getSignOutQueryParameters());
@@ -756,7 +761,9 @@ public final class AuthComponentTest {
     }
 
     /**
-     * Tests that signOut calls the AWSMobileClient sign out method with the global signout option set to true.
+     * Tests that signOut calls the AWSMobileClient sign out method with defaults of no global sign out (which is
+     * incompatible with web UI sign in) and invalidate tokens set to true (which is necessary for web UI sign in and
+     * compatible with other methods).
      * @throws AuthException test fails if this gets thrown since method should succeed
      */
     @Test
@@ -773,6 +780,30 @@ public final class AuthComponentTest {
         verify(mobileClient).signOut(signOutOptionsCaptor.capture(), any());
         assertFalse(signOutOptionsCaptor.getValue().isSignOutGlobally());
         assertTrue(signOutOptionsCaptor.getValue().isInvalidateTokens());
+    }
+
+    /**
+     * Tests that signOut called with options specifying an override for the browser package to use for signing out
+     * of a web UI sign in experience has the proper options set.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signOutWithBrowserPackage() throws AuthException {
+        String browserPackage = "org.mozilla.firefox";
+
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(1);
+            callback.onResult(null);
+            return null;
+        }).when(mobileClient).signOut(any(), any());
+
+        synchronousAuth.signOut(AWSCognitoAuthSignOutOptions.builder().browserPackage(browserPackage).build());
+
+        ArgumentCaptor<SignOutOptions> signOutOptionsCaptor = ArgumentCaptor.forClass(SignOutOptions.class);
+        verify(mobileClient).signOut(signOutOptionsCaptor.capture(), any());
+        assertFalse(signOutOptionsCaptor.getValue().isSignOutGlobally());
+        assertTrue(signOutOptionsCaptor.getValue().isInvalidateTokens());
+        assertEquals(browserPackage, signOutOptionsCaptor.getValue().getBrowserPackage());
     }
 
     /**

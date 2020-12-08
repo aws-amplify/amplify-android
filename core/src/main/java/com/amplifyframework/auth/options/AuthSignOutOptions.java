@@ -26,7 +26,7 @@ public class AuthSignOutOptions {
 
     /**
      * Advanced options for signing up.
-     * @param globalSignOut Sign out of all devices
+     * @param globalSignOut Sign out of all devices (do not use when signing out of a WebUI experience)
      */
     protected AuthSignOutOptions(
             boolean globalSignOut
