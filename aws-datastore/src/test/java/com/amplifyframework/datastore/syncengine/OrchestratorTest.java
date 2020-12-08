@@ -62,7 +62,7 @@ import static org.mockito.Mockito.verify;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore:test");
 
     private Orchestrator orchestrator;
     private HubAccumulator orchestratorInitObserver;

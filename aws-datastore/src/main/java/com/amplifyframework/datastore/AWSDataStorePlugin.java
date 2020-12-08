@@ -263,6 +263,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     public void stop(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
         waitForInitialization()
             .andThen(orchestrator.stop())
+            .subscribeOn(Schedulers.io())
             .subscribe(
                 onComplete::call,
                 error -> onError.accept(new DataStoreException("Failed to stop DataStore.", error, "Retry."))
