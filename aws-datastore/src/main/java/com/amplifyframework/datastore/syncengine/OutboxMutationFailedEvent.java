@@ -175,7 +175,7 @@ public final class OutboxMutationFailedEvent<M extends Model>
                 GraphQLResponse.Error firstError = errors.get(0);
                 AppSyncExtensions extensions = new AppSyncExtensions(firstError.getExtensions());
                 return enumerate(extensions.getErrorType().getValue());
-            } catch (RuntimeException parsingError) {
+            } catch (NullPointerException | IndexOutOfBoundsException error) {
                 return UNKNOWN;
             }
         }
