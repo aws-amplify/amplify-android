@@ -22,6 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
@@ -231,5 +232,84 @@ public final class MutationProcessorTest {
 
         // Wait for the conflict handler to be called.
         Latch.await(handlerInvocationsRemainingCount);
+    }
+
+    /**
+     * If the AppSync response to the mutation contains not-empty GraphQLResponse error
+     * list without any ConflictUnhandled error, then
+     * {@link DataStoreChannelEventName#OUTBOX_MUTATION_FAILED} event is published via Hub.
+     * @throws DataStoreException On failure to save model and metadata
+     */
+    @Test
+    public void hubEventPublishedForPublicationError() throws DataStoreException {
+        // Save a model, its metadata, and its last sync data.
+        BlogOwner model = BlogOwner.builder()
+                .name("Average Joe")
+                .build();
+        ModelMetadata metadata =
+                new ModelMetadata(model.getId(), false, 1, Temporal.Timestamp.now());
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        synchronousStorageAdapter.save(model, metadata);
+
+        // Enqueue an update in the mutation outbox
+        assertTrue(mutationOutbox
+                .enqueue(PendingMutation.update(model, schema))
+                .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+
+        // When AppSync receives that update, have it respond with an error.
+        AppSyncMocking.update(appSync).mockErrorResponse(model, 1);
+
+        // Start listening for publication events.
+        HubAccumulator errorAccumulator = HubAccumulator.create(
+                HubChannel.DATASTORE,
+                DataStoreChannelEventName.OUTBOX_MUTATION_FAILED,
+                1
+        ).start();
+
+        // Start the mutation processor and wait for hub event.
+        mutationProcessor.startDrainingMutationOutbox();
+        errorAccumulator.await();
+    }
+
+    /**
+     * If error is caused by AppSync response, then the mutation outbox continues to
+     * drain without getting blocked.
+     * @throws DataStoreException On failure to save models
+     */
+    @Test
+    public void canDrainMutationOutboxOnPublicationError() throws DataStoreException {
+        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+
+        // We will attempt to "sync" 10 models.
+        final int maxAttempts = 10;
+        for (int attempt = 0; attempt < maxAttempts; attempt++) {
+            BlogOwner model = BlogOwner.builder()
+                .name("Blogger #" + attempt)
+                .build();
+            synchronousStorageAdapter.save(model);
+
+            // Every other model triggers an AppSync error response.
+            if (attempt % 2 == 0) {
+                AppSyncMocking.create(appSync).mockErrorResponse(model);
+            } else {
+                AppSyncMocking.create(appSync).mockSuccessResponse(model);
+            }
+
+            // Enqueue a creation in the mutation outbox
+            assertTrue(mutationOutbox
+                .enqueue(PendingMutation.creation(model, schema))
+                .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        }
+
+        // Start listening for Mutation Outbox Empty event.
+        HubAccumulator accumulator = HubAccumulator.create(
+            HubChannel.DATASTORE,
+            isOutboxEmpty(true),
+            1
+        ).start();
+
+        // Start draining the outbox.
+        mutationProcessor.startDrainingMutationOutbox();
+        accumulator.await();
     }
 }

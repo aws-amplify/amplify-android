@@ -69,6 +69,11 @@ public enum DataStoreChannelEventName {
     OUTBOX_MUTATION_PROCESSED("outboxMutationProcessed"),
 
     /**
+     * A mutation from the outbox was sent but was met with an error response.
+     */
+    OUTBOX_MUTATION_FAILED("outboxMutationFailed"),
+
+    /**
      * The DataStore is about to start the Sync Queries.
      */
     SYNC_QUERIES_STARTED("syncQueriesStarted"),
