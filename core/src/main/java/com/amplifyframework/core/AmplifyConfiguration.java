@@ -112,7 +112,7 @@ public final class AmplifyConfiguration {
     @SuppressWarnings("WeakerAccess")
     @NonNull
     public static AmplifyConfiguration fromConfigFile(@NonNull Context context) throws AmplifyException {
-        return builder(context, Resources.getRawResourceId(context, DEFAULT_IDENTIFIER)).build();
+        return builder(context).build();
     }
 
     /**
@@ -206,7 +206,16 @@ public final class AmplifyConfiguration {
      */
     @NonNull
     public static Builder builder(@NonNull Context context) throws AmplifyException {
-        return builder(context, Resources.getRawResourceId(context, DEFAULT_IDENTIFIER));
+        try {
+            @RawRes final int resourceId = Resources.getRawResourceId(context, DEFAULT_IDENTIFIER);
+            return builder(context, resourceId);
+        } catch (Resources.ResourceLoadingException resourceLoadingException) {
+            throw new AmplifyException(
+                "Failed to load the " + DEFAULT_IDENTIFIER + " configuration file.", resourceLoadingException,
+                "Is there an Amplify configuration file present in your app project, under " +
+                    "./app/src/main/res/raw/" + DEFAULT_IDENTIFIER + "?"
+            );
+        }
     }
 
     /**
@@ -219,11 +228,18 @@ public final class AmplifyConfiguration {
      * @throws AmplifyException If there is a problem in the config file
      */
     @NonNull
-    public static Builder builder(
-            @NonNull Context context,
-            @RawRes int configFileResourceId
-    ) throws AmplifyException {
-        return builder(Resources.readJsonResourceFromId(Objects.requireNonNull(context), configFileResourceId));
+    public static Builder builder(@NonNull Context context, @RawRes int configFileResourceId)
+            throws AmplifyException {
+        Objects.requireNonNull(context);
+        try {
+            return builder(Resources.readJsonResourceFromId(context, configFileResourceId));
+        } catch (Resources.ResourceLoadingException resourceLoadingException) {
+            throw new AmplifyException(
+                "Failed to read JSON from resource = " + configFileResourceId, resourceLoadingException,
+                "If you are attempting to load a custom configuration file, please ensure that it exists " +
+                    "in your application project under app/src/main/res/raw/<YOUR_CUSTOM_CONFIG_FILE>."
+            );
+        }
     }
 
     /**
@@ -298,4 +314,3 @@ public final class AmplifyConfiguration {
         }
     }
 }
-
