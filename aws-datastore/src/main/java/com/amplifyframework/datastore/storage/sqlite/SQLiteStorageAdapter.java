@@ -285,6 +285,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         return;
                     }
                     modelConflictStrategy = ModelConflictStrategy.OVERWRITE_EXISTING;
+                } else if (!QueryPredicates.all().equals(predicate)) {
+                    // insert not permitted with a condition
+                    onError.accept(new DataStoreException(
+                        "Conditional update must be performed against an already existing data. " +
+                            "Insertion is not permitted while using a predicate.",
+                        "Please save without specifying a predicate."
+                    ));
+                    return;
                 } else {
                     // insert model in SQLite
                     type = StorageItemChange.Type.CREATE;
