@@ -236,7 +236,7 @@ public final class AmplifyConfiguration {
         } catch (Resources.ResourceLoadingException resourceLoadingException) {
             throw new AmplifyException(
                 "Failed to read JSON from resource = " + configFileResourceId, resourceLoadingException,
-                "If you are attempting to load a custom configuration file, please that it exists " +
+                "If you are attempting to load a custom configuration file, please ensure that it exists " +
                     "in your application project under app/src/main/res/raw/<YOUR_CUSTOM_CONFIG_FILE>."
             );
         }
@@ -314,4 +314,3 @@ public final class AmplifyConfiguration {
         }
     }
 }
-
