@@ -528,13 +528,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     }
                 }
                 final StorageItemChange<T> change = StorageItemChange.<T>builder()
-                        .changeId(item.getId())
-                        .item(item)
-                        .modelSchema(modelSchema)
-                        .type(StorageItemChange.Type.DELETE)
-                        .predicate(predicate)
-                        .initiator(initiator)
-                        .build();
+                    .changeId(item.getId())
+                    .item(item)
+                    .modelSchema(modelSchema)
+                    .type(StorageItemChange.Type.DELETE)
+                    .predicate(predicate)
+                    .initiator(initiator)
+                    .build();
                 itemChangeSubject.onNext(change);
                 onSuccess.accept(change);
             } catch (DataStoreException dataStoreException) {
