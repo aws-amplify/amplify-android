@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
@@ -49,31 +50,6 @@ public final class OutboxMutationFailedEvent<M extends Model>
         this.operation = operation;
         this.modelName = modelName;
         this.model = model;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        OutboxMutationFailedEvent<?> that = (OutboxMutationFailedEvent<?>) obj;
-        return getErrorType() == that.getErrorType() &&
-            getOperation() == that.getOperation() &&
-            getModelName().equals(that.getModelName()) &&
-            getModel().equals(that.getModel());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(
-            getErrorType(),
-            getOperation(),
-            getModelName(),
-            getModel()
-        );
     }
 
     /**
@@ -137,6 +113,31 @@ public final class OutboxMutationFailedEvent<M extends Model>
     @Override
     public HubEvent<OutboxMutationFailedEvent<M>> toHubEvent() {
         return HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_FAILED, this);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        OutboxMutationFailedEvent<?> that = (OutboxMutationFailedEvent<?>) obj;
+        return getErrorType() == that.getErrorType() &&
+                getOperation() == that.getOperation() &&
+                getModelName().equals(that.getModelName()) &&
+                getModel().equals(that.getModel());
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getErrorType(),
+                getOperation(),
+                getModelName(),
+                getModel()
+        );
     }
 
     @Override
