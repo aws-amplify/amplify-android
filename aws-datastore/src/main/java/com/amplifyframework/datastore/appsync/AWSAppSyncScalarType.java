@@ -44,6 +44,7 @@ public enum AWSAppSyncScalarType {
 
     /**
      * A signed double-precision fractional values as specified by IEEE 754.
+     * Note that this is distinct from a {@link java.lang.Float}, which stores a single precision value.
      * @see <a href="https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html#float">Float Scalar</a>
      */
     FLOAT("Float"),

@@ -695,6 +695,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             statement.bindLong(columnIndex, (Integer) value);
         } else if (value instanceof Float) {
             statement.bindDouble(columnIndex, (Float) value);
+        } else if (value instanceof Double) {
+            statement.bindDouble(columnIndex, (Double) value);
         } else {
             throw new DataStoreException("", "");
         }

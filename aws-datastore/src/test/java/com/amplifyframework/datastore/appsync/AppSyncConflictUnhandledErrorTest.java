@@ -119,9 +119,8 @@ public final class AppSyncConflictUnhandledErrorTest {
             AppSyncConflictUnhandledError.findFirst(Note.class, response.getErrors());
         assertNotNull(conflictUnhandledError);
 
-        // TODO: The JSON document has '1601499066604' as the time. These differ by 26604,
-        // also the TimeUnit appears to be wrong. Should be MILLISECONDS.
-        Temporal.Timestamp lastChangedAt = new Temporal.Timestamp(1601499040000L, TimeUnit.SECONDS);
+        // TODO: the TimeUnit appears to be wrong. Should be MILLISECONDS?
+        Temporal.Timestamp lastChangedAt = new Temporal.Timestamp(1601499066604L, TimeUnit.SECONDS);
         assertEquals(
             new ModelWithMetadata<>(
                 new Note("KoolId22", "Resurecting the dataz"),
