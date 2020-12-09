@@ -76,7 +76,15 @@ public final class EnvironmentInfo {
      */
     public String getDeveloperEnvironmentInfo(@NonNull Context context) throws AmplifyException {
         Context appContext = Objects.requireNonNull(context).getApplicationContext();
-        JSONObject envInfo = Resources.readJsonResource(appContext, DEV_ENV_INFO_FILE_NAME);
+        final JSONObject envInfo;
+        try {
+            envInfo = Resources.readJsonResource(appContext, DEV_ENV_INFO_FILE_NAME);
+        } catch (Resources.ResourceLoadingException resourceLoadingException) {
+            throw new AmplifyException(
+                "Failed to find " + DEV_ENV_INFO_FILE_NAME + ".", resourceLoadingException,
+                "Please ensure it is present in your project."
+            );
+        }
         StringBuilder formattedEnvInfo = new StringBuilder();
         for (String envItem : devEnvironmentItems.keySet()) {
             if (envInfo.has(envItem)) {
