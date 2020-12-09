@@ -201,6 +201,35 @@ public final class SQLiteStorageAdapterSaveTest {
     }
 
     /**
+     * Test save with predicate. Conditional insert is not viable since conditional write
+     * applies predicate to existing data. Insert is only performed if there isn't any existing
+     * data. Save operation should fail.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    @SuppressWarnings("ThrowableNotThrown")
+    public void saveModelWithPredicateFailsInsert() throws DataStoreException {
+        final BlogOwner john = BlogOwner.builder()
+                .name("John")
+                .build();
+        final BlogOwner jane = BlogOwner.builder()
+                .name("Jane")
+                .build();
+        final BlogOwner mark = BlogOwner.builder()
+                .name("Mark")
+                .build();
+
+        // Try inserting with predicate
+        final QueryPredicate predicate = BlogOwner.NAME.beginsWith("J");
+        adapter.saveExpectingError(john, predicate);
+        adapter.saveExpectingError(jane, predicate);
+        adapter.saveExpectingError(mark, predicate);
+
+        // Nothing was saved
+        assertTrue(adapter.query(BlogOwner.class).isEmpty());
+    }
+
+    /**
      * Test save with predicate. Conditional write is useful for making sure that
      * no data is overwritten with outdated assumptions.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
