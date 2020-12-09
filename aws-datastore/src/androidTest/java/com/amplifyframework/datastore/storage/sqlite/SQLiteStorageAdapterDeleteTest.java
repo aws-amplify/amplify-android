@@ -120,6 +120,28 @@ public final class SQLiteStorageAdapterDeleteTest {
     }
 
     /**
+     * Test deleting nonexistent model from the database.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void deleteNonexistentModelDoesNotFail() throws DataStoreException {
+        final BlogOwner john = BlogOwner.builder()
+                .name("John")
+                .build();
+
+        // Try deleting John without saving first
+        adapter.delete(john);
+
+        // Try deleting John again, this time with a true condition
+        QueryPredicate matching = BlogOwner.NAME.eq(john.getName());
+        adapter.delete(john, matching);
+
+        // Try deleting John again, this time with a false condition
+        QueryPredicate mismatch = BlogOwner.NAME.ne(john.getName());
+        adapter.delete(john, mismatch);
+    }
+
+    /**
      * Test delete with predicate. Conditional delete is useful for making sure that
      * no data is removed with outdated assumptions.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
