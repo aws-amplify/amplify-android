@@ -111,7 +111,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         } else if (subscriptionFuture != null && subscriptionFuture.cancel(true)) {
             LOG.debug("Subscription attempt was canceled.");
         } else {
-            LOG.debug("Nothing to cancel. Subscription not yet created.");
+            LOG.debug("Nothing to cancel. Subscription not yet created, or already cancelled.");
         }
     }
 

@@ -376,7 +376,7 @@ final class SubscriptionEndpoint {
                 }
             } catch (InterruptedException interruptedException) {
                 dispatchError(new ApiException(
-                    "Failure awaiting acknowledgement of subscription completion.",
+                    "Thread interrupted awaiting subscription completion.",
                     interruptedException,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));

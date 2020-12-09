@@ -51,10 +51,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import io.reactivex.rxjava3.subjects.ReplaySubject;
 
 /**
  * Observes mutations occurring on a remote {@link AppSync} system. The mutations arrive
@@ -73,7 +73,6 @@ final class SubscriptionProcessor {
     private final QueryPredicateProvider queryPredicateProvider;
     private final CompositeDisposable ongoingOperationsDisposable;
     private final long adjustedTimeoutSeconds;
-    private ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
 
     /**
      * Constructs a new SubscriptionProcessor.
@@ -105,14 +104,11 @@ final class SubscriptionProcessor {
     /**
      * Start subscribing to model mutations.
      */
-    synchronized void startSubscriptions() {
+    synchronized void startSubscriptions(Action onPipelineBroken) {
         int subscriptionCount = modelProvider.modelNames().size() * SubscriptionType.values().length;
         // Create a latch with the number of subscriptions are requesting. Each of these will be
         // counted down when each subscription's onStarted event is called.
         CountDownLatch latch = new CountDownLatch(subscriptionCount);
-        // Need to create a new buffer so we can properly handle retries and stop/start scenarios.
-        // Re-using the same buffer has some unexpected results due to the replay aspect of the subject.
-        buffer = ReplaySubject.create();
 
         Set<Observable<SubscriptionEvent<? extends Model>>> subscriptions = new HashSet<>();
         for (ModelSchema modelSchema : modelProvider.modelSchemas().values()) {
@@ -124,16 +120,13 @@ final class SubscriptionProcessor {
         ongoingOperationsDisposable.add(Observable.merge(subscriptions)
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
-            .subscribe(
-                buffer::onNext,
-                exception -> {
-                    // If the downstream buffer already has an error, don't invoke it again.
-                    if (!buffer.hasThrowable()) {
-                        buffer.onError(exception);
-                    }
-                },
-                buffer::onComplete
-            ));
+            .doOnSubscribe(disposable -> LOG.info("Starting processing subscription events."))
+            .flatMapCompletable(this::mergeEvent)
+            .doOnError(failure -> LOG.warn("Reading subscription events has failed.", failure))
+            .doOnComplete(() -> LOG.warn("Reading subscription events is completed."))
+            .onErrorComplete()
+            .subscribe(onPipelineBroken::call));
+
         boolean subscriptionsStarted;
         try {
             LOG.debug("Waiting for subscriptions to start.");
@@ -146,7 +139,7 @@ final class SubscriptionProcessor {
             Amplify.Hub.publish(HubChannel.DATASTORE,
                                 HubEvent.create(DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED));
             LOG.info(String.format(Locale.US,
-                "Began buffering subscription events for remote mutations %s to Cloud models of types %s.",
+                "Started subscription processor for models: %s of types %s.",
                 modelProvider.modelNames(), Arrays.toString(SubscriptionType.values())
             ));
         } else {
@@ -194,6 +187,8 @@ final class SubscriptionProcessor {
                         } else {
                             emitter.onError(dataStoreException);
                         }
+                    } else {
+                        LOG.warn("An error occurred, but emitter is already disposed!", dataStoreException);
                     }
                     if (latch.getCount() != 0) {
                         LOG.warn("Releasing latch due to an error: " + dataStoreException.getMessage());
@@ -228,43 +223,26 @@ final class SubscriptionProcessor {
         );
     }
 
-    /**
-     * Start draining mutations out of the mutation buffer.
-     * This should be called after {@link #startSubscriptions()}.
-     */
-    void startDrainingMutationBuffer(Action onPipelineBroken) {
-        ongoingOperationsDisposable.add(
-            buffer
-                .doOnSubscribe(disposable ->
-                    LOG.info("Starting processing subscription data buffer.")
-                )
-                .flatMapCompletable(mutation -> {
-                    ModelWithMetadata<? extends Model> original = mutation.modelWithMetadata();
-                    if (original.getModel() instanceof SerializedModel) {
-                        SerializedModel originalModel = (SerializedModel) original.getModel();
-                        SerializedModel newModel = SerializedModel.builder()
-                            .serializedData(originalModel.getSerializedData())
-                            .modelSchema(mutation.modelSchema())
-                            .build();
-                        return merger.merge(new ModelWithMetadata<>(newModel, original.getSyncMetadata()));
-                    } else {
-                        return merger.merge(original);
-                    }
-                })
-                .doOnError(failure -> LOG.warn("Reading subscriptions buffer has failed.", failure))
-                .doOnComplete(() -> LOG.warn("Reading from subscriptions buffer is completed."))
-                .onErrorComplete()
-                .subscribe(onPipelineBroken::call)
-        );
+    private Completable mergeEvent(SubscriptionEvent<? extends Model> event) {
+        ModelWithMetadata<? extends Model> original = event.modelWithMetadata();
+        if (original.getModel() instanceof SerializedModel) {
+            SerializedModel originalModel = (SerializedModel) original.getModel();
+            SerializedModel newModel = SerializedModel.builder()
+                    .serializedData(originalModel.getSerializedData())
+                    .modelSchema(event.modelSchema())
+                    .build();
+            return merger.merge(new ModelWithMetadata<>(newModel, original.getSyncMetadata()));
+        } else {
+            return merger.merge(original);
+        }
     }
 
     /**
-     * Stop any active subscriptions, and stop draining the mutation buffer.
+     * Stop any active subscriptions.
      */
     synchronized void stopAllSubscriptionActivity() {
         LOG.info("Stopping subscription processor.");
         ongoingOperationsDisposable.clear();
-        LOG.info("Stopped subscription processor.");
     }
 
     @VisibleForTesting

@@ -109,7 +109,7 @@ public final class SubscriptionProcessorTest {
     }
 
     /**
-     * When {@link SubscriptionProcessor#startSubscriptions()} is invoked,
+     * When {@link SubscriptionProcessor#startSubscriptions(Action)} is invoked,
      * the {@link AppSync} client receives subscription requests.
      */
     @Test
@@ -134,7 +134,7 @@ public final class SubscriptionProcessorTest {
             });
 
         // Act: start some subscriptions.
-        subscriptionProcessor.startSubscriptions();
+        subscriptionProcessor.startSubscriptions(EmptyAction.create());
 
         // Make sure that all of the subscriptions have been
         Observable.fromIterable(seen.entrySet())
@@ -145,7 +145,7 @@ public final class SubscriptionProcessorTest {
     }
 
     /**
-     * When {@link SubscriptionProcessor#startDrainingMutationBuffer(Action)} is called, then the
+     * When {@link SubscriptionProcessor#startSubscriptions(Action)} is called, then the
      * {@link Merger} is invoked to begin merging whatever content has shown up on the subscriptions.
      * @throws DataStoreException On failure to arrange mocking
      * @throws InterruptedException On failure to await latch
@@ -199,8 +199,7 @@ public final class SubscriptionProcessorTest {
         }).when(merger).merge(eq(response.getData()));
 
         // Start draining....
-        subscriptionProcessor.startSubscriptions();
-        subscriptionProcessor.startDrainingMutationBuffer(EmptyAction.create());
+        subscriptionProcessor.startSubscriptions(EmptyAction.create());
 
         // Was the data merged?
         return latch.await(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
