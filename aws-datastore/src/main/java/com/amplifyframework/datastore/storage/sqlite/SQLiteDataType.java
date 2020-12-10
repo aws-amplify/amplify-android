@@ -33,8 +33,8 @@ public enum SQLiteDataType {
     INTEGER("INTEGER"),
 
     /**
-     * The value is a floating point value, stored as an 8-byte IEEE
-     * floating point number.
+     * The value is a floating point value, stored as an 8-byte ("double precision")
+     * IEEE floating point number.
      */
     REAL("REAL"),
 
