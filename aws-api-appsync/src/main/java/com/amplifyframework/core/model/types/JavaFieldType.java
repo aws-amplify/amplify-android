@@ -47,6 +47,11 @@ public enum JavaFieldType {
     FLOAT(Float.class),
 
     /**
+     * Represents the double data type.
+     */
+    DOUBLE(Double.class),
+
+    /**
      * Represents the String data type.
      */
     STRING(String.class),

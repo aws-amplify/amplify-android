@@ -42,6 +42,7 @@ public final class TypeConverter {
         JAVA_TO_SQL.put(JavaFieldType.LONG, SQLiteDataType.INTEGER);
         JAVA_TO_SQL.put(JavaFieldType.INTEGER, SQLiteDataType.INTEGER);
         JAVA_TO_SQL.put(JavaFieldType.FLOAT, SQLiteDataType.REAL);
+        JAVA_TO_SQL.put(JavaFieldType.DOUBLE, SQLiteDataType.REAL);
         JAVA_TO_SQL.put(JavaFieldType.STRING, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.ENUM, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.DATE, SQLiteDataType.TEXT);
