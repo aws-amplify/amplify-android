@@ -75,8 +75,10 @@ public final class GsonObjectConverter {
                     Number number = primitive.getAsNumber();
                     if (number.floatValue() == number.intValue()) {
                         return number.intValue();
-                    } else {
+                    } else if (number.floatValue() == number.doubleValue()) {
                         return number.floatValue();
+                    } else {
+                        return number.doubleValue();
                     }
                 } else if (primitive.isBoolean()) {
                     return primitive.getAsBoolean();

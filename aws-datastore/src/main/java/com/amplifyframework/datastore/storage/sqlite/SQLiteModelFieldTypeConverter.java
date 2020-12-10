@@ -91,6 +91,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             case INTEGER:
             case LONG:
             case FLOAT:
+            case DOUBLE:
             case STRING:
                 // these types require no special treatment
                 return value;
@@ -172,6 +173,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     return cursor.getInt(columnIndex) != 0;
                 case FLOAT:
                     return cursor.getFloat(columnIndex);
+                case DOUBLE:
+                    return cursor.getDouble(columnIndex);
                 case LONG:
                     return cursor.getLong(columnIndex);
                 case DATE:

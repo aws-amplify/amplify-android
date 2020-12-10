@@ -39,5 +39,5 @@ readonly config_files=(
 for config_file in ${config_files[@]}; do
     aws s3 cp "s3://$config_bucket/$config_file" "$config_file" &
 done
-wait
 
+wait

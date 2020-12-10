@@ -97,7 +97,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             sqliteStorageAdapter,
             AppSyncClient.via(api),
             () -> pluginConfiguration,
-            () -> api.getPlugins().isEmpty() ? Orchestrator.Mode.LOCAL_ONLY : Orchestrator.Mode.SYNC_VIA_API
+            () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
     }
@@ -235,18 +235,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         ));
     }
 
-    private void waitForInitialization(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
-        Completable.create(emitter -> {
-            categoryInitializationsPending.await();
-            emitter.onComplete();
-        })
-                .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        onComplete::call,
-                        throwable -> onError.accept(new DataStoreException("Request failed because DataStore is not " +
-                                "initialized.", throwable, "Retry your request."))
-            );
+    private Completable waitForInitialization() {
+        return Completable.fromAction(() -> categoryInitializationsPending.await())
+            .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .subscribeOn(Schedulers.io())
+            .doOnError(error -> LOG.error("DataStore initialization timed out.", error));
     }
 
     /**
@@ -254,15 +247,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @Override
     public void start(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
-        waitForInitialization(() -> {
-            try {
-                orchestrator.start();
-            } catch (DataStoreException exception) {
-                onError.accept(exception);
-                return;
-            }
-            onComplete.call();
-        }, onError);
+        waitForInitialization()
+            .andThen(orchestrator.start())
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                onComplete::call,
+                error -> onError.accept(new DataStoreException("Failed to start DataStore.", error, "Retry."))
+            );
     }
 
     /**
@@ -270,12 +261,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @Override
     public void stop(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
-        waitForInitialization(() -> orchestrator.stop()
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                    onComplete::call,
-                    error -> onError.accept(new DataStoreException("Failed to stop DataStore.", error,
-                            "Retry your request."))), onError);
+        waitForInitialization()
+            .andThen(orchestrator.stop())
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                onComplete::call,
+                error -> onError.accept(new DataStoreException("Failed to stop DataStore.", error, "Retry."))
+            );
     }
 
     /**
@@ -294,19 +286,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                             throwable -> onError.accept(new DataStoreException("Clear operation failed",
                                     throwable, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION))),
                 onError);
-    }
-
-    /**
-     * Terminate use of the plugin.
-     */
-    synchronized void terminate() {
-        try {
-            orchestrator.stop()
-                .andThen(Completable.fromAction(sqliteStorageAdapter::terminate))
-                .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        } catch (Throwable throwable) {
-            LOG.warn("An error occurred while terminating the DataStore plugin.", throwable);
-        }
     }
 
     /**

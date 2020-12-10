@@ -19,8 +19,6 @@ import android.content.Context;
 import android.content.res.Resources.NotFoundException;
 import androidx.annotation.RawRes;
 
-import com.amplifyframework.AmplifyException;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,25 +29,21 @@ import java.util.Scanner;
  * A utility to read resource files.
  */
 public final class Resources {
-
-    private Resources() { }
+    private Resources() {}
 
     /**
      * Obtains the raw resource ID for the given resource identifier.
      * @param context An Android Context
      * @param identifier Name of a raw resource
      * @return ID of the raw resource
-     * @throws AmplifyException if the specified raw resource does not exist
+     * @throws ResourceLoadingException if the specified raw resource does not exist
      */
     @RawRes
-    public static int getRawResourceId(Context context, String identifier) throws AmplifyException {
+    public static int getRawResourceId(Context context, String identifier) throws ResourceLoadingException {
         try {
             return context.getResources().getIdentifier(identifier, "raw", context.getPackageName());
-        } catch (Exception exception) {
-            throw new AmplifyException(
-                    "Failed to find " + identifier + ".",
-                    exception, "Please check that it exists."
-            );
+        } catch (Exception lookupError) {
+            throw new ResourceLoadingException("No such resource with identifier " + identifier, lookupError);
         }
     }
 
@@ -58,9 +52,10 @@ public final class Resources {
      * @param context An Android Context
      * @param identifier Name of a raw resource
      * @return JSON Object equivalent of the raw resource
-     * @throws AmplifyException If resource with given ID does not exist or cannot be read
+     * @throws ResourceLoadingException If resource with given ID does not exist or cannot be read
      */
-    public static JSONObject readJsonResource(Context context, String identifier) throws AmplifyException {
+    public static JSONObject readJsonResource(Context context, String identifier)
+            throws ResourceLoadingException {
         return readJsonResourceFromId(context, getRawResourceId(context, identifier));
     }
 
@@ -69,18 +64,16 @@ public final class Resources {
      * @param context An Android Context
      * @param resourceId ID of a raw resource
      * @return JSON Object equivalent of the raw resource
-     * @throws AmplifyException If resource with given ID does not exist or cannot be read
+     * @throws ResourceLoadingException If resource with given ID does not exist or cannot be read
      */
-    public static JSONObject readJsonResourceFromId(Context context, @RawRes int resourceId) throws AmplifyException {
+    public static JSONObject readJsonResourceFromId(Context context, @RawRes int resourceId)
+            throws ResourceLoadingException {
         InputStream inputStream;
 
         try {
             inputStream = context.getResources().openRawResource(resourceId);
-        } catch (NotFoundException exception) {
-            throw new AmplifyException(
-                    "Failed to find the resource with ID " + resourceId + ".",
-                    exception, "Please check that it has been created."
-            );
+        } catch (NotFoundException notFoundError) {
+            throw new ResourceLoadingException("No such resource with ID = " + resourceId, notFoundError);
         }
 
         final Scanner in = new Scanner(inputStream);
@@ -92,11 +85,26 @@ public final class Resources {
 
         try {
             return new JSONObject(sb.toString());
-        } catch (JSONException jsonError) {
-            throw new AmplifyException(
-                    "Failed to read the resource with ID " + resourceId + ".",
-                    jsonError, "Please check that it is correctly formed."
+        } catch (JSONException badJsonError) {
+            throw new ResourceLoadingException(
+                "Failed to read the resource with ID " + resourceId + ".", badJsonError
             );
+        }
+    }
+
+    /**
+     * Indicates that a requested resource cannot be loaded.
+     */
+    public static final class ResourceLoadingException extends Exception {
+        private static final long serialVersionUID = 1;
+
+        /**
+         * Constructs a new resource loading exception.
+         * @param failureRationale A rationale for the failure
+         * @param rootCause A root cause for the failure
+         */
+        public ResourceLoadingException(String failureRationale, Throwable rootCause) {
+            super(failureRationale, rootCause);
         }
     }
 }

@@ -227,8 +227,12 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
         //Set the URL and Method
         okReqBuilder.url(req.url());
-        final RequestBody requestBody = req.body() != null ?
-                RequestBody.create(bodyBytes, JSON_MEDIA_TYPE) : null;
+        final RequestBody requestBody;
+        if (req.body() != null && req.body().contentLength() > 0) {
+            requestBody = RequestBody.create(bodyBytes, JSON_MEDIA_TYPE);
+        } else {
+            requestBody = null;
+        }
 
         okReqBuilder.method(req.method(), requestBody);
 

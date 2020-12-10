@@ -285,6 +285,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         return;
                     }
                     modelConflictStrategy = ModelConflictStrategy.OVERWRITE_EXISTING;
+                } else if (!QueryPredicates.all().equals(predicate)) {
+                    // insert not permitted with a condition
+                    onError.accept(new DataStoreException(
+                        "Conditional update must be performed against an already existing data. " +
+                            "Insertion is not permitted while using a predicate.",
+                        "Please save without specifying a predicate."
+                    ));
+                    return;
                 } else {
                     // insert model in SQLite
                     type = StorageItemChange.Type.CREATE;
@@ -481,6 +489,20 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
 
+                if (!dataExistsInSQLiteTable(sqliteTable.getName(), primaryKeyName, item.getId())) {
+                    LOG.warn(modelName + " model with id = " + item.getId() + " does not exist.");
+                    // Pass back item change instance without publishing it.
+                    onSuccess.accept(StorageItemChange.<T>builder()
+                        .changeId(item.getId())
+                        .item(item)
+                        .modelSchema(modelSchema)
+                        .type(StorageItemChange.Type.DELETE)
+                        .predicate(predicate)
+                        .initiator(initiator)
+                        .build());
+                    return;
+                }
+
                 LOG.debug("Deleting item in table: " + sqliteTable.getName() +
                     " identified by ID: " + item.getId());
 
@@ -499,22 +521,18 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     return;
                 }
 
-                DataStoreException problem = null;
                 synchronized (sqlCommand.getCompiledSqlStatement()) {
                     final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
                     compiledSqlStatement.clearBindings();
                     bindStatementToValues(sqlCommand, null);
                     // executeUpdateDelete returns the number of rows affected.
                     final int rowsDeleted = compiledSqlStatement.executeUpdateDelete();
-                    if (rowsDeleted != 1) {
-                        problem = new DataStoreException(
-                            "Wanted to delete one row, but deleted " + rowsDeleted + " rows.",
-                            "This is likely a bug. Please report to AWS."
-                        );
-                    }
                     compiledSqlStatement.clearBindings();
-                    if (problem != null) {
-                        throw problem;
+                    if (rowsDeleted == 0) {
+                        throw new DataStoreException(
+                            "Failed to meet condition. Model was not deleted.",
+                            "Please verify the current state of saved item."
+                        );
                     }
                 }
                 final StorageItemChange<T> change = StorageItemChange.<T>builder()
@@ -695,6 +713,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             statement.bindLong(columnIndex, (Integer) value);
         } else if (value instanceof Float) {
             statement.bindDouble(columnIndex, (Float) value);
+        } else if (value instanceof Double) {
+            statement.bindDouble(columnIndex, (Double) value);
         } else {
             throw new DataStoreException("", "");
         }

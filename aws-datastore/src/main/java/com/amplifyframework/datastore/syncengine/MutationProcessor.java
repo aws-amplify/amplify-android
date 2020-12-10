@@ -23,7 +23,6 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
@@ -154,7 +153,22 @@ final class MutationProcessor {
                 );
                 publishCurrentOutboxStatus();
             })
-            .doOnError(error -> LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error));
+            // If caused by an AppSync error, then publish it to hub, swallow,
+            // and then remove from the outbox to unblock the queue.
+            // Otherwise, pass it through.
+            .onErrorResumeNext(error -> {
+                if (error instanceof DataStoreException.GraphQLResponseException) {
+                    DataStoreException.GraphQLResponseException appSyncError =
+                        (DataStoreException.GraphQLResponseException) error;
+                    return mutationOutbox.remove(mutationOutboxItem.getMutationId())
+                        .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, appSyncError));
+                }
+                return Completable.error(error);
+            })
+            // Finally, catch all.
+            .doOnError(error -> {
+                LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error);
+            });
     }
 
     /**
@@ -163,11 +177,27 @@ final class MutationProcessor {
      * @param <T> Type of model
      */
     private <T extends Model> void announceMutationProcessed(
-            String modelName, ModelWithMetadata<T> modelWithMetadata) {
+            String modelName,
+            ModelWithMetadata<T> modelWithMetadata
+    ) {
         OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent.create(modelName, modelWithMetadata);
-        HubEvent<OutboxMutationEvent<T>> hubEvent =
-            HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED, mutationEvent);
-        Amplify.Hub.publish(HubChannel.DATASTORE, hubEvent);
+        Amplify.Hub.publish(HubChannel.DATASTORE, mutationEvent.toHubEvent());
+    }
+
+    /**
+     * Publish hub event to indicate that mutation failed to publish.
+     * @param pendingMutation Pending mutation that triggered AppSync error response
+     * @param error Exception containing AppSync errors
+     * @param <T> Type of model
+     */
+    private <T extends Model> void announceMutationFailed(
+            PendingMutation<T> pendingMutation,
+            DataStoreException.GraphQLResponseException error
+    ) {
+        List<GraphQLResponse.Error> errors = error.getErrors();
+        OutboxMutationFailedEvent<T> errorEvent =
+                OutboxMutationFailedEvent.create(pendingMutation, errors);
+        Amplify.Hub.publish(HubChannel.DATASTORE, errorEvent.toHubEvent());
     }
 
     /**
@@ -290,15 +320,17 @@ final class MutationProcessor {
         Class<T> modelClazz = (Class<T>) pendingMutation.getModelSchema().getModelClass();
         AppSyncConflictUnhandledError<T> unhandledConflict =
             AppSyncConflictUnhandledError.findFirst(modelClazz, errors);
-        if (unhandledConflict == null) {
-            return Single.error(new DataStoreException(
-                "Mutation failed. Failed mutation = " + pendingMutation + ". " +
-                    "AppSync response contained errors = " + errors,
-                "Verify that your AppSync endpoint is able to store " + modelClazz + " models."
-            ));
+        if (unhandledConflict != null) {
+            return conflictResolver.resolve(pendingMutation, unhandledConflict);
         }
 
-        return conflictResolver.resolve(pendingMutation, unhandledConflict);
+        // If error was not due to ConflictUnhandled, then mark it as an AppSync
+        // error and bubble it up further to be taken care of inside
+        // processOutboxItem() method.
+        return Single.error(new DataStoreException.GraphQLResponseException(
+            "Mutation failed. Failed mutation = " + pendingMutation + ". " +
+                "AppSync response contained errors = " + errors, errors
+        ));
     }
 
     private static String getModelName(@NonNull Model model) {
