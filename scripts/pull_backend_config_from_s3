@@ -4,40 +4,11 @@ set -x
 set -e
 
 # This bucket contains a collection of config files that are used by the
-# integration tests. They contain sensitive
+# integration tests. The configuration files contain sensitive
 # tokens/credentials/identifiers, so are not published publicly.
 readonly config_bucket=$1
 
-# Mac OS X's antiquated version of bash doesn't have associative arrays.
-# So, use two simple arrays and join on index.
-# sources are remote URLs, targets are local file paths
-readonly sources=(
-    # Core
-    "s3://$config_bucket/Core/amplifyconfiguration.json"
-
-    # Analytics
-    "s3://$config_bucket/Analytics/amplifyconfiguration.json"
-    "s3://$config_bucket/Analytics/awsconfiguration.json"
-
-    # API
-    "s3://$config_bucket/API/amplifyconfiguration.json"
-    "s3://$config_bucket/API/awsconfiguration.json"
-    "s3://$config_bucket/API/credentials.json"
-
-    # DataStore
-    "s3://$config_bucket/DataStore/amplifyconfiguration.json"
-    "s3://$config_bucket/DataStore/awsconfiguration.json"
-
-    # Predictions
-    "s3://$config_bucket/Predictions/amplifyconfiguration.json"
-    "s3://$config_bucket/Predictions/awsconfiguration.json"
-
-    # Storage
-    "s3://$config_bucket/Storage/amplifyconfiguration.json"
-    "s3://$config_bucket/Storage/awsconfiguration.json"
-    "s3://$config_bucket/Storage/credentials.json"
-)
-readonly targets=(
+readonly config_files=(
     # Core
     "core/src/androidTest/res/raw/amplifyconfiguration.json"
 
@@ -64,15 +35,9 @@ readonly targets=(
     "aws-storage-s3/src/androidTest/res/raw/credentials.json"
 )
 
-# Compute indices into the arrays.
-readonly start_index=0
-readonly source_array_size=${#sources[@]}
-readonly end_index=$(($source_array_size - 1))
-
-# Iterate source and target, coying out of s3 to local path.
-for index in $(seq $start_index $end_index); do
-    aws s3 cp \
-        "s3://$config_bucket/${targets[$index]}" \
-        "${targets[$index]}"
+# Copy remote files into the local directory.
+for config_file in ${config_files[@]}; do
+    aws s3 cp "s3://$config_bucket/$config_file" "$config_file" &
 done
+wait
 
