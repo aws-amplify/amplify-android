@@ -73,6 +73,8 @@ readonly end_index=$(($source_array_size - 1))
 for index in $(seq $start_index $end_index); do
     aws s3 cp \
         "s3://$config_bucket/${targets[$index]}" \
-        "${targets[$index]}"
+        "${targets[$index]}" &
 done
+
+wait
 
