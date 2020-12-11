@@ -3,9 +3,6 @@
  <a href="https://discord.gg/jWVbPfC" target="_blank">
    <img src="https://img.shields.io/discord/308323056592486420?logo=discord" alt="Discord Chat" />  
  </a>
- <a href="https://codecov.io/gh/aws-amplify/amplify-android">
-   <img src="https://codecov.io/gh/aws-amplify/amplify-android/branch/main/graph/badge.svg" />
- </a>
 
 -------------------------------------------------------
 
