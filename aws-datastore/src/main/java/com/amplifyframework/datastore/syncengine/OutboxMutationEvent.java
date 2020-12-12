@@ -20,7 +20,6 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -80,7 +79,9 @@ public final class OutboxMutationEvent<M extends Model>
         ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
 
         Integer version = metadata.getVersion();
-        Temporal.Timestamp lastChangedAt = metadata.getLastChangedAt();
+        Long lastChangedAt = metadata.getLastChangedAt() != null
+            ? metadata.getLastChangedAt().getSecondsSinceEpoch()
+            : null;
         Boolean deleted = metadata.isDeleted();
 
         OutboxMutationEventElement<M> element =
@@ -155,11 +156,11 @@ public final class OutboxMutationEvent<M extends Model>
     public static final class OutboxMutationEventElement<M extends Model> {
         private final M model;
         private final Integer version;
-        private final Temporal.Timestamp lastChangedAt;
+        private final Long lastChangedAt;
         private final Boolean deleted;
 
         private OutboxMutationEventElement(
-                M model, Integer version, Temporal.Timestamp lastChangedAt, Boolean deleted) {
+                M model, Integer version, Long lastChangedAt, Boolean deleted) {
             this.model = model;
             this.version = version;
             this.lastChangedAt = lastChangedAt;
@@ -180,7 +181,7 @@ public final class OutboxMutationEvent<M extends Model>
          * @return Last time the model was updated locally
          */
         @Nullable
-        public Temporal.Timestamp getLastChangedAt() {
+        public Long getLastChangedAt() {
             return lastChangedAt;
         }
 
