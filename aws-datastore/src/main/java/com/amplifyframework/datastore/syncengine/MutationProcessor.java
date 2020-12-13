@@ -134,12 +134,13 @@ final class MutationProcessor {
         return mutationOutbox.markInFlight(mutationOutboxItem.getMutationId())
             // Then, put it "into flight"
             .andThen(publishToNetwork(mutationOutboxItem)
+                .map(modelWithMetadata -> ensureModelHasSchema(mutationOutboxItem, modelWithMetadata))
                 .flatMapCompletable(modelWithMetadata ->
                     // Once the server knows about it, it's safe to remove from the outbox.
                     // This is done before merging, because the merger will refuse to merge
                     // if there are outstanding mutations in the outbox.
                     mutationOutbox.remove(mutationOutboxItem.getMutationId())
-                        .andThen(merger.merge(modelWithMetadata))
+                        .andThen(Completable.defer(() -> merger.merge(modelWithMetadata)))
                         .doOnComplete(() -> {
                             String modelName = mutationOutboxItem.getModelSchema().getName();
                             announceMutationProcessed(modelName, modelWithMetadata);
@@ -169,6 +170,27 @@ final class MutationProcessor {
             .doOnError(error -> {
                 LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error);
             });
+    }
+
+    private <T extends Model> ModelWithMetadata<? extends Model> ensureModelHasSchema(
+        PendingMutation<T> mutationOutboxItem,
+        ModelWithMetadata<T> modelWithMetadata
+    ) {
+        return (modelWithMetadata.getModel() instanceof SerializedModel)
+            ? modelWithSchemaAdded(modelWithMetadata, mutationOutboxItem.getModelSchema())
+            : modelWithMetadata;
+    }
+
+    private <T extends Model> ModelWithMetadata<? extends Model> modelWithSchemaAdded(
+        ModelWithMetadata<T> modelWithMetadata,
+        ModelSchema modelSchema
+    ) {
+        final SerializedModel originalModel = (SerializedModel) modelWithMetadata.getModel();
+        final SerializedModel newModel = SerializedModel.builder()
+            .serializedData(originalModel.getSerializedData())
+            .modelSchema(modelSchema)
+            .build();
+        return new ModelWithMetadata<>(newModel, modelWithMetadata.getSyncMetadata());
     }
 
     /**
