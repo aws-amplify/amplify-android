@@ -124,6 +124,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     ) throws StorageException {
         String regionStr;
         String bucket;
+        String customPrefix;
 
         try {
             regionStr = pluginConfiguration.getString(JsonKeys.REGION.getConfigurationKey());
@@ -173,6 +174,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
         // TODO: Integrate into config + options
         this.defaultAccessLevel = StorageAccessLevel.PUBLIC;
+
+        try {
+            if (JsonKeys.CUSTOM_PREFIX != null) {
+                customPrefix = pluginConfiguration.getString(JsonKeys.CUSTOM_PREFIX.getConfigurationKey());
+                // TODO: Extract customized prefix values from the embedded JSON object
+            }
+        } catch (JSONException error) {
+            throw new StorageException(
+                    "Missing or malformed value for customized prefix in " + AWS_S3_STORAGE_PLUGIN_KEY + "configuration.",
+                    error,
+                    "Check the attached error to see where the parsing issue took place."
+            );
+        }
         this.defaultUrlExpiration = (int) TimeUnit.DAYS.toSeconds(7);
     }
 
@@ -483,7 +497,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         /**
          * The AWS region this plugin will work with.
          */
-        REGION("region");
+        REGION("region"),
+
+        /**
+         * The customized prefix of access level defined by customer.
+         */
+        CUSTOM_PREFIX("customPrefix");
 
         /**
          * The key this property is listed under in the config JSON.
@@ -506,5 +525,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         public String getConfigurationKey() {
             return configurationKey;
         }
+    }
+
+    /**
+     * Holds the keys for customized prefix of access level.
+     */
+    public enum CustomPrefixKeys {
+        PUBLIC,
+        PROTECTED,
+        PRIVATE;
     }
 }
