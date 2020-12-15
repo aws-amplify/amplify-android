@@ -30,6 +30,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -61,6 +62,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -503,47 +505,40 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     return;
                 }
 
-                LOG.debug("Deleting item in table: " + sqliteTable.getName() +
-                    " identified by ID: " + item.getId());
+                // Family tree is an ordered cache of the following shape:
+                // { ModelSchema -> Set of model IDs }
+                // , where the order of insertion is determines tree level.
+                // (i.e. first in = higher level)
+                Map<ModelSchema, Set<String>> modelFamilyTree = new LinkedHashMap<>();
+                modelFamilyTree.put(modelSchema, Collections.singleton(item.getId()));
+                populateFamilyTree(modelFamilyTree);
 
-                // delete always checks for ID first
-                final QueryPredicateOperation<?> idCheck =
-                    QueryField.field(primaryKeyName).eq(item.getId());
-                final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
-                    ? idCheck.and(predicate)
-                    : idCheck;
-                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, condition);
-                if (sqlCommand.sqlStatement() == null || !sqlCommand.hasCompiledSqlStatement()) {
-                    onError.accept(new DataStoreException(
-                        "No delete statement found for the Model: " + modelSchema.getName(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                    return;
-                }
-
-                synchronized (sqlCommand.getCompiledSqlStatement()) {
-                    final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
-                    compiledSqlStatement.clearBindings();
-                    bindStatementToValues(sqlCommand, null);
-                    // executeUpdateDelete returns the number of rows affected.
-                    final int rowsDeleted = compiledSqlStatement.executeUpdateDelete();
-                    compiledSqlStatement.clearBindings();
-                    if (rowsDeleted == 0) {
-                        throw new DataStoreException(
-                            "Failed to meet condition. Model was not deleted.",
-                            "Please verify the current state of saved item."
-                        );
+                // The family tree is cached from top -> bottom level.
+                // Delete from bottom -> top to avoid foreign key constraint violation
+                List<ModelSchema> reverseOrderedKeys = new ArrayList<>(modelFamilyTree.keySet());
+                Collections.reverse(reverseOrderedKeys);
+                for (ModelSchema schema : reverseOrderedKeys) {
+                    // Treat top-level deletion separately
+                    if (modelSchema.equals(schema)) {
+                        continue;
+                    }
+                    for (String id : modelFamilyTree.get(schema)) {
+                        // Publish DELETE mutation for each affected item.
+                        String dummyJson = String.format("{\"id\":%s}", id);
+                        Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
+                        itemChangeSubject.onNext(StorageItemChange.builder()
+                                .changeId(id)
+                                .item(dummyItem)
+                                .modelSchema(schema)
+                                .type(StorageItemChange.Type.DELETE)
+                                .predicate(QueryPredicates.all())
+                                .initiator(initiator)
+                                .build());
                     }
                 }
-                final StorageItemChange<T> change = StorageItemChange.<T>builder()
-                    .changeId(item.getId())
-                    .item(item)
-                    .modelSchema(modelSchema)
-                    .type(StorageItemChange.Type.DELETE)
-                    .predicate(predicate)
-                    .initiator(initiator)
-                    .build();
-                itemChangeSubject.onNext(change);
+
+                // Delete top-level item. SQLite cascades on delete.
+                StorageItemChange<T> change = deleteModel(item, modelSchema, initiator, predicate);
                 onSuccess.accept(change);
             } catch (DataStoreException dataStoreException) {
                 onError.accept(dataStoreException);
@@ -727,8 +722,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
             @NonNull SqlCommand sqlCommand,
-            @NonNull ModelConflictStrategy modelConflictStrategy)
-            throws DataStoreException {
+            @NonNull ModelConflictStrategy modelConflictStrategy
+    ) throws DataStoreException {
         Objects.requireNonNull(model);
         Objects.requireNonNull(modelSchema);
         Objects.requireNonNull(sqlCommand);
@@ -777,6 +772,117 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 throw problem;
             }
         }
+    }
+
+    private void populateFamilyTree(
+            @NonNull Map<ModelSchema, Set<String>> familyTree
+    ) throws DataStoreException {
+        for (Map.Entry<ModelSchema, Set<String>> entry : familyTree.entrySet()) {
+            ModelSchema modelSchema = entry.getKey();
+            Set<String> parentIds = entry.getValue();
+            if (parentIds == null || parentIds.isEmpty()) {
+                continue;
+            }
+            SQLiteTable parentTable = SQLiteTable.fromSchema(modelSchema);
+
+            for (ModelAssociation association : modelSchema.getAssociations().values()) {
+                switch (association.getName()) {
+                    case "HasOne":
+                    case "HasMany":
+                        String childModel = association.getAssociatedType(); // model name
+                        ModelSchema childSchema = modelSchemaRegistry.getModelSchemaForModelClass(childModel);
+                        SQLiteTable childTable = SQLiteTable.fromSchema(childSchema);
+                        String childPrimaryKey = childTable.getPrimaryKey().getAliasedName();
+                        QueryField queryField = QueryField.field(parentTable.getPrimaryKeyColumnName());
+
+                        // Set up cache for the next level of family tree
+                        Set<String> childrenIds = familyTree.get(childSchema);
+                        if (childrenIds == null) {
+                            childrenIds = new HashSet<>();
+                            familyTree.put(childSchema, childrenIds);
+                        }
+
+                        // Chain predicates with OR operator
+                        QueryPredicate predicate = null;
+                        for (String id : parentIds) {
+                            QueryPredicateOperation<Object> operation = queryField.eq(id);
+                            if (predicate == null) {
+                                predicate = operation;
+                            } else {
+                                predicate = operation.or(predicate);
+                            }
+                        }
+
+                        // Collect every children one level deeper than current level
+                        // SELECT * FROM <CHILD_TABLE> WHERE <PARENT> = <ID_1> OR <PARENT> = <ID_2> OR ...
+                        QueryOptions options = Where.matches(predicate);
+                        try (Cursor cursor = getQueryAllCursor(childModel, options)) {
+                            if (cursor != null && cursor.moveToFirst()) {
+                                int index = cursor.getColumnIndexOrThrow(childPrimaryKey);
+                                do {
+                                    childrenIds.add(cursor.getString(index));
+                                } while (cursor.moveToNext());
+                            }
+                        }
+                        break;
+                    case "BelongsTo":
+                    default:
+                        // Ignore other relationships
+                }
+            }
+        }
+    }
+
+    // actually delete it from SQLite.
+    private <T extends Model> StorageItemChange<T> deleteModel(
+            @NonNull T item,
+            @NonNull ModelSchema modelSchema,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull QueryPredicate predicate
+    ) throws DataStoreException {
+        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+        final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
+        LOG.debug("Deleting item in table: " + sqliteTable.getName() +
+                " identified by ID: " + item.getId());
+
+        // delete always checks for ID first
+        final QueryPredicateOperation<?> idCheck =
+                QueryField.field(primaryKeyName).eq(item.getId());
+        final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
+                ? idCheck.and(predicate)
+                : idCheck;
+        final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, condition);
+        if (sqlCommand.sqlStatement() == null || !sqlCommand.hasCompiledSqlStatement()) {
+            throw new DataStoreException(
+                    "No delete statement found for the Model: " + modelSchema.getName(),
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+            );
+        }
+
+        synchronized (sqlCommand.getCompiledSqlStatement()) {
+            final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
+            compiledSqlStatement.clearBindings();
+            bindStatementToValues(sqlCommand, null);
+            // executeUpdateDelete returns the number of rows affected.
+            final int rowsDeleted = compiledSqlStatement.executeUpdateDelete();
+            compiledSqlStatement.clearBindings();
+            if (rowsDeleted != 1) {
+                throw new DataStoreException(
+                        "Wanted to delete one row, but deleted " + rowsDeleted + " rows.",
+                        "This is likely a bug. Please report to AWS."
+                );
+            }
+        }
+        StorageItemChange<T> change = StorageItemChange.<T>builder()
+                .changeId(item.getId())
+                .item(item)
+                .modelSchema(modelSchema)
+                .type(StorageItemChange.Type.DELETE)
+                .predicate(predicate)
+                .initiator(initiator)
+                .build();
+        itemChangeSubject.onNext(change);
+        return change;
     }
 
     private boolean dataExistsInSQLiteTable(

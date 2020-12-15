@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -93,30 +94,39 @@ public final class SQLiteStorageAdapterDeleteTest {
      */
     @Test
     public void deleteModelCascades() throws DataStoreException {
-        // Triggers an insert
+        // Insert models
         final BlogOwner raphael = BlogOwner.builder()
                 .name("Raphael Kim")
                 .build();
+        final BlogOwner john = BlogOwner.builder()
+                .name("John Pignata")
+                .build();
         adapter.save(raphael);
+        adapter.save(john);
 
-        // Triggers a foreign key constraint check
+        // Trigger a foreign key constraint checks
         final Blog raphaelsBlog = Blog.builder()
                 .name("Raphael's Blog")
                 .owner(raphael)
                 .build();
+        final Blog johnsBlog = Blog.builder()
+                .name("John's Blog")
+                .owner(john)
+                .build();
         adapter.save(raphaelsBlog);
+        adapter.save(johnsBlog);
 
         // Triggers a delete
         // Deletes Raphael's Blog also to prevent foreign key violation
         adapter.delete(raphael);
 
-        // Get the BlogOwner from the database
+        // Get the BlogOwner from the database. Assert john isn't affected.
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
-        assertTrue(blogOwners.isEmpty());
+        assertEquals(Collections.singletonList(john), blogOwners);
 
-        // Get the Blog from the database
+        // Get the Blog from the database. Assert john's blog isn't affected.
         final List<Blog> blogs = adapter.query(Blog.class);
-        assertTrue(blogs.isEmpty());
+        assertEquals(Collections.singletonList(johnsBlog), blogs);
     }
 
     /**
