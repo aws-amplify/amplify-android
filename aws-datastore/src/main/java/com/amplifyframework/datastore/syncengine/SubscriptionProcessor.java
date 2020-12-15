@@ -55,6 +55,7 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.ReplaySubject;
 
 /**
  * Observes mutations occurring on a remote {@link AppSync} system. The mutations arrive
@@ -71,8 +72,10 @@ final class SubscriptionProcessor {
     private final ModelProvider modelProvider;
     private final Merger merger;
     private final QueryPredicateProvider queryPredicateProvider;
+    private final Consumer<Throwable> onFailure;
     private final CompositeDisposable ongoingOperationsDisposable;
     private final long adjustedTimeoutSeconds;
+    private ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
 
     /**
      * Constructs a new SubscriptionProcessor.
@@ -83,6 +86,8 @@ final class SubscriptionProcessor {
         this.modelProvider = builder.modelProvider;
         this.merger = builder.merger;
         this.queryPredicateProvider = builder.queryPredicateProvider;
+        this.onFailure = builder.onFailure;
+
         this.ongoingOperationsDisposable = new CompositeDisposable();
 
         // Operation times out after 10 seconds. If there are more than 5 models,
@@ -104,11 +109,15 @@ final class SubscriptionProcessor {
     /**
      * Start subscribing to model mutations.
      */
-    synchronized void startSubscriptions(Action onPipelineBroken) {
+    synchronized void startSubscriptions() throws DataStoreException {
         int subscriptionCount = modelProvider.modelNames().size() * SubscriptionType.values().length;
         // Create a latch with the number of subscriptions are requesting. Each of these will be
         // counted down when each subscription's onStarted event is called.
         CountDownLatch latch = new CountDownLatch(subscriptionCount);
+
+        // Need to create a new buffer so we can properly handle retries and stop/start scenarios.
+        // Re-using the same buffer has some unexpected results due to the replay aspect of the subject.
+        buffer = ReplaySubject.create();
 
         Set<Observable<SubscriptionEvent<? extends Model>>> subscriptions = new HashSet<>();
         for (ModelSchema modelSchema : modelProvider.modelSchemas().values()) {
@@ -121,11 +130,10 @@ final class SubscriptionProcessor {
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
             .doOnSubscribe(disposable -> LOG.info("Starting processing subscription events."))
-            .flatMapCompletable(this::mergeEvent)
             .doOnError(failure -> LOG.warn("Reading subscription events has failed.", failure))
             .doOnComplete(() -> LOG.warn("Reading subscription events is completed."))
-            .onErrorComplete()
-            .subscribe(onPipelineBroken::call));
+            .subscribe(buffer::onNext, buffer::onError, buffer::onComplete)
+        );
 
         boolean subscriptionsStarted;
         try {
@@ -143,7 +151,7 @@ final class SubscriptionProcessor {
                 modelProvider.modelNames(), Arrays.toString(SubscriptionType.values())
             ));
         } else {
-            LOG.warn("Subscription processor failed to start within the expected timeout.");
+            throw new DataStoreException("Timed out waiting for subscription processor to start.", "Retry");
         }
     }
 
@@ -178,17 +186,12 @@ final class SubscriptionProcessor {
                 },
                 emitter::onNext,
                 dataStoreException -> {
-                    // Only call onError if the Observable hasn't been disposed and it's not an Unauthorized error.
-                    // Unauthorized errors are ignored, so that DataStore can still be used even if the user is only
+                    // Ignore Unauthorized errors, so that DataStore can still be used even if the user is only
                     // authorized to read a subset of the models.
-                    if (!emitter.isDisposed()) {
-                        if (isUnauthorizedException(dataStoreException)) {
-                            LOG.warn("Unauthorized failure for " + subscriptionType + " " + modelSchema.getName());
-                        } else {
-                            emitter.onError(dataStoreException);
-                        }
+                    if (isUnauthorizedException(dataStoreException)) {
+                        LOG.warn("Unauthorized failure for " + subscriptionType.name() + " " + modelSchema.getName());
                     } else {
-                        LOG.warn("An error occurred, but emitter is already disposed!", dataStoreException);
+                        onFailure.accept(dataStoreException);
                     }
                     if (latch.getCount() != 0) {
                         LOG.warn("Releasing latch due to an error: " + dataStoreException.getMessage());
@@ -223,6 +226,21 @@ final class SubscriptionProcessor {
         );
     }
 
+    /**
+     * Start draining mutations out of the mutation buffer.
+     * This should be called after {@link #startSubscriptions()}.
+     */
+    void startDrainingMutationBuffer() {
+        ongoingOperationsDisposable.add(
+            buffer
+                .doOnSubscribe(disposable -> LOG.info("Starting processing subscription data buffer."))
+                .flatMapCompletable(this::mergeEvent)
+                .doOnError(failure -> LOG.warn("Reading subscriptions buffer has failed.", failure))
+                .doOnComplete(() -> LOG.warn("Reading from subscriptions buffer is completed."))
+                .subscribe()
+        );
+    }
+
     private Completable mergeEvent(SubscriptionEvent<? extends Model> event) {
         ModelWithMetadata<? extends Model> original = event.modelWithMetadata();
         if (original.getModel() instanceof SerializedModel) {
@@ -238,11 +256,12 @@ final class SubscriptionProcessor {
     }
 
     /**
-     * Stop any active subscriptions.
+     * Stop any active subscriptions, and stop draining the mutation buffer.
      */
     synchronized void stopAllSubscriptionActivity() {
         LOG.info("Stopping subscription processor.");
         ongoingOperationsDisposable.clear();
+        LOG.info("Stopped subscription processor.");
     }
 
     @VisibleForTesting
@@ -308,11 +327,12 @@ final class SubscriptionProcessor {
      * Builds instances of {@link SubscriptionProcessor}s.
      */
     public static final class Builder implements AppSyncStep, ModelProviderStep, MergerStep,
-            QueryPredicateProviderStep, BuildStep {
+            QueryPredicateProviderStep, OnFailureStep, BuildStep {
         private AppSync appSync;
         private ModelProvider modelProvider;
         private Merger merger;
         private QueryPredicateProvider queryPredicateProvider;
+        private Consumer<Throwable> onFailure;
 
         @NonNull
         @Override
@@ -337,7 +357,7 @@ final class SubscriptionProcessor {
 
         @NonNull
         @Override
-        public BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
+        public OnFailureStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
             this.queryPredicateProvider = Objects.requireNonNull(queryPredicateProvider);
             return Builder.this;
         }
@@ -346,6 +366,13 @@ final class SubscriptionProcessor {
         @Override
         public SubscriptionProcessor build() {
             return new SubscriptionProcessor(this);
+        }
+
+        @NonNull
+        @Override
+        public BuildStep onFailure(Consumer<Throwable> onFailure) {
+            this.onFailure = Objects.requireNonNull(onFailure);
+            return Builder.this;
         }
     }
 
@@ -366,7 +393,12 @@ final class SubscriptionProcessor {
 
     interface QueryPredicateProviderStep {
         @NonNull
-        BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
+        OnFailureStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
+    }
+
+    interface OnFailureStep {
+        @NonNull
+        BuildStep onFailure(Consumer<Throwable> onFailure);
     }
 
     interface BuildStep {

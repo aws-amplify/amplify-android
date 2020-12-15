@@ -35,7 +35,6 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
@@ -97,6 +96,7 @@ public final class SubscriptionProcessorTest {
                 .modelProvider(modelProvider)
                 .merger(merger)
                 .queryPredicateProvider(queryPredicateProvider)
+                .onFailure(throwable -> { })
                 .build();
     }
 
@@ -109,7 +109,7 @@ public final class SubscriptionProcessorTest {
     }
 
     /**
-     * When {@link SubscriptionProcessor#startSubscriptions(Action)} is invoked,
+     * When {@link SubscriptionProcessor#startSubscriptions()} is invoked,
      * the {@link AppSync} client receives subscription requests.
      */
     @Test
@@ -134,7 +134,13 @@ public final class SubscriptionProcessorTest {
             });
 
         // Act: start some subscriptions.
-        subscriptionProcessor.startSubscriptions(EmptyAction.create());
+        try {
+            subscriptionProcessor.startSubscriptions();
+        } catch (DataStoreException exception) {
+            // startSubscriptions throws this exception if it doesn't receive the start_ack messages after a time out.
+            // This test doesn't mock those start_ack messages, so this expection is expected.  That's okay though -
+            // we just want to verify that the subscriptions were requested.
+        }
 
         // Make sure that all of the subscriptions have been
         Observable.fromIterable(seen.entrySet())
@@ -145,7 +151,7 @@ public final class SubscriptionProcessorTest {
     }
 
     /**
-     * When {@link SubscriptionProcessor#startSubscriptions(Action)} is called, then the
+     * When {@link SubscriptionProcessor#startDrainingMutationBuffer()} is called, then the
      * {@link Merger} is invoked to begin merging whatever content has shown up on the subscriptions.
      * @throws DataStoreException On failure to arrange mocking
      * @throws InterruptedException On failure to await latch
@@ -199,7 +205,8 @@ public final class SubscriptionProcessorTest {
         }).when(merger).merge(eq(response.getData()));
 
         // Start draining....
-        subscriptionProcessor.startSubscriptions(EmptyAction.create());
+        subscriptionProcessor.startSubscriptions();
+        subscriptionProcessor.startDrainingMutationBuffer();
 
         // Was the data merged?
         return latch.await(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
@@ -247,7 +254,7 @@ public final class SubscriptionProcessorTest {
             .blockingForEach(pair -> arrangeSubscription(appSync, answer, pair.first, pair.second));
     }
 
-    private static <T extends Model> void arrangeSubscription(
+    private static void arrangeSubscription(
             AppSync appSync, Answer<Cancelable> answer, ModelSchema modelSchema, SubscriptionType subscriptionType)
             throws DataStoreException {
         AppSync stub = doAnswer(answer).when(appSync);

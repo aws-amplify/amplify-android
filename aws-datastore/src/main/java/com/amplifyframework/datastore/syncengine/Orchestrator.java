@@ -125,6 +125,7 @@ public final class Orchestrator {
                 .modelProvider(modelProvider)
                 .merger(merger)
                 .queryPredicateProvider(queryPredicateProvider)
+                .onFailure(this::onApiSyncFailure)
                 .build();
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
         this.currentState = new AtomicReference<>(State.STOPPED);
@@ -303,7 +304,7 @@ public final class Orchestrator {
                 // are then used to filter data received from AppSync.
                 queryPredicateProvider.resolvePredicates();
 
-                subscriptionProcessor.startSubscriptions(this::transitionToLocalOnlyBlocking);
+                subscriptionProcessor.startSubscriptions();
 
                 LOG.debug("About to hydrate...");
                 try {
@@ -328,6 +329,8 @@ public final class Orchestrator {
                 LOG.debug("Draining outbox...");
                 mutationProcessor.startDrainingMutationOutbox();
 
+                subscriptionProcessor.startDrainingMutationBuffer();
+
                 emitter.onComplete();
             })
             .doOnError(error -> LOG.error("Failure encountered while attempting to start API sync.", error))
@@ -336,7 +339,7 @@ public final class Orchestrator {
             .subscribeOn(Schedulers.io())
             .subscribe(
                     this::publishReadyEvent,
-                    error -> transitionToLocalOnlyBlocking()
+                    this::onApiSyncFailure
             )
         );
     }
@@ -345,26 +348,26 @@ public final class Orchestrator {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(DataStoreChannelEventName.READY));
     }
 
-    private void transitionToLocalOnlyBlocking() {
-        try {
-            if (!performSynchronized(this::transitionToLocalOnly)
-                    .blockingAwait(NETWORK_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                throw new TimeoutException("Timed out while waiting for API synchronization to end.");
-            }
-        } catch (Throwable failure) {
-            LOG.warn("Failed to stop API sync", failure);
+    private void onApiSyncFailure(Throwable exception) {
+        // Don't transition to LOCAL_ONLY, if it's already in progress.
+        if (!State.SYNC_VIA_API.equals(currentState.get())) {
+            return;
         }
+        LOG.warn("API sync failed - transitioning to LOCAL_ONLY.", exception);
+        Completable.fromAction(this::transitionToLocalOnly)
+            .doOnError(error -> LOG.warn("Transition to LOCAL_ONLY failed.", error))
+            .subscribe();
     }
 
     /**
      * Stop all model synchronization with the remote API.
      */
     private void stopApiSync() {
+        LOG.info("Setting currentState to LOCAL_ONLY");
+        currentState.set(State.LOCAL_ONLY);
         disposables.clear();
         subscriptionProcessor.stopAllSubscriptionActivity();
         mutationProcessor.stopDrainingMutationOutbox();
-        LOG.info("Setting currentState to LOCAL_ONLY");
-        currentState.set(State.LOCAL_ONLY);
     }
 
     /**

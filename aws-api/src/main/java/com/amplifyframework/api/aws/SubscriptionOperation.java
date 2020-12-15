@@ -88,11 +88,8 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
                 },
                 onNextItem,
                 apiException -> {
-                    // Guard against calling something that's been cancelled already.
-                    if (!canceled.get()) {
-                        canceled.set(true);
-                        onSubscriptionError.accept(apiException);
-                    }
+                    cancel();
+                    onSubscriptionError.accept(apiException);
                 },
                 onSubscriptionComplete
             );
@@ -104,6 +101,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         if (subscriptionId != null && !canceled.get()) {
             canceled.set(true);
             try {
+                LOG.debug("Cancelling subscription: " + subscriptionId);
                 subscriptionEndpoint.releaseSubscription(subscriptionId);
             } catch (ApiException exception) {
                 onSubscriptionError.accept(exception);
