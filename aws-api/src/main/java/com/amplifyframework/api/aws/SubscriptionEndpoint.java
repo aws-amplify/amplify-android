@@ -241,7 +241,8 @@ final class SubscriptionEndpoint {
 
         // Only do this if the subscription was NOT pending.
         // Otherwise it would probably fail since it was never established in the first place.
-        if (!wasSubscriptionPending) {
+
+        if (!wasSubscriptionPending && !webSocketListener.isDisconnectedState()) {
             try {
                 webSocket.send(new JSONObject()
                     .put("type", "stop")
@@ -257,8 +258,11 @@ final class SubscriptionEndpoint {
             subscription.awaitSubscriptionCompleted();
         }
 
+        subscriptions.remove(subscriptionId);
+
         // If we have zero subscriptions, close the WebSocket
         if (subscriptions.size() == 0) {
+            LOG.info("No more active subscriptions. Closing web socket.");
             timeoutWatchdog.stop();
             webSocket.close(NORMAL_CLOSURE_STATUS, "No active subscriptions");
         }
@@ -376,7 +380,7 @@ final class SubscriptionEndpoint {
                 }
             } catch (InterruptedException interruptedException) {
                 dispatchError(new ApiException(
-                    "Failure awaiting acknowledgement of subscription completion.",
+                    "Thread interrupted awaiting subscription completion.",
                     interruptedException,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
@@ -512,6 +516,9 @@ final class SubscriptionEndpoint {
                 return new Connection("Thread interrupted waiting for connection acknowledgement");
             }
             LOG.debug("Current endpoint status: " + endpointStatus.get());
+            if (EndpointStatus.CONNECTION_FAILED.equals(endpointStatus.get())) {
+                return new Connection("Connection failed.");
+            }
             return new Connection();
         }
 

@@ -120,8 +120,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     @SuppressLint("SyntheticAccessor")
     class OkHttpCallback implements Callback {
         @Override
-        public void onResponse(@NonNull Call call,
-                               @NonNull Response response) {
+        public void onResponse(@NonNull Call call, @NonNull Response response) {
             final ResponseBody responseBody = response.body();
             String jsonResponse = null;
             if (responseBody != null) {
@@ -145,11 +144,9 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         }
 
         @Override
-        public void onFailure(@NonNull Call call,
-                              @NonNull IOException exception) {
+        public void onFailure(@NonNull Call call, @NonNull IOException exception) {
             onFailure.accept(new ApiException(
-                "Could not retrieve the response body from the returned JSON",
-                exception, AmplifyException.TODO_RECOVERY_SUGGESTION
+                "OkHttp client request failed.", exception, "See attached exception for more details."
             ));
         }
     }
