@@ -310,6 +310,10 @@ tests. This must complete successfully before proposing a PR.
 ./gradlew clean build
 ```
 
+Tip: Checkstyle specifies a specific ordering and spacing of import statements, maximum line length, and other rules.
+To setup the Android Studio editor to automatically organize import according to the project checkstyle,  go to
+Preferences > Editor > Code Style > Java.  Under Scheme, select "Project".
+
 ### Run Instrumentation Tests
 
 The instrumentation tests presume the presence of various backend resources.
