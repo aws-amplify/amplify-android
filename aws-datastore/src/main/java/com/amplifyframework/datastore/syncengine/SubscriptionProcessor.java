@@ -51,6 +51,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -71,6 +72,7 @@ final class SubscriptionProcessor {
     private final ModelProvider modelProvider;
     private final Merger merger;
     private final QueryPredicateProvider queryPredicateProvider;
+    private final Consumer<Throwable> onFailure;
     private final CompositeDisposable ongoingOperationsDisposable;
     private final long adjustedTimeoutSeconds;
     private ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
@@ -84,6 +86,8 @@ final class SubscriptionProcessor {
         this.modelProvider = builder.modelProvider;
         this.merger = builder.merger;
         this.queryPredicateProvider = builder.queryPredicateProvider;
+        this.onFailure = builder.onFailure;
+
         this.ongoingOperationsDisposable = new CompositeDisposable();
 
         // Operation times out after 10 seconds. If there are more than 5 models,
@@ -105,11 +109,12 @@ final class SubscriptionProcessor {
     /**
      * Start subscribing to model mutations.
      */
-    synchronized void startSubscriptions() {
+    synchronized void startSubscriptions() throws DataStoreException {
         int subscriptionCount = modelProvider.modelNames().size() * SubscriptionType.values().length;
         // Create a latch with the number of subscriptions are requesting. Each of these will be
         // counted down when each subscription's onStarted event is called.
         CountDownLatch latch = new CountDownLatch(subscriptionCount);
+
         // Need to create a new buffer so we can properly handle retries and stop/start scenarios.
         // Re-using the same buffer has some unexpected results due to the replay aspect of the subject.
         buffer = ReplaySubject.create();
@@ -124,16 +129,12 @@ final class SubscriptionProcessor {
         ongoingOperationsDisposable.add(Observable.merge(subscriptions)
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
-            .subscribe(
-                buffer::onNext,
-                exception -> {
-                    // If the downstream buffer already has an error, don't invoke it again.
-                    if (!buffer.hasThrowable()) {
-                        buffer.onError(exception);
-                    }
-                },
-                buffer::onComplete
-            ));
+            .doOnSubscribe(disposable -> LOG.info("Starting processing subscription events."))
+            .doOnError(failure -> LOG.warn("Reading subscription events has failed.", failure))
+            .doOnComplete(() -> LOG.warn("Reading subscription events is completed."))
+            .subscribe(buffer::onNext, buffer::onError, buffer::onComplete)
+        );
+
         boolean subscriptionsStarted;
         try {
             LOG.debug("Waiting for subscriptions to start.");
@@ -146,11 +147,11 @@ final class SubscriptionProcessor {
             Amplify.Hub.publish(HubChannel.DATASTORE,
                                 HubEvent.create(DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED));
             LOG.info(String.format(Locale.US,
-                "Began buffering subscription events for remote mutations %s to Cloud models of types %s.",
+                "Started subscription processor for models: %s of types %s.",
                 modelProvider.modelNames(), Arrays.toString(SubscriptionType.values())
             ));
         } else {
-            LOG.warn("Subscription processor failed to start within the expected timeout.");
+            throw new DataStoreException("Timed out waiting for subscription processor to start.", "Retry");
         }
     }
 
@@ -185,15 +186,12 @@ final class SubscriptionProcessor {
                 },
                 emitter::onNext,
                 dataStoreException -> {
-                    // Only call onError if the Observable hasn't been disposed and it's not an Unauthorized error.
-                    // Unauthorized errors are ignored, so that DataStore can still be used even if the user is only
+                    // Ignore Unauthorized errors, so that DataStore can still be used even if the user is only
                     // authorized to read a subset of the models.
-                    if (!emitter.isDisposed()) {
-                        if (isUnauthorizedException(dataStoreException)) {
-                            LOG.warn("Unauthorized failure for " + subscriptionType + " " + modelSchema.getName());
-                        } else {
-                            emitter.onError(dataStoreException);
-                        }
+                    if (isUnauthorizedException(dataStoreException)) {
+                        LOG.warn("Unauthorized failure for " + subscriptionType.name() + " " + modelSchema.getName());
+                    } else {
+                        onFailure.accept(dataStoreException);
                     }
                     if (latch.getCount() != 0) {
                         LOG.warn("Releasing latch due to an error: " + dataStoreException.getMessage());
@@ -232,30 +230,29 @@ final class SubscriptionProcessor {
      * Start draining mutations out of the mutation buffer.
      * This should be called after {@link #startSubscriptions()}.
      */
-    void startDrainingMutationBuffer(Action onPipelineBroken) {
+    void startDrainingMutationBuffer() {
         ongoingOperationsDisposable.add(
             buffer
-                .doOnSubscribe(disposable ->
-                    LOG.info("Starting processing subscription data buffer.")
-                )
-                .flatMapCompletable(mutation -> {
-                    ModelWithMetadata<? extends Model> original = mutation.modelWithMetadata();
-                    if (original.getModel() instanceof SerializedModel) {
-                        SerializedModel originalModel = (SerializedModel) original.getModel();
-                        SerializedModel newModel = SerializedModel.builder()
-                            .serializedData(originalModel.getSerializedData())
-                            .modelSchema(mutation.modelSchema())
-                            .build();
-                        return merger.merge(new ModelWithMetadata<>(newModel, original.getSyncMetadata()));
-                    } else {
-                        return merger.merge(original);
-                    }
-                })
+                .doOnSubscribe(disposable -> LOG.info("Starting processing subscription data buffer."))
+                .flatMapCompletable(this::mergeEvent)
                 .doOnError(failure -> LOG.warn("Reading subscriptions buffer has failed.", failure))
                 .doOnComplete(() -> LOG.warn("Reading from subscriptions buffer is completed."))
-                .onErrorComplete()
-                .subscribe(onPipelineBroken::call)
+                .subscribe()
         );
+    }
+
+    private Completable mergeEvent(SubscriptionEvent<? extends Model> event) {
+        ModelWithMetadata<? extends Model> original = event.modelWithMetadata();
+        if (original.getModel() instanceof SerializedModel) {
+            SerializedModel originalModel = (SerializedModel) original.getModel();
+            SerializedModel newModel = SerializedModel.builder()
+                    .serializedData(originalModel.getSerializedData())
+                    .modelSchema(event.modelSchema())
+                    .build();
+            return merger.merge(new ModelWithMetadata<>(newModel, original.getSyncMetadata()));
+        } else {
+            return merger.merge(original);
+        }
     }
 
     /**
@@ -330,11 +327,12 @@ final class SubscriptionProcessor {
      * Builds instances of {@link SubscriptionProcessor}s.
      */
     public static final class Builder implements AppSyncStep, ModelProviderStep, MergerStep,
-            QueryPredicateProviderStep, BuildStep {
+            QueryPredicateProviderStep, OnFailureStep, BuildStep {
         private AppSync appSync;
         private ModelProvider modelProvider;
         private Merger merger;
         private QueryPredicateProvider queryPredicateProvider;
+        private Consumer<Throwable> onFailure;
 
         @NonNull
         @Override
@@ -359,7 +357,7 @@ final class SubscriptionProcessor {
 
         @NonNull
         @Override
-        public BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
+        public OnFailureStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
             this.queryPredicateProvider = Objects.requireNonNull(queryPredicateProvider);
             return Builder.this;
         }
@@ -368,6 +366,13 @@ final class SubscriptionProcessor {
         @Override
         public SubscriptionProcessor build() {
             return new SubscriptionProcessor(this);
+        }
+
+        @NonNull
+        @Override
+        public BuildStep onFailure(Consumer<Throwable> onFailure) {
+            this.onFailure = Objects.requireNonNull(onFailure);
+            return Builder.this;
         }
     }
 
@@ -388,7 +393,12 @@ final class SubscriptionProcessor {
 
     interface QueryPredicateProviderStep {
         @NonNull
-        BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
+        OnFailureStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
+    }
+
+    interface OnFailureStep {
+        @NonNull
+        BuildStep onFailure(Consumer<Throwable> onFailure);
     }
 
     interface BuildStep {
