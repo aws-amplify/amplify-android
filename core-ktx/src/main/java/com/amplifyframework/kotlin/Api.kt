@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,22 +13,9 @@
  * permissions and limitations under the License.
  */
 
-include ':core'
+package com.amplifyframework.kotlin
 
-// Plugin Modules
-include ':aws-analytics-pinpoint'
-include ':aws-api'
-include ':aws-datastore'
-include ':aws-auth-cognito'
-include ':aws-predictions'
-include ':aws-predictions-tensorflow'
-include ':aws-storage-s3'
-
-// Test Utilities and assets
-include ':testutils'
-include ':testmodels'
-
-// Bindings and accessory modules
-include ':core-ktx'
-include ':rxbindings'
-include ':aws-api-appsync'
+/**
+ * Interfaces to remote web service APIs.
+ */
+interface Api : Rest, GraphQL
