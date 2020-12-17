@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import android.database.sqlite.SQLiteConstraintException;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
@@ -27,6 +28,7 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -108,6 +110,15 @@ final class Merger {
             .doOnComplete(() -> {
                 announceSuccessfulMerge(modelWithMetadata);
                 LOG.debug("Remote model update was sync'd down into local storage: " + modelWithMetadata);
+            })
+            // Remote store may not always respect the foreign key constraint, so
+            // swallow any error caused by foreign key constraint violation.
+            .onErrorComplete(failure -> {
+                if (!ErrorInspector.contains(failure, SQLiteConstraintException.class)) {
+                    return false;
+                }
+                LOG.warn("Failed to sync due to foreign key constraint violation: " + modelWithMetadata, failure);
+                return true;
             })
             .doOnError(failure ->
                 LOG.warn("Failed to sync remote model into local storage: " + modelWithMetadata, failure)
