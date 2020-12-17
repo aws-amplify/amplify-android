@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import android.database.sqlite.SQLiteConstraintException;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.Where;
@@ -25,6 +27,7 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -41,6 +44,10 @@ import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
 /**
  * Tests the {@link Merger}.
@@ -49,6 +56,7 @@ import static org.junit.Assert.assertTrue;
 public final class MergerTest {
     private static final long REASONABLE_WAIT_TIME = TimeUnit.SECONDS.toMillis(2);
 
+    private InMemoryStorageAdapter inMemoryStorageAdapter;
     private SynchronousStorageAdapter storageAdapter;
     private MutationOutbox mutationOutbox;
     private Merger merger;
@@ -62,7 +70,7 @@ public final class MergerTest {
      */
     @Before
     public void setup() {
-        InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
+        this.inMemoryStorageAdapter = spy(InMemoryStorageAdapter.create());
         this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
         this.mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
@@ -346,5 +354,40 @@ public final class MergerTest {
             Collections.singletonList(existingMetadata),
             storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getId()))
         );
+    }
+
+    /**
+     * Assume item A is dependent on item B, but the remote store has an
+     * orphaned item A without item B. Then, we try to merge a save for a
+     * item A. This should gracefully fail, with A not being in the local
+     * store, at the end.
+     * @throws DataStoreException On failure to query results for assertions
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     */
+    @Test
+    public void orphanedItemIsNotMerged() throws DataStoreException, InterruptedException {
+        // Arrange: an item and its parent are not in the local store
+        BlogOwner badOwner = BlogOwner.builder()
+                .name("Raphael")
+                .build();
+        Blog orphanedBlog = Blog.builder()
+                .name("How Not To Save Blogs")
+                .owner(badOwner)
+                .build();
+        ModelMetadata metadata = new ModelMetadata(orphanedBlog.getId(), false, 1, Temporal.Timestamp.now());
+
+        // Enforce foreign key constraint on in-memory storage adapter
+        doThrow(SQLiteConstraintException.class)
+                .when(inMemoryStorageAdapter)
+                .save(eq(orphanedBlog), any(), any(), any(), any());
+
+        // Act: merge a creation for an item
+        TestObserver<Void> observer = merger.merge(new ModelWithMetadata<>(orphanedBlog, metadata)).test();
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
+        observer.assertNoErrors().assertComplete();
+
+        // Assert: orphaned model was not merged locally
+        final List<Blog> blogsInStorage = storageAdapter.query(Blog.class);
+        assertTrue(blogsInStorage.isEmpty());
     }
 }
