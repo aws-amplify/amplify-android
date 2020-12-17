@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.util;
+package com.amplifyframework.datastore.utils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,8 +23,8 @@ import java.util.Objects;
 /**
  * Utility class to provide helpful functions to use on throwable instances.
  */
-public final class Error {
-    private Error() {}
+public final class ErrorInspector {
+    private ErrorInspector() {}
 
     /**
      * Returns true if an error object was caused by a specific throwable type.
@@ -32,7 +32,7 @@ public final class Error {
      * @param causeType Class type of the error to look for in stacktrace.
      * @return true if an error object contains given cause.
      */
-    public static boolean containsCause(
+    public static boolean contains(
         @Nullable Throwable error,
         @NonNull Class<? extends Throwable> causeType
     ) {
@@ -41,7 +41,7 @@ public final class Error {
             return false;
         }
         try {
-            return causeType.isInstance(error) || containsCause(error.getCause(), causeType);
+            return causeType.isInstance(error) || contains(error.getCause(), causeType);
         } catch (Throwable unexpected) {
             // May encounter unexpected error during recursive search.
             // e.g. StackOverflowError, NoClassDefFoundError, etc.

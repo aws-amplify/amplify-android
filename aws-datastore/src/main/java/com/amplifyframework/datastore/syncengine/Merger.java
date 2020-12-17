@@ -28,10 +28,10 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.util.Error;
 
 import java.util.Objects;
 
@@ -114,7 +114,7 @@ final class Merger {
             // Remote store may not always respect the foreign key constraint, so
             // swallow any error caused by foreign key constraint violation.
             .onErrorComplete(failure -> {
-                if (!Error.containsCause(failure, SQLiteConstraintException.class)) {
+                if (!ErrorInspector.contains(failure, SQLiteConstraintException.class)) {
                     return false;
                 }
                 LOG.warn("Failed to sync due to foreign key constraint violation: " + modelWithMetadata, failure);
