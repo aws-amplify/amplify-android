@@ -121,6 +121,10 @@ public final class GsonResponseAdapters {
 
         // Skips a JSON level to get content of query, not query itself
         private JsonElement skipQueryLevel(JsonElement jsonData) throws JsonParseException {
+            if (jsonData == null || jsonData.isJsonNull()) {
+                return null;
+            }
+
             JsonObject data = jsonData.getAsJsonObject();
             if (data.size() == 0) {
                 throw new JsonParseException(
