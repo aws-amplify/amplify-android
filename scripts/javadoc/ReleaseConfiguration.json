@@ -1,0 +1,104 @@
+{
+	JavaDoc : {
+		variables:	{
+			"javadoc.doctitle" : "AWS Amplify for Android - $sdkVersion"
+		},
+		modules:[
+			"aws-analytics-pinpoint",
+			"aws-api",
+			"aws-api-appsync",
+			"aws-auth-cognito",
+			"aws-datastore",
+			"aws-predictions",
+			"aws-predictions-tensorflow",
+			"aws-storage-s3",
+			"core",
+			"rxbindings"
+		],
+		packages : [
+			"com.amplifyframework"
+		],
+
+		subpackages : [
+			"com.amplifyframework"
+		],
+
+		sourcefiles: [
+		],
+
+		excludes: [
+		],
+		groups : [
+			{
+				title : "Analytics",
+				packages : [
+					"com.amplifyframework.analytics*"
+				]			
+			},
+			{
+				title : "API",
+				packages : [
+					"com.amplifyframework.api*"
+				]
+			},
+			{
+				title : "Authentication",
+				packages : [
+					"com.amplifyframework.auth*"
+				]
+			},
+			{ 
+				title : "DataStore" , 
+				packages : [ 
+					"com.amplifyframework.datastore*"
+				] 
+			},
+			{ 
+				title : "Predictions" , 
+				packages : [ 
+					"com.amplifyframework.predictions*"
+				]  
+			},
+			{ 
+				title : "Storage" , 
+				packages : [ 
+					"com.amplifyframework.storage*"
+				]  
+			},
+			{ 
+				title : "Core" , 
+				packages : [ 
+					"com.amplifyframework",
+					"com.amplifyframework.core*",
+					"com.amplifyframework.util",
+					"com.amplifyframework.logging",
+					"com.amplifyframework.devmenu",
+					"com.amplifyframework.hub"
+				]
+			},
+			{ 
+				title : "Rx Bindings" , 
+				packages : [ 
+					"com.amplifyframework.rx"
+				]
+			}
+		],
+		otheroptions :	{
+			"link" :"http://java.sun.com/j2se/1.5.0/docs/api/" ,
+			"windowtitle" : "${javadoc.doctitle}" ,
+			"doctitle" : "${javadoc.doctitle}",
+			"bottom": "Copyright &#169; 2020 Amazon Web Services, Inc. All Rights Reserved.",
+			"encoding" : "UTF-8",
+			"docencoding" : "UTF-8",
+			"stylesheetfile" : "scripts/javadoc/style.css"
+		},
+		otherargs : [
+			"Xdoclint:none",
+			"public",
+			"version",
+			"notree",
+			"nodeprecatedlist"
+		]
+	}
+
+}
