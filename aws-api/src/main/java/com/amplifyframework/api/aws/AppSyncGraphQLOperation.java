@@ -136,7 +136,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             }
 
             try {
-                onResponse.accept(wrapResponse(jsonResponse, getResponseType()));
+                onResponse.accept(wrapResponse(jsonResponse));
                 //TODO: Dispatch to hub
             } catch (ApiException exception) {
                 onFailure.accept(exception);

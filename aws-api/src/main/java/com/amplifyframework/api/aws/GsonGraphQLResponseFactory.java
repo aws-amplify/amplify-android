@@ -55,9 +55,9 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     }
 
     @Override
-    public <T> GraphQLResponse<T> buildResponse(GraphQLRequest<T> request, String responseJson, Type typeOfT)
+    public <T> GraphQLResponse<T> buildResponse(GraphQLRequest<T> request, String responseJson)
             throws ApiException {
-        Type responseType = TypeMaker.getParameterizedType(GraphQLResponse.class, typeOfT);
+        Type responseType = TypeMaker.getParameterizedType(GraphQLResponse.class, request.getResponseType());
         try {
             Gson responseGson = gson.newBuilder()
                 .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer<>(request))

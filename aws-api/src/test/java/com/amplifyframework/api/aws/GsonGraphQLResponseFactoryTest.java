@@ -81,8 +81,9 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act! Parse it into a model.
         Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
         final GraphQLResponse<PaginatedResult<Todo>> response =
-            responseFactory.buildResponse(null, nullResponseJson, responseType);
+            responseFactory.buildResponse(request, nullResponseJson);
 
         // Assert that the model is constructed without content
         assertNotNull(response);
@@ -107,7 +108,7 @@ public final class GsonGraphQLResponseFactoryTest {
         Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
         GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
         final GraphQLResponse<PaginatedResult<Todo>> response =
-            responseFactory.buildResponse(request, partialResponseJson, responseType);
+            responseFactory.buildResponse(request, partialResponseJson);
 
         // Assert that the model contained things...
         assertNotNull(response);
@@ -222,7 +223,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         final GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
         final GraphQLResponse<PaginatedResult<Todo>> response =
-                responseFactory.buildResponse(request, partialResponseJson, responseType);
+                responseFactory.buildResponse(request, partialResponseJson);
 
         // Assert
         assertEquals(expectedResponse, response);
@@ -248,8 +249,9 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act! Parse it into a model.
         Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
         final GraphQLResponse<PaginatedResult<Todo>> response =
-                responseFactory.buildResponse(null, partialResponseJson, responseType);
+                responseFactory.buildResponse(request, partialResponseJson);
 
         // Build the expected response.
         String message = "Conflict resolver rejects mutation.";
@@ -298,8 +300,9 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act! Parse it into a model.
         Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
         final GraphQLResponse<PaginatedResult<Todo>> response =
-                responseFactory.buildResponse(null, responseJson, responseType);
+                responseFactory.buildResponse(request, responseJson);
 
         // Build the expected response.
         Map<String, Object> extensions = new HashMap<>();
@@ -331,7 +334,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act! Parse it into a String data type.
         final GraphQLResponse<String> response =
-                responseFactory.buildResponse(request, partialResponseJson.toString(), String.class);
+                responseFactory.buildResponse(request, partialResponseJson.toString());
 
         // Assert that the response data is just the data block as a JSON string
         assertEquals(
@@ -352,7 +355,7 @@ public final class GsonGraphQLResponseFactoryTest {
         Type responseType = TypeMaker.getParameterizedType(Iterable.class, String.class);
         GraphQLRequest<Iterable<String>> request = buildDummyRequest(responseType);
         GraphQLResponse<Iterable<String>> response =
-                responseFactory.buildResponse(request, baseQueryResponseJson.toString(), responseType);
+                responseFactory.buildResponse(request, baseQueryResponseJson.toString());
         final Iterable<String> queryResults = response.getData();
 
         final List<String> resultJsons = new ArrayList<>();
@@ -434,7 +437,7 @@ public final class GsonGraphQLResponseFactoryTest {
         Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Meeting.class);
         GraphQLRequest<PaginatedResult<Meeting>> request = buildDummyRequest(responseType);
         final GraphQLResponse<PaginatedResult<Meeting>> response =
-                responseFactory.buildResponse(request, responseString, responseType);
+                responseFactory.buildResponse(request, responseString);
         final Iterable<Meeting> actualMeetings = response.getData().getItems();
 
         // Assert

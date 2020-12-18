@@ -389,7 +389,7 @@ final class SubscriptionEndpoint {
 
         void dispatchNextMessage(String message) {
             try {
-                onNextItem.accept(responseFactory.buildResponse(request, message, responseType));
+                onNextItem.accept(responseFactory.buildResponse(request, message));
             } catch (ApiException exception) {
                 dispatchError(exception);
             }
