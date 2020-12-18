@@ -21,15 +21,12 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiOperation;
 
-import java.lang.reflect.Type;
-
 /**
  * A GraphQLOperation is an API operation which returns a GraphQLResponse.
  * @param <R> The type of data contained in the GraphQLResponse.
  */
 public abstract class GraphQLOperation<R> extends ApiOperation<GraphQLRequest<R>> {
     private final GraphQLResponse.Factory responseFactory;
-    private final Type responseType;
 
     /**
      * Constructs a new instance of a GraphQLOperation.
@@ -42,31 +39,21 @@ public abstract class GraphQLOperation<R> extends ApiOperation<GraphQLRequest<R>
     ) {
         super(graphQLRequest);
         this.responseFactory = responseFactory;
-        this.responseType = graphQLRequest.getResponseType();
     }
 
     /**
      * Converts a response json string containing a single object to a formatted
      * {@link GraphQLResponse} object that a response consumer can receive.
      * @param jsonResponse json response from API to be converted
-     * @param type Type of R, the data contained in the GraphQLResponse
      * @return wrapped response object
      * @throws ApiException If the class provided mismatches the data
      */
-    protected final GraphQLResponse<R> wrapResponse(String jsonResponse, Type type) throws ApiException {
+    protected final GraphQLResponse<R> wrapResponse(String jsonResponse) throws ApiException {
         try {
-            return responseFactory.buildResponse(getRequest(), jsonResponse, type);
+            return responseFactory.buildResponse(getRequest(), jsonResponse);
         } catch (ClassCastException cce) {
             throw new ApiException("Amplify encountered an error while deserializing an object",
                     AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
-    }
-
-    /**
-     * Gets the Type to use for deserializing the response.
-     * @return response type
-     */
-    protected final Type getResponseType() {
-        return responseType;
     }
 }
