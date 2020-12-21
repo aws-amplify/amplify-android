@@ -80,9 +80,10 @@ public final class GsonGraphQLResponseFactoryTest {
             Resources.readAsString("null-gql-response.json");
 
         // Act! Parse it into a model.
-
-        final GraphQLResponse<ListTodosResult> response =
-            responseFactory.buildResponse(null, nullResponseJson, ListTodosResult.class);
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
+        final GraphQLResponse<PaginatedResult<Todo>> response =
+            responseFactory.buildResponse(request, nullResponseJson);
 
         // Assert that the model is constructed without content
         assertNotNull(response);
@@ -104,9 +105,10 @@ public final class GsonGraphQLResponseFactoryTest {
             Resources.readAsString("partial-gql-response.json");
 
         // Act! Parse it into a model.
-        GraphQLRequest<ListTodosResult> request = buildDummyRequest(ListTodosResult.class);
-        final GraphQLResponse<ListTodosResult> response =
-            responseFactory.buildResponse(request, partialResponseJson, ListTodosResult.class);
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
+        final GraphQLResponse<PaginatedResult<Todo>> response =
+            responseFactory.buildResponse(request, partialResponseJson);
 
         // Assert that the model contained things...
         assertNotNull(response);
@@ -116,7 +118,7 @@ public final class GsonGraphQLResponseFactoryTest {
         // Assert that all of the fields of the different todos
         // match what we would expect from a manual inspection of the
         // JSON.
-        final List<Todo> actualTodos = response.getData().getItems();
+        final Iterable<Todo> actualTodos = response.getData().getItems();
 
         final List<Todo> expectedTodos = Arrays.asList(
             Todo.builder()
@@ -221,7 +223,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         final GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
         final GraphQLResponse<PaginatedResult<Todo>> response =
-                responseFactory.buildResponse(request, partialResponseJson, responseType);
+                responseFactory.buildResponse(request, partialResponseJson);
 
         // Assert
         assertEquals(expectedResponse, response);
@@ -246,8 +248,10 @@ public final class GsonGraphQLResponseFactoryTest {
                 Resources.readAsString("error-extensions-gql-response.json");
 
         // Act! Parse it into a model.
-        final GraphQLResponse<ListTodosResult> response =
-                responseFactory.buildResponse(null, partialResponseJson, ListTodosResult.class);
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
+        final GraphQLResponse<PaginatedResult<Todo>> response =
+                responseFactory.buildResponse(request, partialResponseJson);
 
         // Build the expected response.
         String message = "Conflict resolver rejects mutation.";
@@ -273,7 +277,7 @@ public final class GsonGraphQLResponseFactoryTest {
         extensions.put("data", data);
 
         GraphQLResponse.Error expectedError = new GraphQLResponse.Error(message, locations, path, extensions);
-        GraphQLResponse<ListTodosResult> expectedResponse = new GraphQLResponse<>(null,
+        GraphQLResponse<PaginatedResult<Todo>> expectedResponse = new GraphQLResponse<>(null,
                 Arrays.asList(expectedError, expectedError, expectedError, expectedError));
 
         // Assert that the response is expected
@@ -295,8 +299,10 @@ public final class GsonGraphQLResponseFactoryTest {
         final String responseJson = Resources.readAsString("error-null-properties.json");
 
         // Act! Parse it into a model.
-        final GraphQLResponse<ListTodosResult> response =
-                responseFactory.buildResponse(null, responseJson, ListTodosResult.class);
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
+        final GraphQLResponse<PaginatedResult<Todo>> response =
+                responseFactory.buildResponse(request, responseJson);
 
         // Build the expected response.
         Map<String, Object> extensions = new HashMap<>();
@@ -306,7 +312,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         GraphQLResponse.Error expectedError =
             new GraphQLResponse.Error("the message", null, null, extensions);
-        GraphQLResponse<ListTodosResult> expectedResponse =
+        GraphQLResponse<PaginatedResult<Todo>> expectedResponse =
             new GraphQLResponse<>(null, Collections.singletonList(expectedError));
 
         // Assert that the response is expected
@@ -328,11 +334,11 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act! Parse it into a String data type.
         final GraphQLResponse<String> response =
-                responseFactory.buildResponse(request, partialResponseJson.toString(), String.class);
+                responseFactory.buildResponse(request, partialResponseJson.toString());
 
         // Assert that the response data is just the data block as a JSON string
         assertEquals(
-                partialResponseJson.getJSONObject("data").getJSONObject("listTodos").toString(),
+                partialResponseJson.getJSONObject("data").toString(),
                 response.getData()
         );
     }
@@ -349,7 +355,7 @@ public final class GsonGraphQLResponseFactoryTest {
         Type responseType = TypeMaker.getParameterizedType(Iterable.class, String.class);
         GraphQLRequest<Iterable<String>> request = buildDummyRequest(responseType);
         GraphQLResponse<Iterable<String>> response =
-                responseFactory.buildResponse(request, baseQueryResponseJson.toString(), responseType);
+                responseFactory.buildResponse(request, baseQueryResponseJson.toString());
         final Iterable<String> queryResults = response.getData();
 
         final List<String> resultJsons = new ArrayList<>();
@@ -428,10 +434,11 @@ public final class GsonGraphQLResponseFactoryTest {
         // Act
         final String responseString = Resources.readAsString("list-meetings-response.json");
 
-        GraphQLRequest<ListMeetingsResult> request = buildDummyRequest(ListMeetingsResult.class);
-        final GraphQLResponse<ListMeetingsResult> response =
-                responseFactory.buildResponse(request, responseString, ListMeetingsResult.class);
-        final List<Meeting> actualMeetings = response.getData().getItems();
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Meeting.class);
+        GraphQLRequest<PaginatedResult<Meeting>> request = buildDummyRequest(responseType);
+        final GraphQLResponse<PaginatedResult<Meeting>> response =
+                responseFactory.buildResponse(request, responseString);
+        final Iterable<Meeting> actualMeetings = response.getData().getItems();
 
         // Assert
         assertEquals(expectedMeetings, actualMeetings);

@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.graphql;
 
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.util.GsonObjectConverter;
 import com.amplifyframework.util.TypeMaker;
 
@@ -72,8 +74,9 @@ public final class GsonResponseAdapters {
             JsonElement jsonErrors = null;
 
             if (jsonObject.has(DATA_KEY)) {
-                jsonData = skipQueryLevel(jsonObject.get(DATA_KEY));
+                jsonData = jsonObject.get(DATA_KEY);
             }
+
             if (jsonObject.has(ERRORS_KEY)) {
                 jsonErrors = jsonObject.get(ERRORS_KEY);
             }
@@ -81,11 +84,14 @@ public final class GsonResponseAdapters {
             List<GraphQLResponse.Error> errors = parseErrors(jsonErrors, context);
 
             if (!(typeOfT instanceof ParameterizedType)) {
-                throw new JsonParseException("Expected a parameterized type during list deserialization.");
+                throw new JsonParseException("Expected a parameterized type during GraphQLResponse deserialization.");
             }
 
             // Because typeOfT is ParameterizedType we can be sure this is a safe cast.
             final Type templateClassType = ((ParameterizedType) typeOfT).getActualTypeArguments()[0];
+            if (shouldSkipQueryLevel(templateClassType)) {
+                jsonData = skipQueryLevel(jsonData);
+            }
 
             if (jsonData == null || jsonData.isJsonNull()) {
                 return new GraphQLResponse<>(null, errors);
@@ -93,6 +99,24 @@ public final class GsonResponseAdapters {
                 Object data = context.deserialize(jsonData, templateClassType);
                 return new GraphQLResponse<>(data, errors);
             }
+        }
+
+        private boolean shouldSkipQueryLevel(Type type) {
+            if (type instanceof ParameterizedType) {
+                final Type rawType = ((ParameterizedType) type).getRawType();
+                if (ModelWithMetadata.class.equals(rawType)) {
+                    return true;
+                }
+                if (Iterable.class.isAssignableFrom((Class<?>) rawType)) {
+                    return true;
+                }
+            } else {
+                if (Model.class.isAssignableFrom((Class<?>) type)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // Skips a JSON level to get content of query, not query itself
