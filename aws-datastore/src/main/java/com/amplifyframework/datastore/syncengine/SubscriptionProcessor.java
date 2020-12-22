@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -113,7 +112,7 @@ final class SubscriptionProcessor {
         int subscriptionCount = modelProvider.modelNames().size() * SubscriptionType.values().length;
         // Create a latch with the number of subscriptions are requesting. Each of these will be
         // counted down when each subscription's onStarted event is called.
-        CountDownLatch latch = new CountDownLatch(subscriptionCount);
+        AbortableCountDownLatch<DataStoreException> latch = new AbortableCountDownLatch<>(subscriptionCount);
 
         // Need to create a new buffer so we can properly handle retries and stop/start scenarios.
         // Re-using the same buffer has some unexpected results due to the replay aspect of the subject.
@@ -138,11 +137,12 @@ final class SubscriptionProcessor {
         boolean subscriptionsStarted;
         try {
             LOG.debug("Waiting for subscriptions to start.");
-            subscriptionsStarted = latch.await(adjustedTimeoutSeconds, TimeUnit.SECONDS);
+            subscriptionsStarted = latch.abortableAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException exception) {
             LOG.warn("Subscription operations were interrupted during setup.");
             return;
         }
+
         if (subscriptionsStarted) {
             Amplify.Hub.publish(HubChannel.DATASTORE,
                                 HubEvent.create(DataStoreChannelEventName.SUBSCRIPTIONS_ESTABLISHED));
@@ -171,7 +171,7 @@ final class SubscriptionProcessor {
     private <T extends Model> Observable<SubscriptionEvent<? extends Model>>
             subscriptionObservable(AppSync appSync,
                                    SubscriptionType subscriptionType,
-                                   CountDownLatch latch,
+                                   AbortableCountDownLatch<DataStoreException> latch,
                                    ModelSchema modelSchema) {
         return Observable.<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
             SubscriptionMethod method = subscriptionMethodFor(appSync, subscriptionType);
@@ -189,13 +189,17 @@ final class SubscriptionProcessor {
                     // Ignore Unauthorized errors, so that DataStore can still be used even if the user is only
                     // authorized to read a subset of the models.
                     if (isUnauthorizedException(dataStoreException)) {
+                        latch.countDown();
                         LOG.warn("Unauthorized failure for " + subscriptionType.name() + " " + modelSchema.getName());
                     } else {
-                        onFailure.accept(dataStoreException);
-                    }
-                    if (latch.getCount() != 0) {
-                        LOG.warn("Releasing latch due to an error: " + dataStoreException.getMessage());
-                        latch.countDown();
+                        if (latch.getCount() > 0) {
+                            // An error occurred during startup.  Abort and notify the Orchestrator by throwing the
+                            // exception from startSubscriptions.
+                            latch.abort(dataStoreException);
+                        } else {
+                            // An error occurred after startup. Notify the Orchestrator via the onFailure action.
+                            onFailure.accept(dataStoreException);
+                        }
                     }
                 },
                 () -> {

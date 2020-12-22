@@ -43,7 +43,6 @@ import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
-import com.amplifyframework.datastore.syncengine.NetworkStatusMonitor;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
@@ -206,7 +205,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             event -> InitializationStatus.SUCCEEDED.toString().equals(event.getName()),
             event -> categoryInitializationsPending.countDown()
         );
-        NetworkStatusMonitor.start();
     }
 
     @WorkerThread
