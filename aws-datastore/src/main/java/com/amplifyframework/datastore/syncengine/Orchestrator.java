@@ -28,6 +28,7 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
+import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -305,6 +306,7 @@ public final class Orchestrator {
                 queryPredicateProvider.resolvePredicates();
 
                 subscriptionProcessor.startSubscriptions();
+                publishNetworkStatusEvent(true);
 
                 LOG.debug("About to hydrate...");
                 try {
@@ -344,6 +346,11 @@ public final class Orchestrator {
         );
     }
 
+    private void publishNetworkStatusEvent(boolean active) {
+        Amplify.Hub.publish(HubChannel.DATASTORE,
+                HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatusEvent(active)));
+    }
+
     private void publishReadyEvent() {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(DataStoreChannelEventName.READY));
     }
@@ -354,6 +361,7 @@ public final class Orchestrator {
             return;
         }
         LOG.warn("API sync failed - transitioning to LOCAL_ONLY.", exception);
+        publishNetworkStatusEvent(false);
         Completable.fromAction(this::transitionToLocalOnly)
             .doOnError(error -> LOG.warn("Transition to LOCAL_ONLY failed.", error))
             .subscribe();
