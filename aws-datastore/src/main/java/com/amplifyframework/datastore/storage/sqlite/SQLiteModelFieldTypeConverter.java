@@ -141,7 +141,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             // Skip if there is no equivalent column for field in object
             final SQLiteColumn column = columns.get(field.getName());
             if (column == null) {
-                LOGGER.warn(String.format("Column with name %s does not exist", field.getName()));
+                LOGGER.verbose(String.format("Column with name %s does not exist", field.getName()));
                 return null;
             }
 
