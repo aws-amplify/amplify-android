@@ -51,9 +51,9 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 30
 
-    awsSdkVersion = '2.19.3'
+    awsSdkVersion = '2.20.1'
     fragmentVersion = '1.2.5'
-    navigationVersion = '2.3.1'
+    navigationVersion = '2.3.2'
     dependency = [
         android: [
             desugartools: 'com.android.tools:desugar_jdk_libs:1.0.9',
