@@ -30,7 +30,6 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -62,7 +61,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -119,6 +117,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     // Factory that produces SQL commands.
     private SQLCommandFactory sqlCommandFactory;
+
+    // The helper object to iterate through associated models of a given model.
+    private ModelTreeHelper modelTreeHelper;
 
     // Stores the reference to disposable objects for cleanup
     private final CompositeDisposable toBeDisposed;
@@ -216,6 +217,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 databaseConnectionHandle = sqliteStorageHelper.getWritableDatabase();
                 this.sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry, databaseConnectionHandle);
+
+                /*
+                 * Create helper instance that can traverse through model relations.
+                 */
+                this.modelTreeHelper = new ModelTreeHelper(modelSchemaRegistry, this);
 
                 /*
                  * Detect if the version of the models stored in SQLite is different
@@ -505,23 +511,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     return;
                 }
 
-                // Family tree is an ordered cache of the following shape:
-                // { ModelSchema -> Set of model IDs }
-                // , where the order of insertion is determines tree level.
-                // (i.e. first in = higher level)
-                Map<ModelSchema, Set<String>> modelFamilyTree = new LinkedHashMap<>();
-                modelFamilyTree.put(modelSchema, Collections.singleton(item.getId()));
-                populateFamilyTree(modelFamilyTree);
+                // Use ModelTreeHelper to identify the models affected by cascading delete.
+                Map<ModelSchema, Set<String>> modelFamilyTree =
+                        modelTreeHelper.descendantsOf(Collections.singleton(item));
 
-                // The family tree is cached from top -> bottom level.
-                // Delete from bottom -> top to avoid foreign key constraint violation
-                List<ModelSchema> reverseOrderedKeys = new ArrayList<>(modelFamilyTree.keySet());
-                Collections.reverse(reverseOrderedKeys);
-                for (ModelSchema schema : reverseOrderedKeys) {
-                    // Treat top-level deletion separately
-                    if (modelSchema.equals(schema)) {
-                        continue;
-                    }
+                for (ModelSchema schema : modelFamilyTree.keySet()) {
                     for (String id : modelFamilyTree.get(schema)) {
                         // Publish DELETE mutation for each affected item.
                         String dummyJson = String.format("{\"id\":%s}", id);
@@ -774,65 +768,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         }
     }
 
-    private void populateFamilyTree(
-            @NonNull Map<ModelSchema, Set<String>> familyTree
-    ) throws DataStoreException {
-        for (Map.Entry<ModelSchema, Set<String>> entry : familyTree.entrySet()) {
-            ModelSchema modelSchema = entry.getKey();
-            Set<String> parentIds = entry.getValue();
-            if (parentIds == null || parentIds.isEmpty()) {
-                continue;
-            }
-            SQLiteTable parentTable = SQLiteTable.fromSchema(modelSchema);
-
-            for (ModelAssociation association : modelSchema.getAssociations().values()) {
-                switch (association.getName()) {
-                    case "HasOne":
-                    case "HasMany":
-                        String childModel = association.getAssociatedType(); // model name
-                        ModelSchema childSchema = modelSchemaRegistry.getModelSchemaForModelClass(childModel);
-                        SQLiteTable childTable = SQLiteTable.fromSchema(childSchema);
-                        String childPrimaryKey = childTable.getPrimaryKey().getAliasedName();
-                        QueryField queryField = QueryField.field(parentTable.getPrimaryKeyColumnName());
-
-                        // Set up cache for the next level of family tree
-                        Set<String> childrenIds = familyTree.get(childSchema);
-                        if (childrenIds == null) {
-                            childrenIds = new HashSet<>();
-                            familyTree.put(childSchema, childrenIds);
-                        }
-
-                        // Chain predicates with OR operator
-                        QueryPredicate predicate = null;
-                        for (String id : parentIds) {
-                            QueryPredicateOperation<Object> operation = queryField.eq(id);
-                            if (predicate == null) {
-                                predicate = operation;
-                            } else {
-                                predicate = operation.or(predicate);
-                            }
-                        }
-
-                        // Collect every children one level deeper than current level
-                        // SELECT * FROM <CHILD_TABLE> WHERE <PARENT> = <ID_1> OR <PARENT> = <ID_2> OR ...
-                        QueryOptions options = Where.matches(predicate);
-                        try (Cursor cursor = getQueryAllCursor(childModel, options)) {
-                            if (cursor != null && cursor.moveToFirst()) {
-                                int index = cursor.getColumnIndexOrThrow(childPrimaryKey);
-                                do {
-                                    childrenIds.add(cursor.getString(index));
-                                } while (cursor.moveToNext());
-                            }
-                        }
-                        break;
-                    case "BelongsTo":
-                    default:
-                        // Ignore other relationships
-                }
-            }
-        }
-    }
-
     // actually delete it from SQLite.
     private <T extends Model> StorageItemChange<T> deleteModel(
             @NonNull T item,
@@ -941,7 +876,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     @SuppressWarnings("WeakerAccess")
-    @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName,
                              @NonNull QueryOptions options) throws DataStoreException {
         final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(tableName);
