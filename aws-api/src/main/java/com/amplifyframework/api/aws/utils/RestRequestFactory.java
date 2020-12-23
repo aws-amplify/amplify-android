@@ -60,6 +60,10 @@ public final class RestRequestFactory {
             .host(url.getHost())
             .addPathSegment(stripLeadingSlashes(url.getPath()));
 
+        if (url.getPort() != -1) {
+            builder.port(url.getPort());
+        }
+
         if (path != null) {
             builder.addPathSegments(stripLeadingSlashes(path));
         }
