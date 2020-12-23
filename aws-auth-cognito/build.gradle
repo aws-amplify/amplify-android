@@ -26,9 +26,6 @@ dependencies {
     testImplementation project(path: ':testutils')
     testImplementation dependency.junit
     testImplementation dependency.mockito
-    testImplementation (dependency.robolectric) {
-        // https://github.com/robolectric/robolectric/issues/5245
-        exclude group: 'com.google.auto.service', module: 'auto-service'
-    }
+    testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
 }
