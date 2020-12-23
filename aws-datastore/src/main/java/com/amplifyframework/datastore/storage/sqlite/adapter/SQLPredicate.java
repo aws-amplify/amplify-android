@@ -23,6 +23,8 @@ import com.amplifyframework.core.model.query.predicate.GreaterOrEqualQueryOperat
 import com.amplifyframework.core.model.query.predicate.GreaterThanQueryOperator;
 import com.amplifyframework.core.model.query.predicate.LessOrEqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.LessThanQueryOperator;
+import com.amplifyframework.core.model.query.predicate.MatchAllQueryPredicate;
+import com.amplifyframework.core.model.query.predicate.MatchNoneQueryPredicate;
 import com.amplifyframework.core.model.query.predicate.NotEqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -106,19 +108,25 @@ public final class SQLPredicate {
 
     // Utility method to recursively parse a given predicate.
     private StringBuilder parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
+        if (queryPredicate instanceof MatchAllQueryPredicate) {
+            return new StringBuilder("1 = 1");
+        }
+        if (queryPredicate instanceof MatchNoneQueryPredicate) {
+            return new StringBuilder("1 = 0");
+        }
         if (queryPredicate instanceof QueryPredicateOperation) {
             QueryPredicateOperation<?> qpo = (QueryPredicateOperation) queryPredicate;
             return parsePredicateOperation(qpo);
-        } else if (queryPredicate instanceof QueryPredicateGroup) {
+        }
+        if (queryPredicate instanceof QueryPredicateGroup) {
             QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
             return parsePredicateGroup(qpg);
-        } else {
-            throw new DataStoreException(
-                    "Tried to parse an unsupported QueryPredicate",
-                    "Try changing to one of the supported values: " +
-                            "QueryPredicateOperation, QueryPredicateGroup."
-            );
         }
+        throw new DataStoreException(
+                "Tried to parse an unsupported QueryPredicate",
+                "Try changing to one of the supported values: " +
+                        "QueryPredicateOperation, QueryPredicateGroup."
+        );
     }
 
     // Utility method to recursively parse a given predicate operation.
@@ -128,7 +136,7 @@ public final class SQLPredicate {
         final QueryOperator<?> op = operation.operator();
         switch (op.type()) {
             case BETWEEN:
-                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator) op;
+                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator<?>) op;
                 addBinding(betweenOp.start());
                 addBinding(betweenOp.end());
                 return builder.append(field)
