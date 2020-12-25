@@ -87,7 +87,7 @@ public final class AWSRestOperationTest {
      *         expected, and would constitute a test failure.
      */
     @Test
-    public void responseEmittedIfOperationWhenOperationSucceeds() throws ApiException {
+    public void responseEmittedWhenOperationSucceeds() throws ApiException {
         RestOperationRequest request =
             new RestOperationRequest(HttpMethod.GET, baseUrl.uri().getPath(), emptyMap(), emptyMap());
         RestResponse response = Await.<RestResponse, ApiException>result((onResult, onError) -> {
