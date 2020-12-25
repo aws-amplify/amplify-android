@@ -128,6 +128,14 @@ public final class AWSRestOperation extends RestOperation {
         @Override
         public void onFailure(@NonNull Call call,
                               @NonNull IOException ioe) {
+            // Don't emit a failure if the user has canceled the operation.
+            // This behavior is consistent with how iOS' REST API category works
+            // Rx streams similarly do not report cancellation via
+            // onError or onComplete.
+            if (ongoingCall != null && ongoingCall.isCanceled()) {
+                return;
+            }
+
             onFailure.accept(new ApiException(
                 "Received an IO exception while making the request.",
                 ioe, "Retry the request."
