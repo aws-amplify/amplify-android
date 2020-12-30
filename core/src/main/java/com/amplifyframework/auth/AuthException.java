@@ -452,16 +452,16 @@ public class AuthException extends AmplifyException {
     /**
      * Could not complete an action because it was cancelled by the user.
      */
-    public static class ActionCancelledException extends AuthException {
+    public static class UserCancelledException extends AuthException {
         private static final long serialVersionUID = 1L;
 
         /**
-         * Constructs an {@link ActionCancelledException}.
+         * Constructs an {@link UserCancelledException}.
          * @param message Describes why the error has occurred
          * @param cause An underlying cause of the error
          * @param recoverySuggestion How to remedy the error, if possible
          */
-        public ActionCancelledException(String message, Throwable cause, String recoverySuggestion) {
+        public UserCancelledException(String message, Throwable cause, String recoverySuggestion) {
             super(message, cause, recoverySuggestion);
         }
     }

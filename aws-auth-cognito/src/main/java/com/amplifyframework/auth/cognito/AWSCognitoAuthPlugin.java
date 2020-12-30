@@ -937,7 +937,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                 signOutLocally(options, onSuccess, onError);
                             } else if (error instanceof AuthNavigationException) {
                                 // User cancelled the sign-out screen.
-                                onError.accept(new AuthException.ActionCancelledException(
+                                onError.accept(new AuthException.UserCancelledException(
                                     "The user cancelled the sign-out attempt.", error,
                                     "To recover, catch this error, and retry sign-out."
                                 ));
@@ -998,7 +998,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                             ));
                         } else if (error instanceof AuthNavigationException) {
                             // User cancelled the sign-out screen.
-                            onError.accept(new AuthException.ActionCancelledException(
+                            onError.accept(new AuthException.UserCancelledException(
                                 "The user cancelled the sign-out attempt.", error,
                                 "To recover, catch this error, and retry sign-out."
                             ));
@@ -1075,7 +1075,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @Override
             public void onError(Exception error) {
                 if (error instanceof AuthNavigationException) {
-                    onException.accept(new AuthException.ActionCancelledException(
+                    onException.accept(new AuthException.UserCancelledException(
                         "The user cancelled the sign-in attempt, so it did not complete.",
                         error, "To recover: catch this error, and show the sign-in screen again."
                     ));
