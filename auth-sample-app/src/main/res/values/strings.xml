@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Auth Sample App</string>
+    <string name="sign_up">Sign up</string>
+    <string name="password_hint_text">F5%2r9!</string><!-- Not real, just example! -->
+    <string name="email_hint_text">username@gmail.com</string>
+    <string name="username_hint_text">username</string>
+    <string name="confirming_sign_up">Confirming sign up…</string>
+    <string name="enter_your_code">Enter your code.</string>
+    <string name="enter_your_confirmation_code_here">Enter your confirmation code here.</string>
+    <string name="confirm">Confirm</string>
+    <string name="sign_in">Sign in</string>
+</resources>
