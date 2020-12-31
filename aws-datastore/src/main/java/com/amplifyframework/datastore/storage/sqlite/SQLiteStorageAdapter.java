@@ -490,7 +490,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
 
                 if (!dataExistsInSQLiteTable(sqliteTable.getName(), primaryKeyName, item.getId())) {
-                    LOG.warn(modelName + " model with id = " + item.getId() + " does not exist.");
+                    LOG.verbose(modelName + " model with id = " + item.getId() + " does not exist.");
                     // Pass back item change instance without publishing it.
                     onSuccess.accept(StorageItemChange.<T>builder()
                         .changeId(item.getId())
