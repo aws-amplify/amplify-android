@@ -82,47 +82,50 @@ final class Merger {
      */
     <T extends Model> Completable merge(
             ModelWithMetadata<T> modelWithMetadata, Consumer<StorageItemChange.Type> changeTypeConsumer) {
-        ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
-        boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
-        int incomingVersion = metadata.getVersion() == null ? -1 : metadata.getVersion();
-        T model = modelWithMetadata.getModel();
+        return Completable.defer(() -> {
+            ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
+            boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
+            int incomingVersion = metadata.getVersion() == null ? -1 : metadata.getVersion();
+            T model = modelWithMetadata.getModel();
 
-        // Check if there is a pending mutation for this model, in the outbox.
-        if (mutationOutbox.hasPendingMutation(model.getId())) {
-            LOG.info("Mutation outbox has pending mutation for " + model.getId() + ", refusing to merge.");
-            return Completable.complete();
-        }
+            // Check if there is a pending mutation for this model, in the outbox.
+            if (mutationOutbox.hasPendingMutation(model.getId())) {
+                LOG.info("Mutation outbox has pending mutation for " + model.getId() + ", refusing to merge.");
+                return Completable.complete();
+            }
 
-        return versionRepository.findModelVersion(model)
-            .onErrorReturnItem(-1)
-            // If the incoming version is strictly less than the current version, it's "out of date,"
-            // so don't merge it.
-            // If the incoming version is exactly equal, it might clobber our local changes. So we
-            // *still* won't merge it. Instead, the MutationProcessor would publish the current content,
-            // and the version would get bumped up.
-            .filter(currentVersion -> currentVersion == -1 || incomingVersion > currentVersion)
-            // If we should merge, then do so now, starting with the model data.
-            .flatMapCompletable(shouldMerge ->
-                (isDelete ? delete(model, changeTypeConsumer) : save(model, changeTypeConsumer))
-                    .andThen(save(metadata, NoOpConsumer.create()))
-            )
-            // Let the world know that we've done a good thing.
-            .doOnComplete(() -> {
-                announceSuccessfulMerge(modelWithMetadata);
-                LOG.debug("Remote model update was sync'd down into local storage: " + modelWithMetadata);
-            })
-            // Remote store may not always respect the foreign key constraint, so
-            // swallow any error caused by foreign key constraint violation.
-            .onErrorComplete(failure -> {
-                if (!ErrorInspector.contains(failure, SQLiteConstraintException.class)) {
-                    return false;
-                }
-                LOG.warn("Failed to sync due to foreign key constraint violation: " + modelWithMetadata, failure);
-                return true;
-            })
-            .doOnError(failure ->
-                LOG.warn("Failed to sync remote model into local storage: " + modelWithMetadata, failure)
-            );
+            return versionRepository.findModelVersion(model)
+                .onErrorReturnItem(-1)
+                // If the incoming version is strictly less than the current version, it's "out of date,"
+                // so don't merge it.
+                // If the incoming version is exactly equal, it might clobber our local changes. So we
+                // *still* won't merge it. Instead, the MutationProcessor would publish the current content,
+                // and the version would get bumped up.
+                .filter(currentVersion -> currentVersion == -1 || incomingVersion > currentVersion)
+                // If we should merge, then do so now, starting with the model data.
+                .flatMapCompletable(shouldMerge ->
+                        (isDelete ? delete(model, changeTypeConsumer) : save(model, changeTypeConsumer))
+                                .andThen(save(metadata, NoOpConsumer.create()))
+                )
+                // Let the world know that we've done a good thing.
+                .doOnComplete(() -> {
+                    announceSuccessfulMerge(modelWithMetadata);
+                    LOG.debug("Remote model update was sync'd down into local storage: " + modelWithMetadata);
+                })
+                // Remote store may not always respect the foreign key constraint, so
+                // swallow any error caused by foreign key constraint violation.
+                .onErrorComplete(failure -> {
+                    if (!ErrorInspector.contains(failure, SQLiteConstraintException.class)) {
+                        return false;
+                    }
+                    LOG.warn("Sync failed: foreign key constraint violation: " + modelWithMetadata, failure);
+                    return true;
+                })
+                .doOnError(failure ->
+                    LOG.warn("Failed to sync remote model into local storage: " + modelWithMetadata, failure)
+                );
+        });
+
     }
 
     /**
