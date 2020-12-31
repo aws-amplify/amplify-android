@@ -242,6 +242,51 @@ public final class MergerTest {
     }
 
     /**
+     * When processing a mutation response, the pending mutation should be removed from the outbox, and the mutation
+     * should be merged to local storage.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws AmplifyException On failure to arrange model schema
+     */
+    @Test
+    public void itemIsMergedAfterPendingMutationRemovedFromOutbox() throws AmplifyException, InterruptedException {
+        // Arrange: some model with a well known ID exists on the system.
+        // We pretend that the user has recently updated it via the DataStore update() API.
+        String knownId = RandomString.string();
+        BlogOwner blogOwner = BlogOwner.builder()
+                .name("Jameson")
+                .id(knownId)
+                .build();
+        ModelMetadata localMetadata =
+                new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now());
+        storageAdapter.save(blogOwner, localMetadata);
+
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        PendingMutation<BlogOwner> pendingMutation = PendingMutation.instance(
+                blogOwner, schema, PendingMutation.Type.DELETE, QueryPredicates.all()
+        );
+
+        TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(pendingMutation).test();
+        enqueueObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        enqueueObserver.assertNoErrors().assertComplete();
+
+        // Act: now, cloud sync happens, and the sync engine tries to apply an update
+        // for the same model ID, into the store. According to the cloud, this same
+        // item should be DELETED.
+        ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Temporal.Timestamp.now());
+        TestObserver<Void> observer =
+            mutationOutbox.remove(pendingMutation.getMutationId())
+                .andThen(merger.merge(new ModelWithMetadata<>(blogOwner, cloudMetadata)))
+                .test();
+        observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        observer.assertNoErrors().assertComplete();
+
+        // Assert: the item IS deleted from the local store.
+        // Or in other words, the cloud data WAS merged.
+        final List<BlogOwner> blogOwnersInStorage = storageAdapter.query(BlogOwner.class);
+        assertEquals(0, blogOwnersInStorage.size());
+    }
+
+    /**
      * An incoming mutation whose model has a LOWER version than an already existing model
      * shall be rejected from the merger.
      * @throws DataStoreException On failure interacting with local store during test arrange/verify.
