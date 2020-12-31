@@ -251,6 +251,7 @@ public final class GraphQLInstrumentationTest {
         private final String content;
         private final String id;
 
+        @SuppressWarnings("checkstyle:ParameterName")
         Comment(final String id, final String content) {
             this.id = id;
             this.content = content;
