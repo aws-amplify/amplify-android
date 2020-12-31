@@ -1,8 +1,7 @@
-mutation CommentOnEvent($eventId: ID!, $content: String!, $createdAt: String!) {
-  commentOnEvent(eventId: $eventId, content: $content, createdAt: $createdAt) {
+mutation CreateComment($eventId: ID!, $commentId:String!, $content: String!, $createdAt: String!) {
+   createComment(input: {commentId: $commentId, eventId: $eventId, content: $content, createdAt: $createdAt}) {
       eventId
       content
       createdAt
   }
 }
-
