@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.reactivex.rxjava3.subjects.Subject;
@@ -146,28 +147,33 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             ));
         }
-        return Completable.defer(() -> Completable.create(subscriber -> {
-            semaphore.acquire();
-            storage.delete(
-                converter.toRecord(pendingMutation),
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                QueryPredicates.all(),
-                ignored -> {
-                    mutationQueue.removeById(pendingMutation.getMutationId());
-                    inFlightMutations.remove(pendingMutationId);
-                    LOG.info("Successfully removed from mutations outbox" + pendingMutation);
-                    if (!mutationQueue.isEmpty()) {
-                        notifyContentAvailable();
+        return Completable.defer(() ->
+            Maybe.<OutboxEvent>create(subscriber -> {
+                semaphore.acquire();
+                storage.delete(
+                    converter.toRecord(pendingMutation),
+                    StorageItemChange.Initiator.SYNC_ENGINE,
+                    QueryPredicates.all(),
+                    ignored -> {
+                        mutationQueue.removeById(pendingMutation.getMutationId());
+                        inFlightMutations.remove(pendingMutationId);
+                        LOG.info("Successfully removed from mutations outbox" + pendingMutation);
+                        final boolean contentAvailable = !mutationQueue.isEmpty();
+                        semaphore.release(); // Done accessing queue, now.
+                        if (contentAvailable) {
+                            subscriber.onSuccess(OutboxEvent.CONTENT_AVAILABLE);
+                        } else {
+                            subscriber.onComplete();
+                        }
+                    },
+                    failure -> {
+                        semaphore.release();
+                        subscriber.onError(failure);
                     }
-                    semaphore.release();
-                    subscriber.onComplete();
-                },
-                failure -> {
-                    semaphore.release();
-                    subscriber.onError(failure);
-                }
-            );
-        }));
+                );
+            })
+            .flatMapCompletable(contentAvailable -> notifyContentAvailable())
+        );
     }
 
     @NonNull
