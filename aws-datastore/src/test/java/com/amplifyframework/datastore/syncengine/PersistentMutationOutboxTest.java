@@ -943,6 +943,87 @@ public final class PersistentMutationOutboxTest {
             );
     }
 
+    /**
+     * When two creations for the same model are enqueued, the second should fail.  This is similar to
+     * {@link #existingCreationIncomingCreationYieldsError}, except that the Completable's from the two enqueue calls
+     * are concatenated into the same stream.   The second enqueue should not check if an item exists in the queue
+     * until the first enqueue is completed.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     */
+    @Test
+    public void enqueueIsSynchronized() throws InterruptedException {
+        // Arrange an existing creation mutation
+        BlogOwner modelInExistingMutation = BlogOwner.builder()
+            .name("The Real Papa Tony")
+            .build();
+        PendingMutation<BlogOwner> firstCreation = PendingMutation.creation(modelInExistingMutation, schema);
+        PendingMutation<BlogOwner> secondCreation = PendingMutation.creation(modelInExistingMutation, schema);
+
+        TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(firstCreation)
+            .andThen(mutationOutbox.enqueue(secondCreation))
+            .test();
+
+        // Assert: caused a failure.
+        enqueueObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
+    }
+
+    /**
+     * Attempting to remove an item from the queue which doesn't exist should throw an error.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     */
+    @Test
+    public void removeIsSynchronized() throws InterruptedException {
+        // Enqueue and remove a mutation.
+        BlogOwner tabby = BlogOwner.builder()
+            .name("Tabitha Stevens of Beaver Falls, Idaho")
+            .build();
+        PendingMutation<BlogOwner> creation = PendingMutation.creation(tabby, schema);
+        mutationOutbox.enqueue(creation)
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        TestObserver<Void> observer = mutationOutbox.remove(creation.getMutationId())
+            .andThen(mutationOutbox.remove(creation.getMutationId()))
+            .test();
+
+        observer.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        observer
+            .assertError(DataStoreException.class)
+            .assertError(error ->
+                    error.getMessage() != null &&
+                            error.getMessage().contains("there was no mutation with that ID in the outbox")
+            );
+    }
+
+    /**
+     * Marking an item in flight should throw an error if the item is already removed from the queue.  This is similar
+     * to {@link #errorWhenMarkingItemNotInQueue}, except that the removal and marking in flight Completables are
+     * concatenated into the same stream.  This validates that markInFlight does not check if the item is in the queue
+     * until after the removal is complete.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     */
+    @Test
+    public void markInFlightIsSynchronized() throws InterruptedException {
+        // Enqueue and remove a mutation.
+        BlogOwner tabby = BlogOwner.builder()
+                .name("Tabitha Stevens of Beaver Falls, Idaho")
+                .build();
+        PendingMutation<BlogOwner> creation = PendingMutation.creation(tabby, schema);
+        mutationOutbox.enqueue(creation)
+                .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        TestObserver<Void> observer = mutationOutbox.remove(creation.getMutationId())
+                .andThen(mutationOutbox.markInFlight(creation.getMutationId())).test();
+
+        // Now, we should see an error since we can't mark a mutation as in-flight that has already been removed.
+        observer.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        observer
+            .assertError(DataStoreException.class)
+            .assertError(error ->
+                error.getMessage() != null &&
+                    error.getMessage().contains("there was no mutation with that ID in the outbox")
+            );
+    }
+
     private void assertRecordCountForMutationId(String mutationId, int expectedCount) throws DataStoreException {
         List<PersistentRecord> recordsForExistingMutationId = getPendingMutationRecordFromStorage(mutationId);
         assertEquals(expectedCount, recordsForExistingMutationId.size());
