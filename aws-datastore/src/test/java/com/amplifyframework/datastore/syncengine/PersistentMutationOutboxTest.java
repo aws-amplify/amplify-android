@@ -237,6 +237,65 @@ public final class PersistentMutationOutboxTest {
     }
 
     /**
+     * When there are multiple pending mutations in the outbox, and one is removed,
+     * we will see a {@link OutboxEvent#CONTENT_AVAILABLE} after the removal. This
+     * notifies the system that there is more work to be done, even though we've successfully
+     * processed an event. The system will continue processing items from the outbox until
+     * all have been processed.
+     * @throws DataStoreException On failure to arrange data into storage
+     * @throws InterruptedException If thread interrupted while waiting for events
+     */
+    @Test
+    public void notifiesWhenContentAvailableAfterDelete() throws DataStoreException, InterruptedException {
+        // Start watching the events stream. We'll expect a notification here once,
+        // after the first deletion.
+        TestObserver<OutboxEvent> firstEventObserver = mutationOutbox.events().test();
+
+        // Arrange a few mutations into the queue.
+        BlogOwner senatorBernie = BlogOwner.builder()
+            .name("Senator Bernard Sanders")
+            .build();
+        PendingMutation<BlogOwner> createSenatorBernie = PendingMutation.creation(senatorBernie, schema);
+        storage.save(converter.toRecord(createSenatorBernie));
+        BlogOwner candidateBernie = senatorBernie.copyOfBuilder()
+            .name("Democratic Presidential Candidate, Bernard Sanders")
+            .build();
+        PendingMutation<BlogOwner> updateCandidateBernie = PendingMutation.update(candidateBernie, schema);
+        storage.save(converter.toRecord(updateCandidateBernie));
+        mutationOutbox.load().blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        // Remove first item.
+        TestObserver<Void> firstRemoval = mutationOutbox.remove(createSenatorBernie.getMutationId()).test();
+        firstRemoval.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        firstRemoval
+            .assertNoErrors()
+            .assertComplete()
+            .dispose();
+
+        // One event is observed on events(), since there are still some pending mutations
+        // that need to be processed.
+        firstEventObserver
+            .awaitCount(1)
+            .assertValues(OutboxEvent.CONTENT_AVAILABLE)
+            .assertNoErrors();
+
+        // Get ready to watch the events() again.
+        TestObserver<OutboxEvent> secondEventObserver = mutationOutbox.events().test();
+
+        // Remove the next item.
+        TestObserver<Void> secondRemoval = mutationOutbox.remove(updateCandidateBernie.getMutationId()).test();
+        secondRemoval.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        secondRemoval
+            .assertNoErrors()
+            .assertComplete()
+            .dispose();
+
+        // This time, we don't see any event on events(), since the outbox has become empty.
+        secondEventObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        secondEventObserver.assertNoValues().assertNoErrors();
+    }
+
+    /**
      * When there is a pending mutation for a particular model ID
      * {@link MutationOutbox#hasPendingMutation(String)} must say "yes!".
      */
