@@ -83,7 +83,7 @@ final class SQLiteModelTree {
     }
 
     private void recurseTree(
-            Map<ModelSchema, Set<String>> tree,
+            Map<ModelSchema, Set<String>> map,
             ModelSchema modelSchema,
             Collection<String> parentIds
     ) {
@@ -127,14 +127,14 @@ final class SQLiteModelTree {
                         // Don't cut the search short. Populate rest of the tree.
                     }
 
-                    // Add queried result to the tree
+                    // Add queried result to the map
                     if (!childrenIds.isEmpty()) {
-                        if (!tree.containsKey(childSchema)) {
-                            tree.put(childSchema, childrenIds);
+                        if (!map.containsKey(childSchema)) {
+                            map.put(childSchema, childrenIds);
                         } else {
-                            tree.get(childSchema).addAll(childrenIds);
+                            map.get(childSchema).addAll(childrenIds);
                         }
-                        recurseTree(tree, childSchema, childrenIds);
+                        recurseTree(map, childSchema, childrenIds);
                     }
                     break;
                 case "BelongsTo":

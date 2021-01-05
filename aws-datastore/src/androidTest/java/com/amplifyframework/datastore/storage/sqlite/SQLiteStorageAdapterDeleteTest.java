@@ -99,39 +99,47 @@ public final class SQLiteStorageAdapterDeleteTest {
      */
     @Test
     public void deleteModelCascades() throws DataStoreException {
-        // Insert models
-        final BlogOwner raphael = BlogOwner.builder()
-                .name("Raphael Kim")
+        // Create 1 blog owner, which has 3 blogs each, which has 3 posts each.
+        // Insert 1 blog owner, 3 blogs, 9 posts
+        Set<String> expected = new HashSet<>();
+        BlogOwner ownerModel = BlogOwner.builder()
+            .name("Blog Owner 1")
+            .build();
+        adapter.save(ownerModel);
+        expected.add(ownerModel.getId());
+        for (int blog = 1; blog <= 3; blog++) {
+            Blog blogModel = Blog.builder()
+                .name("Blog " + blog)
+                .owner(ownerModel)
                 .build();
-        final Blog raphaelsBlog = Blog.builder()
-                .name("Raphael's Blog")
-                .owner(raphael)
-                .build();
-        final Post raphaelsPost = Post.builder()
-                .title("Raphael's Blog Post")
-                .status(PostStatus.INACTIVE)
-                .rating(5)
-                .blog(raphaelsBlog)
-                .build();
-        adapter.save(raphael);
-        adapter.save(raphaelsBlog);
-        adapter.save(raphaelsPost);
+            adapter.save(blogModel);
+            expected.add(blogModel.getId());
+            for (int post = 1; post <= 3; post++) {
+                Post postModel = Post.builder()
+                    .title("Post " + post)
+                    .status(PostStatus.INACTIVE)
+                    .rating(5)
+                    .blog(blogModel)
+                    .build();
+                adapter.save(postModel);
+                expected.add(postModel.getId());
+            }
+        }
 
         // Observe deletions
-        Set<Model> deleted = new HashSet<>();
+        Set<String> deleted = new HashSet<>();
         adapter.observe()
                 .filter(change -> StorageItemChange.Type.DELETE.equals(change.type()))
                 .map(StorageItemChange::item)
-                .subscribe(deleted::add);
+                .subscribe(model -> deleted.add(model.getId()));
 
         // Triggers a delete.
-        // Deletes Raphael's Blog and Post to prevent foreign key constraint violation
-        adapter.delete(raphael);
+        // Deletes every saved model to prevent foreign key constraint violation
+        adapter.delete(ownerModel);
 
         // Assert that cascaded deletions are observed.
-        assertTrue(deleted.contains(raphael));
-        assertTrue(deleted.contains(Blog.justId(raphaelsBlog.getId())));
-        assertTrue(deleted.contains(Post.justId(raphaelsPost.getId())));
+        assertEquals(13, deleted.size());
+        assertEquals(expected, deleted);
 
         // Get the BlogOwner from the database.
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);

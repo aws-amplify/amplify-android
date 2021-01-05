@@ -125,7 +125,8 @@ public final class SQLPredicate {
         throw new DataStoreException(
                 "Tried to parse an unsupported QueryPredicate",
                 "Try changing to one of the supported values: " +
-                        "QueryPredicateOperation, QueryPredicateGroup."
+                        "QueryPredicateOperation, QueryPredicateGroup, " +
+                        "MatchAllQueryPredicate, or MatchNoneQueryPredicate."
         );
     }
 

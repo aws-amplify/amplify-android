@@ -119,7 +119,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private SQLCommandFactory sqlCommandFactory;
 
     // The helper object to iterate through associated models of a given model.
-    private SQLiteModelTree sqLiteModelTree;
+    private SQLiteModelTree sqliteModelTree;
 
     // Stores the reference to disposable objects for cleanup
     private final CompositeDisposable toBeDisposed;
@@ -221,7 +221,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 /*
                  * Create helper instance that can traverse through model relations.
                  */
-                this.sqLiteModelTree = new SQLiteModelTree(
+                this.sqliteModelTree = new SQLiteModelTree(
                     modelSchemaRegistry,
                     sqlCommandFactory,
                     databaseConnectionHandle
@@ -515,14 +515,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     return;
                 }
 
-                // Use ModelTreeHelper to identify the models affected by cascading delete.
-                Map<ModelSchema, Set<String>> modelFamilyTree =
-                        sqLiteModelTree.descendantsOf(Collections.singleton(item));
+                // Use sqliteModelTree to identify the models affected by cascading delete.
+                Map<ModelSchema, Set<String>> descendants =
+                        sqliteModelTree.descendantsOf(Collections.singleton(item));
 
-                for (ModelSchema schema : modelFamilyTree.keySet()) {
-                    for (String id : modelFamilyTree.get(schema)) {
+                for (ModelSchema schema : descendants.keySet()) {
+                    for (String id : descendants.get(schema)) {
                         // Publish DELETE mutation for each affected item.
-                        String dummyJson = String.format("{\"id\":%s}", id);
+                        String dummyJson = String.format("{\"id\":\"%s\"}", id);
                         Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
                         itemChangeSubject.onNext(StorageItemChange.builder()
                                 .changeId(id)
