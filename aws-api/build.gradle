@@ -35,10 +35,7 @@ dependencies {
     testImplementation dependency.mockito
     testImplementation dependency.mockwebserver
     testImplementation dependency.rxjava
-    testImplementation (dependency.robolectric) {
-        // https://github.com/robolectric/robolectric/issues/5245
-        exclude group: 'com.google.auto.service', module: 'auto-service'
-    }
+    testImplementation dependency.robolectric
 
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation project(path: ':testmodels')
