@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
