@@ -119,7 +119,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private SQLCommandFactory sqlCommandFactory;
 
     // The helper object to iterate through associated models of a given model.
-    private ModelTreeHelper modelTreeHelper;
+    private SQLiteModelTree sqLiteModelTree;
 
     // Stores the reference to disposable objects for cleanup
     private final CompositeDisposable toBeDisposed;
@@ -221,7 +221,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 /*
                  * Create helper instance that can traverse through model relations.
                  */
-                this.modelTreeHelper = new ModelTreeHelper(modelSchemaRegistry, this);
+                this.sqLiteModelTree = new SQLiteModelTree(
+                    modelSchemaRegistry,
+                    sqlCommandFactory,
+                    databaseConnectionHandle
+                );
 
                 /*
                  * Detect if the version of the models stored in SQLite is different
@@ -513,7 +517,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 // Use ModelTreeHelper to identify the models affected by cascading delete.
                 Map<ModelSchema, Set<String>> modelFamilyTree =
-                        modelTreeHelper.descendantsOf(Collections.singleton(item));
+                        sqLiteModelTree.descendantsOf(Collections.singleton(item));
 
                 for (ModelSchema schema : modelFamilyTree.keySet()) {
                     for (String id : modelFamilyTree.get(schema)) {
@@ -875,9 +879,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
-    Cursor getQueryAllCursor(@NonNull String tableName,
-                             @NonNull QueryOptions options) throws DataStoreException {
+    private Cursor getQueryAllCursor(
+            @NonNull String tableName,
+            @NonNull QueryOptions options
+    ) throws DataStoreException {
         final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(tableName);
         final SqlCommand sqlCommand = sqlCommandFactory.queryFor(schema, options);
         final String rawQuery = sqlCommand.sqlStatement();

@@ -16,6 +16,8 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
@@ -40,19 +42,23 @@ import java.util.Set;
 /**
  * Utility class to help traverse a tree of models by relationship.
  */
-final class ModelTreeHelper {
+final class SQLiteModelTree {
     private final ModelSchemaRegistry registry;
-    private final SQLiteStorageAdapter storage;
+    private final SQLCommandFactory commandFactory;
+    private final SQLiteDatabase database;
 
     /**
      * Constructs a model family tree traversing utility.
      * @param registry model registry to search schema from
-     * @param storage SQLite storage engine
+     * @param commandFactory SQL command factory
+     * @param database SQLite database connection handle
      */
-    ModelTreeHelper(ModelSchemaRegistry registry,
-                    SQLiteStorageAdapter storage) {
+    SQLiteModelTree(ModelSchemaRegistry registry,
+                    SQLCommandFactory commandFactory,
+                    SQLiteDatabase database) {
         this.registry = registry;
-        this.storage = storage;
+        this.commandFactory = commandFactory;
+        this.database = database;
     }
 
     /**
@@ -110,7 +116,7 @@ final class ModelTreeHelper {
                     // SELECT * FROM <CHILD_TABLE> WHERE <PARENT> = <ID_1> OR <PARENT> = <ID_2> OR ...
                     QueryOptions options = Where.matches(predicate);
                     Set<String> childrenIds = new HashSet<>();
-                    try (Cursor cursor = storage.getQueryAllCursor(childModel, options)) {
+                    try (Cursor cursor = queryAll(childModel, options)) {
                         if (cursor != null && cursor.moveToFirst()) {
                             int index = cursor.getColumnIndexOrThrow(childPrimaryKey);
                             do {
@@ -136,5 +142,16 @@ final class ModelTreeHelper {
                     // Ignore other relationships
             }
         }
+    }
+
+    private Cursor queryAll(
+            @NonNull String tableName,
+            @NonNull QueryOptions options
+    ) throws DataStoreException {
+        final ModelSchema schema = registry.getModelSchemaForModelClass(tableName);
+        final SqlCommand sqlCommand = commandFactory.queryFor(schema, options);
+        final String rawQuery = sqlCommand.sqlStatement();
+        final String[] bindings = sqlCommand.getBindingsAsArray();
+        return database.rawQuery(rawQuery, bindings);
     }
 }
