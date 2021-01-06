@@ -87,17 +87,21 @@ final class PersistentMutationOutbox implements MutationOutbox {
     @Override
     public <T extends Model> Completable enqueue(@NonNull PendingMutation<T> incomingMutation) {
         Objects.requireNonNull(incomingMutation);
-        // If there is no existing mutation for the model, then just apply the incoming
-        // mutation, and be done with this.
-        String modelId = incomingMutation.getMutatedItem().getId();
-        @SuppressWarnings("unchecked")
-        PendingMutation<T> existingMutation = (PendingMutation<T>) mutationQueue.nextMutationForModelId(modelId);
-        if (existingMutation == null || inFlightMutations.contains(existingMutation.getMutationId())) {
-            return save(incomingMutation)
-                .andThen(notifyContentAvailable());
-        } else {
-            return resolveConflict(existingMutation, incomingMutation);
-        }
+        return Completable.defer(() -> {
+            // If there is no existing mutation for the model, then just apply the incoming
+            // mutation, and be done with this.
+            String modelId = incomingMutation.getMutatedItem().getId();
+            @SuppressWarnings("unchecked")
+            PendingMutation<T> existingMutation = (PendingMutation<T>) mutationQueue.nextMutationForModelId(modelId);
+            if (existingMutation == null || inFlightMutations.contains(existingMutation.getMutationId())) {
+                return save(incomingMutation)
+                    .andThen(notifyContentAvailable());
+            } else {
+                return resolveConflict(existingMutation, incomingMutation);
+            }
+        })
+        .doOnSubscribe(disposable -> semaphore.acquire())
+        .doOnTerminate(semaphore::release);
     }
 
     private <T extends Model> Completable resolveConflict(@NonNull PendingMutation<T> existingMutation,
@@ -108,48 +112,47 @@ final class PersistentMutationOutbox implements MutationOutbox {
     }
 
     private <T extends Model> Completable save(PendingMutation<T> pendingMutation) {
-        return Completable.defer(() -> Completable.create(subscriber -> {
-            semaphore.acquire();
-            storage.save(
-                converter.toRecord(pendingMutation),
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                QueryPredicates.all(),
-                saved -> {
-                    // The return value is StorageItemChange, referring to a PersistentRecord
-                    // that was saved. We could "unwrap" a PendingMutation from that PersistentRecord,
-                    // to get identically the thing that was saved. But we know the save succeeded.
-                    // So, let's skip the unwrapping, and use the thing that was enqueued,
-                    // the pendingMutation, directly.
-                    mutationQueue.updateExistingQueueItemOrAppendNew(pendingMutation.getMutationId(), pendingMutation);
-                    LOG.info("Successfully enqueued " + pendingMutation);
-                    announceEventEnqueued(pendingMutation);
-                    publishCurrentOutboxStatus();
-                    semaphore.release();
-                    subscriber.onComplete();
-                },
-                failure -> {
-                    semaphore.release();
-                    subscriber.onError(failure);
-                }
-            );
-        }));
+        return Completable.create(emitter -> storage.save(
+            converter.toRecord(pendingMutation),
+            StorageItemChange.Initiator.SYNC_ENGINE,
+            QueryPredicates.all(),
+            saved -> {
+                // The return value is StorageItemChange, referring to a PersistentRecord
+                // that was saved. We could "unwrap" a PendingMutation from that PersistentRecord,
+                // to get identically the thing that was saved. But we know the save succeeded.
+                // So, let's skip the unwrapping, and use the thing that was enqueued,
+                // the pendingMutation, directly.
+                mutationQueue.updateExistingQueueItemOrAppendNew(pendingMutation.getMutationId(), pendingMutation);
+                LOG.info("Successfully enqueued " + pendingMutation);
+                announceEventEnqueued(pendingMutation);
+                publishCurrentOutboxStatus();
+                emitter.onComplete();
+            },
+            emitter::onError
+        ));
     }
 
     @NonNull
     @Override
     public Completable remove(@NonNull TimeBasedUuid pendingMutationId) {
+        return removeNotLocking(pendingMutationId)
+            .doOnSubscribe(disposable -> semaphore.acquire())
+            .doOnTerminate(semaphore::release);
+    }
+
+    @NonNull
+    private Completable removeNotLocking(@NonNull TimeBasedUuid pendingMutationId) {
         Objects.requireNonNull(pendingMutationId);
-        PendingMutation<? extends Model> pendingMutation = mutationQueue.getMutationById(pendingMutationId);
-        if (pendingMutation == null) {
-            return Completable.error(new DataStoreException(
-                "Outbox was asked to remove a mutation with ID = " + pendingMutationId + ". " +
-                    "However, there was no mutation with that ID in the outbox, to begin with.",
-                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-            ));
-        }
-        return Completable.defer(() ->
-            Maybe.<OutboxEvent>create(subscriber -> {
-                semaphore.acquire();
+        return Completable.defer(() -> {
+            PendingMutation<? extends Model> pendingMutation = mutationQueue.getMutationById(pendingMutationId);
+            if (pendingMutation == null) {
+                throw new DataStoreException(
+                    "Outbox was asked to remove a mutation with ID = " + pendingMutationId + ". " +
+                        "However, there was no mutation with that ID in the outbox, to begin with.",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                );
+            }
+            return Maybe.<OutboxEvent>create(subscriber -> {
                 storage.delete(
                     converter.toRecord(pendingMutation),
                     StorageItemChange.Initiator.SYNC_ENGINE,
@@ -159,28 +162,23 @@ final class PersistentMutationOutbox implements MutationOutbox {
                         inFlightMutations.remove(pendingMutationId);
                         LOG.info("Successfully removed from mutations outbox" + pendingMutation);
                         final boolean contentAvailable = !mutationQueue.isEmpty();
-                        semaphore.release(); // Done accessing queue, now.
                         if (contentAvailable) {
                             subscriber.onSuccess(OutboxEvent.CONTENT_AVAILABLE);
                         } else {
                             subscriber.onComplete();
                         }
                     },
-                    failure -> {
-                        semaphore.release();
-                        subscriber.onError(failure);
-                    }
+                    subscriber::onError
                 );
             })
-            .flatMapCompletable(contentAvailable -> notifyContentAvailable())
-        );
+            .flatMapCompletable(contentAvailable -> notifyContentAvailable());
+        });
     }
 
     @NonNull
     @Override
     public Completable load() {
-        return Completable.defer(() -> Completable.create(emitter -> {
-            semaphore.acquire();
+        return Completable.create(emitter -> {
             inFlightMutations.clear();
             mutationQueue.clear();
             storage.query(PendingMutation.PersistentRecord.class,
@@ -189,22 +187,19 @@ final class PersistentMutationOutbox implements MutationOutbox {
                         try {
                             mutationQueue.add(converter.fromRecord(results.next()));
                         } catch (DataStoreException conversionFailure) {
-                            semaphore.release();
                             emitter.onError(conversionFailure);
                             return;
                         }
                     }
                     // Publish outbox status upon loading
                     publishCurrentOutboxStatus();
-                    semaphore.release();
                     emitter.onComplete();
                 },
-                failure -> {
-                    semaphore.release();
-                    emitter.onError(failure);
-                }
+                emitter::onError
             );
-        }));
+        })
+        .doOnSubscribe(disposable -> semaphore.acquire())
+        .doOnTerminate(semaphore::release);
     }
 
     @NonNull
@@ -333,7 +328,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     if (QueryPredicates.all().equals(incoming.getPredicate())) {
                         // If the incoming update does not have a condition, we want to delete any
                         // existing mutations for the modelId before saving the incoming one.
-                        return remove(existing.getMutationId()).andThen(saveIncomingAndNotify());
+                        return removeNotLocking(existing.getMutationId()).andThen(saveIncomingAndNotify());
                     } else {
                         // If it has a condition, we want to just add it to the queue
                         return saveIncomingAndNotify();
@@ -360,7 +355,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     } else {
                         // The existing create mutation hasn't made it to the remote store, so we
                         // ignore the incoming and remove the existing create mutation from outbox.
-                        return remove(existing.getMutationId());
+                        return removeNotLocking(existing.getMutationId());
                     }
                 case UPDATE:
                 case DELETE:
