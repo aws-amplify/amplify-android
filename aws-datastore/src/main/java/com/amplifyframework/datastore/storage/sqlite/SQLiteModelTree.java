@@ -19,6 +19,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelSchema;
@@ -31,6 +32,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
 
 import java.util.Collection;
@@ -43,6 +45,8 @@ import java.util.Set;
  * Utility class to help traverse a tree of models by relationship.
  */
 final class SQLiteModelTree {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private final ModelSchemaRegistry registry;
     private final SQLCommandFactory commandFactory;
     private final SQLiteDatabase database;
@@ -125,6 +129,7 @@ final class SQLiteModelTree {
                         }
                     } catch (DataStoreException exception) {
                         // Don't cut the search short. Populate rest of the tree.
+                        LOG.error("Failed to query children of deleted model(s).", exception);
                     }
 
                     // Add queried result to the map

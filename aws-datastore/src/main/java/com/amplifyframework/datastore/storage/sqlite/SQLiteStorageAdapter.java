@@ -522,7 +522,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 for (ModelSchema schema : descendants.keySet()) {
                     for (String id : descendants.get(schema)) {
                         // Publish DELETE mutation for each affected item.
-                        String dummyJson = String.format("{\"id\":\"%s\"}", id);
+
+                        String dummyJson = gson.toJson(Collections.singletonMap("id", id));
                         Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
                         itemChangeSubject.onNext(StorageItemChange.builder()
                                 .changeId(id)
