@@ -22,7 +22,8 @@
     "input": {
       "_version" : 42,
       "id" : "926d7ee8-4ea5-40c0-8e62-3fb80b2a2edd",
-      "name" : "John Doe"
+      "name" : "John Doe",
+      "wea" : null
     }
   }
 }

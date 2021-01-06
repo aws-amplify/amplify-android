@@ -53,6 +53,7 @@ public final class GsonFactory {
         GsonResponseAdapters.register(builder);
         ModelWithMetadataAdapter.register(builder);
         SerializedModelAdapter.register(builder);
+        builder.serializeNulls();
         return builder.create();
     }
 }

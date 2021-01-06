@@ -165,7 +165,7 @@ public final class AppSyncClientTest {
                 .time(new Temporal.Time("01:22:33"))
                 .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build();
-        endpoint.update(meeting, ModelSchema.fromModelClass(Meeting.class), null, response -> { }, error -> { });
+        endpoint.update(meeting, ModelSchema.fromModelClass(Meeting.class), 1, response -> { }, error -> { });
 
         // Now, capture the request argument on API, so we can see what was passed.
         ArgumentCaptor<GraphQLRequest<ModelWithMetadata<Meeting>>> requestCaptor =
