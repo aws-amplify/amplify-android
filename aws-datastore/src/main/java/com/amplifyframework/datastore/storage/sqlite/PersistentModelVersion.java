@@ -21,6 +21,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.annotations.ModelField;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -71,6 +72,7 @@ public final class PersistentModelVersion implements Model {
         return Single.create(emitter ->
             localStorageAdapter.query(
                 PersistentModelVersion.class,
+                Where.matchesAll(),
                 emitter::onSuccess,
                 emitter::onError
             )

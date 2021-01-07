@@ -379,7 +379,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Class<T> itemClass,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
-        start(() -> sqliteStorageAdapter.query(itemClass, onQueryResults, onQueryFailure), onQueryFailure);
+        start(() ->
+            sqliteStorageAdapter.query(itemClass, Where.matchesAll(), onQueryResults, onQueryFailure), onQueryFailure);
     }
 
     /**

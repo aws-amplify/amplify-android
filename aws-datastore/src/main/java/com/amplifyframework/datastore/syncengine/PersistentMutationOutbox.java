@@ -23,6 +23,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -181,7 +182,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         return Completable.create(emitter -> {
             inFlightMutations.clear();
             mutationQueue.clear();
-            storage.query(PendingMutation.PersistentRecord.class,
+            storage.query(PendingMutation.PersistentRecord.class, Where.matchesAll(),
                 results -> {
                     while (results.hasNext()) {
                         try {
