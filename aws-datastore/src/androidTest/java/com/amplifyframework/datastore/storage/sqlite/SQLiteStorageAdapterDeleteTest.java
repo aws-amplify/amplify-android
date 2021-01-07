@@ -18,17 +18,22 @@ package com.amplifyframework.datastore.storage.sqlite;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
+import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.commentsblog.PostStatus;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -93,30 +98,59 @@ public final class SQLiteStorageAdapterDeleteTest {
      */
     @Test
     public void deleteModelCascades() throws DataStoreException {
-        // Triggers an insert
-        final BlogOwner raphael = BlogOwner.builder()
-                .name("Raphael Kim")
+        // Create 1 blog owner, which has 3 blogs each, which has 3 posts each.
+        // Insert 1 blog owner, 3 blogs, 9 posts
+        Set<String> expected = new HashSet<>();
+        BlogOwner ownerModel = BlogOwner.builder()
+            .name("Blog Owner 1")
+            .build();
+        adapter.save(ownerModel);
+        expected.add(ownerModel.getId());
+        for (int blog = 1; blog <= 3; blog++) {
+            Blog blogModel = Blog.builder()
+                .name("Blog " + blog)
+                .owner(ownerModel)
                 .build();
-        adapter.save(raphael);
+            adapter.save(blogModel);
+            expected.add(blogModel.getId());
+            for (int post = 1; post <= 3; post++) {
+                Post postModel = Post.builder()
+                    .title("Post " + post)
+                    .status(PostStatus.INACTIVE)
+                    .rating(5)
+                    .blog(blogModel)
+                    .build();
+                adapter.save(postModel);
+                expected.add(postModel.getId());
+            }
+        }
 
-        // Triggers a foreign key constraint check
-        final Blog raphaelsBlog = Blog.builder()
-                .name("Raphael's Blog")
-                .owner(raphael)
-                .build();
-        adapter.save(raphaelsBlog);
+        // Observe deletions
+        Set<String> deleted = new HashSet<>();
+        adapter.observe()
+                .filter(change -> StorageItemChange.Type.DELETE.equals(change.type()))
+                .map(StorageItemChange::item)
+                .subscribe(model -> deleted.add(model.getId()));
 
-        // Triggers a delete
-        // Deletes Raphael's Blog also to prevent foreign key violation
-        adapter.delete(raphael);
+        // Triggers a delete.
+        // Deletes every saved model to prevent foreign key constraint violation
+        adapter.delete(ownerModel);
 
-        // Get the BlogOwner from the database
+        // Assert that cascaded deletions are observed.
+        assertEquals(13, deleted.size());
+        assertEquals(expected, deleted);
+
+        // Get the BlogOwner from the database.
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertTrue(blogOwners.isEmpty());
 
-        // Get the Blog from the database
+        // Get the Blog from the database.
         final List<Blog> blogs = adapter.query(Blog.class);
         assertTrue(blogs.isEmpty());
+
+        // Get the Post from the database.
+        final List<Post> posts = adapter.query(Post.class);
+        assertTrue(posts.isEmpty());
     }
 
     /**
