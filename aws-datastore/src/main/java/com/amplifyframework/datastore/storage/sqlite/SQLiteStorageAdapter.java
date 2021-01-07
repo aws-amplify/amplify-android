@@ -118,6 +118,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Factory that produces SQL commands.
     private SQLCommandFactory sqlCommandFactory;
 
+    // The helper object to iterate through associated models of a given model.
+    private SQLiteModelTree sqliteModelTree;
+
     // Stores the reference to disposable objects for cleanup
     private final CompositeDisposable toBeDisposed;
 
@@ -214,6 +217,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 databaseConnectionHandle = sqliteStorageHelper.getWritableDatabase();
                 this.sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry, databaseConnectionHandle);
+
+                /*
+                 * Create helper instance that can traverse through model relations.
+                 */
+                this.sqliteModelTree = new SQLiteModelTree(
+                    modelSchemaRegistry,
+                    sqlCommandFactory,
+                    databaseConnectionHandle
+                );
 
                 /*
                  * Detect if the version of the models stored in SQLite is different
@@ -503,47 +515,29 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     return;
                 }
 
-                LOG.debug("Deleting item in table: " + sqliteTable.getName() +
-                    " identified by ID: " + item.getId());
+                // Use sqliteModelTree to identify the models affected by cascading delete.
+                Map<ModelSchema, Set<String>> descendants =
+                        sqliteModelTree.descendantsOf(Collections.singleton(item));
 
-                // delete always checks for ID first
-                final QueryPredicateOperation<?> idCheck =
-                    QueryField.field(primaryKeyName).eq(item.getId());
-                final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
-                    ? idCheck.and(predicate)
-                    : idCheck;
-                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, condition);
-                if (sqlCommand.sqlStatement() == null || !sqlCommand.hasCompiledSqlStatement()) {
-                    onError.accept(new DataStoreException(
-                        "No delete statement found for the Model: " + modelSchema.getName(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                    return;
-                }
+                for (ModelSchema schema : descendants.keySet()) {
+                    for (String id : descendants.get(schema)) {
+                        // Publish DELETE mutation for each affected item.
 
-                synchronized (sqlCommand.getCompiledSqlStatement()) {
-                    final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
-                    compiledSqlStatement.clearBindings();
-                    bindStatementToValues(sqlCommand, null);
-                    // executeUpdateDelete returns the number of rows affected.
-                    final int rowsDeleted = compiledSqlStatement.executeUpdateDelete();
-                    compiledSqlStatement.clearBindings();
-                    if (rowsDeleted == 0) {
-                        throw new DataStoreException(
-                            "Failed to meet condition. Model was not deleted.",
-                            "Please verify the current state of saved item."
-                        );
+                        String dummyJson = gson.toJson(Collections.singletonMap("id", id));
+                        Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
+                        itemChangeSubject.onNext(StorageItemChange.builder()
+                                .changeId(id)
+                                .item(dummyItem)
+                                .modelSchema(schema)
+                                .type(StorageItemChange.Type.DELETE)
+                                .predicate(QueryPredicates.all())
+                                .initiator(initiator)
+                                .build());
                     }
                 }
-                final StorageItemChange<T> change = StorageItemChange.<T>builder()
-                    .changeId(item.getId())
-                    .item(item)
-                    .modelSchema(modelSchema)
-                    .type(StorageItemChange.Type.DELETE)
-                    .predicate(predicate)
-                    .initiator(initiator)
-                    .build();
-                itemChangeSubject.onNext(change);
+
+                // Delete top-level item. SQLite cascades on delete.
+                StorageItemChange<T> change = deleteModel(item, modelSchema, initiator, predicate);
                 onSuccess.accept(change);
             } catch (DataStoreException dataStoreException) {
                 onError.accept(dataStoreException);
@@ -727,8 +721,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
             @NonNull SqlCommand sqlCommand,
-            @NonNull ModelConflictStrategy modelConflictStrategy)
-            throws DataStoreException {
+            @NonNull ModelConflictStrategy modelConflictStrategy
+    ) throws DataStoreException {
         Objects.requireNonNull(model);
         Objects.requireNonNull(modelSchema);
         Objects.requireNonNull(sqlCommand);
@@ -777,6 +771,58 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 throw problem;
             }
         }
+    }
+
+    // actually delete it from SQLite.
+    private <T extends Model> StorageItemChange<T> deleteModel(
+            @NonNull T item,
+            @NonNull ModelSchema modelSchema,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull QueryPredicate predicate
+    ) throws DataStoreException {
+        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+        final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
+        LOG.debug("Deleting item in table: " + sqliteTable.getName() +
+                " identified by ID: " + item.getId());
+
+        // delete always checks for ID first
+        final QueryPredicateOperation<?> idCheck =
+                QueryField.field(primaryKeyName).eq(item.getId());
+        final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
+                ? idCheck.and(predicate)
+                : idCheck;
+        final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, condition);
+        if (sqlCommand.sqlStatement() == null || !sqlCommand.hasCompiledSqlStatement()) {
+            throw new DataStoreException(
+                    "No delete statement found for the Model: " + modelSchema.getName(),
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+            );
+        }
+
+        synchronized (sqlCommand.getCompiledSqlStatement()) {
+            final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
+            compiledSqlStatement.clearBindings();
+            bindStatementToValues(sqlCommand, null);
+            // executeUpdateDelete returns the number of rows affected.
+            final int rowsDeleted = compiledSqlStatement.executeUpdateDelete();
+            compiledSqlStatement.clearBindings();
+            if (rowsDeleted != 1) {
+                throw new DataStoreException(
+                        "Wanted to delete one row, but deleted " + rowsDeleted + " rows.",
+                        "This is likely a bug. Please report to AWS."
+                );
+            }
+        }
+        StorageItemChange<T> change = StorageItemChange.<T>builder()
+                .changeId(item.getId())
+                .item(item)
+                .modelSchema(modelSchema)
+                .type(StorageItemChange.Type.DELETE)
+                .predicate(predicate)
+                .initiator(initiator)
+                .build();
+        itemChangeSubject.onNext(change);
+        return change;
     }
 
     private boolean dataExistsInSQLiteTable(
@@ -834,10 +880,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
-    @VisibleForTesting
-    Cursor getQueryAllCursor(@NonNull String tableName,
-                             @NonNull QueryOptions options) throws DataStoreException {
+    private Cursor getQueryAllCursor(
+            @NonNull String tableName,
+            @NonNull QueryOptions options
+    ) throws DataStoreException {
         final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(tableName);
         final SqlCommand sqlCommand = sqlCommandFactory.queryFor(schema, options);
         final String rawQuery = sqlCommand.sqlStatement();

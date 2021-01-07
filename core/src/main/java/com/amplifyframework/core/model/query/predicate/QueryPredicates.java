@@ -28,4 +28,12 @@ public final class QueryPredicates {
     public static MatchAllQueryPredicate all() {
         return MatchAllQueryPredicate.instance();
     }
+
+    /**
+     * Creates a {@link QueryPredicate} which matches nothing.
+     * @return A query predicate that matches nothing.
+     */
+    public static MatchNoneQueryPredicate none() {
+        return MatchNoneQueryPredicate.instance();
+    }
 }
