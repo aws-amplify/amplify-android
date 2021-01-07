@@ -21,6 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
@@ -32,6 +33,7 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.parenting.Address;
 import com.amplifyframework.testmodels.parenting.Child;
 import com.amplifyframework.testmodels.parenting.City;
@@ -43,6 +45,7 @@ import com.amplifyframework.testutils.Resources;
 import org.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
@@ -51,6 +54,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests the {@link AppSyncRequestFactory}.
@@ -300,6 +305,32 @@ public final class AppSyncRequestFactoryTest {
             AppSyncRequestFactory.buildCreationRequest(schema, buildTestParentModel()).getContent(),
             true
         );
+    }
+
+    /**
+     * Verify that only the fields included in serializedData on the SerializedModel are included on the API request.
+     * To test this, create a SerializedModel of a BlogOwner, which only has "id", and "name", not the "wea" field.
+     * Then, verify that the request does not contain "wea" field.
+     *
+     * @throws JSONException from JSONAssert.assertEquals JSON parsing error
+     * @throws AmplifyException from ModelSchema.fromModelClass to convert model to schema
+     */
+    @Test
+    public void validateUpdateMutationOnlyContainsChangedFields() throws JSONException, AmplifyException {
+        ModelSchema modelSchema = ModelSchema.fromModelClass(BlogOwner.class);
+        Map<String, Object> serializedData = new HashMap<>();
+        serializedData.put("id", "5aef1282-64d6-4fa8-ba2c-290f9d9c6973");
+        serializedData.put("name", "John Smith");
+
+        SerializedModel blogOwner = SerializedModel.builder()
+                .serializedData(serializedData)
+                .modelSchema(modelSchema)
+                .build();
+
+        // Assert
+        JSONAssert.assertEquals(Resources.readAsString("update-blog-owner-only-changed-fields.txt"),
+            AppSyncRequestFactory.buildUpdateRequest(
+                modelSchema, blogOwner, 1, QueryPredicates.all()).getContent(), true);
     }
 
     private Parent buildTestParentModel() {

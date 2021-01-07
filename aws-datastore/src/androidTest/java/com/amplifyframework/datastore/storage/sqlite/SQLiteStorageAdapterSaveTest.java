@@ -17,9 +17,14 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.util.Log;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
+import com.amplifyframework.datastore.appsync.SerializedModel;
+import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
@@ -30,10 +35,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -275,5 +284,39 @@ public final class SQLiteStorageAdapterSaveTest {
                 .map(HashSet::new)
                 .blockingGet()
         );
+    }
+
+    /**
+     * Verify that saving an item that already exists emits an StorageItemChange event that only contains the fields
+     * that are different.
+     *
+     * @throws AmplifyException On failure to obtain ModelSchema from model class.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     */
+    @Test
+    public void saveOnlyUpdatesFieldsThatHaveChanged() throws AmplifyException, InterruptedException {
+        TestObserver<StorageItemChange<? extends Model>> observer = adapter.observe().test();
+
+        final BlogOwner john = BlogOwner.builder()
+                .name("John")
+                .wea("ther")
+                .build();
+        adapter.save(john);
+
+        observer.await(5, TimeUnit.SECONDS);
+
+        Map<String, Object> expectedData = new HashMap<>();
+        expectedData.put("id", john.getId());
+        expectedData.put("name", "John");
+        expectedData.put("wea", "ther");
+
+        SerializedModel expected = SerializedModel.builder()
+            .serializedData(expectedData)
+            .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+            .build();
+
+        observer.assertValue(storageItemChange -> storageItemChange.item().equals(expected))
+            .assertNoErrors()
+            .assertComplete();
     }
 }
