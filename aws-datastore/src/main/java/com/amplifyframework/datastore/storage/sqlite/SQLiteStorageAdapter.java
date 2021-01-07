@@ -35,7 +35,6 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
-import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
@@ -342,20 +341,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 onError.accept(dataStoreException);
             }
         });
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <T extends Model> void query(
-            @NonNull Class<T> itemClass,
-            @NonNull Consumer<Iterator<T>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError) {
-        Objects.requireNonNull(itemClass);
-        Objects.requireNonNull(onSuccess);
-        Objects.requireNonNull(onError);
-        query(itemClass, Where.matchesAll(), onSuccess, onError);
     }
 
     /**

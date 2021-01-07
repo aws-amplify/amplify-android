@@ -25,7 +25,6 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
-import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 
@@ -107,15 +106,6 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             .build();
         itemChangeStream.onNext(change);
         onSuccess.accept(change);
-    }
-
-    @Override
-    public <T extends Model> void query(
-            @NonNull final Class<T> itemClass,
-            @NonNull final Consumer<Iterator<T>> onSuccess,
-            @NonNull final Consumer<DataStoreException> onError
-    ) {
-        query(itemClass, Where.matchesAll(), onSuccess, onError);
     }
 
     @SuppressWarnings("unchecked") // (T) item *is* checked, via isAssignableFrom().
