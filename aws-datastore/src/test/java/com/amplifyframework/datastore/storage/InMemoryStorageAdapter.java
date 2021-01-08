@@ -26,10 +26,14 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+
+import com.google.common.base.Predicates;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -185,6 +189,46 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             .build();
         itemChangeStream.onNext(deletion);
         onSuccess.accept(deletion);
+    }
+
+    @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
+    @Override
+    public <T extends Model> void delete(
+            @NonNull Class<T> itemClass,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull QueryPredicate predicate,
+            @NonNull Consumer<Iterator<StorageItemChange<T>>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    ) {
+        final ModelSchema schema;
+        try {
+            schema = ModelSchema.fromModelClass(itemClass);
+        } catch (AmplifyException schemaBuildFailure) {
+            onError.accept(new DataStoreException(
+                    "Failed to build model schema.", schemaBuildFailure, "Verify your model."
+            ));
+            return;
+        }
+
+        List<StorageItemChange<T>> changes = new LinkedList<>();
+        for (Model savedItem : items) {
+            if (!itemClass.isInstance(savedItem) || !predicate.evaluate(savedItem)) {
+                continue;
+            }
+            items.remove(savedItem);
+
+            StorageItemChange<T> deletion = StorageItemChange.<T>builder()
+                    .item((T) savedItem)
+                    .modelSchema(schema)
+                    .type(StorageItemChange.Type.DELETE)
+                    .predicate(predicate)
+                    .initiator(initiator)
+                    .build();
+            itemChangeStream.onNext(deletion);
+            changes.add(deletion);
+        }
+
+        onSuccess.accept(changes.iterator());
     }
 
     @NonNull
