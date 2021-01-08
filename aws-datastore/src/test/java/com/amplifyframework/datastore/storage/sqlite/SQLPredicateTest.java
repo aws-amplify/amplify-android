@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
 import com.amplifyframework.testmodels.ratingsblog.Blog;
@@ -27,9 +28,36 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
 public class SQLPredicateTest {
+
+    /**
+     * Test that MATCH ALL predicate is correctly parsed to an
+     * expression that is always true.
+     * @throws DataStoreException if parsing fails
+     */
+    @Test
+    public void testMatchAllPredicate() throws DataStoreException {
+        QueryPredicate predicate = QueryPredicates.all();
+        SQLPredicate sqlPredicate = new SQLPredicate(predicate);
+        assertEquals("1 = 1", sqlPredicate.toString());
+        assertTrue(sqlPredicate.getBindings().isEmpty());
+    }
+
+    /**
+     * Test that MATCH NONE predicate is correctly parsed to an
+     * expression that is always false.
+     * @throws DataStoreException if parsing fails
+     */
+    @Test
+    public void testMatchNonePredicate() throws DataStoreException {
+        QueryPredicate predicate = QueryPredicates.none();
+        SQLPredicate sqlPredicate = new SQLPredicate(predicate);
+        assertEquals("1 = 0", sqlPredicate.toString());
+        assertTrue(sqlPredicate.getBindings().isEmpty());
+    }
 
     /**
      * Test contains in the context of a String field.
