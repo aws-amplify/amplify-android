@@ -197,7 +197,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull Class<T> itemClass,
             @NonNull StorageItemChange.Initiator initiator,
             @NonNull QueryPredicate predicate,
-            @NonNull Consumer<Iterator<StorageItemChange<T>>> onSuccess,
+            @NonNull Action onSuccess,
             @NonNull Consumer<DataStoreException> onError
     ) {
         final ModelSchema schema;
@@ -210,7 +210,6 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             return;
         }
 
-        List<StorageItemChange<T>> changes = new LinkedList<>();
         for (Model savedItem : items) {
             if (!itemClass.isInstance(savedItem) || !predicate.evaluate(savedItem)) {
                 continue;
@@ -225,10 +224,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
                     .initiator(initiator)
                     .build();
             itemChangeStream.onNext(deletion);
-            changes.add(deletion);
         }
-
-        onSuccess.accept(changes.iterator());
+        onSuccess.call();
     }
 
     @NonNull

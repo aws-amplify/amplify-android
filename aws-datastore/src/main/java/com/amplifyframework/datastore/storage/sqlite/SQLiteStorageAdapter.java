@@ -522,6 +522,68 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         });
     }
 
+    public <T extends Model> void delete(
+            @NonNull Class<T> itemClass,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull QueryPredicate predicate,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    ) {
+        Objects.requireNonNull(itemClass);
+        Objects.requireNonNull(initiator);
+        Objects.requireNonNull(predicate);
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+
+        threadPool.submit(() -> {
+            try (Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), Where.matches(predicate))) {
+                final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(itemClass);
+                final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+                final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
+
+                // identify items that meet the predicate
+                List<T> items = new ArrayList<>();
+                if (cursor != null && cursor.moveToFirst()) {
+                    int index = cursor.getColumnIndexOrThrow(primaryKeyName);
+                    do {
+                        String id = cursor.getString(index);
+                        items.add(modelWithId(itemClass, id));
+                    } while (cursor.moveToNext());
+                }
+
+                // identify every model to delete as a result of this operation
+                List<Model> modelsToDelete = new ArrayList<>(items);
+                List<Model> cascadedModels = cascade(items);
+                modelsToDelete.addAll(cascadedModels);
+
+                // execute local deletions
+                SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, predicate);
+                executeStatement(sqlCommand.getCompiledSqlStatement(), sqlCommand.getBindings());
+
+                // publish every deletion
+                for (Model model : modelsToDelete) {
+                    ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelInstance(model);
+                    itemChangeSubject.onNext(StorageItemChange.builder()
+                            .item(model)
+                            .modelSchema(schema)
+                            .type(StorageItemChange.Type.DELETE)
+                            .predicate(QueryPredicates.all())
+                            .initiator(initiator)
+                            .build());
+                }
+                onSuccess.call();
+            } catch (DataStoreException dataStoreException) {
+                onError.accept(dataStoreException);
+            } catch (Exception someOtherTypeOfException) {
+                DataStoreException dataStoreException = new DataStoreException(
+                        "Error in deleting models.", someOtherTypeOfException,
+                        "See attached exception for details."
+                );
+                onError.accept(dataStoreException);
+            }
+        });
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -653,14 +715,18 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         List<Model> cascadedModels = new ArrayList<>();
         for (Map.Entry<ModelSchema, Set<String>> entry : descendants.entrySet()) {
             ModelSchema schema = entry.getKey();
+            Class<? extends Model> clazz = schema.getModelClass();
             for (String id : entry.getValue()) {
-                // Create dummy model instance using just the ID and model type
-                String dummyJson = gson.toJson(Collections.singletonMap("id", id));
-                Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
-                cascadedModels.add(dummyItem);
+                cascadedModels.add(modelWithId(clazz, id));
             }
         }
         return cascadedModels;
+    }
+
+    private <T extends Model> T modelWithId(Class<T> clazz, String id) {
+        // Create dummy model instance using just the ID and model type
+        String dummyJson = gson.toJson(Collections.singletonMap("id", id));
+        return gson.fromJson(dummyJson, clazz);
     }
 
     private <T extends Model> void writeData(
