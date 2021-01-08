@@ -18,6 +18,8 @@ package com.amplifyframework.core.model.query.predicate;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Collections;
+
 /**
  * A {@link QueryPredicate} that matches any/all objects passed to it.
  */
@@ -52,5 +54,15 @@ public final class MatchAllQueryPredicate implements QueryPredicate {
     @Override
     public String toString() {
         return MatchAllQueryPredicate.class.getSimpleName();
+    }
+
+    @Override
+    public QueryPredicateGroup and(QueryPredicate predicate) {
+        return new QueryPredicateGroup(QueryPredicateGroup.Type.AND, Collections.singletonList(predicate));
+    }
+
+    @Override
+    public QueryPredicateGroup or(QueryPredicate predicate) {
+        return new QueryPredicateGroup(QueryPredicateGroup.Type.OR, Collections.singletonList(this));
     }
 }

@@ -152,7 +152,7 @@ public final class SQLiteTable {
      * Return "id" if no column identifies as primary key.
      * @return the column name of primary key
      */
-    @Nullable
+    @NonNull
     public String getPrimaryKeyColumnName() {
         if (getPrimaryKey() == null) {
             return PrimaryKey.fieldName();

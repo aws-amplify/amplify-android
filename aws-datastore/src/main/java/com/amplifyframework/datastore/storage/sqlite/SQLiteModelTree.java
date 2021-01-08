@@ -28,7 +28,6 @@ import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
@@ -103,17 +102,10 @@ final class SQLiteModelTree {
                     QueryField queryField = QueryField.field(parentTable.getPrimaryKeyColumnName());
 
                     // Chain predicates with OR operator.
-                    // No predicate = Match NONE.
-                    // 1 predicate = Match SELF.
-                    // 2 or more predicates = Match ANY.
                     QueryPredicate predicate = QueryPredicates.none();
                     for (String parentId : parentIds) {
-                        QueryPredicateOperation<Object> operation = queryField.eq(parentId);
-                        if (QueryPredicates.none().equals(predicate)) {
-                            predicate = operation;
-                        } else {
-                            predicate = operation.or(predicate);
-                        }
+                        QueryPredicate operation = queryField.eq(parentId);
+                        predicate = predicate.or(operation);
                     }
 
                     // Collect every children one level deeper than current level

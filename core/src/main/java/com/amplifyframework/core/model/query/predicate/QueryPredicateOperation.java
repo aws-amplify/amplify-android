@@ -20,7 +20,6 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.FieldFinder;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 /**
@@ -60,29 +59,13 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
     }
 
     /**
-     * Return a group connecting this operation with another group/operation with an AND type.
-     * @param predicate the group/operation to connect to
-     * @return a group connecting this operation with another group/operation with an AND type
+     * Return a group negating the given predicate.
+     * @param predicate the predicate to negate
+     * @return a group negating the given predicate
+     * @deprecated use {@link QueryPredicate#not(QueryPredicate)} instead.
      */
-    public QueryPredicateGroup and(QueryPredicate predicate) {
-        return new QueryPredicateGroup(QueryPredicateGroup.Type.AND, Arrays.asList(this, predicate));
-    }
-
-    /**
-     * Return a group connecting this operation with another group/operation with an OR type.
-     * @param predicate the group/operation to connect to
-     * @return a group connecting this operation with another group/operation with an OR type
-     */
-    public QueryPredicateGroup or(QueryPredicate predicate) {
-        return new QueryPredicateGroup(QueryPredicateGroup.Type.OR, Arrays.asList(this, predicate));
-    }
-
-    /**
-     * Return a group negating the given operation.
-     * @param predicate the operation to negate
-     * @return a group negating the given operation
-     */
-    public static QueryPredicateGroup not(QueryPredicateOperation<?> predicate) {
+    @Deprecated
+    public static QueryPredicateGroup not(QueryPredicate predicate) {
         return new QueryPredicateGroup(QueryPredicateGroup.Type.NOT, Collections.singletonList(predicate));
     }
 
