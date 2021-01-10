@@ -51,7 +51,7 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 30
 
-    awsSdkVersion = '2.20.1'
+    awsSdkVersion = '2.21.0'
     fragmentVersion = '1.2.5'
     navigationVersion = '2.3.2'
     dependency = [
