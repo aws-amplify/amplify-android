@@ -95,9 +95,7 @@ public final class QueryPredicateGroup implements QueryPredicate {
      * Return a group negating the given group of operations.
      * @param predicate the group to negate
      * @return a group negating the given group of operations
-     * @deprecated use {@link QueryPredicate#not(QueryPredicate)} instead.
      */
-    @Deprecated
     public static QueryPredicateGroup not(QueryPredicateGroup predicate) {
         return new QueryPredicateGroup(Type.NOT, Collections.singletonList(predicate));
     }
