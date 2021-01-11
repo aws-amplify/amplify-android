@@ -53,4 +53,14 @@ public final class MatchNoneQueryPredicate implements QueryPredicate {
     public String toString() {
         return MatchNoneQueryPredicate.class.getSimpleName();
     }
+
+    @Override
+    public QueryPredicate and(QueryPredicate predicate) {
+        return this;
+    }
+
+    @Override
+    public QueryPredicate or(QueryPredicate predicate) {
+        return predicate;
+    }
 }

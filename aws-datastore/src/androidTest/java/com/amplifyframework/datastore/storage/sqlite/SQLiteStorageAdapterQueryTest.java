@@ -43,7 +43,7 @@ import java.util.List;
 import io.reactivex.rxjava3.core.Observable;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
-import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
+import static com.amplifyframework.core.model.query.predicate.QueryPredicate.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;

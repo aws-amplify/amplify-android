@@ -60,9 +60,9 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
     }
 
     /**
-     * Return a group connecting this operation with another group/operation with an AND type.
-     * @param predicate the group/operation to connect to
-     * @return a group connecting this operation with another group/operation with an AND type
+     * Return a group connecting this operation with another predicate with an AND type.
+     * @param predicate the predicate to connect to
+     * @return a group connecting this operation with another predicate with an AND type
      */
     public QueryPredicateGroup and(QueryPredicate predicate) {
         return new QueryPredicateGroup(QueryPredicateGroup.Type.AND, Arrays.asList(this, predicate));

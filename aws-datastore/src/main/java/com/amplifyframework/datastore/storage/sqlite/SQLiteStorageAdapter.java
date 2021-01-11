@@ -17,10 +17,10 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
@@ -35,9 +35,9 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.SerializedModel;
@@ -50,7 +50,6 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
-import com.amplifyframework.util.Wrap;
 
 import com.google.gson.Gson;
 
@@ -268,66 +267,43 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         threadPool.submit(() -> {
             try {
                 final String modelName = getModelName(item);
-                final ModelSchema modelSchema =
-                    modelSchemaRegistry.getModelSchemaForModelClass(modelName);
-                final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-                final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
-                final SqlCommand sqlCommand;
-                final ModelConflictStrategy modelConflictStrategy;
-                final StorageItemChange.Type type;
+                final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
 
-                if (dataExistsInSQLiteTable(sqliteTable.getName(), primaryKeyName, item.getId())) {
-                    type = StorageItemChange.Type.UPDATE;
-
-                    // update model stored in SQLite
-                    // update always checks for ID first
-                    final QueryPredicateOperation<?> idCheck =
-                        QueryField.field(primaryKeyName).eq(item.getId());
-                    final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
-                        ? idCheck.and(predicate)
-                        : idCheck;
-                    sqlCommand = sqlCommandFactory.updateFor(modelSchema, condition);
-                    if (!sqlCommand.hasCompiledSqlStatement()) {
-                        onError.accept(new DataStoreException(
-                            "Error in saving the model. No update statement " +
-                                "found for the Model: " + modelSchema.getName(),
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
-                        ));
-                        return;
-                    }
-                    modelConflictStrategy = ModelConflictStrategy.OVERWRITE_EXISTING;
+                final StorageItemChange.Type writeType;
+                if (modelExists(item, QueryPredicates.all())) {
+                    // if data exists already, then UPDATE the row
+                    writeType = StorageItemChange.Type.UPDATE;
                 } else if (!QueryPredicates.all().equals(predicate)) {
                     // insert not permitted with a condition
-                    onError.accept(new DataStoreException(
+                    throw new DataStoreException(
                         "Conditional update must be performed against an already existing data. " +
                             "Insertion is not permitted while using a predicate.",
                         "Please save without specifying a predicate."
-                    ));
-                    return;
+                    );
                 } else {
-                    // insert model in SQLite
-                    type = StorageItemChange.Type.CREATE;
-
-                    sqlCommand = sqlCommandFactory.insertFor(modelSchema);
-                    if (!sqlCommand.hasCompiledSqlStatement()) {
-                        onError.accept(new DataStoreException(
-                            "No insert statement found for the Model: " + modelSchema.getName(),
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
-                        ));
-                        return;
-                    }
-                    modelConflictStrategy = ModelConflictStrategy.THROW_EXCEPTION;
+                    // if data doesn't exist yet, then INSERT a new row
+                    writeType = StorageItemChange.Type.CREATE;
                 }
 
-                saveModel(item, modelSchema, sqlCommand, modelConflictStrategy);
-                final StorageItemChange<T> change = StorageItemChange.<T>builder()
-                    .changeId(item.getId())
-                    .item(item)
-                    .modelSchema(modelSchema)
-                    .type(type)
-                    .predicate(predicate)
-                    .initiator(initiator)
-                    .build();
+                // Check if existing data meets the condition
+                if (StorageItemChange.Type.UPDATE.equals(writeType) && !modelExists(item, predicate)) {
+                    throw new DataStoreException(
+                        "Save failed because condition did not match existing model instance.",
+                        "The save will continue to fail until the model instance is updated."
+                    );
+                }
+
+                // execute local save
+                writeData(item, writeType);
+
+                // publish successful save
+                StorageItemChange<T> change = StorageItemChange.<T>builder()
+                        .item(item)
+                        .modelSchema(modelSchema)
+                        .type(writeType)
+                        .predicate(predicate)
+                        .initiator(initiator)
+                        .build();
                 itemChangeSubject.onNext(change);
                 onSuccess.accept(change);
             } catch (DataStoreException dataStoreException) {
@@ -481,16 +457,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         threadPool.submit(() -> {
             try {
                 final String modelName = getModelName(item);
-                final ModelSchema modelSchema =
-                        modelSchemaRegistry.getModelSchemaForModelClass(modelName);
-                final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-                final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
+                final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
 
-                if (!dataExistsInSQLiteTable(sqliteTable.getName(), primaryKeyName, item.getId())) {
+                // Check if data being deleted exists; "Succeed" deletion in that case.
+                if (!modelExists(item, QueryPredicates.all())) {
                     LOG.verbose(modelName + " model with id = " + item.getId() + " does not exist.");
                     // Pass back item change instance without publishing it.
                     onSuccess.accept(StorageItemChange.<T>builder()
-                        .changeId(item.getId())
                         .item(item)
                         .modelSchema(modelSchema)
                         .type(StorageItemChange.Type.DELETE)
@@ -500,29 +473,41 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     return;
                 }
 
-                // Use sqliteModelTree to identify the models affected by cascading delete.
-                Map<ModelSchema, Set<String>> descendants =
-                        sqliteModelTree.descendantsOf(Collections.singleton(item));
-
-                for (ModelSchema schema : descendants.keySet()) {
-                    for (String id : descendants.get(schema)) {
-                        // Publish DELETE mutation for each affected item.
-
-                        String dummyJson = gson.toJson(Collections.singletonMap("id", id));
-                        Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
-                        itemChangeSubject.onNext(StorageItemChange.builder()
-                                .changeId(id)
-                                .item(dummyItem)
-                                .modelSchema(schema)
-                                .type(StorageItemChange.Type.DELETE)
-                                .predicate(QueryPredicates.all())
-                                .initiator(initiator)
-                                .build());
-                    }
+                // Check if existing data meets the condition
+                if (!modelExists(item, predicate)) {
+                    throw new DataStoreException(
+                        "Deletion failed because condition did not match existing model instance.",
+                        "The deletion will continue to fail until the model instance is updated."
+                    );
                 }
 
-                // Delete top-level item. SQLite cascades on delete.
-                StorageItemChange<T> change = deleteModel(item, modelSchema, initiator, predicate);
+                // identify items affected by cascading delete before deleting them
+                List<Model> cascadedModels = sqliteModelTree.descendantsOf(Collections.singleton(item));
+
+                // execute local deletion
+                writeData(item, StorageItemChange.Type.DELETE);
+
+                // publish cascaded deletions
+                for (Model cascadedModel : cascadedModels) {
+                    ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelInstance(cascadedModel);
+                    itemChangeSubject.onNext(StorageItemChange.builder()
+                        .item(cascadedModel)
+                        .modelSchema(schema)
+                        .type(StorageItemChange.Type.DELETE)
+                        .predicate(QueryPredicates.all())
+                        .initiator(initiator)
+                        .build());
+                }
+
+                // publish successful deletion of top-level item
+                StorageItemChange<T> change = StorageItemChange.<T>builder()
+                        .item(item)
+                        .modelSchema(modelSchema)
+                        .type(StorageItemChange.Type.DELETE)
+                        .predicate(predicate)
+                        .initiator(initiator)
+                        .build();
+                itemChangeSubject.onNext(change);
                 onSuccess.accept(change);
             } catch (DataStoreException dataStoreException) {
                 onError.accept(dataStoreException);
@@ -642,44 +627,110 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return new CreateSqlCommands(createTableCommands, createIndexCommands);
     }
 
-    // Binds each value inside list onto compiled statement in order
-    private void bindStatementToValues(
-            @NonNull SqlCommand sqlCommand,
-            @Nullable Model model
+    // extract model field values to save in database
+    private List<Object> extractFieldValues(@NonNull Model model) throws DataStoreException {
+        final String modelName = getModelName(model);
+        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final SQLiteTable table = SQLiteTable.fromSchema(schema);
+        final SQLiteModelFieldTypeConverter converter =
+                new SQLiteModelFieldTypeConverter(schema, modelSchemaRegistry, gson);
+        final Map<String, ModelField> modelFields = schema.getFields();
+        final List<Object> bindings = new ArrayList<>();
+        for (SQLiteColumn column : table.getSortedColumns()) {
+            final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getFieldName()));
+            final Object fieldValue = converter.convertValueFromTarget(model, modelField);
+            bindings.add(fieldValue);
+        }
+        return bindings;
+    }
+
+    private <T extends Model> void writeData(
+            T item,
+            StorageItemChange.Type writeType
     ) throws DataStoreException {
-        final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
-        // 1-based index for columns
-        int columnIndex = 1;
+        final String modelName = getModelName(item);
+        final ModelSchema modelSchema =
+                modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+        final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
+        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(item.getId());
 
-        // bind model field values to sql columns
-        if (model != null) {
-            final String modelName = getModelName(model);
-            final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
-            final SQLiteModelFieldTypeConverter converter =
-                    new SQLiteModelFieldTypeConverter(schema, modelSchemaRegistry, gson);
-            final Map<String, ModelField> modelFields = schema.getFields();
-
-            final List<SQLiteColumn> columns = sqlCommand.getColumns();
-
-            for (SQLiteColumn column : columns) {
-                final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getFieldName()));
-                final Object fieldValue = converter.convertValueFromTarget(model, modelField);
-                bindValueToStatement(compiledSqlStatement, columnIndex, fieldValue);
-                columnIndex++;
-            }
+        // Generate SQL command for given action
+        final SqlCommand sqlCommand;
+        final List<Object> bindings;
+        switch (writeType) {
+            case CREATE:
+                LOG.verbose("Creating item in " + sqliteTable.getName() +
+                        " identified by ID: " + item.getId());
+                sqlCommand = sqlCommandFactory.insertFor(modelSchema);
+                bindings = extractFieldValues(item); // VALUES clause
+                break;
+            case UPDATE:
+                LOG.verbose("Updating item in " + sqliteTable.getName() +
+                        " identified by ID: " + item.getId());
+                sqlCommand = sqlCommandFactory.updateFor(modelSchema, matchId);
+                bindings = extractFieldValues(item); // SET clause
+                bindings.addAll(sqlCommand.getBindings()); // WHERE clause
+                break;
+            case DELETE:
+                LOG.verbose("Deleting item in " + sqliteTable.getName() +
+                        " identified by ID: " + item.getId());
+                sqlCommand = sqlCommandFactory.deleteFor(modelSchema, matchId);
+                bindings = sqlCommand.getBindings(); // WHERE clause
+                break;
+            default:
+                throw new DataStoreException(
+                    "Unexpected change was requested: " + writeType.name(),
+                    "Valid storage changes are CREATE, UPDATE, and DELETE."
+                );
         }
 
-        // apply stored bindings after columns were bound
-        for (Object binding : sqlCommand.getBindings()) {
-            bindValueToStatement(compiledSqlStatement, columnIndex, binding);
-            columnIndex++;
+        executeStatement(sqlCommand.getCompiledSqlStatement(), bindings);
+    }
+
+    private synchronized void executeStatement(
+            SQLiteStatement sqliteStatement,
+            List<Object> bindings
+    ) throws DataStoreException {
+        if (sqliteStatement == null) {
+            throw new DataStoreException(
+                "Compiled SQLite statement cannot be null.",
+                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+            );
+        }
+
+        try {
+            bindValuesToStatement(sqliteStatement, bindings);
+            sqliteStatement.execute();
+        } catch (SQLException sqlException) {
+            throw new DataStoreException(
+                "Invalid SQL statement: " + sqliteStatement,
+                sqlException,
+                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+            );
         }
     }
 
-    private void bindValueToStatement(
-            @NonNull SQLiteStatement statement,
+    private synchronized void bindValuesToStatement(
+            SQLiteStatement statement,
+            List<Object> values
+    ) throws DataStoreException {
+        // remove any bindings if there is any
+        statement.clearBindings();
+
+        // 1-based index for columns
+        int columnIndex = 1;
+
+        // apply stored bindings after columns were bound
+        for (Object value : Objects.requireNonNull(values)) {
+            bindValueToStatement(statement, columnIndex++, value);
+        }
+    }
+
+    private synchronized void bindValueToStatement(
+            SQLiteStatement statement,
             int columnIndex,
-            @Nullable Object value
+            Object value
     ) throws DataStoreException {
         LOG.verbose("SQLiteStorageAdapter.bindValueToStatement(..., value = " + value);
         if (value == null) {
@@ -695,132 +746,24 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         } else if (value instanceof Double) {
             statement.bindDouble(columnIndex, (Double) value);
         } else {
-            throw new DataStoreException("", "");
-        }
-    }
-
-    // Extract the values of the fields of a model and bind the values to the SQLiteStatement
-    // and execute the statement.
-    // throws DataStoreException on failure to save
-    private <T extends Model> void saveModel(
-            @NonNull T model,
-            @NonNull ModelSchema modelSchema,
-            @NonNull SqlCommand sqlCommand,
-            @NonNull ModelConflictStrategy modelConflictStrategy
-    ) throws DataStoreException {
-        Objects.requireNonNull(model);
-        Objects.requireNonNull(modelSchema);
-        Objects.requireNonNull(sqlCommand);
-
-        LOG.debug("Writing data to table for: " + model.toString());
-
-        // SQLiteStatement object that represents the pre-compiled/prepared SQLite statements
-        // are not thread-safe. Adding a synchronization barrier to access it.
-        synchronized (sqlCommand.getCompiledSqlStatement()) {
-            final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
-            compiledSqlStatement.clearBindings();
-
-            bindStatementToValues(sqlCommand, model);
-
-            DataStoreException problem = null;
-            switch (modelConflictStrategy) {
-                case OVERWRITE_EXISTING:
-                    // executeUpdateDelete returns the number of rows affected.
-                    final int rowsUpdated = compiledSqlStatement.executeUpdateDelete();
-                    if (rowsUpdated != 1) {
-                        problem = new DataStoreException(
-                            "Wanted to update 1 row, but updated " + rowsUpdated + " rows!",
-                            "This is likely a bug; please report to AWS."
-                        );
-                    }
-                    break;
-                case THROW_EXCEPTION:
-                    // executeInsert returns id if successful, -1 otherwise.
-                    if (compiledSqlStatement.executeInsert() == -1) {
-                        problem = new DataStoreException(
-                            "Failed to insert any item in to database.",
-                            "This is likely a bug; please report to AWS."
-                        );
-                    }
-                    break;
-                default:
-                    problem = new DataStoreException(
-                        "ModelConflictStrategy " + modelConflictStrategy + " is not supported.",
-                        "This is likely a bug; please report to AWS."
-                    );
-            }
-
-            compiledSqlStatement.clearBindings();
-
-            if (problem != null) {
-                throw problem;
-            }
-        }
-    }
-
-    // actually delete it from SQLite.
-    private <T extends Model> StorageItemChange<T> deleteModel(
-            @NonNull T item,
-            @NonNull ModelSchema modelSchema,
-            @NonNull StorageItemChange.Initiator initiator,
-            @NonNull QueryPredicate predicate
-    ) throws DataStoreException {
-        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-        final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
-        LOG.debug("Deleting item in table: " + sqliteTable.getName() +
-                " identified by ID: " + item.getId());
-
-        // delete always checks for ID first
-        final QueryPredicateOperation<?> idCheck =
-                QueryField.field(primaryKeyName).eq(item.getId());
-        final QueryPredicate condition = !QueryPredicates.all().equals(predicate)
-                ? idCheck.and(predicate)
-                : idCheck;
-        final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, condition);
-        if (sqlCommand.sqlStatement() == null || !sqlCommand.hasCompiledSqlStatement()) {
             throw new DataStoreException(
-                    "No delete statement found for the Model: " + modelSchema.getName(),
+                    "Failed to bind " + value + " to SQL statement. " +
+                            value.getClass().getSimpleName() + " is an unsupported type.",
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
         }
-
-        synchronized (sqlCommand.getCompiledSqlStatement()) {
-            final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
-            compiledSqlStatement.clearBindings();
-            bindStatementToValues(sqlCommand, null);
-            // executeUpdateDelete returns the number of rows affected.
-            final int rowsDeleted = compiledSqlStatement.executeUpdateDelete();
-            compiledSqlStatement.clearBindings();
-            if (rowsDeleted != 1) {
-                throw new DataStoreException(
-                        "Wanted to delete one row, but deleted " + rowsDeleted + " rows.",
-                        "This is likely a bug. Please report to AWS."
-                );
-            }
-        }
-        StorageItemChange<T> change = StorageItemChange.<T>builder()
-                .changeId(item.getId())
-                .item(item)
-                .modelSchema(modelSchema)
-                .type(StorageItemChange.Type.DELETE)
-                .predicate(predicate)
-                .initiator(initiator)
-                .build();
-        itemChangeSubject.onNext(change);
-        return change;
     }
 
-    private boolean dataExistsInSQLiteTable(
-            @NonNull String tableName,
-            @NonNull String columnName,
-            @NonNull String columnValue) {
-        // SELECT 1 FROM '{tableName}' WHERE {columnName} = '{columnValue}'
-        final String queryString = "" +
-            SqlKeyword.SELECT + SqlKeyword.DELIMITER + "1" + SqlKeyword.DELIMITER +
-            SqlKeyword.FROM + SqlKeyword.DELIMITER + Wrap.inBackticks(tableName) + SqlKeyword.DELIMITER +
-            SqlKeyword.WHERE + SqlKeyword.DELIMITER + columnName + SqlKeyword.DELIMITER +
-            SqlKeyword.EQUAL + SqlKeyword.DELIMITER + Wrap.inSingleQuotes(columnValue);
-        try (Cursor cursor = databaseConnectionHandle.rawQuery(queryString, null)) {
+    private boolean modelExists(Model model, QueryPredicate predicate) throws DataStoreException {
+        final String modelName = getModelName(model);
+        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final SQLiteTable table = SQLiteTable.fromSchema(schema);
+        final String tableName = table.getName();
+        final String primaryKeyName = table.getPrimaryKeyColumnName();
+
+        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getId());
+        final QueryPredicate condition = matchId.and(predicate);
+        try (Cursor cursor = getQueryAllCursor(tableName, Where.matches(condition))) {
             return cursor.getCount() > 0;
         }
     }

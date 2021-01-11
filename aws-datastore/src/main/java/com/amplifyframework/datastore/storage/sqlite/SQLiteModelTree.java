@@ -28,16 +28,21 @@ import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
+import com.amplifyframework.util.GsonFactory;
 
+import com.google.gson.Gson;
+
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,6 +55,7 @@ final class SQLiteModelTree {
     private final ModelSchemaRegistry registry;
     private final SQLCommandFactory commandFactory;
     private final SQLiteDatabase database;
+    private final Gson gson;
 
     /**
      * Constructs a model family tree traversing utility.
@@ -63,26 +69,38 @@ final class SQLiteModelTree {
         this.registry = registry;
         this.commandFactory = commandFactory;
         this.database = database;
+        this.gson = GsonFactory.instance();
     }
 
     /**
      * Returns a map of descendants of a set of models (of same type).
      * A model is a child of its parent if it uses its parent's ID as foreign key.
      * @param root Collection of models to query its descendants of.
-     * @return Map of descendants keyed by model schema. The value contains a set of
-     *          descendants' IDs for that model type.
+     * @return List of models that are descendants of given models. These models will
+     *          have the correct model type and ID, but no other field will be populated.
      */
-    <T extends Model> Map<ModelSchema, Set<String>> descendantsOf(Collection<T> root) {
+    <T extends Model> List<Model> descendantsOf(Collection<T> root) {
         if (Empty.check(root)) {
             throw new IllegalArgumentException("Cannot traverse tree from an empty root.");
         }
-        Map<ModelSchema, Set<String>> descendants = new LinkedHashMap<>();
+        Map<ModelSchema, Set<String>> modelMap = new LinkedHashMap<>();
         ModelSchema rootSchema = registry.getModelSchemaForModelInstance(root.iterator().next());
         Set<String> rootIds = new HashSet<>();
         for (T model : root) {
             rootIds.add(model.getId());
         }
-        recurseTree(descendants, rootSchema, rootIds);
+        recurseTree(modelMap, rootSchema, rootIds);
+
+        List<Model> descendants = new ArrayList<>();
+        for (Map.Entry<ModelSchema, Set<String>> entry : modelMap.entrySet()) {
+            ModelSchema schema = entry.getKey();
+            for (String id : entry.getValue()) {
+                // Create dummy model instance using just the ID and model type
+                String dummyJson = gson.toJson(Collections.singletonMap("id", id));
+                Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
+                descendants.add(dummyItem);
+            }
+        }
         return descendants;
     }
 
@@ -103,17 +121,10 @@ final class SQLiteModelTree {
                     QueryField queryField = QueryField.field(parentTable.getPrimaryKeyColumnName());
 
                     // Chain predicates with OR operator.
-                    // No predicate = Match NONE.
-                    // 1 predicate = Match SELF.
-                    // 2 or more predicates = Match ANY.
                     QueryPredicate predicate = QueryPredicates.none();
                     for (String parentId : parentIds) {
-                        QueryPredicateOperation<Object> operation = queryField.eq(parentId);
-                        if (QueryPredicates.none().equals(predicate)) {
-                            predicate = operation;
-                        } else {
-                            predicate = operation.or(predicate);
-                        }
+                        QueryPredicate operation = queryField.eq(parentId);
+                        predicate = predicate.or(operation);
                     }
 
                     // Collect every children one level deeper than current level

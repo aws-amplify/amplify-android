@@ -53,4 +53,14 @@ public final class MatchAllQueryPredicate implements QueryPredicate {
     public String toString() {
         return MatchAllQueryPredicate.class.getSimpleName();
     }
+
+    @Override
+    public QueryPredicate and(QueryPredicate predicate) {
+        return predicate;
+    }
+
+    @Override
+    public QueryPredicate or(QueryPredicate predicate) {
+        return this;
+    }
 }

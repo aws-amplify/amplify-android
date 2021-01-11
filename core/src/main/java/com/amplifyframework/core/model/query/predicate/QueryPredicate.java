@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
+import java.util.Collections;
+
 /**
  * Parent class for groups of conditions and individual conditions.
  * This way, through polymorphism, an individual condition can be
@@ -22,4 +24,27 @@ package com.amplifyframework.core.model.query.predicate;
  * of conditions.
  */
 public interface QueryPredicate extends Evaluable<Object> {
+
+    /**
+     * Return a predicate that evaluates AND connection between this and given predicate.
+     * @param predicate the predicate to connect to
+     * @return a combined predicate
+     */
+    QueryPredicate and(QueryPredicate predicate);
+
+    /**
+     * Return a predicate that evaluates OR connection between this and given predicate.
+     * @param predicate the predicate to connect to
+     * @return a combined predicate
+     */
+    QueryPredicate or(QueryPredicate predicate);
+
+    /**
+     * Return a negation of the given predicate.
+     * @param predicate the predicate to negate
+     * @return a negation of the given predicate
+     */
+    static QueryPredicate not(QueryPredicate predicate) {
+        return new QueryPredicateGroup(QueryPredicateGroup.Type.NOT, Collections.singletonList(predicate));
+    }
 }
