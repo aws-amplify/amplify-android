@@ -483,7 +483,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 }
 
                 // identify items affected by cascading delete before deleting them
-                List<Model> cascadedModels = cascade(Collections.singleton(item));
+                List<Model> cascadedModels = sqliteModelTree.descendantsOf(Collections.singleton(item));
 
                 // execute local deletion
                 writeData(item, StorageItemChange.Type.DELETE);
@@ -645,24 +645,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return bindings;
     }
 
-    private List<Model> cascade(Collection<? extends Model> models) {
-        // Use sqliteModelTree to identify every model affected by cascading delete.
-        Map<ModelSchema, Set<String>> descendants =
-                sqliteModelTree.descendantsOf(models);
-
-        List<Model> cascadedModels = new ArrayList<>();
-        for (Map.Entry<ModelSchema, Set<String>> entry : descendants.entrySet()) {
-            ModelSchema schema = entry.getKey();
-            for (String id : entry.getValue()) {
-                // Create dummy model instance using just the ID and model type
-                String dummyJson = gson.toJson(Collections.singletonMap("id", id));
-                Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
-                cascadedModels.add(dummyItem);
-            }
-        }
-        return cascadedModels;
-    }
-
     private <T extends Model> void writeData(
             T item,
             StorageItemChange.Type writeType
@@ -679,20 +661,20 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final List<Object> bindings;
         switch (writeType) {
             case CREATE:
-                LOG.debug("Creating item in " + sqliteTable.getName() +
+                LOG.verbose("Creating item in " + sqliteTable.getName() +
                         " identified by ID: " + item.getId());
                 sqlCommand = sqlCommandFactory.insertFor(modelSchema);
                 bindings = extractFieldValues(item); // VALUES clause
                 break;
             case UPDATE:
-                LOG.debug("Updating item in " + sqliteTable.getName() +
+                LOG.verbose("Updating item in " + sqliteTable.getName() +
                         " identified by ID: " + item.getId());
                 sqlCommand = sqlCommandFactory.updateFor(modelSchema, matchId);
                 bindings = extractFieldValues(item); // SET clause
                 bindings.addAll(sqlCommand.getBindings()); // WHERE clause
                 break;
             case DELETE:
-                LOG.debug("Deleting item in " + sqliteTable.getName() +
+                LOG.verbose("Deleting item in " + sqliteTable.getName() +
                         " identified by ID: " + item.getId());
                 sqlCommand = sqlCommandFactory.deleteFor(modelSchema, matchId);
                 bindings = sqlCommand.getBindings(); // WHERE clause
