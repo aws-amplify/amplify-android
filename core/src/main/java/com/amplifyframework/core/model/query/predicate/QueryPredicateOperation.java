@@ -20,6 +20,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.FieldFinder;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 /**
@@ -56,6 +57,24 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
      */
     public QueryOperator<T> operator() {
         return operator;
+    }
+
+    /**
+     * Return a group connecting this operation with another predicate with an AND type.
+     * @param predicate the predicate to connect to
+     * @return a group connecting this operation with another predicate with an AND type
+     */
+    public QueryPredicateGroup and(QueryPredicate predicate) {
+        return new QueryPredicateGroup(QueryPredicateGroup.Type.AND, Arrays.asList(this, predicate));
+    }
+
+    /**
+     * Return a group connecting this operation with another group/operation with an OR type.
+     * @param predicate the group/operation to connect to
+     * @return a group connecting this operation with another group/operation with an OR type
+     */
+    public QueryPredicateGroup or(QueryPredicate predicate) {
+        return new QueryPredicateGroup(QueryPredicateGroup.Type.OR, Arrays.asList(this, predicate));
     }
 
     /**

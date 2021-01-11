@@ -15,7 +15,6 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 /**
@@ -27,29 +26,25 @@ import java.util.Collections;
 public interface QueryPredicate extends Evaluable<Object> {
 
     /**
-     * Return a group connecting this predicate with another predicate with an AND type.
+     * Return a predicate that evaluates AND connection between this and given predicate.
      * @param predicate the predicate to connect to
-     * @return a group connecting this predicate with another predicate with an AND type
+     * @return a combined predicate
      */
-    default QueryPredicateGroup and(QueryPredicate predicate) {
-        return new QueryPredicateGroup(QueryPredicateGroup.Type.AND, Arrays.asList(this, predicate));
-    }
+    QueryPredicate and(QueryPredicate predicate);
 
     /**
-     * Return a group connecting this operation with another group/operation with an OR type.
-     * @param predicate the group/operation to connect to
-     * @return a group connecting this operation with another group/operation with an OR type
+     * Return a predicate that evaluates OR connection between this and given predicate.
+     * @param predicate the predicate to connect to
+     * @return a combined predicate
      */
-    default QueryPredicateGroup or(QueryPredicate predicate) {
-        return new QueryPredicateGroup(QueryPredicateGroup.Type.OR, Arrays.asList(this, predicate));
-    }
+    QueryPredicate or(QueryPredicate predicate);
 
     /**
-     * Return a group negating the given predicate.
+     * Return a negation of the given predicate.
      * @param predicate the predicate to negate
-     * @return a group negating the given predicate
+     * @return a negation of the given predicate
      */
-    static QueryPredicateGroup not(QueryPredicate predicate) {
+    static QueryPredicate not(QueryPredicate predicate) {
         return new QueryPredicateGroup(QueryPredicateGroup.Type.NOT, Collections.singletonList(predicate));
     }
 }
