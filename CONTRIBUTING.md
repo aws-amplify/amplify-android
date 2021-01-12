@@ -98,10 +98,10 @@ allprojects {
     }
 }
 ```
-Then, specify `main` instead of a version number to point to mavenLocal inside `build.gradle(Module)` file:
+Then, specify `local` instead of a version number to point to mavenLocal inside `build.gradle(Module)` file:
 ```
 dependencies {
-    implementation 'com.amplifyframework:core:main'
+    implementation 'com.amplifyframework:core:local'
 }
 ```
 
