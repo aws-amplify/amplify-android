@@ -68,7 +68,8 @@ public interface DataStoreCategoryBehavior {
     );
 
     /**
-     * Deletes an item from the DataStore.
+     * Deletes an item from the DataStore. If item doesn't exist, then
+     * operation succeeds with no-op.
      * @param item An item to delete from the DataStore
      * @param onItemDeleted Called upon successful deletion of item
      * @param onFailureToDelete Called upon failure to delete item
@@ -83,7 +84,8 @@ public interface DataStoreCategoryBehavior {
     /**
      * Deletes an item from the DataStore if the data being deleted meets the
      * provided conditions. This is useful for making sure that no data is being
-     * deleted with an outdated/incorrect assumption.
+     * deleted with an outdated/incorrect assumption. If item doesn't exist,
+     * then operation succeeds with no-op.
      * @param item An item to delete from the DataStore
      * @param predicate Predicate condition to apply for conditional write
      * @param onItemDeleted Called upon successful deletion of item
@@ -99,7 +101,8 @@ public interface DataStoreCategoryBehavior {
 
     /**
      * Deletes every item of given type from the DataStore that meets the provided
-     * conditions.
+     * conditions. If there is no match, then nothing is deleted and operation
+     * succeeds.
      * @param itemClass Item type to delete from the DataStore
      * @param predicate Predicate condition to filter items to delete
      * @param onItemDeleted Called upon successful deletion of item

@@ -89,8 +89,7 @@ public final class SQLiteStorageAdapterDeleteTest {
         adapter.delete(raphael);
 
         // Get the BlogOwner from the database
-        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
-        assertTrue(blogOwners.isEmpty());
+        assertTrue(adapter.query(BlogOwner.class).isEmpty());
     }
 
     /**
@@ -142,17 +141,10 @@ public final class SQLiteStorageAdapterDeleteTest {
         assertEquals(13, deleted.size());
         assertEquals(expected, deleted);
 
-        // Get the BlogOwner from the database.
-        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
-        assertTrue(blogOwners.isEmpty());
-
-        // Get the Blog from the database.
-        final List<Blog> blogs = adapter.query(Blog.class);
-        assertTrue(blogs.isEmpty());
-
-        // Get the Post from the database.
-        final List<Post> posts = adapter.query(Post.class);
-        assertTrue(posts.isEmpty());
+        // Get data from the database and assert that everything is deleted.
+        assertTrue(adapter.query(BlogOwner.class).isEmpty());
+        assertTrue(adapter.query(Blog.class).isEmpty());
+        assertTrue(adapter.query(Post.class).isEmpty());
     }
 
     /**
@@ -169,12 +161,10 @@ public final class SQLiteStorageAdapterDeleteTest {
         adapter.delete(john);
 
         // Try deleting John again, this time with a true condition
-        QueryPredicate matching = BlogOwner.NAME.eq(john.getName());
-        adapter.delete(john, matching);
+        adapter.delete(john, BlogOwner.NAME.eq(john.getName()));
 
         // Try deleting John again, this time with a false condition
-        QueryPredicate mismatch = BlogOwner.NAME.ne(john.getName());
-        adapter.delete(john, mismatch);
+        adapter.delete(john, BlogOwner.NAME.ne(john.getName()));
     }
 
     /**
@@ -229,8 +219,7 @@ public final class SQLiteStorageAdapterDeleteTest {
         adapter.save(mark);
 
         // Delete everybody whose names start with "J" (i.e. John & Jane)
-        final QueryPredicate predicate = BlogOwner.NAME.beginsWith("J");
-        adapter.delete(BlogOwner.class, predicate);
+        adapter.delete(BlogOwner.class, BlogOwner.NAME.beginsWith("J"));
 
         List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(Collections.singletonList(mark), blogOwners);
@@ -288,12 +277,28 @@ public final class SQLiteStorageAdapterDeleteTest {
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(Collections.singletonList(ownerModel), blogOwners);
 
-        // Get the Blog from the database. Should be deleted.
-        final List<Blog> blogs = adapter.query(Blog.class);
-        assertTrue(blogs.isEmpty());
+        // Get the Blogs and Posts from the database. Should be deleted.
+        assertTrue(adapter.query(Blog.class).isEmpty());
+        assertTrue(adapter.query(Post.class).isEmpty());
+    }
 
-        // Get the Post from the database. Should be deleted
-        final List<Post> posts = adapter.query(Post.class);
-        assertTrue(posts.isEmpty());
+    /**
+     * Test deleting model type by predicate where no model matches.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void deleteNoneDoesNotFail() throws DataStoreException {
+        // Save an entry in storage adapter
+        final BlogOwner john = BlogOwner.builder()
+                .name("John")
+                .build();
+        adapter.save(john);
+
+        // Try deleting with zero matches
+        adapter.delete(BlogOwner.class, QueryPredicates.none());
+
+        // Assert that nothing was deleted
+        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        assertEquals(Collections.singletonList(john), blogOwners);
     }
 }
