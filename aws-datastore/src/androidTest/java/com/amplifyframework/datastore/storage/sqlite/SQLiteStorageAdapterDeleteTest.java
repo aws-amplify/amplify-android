@@ -15,7 +15,9 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -31,6 +33,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -204,8 +207,7 @@ public final class SQLiteStorageAdapterDeleteTest {
         adapter.deleteExpectingError(mark, predicate); // Should not be deleted
 
         List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
-        assertEquals(1, blogOwners.size());
-        assertTrue(blogOwners.contains(mark));
+        assertEquals(Collections.singletonList(mark), blogOwners);
     }
 
 
@@ -233,7 +235,67 @@ public final class SQLiteStorageAdapterDeleteTest {
         adapter.delete(BlogOwner.class, predicate);
 
         List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
-        assertEquals(1, blogOwners.size());
-        assertTrue(blogOwners.contains(mark));
+        assertEquals(Collections.singletonList(mark), blogOwners);
+    }
+
+    /**
+     * Assert that delete model type with predicate deletes items in
+     * the SQLite database without violating foreign key constraints.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void deleteModelTypeWithPredicateCascades() throws DataStoreException {
+        // Create 1 blog owner, which has 3 blogs each, which has 3 posts each.
+        // Insert 1 blog owner, 3 blogs, 9 posts
+        Set<String> expected = new HashSet<>();
+        BlogOwner ownerModel = BlogOwner.builder()
+                .name("Blog Owner 1")
+                .build();
+        adapter.save(ownerModel);
+        for (int blog = 1; blog <= 3; blog++) {
+            Blog blogModel = Blog.builder()
+                    .name("Blog " + blog)
+                    .owner(ownerModel)
+                    .build();
+            adapter.save(blogModel);
+            expected.add(blogModel.getId());
+            for (int post = 1; post <= 3; post++) {
+                Post postModel = Post.builder()
+                        .title("Post " + blog + "-" + post)
+                        .status(PostStatus.INACTIVE)
+                        .rating(5)
+                        .blog(blogModel)
+                        .build();
+                adapter.save(postModel);
+                expected.add(postModel.getId());
+            }
+        }
+
+        // Observe deletions
+        Set<String> deleted = new HashSet<>();
+        adapter.observe()
+                .filter(change -> StorageItemChange.Type.DELETE.equals(change.type()))
+                .map(StorageItemChange::item)
+                .subscribe(model -> deleted.add(model.getId()));
+
+        // Triggers a delete of all blogs.
+        // All posts will be deleted by cascade.
+        adapter.delete(Blog.class, QueryPredicates.all());
+
+        // Assert that cascaded deletions are observed.
+        assertEquals(12, deleted.size());
+        assertEquals(expected, deleted);
+
+        // Get the BlogOwner from the database. Should not have been deleted.
+        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        assertEquals(Collections.singletonList(ownerModel), blogOwners);
+
+        // Get the Blog from the database. Should be deleted.
+        final List<Blog> blogs = adapter.query(Blog.class);
+        assertTrue(blogs.isEmpty());
+
+        // Get the Post from the database. Should be deleted
+        final List<Post> posts = adapter.query(Post.class);
+        assertTrue(posts.isEmpty());
     }
 }

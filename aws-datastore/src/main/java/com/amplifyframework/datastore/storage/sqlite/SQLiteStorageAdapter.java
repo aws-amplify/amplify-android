@@ -538,7 +538,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try (Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), Where.matches(predicate))) {
                 final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(itemClass);
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-                final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
+                final String primaryKeyName = sqliteTable.getPrimaryKey().getAliasedName();
 
                 // identify items that meet the predicate
                 List<T> items = new ArrayList<>();
