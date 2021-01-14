@@ -147,7 +147,7 @@ public interface LocalStorageAdapter {
             @NonNull Class<T> itemClass,
             @NonNull StorageItemChange.Initiator initiator,
             @NonNull QueryPredicate predicate,
-            @NonNull Consumer<Iterator<StorageItemChange<T>>> onSuccess,
+            @NonNull Action onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 
