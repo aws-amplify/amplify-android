@@ -31,6 +31,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -201,6 +202,35 @@ public final class SQLiteStorageAdapterDeleteTest {
         adapter.delete(jane, predicate);
         //noinspection ThrowableNotThrown This is the point of this method.
         adapter.deleteExpectingError(mark, predicate); // Should not be deleted
+
+        List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        assertEquals(1, blogOwners.size());
+        assertTrue(blogOwners.contains(mark));
+    }
+
+
+    /**
+     * Test delete type with predicate.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void deleteModelTypeWithPredicateDeletesData() throws DataStoreException {
+        final BlogOwner john = BlogOwner.builder()
+                .name("John")
+                .build();
+        final BlogOwner jane = BlogOwner.builder()
+                .name("Jane")
+                .build();
+        final BlogOwner mark = BlogOwner.builder()
+                .name("Mark")
+                .build();
+        adapter.save(john);
+        adapter.save(jane);
+        adapter.save(mark);
+
+        // Delete everybody whose names start with "J" (i.e. John & Jane)
+        final QueryPredicate predicate = BlogOwner.NAME.beginsWith("J");
+        adapter.delete(BlogOwner.class, predicate);
 
         List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());

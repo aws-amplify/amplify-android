@@ -74,6 +74,13 @@ final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
 
     @NonNull
     @Override
+    public <T extends Model> Completable delete(@NonNull Class<T> itemClass, @NonNull QueryPredicate predicate) {
+        return toCompletable((onResult, onError) ->
+                dataStore.delete(itemClass, predicate, () -> {}, onError));
+    }
+
+    @NonNull
+    @Override
     public <T extends Model> Observable<T> query(@NonNull Class<T> itemClass) {
         return toObservable((onResult, onError) -> dataStore.query(itemClass, onResult, onError));
     }

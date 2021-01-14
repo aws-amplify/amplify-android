@@ -98,6 +98,22 @@ public interface DataStoreCategoryBehavior {
     );
 
     /**
+     * Deletes every item of given type from the DataStore that meets the provided
+     * conditions.
+     * @param itemClass Item type to delete from the DataStore
+     * @param predicate Predicate condition to filter items to delete
+     * @param onItemDeleted Called upon successful deletion of item
+     * @param onFailureToDelete Called upon failure to delete item
+     * @param <T> The type of item being deleted
+     */
+    <T extends Model> void delete(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate predicate,
+            @NonNull Action onItemDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete
+    );
+
+    /**
      * Query the DataStore to find all items of the requested Java class.
      * @param itemClass Items of this class will be targeted by this query
      * @param onQueryResults Called when a query successfully returns 0 or more results

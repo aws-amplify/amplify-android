@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
@@ -27,6 +28,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.VoidResult;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -234,6 +236,28 @@ public final class SynchronousStorageAdapter {
                     onResult,
                     onError
                 )
+        );
+    }
+
+    /**
+     * Delete every model of given type that matches predicate.
+     * @param modelType Model type to delete
+     * @param predicate Filter to apply for deletion
+     * @param <T> Type of model being deleted
+     * @throws DataStoreException On any failure to delete the models
+     */
+    public <T extends Model> void delete(@NonNull Class<T> modelType, @NonNull QueryPredicate predicate)
+            throws DataStoreException {
+        Await.result(
+                operationTimeoutMs,
+                (Consumer<Object> onResult, Consumer<DataStoreException> onError) ->
+                    asyncDelegate.delete(
+                            modelType,
+                            StorageItemChange.Initiator.DATA_STORE_API,
+                            predicate,
+                            () -> onResult.accept(VoidResult.instance()),
+                            onError
+                    )
         );
     }
 
