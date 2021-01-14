@@ -18,7 +18,6 @@ package com.amplifyframework.datastore.storage;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
@@ -249,15 +248,15 @@ public final class SynchronousStorageAdapter {
     public <T extends Model> void delete(@NonNull Class<T> modelType, @NonNull QueryPredicate predicate)
             throws DataStoreException {
         Await.result(
-                operationTimeoutMs,
-                (Consumer<Object> onResult, Consumer<DataStoreException> onError) ->
-                    asyncDelegate.delete(
-                            modelType,
-                            StorageItemChange.Initiator.DATA_STORE_API,
-                            predicate,
-                            () -> onResult.accept(VoidResult.instance()),
-                            onError
-                    )
+            operationTimeoutMs,
+            (Consumer<Object> onResult, Consumer<DataStoreException> onError) ->
+                asyncDelegate.delete(
+                    modelType,
+                    StorageItemChange.Initiator.DATA_STORE_API,
+                    predicate,
+                    () -> onResult.accept(VoidResult.instance()),
+                    onError
+                )
         );
     }
 

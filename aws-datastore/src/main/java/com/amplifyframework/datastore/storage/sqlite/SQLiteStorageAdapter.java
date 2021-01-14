@@ -521,6 +521,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         });
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <T extends Model> void delete(
             @NonNull Class<T> itemClass,
             @NonNull StorageItemChange.Initiator initiator,
