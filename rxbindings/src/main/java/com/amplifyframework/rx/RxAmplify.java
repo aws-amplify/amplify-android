@@ -63,6 +63,14 @@ public final class RxAmplify {
     }
 
     /**
+     * Checks if Amplify has been configured, yet.
+     * @return True if so, false otherwise
+     */
+    public static boolean isConfigured() {
+        return Amplify.isConfigured();
+    }
+
+    /**
      * Register a plugin with Amplify.
      * @param plugin an implementation of a CATEGORY_TYPE that
      *               conforms to the {@link Plugin} interface.

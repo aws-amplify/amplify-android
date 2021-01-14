@@ -116,6 +116,18 @@ public final class Amplify {
     }
 
     /**
+     * Check is Amplify has been configured. Amplify cannot be used until it has been configured.
+     * {@link #configure(Context)} will throw an {@link AmplifyException} if you try to re-configure
+     * Amplify. To guard against this, you can wrap the call inside an isConfigured() check.
+     * @return True if Amplify has been configured, false otherwise
+     */
+    public static boolean isConfigured() {
+        synchronized (CONFIGURATION_LOCK) {
+            return CONFIGURATION_LOCK.get();
+        }
+    }
+
+    /**
      * Read the configuration from amplifyconfiguration.json file.
      * @param context Android context required to read the contents of file
      * @throws AmplifyException Indicates one of numerous possible failures to configure the Framework

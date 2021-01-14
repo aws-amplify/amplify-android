@@ -82,6 +82,14 @@ class Amplify {
         }
 
         /**
+         * Checks if Amplify has been configured, yet.
+         * @return true if so, false, otherwise.
+         */
+        fun isConfigured(): Boolean {
+            return delegate.isConfigured()
+        }
+
+        /**
          * Add a plugin to the Amplify framework.
          * You must add or remove plugins before calling configure();
          * it is an error to try to add a plugin after calling configure().
