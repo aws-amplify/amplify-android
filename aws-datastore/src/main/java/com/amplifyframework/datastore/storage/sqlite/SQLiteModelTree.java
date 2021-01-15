@@ -81,7 +81,7 @@ final class SQLiteModelTree {
      */
     <T extends Model> List<Model> descendantsOf(Collection<T> root) {
         if (Empty.check(root)) {
-            throw new IllegalArgumentException("Cannot traverse tree from an empty root.");
+            return new ArrayList<>();
         }
         Map<ModelSchema, Set<String>> modelMap = new LinkedHashMap<>();
         ModelSchema rootSchema = registry.getModelSchemaForModelInstance(root.iterator().next());

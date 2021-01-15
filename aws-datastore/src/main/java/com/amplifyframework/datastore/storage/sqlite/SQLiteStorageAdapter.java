@@ -524,6 +524,74 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public <T extends Model> void delete(
+            @NonNull Class<T> itemClass,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull QueryPredicate predicate,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    ) {
+        Objects.requireNonNull(itemClass);
+        Objects.requireNonNull(initiator);
+        Objects.requireNonNull(predicate);
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+
+        threadPool.submit(() -> {
+            try (Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), Where.matches(predicate))) {
+                final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(itemClass);
+                final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+                final String primaryKeyName = sqliteTable.getPrimaryKey().getAliasedName();
+
+                // identify items that meet the predicate
+                List<T> items = new ArrayList<>();
+                if (cursor != null && cursor.moveToFirst()) {
+                    int index = cursor.getColumnIndexOrThrow(primaryKeyName);
+                    do {
+                        String id = cursor.getString(index);
+                        String dummyJson = gson.toJson(Collections.singletonMap("id", id));
+                        T dummyItem = gson.fromJson(dummyJson, itemClass);
+                        items.add(dummyItem);
+                    } while (cursor.moveToNext());
+                }
+
+                // identify every model to delete as a result of this operation
+                List<Model> modelsToDelete = new ArrayList<>(items);
+                List<Model> cascadedModels = sqliteModelTree.descendantsOf(items);
+                modelsToDelete.addAll(cascadedModels);
+
+                // execute local deletions
+                SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, predicate);
+                executeStatement(sqlCommand.getCompiledSqlStatement(), sqlCommand.getBindings());
+
+                // publish every deletion
+                for (Model model : modelsToDelete) {
+                    ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelInstance(model);
+                    itemChangeSubject.onNext(StorageItemChange.builder()
+                            .item(model)
+                            .modelSchema(schema)
+                            .type(StorageItemChange.Type.DELETE)
+                            .predicate(QueryPredicates.all())
+                            .initiator(initiator)
+                            .build());
+                }
+                onSuccess.call();
+            } catch (DataStoreException dataStoreException) {
+                onError.accept(dataStoreException);
+            } catch (Exception someOtherTypeOfException) {
+                DataStoreException dataStoreException = new DataStoreException(
+                        "Error in deleting models.", someOtherTypeOfException,
+                        "See attached exception for details."
+                );
+                onError.accept(dataStoreException);
+            }
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public Cancelable observe(

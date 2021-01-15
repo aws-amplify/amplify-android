@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.QueryOptions;
@@ -70,6 +71,13 @@ final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
     public <T extends Model> Completable delete(@NonNull T item, @NonNull QueryPredicate predicate) {
         return toCompletable((onResult, onError) ->
             dataStore.delete(item, predicate, onResult, onError));
+    }
+
+    @NonNull
+    @Override
+    public <T extends Model> Completable delete(@NonNull Class<T> itemClass, @NonNull QueryPredicate predicate) {
+        return toCompletable((onResult, onError) ->
+                dataStore.delete(itemClass, predicate, NoOpAction.create(), onError));
     }
 
     @NonNull

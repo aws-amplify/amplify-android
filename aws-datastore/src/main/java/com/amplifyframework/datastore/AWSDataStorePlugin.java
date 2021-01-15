@@ -371,6 +371,21 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         ), onFailureToDelete);
     }
 
+    @Override
+    public <T extends Model> void delete(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate predicate,
+            @NonNull Action onItemsDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete) {
+        start(() -> sqliteStorageAdapter.delete(
+                itemClass,
+                StorageItemChange.Initiator.DATA_STORE_API,
+                predicate,
+                onItemsDeleted,
+                onFailureToDelete
+        ), onFailureToDelete);
+    }
+
     /**
      * {@inheritDoc}
      */

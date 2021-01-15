@@ -80,6 +80,19 @@ public interface RxDataStoreCategoryBehavior {
     );
 
     /**
+     * Deletes item from the DataStore, filtered by a predicate.
+     * @param <T> The type of item being deleted
+     * @param itemClass Item type to delete from the DataStore
+     * @param predicate Predicate condition to filter items
+     * @return A {@link Completable} which completes on success, emits error on error
+     */
+    @NonNull
+    <T extends Model> Completable delete(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate predicate
+    );
+
+    /**
      * Query the DataStore to find all items of the requested Java class.
      * @param itemClass Items of this class will be targeted by this query
      * @param <T> The type of items being queried
