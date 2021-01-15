@@ -20,6 +20,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.MatchAllQueryPredicate;
@@ -28,7 +29,6 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSyncMocking.SyncConfigurator;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.EmptyAction;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -280,7 +280,7 @@ public final class AppSyncMockingTest {
                 subscriptionToken -> subscriber.onComplete(),
                 NoOpConsumer.create(),
                 NoOpConsumer.create(),
-                EmptyAction.create()
+                NoOpAction.create()
             ))
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -301,7 +301,7 @@ public final class AppSyncMockingTest {
                 subscriptionToken -> subscriber.onComplete(),
                 NoOpConsumer.create(),
                 NoOpConsumer.create(),
-                EmptyAction.create()
+                NoOpAction.create()
             ))
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -322,7 +322,7 @@ public final class AppSyncMockingTest {
                 subscriptionToken -> subscriber.onComplete(),
                 NoOpConsumer.create(),
                 NoOpConsumer.create(),
-                EmptyAction.create()
+                NoOpAction.create()
             ))
             .test()
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)

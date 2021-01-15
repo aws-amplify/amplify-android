@@ -23,12 +23,12 @@ import androidx.annotation.RawRes;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.HubAccumulator;
 
 import java.util.Objects;
@@ -119,7 +119,7 @@ final class DataStoreCategoryConfigurator {
         dataStoreCategory.addPlugin(awsDataStorePlugin);
         dataStoreCategory.configure(dataStoreConfiguration, context);
         dataStoreCategory.initialize(context);
-        dataStoreCategory.start(EmptyAction.create(), NoOpConsumer.create());
+        dataStoreCategory.start(NoOpAction.create(), NoOpConsumer.create());
 
         initializationObserver.await(timeoutAmount, timeoutUnit);
 
