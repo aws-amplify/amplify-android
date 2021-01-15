@@ -36,9 +36,7 @@ public final class RetryStrategy {
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private RetryStrategy() {
-
-    }
+    private RetryStrategy() {}
 
     /**
      * Simple implementation of an exponential backoff startegy that can be used with RxCompletables.

@@ -39,8 +39,7 @@ public abstract class LoggingPlugin<E> implements LoggingCategoryBehavior, Plugi
 
     @WorkerThread
     @Override
-    public void initialize(@NonNull Context context) throws AmplifyException {
-    }
+    public void initialize(@NonNull Context context) throws AmplifyException {}
 
     @Override
     public final boolean equals(Object object) {

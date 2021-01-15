@@ -19,5 +19,4 @@ package com.amplifyframework.predictions.result;
  * Interface to group different types of results from
  * identify operation in Predictions category.
  */
-public interface IdentifyResult {
-}
+public interface IdentifyResult {}
