@@ -62,8 +62,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull Context context,
             @NonNull Consumer<List<ModelSchema>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
-    ) {
-    }
+    ) {}
 
     @Override
     public <T extends Model> void save(

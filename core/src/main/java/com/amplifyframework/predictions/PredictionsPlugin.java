@@ -38,6 +38,5 @@ public abstract class PredictionsPlugin<E> implements PredictionsCategoryBehavio
 
     @WorkerThread
     @Override
-    public void initialize(@NonNull Context context) throws AmplifyException {
-    }
+    public void initialize(@NonNull Context context) throws AmplifyException {}
 }

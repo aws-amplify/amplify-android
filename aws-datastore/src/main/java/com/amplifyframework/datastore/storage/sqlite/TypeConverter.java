@@ -34,8 +34,7 @@ public final class TypeConverter {
     /**
      * Dis-allows instantiation of the static utility.
      */
-    private TypeConverter() {
-    }
+    private TypeConverter() {}
 
     static {
         JAVA_TO_SQL.put(JavaFieldType.BOOLEAN, SQLiteDataType.INTEGER);

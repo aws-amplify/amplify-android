@@ -3,10 +3,8 @@
   "version": "1.0",
   "logging": {
     "plugins": {
-      "SimpleLoggingPlugin": {
-      },
-      "BadInitLoggingPlugin": {
-      }
+      "SimpleLoggingPlugin": {},
+      "BadInitLoggingPlugin": {}
     }
   }
 }

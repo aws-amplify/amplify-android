@@ -20,6 +20,5 @@ package com.amplifyframework.core.async;
  */
 public final class NoOpCancelable implements Cancelable {
     @Override
-    public void cancel() {
-    }
+    public void cancel() {}
 }

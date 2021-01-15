@@ -39,8 +39,7 @@ public final class Temporal {
     /**
      * This class acts as a namespace and should not be directly instantiated.
      */
-    private Temporal() {
-    }
+    private Temporal() {}
 
     /**
      * Represents a valid extended ISO-8601 Date string, with an optional timezone offset.
