@@ -773,7 +773,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final QueryPredicate condition = matchId.and(predicate);
 
         Iterator<? extends Model> result = Single.<Iterator<? extends Model>>create(emitter -> {
-            query(schema.getModelClass(), Where.matches(condition), emitter::onSuccess, emitter::onError);
+            if (model instanceof SerializedModel) {
+                query(modelName, Where.matches(condition), emitter::onSuccess, emitter::onError);
+            } else {
+                query(model.getClass(), Where.matches(condition), emitter::onSuccess, emitter::onError);
+            }
         }).blockingGet();
         return result.hasNext() ? result.next() : null;
     }
