@@ -39,6 +39,5 @@ public abstract class HubPlugin<E> implements HubCategoryBehavior, Plugin<E> {
 
     @WorkerThread
     @Override
-    public void initialize(@NonNull Context context) throws AmplifyException {
-    }
+    public void initialize(@NonNull Context context) throws AmplifyException {}
 }

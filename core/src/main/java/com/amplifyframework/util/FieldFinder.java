@@ -36,8 +36,7 @@ public final class FieldFinder {
     /**
      * Dis-allows instantiation of this utility.
      */
-    private FieldFinder() {
-    }
+    private FieldFinder() {}
 
     /**
      * Get a set of all the fields of a class that are

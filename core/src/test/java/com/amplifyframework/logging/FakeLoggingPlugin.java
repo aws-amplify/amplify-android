@@ -51,8 +51,7 @@ final class FakeLoggingPlugin<E> extends LoggingPlugin<E> {
     }
 
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) {
-    }
+    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) {}
 
     @Nullable
     @Override

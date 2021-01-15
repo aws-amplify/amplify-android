@@ -26,8 +26,7 @@ public final class EmptyAction implements Action {
     private EmptyAction() {}
 
     @Override
-    public void call() {
-    }
+    public void call() {}
 
     /**
      * Creates a new instance of an {@link EmptyAction}.
