@@ -114,7 +114,7 @@ public final class Amplify {
     /**
      * Read the configuration from amplifyconfiguration.json file.
      * @param context Android context required to read the contents of file
-     * @throws AmplifyException thrown when already configured or there is no plugin found for a configuration
+     * @throws AmplifyException Indicates one of numerous possible failures to configure the Framework
      */
     public static void configure(@NonNull Context context) throws AmplifyException {
         configure(AmplifyConfiguration.fromConfigFile(context), context);
@@ -124,7 +124,7 @@ public final class Amplify {
      * Configure Amplify with AmplifyConfiguration object.
      * @param configuration AmplifyConfiguration object for configuration via code
      * @param context An Android Context
-     * @throws AmplifyException thrown when already configured or there is no configuration found for a plugin
+     * @throws AmplifyException Indicates one of numerous possible failures to configure the Framework
      */
     public static void configure(@NonNull final AmplifyConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
@@ -133,10 +133,7 @@ public final class Amplify {
 
         synchronized (CONFIGURATION_LOCK) {
             if (CONFIGURATION_LOCK.get()) {
-                throw new AmplifyException(
-                    "The client issued a subsequent call to `Amplify.configure` after the first had already succeeded.",
-                        "Be sure to only call Amplify.configure once"
-                );
+                throw new AlreadyConfiguredException();
             }
 
             // Configure User-Agent utility
@@ -233,4 +230,20 @@ public final class Amplify {
         REMOVE
     }
 
+    /**
+     * Amplify can only be configured once per process. This means that {@link #configure(Context)}
+     * and/or {@link #configure(AmplifyConfiguration, Context)} can only be called once per process.
+     * If the user tries to re-configure Amplify after it has already been configured, an
+     * AlreadyConfiguredException will be thrown.
+     */
+    public static final class AlreadyConfiguredException extends AmplifyException {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * Constructs an AlreadyConfiguredException, indicating that Amplify has already been configured.
+         */
+        private AlreadyConfiguredException() {
+            super("Amplify has already been configured.", "Remove the duplicate call to `Amplify.configure()`");
+        }
+    }
 }
