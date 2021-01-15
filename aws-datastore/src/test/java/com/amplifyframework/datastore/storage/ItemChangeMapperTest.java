@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Before;
@@ -73,6 +74,7 @@ public final class ItemChangeMapperTest {
                 .changeId(changeId)
                 .initiator(StorageItemChange.Initiator.DATA_STORE_API)
                 .item(joe)
+                .patchItem(SerializedModel.create(joe, ModelSchema.fromModelClass(BlogOwner.class)))
                 .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
                 .predicate(QueryPredicates.all())
                 .type(StorageItemChange.Type.UPDATE)
@@ -101,6 +103,7 @@ public final class ItemChangeMapperTest {
                 .changeId(changeId)
                 .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
                 .item(joe)
+                .patchItem(SerializedModel.create(joe, ModelSchema.fromModelClass(BlogOwner.class)))
                 .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
                 .predicate(QueryPredicates.all())
                 .type(StorageItemChange.Type.DELETE)

@@ -21,7 +21,6 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
-import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
@@ -33,7 +32,6 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
-import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.parenting.Address;
 import com.amplifyframework.testmodels.parenting.Child;
 import com.amplifyframework.testmodels.parenting.City;
@@ -45,7 +43,6 @@ import com.amplifyframework.testutils.Resources;
 import org.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
@@ -54,8 +51,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 
 /**
  * Tests the {@link AppSyncRequestFactory}.

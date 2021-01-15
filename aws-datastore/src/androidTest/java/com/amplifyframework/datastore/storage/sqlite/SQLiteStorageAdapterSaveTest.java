@@ -287,36 +287,39 @@ public final class SQLiteStorageAdapterSaveTest {
     }
 
     /**
-     * Verify that saving an item that already exists emits an StorageItemChange event that only contains the fields
-     * that are different.
+     * Verify that saving an item that already exists emits a StorageItemChange event with a patchItem that only
+     * contains the fields that are different.
      *
      * @throws AmplifyException On failure to obtain ModelSchema from model class.
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void saveOnlyUpdatesFieldsThatHaveChanged() throws AmplifyException, InterruptedException {
-        TestObserver<StorageItemChange<? extends Model>> observer = adapter.observe().test();
-
-        final BlogOwner john = BlogOwner.builder()
-                .name("John")
+    public void patchItemOnlyHasChangedFields() throws AmplifyException, InterruptedException {
+        // Create a BlogOwner.
+        final BlogOwner johnSmith = BlogOwner.builder()
+                .name("John Smith")
                 .wea("ther")
                 .build();
-        adapter.save(john);
+        adapter.save(johnSmith);
 
-        observer.await(5, TimeUnit.SECONDS);
+        // Start observing for changes
+        TestObserver<StorageItemChange<? extends Model>> observer = adapter.observe().test();
 
-        Map<String, Object> expectedData = new HashMap<>();
-        expectedData.put("id", john.getId());
-        expectedData.put("name", "John");
-        expectedData.put("wea", "ther");
+        // Update one field on the BlogOwner.
+        BlogOwner johnAdams = johnSmith.copyOfBuilder().name("John Adams").build();
+        adapter.save(johnAdams);
 
-        SerializedModel expected = SerializedModel.builder()
-            .serializedData(expectedData)
-            .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
-            .build();
-
-        observer.assertValue(storageItemChange -> storageItemChange.item().equals(expected))
-            .assertNoErrors()
-            .assertComplete();
+        // Observe that the StorageItemChange contains an item with only the fields that changed (`id`, and `name`, but
+        // not `wea`)
+        Map<String, Object> serializedData = new HashMap<>();
+        serializedData.put("id", johnAdams.getId());
+        serializedData.put("name", "John Adams");
+        SerializedModel expectedItem = SerializedModel.builder()
+                .serializedData(serializedData)
+                .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                .build();
+        observer.await(1, TimeUnit.SECONDS);
+        observer.assertValueCount(1);
+        observer.assertValueAt(0, storageItemChange -> storageItemChange.patchItem().equals(expectedItem));
     }
 }
