@@ -37,8 +37,7 @@ public final class NoOpConsumer<T> implements Consumer<T> {
     }
 
     @Override
-    public void accept(@NonNull T value) {
-    }
+    public void accept(@NonNull T value) {}
 
     @Override
     public int hashCode() {

@@ -515,9 +515,7 @@ public final class SQLiteStorageReservedWordTest {
         private static final String AMPLIFY_MODEL_VERSION = "305719dace2b972243b439fbd551fe1a";
         private static AmplifyModelProvider amplifyGeneratedModelInstance;
 
-        private AmplifyModelProvider() {
-
-        }
+        private AmplifyModelProvider() {}
 
         /**
          * Instance of AmplifyModelProvider.

@@ -93,10 +93,16 @@
             <!--
                 Utility class constructors should be private. This
                 happens widely in the code base, and is the desirable
-                default. These should also have empty construtors, which
-                might as well be consisely written.
+                default. These should also have empty constructors, which
+                might as well be concisely written.
             -->
             <property name="allowEmptyConstructors" value="true" />
+            <!--
+                Some no-op operations must be defined to satisfy the
+                interface requirements. These will be more concisely
+                written by allowing this property.
+            -->
+            <property name="allowEmptyMethods" value="true" />
             <!--
                  false is already the default value for
                  WhitespaceAround.  This documents that we have this
