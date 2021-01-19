@@ -30,6 +30,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.graphql.model.ModelSubscription;
+import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
@@ -37,7 +38,6 @@ import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
-import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
@@ -281,7 +281,7 @@ public final class OwnerBasedAuthTest {
             NoOpConsumer.create(),
             NoOpConsumer.create(),
             NoOpConsumer.create(),
-            EmptyAction.create()
+            NoOpAction.create()
         );
     }
 
