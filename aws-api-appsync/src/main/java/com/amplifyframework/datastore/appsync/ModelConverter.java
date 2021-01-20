@@ -53,7 +53,7 @@ public final class ModelConverter {
 
     /**
      * Convert a Map&lt;String, Object&gt; to a Model.
-     * @param map a a Map&lt;String, Object&gt;
+     * @param map a Map&lt;String, Object&gt;.
      * @param modelClass Class of Model to convert the Map to.
      * @param <T> type of the Model instance to convert to.
      * @return a Model instance created from the provided Map.
@@ -64,4 +64,3 @@ public final class ModelConverter {
         return gson.fromJson(jsonString, modelClass);
     }
 }
-
