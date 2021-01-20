@@ -30,7 +30,7 @@ import java.util.Map;
  */
 public final class ModelConverter {
 
-    private ModelConverter() { }
+    private ModelConverter() {}
 
     /**
      * Convert a Model to a Map&lt;String, Object&gt;.
