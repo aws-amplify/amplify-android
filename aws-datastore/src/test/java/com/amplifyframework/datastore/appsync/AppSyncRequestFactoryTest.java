@@ -302,6 +302,32 @@ public final class AppSyncRequestFactoryTest {
         );
     }
 
+    /**
+     * Verify that only the fields included in serializedData on the SerializedModel are included on the API request.
+     * To test this, create a SerializedModel of a BlogOwner, which only has "id", and "name", not the "wea" field.
+     * Then, verify that the request does not contain "wea" field.
+     *
+     * @throws JSONException from JSONAssert.assertEquals JSON parsing error
+     * @throws AmplifyException from ModelSchema.fromModelClass to convert model to schema
+     */
+    @Test
+    public void validateUpdateMutationOnlyContainsChangedFields() throws JSONException, AmplifyException {
+        ModelSchema modelSchema = ModelSchema.fromModelClass(BlogOwner.class);
+        Map<String, Object> serializedData = new HashMap<>();
+        serializedData.put("id", "5aef1282-64d6-4fa8-ba2c-290f9d9c6973");
+        serializedData.put("name", "John Smith");
+
+        SerializedModel blogOwner = SerializedModel.builder()
+                .serializedData(serializedData)
+                .modelSchema(modelSchema)
+                .build();
+
+        // Assert
+        JSONAssert.assertEquals(Resources.readAsString("update-blog-owner-only-changed-fields.txt"),
+            AppSyncRequestFactory.buildUpdateRequest(
+                modelSchema, blogOwner, 1, QueryPredicates.all()).getContent(), true);
+    }
+
     private Parent buildTestParentModel() {
         Address address = Address.builder()
                 .street("555 Five Fiver")

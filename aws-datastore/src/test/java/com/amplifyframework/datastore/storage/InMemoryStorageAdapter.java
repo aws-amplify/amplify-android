@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -73,10 +74,12 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<DataStoreException> onError) {
         StorageItemChange.Type type = StorageItemChange.Type.CREATE;
         final int index = indexOf(item);
+        Model savedItem = null;
         if (index > -1) {
             // There is an existing record with that ID; this is an update.
             type = StorageItemChange.Type.UPDATE;
-            Model savedItem = items.get(index);
+            savedItem = items.get(index);
+
             if (!predicate.evaluate(savedItem)) {
                 onError.accept(new DataStoreException(
                     "Conditional check failed.",
@@ -98,6 +101,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         items.add(item);
         StorageItemChange<T> change = StorageItemChange.<T>builder()
             .item(item)
+            .patchItem(SerializedModel.difference(item, savedItem, schema))
             .modelSchema(schema)
             .type(type)
             .predicate(predicate)
@@ -177,6 +181,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         }
         StorageItemChange<T> deletion = StorageItemChange.<T>builder()
             .item((T) savedItem)
+            .patchItem(SerializedModel.create(savedItem, schema))
             .modelSchema(schema)
             .type(StorageItemChange.Type.DELETE)
             .predicate(predicate)

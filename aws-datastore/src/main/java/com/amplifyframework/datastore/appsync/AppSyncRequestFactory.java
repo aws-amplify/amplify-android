@@ -341,7 +341,14 @@ final class AppSyncRequestFactory {
             try {
                 final ModelAssociation association = schema.getAssociations().get(fieldName);
                 if (association == null) {
-                    result.put(fieldName, extractFieldValue(modelField, instance));
+                    if (instance instanceof SerializedModel) {
+                        Map<String, Object> serializedData = ((SerializedModel) instance).getSerializedData();
+                        if (serializedData.containsKey(modelField.getName())) {
+                            result.put(fieldName, serializedData.get(modelField.getName()));
+                        }
+                    } else {
+                        result.put(fieldName, extractFieldValue(modelField, instance));
+                    }
                 } else if (association.isOwner()) {
                     result.put(association.getTargetName(), extractAssociateId(modelField, instance));
                 }

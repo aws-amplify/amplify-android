@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.logging.Logger;
@@ -78,14 +79,14 @@ final class StorageObserver {
         );
     }
 
-    private <T extends Model> PendingMutation<T> toPendingMutation(StorageItemChange<T> change) {
+    private PendingMutation<SerializedModel> toPendingMutation(StorageItemChange<? extends Model> change) {
         switch (change.type()) {
             case CREATE:
-                return PendingMutation.creation(change.item(), change.modelSchema());
+                return PendingMutation.creation(change.patchItem(), change.modelSchema());
             case UPDATE:
-                return PendingMutation.update(change.item(), change.modelSchema(), change.predicate());
+                return PendingMutation.update(change.patchItem(), change.modelSchema(), change.predicate());
             case DELETE:
-                return PendingMutation.deletion(change.item(), change.modelSchema(), change.predicate());
+                return PendingMutation.deletion(change.patchItem(), change.modelSchema(), change.predicate());
             default:
                 throw new IllegalStateException("Unknown mutation type = " + change.type());
         }

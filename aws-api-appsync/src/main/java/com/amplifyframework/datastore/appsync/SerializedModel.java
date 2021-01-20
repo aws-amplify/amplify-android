@@ -45,6 +45,45 @@ public final class SerializedModel implements Model {
     }
 
     /**
+     * Creates a SerializedModel from a generated Java Model object.
+     * @param model Model object
+     * @param modelSchema schema for the Model object
+     * @param <T> type of the Model object.
+     * @return SerializedModel equivalent of the Model object.
+     */
+    public static <T extends Model> SerializedModel create(T model, ModelSchema modelSchema) {
+        return SerializedModel.builder()
+                .serializedData(ModelConverter.toMap(model))
+                .modelSchema(modelSchema)
+                .build();
+    }
+
+    /**
+     * Computes the difference between two Models, comparing equality of each field value for each Model, and returns
+     * the difference as a SerializedModel.
+     * @param updated the updated Model, whose values will be used to build the resulting SerializedModel.
+     * @param original the original Model to compare against.
+     * @param modelSchema ModelSchema for the Models between compared.
+     * @param <T> type of the Models being compared.
+     * @return a SerializedModel, containing only the values from the updated Model that are different from the
+     *         corresponding values in original.
+     */
+    public static <T extends Model> SerializedModel difference(T updated, T original, ModelSchema modelSchema) {
+        Map<String, Object> updatedMap = ModelConverter.toMap(updated);
+        Map<String, Object> originalMap = ModelConverter.toMap(original);
+        Map<String, Object> patchMap = new HashMap<>();
+        for (String key : updatedMap.keySet()) {
+            if ("id".equals(key) || !ObjectsCompat.equals(originalMap.get(key), updatedMap.get(key))) {
+                patchMap.put(key, updatedMap.get(key));
+            }
+        }
+        return SerializedModel.builder()
+                .serializedData(patchMap)
+                .modelSchema(modelSchema)
+                .build();
+    }
+
+    /**
      * Return a builder of {@link SerializedModel}.
      * @return A serialized model builder
      */
