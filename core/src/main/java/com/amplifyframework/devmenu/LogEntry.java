@@ -22,8 +22,8 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.logging.LogLevel;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -33,7 +33,7 @@ import java.util.Objects;
 public final class LogEntry implements Comparable<LogEntry> {
     // The format for the log's date and time.
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
-    private final LocalDateTime dateTime;
+    private final Date date;
     private final String namespace;
     private final String message;
     private final Throwable throwable;
@@ -42,15 +42,15 @@ public final class LogEntry implements Comparable<LogEntry> {
     /**
      * Creates a new LogEntry representing a log with the given time, tag, message,
      * and throwable that was logged at the given level.
-     * @param dateTime the date and time of the log.
+     * @param date the date of the log.
      * @param namespace the namespace of the logger that emitted the log.
      * @param message the message for the log.
      * @param throwable the Throwable associated with the log.
      * @param logLevel the level the log was logged at.
      */
-    public LogEntry(@NonNull LocalDateTime dateTime, @Nullable String namespace, @Nullable String message,
+    public LogEntry(@NonNull Date date, @Nullable String namespace, @Nullable String message,
                     @Nullable Throwable throwable, @NonNull LogLevel logLevel) {
-        this.dateTime = Objects.requireNonNull(dateTime);
+        this.date = Objects.requireNonNull(date);
         this.logLevel = Objects.requireNonNull(logLevel);
         this.namespace = namespace;
         this.message = message;
@@ -61,8 +61,8 @@ public final class LogEntry implements Comparable<LogEntry> {
      * Gets the date and time of the log.
      * @return the date and time of the log.
      */
-    public LocalDateTime getDateTime() {
-        return dateTime;
+    public Date getDate() {
+        return date;
     }
 
     /**
@@ -99,7 +99,7 @@ public final class LogEntry implements Comparable<LogEntry> {
 
     @Override
     public int compareTo(LogEntry logEntry) {
-        return getDateTime().compareTo(logEntry.getDateTime());
+        return getDate().compareTo(logEntry.getDate());
     }
 
     @Override
@@ -111,14 +111,14 @@ public final class LogEntry implements Comparable<LogEntry> {
             return false;
         }
         LogEntry logEntry = (LogEntry) object;
-        return dateTime.equals(logEntry.getDateTime()) && ObjectsCompat.equals(namespace, logEntry.getNamespace())
+        return date.equals(logEntry.getDate()) && ObjectsCompat.equals(namespace, logEntry.getNamespace())
                 && ObjectsCompat.equals(message, logEntry.getMessage()) && logLevel == logEntry.getLogLevel()
                 && ObjectsCompat.equals(throwable, logEntry.getThrowable());
     }
 
     @Override
     public int hashCode() {
-        int result = getDateTime().hashCode();
+        int result = getDate().hashCode();
         result = 31 * result + (getNamespace() != null ? getNamespace().hashCode() : 0);
         result = 31 * result + (getMessage() != null ? getMessage().hashCode() : 0);
         result = 31 * result + (getThrowable() != null ? getThrowable().hashCode() : 0);
@@ -131,7 +131,8 @@ public final class LogEntry implements Comparable<LogEntry> {
      * @return a String representing this log.
      */
     public String toString() {
-        String dateString = dateTime.format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+        SimpleDateFormat df = new SimpleDateFormat(DATE_TIME_FORMAT, Locale.US);
+        String dateString = df.format(date);
         String exceptionTrace = throwable == null ? "" : Log.getStackTraceString(throwable);
         if (!exceptionTrace.isEmpty() && !exceptionTrace.endsWith("\n")) {
             exceptionTrace += "\n";
