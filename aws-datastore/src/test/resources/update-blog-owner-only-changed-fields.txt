@@ -1,0 +1,22 @@
+{"query": "mutation UpdateBlogOwner($input: UpdateBlogOwnerInput!) {
+  updateBlogOwner(input: $input) {
+    _deleted
+    _lastChangedAt
+    _version
+    blog {
+      id
+    }
+    id
+    name
+    wea
+  }
+}
+",
+"variables": {
+    "input":{
+       "name":"John Smith",
+       "id":"5aef1282-64d6-4fa8-ba2c-290f9d9c6973",
+       "_version":1
+    }
+  }
+}
