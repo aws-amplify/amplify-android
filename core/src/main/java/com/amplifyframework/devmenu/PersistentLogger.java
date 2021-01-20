@@ -23,7 +23,7 @@ import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Immutable;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -113,6 +113,6 @@ final class PersistentLogger implements Logger {
         if (logs.size() == MAX_NUM_LOGS) {
             logs.remove(0);
         }
-        logs.add(new LogEntry(LocalDateTime.now(), namespace, message, throwable, logLevel));
+        logs.add(new LogEntry(new Date(), namespace, message, throwable, logLevel));
     }
 }
