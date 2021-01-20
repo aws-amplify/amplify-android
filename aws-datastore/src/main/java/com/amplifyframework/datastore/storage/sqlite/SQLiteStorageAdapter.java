@@ -270,17 +270,23 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
 
                 final StorageItemChange.Type writeType;
-                Model existingItem = query(item, QueryPredicates.all());
-                if (existingItem != null) {
+                SerializedModel patchItem = null;
+                if (modelExists(item, QueryPredicates.all())) {
                     // if data exists already, then UPDATE the row
                     writeType = StorageItemChange.Type.UPDATE;
 
                     // Check if existing data meets the condition
-                    if (query(item, predicate) == null) {
+                    if (!modelExists(item, predicate)) {
                         throw new DataStoreException(
                             "Save failed because condition did not match existing model instance.",
                             "The save will continue to fail until the model instance is updated."
                         );
+                    }
+                    if (initiator == StorageItemChange.Initiator.DATA_STORE_API) {
+                        // When saving items via the DataStore API, compute a SerializedModel containing only the fields
+                        // that differ from the model currently in the local storage.  This is not necessary when save
+                        // is initiated by the sync engine, so skip it for optimization to avoid the extra SQL query.
+                        patchItem = SerializedModel.difference(item, query(item), modelSchema);
                     }
                 } else if (!QueryPredicates.all().equals(predicate)) {
                     // insert not permitted with a condition
@@ -300,7 +306,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 // publish successful save
                 StorageItemChange<T> change = StorageItemChange.<T>builder()
                         .item(item)
-                        .patchItem(SerializedModel.difference(item, existingItem, modelSchema))
+                        .patchItem(patchItem != null ? patchItem : SerializedModel.create(item, modelSchema))
                         .modelSchema(modelSchema)
                         .type(writeType)
                         .predicate(predicate)
@@ -459,7 +465,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
 
                 // Check if data being deleted exists; "Succeed" deletion in that case.
-                if (query(item, QueryPredicates.all()) == null) {
+                if (!modelExists(item, QueryPredicates.all())) {
                     LOG.verbose(modelName + " model with id = " + item.getId() + " does not exist.");
                     // Pass back item change instance without publishing it.
                     onSuccess.accept(StorageItemChange.<T>builder()
@@ -474,7 +480,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 }
 
                 // Check if existing data meets the condition
-                if (query(item, predicate) == null) {
+                if (!modelExists(item, predicate)) {
                     throw new DataStoreException(
                         "Deletion failed because condition did not match existing model instance.",
                         "The deletion will continue to fail until the model instance is updated."
@@ -756,27 +762,38 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         }
     }
 
-    /**
-     * Helper method to synchronously query for a single model instance.  Used before saving and deleting to check if
-     * the item exists.
-     * @param model a Model that we want to query for the same type and id in SQLite.
-     * @param predicate a predicate to apply to the query.
-     * @return the Model instance from SQLite, if it exists, otherwise null.
-     */
-    private Model query(Model model, QueryPredicate predicate) {
+    private boolean modelExists(Model model, QueryPredicate predicate) throws DataStoreException {
         final String modelName = getModelName(model);
         final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable table = SQLiteTable.fromSchema(schema);
+        final String tableName = table.getName();
         final String primaryKeyName = table.getPrimaryKeyColumnName();
 
         final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getId());
         final QueryPredicate condition = matchId.and(predicate);
+        try (Cursor cursor = getQueryAllCursor(tableName, Where.matches(condition))) {
+            return cursor.moveToFirst();
+        }
+    }
+
+    /**
+     * Helper method to synchronously query for a single model instance.  Used before any save initiated by
+     * DATASTORE_API in order to determine which fields have changed.
+     * @param model a Model that we want to query for the same type and id in SQLite.
+     * @return the Model instance from SQLite, if it exists, otherwise null.
+     */
+    private Model query(Model model) {
+        final String modelName = getModelName(model);
+        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final SQLiteTable table = SQLiteTable.fromSchema(schema);
+        final String primaryKeyName = table.getPrimaryKeyColumnName();
+        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getId());
 
         Iterator<? extends Model> result = Single.<Iterator<? extends Model>>create(emitter -> {
             if (model instanceof SerializedModel) {
-                query(modelName, Where.matches(condition), emitter::onSuccess, emitter::onError);
+                query(modelName, Where.matches(matchId), emitter::onSuccess, emitter::onError);
             } else {
-                query(model.getClass(), Where.matches(condition), emitter::onSuccess, emitter::onError);
+                query(model.getClass(), Where.matches(matchId), emitter::onSuccess, emitter::onError);
             }
         }).blockingGet();
         return result.hasNext() ? result.next() : null;
