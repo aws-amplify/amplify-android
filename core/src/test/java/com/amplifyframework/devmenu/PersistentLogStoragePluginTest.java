@@ -44,7 +44,8 @@ public final class PersistentLogStoragePluginTest {
         logger.error(message, throwable);
         List<LogEntry> logs = plugin.getLogs();
         assertEquals(1, logs.size());
-        LogEntry expectedLog = new LogEntry(logs.get(0).getDateTime(), logger.getNamespace(), message,
+
+        LogEntry expectedLog = new LogEntry(logs.get(0).getDate(), logger.getNamespace(), message,
                 throwable, LogLevel.ERROR);
         assertEquals(expectedLog, logs.get(0));
     }
