@@ -15,6 +15,7 @@ Please search the [existing issues](https://github.com/aws-amplify/amplify-andro
 4. Any relevant [logs](https://github.com/aws-amplify/amplify-android/blob/main/CONTRIBUTING.md#getting-more-output)
 5. Any relevant guides or documentation you're referencing
 6. For API or DataStore issues, your `schema.graphql`
+7. For CLI issues, include any relevant logs in `~/.amplify/logs/amplify-cli-<date>.log`
 
 Please use [syntax highlighting](https://docs.github.com/en/free-pro-team@latest/github/writing-on-github/creating-and-highlighting-code-blocks#fenced-code-blocks) for any code/logs.
 
