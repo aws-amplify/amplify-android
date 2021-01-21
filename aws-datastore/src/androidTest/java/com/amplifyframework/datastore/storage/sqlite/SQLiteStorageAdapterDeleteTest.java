@@ -301,4 +301,33 @@ public final class SQLiteStorageAdapterDeleteTest {
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(Collections.singletonList(john), blogOwners);
     }
+
+    /**
+     * Test deleting item with many children does not trigger SQLite exception.
+     * SQLite places a hard limit of 1000 on expression tree depth, so chaining too many
+     * predicates can potentially trigger an error.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void deleteModelWithManyChildrenSucceeds() throws DataStoreException {
+        // Create model with more than 1000 child models
+        BlogOwner ownerModel = BlogOwner.builder()
+                .name("BlogOwner")
+                .build();
+        adapter.save(ownerModel);
+        for (int blog = 0; blog < 1001; blog++) {
+            Blog blogModel = Blog.builder()
+                    .name("Blog " + blog)
+                    .owner(ownerModel)
+                    .build();
+            adapter.save(blogModel);
+        }
+
+        // Delete parent model
+        adapter.delete(ownerModel);
+
+        // Assert parent and children are both deleted
+        assertTrue(adapter.query(BlogOwner.class).isEmpty());
+        assertTrue(adapter.query(Blog.class).isEmpty());
+    }
 }

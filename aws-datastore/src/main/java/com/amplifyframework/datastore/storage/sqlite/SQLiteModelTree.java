@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
+import android.database.MergeCursor;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 
@@ -116,32 +117,8 @@ final class SQLiteModelTree {
                 case "HasMany":
                     String childModel = association.getAssociatedType(); // model name
                     ModelSchema childSchema = registry.getModelSchemaForModelClass(childModel);
-                    SQLiteTable childTable = SQLiteTable.fromSchema(childSchema);
-                    String childPrimaryKey = childTable.getPrimaryKey().getAliasedName();
-                    QueryField queryField = QueryField.field(parentTable.getPrimaryKeyColumnName());
-
-                    // Chain predicates with OR operator.
-                    QueryPredicate predicate = QueryPredicates.none();
-                    for (String parentId : parentIds) {
-                        QueryPredicate operation = queryField.eq(parentId);
-                        predicate = predicate.or(operation);
-                    }
-
-                    // Collect every children one level deeper than current level
-                    // SELECT * FROM <CHILD_TABLE> WHERE <PARENT> = <ID_1> OR <PARENT> = <ID_2> OR ...
-                    QueryOptions options = Where.matches(predicate);
-                    Set<String> childrenIds = new HashSet<>();
-                    try (Cursor cursor = queryAll(childModel, options)) {
-                        if (cursor != null && cursor.moveToFirst()) {
-                            int index = cursor.getColumnIndexOrThrow(childPrimaryKey);
-                            do {
-                                childrenIds.add(cursor.getString(index));
-                            } while (cursor.moveToNext());
-                        }
-                    } catch (DataStoreException exception) {
-                        // Don't cut the search short. Populate rest of the tree.
-                        LOG.error("Failed to query children of deleted model(s).", exception);
-                    }
+                    QueryField parentIdField = QueryField.field(parentTable.getPrimaryKeyColumnName());
+                    Set<String> childrenIds = childrenOf(parentIdField, parentIds, childSchema);
 
                     // Add queried result to the map
                     if (!childrenIds.isEmpty()) {
@@ -160,11 +137,65 @@ final class SQLiteModelTree {
         }
     }
 
+    private Set<String> childrenOf(
+            QueryField parentIdField,
+            Collection<String> parentIds,
+            ModelSchema childSchema
+    ) {
+        SQLiteTable childTable = SQLiteTable.fromSchema(childSchema);
+        String childPrimaryKey = childTable.getPrimaryKey().getAliasedName();
+
+        // Chain predicates with OR operator.
+        // Beware the SQLite expression tree size limit of 1000
+        List<QueryOptions> options = new ArrayList<>();
+        QueryPredicate predicate = QueryPredicates.none();
+        int currentSize = 0;
+        for (String parentId : parentIds) {
+            // Stop appending if size exceeds 900
+            if (currentSize > 900) {
+                options.add(Where.matches(predicate));
+                predicate = QueryPredicates.none();
+                currentSize = 0;
+            }
+            QueryPredicate operation = parentIdField.eq(parentId);
+            predicate = predicate.or(operation);
+            currentSize++;
+        }
+        options.add(Where.matches(predicate));
+
+        // Collect every children one level deeper than current level
+        // SELECT * FROM <CHILD_TABLE> WHERE <PARENT> = <ID_1> OR <PARENT> = <ID_2> OR ...
+        Set<String> childrenIds = new HashSet<>();
+        try (Cursor cursor = querySeparatelyAndMerge(childSchema, options)) {
+            if (cursor.moveToFirst()) {
+                int index = cursor.getColumnIndexOrThrow(childPrimaryKey);
+                do {
+                    childrenIds.add(cursor.getString(index));
+                } while (cursor.moveToNext());
+            }
+        } catch (DataStoreException exception) {
+            // Don't cut the search short. Populate rest of the tree.
+            LOG.error("Failed to query children of deleted model(s).", exception);
+        }
+        return childrenIds;
+    }
+
+    private Cursor querySeparatelyAndMerge(
+            @NonNull ModelSchema schema,
+            @NonNull List<QueryOptions> optionsList
+    ) throws DataStoreException {
+        List<Cursor> cursors = new ArrayList<>();
+        for (QueryOptions options : optionsList) {
+            cursors.add(queryAll(schema, options));
+        }
+        Cursor[] cursorsArray = new Cursor[optionsList.size()];
+        return new MergeCursor(cursors.toArray(cursorsArray));
+    }
+
     private Cursor queryAll(
-            @NonNull String tableName,
+            @NonNull ModelSchema schema,
             @NonNull QueryOptions options
     ) throws DataStoreException {
-        final ModelSchema schema = registry.getModelSchemaForModelClass(tableName);
         final SqlCommand sqlCommand = commandFactory.queryFor(schema, options);
         final String rawQuery = sqlCommand.sqlStatement();
         final String[] bindings = sqlCommand.getBindingsAsArray();
