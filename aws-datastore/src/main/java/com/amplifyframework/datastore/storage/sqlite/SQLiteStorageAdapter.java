@@ -498,7 +498,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelInstance(cascadedModel);
                     itemChangeSubject.onNext(StorageItemChange.builder()
                         .item(cascadedModel)
-                        .patchItem(SerializedModel.create(cascadedModel, modelSchema))
+                        .patchItem(SerializedModel.create(cascadedModel, schema))
                         .modelSchema(schema)
                         .type(StorageItemChange.Type.DELETE)
                         .predicate(QueryPredicates.all())
@@ -578,6 +578,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelInstance(model);
                     itemChangeSubject.onNext(StorageItemChange.builder()
                             .item(model)
+                            .patchItem(SerializedModel.create(model, schema))
                             .modelSchema(schema)
                             .type(StorageItemChange.Type.DELETE)
                             .predicate(QueryPredicates.all())
