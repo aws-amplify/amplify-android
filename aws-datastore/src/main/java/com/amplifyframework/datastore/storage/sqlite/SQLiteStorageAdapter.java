@@ -851,17 +851,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * @return the Model instance from SQLite, if it exists, otherwise null.
      */
     private Model query(Model model) {
-        final String modelName = getModelName(model);
-        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
-        final SQLiteTable table = SQLiteTable.fromSchema(schema);
-        final String primaryKeyName = table.getPrimaryKeyColumnName();
-        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getId());
-
         Iterator<? extends Model> result = Single.<Iterator<? extends Model>>create(emitter -> {
             if (model instanceof SerializedModel) {
-                query(modelName, Where.matches(matchId), emitter::onSuccess, emitter::onError);
+                query(getModelName(model), Where.id(model.getId()), emitter::onSuccess, emitter::onError);
             } else {
-                query(model.getClass(), Where.matches(matchId), emitter::onSuccess, emitter::onError);
+                query(model.getClass(), Where.id(model.getId()), emitter::onSuccess, emitter::onError);
             }
         }).blockingGet();
         return result.hasNext() ? result.next() : null;
