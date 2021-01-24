@@ -222,7 +222,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 this.sqliteModelTree = new SQLiteModelTree(
                     modelSchemaRegistry,
-                    sqlCommandFactory,
                     databaseConnectionHandle
                 );
 

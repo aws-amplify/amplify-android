@@ -16,8 +16,8 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
-import android.database.MergeCursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
@@ -25,16 +25,11 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.core.model.query.QueryOptions;
-import com.amplifyframework.core.model.query.Where;
-import com.amplifyframework.core.model.query.predicate.QueryField;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.query.predicate.QueryPredicates;
-import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.GsonFactory;
+import com.amplifyframework.util.Wrap;
 
 import com.google.gson.Gson;
 
@@ -46,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Utility class to help traverse a tree of models by relationship.
@@ -54,21 +50,17 @@ final class SQLiteModelTree {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final ModelSchemaRegistry registry;
-    private final SQLCommandFactory commandFactory;
     private final SQLiteDatabase database;
     private final Gson gson;
 
     /**
      * Constructs a model family tree traversing utility.
      * @param registry model registry to search schema from
-     * @param commandFactory SQL command factory
      * @param database SQLite database connection handle
      */
     SQLiteModelTree(ModelSchemaRegistry registry,
-                    SQLCommandFactory commandFactory,
                     SQLiteDatabase database) {
         this.registry = registry;
-        this.commandFactory = commandFactory;
         this.database = database;
         this.gson = GsonFactory.instance();
     }
@@ -110,15 +102,32 @@ final class SQLiteModelTree {
             ModelSchema modelSchema,
             Collection<String> parentIds
     ) {
-        SQLiteTable parentTable = SQLiteTable.fromSchema(modelSchema);
         for (ModelAssociation association : modelSchema.getAssociations().values()) {
             switch (association.getName()) {
                 case "HasOne":
                 case "HasMany":
                     String childModel = association.getAssociatedType(); // model name
                     ModelSchema childSchema = registry.getModelSchemaForModelClass(childModel);
-                    QueryField parentIdField = QueryField.field(parentTable.getPrimaryKeyColumnName());
-                    Set<String> childrenIds = childrenOf(parentIdField, parentIds, childSchema);
+                    SQLiteTable childTable = SQLiteTable.fromSchema(childSchema);
+                    String childId = childTable.getPrimaryKey().getName();
+                    String parentId = childSchema.getAssociations() // get a map of associations
+                            .get(association.getAssociatedName()) // get @BelongsTo association linked to this field
+                            .getTargetName(); // get the target field (parent) name
+
+                    // Collect every children one level deeper than current level
+                    // SELECT * FROM <CHILD_TABLE> WHERE <PARENT> = <ID_1> OR <PARENT> = <ID_2> OR ...
+                    Set<String> childrenIds = new HashSet<>();
+                    try (Cursor cursor = queryChildren(childTable.getName(), childId, parentId, parentIds)) {
+                        if (cursor != null && cursor.moveToFirst()) {
+                            int index = cursor.getColumnIndexOrThrow(childId);
+                            do {
+                                childrenIds.add(cursor.getString(index));
+                            } while (cursor.moveToNext());
+                        }
+                    } catch (SQLiteException exception) {
+                        // Don't cut the search short. Populate rest of the tree.
+                        LOG.error("Failed to query children of deleted model(s).", exception);
+                    }
 
                     // Add queried result to the map
                     if (!childrenIds.isEmpty()) {
@@ -137,68 +146,34 @@ final class SQLiteModelTree {
         }
     }
 
-    private Set<String> childrenOf(
-            QueryField parentIdField,
-            Collection<String> parentIds,
-            ModelSchema childSchema
+    private Cursor queryChildren(
+            @NonNull String childTable,
+            @NonNull String childIdField,
+            @NonNull String parentIdField,
+            @NonNull Collection<String> parentIds
     ) {
-        SQLiteTable childTable = SQLiteTable.fromSchema(childSchema);
-        String childPrimaryKey = childTable.getPrimaryKey().getAliasedName();
-
-        // Chain predicates with OR operator.
-        // Beware the SQLite expression tree size limit of 1000
-        List<QueryOptions> options = new ArrayList<>();
-        QueryPredicate predicate = QueryPredicates.none();
-        int currentSize = 0;
-        for (String parentId : parentIds) {
-            // Stop appending if size exceeds 900
-            if (currentSize > 900) {
-                options.add(Where.matches(predicate));
-                predicate = QueryPredicates.none();
-                currentSize = 0;
-            }
-            QueryPredicate operation = parentIdField.eq(parentId);
-            predicate = predicate.or(operation);
-            currentSize++;
-        }
-        options.add(Where.matches(predicate));
-
-        // Collect every children one level deeper than current level
-        // SELECT * FROM <CHILD_TABLE> WHERE <PARENT> = <ID_1> OR <PARENT> = <ID_2> OR ...
-        Set<String> childrenIds = new HashSet<>();
-        try (Cursor cursor = querySeparatelyAndMerge(childSchema, options)) {
-            if (cursor.moveToFirst()) {
-                int index = cursor.getColumnIndexOrThrow(childPrimaryKey);
-                do {
-                    childrenIds.add(cursor.getString(index));
-                } while (cursor.moveToNext());
-            }
-        } catch (DataStoreException exception) {
-            // Don't cut the search short. Populate rest of the tree.
-            LOG.error("Failed to query children of deleted model(s).", exception);
-        }
-        return childrenIds;
-    }
-
-    private Cursor querySeparatelyAndMerge(
-            @NonNull ModelSchema schema,
-            @NonNull List<QueryOptions> optionsList
-    ) throws DataStoreException {
-        List<Cursor> cursors = new ArrayList<>();
-        for (QueryOptions options : optionsList) {
-            cursors.add(queryAll(schema, options));
-        }
-        Cursor[] cursorsArray = new Cursor[optionsList.size()];
-        return new MergeCursor(cursors.toArray(cursorsArray));
-    }
-
-    private Cursor queryAll(
-            @NonNull ModelSchema schema,
-            @NonNull QueryOptions options
-    ) throws DataStoreException {
-        final SqlCommand sqlCommand = commandFactory.queryFor(schema, options);
-        final String rawQuery = sqlCommand.sqlStatement();
-        final String[] bindings = sqlCommand.getBindingsAsArray();
-        return database.rawQuery(rawQuery, bindings);
+        // SELECT <child_id>, <parent_id> FROM <child_table> WHERE <parent_id> IN (<id_1>, <id_2>, ...)
+        String queryString = String.valueOf(SqlKeyword.SELECT) +
+                SqlKeyword.DELIMITER +
+                Wrap.inBackticks(childIdField) +
+                SqlKeyword.SEPARATOR +
+                Wrap.inBackticks(parentIdField) +
+                SqlKeyword.DELIMITER +
+                SqlKeyword.FROM +
+                SqlKeyword.DELIMITER +
+                Wrap.inBackticks(childTable) +
+                SqlKeyword.DELIMITER +
+                SqlKeyword.WHERE +
+                SqlKeyword.DELIMITER +
+                Wrap.inBackticks(parentIdField) +
+                SqlKeyword.DELIMITER +
+                SqlKeyword.IN +
+                SqlKeyword.DELIMITER +
+                Wrap.inParentheses(parentIds
+                    .stream()
+                    .map(Wrap::inSingleQuotes)
+                    .collect(Collectors.joining(SqlKeyword.SEPARATOR.toString()))) +
+                ";";
+        return database.rawQuery(queryString, new String[0]);
     }
 }

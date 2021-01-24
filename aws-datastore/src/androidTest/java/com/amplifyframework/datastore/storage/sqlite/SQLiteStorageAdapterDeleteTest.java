@@ -315,7 +315,7 @@ public final class SQLiteStorageAdapterDeleteTest {
                 .name("BlogOwner")
                 .build();
         adapter.save(ownerModel);
-        for (int blog = 0; blog < 1001; blog++) {
+        for (int blog = 0; blog < 1000; blog++) {
             Blog blogModel = Blog.builder()
                     .name("Blog " + blog)
                     .owner(ownerModel)
