@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 /**
  * A {@link QueryPredicate} that matches none of the objects passed to it.
  */
-public final class MatchNoneQueryPredicate implements QueryPredicate {
+final class MatchNoneQueryPredicate implements QueryPredicate {
     private MatchNoneQueryPredicate() {}
 
     /**
