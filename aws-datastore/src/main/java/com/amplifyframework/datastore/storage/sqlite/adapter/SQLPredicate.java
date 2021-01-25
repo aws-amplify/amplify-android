@@ -23,13 +23,12 @@ import com.amplifyframework.core.model.query.predicate.GreaterOrEqualQueryOperat
 import com.amplifyframework.core.model.query.predicate.GreaterThanQueryOperator;
 import com.amplifyframework.core.model.query.predicate.LessOrEqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.LessThanQueryOperator;
-import com.amplifyframework.core.model.query.predicate.MatchAllQueryPredicate;
-import com.amplifyframework.core.model.query.predicate.MatchNoneQueryPredicate;
 import com.amplifyframework.core.model.query.predicate.NotEqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteModelFieldTypeConverter;
@@ -108,10 +107,10 @@ public final class SQLPredicate {
 
     // Utility method to recursively parse a given predicate.
     private StringBuilder parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
-        if (queryPredicate instanceof MatchAllQueryPredicate) {
+        if (QueryPredicates.all().equals(queryPredicate)) {
             return new StringBuilder("1 = 1");
         }
-        if (queryPredicate instanceof MatchNoneQueryPredicate) {
+        if (QueryPredicates.none().equals(queryPredicate)) {
             return new StringBuilder("1 = 0");
         }
         if (queryPredicate instanceof QueryPredicateOperation) {
