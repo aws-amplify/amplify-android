@@ -35,6 +35,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -321,5 +322,34 @@ public final class SQLiteStorageAdapterSaveTest {
         observer.await(1, TimeUnit.SECONDS);
         observer.assertValueCount(1);
         observer.assertValueAt(0, storageItemChange -> storageItemChange.patchItem().equals(expectedItem));
+    }
+
+    /**
+     * Test save with predicate. Confirms that conditionally updating a nested model also works.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void saveModelWithPredicateUpdatesForNestedModels() throws DataStoreException {
+        // Save a model
+        final BlogOwner mark = BlogOwner.builder()
+                .name("Mark")
+                .build();
+        adapter.save(mark);
+
+        // Save a model that belongs to another model
+        final Blog marksBlog = Blog.builder()
+                .name("Mark's very first blog.")
+                .owner(mark)
+                .build();
+        adapter.save(marksBlog);
+
+        // Update a model that belongs to another model
+        final Blog marksBlogEdit = marksBlog.copyOfBuilder()
+                .name("Mark's edited blog.")
+                .build();
+        adapter.save(marksBlogEdit);
+
+        // Assert that update went through successfully
+        assertEquals(Collections.singletonList(marksBlogEdit), adapter.query(Blog.class));
     }
 }
