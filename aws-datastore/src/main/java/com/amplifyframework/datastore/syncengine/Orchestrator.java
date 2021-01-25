@@ -52,8 +52,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long TIMEOUT_SECONDS_PER_MODEL = 2;
-    private static final long NETWORK_OP_TIMEOUT_SECONDS = 10;
     private static final long LOCAL_OP_TIMEOUT_SECONDS = 2;
 
     private final SubscriptionProcessor subscriptionProcessor;
@@ -65,8 +63,8 @@ public final class Orchestrator {
     private final AtomicReference<State> currentState;
     private final MutationOutbox mutationOutbox;
     private final CompositeDisposable disposables;
-    private final long adjustedTimeoutSeconds;
     private final Semaphore startStopSemaphore;
+    private Long syncStartTime;
 
     /**
      * Constructs a new Orchestrator.
@@ -133,12 +131,6 @@ public final class Orchestrator {
         this.targetState = targetState;
         this.disposables = new CompositeDisposable();
 
-        // Operation times out after 10 seconds. If there are more than 5 models,
-        // then 2 seconds are added to the timer per additional model count.
-        this.adjustedTimeoutSeconds = Math.max(
-            NETWORK_OP_TIMEOUT_SECONDS,
-            TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
-        );
         this.startStopSemaphore = new Semaphore(1);
 
     }
@@ -310,11 +302,7 @@ public final class Orchestrator {
 
                 LOG.debug("About to hydrate...");
                 try {
-                    boolean subscribed = syncProcessor.hydrate()
-                            .blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
-                    if (!subscribed) {
-                        throw new TimeoutException("Timed out while performing initial model sync.");
-                    }
+                    syncProcessor.hydrate().blockingAwait();
                 } catch (Throwable failure) {
                     if (!emitter.isDisposed()) {
                         emitter.onError(new DataStoreException(
@@ -335,8 +323,10 @@ public final class Orchestrator {
 
                 emitter.onComplete();
             })
+            .doOnSubscribe(disposable -> syncStartTime = System.currentTimeMillis())
             .doOnError(error -> LOG.error("Failure encountered while attempting to start API sync.", error))
-            .doOnComplete(() -> LOG.info("Started the orchestrator in API sync mode."))
+            .doOnComplete(() -> LOG.info("Started the orchestrator in API sync mode in "
+                + (System.currentTimeMillis() - syncStartTime) + "ms"))
             .doOnDispose(() -> LOG.debug("Orchestrator disposed the API sync"))
             .subscribeOn(Schedulers.io())
             .subscribe(

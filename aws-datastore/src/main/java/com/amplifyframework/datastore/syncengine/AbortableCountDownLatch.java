@@ -41,6 +41,13 @@ final class AbortableCountDownLatch<E extends Throwable> extends CountDownLatch 
         }
     }
 
+    public void abortableAwait() throws InterruptedException, E {
+        super.await();
+        if (error != null) {
+            throw error;
+        }
+    }
+
     public boolean abortableAwait(long timeout, TimeUnit unit) throws InterruptedException, E {
         final boolean success = super.await(timeout, unit);
         if (error != null) {
