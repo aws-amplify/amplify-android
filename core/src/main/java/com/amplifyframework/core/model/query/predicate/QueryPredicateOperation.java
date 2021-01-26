@@ -30,7 +30,7 @@ import java.util.Objects;
  * @param <T> Data type of the field being evaluated
  */
 public final class QueryPredicateOperation<T> implements QueryPredicate {
-    private final String model;
+    private final String modelName;
     private final String field;
     private final QueryOperator<T> operator;
 
@@ -48,16 +48,16 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
 
     /**
      * Create a new comparison operation with the field to examine and the comparison to perform on it.
-     * @param model the name of the Java model whose field is being compared
+     * @param modelName the name of the Java model whose field is being compared
      * @param field the name of the Java property in the model representing the field to perform this comparison on
      * @param operator the comparison to perform on it
      */
     QueryPredicateOperation(
-            @Nullable String model,
+            @Nullable String modelName,
             @NonNull String field,
             @NonNull QueryOperator<T> operator
     ) {
-        this.model = model;
+        this.modelName = modelName;
         this.field = Objects.requireNonNull(field);
         this.operator = Objects.requireNonNull(operator);
     }
@@ -67,8 +67,8 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
      * @return the name of the Java model to perform this comparison on
      */
     @Nullable
-    public String model() {
-        return model;
+    public String modelName() {
+        return modelName;
     }
 
     /**
@@ -154,7 +154,7 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
         } else {
             QueryPredicateOperation<?> op = (QueryPredicateOperation<?>) obj;
 
-            return ObjectsCompat.equals(model(), op.model()) &&
+            return ObjectsCompat.equals(modelName(), op.modelName()) &&
                     ObjectsCompat.equals(field(), op.field()) &&
                     ObjectsCompat.equals(operator(), op.operator());
         }
@@ -163,7 +163,7 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                model(),
+                modelName(),
                 field(),
                 operator()
         );
@@ -172,7 +172,7 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
     @Override
     public String toString() {
         return "QueryPredicateOperation { " +
-            "model: " + model() +
+            "model: " + modelName() +
             ", field: " + field() +
             ", operator: " + operator() +
             " }";

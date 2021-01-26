@@ -34,7 +34,7 @@ import java.util.Objects;
  * {@link QueryField#descending()} helper methods (e.g. Todo.DESCRIPTION.ascending() or Todo.DESCRIPTION.descending())
  */
 public final class QuerySortBy {
-    private final String model;
+    private final String modelName;
     private final String field;
     private final QuerySortOrder sortOrder;
 
@@ -51,12 +51,12 @@ public final class QuerySortBy {
     /**
      * Constructor for {@code QuerySortBy}.
      *
-     * @param model name of the model being sorted.
+     * @param modelName name of the model being sorted.
      * @param field name of field to sort by.
      * @param sortOrder order to sort by, either ASCENDING or DESCENDING.
      */
-    public QuerySortBy(@Nullable String model, @NonNull String field, @NonNull QuerySortOrder sortOrder) {
-        this.model = model;
+    public QuerySortBy(@Nullable String modelName, @NonNull String field, @NonNull QuerySortOrder sortOrder) {
+        this.modelName = modelName;
         this.field = Objects.requireNonNull(field);
         this.sortOrder = Objects.requireNonNull(sortOrder);
     }
@@ -66,8 +66,8 @@ public final class QuerySortBy {
      * @return the model being sorted.
      */
     @Nullable
-    public String getModel() {
-        return model;
+    public String getModelName() {
+        return modelName;
     }
 
     /**
@@ -99,21 +99,21 @@ public final class QuerySortBy {
         }
 
         QuerySortBy that = (QuerySortBy) object;
-        return ObjectsCompat.equals(model, that.model) &&
+        return ObjectsCompat.equals(modelName, that.modelName) &&
                 ObjectsCompat.equals(field, that.field) &&
                 ObjectsCompat.equals(sortOrder, that.sortOrder);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(model, field, sortOrder);
+        return ObjectsCompat.hash(modelName, field, sortOrder);
     }
 
     @Override
     public String toString() {
         return "QuerySortBy{" +
-                "model=" + (model == null ? null : Wrap.inSingleQuotes(model)) +
-                ", field='" + field + '\'' +
+                "model=" + (modelName == null ? null : Wrap.inSingleQuotes(modelName)) +
+                ", field=" + Wrap.inSingleQuotes(field) +
                 ", sortOrder=" + sortOrder +
                 '}';
     }

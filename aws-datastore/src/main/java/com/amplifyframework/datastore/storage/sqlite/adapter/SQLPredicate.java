@@ -133,7 +133,7 @@ public final class SQLPredicate {
     // Utility method to recursively parse a given predicate operation.
     private StringBuilder parsePredicateOperation(QueryPredicateOperation<?> operation) throws DataStoreException {
         final StringBuilder builder = new StringBuilder();
-        final String model = Wrap.inBackticks(operation.model());
+        final String model = Wrap.inBackticks(operation.modelName());
         final String field = Wrap.inBackticks(operation.field());
         final String column = model == null ? operation.field() : model + "." + field;
         final QueryOperator<?> op = operation.operator();
