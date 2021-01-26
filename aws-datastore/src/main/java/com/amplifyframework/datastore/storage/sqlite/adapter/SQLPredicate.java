@@ -114,7 +114,7 @@ public final class SQLPredicate {
             return new StringBuilder("1 = 0");
         }
         if (queryPredicate instanceof QueryPredicateOperation) {
-            QueryPredicateOperation<?> qpo = (QueryPredicateOperation) queryPredicate;
+            QueryPredicateOperation<?> qpo = (QueryPredicateOperation<?>) queryPredicate;
             return parsePredicateOperation(qpo);
         }
         if (queryPredicate instanceof QueryPredicateGroup) {
@@ -132,14 +132,16 @@ public final class SQLPredicate {
     // Utility method to recursively parse a given predicate operation.
     private StringBuilder parsePredicateOperation(QueryPredicateOperation<?> operation) throws DataStoreException {
         final StringBuilder builder = new StringBuilder();
+        final String model = operation.model();
         final String field = operation.field();
+        final String column = model == null ? field : model + "." + field;
         final QueryOperator<?> op = operation.operator();
         switch (op.type()) {
             case BETWEEN:
                 BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator<?>) op;
                 addBinding(betweenOp.start());
                 addBinding(betweenOp.end());
-                return builder.append(field)
+                return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.BETWEEN)
                         .append(SqlKeyword.DELIMITER)
@@ -152,7 +154,7 @@ public final class SQLPredicate {
                 ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
                 addBinding(containsOp.value());
                 return builder.append("instr(")
-                        .append(field)
+                        .append(column)
                         .append(",")
                         .append("?")
                         .append(")")
@@ -163,7 +165,7 @@ public final class SQLPredicate {
             case BEGINS_WITH:
                 BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
                 addBinding(beginsWithOp.value() + "%");
-                return builder.append(field)
+                return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.LIKE)
                         .append(SqlKeyword.DELIMITER)
@@ -175,7 +177,7 @@ public final class SQLPredicate {
             case LESS_OR_EQUAL:
             case GREATER_OR_EQUAL:
                 addBinding(getOperatorValue(op));
-                return builder.append(field)
+                return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQueryOperator(op.type()))
                         .append(SqlKeyword.DELIMITER)
@@ -227,13 +229,13 @@ public final class SQLPredicate {
             case EQUAL:
                 return ((EqualQueryOperator) qOp).value();
             case LESS_OR_EQUAL:
-                return ((LessOrEqualQueryOperator) qOp).value();
+                return ((LessOrEqualQueryOperator<?>) qOp).value();
             case LESS_THAN:
-                return ((LessThanQueryOperator) qOp).value();
+                return ((LessThanQueryOperator<?>) qOp).value();
             case GREATER_OR_EQUAL:
-                return ((GreaterOrEqualQueryOperator) qOp).value();
+                return ((GreaterOrEqualQueryOperator<?>) qOp).value();
             case GREATER_THAN:
-                return ((GreaterThanQueryOperator) qOp).value();
+                return ((GreaterThanQueryOperator<?>) qOp).value();
             default:
                 throw new DataStoreException(
                         "Tried to parse an unsupported QueryOperator type",

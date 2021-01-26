@@ -16,18 +16,21 @@
 package com.amplifyframework.core.model.query.predicate;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.FieldFinder;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 
 /**
  * Represents an individual comparison operation on a model field.
  * @param <T> Data type of the field being evaluated
  */
 public final class QueryPredicateOperation<T> implements QueryPredicate {
+    private final String model;
     private final String field;
     private final QueryOperator<T> operator;
 
@@ -36,16 +39,43 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
      * @param field the name of the Java property in the model representing the field to perform this comparison on
      * @param operator the comparison to perform on it
      */
-    QueryPredicateOperation(@NonNull String field,
-                            @NonNull QueryOperator<T> operator) {
-        this.field = field;
-        this.operator = operator;
+    QueryPredicateOperation(
+            @NonNull String field,
+            @NonNull QueryOperator<T> operator
+    ) {
+        this(null, field, operator);
+    }
+
+    /**
+     * Create a new comparison operation with the field to examine and the comparison to perform on it.
+     * @param model the name of the Java model whose field is being compared
+     * @param field the name of the Java property in the model representing the field to perform this comparison on
+     * @param operator the comparison to perform on it
+     */
+    QueryPredicateOperation(
+            @Nullable String model,
+            @NonNull String field,
+            @NonNull QueryOperator<T> operator
+    ) {
+        this.model = model;
+        this.field = Objects.requireNonNull(field);
+        this.operator = Objects.requireNonNull(operator);
+    }
+
+    /**
+     * Get the name of the Java model to perform this comparison on.
+     * @return the name of the Java model to perform this comparison on
+     */
+    @Nullable
+    public String model() {
+        return model;
     }
 
     /**
      * Get the name of the field in the Java model to perform this comparison on.
      * @return the name of the field in the Java model to perform this comparison on
      */
+    @NonNull
     public String field() {
         return field;
     }
@@ -55,6 +85,7 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
      * This includes both the type (e.g. EQUAL) and the value to compare the field to (e.g. "ABC")
      * @return the comparison operation to perform on this field
      */
+    @NonNull
     public QueryOperator<T> operator() {
         return operator;
     }
@@ -64,6 +95,7 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
      * @param predicate the predicate to connect to
      * @return a group connecting this operation with another predicate with an AND type
      */
+    @NonNull
     public QueryPredicateGroup and(QueryPredicate predicate) {
         return new QueryPredicateGroup(QueryPredicateGroup.Type.AND, Arrays.asList(this, predicate));
     }
@@ -73,6 +105,7 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
      * @param predicate the group/operation to connect to
      * @return a group connecting this operation with another group/operation with an OR type
      */
+    @NonNull
     public QueryPredicateGroup or(QueryPredicate predicate) {
         return new QueryPredicateGroup(QueryPredicateGroup.Type.OR, Arrays.asList(this, predicate));
     }
@@ -82,6 +115,7 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
      * @param predicate the operation to negate
      * @return a group negating the given operation
      */
+    @NonNull
     public static QueryPredicateGroup not(QueryPredicateOperation<?> predicate) {
         return new QueryPredicateGroup(QueryPredicateGroup.Type.NOT, Collections.singletonList(predicate));
     }
@@ -118,9 +152,10 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            QueryPredicateOperation<?> op = (QueryPredicateOperation) obj;
+            QueryPredicateOperation<?> op = (QueryPredicateOperation<?>) obj;
 
-            return ObjectsCompat.equals(field(), op.field()) &&
+            return ObjectsCompat.equals(model(), op.model()) &&
+                    ObjectsCompat.equals(field(), op.field()) &&
                     ObjectsCompat.equals(operator(), op.operator());
         }
     }
@@ -128,6 +163,7 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
+                model(),
                 field(),
                 operator()
         );
@@ -136,7 +172,8 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
     @Override
     public String toString() {
         return "QueryPredicateOperation { " +
-            "field: " + field() +
+            "model: " + model() +
+            ", field: " + field() +
             ", operator: " + operator() +
             " }";
     }

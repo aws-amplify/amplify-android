@@ -17,6 +17,7 @@ package com.amplifyframework.core.model.query;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
@@ -56,7 +57,9 @@ public final class Where {
      * @return options with proper predicate and pagination to match a model by its id.
      */
     public static QueryOptions id(@NonNull final String modelId) {
-        return matches(QueryField.field("id").eq(Objects.requireNonNull(modelId))).paginated(Page.firstResult());
+        final QueryField idField = QueryField.field(PrimaryKey.fieldName());
+        return matches(idField.eq(Objects.requireNonNull(modelId)))
+                .paginated(Page.firstResult());
     }
 
     /**
