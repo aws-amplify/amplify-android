@@ -110,6 +110,8 @@ final class SQLiteModelTree {
             Collection<String> parentIds
     ) {
         SQLiteTable parentTable = SQLiteTable.fromSchema(modelSchema);
+        final String parentTableName = parentTable.getName();
+        final String parentPrimaryKeyName = parentTable.getPrimaryKey().getName();
         for (ModelAssociation association : modelSchema.getAssociations().values()) {
             switch (association.getName()) {
                 case "HasOne":
@@ -118,7 +120,7 @@ final class SQLiteModelTree {
                     ModelSchema childSchema = registry.getModelSchemaForModelClass(childModel);
                     SQLiteTable childTable = SQLiteTable.fromSchema(childSchema);
                     String childPrimaryKey = childTable.getPrimaryKey().getAliasedName();
-                    QueryField queryField = QueryField.field(parentTable.getPrimaryKeyColumnName());
+                    QueryField queryField = QueryField.field(parentTableName, parentPrimaryKeyName);
 
                     // Chain predicates with OR operator.
                     QueryPredicate predicate = QueryPredicates.none();

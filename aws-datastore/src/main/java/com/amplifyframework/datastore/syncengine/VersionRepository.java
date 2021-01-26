@@ -19,8 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
-import com.amplifyframework.core.model.query.predicate.QueryField;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -55,10 +53,9 @@ final class VersionRepository {
      * @return Current version known locally
      */
     <T extends Model> Single<Integer> findModelVersion(T model) {
-        // The ModelMetadata for the model uses the same ID as an identifier.
-        final QueryPredicate hasMatchingId = QueryField.field("id").eq(model.getId());
         return Single.create(emitter -> {
-            localStorageAdapter.query(ModelMetadata.class, Where.matches(hasMatchingId), iterableResults -> {
+            // The ModelMetadata for the model uses the same ID as an identifier.
+            localStorageAdapter.query(ModelMetadata.class, Where.id(model.getId()), iterableResults -> {
                 try {
                     emitter.onSuccess(extractVersion(model, iterableResults));
                 } catch (DataStoreException badVersionFailure) {
