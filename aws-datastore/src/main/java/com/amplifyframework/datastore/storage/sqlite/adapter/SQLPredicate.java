@@ -36,6 +36,7 @@ import com.amplifyframework.datastore.storage.sqlite.SqlKeyword;
 import com.amplifyframework.datastore.storage.sqlite.TypeConverter;
 import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
+import com.amplifyframework.util.Wrap;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -132,9 +133,9 @@ public final class SQLPredicate {
     // Utility method to recursively parse a given predicate operation.
     private StringBuilder parsePredicateOperation(QueryPredicateOperation<?> operation) throws DataStoreException {
         final StringBuilder builder = new StringBuilder();
-        final String model = operation.model();
-        final String field = operation.field();
-        final String column = model == null ? field : model + "." + field;
+        final String model = Wrap.inBackticks(operation.model());
+        final String field = Wrap.inBackticks(operation.field());
+        final String column = model == null ? operation.field() : model + "." + field;
         final QueryOperator<?> op = operation.operator();
         switch (op.type()) {
             case BETWEEN:
