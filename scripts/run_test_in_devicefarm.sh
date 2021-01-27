@@ -67,14 +67,16 @@ while true; do
   read -a result_arr <<< $run_status_response
   status=${result_arr[0]}
   result=${result_arr[1]}
-  echo "Status = $status Result = $result"
   if [ "$status" = "COMPLETED" ]
   then
     break
   fi
   sleep 5
 done
+echo "Status = $status Result = $result"
 
+echo "PR=$CODEBUILD_SOURCE_VERSION RUN_ARN=$run_arn"
+./generate_df_testrun_report --run_arn run_arn --module_name=module_name
 # If the result is PASSED, then exit with a return code 0
 if [ "$result" = "PASSED" ]
 then

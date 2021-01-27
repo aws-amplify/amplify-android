@@ -18,8 +18,10 @@ phases:
     runtime-versions:
       android: 29
       nodejs: 12
+      python: 3.8
     commands:
       - echo 'Install phase starting'
+      - pip3 install junit-xml
     finally:
       - echo 'Install phase completed.'
   pre_build:
@@ -45,8 +47,17 @@ phases:
   post_build:
     commands:
       - echo 'Post-build phase starting'
+      - pwd
+      - mkdir -p build/allTests
+      - cp -f ./*/build/test-results/devicefarm-run/*.xml ./build/allTests
     finally:
       - echo 'Post-build phase completed.'
+reports:
+  amplify-android-devicefarm-tests:
+    files:
+      - build/allTests/*
+    discard-paths: yes
+    file-format: JUNITXML
 artifacts:
   files:
     - '**/*.apk'

@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Python script that generates a user-readable report for a given DeviceFarm test run.
+"""
+
+import os
+import sys
+import subprocess
+import argparse
+import logging
+import boto3
+from botocore.config import Config
+from junit_xml import TestSuite, TestCase
+
+client = boto3.client('devicefarm', config=Config(region_name='us-west-2'))
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Utility that generates a report for a DeviceFarm test run.")
+    parser.add_argument("--run_arn", help="The ARN of the DeviceFarm test run.", required=True)
+    parser.add_argument("--module_name", help="The module name for the test suite.", required=True)
+    parser.add_argument("--pr", help="The github PR number.")
+    return parser.parse_args()
+
+def generate_junit_report(run_arn, output_path):
+    jobs = get_test_jobs(run_arn)
+    for job in jobs:
+        suites = get_test_suites(job['arn'])
+        for suite in suites:
+            # print(f"Suite {suite['name']}")
+            tests = get_tests(suite['arn'])
+            test_cases = []
+            for test in tests:
+                # print(f"Test {test['name']}")
+                test_cases.append(TestCase(test['name'],
+                                classname=suite['name'], 
+                                elapsed_sec=test['deviceMinutes']['total']*60,
+                                stdout=test['message'],
+                                status=test['result'] ))
+            ts = TestSuite(suite['name'],test_cases=test_cases)
+            ts_output = TestSuite.to_xml_string([ts])
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
+            f = open(output_path + suite['name'] + ".xml", "w")
+            f.write(ts_output)
+            f.close()
+
+def get_test_jobs(run_arn):
+    result = client.list_jobs(arn=run_arn)
+    return result['jobs'] if result is not None else []
+
+def get_test_suites(job_arn):
+    result = client.list_suites(arn=job_arn)
+    return result['suites'] if result is not None else []
+
+def get_tests(suite_arn):
+    result = client.list_tests(arn=suite_arn)
+    return result['tests'] if result is not None else []
+
+def get_problems(run_arn):
+    return client.list_unique_problems(
+        arn=run_arn
+    )
+
+def main(arguments):
+    args = parse_arguments()
+    # problems = get_problems(args.run_arn)
+    # generate_html_report(args.pr, problems)
+    generate_junit_report(run_arn=args.run_arn, 
+                            output_path=f"{args.module_name}/build/test-results/devicefarm-run/")
+
+    
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
