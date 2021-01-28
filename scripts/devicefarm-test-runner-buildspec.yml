@@ -21,6 +21,7 @@ phases:
       python: 3.8
     commands:
       - echo 'Install phase starting'
+      - npm install -g xunit-viewer
       - pip3 install junit-xml
     finally:
       - echo 'Install phase completed.'
@@ -47,7 +48,8 @@ phases:
   post_build:
     commands:
       - echo 'Post-build phase starting'
-      - find build/allTests/**
+      - mkdir -p build/reports/dfrun
+      - xunit-viewer -r build/allTests -o build/reports/dfrun/${CODEBUILD_RESOLVED_SOURCE_VERSION}.html
     finally:
       - echo 'Post-build phase completed.'
 reports:
@@ -62,3 +64,10 @@ artifacts:
     - '**/*.apk'
   name: AmplifyAndroidCatApks
   discard-paths: yes
+  secondary-artifacts:
+    devicefarmRunReport:
+      files:
+        - '**/*'
+      name: DevicefarmTestRunReport
+      base-directory: 'build/reports/dfrun'
+      discard-paths: no
