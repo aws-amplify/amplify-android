@@ -11,6 +11,13 @@ import boto3
 from botocore.config import Config
 from junit_xml import TestSuite, TestCase
 
+LOG_FORMATTER = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+CONSOLE_HANDLER = logging.StreamHandler()
+CONSOLE_HANDLER.setFormatter(LOG_FORMATTER)
+LOGGER = logging.getLogger("DeviceFarmTestRunReportGenerator")
+LOGGER.setLevel("INFO")
+LOGGER.addHandler(CONSOLE_HANDLER)
+
 client = boto3.client('devicefarm', config=Config(region_name='us-west-2'))
 
 def parse_arguments():
@@ -22,11 +29,13 @@ def parse_arguments():
     return parser.parse_args()
 
 def generate_junit_report(run_arn, output_path):
+    LOGGER.info(f"Retrieving test jobs for run {run_arn}")
     jobs = get_test_jobs(run_arn)
     for job in jobs:
+        LOGGER.info(f"Retrieving test suites for job {job['arn']}")
         suites = get_test_suites(job['arn'])
         for suite in suites:
-            # print(f"Suite {suite['name']}")
+            LOGGER.info(f"Retrieving tests for suite {suite['arn']}")
             tests = get_tests(suite['arn'])
             test_cases = []
             for test in tests:
@@ -38,6 +47,7 @@ def generate_junit_report(run_arn, output_path):
                                 status=test['result'] ))
             ts = TestSuite(suite['name'],test_cases=test_cases)
             ts_output = TestSuite.to_xml_string([ts])
+            LOGGER.info(f"Saving test suite {suite['arn']} to {output_path}")
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
             f = open(output_path + suite['name'] + ".xml", "w")
@@ -65,8 +75,6 @@ def main(arguments):
     args = parse_arguments()
     generate_junit_report(run_arn=args.run_arn, 
                             output_path=args.output_path)
-
-    
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

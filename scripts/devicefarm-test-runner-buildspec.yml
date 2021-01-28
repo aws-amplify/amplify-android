@@ -47,7 +47,6 @@ phases:
   post_build:
     commands:
       - echo 'Post-build phase starting'
-#      - cp -f ./*/build/test-results/devicefarm-run/*.xml ./build/allTests
     finally:
       - echo 'Post-build phase completed.'
 reports:
