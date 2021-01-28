@@ -17,6 +17,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Utility that generates a report for a DeviceFarm test run.")
     parser.add_argument("--run_arn", help="The ARN of the DeviceFarm test run.", required=True)
     parser.add_argument("--module_name", help="The module name for the test suite.", required=True)
+    parser.add_argument("--output_path", help="Destination path for the build reports.", required=True)
     parser.add_argument("--pr", help="The github PR number.")
     return parser.parse_args()
 
@@ -62,10 +63,8 @@ def get_problems(run_arn):
 
 def main(arguments):
     args = parse_arguments()
-    # problems = get_problems(args.run_arn)
-    # generate_html_report(args.pr, problems)
     generate_junit_report(run_arn=args.run_arn, 
-                            output_path=f"{args.module_name}/build/test-results/devicefarm-run/")
+                            output_path=args.output_path)
 
     
 

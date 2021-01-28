@@ -76,7 +76,7 @@ done
 echo "Status = $status Result = $result"
 
 echo "PR=$CODEBUILD_SOURCE_VERSION RUN_ARN=$run_arn"
-./scripts/generate_df_testrun_report --run_arn="$run_arn" --module_name="$module_name" --pr="$CODEBUILD_SOURCE_VERSION"
+./scripts/generate_df_testrun_report --run_arn="$run_arn" --module_name="$module_name" --pr="$CODEBUILD_SOURCE_VERSION" --output_path="build/allTests/$module_name/"
 # If the result is PASSED, then exit with a return code 0
 if [ "$result" = "PASSED" ]
 then
