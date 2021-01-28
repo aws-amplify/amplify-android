@@ -15,7 +15,7 @@ LOG_FORMATTER = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 CONSOLE_HANDLER = logging.StreamHandler()
 CONSOLE_HANDLER.setFormatter(LOG_FORMATTER)
 LOGGER = logging.getLogger("DeviceFarmTestRunReportGenerator")
-LOGGER.setLevel("INFO")
+LOGGER.setLevel(os.getenv("LOG_LEVEL") if os.getenv("LOG_LEVEL") is not None else "INFO")
 LOGGER.addHandler(CONSOLE_HANDLER)
 
 client = boto3.client('devicefarm', config=Config(region_name='us-west-2'))
@@ -29,25 +29,29 @@ def parse_arguments():
     return parser.parse_args()
 
 def generate_junit_report(run_arn, output_path):
-    LOGGER.info(f"Retrieving test jobs for run {run_arn}")
+    LOGGER.debug(f"Retrieving test jobs for run {run_arn}")
     jobs = get_test_jobs(run_arn)
     for job in jobs:
-        LOGGER.info(f"Retrieving test suites for job {job['arn']}")
+        LOGGER.debug(f"Retrieving test suites for job {job['arn']}")
         suites = get_test_suites(job['arn'])
         for suite in suites:
-            LOGGER.info(f"Retrieving tests for suite {suite['arn']}")
+            LOGGER.debug(f"Retrieving tests for suite {suite['arn']}")
             tests = get_tests(suite['arn'])
             test_cases = []
             for test in tests:
-                # print(f"Test {test['name']}")
-                test_cases.append(TestCase(test['name'],
+                tc = TestCase(test['name'],
                                 classname=suite['name'], 
                                 elapsed_sec=test['deviceMinutes']['total']*60,
                                 stdout=test['message'],
-                                status=test['result'] ))
+                                status=test['result'] )
+                if test['result'] == 'FAILED':
+                    tc.add_failure_info(message=test['message'])
+                if test['result'] == 'ERROR':
+                    tc.add_error_info(message=test['message'])
+                test_cases.append(tc)
             ts = TestSuite(suite['name'],test_cases=test_cases)
             ts_output = TestSuite.to_xml_string([ts])
-            LOGGER.info(f"Saving test suite {suite['arn']} to {output_path}")
+            LOGGER.info(f"Saving test suite {suite['name']} report.")
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
             f = open(output_path + suite['name'] + ".xml", "w")
