@@ -47,13 +47,14 @@ phases:
   post_build:
     commands:
       - echo 'Post-build phase starting'
-      - ls -al build/allTests/**
+      - find build/allTests/**
     finally:
       - echo 'Post-build phase completed.'
 reports:
   amplify-android-devicefarm-tests:
     files:
-      - build/allTests/**
+      - '**/*'
+    base-directory: 'build/allTests'
     discard-paths: no
     file-format: JUNITXML
 artifacts:
