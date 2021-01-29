@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import com.amplifyframework.core.model.query.Page;
 import com.amplifyframework.core.model.query.Where;
-import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
@@ -40,7 +39,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Observable;
 
