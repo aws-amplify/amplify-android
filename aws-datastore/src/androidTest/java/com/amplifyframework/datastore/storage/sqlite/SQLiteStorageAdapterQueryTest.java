@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import com.amplifyframework.core.model.query.Page;
 import com.amplifyframework.core.model.query.Where;
+import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
@@ -39,6 +40,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Observable;
 
@@ -414,6 +416,38 @@ public final class SQLiteStorageAdapterQueryTest {
                 .reversed()
                 .thenComparing(BlogOwner::getWea)
         );
+        assertEquals(sorted, result);
+    }
+
+    /**
+     * Test query with order by.  Validate that a list of Blog can be sorted by the names of BlogOwners.
+     * @throws DataStoreException On failure to arrange items into store, or from the query action itself
+     */
+    @Test
+    public void queryWithOrderByRelatedModel() throws DataStoreException {
+        // Expect: Create BlogOwners and their respective blogs
+        List<String> names = Arrays.asList("Joe", "Bob", "Dan", "Jane");
+        List<Blog> blogs = new ArrayList<>();
+
+        for (String name : names) {
+            BlogOwner owner = BlogOwner.builder()
+                    .name(name)
+                    .build();
+            adapter.save(owner);
+            Blog blog = Blog.builder()
+                    .name("")
+                    .owner(owner)
+                    .build();
+            adapter.save(blog);
+            blogs.add(blog);
+        }
+
+        // Act: Query Blogs sorted by owner's name
+        List<Blog> result = adapter.query(Blog.class, Where.sorted(BlogOwner.NAME.ascending()));
+
+        // Verify: Query result is sorted by owner's name
+        List<Blog> sorted = new ArrayList<>(blogs);
+        Collections.sort(sorted, Comparator.comparing(blog -> blog.getOwner().getName()));
         assertEquals(sorted, result);
     }
 

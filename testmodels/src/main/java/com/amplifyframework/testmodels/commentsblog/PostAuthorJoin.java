@@ -22,9 +22,9 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @Index(name = "byAuthor", fields = {"authorId"})
 @Index(name = "byPost", fields = {"postId"})
 public final class PostAuthorJoin implements Model {
-  public static final QueryField ID = field("id");
-  public static final QueryField AUTHOR = field("authorId");
-  public static final QueryField POST = field("postId");
+  public static final QueryField ID = field("PostAuthorJoin", "id");
+  public static final QueryField AUTHOR = field("PostAuthorJoin", "authorId");
+  public static final QueryField POST = field("PostAuthorJoin", "postId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="Author") @BelongsTo(targetName = "authorId", type = Author.class) Author author;
   private final @ModelField(targetType="Post") @BelongsTo(targetName = "postId", type = Post.class) Post post;
