@@ -48,8 +48,8 @@ phases:
   post_build:
     commands:
       - echo 'Post-build phase starting'
-      - mkdir -p build/reports/dfrun
-      - xunit-viewer -r build/allTests -o build/reports/dfrun/${CODEBUILD_RESOLVED_SOURCE_VERSION}.html
+      - mkdir -p build/reports/instrumented
+      - xunit-viewer -r build/allTests -o build/reports/instrumented/${CODEBUILD_RESOLVED_SOURCE_VERSION}.html
     finally:
       - echo 'Post-build phase completed.'
 reports:
@@ -69,5 +69,5 @@ artifacts:
       files:
         - '**/*'
       name: DevicefarmTestRunReport
-      base-directory: 'build/reports/dfrun'
+      base-directory: 'build/reports/instrumented'
       discard-paths: no
