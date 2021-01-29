@@ -65,7 +65,7 @@ artifacts:
   name: AmplifyAndroidCatApks
   discard-paths: yes
   secondary-artifacts:
-    devicefarmRunReport:
+    reports:
       files:
         - '**/*'
       name: DevicefarmTestRunReport

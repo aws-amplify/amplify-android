@@ -77,6 +77,10 @@ def get_problems(run_arn):
 
 def main(arguments):
     args = parse_arguments()
+    build_id = os.getenv("CODEBUILD_BUILD_ID")
+    source_version = os.getenv("CODEBUILD_SOURCE_VERSION")
+    arn_suffix = args.run_arn.split(':')[-1]
+    LOGGER.info(f"devicefarm_run: {arn_suffix} build_id: {build_id} source_version: {source_version}")
     generate_junit_report(run_arn=args.run_arn, 
                             output_path=args.output_path)
 
