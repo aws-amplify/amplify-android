@@ -301,7 +301,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         final List<Blog> blogsOwnedByJaneDoe = adapter.query(
             Blog.class,
-            Where.matches(field("BlogOwner.name").eq("Jane Doe"))
+            Where.matches(BlogOwner.NAME.eq("Jane Doe"))
         );
         assertTrue(blogsOwnedByJaneDoe.contains(blog));
     }
@@ -447,6 +447,39 @@ public final class SQLiteStorageAdapterQueryTest {
         List<Blog> sorted = new ArrayList<>(blogs);
         Collections.sort(sorted, Comparator.comparing(blog -> blog.getOwner().getName()));
         assertEquals(sorted, result);
+    }
+
+    /**
+     * Test that new QueryField with explicit model name produces the same result as old QueryField.
+     * @throws DataStoreException On failure to arrange items into store, or from the query action itself
+     */
+    @Test
+    public void queryFieldsAreBackwardsCompatible() throws DataStoreException {
+        BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
+        adapter.save(blogOwner);
+        Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
+        adapter.save(blog);
+
+        final int numModels = 10;
+        for (int counter = 0; counter < numModels; counter++) {
+            final Post post = Post.builder()
+                    .title("title " + counter)
+                    .status(PostStatus.INACTIVE)
+                    .rating(counter)
+                    .blog(blog)
+                    .build();
+            adapter.save(post);
+        }
+
+        // Assert that using QueryField without model name yields same results if there is no column ambiguity
+        assertEquals(
+            adapter.query(Post.class, Where.matches(field("Post", "title").contains("4"))),
+            adapter.query(Post.class, Where.matches(field("title").contains("4")))
+        );
+        assertEquals(
+            adapter.query(Post.class, Where.matches(field("Post", "rating").gt(3))),
+            adapter.query(Post.class, Where.matches(field("rating").gt(3)))
+        );
     }
 
     private void createBlogOwnerRecords(final int count) throws DataStoreException {
