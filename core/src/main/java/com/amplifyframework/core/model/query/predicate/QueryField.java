@@ -144,6 +144,15 @@ public final class QueryField {
     }
 
     /**
+     * Generates a new notContains comparison object to compare this field to the specified value.
+     * @param value the value to be compared
+     * @return an operation object representing the contains condition
+     */
+    public QueryPredicateOperation<String> notContains(String value) {
+        return new QueryPredicateOperation<>(modelName, fieldName, new NotContainsQueryOperator(value));
+    }
+
+    /**
      * Generates a new sort object specifying a field that should be sorted in ascending order for a query.
      *
      * @return a QuerySortBy object, representing a field that should be sorted in ascending order for a query.
