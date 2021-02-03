@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
@@ -140,9 +141,9 @@ final class SQLiteModelTree {
                                 childrenIds.add(cursor.getString(index));
                             } while (cursor.moveToNext());
                         }
-                    } catch (DataStoreException exception) {
+                    } catch (DataStoreException | SQLiteException exception) {
                         // Don't cut the search short. Populate rest of the tree.
-                        LOG.error("Failed to query children of deleted model(s).", exception);
+                        LOG.warn("Failed to query children of deleted model(s).", exception);
                     }
 
                     // Add queried result to the map
