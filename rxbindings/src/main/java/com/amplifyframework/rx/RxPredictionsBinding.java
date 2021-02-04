@@ -21,6 +21,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.predictions.PredictionsCategoryBehavior;
+import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.options.IdentifyOptions;
@@ -31,10 +32,11 @@ import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
+import com.amplifyframework.rx.RxAdapters.VoidBehaviors;
 
 import java.util.Objects;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 final class RxPredictionsBinding implements RxPredictionsCategoryBehavior {
     private final PredictionsCategoryBehavior delegate;
@@ -50,30 +52,28 @@ final class RxPredictionsBinding implements RxPredictionsCategoryBehavior {
 
     @Override
     public Single<TextToSpeechResult> convertTextToSpeech(@NonNull String text) {
-        return Single.create(emitter ->
-            delegate.convertTextToSpeech(text, emitter::onSuccess, emitter::onError));
+        return toSingle((onResult, onError) ->
+            delegate.convertTextToSpeech(text, onResult, onError));
     }
 
     @Override
     public Single<TextToSpeechResult> convertTextToSpeech(
             @NonNull String text,
             @NonNull TextToSpeechOptions options) {
-        return Single.create(emitter ->
-            delegate.convertTextToSpeech(text, options, emitter::onSuccess, emitter::onError));
+        return toSingle((onResult, onError) ->
+            delegate.convertTextToSpeech(text, options, onResult, onError));
     }
 
     @Override
     public Single<TranslateTextResult> translateText(@NonNull String text) {
-        return Single.create(emitter ->
-            delegate.translateText(text, emitter::onSuccess, emitter::onError));
+        return toSingle((onResult, onError) -> delegate.translateText(text, onResult, onError));
     }
 
     @Override
     public Single<TranslateTextResult> translateText(
             @NonNull String text,
             @NonNull TranslateTextOptions options) {
-        return Single.create(emitter ->
-            delegate.translateText(text, options, emitter::onSuccess, emitter::onError));
+        return toSingle((onResult, onError) -> delegate.translateText(text, options, onResult, onError));
     }
 
     @Override
@@ -81,8 +81,8 @@ final class RxPredictionsBinding implements RxPredictionsCategoryBehavior {
             @NonNull String text,
             @NonNull LanguageType fromLanguage,
             @NonNull LanguageType toLanguage) {
-        return Single.create(emitter ->
-            delegate.translateText(text, fromLanguage, toLanguage, emitter::onSuccess, emitter::onError));
+        return toSingle((onResult, onError) ->
+            delegate.translateText(text, fromLanguage, toLanguage, onResult, onError));
     }
 
     @Override
@@ -91,14 +91,13 @@ final class RxPredictionsBinding implements RxPredictionsCategoryBehavior {
             @NonNull LanguageType fromLanguage,
             @NonNull LanguageType toLanguage,
             @NonNull TranslateTextOptions options) {
-        return Single.create(emitter ->
-            delegate.translateText(text, fromLanguage, toLanguage, options, emitter::onSuccess, emitter::onError));
+        return toSingle((onResult, onError) ->
+            delegate.translateText(text, fromLanguage, toLanguage, options, onResult, onError));
     }
 
     @Override
     public Single<IdentifyResult> identify(@NonNull IdentifyAction actionType, @NonNull Bitmap image) {
-        return Single.create(emitter ->
-            delegate.identify(actionType, image, emitter::onSuccess, emitter::onError));
+        return toSingle((onResult, onError) -> delegate.identify(actionType, image, onResult, onError));
     }
 
     @Override
@@ -106,17 +105,21 @@ final class RxPredictionsBinding implements RxPredictionsCategoryBehavior {
             @NonNull IdentifyAction actionType,
             @NonNull Bitmap image,
             @NonNull IdentifyOptions options) {
-        return Single.create(emitter ->
-            delegate.identify(actionType, image, options, emitter::onSuccess, emitter::onError));
+        return toSingle((onResult, onError) ->
+            delegate.identify(actionType, image, options, onResult, onError));
     }
 
     @Override
     public Single<InterpretResult> interpret(@NonNull String text) {
-        return Single.create(emitter -> delegate.interpret(text, emitter::onSuccess, emitter::onError));
+        return toSingle((onResult, onError) -> delegate.interpret(text, onResult, onError));
     }
 
     @Override
     public Single<InterpretResult> interpret(@NonNull String text, @NonNull InterpretOptions options) {
-        return Single.create(emitter -> delegate.interpret(text, options, emitter::onSuccess, emitter::onError));
+        return toSingle((onResult, onError) -> delegate.interpret(text, options, onResult, onError));
+    }
+
+    private static <T> Single<T> toSingle(VoidBehaviors.ResultEmitter<T, PredictionsException> behavior) {
+        return VoidBehaviors.toSingle(behavior);
     }
 }

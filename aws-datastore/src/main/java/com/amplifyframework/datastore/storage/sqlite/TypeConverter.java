@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.types.JavaFieldType;
-import com.amplifyframework.datastore.appsync.AWSAppSyncScalarType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,40 +29,25 @@ import java.util.Map;
  * GraphQL, Java and SQL data types.
  */
 public final class TypeConverter {
-    private static final Map<AWSAppSyncScalarType, JavaFieldType> AWS_GRAPH_QL_TO_JAVA = new HashMap<>();
     private static final Map<JavaFieldType, SQLiteDataType> JAVA_TO_SQL = new HashMap<>();
 
     /**
      * Dis-allows instantiation of the static utility.
      */
-    private TypeConverter() {
-    }
+    private TypeConverter() {}
 
     static {
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.ID, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.STRING, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.INT, JavaFieldType.INTEGER);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.FLOAT, JavaFieldType.FLOAT);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.BOOLEAN, JavaFieldType.BOOLEAN);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_DATE, JavaFieldType.DATE);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_TIME, JavaFieldType.TIME);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_DATE_TIME, JavaFieldType.DATE);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_TIMESTAMP, JavaFieldType.LONG);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_EMAIL, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_JSON, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_URL, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_PHONE, JavaFieldType.STRING);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_IP_ADDRESS, JavaFieldType.STRING);
-
         JAVA_TO_SQL.put(JavaFieldType.BOOLEAN, SQLiteDataType.INTEGER);
         JAVA_TO_SQL.put(JavaFieldType.LONG, SQLiteDataType.INTEGER);
         JAVA_TO_SQL.put(JavaFieldType.INTEGER, SQLiteDataType.INTEGER);
         JAVA_TO_SQL.put(JavaFieldType.FLOAT, SQLiteDataType.REAL);
+        JAVA_TO_SQL.put(JavaFieldType.DOUBLE, SQLiteDataType.REAL);
         JAVA_TO_SQL.put(JavaFieldType.STRING, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.ENUM, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.DATE, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.DATE_TIME, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.TIME, SQLiteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.TIMESTAMP, SQLiteDataType.INTEGER);
         JAVA_TO_SQL.put(JavaFieldType.MODEL, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.CUSTOM_TYPE, SQLiteDataType.TEXT);
     }
@@ -76,7 +60,7 @@ public final class TypeConverter {
             return JavaFieldType.ENUM;
         }
         try {
-            return JavaFieldType.from(field.getType().getSimpleName());
+            return JavaFieldType.from(field.getJavaClassForValue());
         } catch (IllegalArgumentException exception) {
             // fallback to custom type, which will result in the field being converted to a JSON string
             return JavaFieldType.CUSTOM_TYPE;
@@ -96,7 +80,7 @@ public final class TypeConverter {
             return JavaFieldType.ENUM;
         }
         try {
-            return JavaFieldType.from(value.getClass().getSimpleName());
+            return JavaFieldType.from(value.getClass());
         } catch (IllegalArgumentException exception) {
             // fallback to custom type, which will result in the field being converted to a JSON string
             return JavaFieldType.CUSTOM_TYPE;

@@ -19,7 +19,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -36,7 +38,8 @@ public final class StorageItemChange<T extends Model> {
     private final Type type;
     private final QueryPredicate predicate;
     private final T item;
-    private final Class<T> itemClass;
+    private final SerializedModel patchItem;
+    private final ModelSchema modelSchema;
 
     private StorageItemChange(
             UUID changeId,
@@ -44,13 +47,15 @@ public final class StorageItemChange<T extends Model> {
             Type type,
             QueryPredicate predicate,
             T item,
-            Class<T> itemClass) {
+            SerializedModel patchItem,
+            ModelSchema modelSchema) {
         this.changeId = changeId;
         this.initiator = initiator;
         this.type = type;
         this.predicate = predicate;
         this.item = item;
-        this.itemClass = itemClass;
+        this.patchItem = patchItem;
+        this.modelSchema = modelSchema;
     }
 
     /**
@@ -101,12 +106,21 @@ public final class StorageItemChange<T extends Model> {
     }
 
     /**
-     * Gets the class of the changed item.
-     * @return Class of changed item
+     * Gets a SerializedModel containing only the fields that have changed.
+     * @return a SerializedModel containing only the fields that have changed.
      */
     @NonNull
-    public Class<T> itemClass() {
-        return itemClass;
+    public SerializedModel patchItem() {
+        return patchItem;
+    }
+
+    /**
+     * Gets the schema of the changed item.
+     * @return Schema of changed item
+     */
+    @NonNull
+    public ModelSchema modelSchema() {
+        return modelSchema;
     }
 
     /**
@@ -145,7 +159,7 @@ public final class StorageItemChange<T extends Model> {
         if (!item.equals(that.item)) {
             return false;
         }
-        return itemClass.equals(that.itemClass);
+        return modelSchema.equals(that.modelSchema);
     }
 
     @Override
@@ -155,7 +169,7 @@ public final class StorageItemChange<T extends Model> {
         result = 31 * result + type.hashCode();
         result = 31 * result + predicate.hashCode();
         result = 31 * result + item.hashCode();
-        result = 31 * result + itemClass.hashCode();
+        result = 31 * result + modelSchema.hashCode();
         return result;
     }
 
@@ -168,7 +182,7 @@ public final class StorageItemChange<T extends Model> {
                 ", type=" + type +
                 ", predicate=" + predicate +
                 ", item=" + item +
-                ", itemClass=" + itemClass +
+                ", modelSchema=" + modelSchema +
                 '}';
     }
 
@@ -182,7 +196,8 @@ public final class StorageItemChange<T extends Model> {
         private Type type;
         private QueryPredicate predicate;
         private T item;
-        private Class<T> itemClass;
+        private SerializedModel patchItem;
+        private ModelSchema modelSchema;
 
         /**
          * Use a particular ID as the change ID.
@@ -256,13 +271,23 @@ public final class StorageItemChange<T extends Model> {
         }
 
         /**
-         * Configures the class of the item that changed, e.g., YourType.class.
-         * @param itemClass Class of the item that changed
+         * Configures the patchItem, a SerializedModel containing only the fields that changed.
+         * @param patchItem Representation of the changes that occurred.
+         * @return Current Builder instance for fluent configuration chaining.
+         */
+        public Builder<T> patchItem(@NonNull SerializedModel patchItem) {
+            this.patchItem = Objects.requireNonNull(patchItem);
+            return this;
+        }
+
+        /**
+         * Configures the schema of the item that changed.
+         * @param modelSchema Schema of the item that changed
          * @return Current Builder instance for fluent configuration chaining
          */
         @NonNull
-        public Builder<T> itemClass(@NonNull Class<T> itemClass) {
-            this.itemClass = Objects.requireNonNull(itemClass);
+        public Builder<T> modelSchema(@NonNull ModelSchema modelSchema) {
+            this.modelSchema = Objects.requireNonNull(modelSchema);
             return this;
         }
 
@@ -280,7 +305,8 @@ public final class StorageItemChange<T extends Model> {
                 Objects.requireNonNull(type),
                 Objects.requireNonNull(predicate),
                 Objects.requireNonNull(item),
-                Objects.requireNonNull(itemClass)
+                Objects.requireNonNull(patchItem),
+                Objects.requireNonNull(modelSchema)
             );
         }
     }

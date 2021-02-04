@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.QueryPaginationInput;
+import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -36,6 +37,7 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
+import com.amplifyframework.util.Wrap;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -84,7 +86,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("CREATE TABLE IF NOT EXISTS")
                 .append(SqlKeyword.DELIMITER)
-                .append(table.getName())
+                .append(Wrap.inBackticks(table.getName()))
                 .append(SqlKeyword.DELIMITER);
         if (Empty.check(table.getColumns())) {
             return new SqlCommand(table.getName(), stringBuilder.toString());
@@ -115,18 +117,18 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("CREATE INDEX IF NOT EXISTS")
                     .append(SqlKeyword.DELIMITER)
-                    .append(modelIndex.getIndexName())
+                    .append(Wrap.inBackticks(modelIndex.getIndexName()))
                     .append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.ON)
                     .append(SqlKeyword.DELIMITER)
-                    .append(table.getName())
+                    .append(Wrap.inBackticks(table.getName()))
                     .append(SqlKeyword.DELIMITER);
 
             stringBuilder.append("(");
             Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
             while (iterator.hasNext()) {
                 final String indexColumnName = iterator.next();
-                stringBuilder.append(indexColumnName);
+                stringBuilder.append(Wrap.inBackticks(indexColumnName));
                 if (iterator.hasNext()) {
                     stringBuilder.append(",").append(SqlKeyword.DELIMITER);
                 }
@@ -160,46 +162,19 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
 
         // Joins the foreign keys
-        // LEFT JOIN if foreign key is optional, INNER JOIN otherwise.
-        final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
-        while (foreignKeyIterator.hasNext()) {
-            final SQLiteColumn foreignKey = foreignKeyIterator.next();
-            final String ownedTableName = foreignKey.getOwnedType();
-            final ModelSchema ownedSchema = modelSchemaRegistry.getModelSchemaForModelClass(ownedTableName);
-            final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
-
-            columns.addAll(ownedTable.getSortedColumns());
-
-            SqlKeyword joinType = foreignKey.isNonNull()
-                    ? SqlKeyword.INNER_JOIN
-                    : SqlKeyword.LEFT_JOIN;
-
-            joinStatement.append(joinType)
-                    .append(SqlKeyword.DELIMITER)
-                    .append(ownedTableName)
-                    .append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.ON)
-                    .append(SqlKeyword.DELIMITER)
-                    .append(foreignKey.getColumnName())
-                    .append(SqlKeyword.EQUAL)
-                    .append(ownedTable.getPrimaryKeyColumnName());
-
-            if (foreignKeyIterator.hasNext()) {
-                joinStatement.append(SqlKeyword.DELIMITER);
-            }
-        }
+        recursivelyBuildJoins(table, columns, joinStatement);
 
         // Convert columns to comma-separated column names
         Iterator<SQLiteColumn> columnsIterator = columns.iterator();
         while (columnsIterator.hasNext()) {
             final SQLiteColumn column = columnsIterator.next();
-            selectColumns.append(column.getColumnName());
+            selectColumns.append(column.getQuotedColumnName());
 
             // Alias primary keys to avoid duplicate column names
             selectColumns.append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.AS)
                     .append(SqlKeyword.DELIMITER)
-                    .append(column.getAliasedName());
+                    .append(Wrap.inBackticks(column.getAliasedName()));
 
             if (columnsIterator.hasNext()) {
                 selectColumns.append(",").append(SqlKeyword.DELIMITER);
@@ -214,7 +189,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 .append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.FROM)
                 .append(SqlKeyword.DELIMITER)
-                .append(tableName);
+                .append(Wrap.inBackticks(tableName));
 
         // Append join statements.
         // INNER JOIN tableOne ON tableName.id=tableOne.foreignKey
@@ -236,17 +211,38 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append(sqlPredicate);
         }
 
-        // Append pagination
+        // Append order by
+        final List<QuerySortBy> sortByList = options.getSortBy();
+        if (sortByList != null) {
+            rawQuery.append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.ORDER_BY)
+                    .append(SqlKeyword.DELIMITER);
+            Iterator<QuerySortBy> sortByIterator = sortByList.iterator();
+            while (sortByIterator.hasNext()) {
+                final QuerySortBy sortBy = sortByIterator.next();
+                SQLiteColumn column = table.getColumn(sortBy.getField());
+                rawQuery.append(Wrap.inBackticks(column.getAliasedName()))
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.fromQuerySortOrder(sortBy.getSortOrder()));
+
+                if (sortByIterator.hasNext()) {
+                    rawQuery.append(",")
+                            .append(SqlKeyword.DELIMITER);
+                }
+            }
+        }
+
+        // Append pagination after order by
         final QueryPaginationInput paginationInput = options.getPaginationInput();
         if (paginationInput != null) {
             rawQuery.append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.LIMIT)
-                    .append(SqlKeyword.DELIMITER)
-                    .append("?")
-                    .append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.OFFSET)
-                    .append(SqlKeyword.DELIMITER)
-                    .append("?");
+                .append(SqlKeyword.LIMIT)
+                .append(SqlKeyword.DELIMITER)
+                .append("?")
+                .append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.OFFSET)
+                .append(SqlKeyword.DELIMITER)
+                .append("?");
             bindings.add(paginationInput.getLimit());
             bindings.add(paginationInput.getPage() * paginationInput.getLimit());
         }
@@ -270,14 +266,14 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("INSERT INTO")
                 .append(SqlKeyword.DELIMITER)
-                .append(table.getName())
+                .append(Wrap.inBackticks(table.getName()))
                 .append(SqlKeyword.DELIMITER)
                 .append("(");
         final List<SQLiteColumn> columns = table.getSortedColumns();
         final Iterator<SQLiteColumn> columnsIterator = columns.iterator();
         while (columnsIterator.hasNext()) {
             final String columnName = columnsIterator.next().getName();
-            stringBuilder.append(columnName);
+            stringBuilder.append(Wrap.inBackticks(columnName));
             if (columnsIterator.hasNext()) {
                 stringBuilder.append(",").append(SqlKeyword.DELIMITER);
             }
@@ -297,7 +293,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append(")");
         final String preparedInsertStatement = stringBuilder.toString();
         final SQLiteStatement compiledInsertStatement =
-                databaseConnectionHandle.compileStatement(preparedInsertStatement);
+                databaseConnectionHandle == null ?
+                null : databaseConnectionHandle.compileStatement(preparedInsertStatement);
         return new SqlCommand(table.getName(), preparedInsertStatement, columns,
                 Collections.emptyList(), compiledInsertStatement);
     }
@@ -311,14 +308,13 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @NonNull
     @WorkerThread
     @Override
-    public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
-                                                  @NonNull T item,
-                                                  @NonNull QueryPredicate predicate) throws DataStoreException {
+    public SqlCommand updateFor(@NonNull ModelSchema modelSchema,
+                                @NonNull QueryPredicate predicate) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("UPDATE")
                 .append(SqlKeyword.DELIMITER)
-                .append(table.getName())
+                .append(Wrap.inBackticks(table.getName()))
                 .append(SqlKeyword.DELIMITER)
                 .append("SET")
                 .append(SqlKeyword.DELIMITER);
@@ -330,7 +326,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final Iterator<SQLiteColumn> columnsIterator = columns.iterator();
         while (columnsIterator.hasNext()) {
             final String columnName = columnsIterator.next().getName();
-            stringBuilder.append(columnName)
+            stringBuilder.append(Wrap.inBackticks(columnName))
                     .append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.EQUAL)
                     .append(SqlKeyword.DELIMITER)
@@ -350,7 +346,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         final String preparedUpdateStatement = stringBuilder.toString();
         final SQLiteStatement compiledUpdateStatement =
-                databaseConnectionHandle.compileStatement(preparedUpdateStatement);
+                databaseConnectionHandle == null ?
+                null : databaseConnectionHandle.compileStatement(preparedUpdateStatement);
         return new SqlCommand(table.getName(),
                 preparedUpdateStatement,
                 columns,
@@ -364,30 +361,69 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      */
     @NonNull
     @Override
-    public <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
-                                                  @NonNull T item,
-                                                  @NonNull QueryPredicate predicate) throws DataStoreException {
+    public SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
+                                @NonNull QueryPredicate predicate) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
-        final StringBuilder stringBuilder = new StringBuilder();
         final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
-        stringBuilder.append("DELETE FROM")
-                .append(SqlKeyword.DELIMITER)
-                .append(table.getName())
-                .append(SqlKeyword.DELIMITER)
-                .append(SqlKeyword.WHERE)
-                .append(SqlKeyword.DELIMITER)
-                .append(sqlPredicate)
-                .append(";");
 
-        final String preparedDeleteStatement = stringBuilder.toString();
+        final String preparedDeleteStatement =
+                "DELETE FROM" +
+                SqlKeyword.DELIMITER +
+                Wrap.inBackticks(table.getName()) +
+                SqlKeyword.DELIMITER +
+                SqlKeyword.WHERE +
+                SqlKeyword.DELIMITER +
+                sqlPredicate +
+                ";";
         final SQLiteStatement compiledDeleteStatement =
-                databaseConnectionHandle.compileStatement(preparedDeleteStatement);
+                databaseConnectionHandle == null ?
+                null : databaseConnectionHandle.compileStatement(preparedDeleteStatement);
         return new SqlCommand(table.getName(),
                 preparedDeleteStatement,
                 Collections.emptyList(),
                 sqlPredicate.getBindings(),
                 compiledDeleteStatement
         );
+    }
+
+    /**
+     * Recursively build joins for multilevel nested joins.
+     *
+     */
+    private void recursivelyBuildJoins(SQLiteTable table, List<SQLiteColumn> columns,
+                                       StringBuilder joinStatement) {
+        // Joins the foreign keys
+        // LEFT JOIN if foreign key is optional, INNER JOIN otherwise.
+        final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
+        while (foreignKeyIterator.hasNext()) {
+            final SQLiteColumn foreignKey = foreignKeyIterator.next();
+            final String ownedTableName = foreignKey.getOwnedType();
+            final ModelSchema ownedSchema = modelSchemaRegistry.getModelSchemaForModelClass(ownedTableName);
+            final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
+
+            columns.addAll(ownedTable.getSortedColumns());
+
+            SqlKeyword joinType = foreignKey.isNonNull()
+                ? SqlKeyword.INNER_JOIN
+                : SqlKeyword.LEFT_JOIN;
+
+            joinStatement.append(joinType)
+                .append(SqlKeyword.DELIMITER)
+                .append(Wrap.inBackticks(ownedTableName))
+                .append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.ON)
+                .append(SqlKeyword.DELIMITER)
+                .append(foreignKey.getQuotedColumnName())
+                .append(SqlKeyword.EQUAL)
+                .append(ownedTable.getPrimaryKeyColumnName());
+
+            if (foreignKeyIterator.hasNext()) {
+                joinStatement.append(SqlKeyword.DELIMITER);
+            }
+
+            // important that this comes last to maintain the order of the joins
+            recursivelyBuildJoins(ownedTable, columns, joinStatement);
+        }
     }
 
     // Utility method to parse columns in CREATE TABLE
@@ -398,7 +434,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final SQLiteColumn column = columnsIterator.next();
             final String columnName = column.getName();
 
-            builder.append(columnName)
+            builder.append(Wrap.inBackticks(columnName))
                     .append(SqlKeyword.DELIMITER)
                     .append(column.getColumnType());
 
@@ -430,12 +466,12 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
             builder.append("FOREIGN KEY")
                     .append(SqlKeyword.DELIMITER)
-                    .append("(" + connectedName + ")")
+                    .append("(" + Wrap.inBackticks(connectedName) + ")")
                     .append(SqlKeyword.DELIMITER)
                     .append("REFERENCES")
                     .append(SqlKeyword.DELIMITER)
-                    .append(connectedType)
-                    .append("(" + connectedId + ")")
+                    .append(Wrap.inBackticks(connectedType))
+                    .append("(" + Wrap.inBackticks(connectedId) + ")")
                     .append(SqlKeyword.DELIMITER)
                     .append("ON DELETE CASCADE");
 

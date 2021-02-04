@@ -16,11 +16,13 @@
 package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -28,7 +30,7 @@ import com.amplifyframework.testutils.Await;
 
 import java.util.Objects;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 
 /**
  * A synchronous wrapper around an AppSync client, useful in test, so you can just
@@ -59,37 +61,38 @@ public final class SynchronousAppSync {
     /**
      * Uses Amplify API category to get a list of changes which have happened since a last sync time.
      * @param <T> The type of data in the response. Must extend Model.
-     * @param modelClass The class of the Model we are querying on
-     * @param lastSync The time you last synced - all changes since this time are retrieved.
+     * @param request The request for the sync query.
      * @return Response data from AppSync.
      * @throws DataStoreException on failure to obtain response data
      */
     @NonNull
-    public <T extends Model> GraphQLResponse<Iterable<ModelWithMetadata<T>>> sync(
-            @NonNull Class<T> modelClass,
-            @Nullable Long lastSync) throws DataStoreException {
-        return Await.<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException>result((onResult, onError) ->
-            appSync.sync(modelClass, lastSync, onResult, onError)
+    public <T extends Model> GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>> sync(
+            @NonNull GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) throws DataStoreException {
+        return Await.<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>, DataStoreException>
+                result((onResult, onError) -> appSync.sync(request, onResult, onError)
         );
     }
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param model An instance of the Model with the values to mutate
+     * @param schema The schema of the Model we are creating
      * @param <T> The type of data in the response. Must extend Model.
      * @return Response data from AppSync
      * @throws DataStoreException On failure to obtain response data
      */
     @NonNull
-    public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> create(@NonNull T model) throws DataStoreException {
+    public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> create(
+            @NonNull T model, @NonNull ModelSchema schema) throws DataStoreException {
         return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result((onResult, onError) ->
-            appSync.create(model, onResult, onError)
+            appSync.create(model, schema, onResult, onError)
         );
     }
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param model An instance of the model with the values to mutate
+     * @param schema The schema of the Model we are updating
      * @param version The version of the model we have
      * @param <T> The type of data in the response. Must extend Model.
      * @return Response data is from AppSync
@@ -97,13 +100,14 @@ public final class SynchronousAppSync {
      */
     @NonNull
     public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> update(
-            @NonNull T model, @NonNull Integer version) throws DataStoreException {
-        return update(model, version, QueryPredicates.all());
+            @NonNull T model, @NonNull ModelSchema schema, @NonNull Integer version) throws DataStoreException {
+        return update(model, schema, version, QueryPredicates.all());
     }
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param model An instance of the Model with the values to mutate
+     * @param schema The schema of the Model we are updating
      * @param version The version of the model we have
      * @param <T> The type of data in the response. Must extend Model.
      * @param predicate The condition to be applied to the update.
@@ -112,15 +116,16 @@ public final class SynchronousAppSync {
      */
     @NonNull
     public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> update(
-            @NonNull T model, @NonNull Integer version, @NonNull QueryPredicate predicate) throws DataStoreException {
+            @NonNull T model, @NonNull ModelSchema schema, @NonNull Integer version, @NonNull QueryPredicate predicate)
+            throws DataStoreException {
         return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result(((onResult, onError) ->
-            appSync.update(model, version, predicate, onResult, onError)
+            appSync.update(model, schema, version, predicate, onResult, onError)
         ));
     }
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
-     * @param clazz The class of the object being deleted
+     * @param schema The schema of the Model we are deleting
      * @param objectId Id of the object to delete
      * @param version The version of the model we have
      * @param <T> The type of data in the response. Must extend Model.
@@ -129,13 +134,13 @@ public final class SynchronousAppSync {
      */
     @NonNull
     <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
-        @NonNull Class<T> clazz, @NonNull String objectId, @NonNull Integer version) throws DataStoreException {
-        return delete(clazz, objectId, version, QueryPredicates.all());
+            @NonNull ModelSchema schema, @NonNull String objectId, @NonNull Integer version) throws DataStoreException {
+        return delete(schema, objectId, version, QueryPredicates.all());
     }
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
-     * @param clazz The class of the object being deleted
+     * @param schema The schema of the Model we are deleting
      * @param objectId Id of the object to delete
      * @param version The version of the model we have
      * @param predicate The condition to be applied to the delete.
@@ -145,51 +150,51 @@ public final class SynchronousAppSync {
      */
     @NonNull
     <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
-            @NonNull Class<T> clazz,
+            @NonNull ModelSchema schema,
             @NonNull String objectId,
             @NonNull Integer version,
             @NonNull QueryPredicate predicate) throws DataStoreException {
         return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result((onResult, onError) ->
-            appSync.delete(clazz, objectId, version, predicate, onResult, onError)
+            appSync.delete(schema, objectId, version, predicate, onResult, onError)
         );
     }
 
     /**
      * Get notified when a create event happens on a given class.
-     * @param modelClass The class of the Model we are listening on
+     * @param schema The schema of the Model we are listening
      * @param <T> The type of data in the response. Must extend Model.
      * @return An observable that emits creation events, error/completion on termination
      */
     @NonNull
-    public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onCreate(@NonNull Class<T> modelClass) {
+    public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onCreate(@NonNull ModelSchema schema) {
         return Observable.defer(() -> Observable.create(emitter ->
-            appSync.onCreate(modelClass, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
+            appSync.onCreate(schema, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
         ));
     }
 
     /**
      * Get notified when an update event happens on a given class.
-     * @param modelClass The class of the Model we are listening on
+     * @param schema The schema of the Model we are listening
      * @param <T> The type of data in the response. Must extend Model.
      * @return An observable that emits update events, error/completion on termination
      */
     @NonNull
-    public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onUpdate(@NonNull Class<T> modelClass) {
+    public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onUpdate(@NonNull ModelSchema schema) {
         return Observable.defer(() -> Observable.create(emitter ->
-            appSync.onUpdate(modelClass, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
+            appSync.onUpdate(schema, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
         ));
     }
 
     /**
      * Get notified when a delete event happens on a given class.
-     * @param modelClass The class of the Model we are listening on
+     * @param schema The schema of the Model we are listening
      * @param <T> The type of data in the response. Must extend Model.
      * @return An observable that emits deletion events, error/completion on termination
      */
     @NonNull
-    public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onDelete(@NonNull Class<T> modelClass) {
+    public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onDelete(@NonNull ModelSchema schema) {
         return Observable.defer(() -> Observable.create(emitter ->
-            appSync.onDelete(modelClass, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
+            appSync.onDelete(schema, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
         ));
     }
 }

@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""Python script that generates a user-readable report for a given DeviceFarm test run.
+"""
+
+import os
+import sys
+import subprocess
+import argparse
+import logging
+import boto3
+from botocore.config import Config
+from junit_xml import TestSuite, TestCase
+
+LOG_FORMATTER = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+CONSOLE_HANDLER = logging.StreamHandler()
+CONSOLE_HANDLER.setFormatter(LOG_FORMATTER)
+LOGGER = logging.getLogger("DeviceFarmTestRunReportGenerator")
+LOGGER.setLevel(os.getenv("LOG_LEVEL") if os.getenv("LOG_LEVEL") is not None else "INFO")
+LOGGER.addHandler(CONSOLE_HANDLER)
+
+client = boto3.client('devicefarm', config=Config(region_name='us-west-2'))
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Utility that generates a report for a DeviceFarm test run.")
+    parser.add_argument("--run_arn", help="The ARN of the DeviceFarm test run.", required=True)
+    parser.add_argument("--module_name", help="The module name for the test suite.", required=True)
+    parser.add_argument("--output_path", help="Destination path for the build reports.", required=True)
+    parser.add_argument("--pr", help="The github PR number.")
+    return parser.parse_args()
+
+def generate_junit_report(run_arn, output_path):
+    LOGGER.debug(f"Retrieving test jobs for run {run_arn}")
+    jobs = get_test_jobs(run_arn)
+    for job in jobs:
+        LOGGER.debug(f"Retrieving test suites for job {job['arn']}")
+        suites = get_test_suites(job['arn'])
+        for suite in suites:
+            LOGGER.debug(f"Retrieving tests for suite {suite['arn']}")
+            tests = get_tests(suite['arn'])
+            test_cases = []
+            for test in tests:
+                tc = TestCase(test['name'],
+                                classname=suite['name'], 
+                                elapsed_sec=test['deviceMinutes']['total']*60,
+                                stdout=test['message'],
+                                status=test['result'] )
+                if test['result'] == 'FAILED':
+                    tc.add_failure_info(message=test['message'])
+                if test['result'] == 'ERROR':
+                    tc.add_error_info(message=test['message'])
+                test_cases.append(tc)
+            ts = TestSuite(suite['name'],test_cases=test_cases)
+            ts_output = TestSuite.to_xml_string([ts])
+            LOGGER.info(f"Saving test suite {suite['name']} report.")
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
+            f = open(output_path + suite['name'] + ".xml", "w")
+            f.write(ts_output)
+            f.close()
+
+def get_test_jobs(run_arn):
+    result = client.list_jobs(arn=run_arn)
+    return result['jobs'] if result is not None else []
+
+def get_test_suites(job_arn):
+    result = client.list_suites(arn=job_arn)
+    return result['suites'] if result is not None else []
+
+def get_tests(suite_arn):
+    result = client.list_tests(arn=suite_arn)
+    return result['tests'] if result is not None else []
+
+def get_problems(run_arn):
+    return client.list_unique_problems(
+        arn=run_arn
+    )
+
+def main(arguments):
+    args = parse_arguments()
+    build_id = os.getenv("CODEBUILD_BUILD_ID")
+    source_version = os.getenv("CODEBUILD_SOURCE_VERSION")
+    arn_suffix = args.run_arn.split(':')[-1]
+    LOGGER.info(f"devicefarm_run: {arn_suffix} build_id: {build_id} source_version: {source_version}")
+    generate_junit_report(run_arn=args.run_arn, 
+                            output_path=args.output_path)
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))

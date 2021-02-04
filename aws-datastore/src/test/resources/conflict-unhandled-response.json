@@ -1,0 +1,29 @@
+{
+  "data": {
+    "updateNote": null
+  },
+  "errors": [
+    {
+      "path": [
+        "updateNote"
+      ],
+      "data": {
+        "id": "KoolId22",
+        "content": "Resurecting the dataz",
+        "_version": 7,
+        "_deleted": true,
+        "_lastChangedAt": 1601499066604
+      },
+      "errorType": "ConflictUnhandled",
+      "errorInfo": null,
+      "locations": [
+        {
+          "line": 2,
+          "column": 3,
+          "sourceName": null
+        }
+      ],
+      "message": "Conflict resolver rejects mutation."
+    }
+  ]
+}

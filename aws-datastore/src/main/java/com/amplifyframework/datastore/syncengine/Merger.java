@@ -15,24 +15,27 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import android.database.sqlite.SQLiteConstraintException;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.Where;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
-import io.reactivex.Completable;
+import io.reactivex.rxjava3.core.Completable;
 
 /**
  * The merger is responsible for merging cloud data back into the local store.
@@ -66,38 +69,63 @@ final class Merger {
      * @return A completable operation to merge the model
      */
     <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata) {
-        ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
-        boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
-        int incomingVersion = metadata.getVersion() == null ? -1 : metadata.getVersion();
-        T model = modelWithMetadata.getModel();
+        return merge(modelWithMetadata, NoOpConsumer.create());
+    }
 
-        // Check if there is a pending mutation for this model, in the outbox.
-        if (mutationOutbox.hasPendingMutation(model.getId())) {
-            LOG.info("Mutation outbox has pending mutation for " + model.getId() + ", refusing to merge.");
-            return Completable.complete();
-        }
+    /**
+     * Merge an item back into the local store, using a default strategy.
+     * TODO: Change this method to return a Maybe, and remove the Consumer argument.
+     * @param modelWithMetadata A model, combined with metadata about it
+     * @param changeTypeConsumer A callback invoked when the merge method saves or deletes the model.
+     * @param <T> Type of model
+     * @return A completable operation to merge the model
+     */
+    <T extends Model> Completable merge(
+            ModelWithMetadata<T> modelWithMetadata, Consumer<StorageItemChange.Type> changeTypeConsumer) {
+        return Completable.defer(() -> {
+            ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
+            boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
+            int incomingVersion = metadata.getVersion() == null ? -1 : metadata.getVersion();
+            T model = modelWithMetadata.getModel();
 
-        return versionRepository.findModelVersion(model)
-            .onErrorReturnItem(-1)
-            // If the incoming version is strictly less than the current version, it's "out of date,"
-            // so don't merge it.
-            // If the incoming version is exactly equal, it might clobber our local changes. So we
-            // *still* won't merge it. Instead, the MutationProcessor would publish the current content,
-            // and the version would get bumped up.
-            .filter(currentVersion -> currentVersion == -1 || incomingVersion > currentVersion)
-            // If we should merge, then do so now, starting with the model data.
-            .flatMapCompletable(shouldMerge ->
-                (isDelete ? delete(model) : save(model))
-                    .andThen(save(metadata))
-            )
-            // Let the world know that we've done a good thing.
-            .doOnComplete(() -> {
-                announceSuccessfulMerge(modelWithMetadata);
-                LOG.debug("Remote model update was sync'd down into local storage: " + modelWithMetadata);
-            })
-            .doOnError(failure ->
-                LOG.warn("Failed to sync remote model into local storage: " + modelWithMetadata, failure)
-            );
+            // Check if there is a pending mutation for this model, in the outbox.
+            if (mutationOutbox.hasPendingMutation(model.getId())) {
+                LOG.info("Mutation outbox has pending mutation for " + model.getId() + ", refusing to merge.");
+                return Completable.complete();
+            }
+
+            return versionRepository.findModelVersion(model)
+                .onErrorReturnItem(-1)
+                // If the incoming version is strictly less than the current version, it's "out of date,"
+                // so don't merge it.
+                // If the incoming version is exactly equal, it might clobber our local changes. So we
+                // *still* won't merge it. Instead, the MutationProcessor would publish the current content,
+                // and the version would get bumped up.
+                .filter(currentVersion -> currentVersion == -1 || incomingVersion > currentVersion)
+                // If we should merge, then do so now, starting with the model data.
+                .flatMapCompletable(shouldMerge ->
+                        (isDelete ? delete(model, changeTypeConsumer) : save(model, changeTypeConsumer))
+                                .andThen(save(metadata, NoOpConsumer.create()))
+                )
+                // Let the world know that we've done a good thing.
+                .doOnComplete(() -> {
+                    announceSuccessfulMerge(modelWithMetadata);
+                    LOG.debug("Remote model update was sync'd down into local storage: " + modelWithMetadata);
+                })
+                // Remote store may not always respect the foreign key constraint, so
+                // swallow any error caused by foreign key constraint violation.
+                .onErrorComplete(failure -> {
+                    if (!ErrorInspector.contains(failure, SQLiteConstraintException.class)) {
+                        return false;
+                    }
+                    LOG.warn("Sync failed: foreign key constraint violation: " + modelWithMetadata, failure);
+                    return true;
+                })
+                .doOnError(failure ->
+                    LOG.warn("Failed to sync remote model into local storage: " + modelWithMetadata, failure)
+                );
+        });
+
     }
 
     /**
@@ -107,75 +135,40 @@ final class Merger {
      */
     private <T extends Model> void announceSuccessfulMerge(ModelWithMetadata<T> modelWithMetadata) {
         Amplify.Hub.publish(HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.RECEIVED_FROM_CLOUD, modelWithMetadata)
+            HubEvent.create(DataStoreChannelEventName.SUBSCRIPTION_DATA_PROCESSED, modelWithMetadata)
         );
     }
 
     // Delete a model.
-    private <T extends Model> Completable delete(T model) {
-        return Completable.defer(() -> Completable.create(emitter -> {
-            // First, check if the thing exists.
-            // If we don't, we'll get an exception saying basically,
-            // "failed to delete a non-existing thing."
-            ifPresent(model.getClass(), model.getId(),
-                () -> localStorageAdapter.delete(
-                    model,
-                    StorageItemChange.Initiator.SYNC_ENGINE,
-                    ignored -> emitter.onComplete(),
-                    emitter::onError
-                ),
-                emitter::onComplete
-            );
-        }));
+    private <T extends Model> Completable delete(T model, Consumer<StorageItemChange.Type> changeTypeConsumer) {
+        return Completable.create(emitter ->
+            localStorageAdapter.delete(model, StorageItemChange.Initiator.SYNC_ENGINE, QueryPredicates.all(),
+                storageItemChange -> {
+                    changeTypeConsumer.accept(storageItemChange.type());
+                    emitter.onComplete();
+                },
+                failure -> {
+                    LOG.verbose(
+                        "Failed to delete a model while merging. Perhaps it was already gone? "
+                        + android.util.Log.getStackTraceString(failure)
+                    );
+                    changeTypeConsumer.accept(StorageItemChange.Type.DELETE);
+                    emitter.onComplete();
+                }
+            )
+        );
     }
 
     // Create or update a model.
-    private <T extends Model> Completable save(T model) {
-        return Completable.defer(() -> Completable.create(emitter ->
-            localStorageAdapter.save(
-                model,
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                ignored -> emitter.onComplete(),
+    private <T extends Model> Completable save(T model, Consumer<StorageItemChange.Type> changeTypeConsumer) {
+        return Completable.create(emitter ->
+            localStorageAdapter.save(model, StorageItemChange.Initiator.SYNC_ENGINE, QueryPredicates.all(),
+                storageItemChange -> {
+                    changeTypeConsumer.accept(storageItemChange.type());
+                    emitter.onComplete();
+                },
                 emitter::onError
             )
-        ));
-    }
-
-    /**
-     * If the DataStore contains an item of the given class and with the given ID,
-     * then perform an action. Otherwise, perform some other action.
-     * @param clazz Search for this class in the DataStore
-     * @param modelId Search for an item with this ID in the DataStore
-     * @param onPresent If there is a match, perform this action
-     * @param onNotPresent If there is NOT a match, perform this action as a fallback
-     * @param <T> The type of item being searched
-     */
-    private <T extends Model> void ifPresent(
-            Class<T> clazz, String modelId, Action onPresent, Action onNotPresent) {
-        localStorageAdapter.query(clazz, Where.id(modelId), iterator -> {
-            if (iterator.hasNext()) {
-                onPresent.call();
-            } else {
-                onNotPresent.call();
-            }
-        }, failure -> onNotPresent.call());
-    }
-
-    /**
-     * The strategy to use while merging. Whether to consider the contents of the mutation
-     * outbox before saving data locally, or, to ignore it.
-     */
-    enum MergeStrategy {
-        /**
-         * When merging, the contents of the mutation outbox will *not* be considered.
-         */
-        IGNORE_PENDING_MUTATIONS,
-
-        /**
-         * When merging, the contents of the mutation outbox will be considered.
-         * If there is already a pending mutation in the mutation outbox, for a model of the
-         * same ID as the model being merged -- then the merge will *not* modify the existing model.
-         */
-        CONSIDER_PENDING_MUTATIONS
+        );
     }
 }

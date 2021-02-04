@@ -22,6 +22,10 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+
 /**
  * A data structure that provides a query construction mechanism that consolidates all query-related
  * options (e.g. predicates, pagination, etc) and allows consumers to build queries in a fluent way.
@@ -29,6 +33,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 public final class QueryOptions {
     private QueryPredicate queryPredicate;
     private QueryPaginationInput paginationInput;
+    private List<QuerySortBy> sortBy;
 
     /**
      * This class should be created using the factory methods such as {@link Where#matchesAll()}
@@ -36,18 +41,31 @@ public final class QueryOptions {
      */
     QueryOptions(
             @Nullable QueryPredicate queryPredicate,
-            @Nullable QueryPaginationInput paginationInput
+            @Nullable QueryPaginationInput paginationInput,
+            @Nullable List<QuerySortBy> sortBy
     ) {
         this.queryPredicate = queryPredicate == null ? QueryPredicates.all() : queryPredicate;
         this.paginationInput = paginationInput;
+        this.sortBy = sortBy;
     }
 
     QueryOptions() {
-        this(null, null);
+        this(null, null, null);
     }
 
     /**
-     * Updates the current options with a given {@code paginationInput}.
+     * Returns an immutable copy of the current query options with the given {@code queryPredicate}.
+     *
+     * @param queryPredicate predicate.
+     * @return current options with an updated {@code queryPredicate}.
+     */
+    @NonNull
+    public QueryOptions matches(@NonNull final QueryPredicate queryPredicate) {
+        return new QueryOptions(Objects.requireNonNull(queryPredicate), paginationInput, sortBy);
+    }
+
+    /**
+     * Returns an immutable copy of the current query options with the given {@code paginationInput}.
      *
      * @param paginationInput pagination information.
      * @return current options with an updated {@code paginationInput}.
@@ -56,8 +74,17 @@ public final class QueryOptions {
      */
     @NonNull
     public QueryOptions paginated(@NonNull final QueryPaginationInput paginationInput) {
-        this.paginationInput = paginationInput;
-        return this;
+        return new QueryOptions(queryPredicate, Objects.requireNonNull(paginationInput), sortBy);
+    }
+
+    /**
+     * Returns an immutable copy of the current query options with the given {@code sortBy} arguments.
+     *
+     * @param querySortBy sorting information.
+     * @return current options with an updated {@code sortBy}.
+     */
+    public QueryOptions sorted(@NonNull final QuerySortBy... querySortBy) {
+        return new QueryOptions(queryPredicate, paginationInput, Arrays.asList(Objects.requireNonNull(querySortBy)));
     }
 
     /**
@@ -78,6 +105,15 @@ public final class QueryOptions {
         return paginationInput;
     }
 
+    /**
+     * Returns the {@code sortBy} property.
+     * @return the {@code sortBy} property.
+     */
+    @Nullable
+    public List<QuerySortBy> getSortBy() {
+        return sortBy;
+    }
+
     @Override
     public boolean equals(@Nullable Object object) {
         if (this == object) {
@@ -88,12 +124,13 @@ public final class QueryOptions {
         }
         QueryOptions that = (QueryOptions) object;
         return ObjectsCompat.equals(queryPredicate, that.queryPredicate) &&
-                ObjectsCompat.equals(paginationInput, that.paginationInput);
+                ObjectsCompat.equals(paginationInput, that.paginationInput) &&
+                ObjectsCompat.equals(sortBy, that.sortBy);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(queryPredicate, paginationInput);
+        return ObjectsCompat.hash(queryPredicate, paginationInput, sortBy);
     }
 
     @NonNull
@@ -102,6 +139,7 @@ public final class QueryOptions {
         return "QueryOptions{" +
                 "queryPredicate=" + queryPredicate +
                 ", paginationInput=" + paginationInput +
+                ", sortBy=" + sortBy +
                 '}';
     }
 }

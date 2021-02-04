@@ -18,23 +18,23 @@ package com.amplifyframework.rx;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
+import com.amplifyframework.rx.RxAdapters.VoidBehaviors;
 
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
 
 final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
     private final DataStoreCategoryBehavior dataStore;
@@ -56,8 +56,28 @@ final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
 
     @NonNull
     @Override
+    public <T extends Model> Completable save(@NonNull T item, @NonNull QueryPredicate predicate) {
+        return toCompletable((onResult, onError) -> dataStore.save(item, predicate, onResult, onError));
+    }
+
+    @NonNull
+    @Override
     public <T extends Model> Completable delete(@NonNull T item) {
         return toCompletable((onResult, onError) -> dataStore.delete(item, onResult, onError));
+    }
+
+    @NonNull
+    @Override
+    public <T extends Model> Completable delete(@NonNull T item, @NonNull QueryPredicate predicate) {
+        return toCompletable((onResult, onError) ->
+            dataStore.delete(item, predicate, onResult, onError));
+    }
+
+    @NonNull
+    @Override
+    public <T extends Model> Completable delete(@NonNull Class<T> itemClass, @NonNull QueryPredicate predicate) {
+        return toCompletable((onResult, onError) ->
+                dataStore.delete(itemClass, predicate, NoOpAction.create(), onError));
     }
 
     @NonNull
@@ -70,7 +90,16 @@ final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
     @Override
     public <T extends Model> Observable<T> query(
             @NonNull Class<T> itemClass, @NonNull QueryPredicate predicate) {
-        return toObservable((onResult, onError) -> dataStore.query(itemClass, predicate, onResult, onError));
+        return toObservable((onResult, onError) ->
+            dataStore.query(itemClass, predicate, onResult, onError));
+    }
+
+    @NonNull
+    @Override
+    public <T extends Model> Observable<T> query(
+            @NonNull Class<T> itemClass, @NonNull QueryOptions options) {
+        return toObservable((onResult, onError) ->
+            dataStore.query(itemClass, options, onResult, onError));
     }
 
     @NonNull
@@ -81,10 +110,10 @@ final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
 
     @NonNull
     @Override
-    public <T extends Model> Observable<DataStoreItemChange<T>> observe(
-            @NonNull Class<T> itemClass) {
+    public <T extends Model> Observable<DataStoreItemChange<T>> observe(@NonNull Class<T> itemClass) {
         return toObservable((onStart, onItem, onError, onComplete) ->
-            dataStore.observe(itemClass, onStart, onItem, onError, onComplete));
+            dataStore.observe(itemClass, onStart, onItem, onError, onComplete)
+        );
     }
 
     @NonNull
@@ -92,7 +121,8 @@ final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
     public <T extends Model> Observable<DataStoreItemChange<T>> observe(
             @NonNull Class<T> itemClass, @NonNull String uniqueId) {
         return toObservable((onStart, onItem, onError, onComplete) ->
-            dataStore.observe(itemClass, uniqueId, onStart, onItem, onError, onComplete));
+            dataStore.observe(itemClass, uniqueId, onStart, onItem, onError, onComplete)
+        );
     }
 
     @NonNull
@@ -100,45 +130,57 @@ final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
     public <T extends Model> Observable<DataStoreItemChange<T>> observe(
             @NonNull Class<T> itemClass, @NonNull QueryPredicate selectionCriteria) {
         return toObservable((onStart, onItem, onError, onComplete) ->
-            dataStore.observe(itemClass, selectionCriteria, onStart, onItem, onError, onComplete));
+            dataStore.observe(itemClass, selectionCriteria, onStart, onItem, onError, onComplete)
+        );
+    }
+
+    @Override
+    public Completable start() {
+        return VoidBehaviors.toCompletable(dataStore::start);
+    }
+
+    @Override
+    public Completable stop() {
+        return VoidBehaviors.toCompletable(dataStore::stop);
+    }
+
+    @Override
+    public Completable clear() {
+        return VoidBehaviors.toCompletable(dataStore::clear);
     }
 
     private static <T extends Model> Observable<T> toObservable(
-            RxAdapters.VoidResultEmitter<Iterator<T>, DataStoreException> method) {
-        return RxAdapters.<Iterator<T>, DataStoreException>toSingle((onResult, onError) -> {
-            method.emitTo(onResult, onError);
-            return new NoOpCancelable();
-        }).flatMapObservable(iterator -> Observable.create(emitter -> {
-            while (iterator.hasNext()) {
-                emitter.onNext(iterator.next());
-            }
-            emitter.onComplete();
-        }));
+            VoidBehaviors.ResultEmitter<Iterator<T>, DataStoreException> method) {
+        return VoidBehaviors.toSingle(method)
+            .flatMapObservable(iterator -> Observable.create(emitter -> {
+                while (iterator.hasNext()) {
+                    emitter.onNext(iterator.next());
+                }
+                emitter.onComplete();
+            }));
     }
 
-    private static <T> Observable<T> toObservable(DataStoreObserveMethod<T> method) {
-        return RxAdapters.<Cancelable, T, DataStoreException>toObservable(((onStart, onItem, onError, onComplete) -> {
-            AtomicReference<Cancelable> cancelableContainer = new AtomicReference<>();
-            method.streamTo(cancelableContainer::set, onItem, onError, onComplete);
-            return () -> {
-                final Cancelable containedCancelable = cancelableContainer.get();
-                if (containedCancelable != null) {
-                    containedCancelable.cancel();
-                }
-            };
-        }));
+    private static <T> Observable<T> toObservable(
+            VoidBehaviors.StreamEmitter<Cancelable, T, DataStoreException> method) {
+        // The provided behavior receives a cancelable in callback.
+        // It is, in effect, like a cancelable behavior, we just have to remap the cancelable.
+        return RxAdapters.CancelableBehaviors.<Cancelable, T, DataStoreException>toObservable(
+            (onStart, onItem, onError, onComplete) -> {
+                AtomicReference<Cancelable> cancelableContainer = new AtomicReference<>();
+                method.streamTo(cancelableContainer::set, onItem, onError, onComplete);
+                return () -> {
+                    final Cancelable containedCancelable = cancelableContainer.get();
+                    if (containedCancelable != null) {
+                        containedCancelable.cancel();
+                    }
+                };
+            }
+        );
     }
 
     private static <T extends Model> Completable toCompletable(
-            RxAdapters.VoidResultEmitter<DataStoreItemChange<T>, DataStoreException> method) {
-        return RxAdapters.toCompletable(method);
-    }
-
-    interface DataStoreObserveMethod<T> {
-        void streamTo(
-            Consumer<Cancelable> onStart,
-            Consumer<T> onItem,
-            Consumer<DataStoreException> onError,
-            Action onComplete);
+            VoidBehaviors.ResultEmitter<DataStoreItemChange<T>, DataStoreException> method) {
+        return VoidBehaviors.<DataStoreException>toCompletable((onComplete, onError) ->
+                method.emitTo(result -> onComplete.call(), onError));
     }
 }

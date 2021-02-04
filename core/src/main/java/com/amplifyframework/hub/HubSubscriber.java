@@ -15,7 +15,10 @@
 
 package com.amplifyframework.hub;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
+
+import com.amplifyframework.core.Consumer;
 
 /**
  * An instance of the {@link HubSubscriber} may be passed to the
@@ -24,10 +27,29 @@ import androidx.annotation.NonNull;
  * methods to subscribe to various types of Hub events.
  */
 public interface HubSubscriber {
-
     /**
      * Called to notify that there is a new event available in the Hub.
      * @param hubEvent A hub event
      */
     void onEvent(@NonNull HubEvent<?> hubEvent);
+
+    /**
+     * Factory method that provides a cleaner way for a "strongly"-typed
+     * subscriber to be created.
+     * @param eventDataHandler A function that processes the provided event data.
+     * @param <T> An implementation of {@link HubEvent.Data} interface that represents the event payload.
+     * @return An implementation of the {@link HubSubscriber} interface that attempts to
+     *          cast the event payload into the desired type and then invokes the
+     *          function provided in the eventDataHandler parameter.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    static <T extends HubEvent.Data> HubSubscriber create(@NonNull Consumer<T> eventDataHandler) {
+        return hubEvent -> {
+            try {
+                eventDataHandler.accept((T) hubEvent.getData());
+            } catch (Exception exception) {
+                Log.w("amplify:aws-hub", "Unable to cast event data for event type " + hubEvent.getName(), exception);
+            }
+        };
+    }
 }

@@ -22,10 +22,14 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
+import com.amplifyframework.auth.AuthCodeDeliveryDetails;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
+import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -33,12 +37,16 @@ import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.rx.RxAdapters.VoidBehaviors;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 
 final class RxAuthBinding implements RxAuthCategoryBehavior {
     private final AuthCategoryBehavior delegate;
@@ -67,8 +75,7 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Single<AuthSignUpResult> resendSignUpCode(@NonNull String username) {
-        return toSingle((onResult, onError) ->
-            delegate.resendSignUpCode(username, onResult, onError));
+        return toSingle((onResult, onError) -> delegate.resendSignUpCode(username, onResult, onError));
     }
 
     @Override
@@ -127,6 +134,27 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
+    public Completable rememberDevice() {
+        return toCompletable(delegate::rememberDevice);
+    }
+
+    @Override
+    public Completable forgetDevice() {
+        return toCompletable(delegate::forgetDevice);
+    }
+
+    @Override
+    public Completable forgetDevice(@NonNull AuthDevice device) {
+        return toCompletable((onComplete, onError) ->
+            delegate.forgetDevice(device, onComplete, onError));
+    }
+
+    @Override
+    public Single<List<AuthDevice>> fetchDevices() {
+        return toSingle(delegate::fetchDevices);
+    }
+
+    @Override
     public Single<AuthResetPasswordResult> resetPassword(@NonNull String username) {
         return toSingle((onResult, onError) -> delegate.resetPassword(username, onResult, onError));
     }
@@ -144,6 +172,36 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
+    public Single<List<AuthUserAttribute>> fetchUserAttributes() {
+        return toSingle(delegate::fetchUserAttributes);
+    }
+
+    @Override
+    public Single<AuthUpdateAttributeResult> updateUserAttribute(@NonNull AuthUserAttribute attribute) {
+        return toSingle((onResult, onError) -> delegate.updateUserAttribute(attribute, onResult, onError));
+    }
+
+    @Override
+    public Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes) {
+        return toSingle((onResult, onError) -> delegate.updateUserAttributes(attributes, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthCodeDeliveryDetails> resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey) {
+        return toSingle((onResult, onError) ->
+                delegate.resendUserAttributeConfirmationCode(attributeKey, onResult, onError));
+    }
+
+    @Override
+    public Completable confirmUserAttribute(@NonNull AuthUserAttributeKey attributeKey,
+                                            @NonNull String confirmationCode) {
+        return toCompletable((onComplete, onError) ->
+                delegate.confirmUserAttribute(attributeKey, confirmationCode, onComplete, onError));
+    }
+
+    @Override
     public AuthUser getCurrentUser() {
         return delegate.getCurrentUser();
     }
@@ -155,18 +213,15 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Completable signOut(@NonNull AuthSignOutOptions options) {
-        return toCompletable((onComplete, onError) -> delegate.signOut(options, onComplete, onError));
+        return toCompletable((onComplete, onError) ->
+            delegate.signOut(options, onComplete, onError));
     }
 
-    private <T> Single<T> toSingle(RxAdapters.VoidResultEmitter<T, AuthException> resultEmitter) {
-        return Single.defer(() ->
-            Single.create(emitter -> resultEmitter.emitTo(emitter::onSuccess, emitter::onError))
-        );
+    private <T> Single<T> toSingle(VoidBehaviors.ResultEmitter<T, AuthException> behavior) {
+        return VoidBehaviors.toSingle(behavior);
     }
 
-    private Completable toCompletable(RxAdapters.VoidCompletionEmitter<AuthException> resultEmitter) {
-        return Completable.defer(() -> Completable.create(emitter ->
-            resultEmitter.emitTo(emitter::onComplete, emitter::onError)
-        ));
+    private Completable toCompletable(VoidBehaviors.ActionEmitter<AuthException> behavior) {
+        return VoidBehaviors.toCompletable(behavior);
     }
 }

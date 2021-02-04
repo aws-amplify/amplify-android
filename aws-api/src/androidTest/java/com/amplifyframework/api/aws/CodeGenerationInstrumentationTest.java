@@ -15,14 +15,13 @@
 
 package com.amplifyframework.api.aws;
 
-import android.util.Log;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.noteswithauth.PrivateNote;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
@@ -44,10 +43,9 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -85,7 +83,7 @@ public final class CodeGenerationInstrumentationTest {
             .firstName("David")
             .lastName("Daudelin")
             .age(29)
-            .dob(new SimpleDateFormat("MM/dd/yyyy").parse("07/25/1990"))
+            .dob(new Temporal.Date(new SimpleDateFormat("MM/dd/yyyy").parse("07/25/1990")))
             .relationship(MaritalStatus.married)
             .build();
         Person createdPerson = api.create(PERSON_API_NAME, david);
@@ -166,17 +164,12 @@ public final class CodeGenerationInstrumentationTest {
         // Act: try to create a subscription
         TestObserver<GraphQLResponse<PrivateNote>> observer = TestObserver.create();
         api.onCreate(NOTES_WITH_AUTH_API_NAME, PrivateNote.class).subscribe(observer);
-        List<Throwable> errors = observer.errors();
-
-        // Assert: it failed with a connection_error
-        assertEquals(1, errors.size());
-        Throwable throwable = errors.get(0);
-        assertTrue(
-            "Wanted ApiException, but got: " + Log.getStackTraceString(throwable),
-            throwable instanceof ApiException
-        );
-        assertNotNull(throwable.getMessage());
-        assertTrue(throwable.getMessage().contains("connection_error"));
+        observer.assertError(error -> {
+            if (!(error instanceof ApiException) || error.getMessage() == null) {
+                return false;
+            }
+            return error.getMessage().contains("connection_error");
+        });
     }
 
     /**
@@ -201,7 +194,7 @@ public final class CodeGenerationInstrumentationTest {
                 .build(),
             Person.LAST_NAME.eq("Dandelion")
         );
-        assertTrue(errors.get(0).getMessage().contains("ConditionalCheckFailedException"));
+        assertTrue(errors.get(0).toString().contains("ConditionalCheckFailedException"));
 
         api.delete(PERSON_API_NAME, Person.justId(person.getId()));
     }

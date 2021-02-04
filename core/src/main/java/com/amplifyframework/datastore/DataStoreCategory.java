@@ -94,6 +94,15 @@ public final class DataStoreCategory
         getSelectedPlugin().delete(object, predicate, onItemDeleted, onFailureToDelete);
     }
 
+    @Override
+    public <T extends Model> void delete(
+            @NonNull Class<T> objectClass,
+            @NonNull QueryPredicate predicate,
+            @NonNull Action onItemsDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete) {
+        getSelectedPlugin().delete(objectClass, predicate, onItemsDeleted, onFailureToDelete);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -181,6 +190,16 @@ public final class DataStoreCategory
             @NonNull Action onObservationCompleted) {
         getSelectedPlugin().observe(itemClass, selectionCriteria,
             onObservationStarted, onDataStoreItemChange, onObservationFailure, onObservationCompleted);
+    }
+
+    @Override
+    public void start(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        getSelectedPlugin().start(onComplete, onError);
+    }
+
+    @Override
+    public void stop(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        getSelectedPlugin().stop(onComplete, onError);
     }
 
     /**

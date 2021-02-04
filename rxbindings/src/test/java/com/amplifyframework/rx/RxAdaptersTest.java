@@ -17,18 +17,17 @@ package com.amplifyframework.rx;
 
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
-import com.amplifyframework.rx.RxAdapters.CancelableResultEmitter;
-import com.amplifyframework.rx.RxAdapters.CancelableStreamEmitter;
-import com.amplifyframework.rx.RxAdapters.VoidResultEmitter;
+import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
+import com.amplifyframework.rx.RxAdapters.VoidBehaviors;
 import com.amplifyframework.testutils.SimpleCancelable;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Test;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertTrue;
 
@@ -37,26 +36,29 @@ import static org.junit.Assert.assertTrue;
  */
 public final class RxAdaptersTest {
     /**
-     * The {@link Completable} returned by {@link RxAdapters#toCompletable(VoidResultEmitter)}
-     * will complete when {@link VoidResultEmitter}'s result consumer is invoked.
+     * The {@link Completable} returned by
+     * {@link VoidBehaviors#toCompletable(VoidBehaviors.ActionEmitter)}
+     * will complete when {@link VoidBehaviors.ActionEmitter}'s acton call is invoked.
      */
     @Test
     public void completableFiresOnCompleteWhenResultEmitted() {
-        RxAdapters
-            .toCompletable((onResult, onError) -> onResult.accept(RandomString.string()))
+        VoidBehaviors
+            .toCompletable((onResult, onError) -> onResult.call())
             .test()
             .assertComplete()
             .assertNoErrors();
     }
 
     /**
-     * The {@link Completable} returned by {@link RxAdapters#toCompletable(VoidResultEmitter)}
-     * will dispatch an error when {@link VoidResultEmitter}'s error consumer is invoked.
+     * The {@link Completable} returned by
+     * {@link VoidBehaviors#toCompletable(VoidBehaviors.ActionEmitter)}
+     * will dispatch an error when {@link VoidBehaviors.ActionEmitter}'s
+     * error consumer is invoked.
      */
     @Test
     public void completableFiresErrorWhenErrorEmitted() {
         Throwable expected = new Throwable(RandomString.string());
-        RxAdapters
+        VoidBehaviors
             .toCompletable((onResult, onError) -> onError.accept(expected))
             .test()
             .assertError(expected)
@@ -64,27 +66,29 @@ public final class RxAdaptersTest {
     }
 
     /**
-     * The {@link Completable} returned by {@link RxAdapters#toCompletable(VoidResultEmitter)}
+     * The {@link Completable} returned by
+     * {@link VoidBehaviors#toCompletable(VoidBehaviors.ActionEmitter)}
      * is cancelable.
      */
     @SuppressWarnings("checkstyle:WhitespaceAround") // No-op VoidResultEmitter body
     @Test
-    public void completableIsCancellable() {
-        Completable completable = RxAdapters.toCompletable(((onResult, onError) -> {}));
+    public void completableIsDisposable() {
+        Completable completable = VoidBehaviors.toCompletable(((onResult, onError) -> {}));
         TestObserver<?> observer = completable.test();
-        observer.cancel();
-        assertTrue(observer.isCancelled());
+        observer.dispose();
+        assertTrue(observer.isDisposed());
     }
 
     /**
-     * The {@link Single} returned by {@link RxAdapters#toSingle(CancelableResultEmitter)}
-     * will dispatch an error when the {@link CancelableResultEmitter}'s error consumer is
+     * The {@link Single} returned by
+     * {@link CancelableBehaviors#toSingle(CancelableBehaviors.ResultEmitter)}
+     * will dispatch an error when the {@link CancelableBehaviors.ResultEmitter}'s error consumer is
      * invoked.
      */
     @Test
     public void singleFiresErrorWhenErrorEmitted() {
         Throwable expected = new Throwable(RandomString.string());
-        RxAdapters
+        CancelableBehaviors
             .toSingle((onResult, onError) -> {
                 onError.accept(expected);
                 return new NoOpCancelable();
@@ -95,14 +99,15 @@ public final class RxAdaptersTest {
     }
 
     /**
-     * The {@link Single} returned by {@link RxAdapters#toSingle(CancelableResultEmitter)}
-     * will dispatch a result when the {@link CancelableResultEmitter}'s value consumer
+     * The {@link Single} returned by
+     * {@link CancelableBehaviors#toSingle(CancelableBehaviors.ResultEmitter)}
+     * will dispatch a result when the {@link CancelableBehaviors.ResultEmitter}'s value consumer
      * is invoked.
      */
     @Test
     public void singleFiresResultWhenEmitted() {
         String result = RandomString.string();
-        RxAdapters
+        CancelableBehaviors
             .toSingle((onResult, onError) -> {
                 onResult.accept(result);
                 return new NoOpCancelable();
@@ -113,22 +118,23 @@ public final class RxAdaptersTest {
     }
 
     /**
-     * {@link RxAdapters#toSingle(CancelableResultEmitter)} returns a {@link Single} which
-     * can be canceled. The Amplify {@link Cancelable} returned by that emitter will also show
-     * as canceled.
+     * {@link CancelableBehaviors#toSingle(CancelableBehaviors.ResultEmitter)}
+     * returns a {@link Single} which can be canceled. The Amplify {@link Cancelable}
+     * returned by that emitter will also show as canceled.
      */
     @Test
-    public void singleIsCancelable() {
+    public void underlyingOperationIsCanceledWhenSingleSubscriptionIsDisposed() {
         SimpleCancelable cancelable = new SimpleCancelable();
-        TestObserver<?> observer = RxAdapters.toSingle(((onResult, onError) -> cancelable))
-            .test();
-        observer.cancel();
-        assertTrue(observer.isCancelled());
+        TestObserver<?> observer =
+            CancelableBehaviors.toSingle(((onResult, onError) -> cancelable)).test();
+        observer.dispose();
+        assertTrue(observer.isDisposed());
         assertTrue(cancelable.isCanceled());
     }
 
     /**
-     * The {@link Observable} returned by {@link RxAdapters#toObservable(CancelableStreamEmitter)}
+     * The {@link Observable} returned by
+     * {@link CancelableBehaviors#toObservable(CancelableBehaviors.StreamEmitter)}
      * will contain a stream of values corresponding to those that have been passed via the emitter's
      * item consumer. When the emitters' completion action is invoked, the Observable completes.
      */
@@ -136,7 +142,7 @@ public final class RxAdaptersTest {
     public void observableFiresValuesAndCompletesWhenEmitterDoes() {
         String first = RandomString.string();
         String second = RandomString.string();
-        RxAdapters
+        CancelableBehaviors
             .toObservable((onStart, onItem, onError, onComplete) -> {
                 onStart.accept(RandomString.string());
                 onItem.accept(first);
@@ -151,35 +157,36 @@ public final class RxAdaptersTest {
     }
 
     /**
-     * The {@link Observable} returned by {@link RxAdapters#toObservable(CancelableStreamEmitter)}
+     * The {@link Observable} returned by
+     * {@link CancelableBehaviors#toObservable(CancelableBehaviors.StreamEmitter)}
      * terminates with an error if the emitters' error Consumer is called.
      */
     @Test
     public void observableFiresErrorWhenErrorEmitted() {
         RuntimeException expected = new RuntimeException(RandomString.string());
-        RxAdapters
+        CancelableBehaviors
             .toObservable(((onStart, onItem, onError, onComplete) -> {
                 throw expected;
             }))
             .test()
             .assertError(expected)
             .assertNoValues()
-            .assertNotComplete()
-            .assertTerminated();
+            .assertNotComplete();
     }
 
     /**
-     * The {@link Observable} returned by {@link RxAdapters#toObservable(CancelableStreamEmitter)}
+     * The {@link Observable} returned by
+     * {@link CancelableBehaviors#toObservable(CancelableBehaviors.StreamEmitter)}
      * is cancelable.
      */
     @Test
-    public void observableIsCancelable() {
+    public void underlyingCancelIsCalledWhenObservableSubscriptionIsDisposed() {
         SimpleCancelable cancelable = new SimpleCancelable();
         TestObserver<?> observer =
-            RxAdapters.toObservable((onStart, onItem, onError, onComplete) -> cancelable)
+            CancelableBehaviors.toObservable((onStart, onItem, onError, onComplete) -> cancelable)
                 .test();
-        observer.cancel();
-        assertTrue(observer.isCancelled());
+        observer.dispose();
+        assertTrue(observer.isDisposed());
         assertTrue(cancelable.isCanceled());
     }
 }

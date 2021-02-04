@@ -153,7 +153,8 @@ class AmplifyTools implements Plugin<Project> {
                         commandLine amplify, 'init',
                                 '--amplify', amplifyConfig,
                                 '--providers', providersConfig,
-                                '--yes'
+                                '--yes',
+                                '--forcePush'
                     }
                 }
             }
@@ -165,9 +166,12 @@ class AmplifyTools implements Plugin<Project> {
                 //Open XML file
                 def xml = new XmlParser().parse('./.idea/workspace.xml')
                 def RunManagerNode = xml.component.find { it.'@name' == 'RunManager' } as Node
-                def configModelgenCheck = RunManagerNode.children().find {
-                    it.'@name' == 'modelgen'
-                } as Node
+                def configModelgenCheck = null
+                if (RunManagerNode) {
+                    configModelgenCheck = RunManagerNode.children().find {
+                        it.'@name' == 'modelgen'
+                    } as Node
+                }
 
                 if (!configModelgenCheck) {
                     // Nested nodes for modelgen run configuration
@@ -202,9 +206,12 @@ class AmplifyTools implements Plugin<Project> {
                 //Open file
                 def xml = new XmlParser().parse('./.idea/workspace.xml')
                 def RunManagerNode = xml.component.find { it.'@name' == 'RunManager' } as Node
-                def configAmplifyPushCheck = RunManagerNode.children().find {
-                    it.'@name' == 'amplifyPush'
-                } as Node
+                def configAmplifyPushCheck = null
+                if (RunManagerNode) {
+                    configAmplifyPushCheck = RunManagerNode.children().find {
+                        it.'@name' == 'amplifyPush'
+                    } as Node
+                }
 
                 if (!configAmplifyPushCheck) {
                     // Nested nodes for amplifyPush run configuration

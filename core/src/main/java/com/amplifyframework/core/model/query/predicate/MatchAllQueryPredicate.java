@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 /**
  * A {@link QueryPredicate} that matches any/all objects passed to it.
  */
-public final class MatchAllQueryPredicate implements QueryPredicate {
+final class MatchAllQueryPredicate implements QueryPredicate {
     private MatchAllQueryPredicate() {}
 
     /**
@@ -52,5 +52,15 @@ public final class MatchAllQueryPredicate implements QueryPredicate {
     @Override
     public String toString() {
         return MatchAllQueryPredicate.class.getSimpleName();
+    }
+
+    @Override
+    public QueryPredicate and(QueryPredicate predicate) {
+        return predicate;
+    }
+
+    @Override
+    public QueryPredicate or(QueryPredicate predicate) {
+        return this;
     }
 }

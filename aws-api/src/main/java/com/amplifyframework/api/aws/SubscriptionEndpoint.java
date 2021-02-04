@@ -155,7 +155,7 @@ final class SubscriptionEndpoint {
 
         Subscription<T> subscription = new Subscription<>(
             onNextItem, onSubscriptionError, onSubscriptionComplete,
-            responseFactory, request.getResponseType()
+            responseFactory, request.getResponseType(), request
         );
         subscriptions.put(subscriptionId, subscription);
         if (subscription.awaitSubscriptionReady()) {
@@ -175,6 +175,13 @@ final class SubscriptionEndpoint {
                 "Acknowledgement for unknown subscription: " + subscriptionId,
                 AmplifyException.TODO_RECOVERY_SUGGESTION
             );
+        }
+    }
+
+    private void notifySubscriptionFailure(final String subscriptionId) {
+        Subscription<?> subscription = subscriptions.get(subscriptionId);
+        if (subscription != null && pendingSubscriptionIds.remove(subscriptionId)) {
+            subscription.acknowledgeSubscriptionFailure();
         }
     }
 
@@ -202,9 +209,8 @@ final class SubscriptionEndpoint {
     private void notifyError(Throwable error) {
         for (Subscription<?> dispatcher : new HashSet<>(subscriptions.values())) {
             dispatcher.dispatchError(new ApiException(
-                    "Subscription failed.",
-                    error,
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                "Subscription failed.", error,
+                "Check your Internet connection. Is your device online?"
             ));
         }
     }
@@ -235,7 +241,8 @@ final class SubscriptionEndpoint {
 
         // Only do this if the subscription was NOT pending.
         // Otherwise it would probably fail since it was never established in the first place.
-        if (!wasSubscriptionPending) {
+
+        if (!wasSubscriptionPending && !webSocketListener.isDisconnectedState()) {
             try {
                 webSocket.send(new JSONObject()
                     .put("type", "stop")
@@ -251,8 +258,11 @@ final class SubscriptionEndpoint {
             subscription.awaitSubscriptionCompleted();
         }
 
+        subscriptions.remove(subscriptionId);
+
         // If we have zero subscriptions, close the WebSocket
         if (subscriptions.size() == 0) {
+            LOG.info("No more active subscriptions. Closing web socket.");
             timeoutWatchdog.stop();
             webSocket.close(NORMAL_CLOSURE_STATUS, "No active subscriptions");
         }
@@ -301,25 +311,35 @@ final class SubscriptionEndpoint {
         private final Action onSubscriptionComplete;
         private final GraphQLResponse.Factory responseFactory;
         private final Type responseType;
+        private final GraphQLRequest<T> request;
         private final CountDownLatch subscriptionReadyAcknowledgment;
         private final CountDownLatch subscriptionCompletionAcknowledgement;
+        private boolean failed;
 
         Subscription(
                 Consumer<GraphQLResponse<T>> onNextItem,
                 Consumer<ApiException> onSubscriptionError,
                 Action onSubscriptionComplete,
                 GraphQLResponse.Factory responseFactory,
-                Type responseType) {
+                Type responseType,
+                GraphQLRequest<T> request) {
             this.onNextItem = onNextItem;
             this.onSubscriptionError = onSubscriptionError;
             this.onSubscriptionComplete = onSubscriptionComplete;
             this.responseFactory = responseFactory;
             this.responseType = responseType;
+            this.request = request;
             this.subscriptionReadyAcknowledgment = new CountDownLatch(1);
             this.subscriptionCompletionAcknowledgement = new CountDownLatch(1);
+            this.failed = false;
         }
 
         void acknowledgeSubscriptionReady() {
+            subscriptionReadyAcknowledgment.countDown();
+        }
+
+        void acknowledgeSubscriptionFailure() {
+            failed = true;
             subscriptionReadyAcknowledgment.countDown();
         }
 
@@ -327,17 +347,19 @@ final class SubscriptionEndpoint {
             try {
                 if (!subscriptionReadyAcknowledgment.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
                     dispatchError(new ApiException(
-                        "Subscription not acknowledged.",
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                        "Timed out waiting for subscription start_ack.",
+                        "Check your Internet connection. Is your device online?"
                     ));
+                    return false;
+                } else if (failed) {
+                    // An error was already dispatched at the time of failure, so don't dispatch a second one.
                     return false;
                 }
             } catch (InterruptedException interruptedException) {
-                dispatchError(new ApiException(
-                    "Failure awaiting subscription acknowledgement.",
-                    interruptedException,
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
-                ));
+                // Triggered when the Future created in SubscriptionOperation is cancelled, which happens when the
+                // subscription Observable is disposed, which happens when a SUBSCRIPTION_ERROR occurs.  Don't dispatch
+                // any error because the caller has likely already been disposed.
+                LOG.warn("Thread interrupted awaiting subscription acknowledgement.", interruptedException);
                 return false;
             }
 
@@ -358,7 +380,7 @@ final class SubscriptionEndpoint {
                 }
             } catch (InterruptedException interruptedException) {
                 dispatchError(new ApiException(
-                    "Failure awaiting acknowledgement of subscription completion.",
+                    "Thread interrupted awaiting subscription completion.",
                     interruptedException,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
@@ -367,7 +389,7 @@ final class SubscriptionEndpoint {
 
         void dispatchNextMessage(String message) {
             try {
-                onNextItem.accept(responseFactory.buildResponse(null, message, responseType));
+                onNextItem.accept(responseFactory.buildResponse(request, message));
             } catch (ApiException exception) {
                 dispatchError(exception);
             }
@@ -486,15 +508,17 @@ final class SubscriptionEndpoint {
         public Connection waitForConnectionReady() {
             try {
                 if (!connectionResponse.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
-                    LOG.warn("Timed out waiting for connection.");
-                    return new Connection("Timed out waiting for connection.");
+                    LOG.warn("Timed out waiting for connection acknowledgement.");
+                    return new Connection("Timed out waiting for connection acknowledgement.");
                 }
             } catch (InterruptedException exception) {
-                // If the thread where the request was running was killed.
-                LOG.warn("Connection attempt interrupted.");
-                return new Connection("Subscription was terminated.");
+                LOG.warn("Thread interrupted waiting for connection acknowledgement");
+                return new Connection("Thread interrupted waiting for connection acknowledgement");
             }
             LOG.debug("Current endpoint status: " + endpointStatus.get());
+            if (EndpointStatus.CONNECTION_FAILED.equals(endpointStatus.get())) {
+                return new Connection("Connection failed.");
+            }
             return new Connection();
         }
 
@@ -542,6 +566,9 @@ final class SubscriptionEndpoint {
                         timeoutWatchdog.reset();
                         break;
                     case SUBSCRIPTION_ERROR:
+                        notifySubscriptionFailure(jsonMessage.getString("id"));
+                        notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
+                        break;
                     case SUBSCRIPTION_DATA:
                         notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
                         break;

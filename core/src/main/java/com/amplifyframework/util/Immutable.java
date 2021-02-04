@@ -29,8 +29,7 @@ import java.util.Set;
  * Contains methods for immutability.
  */
 public final class Immutable {
-    private Immutable() {
-    }
+    private Immutable() {}
 
     /**
      * Create an immutable copy of the map passed in.

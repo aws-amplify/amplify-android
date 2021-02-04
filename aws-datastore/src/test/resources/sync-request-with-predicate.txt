@@ -1,0 +1,29 @@
+{
+  "query": "query SyncBlogOwners($filter: ModelBlogOwnerFilterInput, $lastSync: AWSTimestamp, $limit: Int) {
+  syncBlogOwners(filter: $filter, lastSync: $lastSync, limit: $limit) {
+    items {
+      _deleted
+      _lastChangedAt
+      _version
+      blog {
+        id
+      }
+      id
+      name
+      wea
+    }
+    nextToken
+    startedAt
+  }
+}
+",
+  "variables": {
+    "filter": {
+      "name": {
+        "beginsWith": "J"
+      }
+    },
+    "limit": 342,
+    "lastSync": 123412341
+  }
+}

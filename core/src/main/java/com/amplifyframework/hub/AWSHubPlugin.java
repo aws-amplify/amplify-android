@@ -20,6 +20,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.BuildConfig;
+
 import org.json.JSONObject;
 
 import java.util.HashSet;
@@ -105,13 +107,18 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
     }
 
     @Override
-    public void configure(JSONObject pluginConfiguration, @NonNull Context context) {
-    }
+    public void configure(JSONObject pluginConfiguration, @NonNull Context context) {}
 
     @Nullable
     @Override
     public Void getEscapeHatch() {
         return null;
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 
     /**

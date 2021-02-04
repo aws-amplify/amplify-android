@@ -21,6 +21,12 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.util.Environment;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The LoggingCategory is a collection of zero or more plugin
@@ -33,9 +39,15 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
 
     /**
      * Constructs a logging category.
+     *
+     * When running on an Android device, logs are handled by the AndroidLoggingPlugin, which uses.
+     * {@link android.util.Log}.
+     *
+     * When running unit tests, the Android library is not available, so logs are handled by the JavaLoggingPlugin,
+     * which outputs logs using {@code System.out.println()}.
      */
     public LoggingCategory() {
-        this(new AndroidLoggingPlugin());
+        this(Environment.isJUnitTest() ? new JavaLoggingPlugin() : new AndroidLoggingPlugin());
     }
 
     @VisibleForTesting
@@ -53,15 +65,18 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     @NonNull
     @Override
     public Logger forNamespace(@Nullable String namespace) {
-        return getLoggingPlugin().forNamespace(namespace);
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
+        List<Logger> delegates = new ArrayList<>();
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            delegates.add(plugin.forNamespace(namespace));
+        }
+        return new BroadcastLogger(delegates);
     }
 
     @NonNull
-    private LoggingPlugin<?> getLoggingPlugin() {
-        if (!super.isInitialized() || super.getPlugins().isEmpty()) {
-            return defaultPlugin;
-        } else {
-            return super.getSelectedPlugin();
-        }
+    @Override
+    protected LoggingPlugin<?> getSelectedPlugin() throws IllegalStateException {
+        throw new UnsupportedOperationException("Getting the selected logging plugin is not supported.");
     }
 }

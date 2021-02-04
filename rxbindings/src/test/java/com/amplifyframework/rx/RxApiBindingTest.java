@@ -22,6 +22,7 @@ import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
@@ -30,6 +31,9 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.rx.RxOperations.RxSubscriptionOperation;
+import com.amplifyframework.rx.RxOperations.RxSubscriptionOperation.ConnectionState;
+import com.amplifyframework.rx.RxOperations.RxSubscriptionOperation.ConnectionStateEvent;
 import com.amplifyframework.testutils.random.RandomModel;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -37,8 +41,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
@@ -52,6 +58,8 @@ import static org.mockito.Mockito.when;
  * Tests the {@link RxApiBinding}.
  */
 public final class RxApiBindingTest {
+    private static final long TIMEOUT_SECONDS = 2;
+
     private ApiPlugin<?> delegate;
     private RxApiCategoryBehavior rxApi;
 
@@ -78,9 +86,10 @@ public final class RxApiBindingTest {
 
     /**
      * When the API behavior emits results for a query, so too should the Rx binding.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void queryEmitsResults() {
+    public void queryEmitsResults() throws InterruptedException {
         GraphQLResponse<Iterable<Model>> response =
             new GraphQLResponse<>(Collections.singleton(RandomModel.model()), Collections.emptyList());
         GraphQLRequest<Iterable<Model>> listRequest = createMockListRequest(Model.class);
@@ -96,7 +105,7 @@ public final class RxApiBindingTest {
         TestObserver<GraphQLResponse<Iterable<Model>>> observer = rxApi.query(listRequest).test();
 
         // Assert: got back a the same response as from category behavior
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertValue(response);
 
         verify(delegate)
@@ -105,9 +114,10 @@ public final class RxApiBindingTest {
 
     /**
      * When the API behavior emits a failure for a query, so too should the Rx binding.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void queryEmitsFailure() {
+    public void queryEmitsFailure() throws InterruptedException {
         // Arrange: category behavior emits a failure
         ApiException expectedFailure = new ApiException("Expected", "Failure");
         GraphQLRequest<Iterable<Model>> listRequest = createMockListRequest(Model.class);
@@ -123,7 +133,7 @@ public final class RxApiBindingTest {
         TestObserver<GraphQLResponse<Iterable<Model>>> observer = rxApi.query(listRequest).test();
 
         // Assert: failure bubbles up to Rx
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(expectedFailure);
 
         verify(delegate)
@@ -132,9 +142,10 @@ public final class RxApiBindingTest {
 
     /**
      * When the API behavior emits a result for a mutation, so too should the Rx binding.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void mutateEmitsResult() {
+    public void mutateEmitsResult() throws InterruptedException {
         // Arrange: category behaviour will yield a response
         Model model = RandomModel.model();
         GraphQLResponse<Model> response = new GraphQLResponse<>(model, Collections.emptyList());
@@ -151,7 +162,7 @@ public final class RxApiBindingTest {
         TestObserver<GraphQLResponse<Model>> observer = rxApi.mutate(deleteRequest).test();
 
         // Assert: response is propagated via Rx
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertValue(response);
 
         verify(delegate)
@@ -160,11 +171,11 @@ public final class RxApiBindingTest {
 
     /**
      * When the API behavior emits a failure for a mutation, so too should the Rx binding.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void mutateEmitsFailure() {
+    public void mutateEmitsFailure() throws InterruptedException {
         // Arrange category behavior to fail
-        Model model = RandomModel.model();
         ApiException expectedFailure = new ApiException("Expected", "Failure");
         GraphQLRequest<Model> deleteRequest = createMockMutationRequest(Model.class);
         doAnswer(invocation -> {
@@ -179,7 +190,7 @@ public final class RxApiBindingTest {
         TestObserver<GraphQLResponse<Model>> observer = rxApi.mutate(deleteRequest).test();
 
         // Assert: failure is propagated
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(expectedFailure);
 
         verify(delegate)
@@ -189,12 +200,15 @@ public final class RxApiBindingTest {
     /**
      * When the API subscribe operation emits values and then completes, the Rx
      * binding should follow suit.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void subscribeStartsEmitsValuesAndCompletes() {
+    public void subscribeStartsEmitsValuesAndCompletes() throws InterruptedException {
         // Arrange a category behavior which emits an expected sequence of callback events
         String token = RandomString.string();
         Model model = RandomModel.model();
+        ConnectionStateEvent expectedConnectionStateEvent =
+            new ConnectionStateEvent(ConnectionState.CONNECTED, token);
         GraphQLResponse<Model> response = new GraphQLResponse<>(model, Collections.emptyList());
         GraphQLRequest<Model> request = createMockSubscriptionRequest(Model.class);
         doAnswer(invocation -> {
@@ -217,23 +231,32 @@ public final class RxApiBindingTest {
         );
 
         // Act: subscribe via binding
-        TestObserver<GraphQLResponse<Model>> observer =
-            rxApi.subscribe(request).test();
+        RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
+        // Act: subscribe via binding
+        TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
+        TestObserver<ConnectionStateEvent> startObserver = rxOperation.observeConnectionState().test();
 
-        observer.awaitTerminalEvent();
-        observer.assertValue(response);
-        observer.assertNoErrors();
+        startObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        startObserver.assertValue(expectedConnectionStateEvent);
+        startObserver.assertNoErrors();
+
+        dataObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        dataObserver.assertValue(response);
+        dataObserver.assertNoErrors();
     }
 
     /**
      * When the subscribe API behavior starts and then immediately fails,
      * the Rx binding should emit that same failure.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void subscribeStartsAndFails() {
+    public void subscribeStartsAndFails() throws InterruptedException {
         // Arrange a category behavior which starts and then fails
         ApiException expectedFailure = new ApiException("Expected", "Failure");
         String token = RandomString.string();
+        ConnectionStateEvent expectedConnectionStateEvent =
+            new ConnectionStateEvent(ConnectionState.CONNECTED, token);
         final GraphQLRequest<Model> request = createMockSubscriptionRequest(Model.class);
         doAnswer(invocation -> {
             final int onStartPosition = 1;
@@ -250,22 +273,82 @@ public final class RxApiBindingTest {
             anyConsumer(),
             anyAction()
         );
+        RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
+        // Act: subscribe via binding
+        TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
+        TestObserver<ConnectionStateEvent> startObserver = rxOperation.observeConnectionState().test();
+
+        startObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        startObserver.assertValue(expectedConnectionStateEvent);
+        startObserver.assertNoErrors();
+
+        dataObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        dataObserver.assertNoValues();
+        dataObserver.assertError(expectedFailure);
+    }
+
+    /**
+     * Verify that the subscription starts and is cancelled gracefully.
+     * @throws InterruptedException Not expected.
+     */
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void subscribeStartsAndGetsCancelled() throws InterruptedException {
+        // Arrange a category behavior which emits an expected sequence of callback events
+        String token = RandomString.string();
+        GraphQLRequest<Model> request = createMockSubscriptionRequest(Model.class);
+        ConnectionStateEvent expectedConnectionStateEvent =
+            new ConnectionStateEvent(ConnectionState.CONNECTED, token);
+
+        doAnswer(invocation -> {
+            final int onStartPosition = 1;
+            final int onCompletePosition = 4;
+            Consumer<String> onStart = invocation.getArgument(onStartPosition);
+            Action onComplete = invocation.getArgument(onCompletePosition);
+            onStart.accept(token);
+
+            GraphQLOperation mockApiOperation = mock(GraphQLOperation.class);
+            doAnswer(apiCancelInvocation -> {
+                onComplete.call();
+                return null;
+            }).when(mockApiOperation).cancel();
+            return mockApiOperation;
+        }).when(delegate).subscribe(
+            eq(request),
+            anyConsumer(),
+            anyConsumer(),
+            anyConsumer(),
+            anyAction()
+        );
 
         // Act: subscribe via binding
-        TestObserver<GraphQLResponse<Model>> observer =
-            rxApi.subscribe(request).test();
+        RxSubscriptionOperation<GraphQLResponse<Model>> rxOperation = rxApi.subscribe(request);
+        // Act: subscribe via binding
+        TestObserver<GraphQLResponse<Model>> dataObserver = rxOperation.observeSubscriptionData().test();
+        TestObserver<ConnectionStateEvent> startObserver = rxOperation.observeConnectionState().test();
 
-        observer.awaitTerminalEvent();
-        observer.assertNoValues();
-        observer.assertError(expectedFailure);
+        startObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        startObserver.assertValue(expectedConnectionStateEvent);
+        startObserver.assertNoErrors();
+
+        // Act: cancel the subscription
+        Completable.timer(1, TimeUnit.SECONDS).andThen(Completable.fromAction(rxOperation::cancel)).subscribe();
+
+        dataObserver.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        dataObserver.assertNoValues();
+        dataObserver.assertNoErrors();
+        dataObserver.assertComplete();
+
+        startObserver.assertComplete();
     }
 
     /**
      * When the REST GET behavior emits a failure, the Rx binding should
      * emit that same failure as well.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void httpGetEmitsFailure() {
+    public void httpGetEmitsFailure() throws InterruptedException {
         RestOptions options = RestOptions.builder()
             .addPath("/api/v1/movies")
             .build();
@@ -280,7 +363,7 @@ public final class RxApiBindingTest {
 
         TestObserver<RestResponse> observer = rxApi.get(options).test();
 
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(expectedFailure);
 
         verify(delegate)
@@ -290,9 +373,10 @@ public final class RxApiBindingTest {
     /**
      * When REST GET behavior emits a result, the Rx binding
      * should emit it, too.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void httpGetEmitsResult() {
+    public void httpGetEmitsResult() throws InterruptedException {
         RestOptions options = RestOptions.builder()
             .addPath("/api/v1/movies")
             .build();
@@ -309,7 +393,7 @@ public final class RxApiBindingTest {
 
         TestObserver<RestResponse> observer = rxApi.get(options).test();
 
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertValue(response);
 
         verify(delegate)
@@ -319,9 +403,10 @@ public final class RxApiBindingTest {
     /**
      * When the REST POST behavior emits a failure, the Rx binding
      * should do the same.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void httpPostEmitsFailure() {
+    public void httpPostEmitsFailure() throws InterruptedException {
         byte[] body = RandomString.string().getBytes();
         RestOptions options = RestOptions.builder()
             .addBody(body)
@@ -340,7 +425,7 @@ public final class RxApiBindingTest {
         TestObserver<RestResponse> observer = rxApi.post(options).test();
 
         // Assert: failure bubbles through
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertError(expectedFailure);
 
         verify(delegate)
@@ -350,9 +435,10 @@ public final class RxApiBindingTest {
     /**
      * When the REST POST behavior emits a result, the Rx binding
      * should do the same.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
      */
     @Test
-    public void httpPostEmitsResult() {
+    public void httpPostEmitsResult() throws InterruptedException {
         // Arrange response from category behavior
         byte[] body = RandomString.string().getBytes();
         RestOptions options = RestOptions.builder()
@@ -373,7 +459,7 @@ public final class RxApiBindingTest {
         TestObserver<RestResponse> observer = rxApi.post(options).test();
 
         // Asset: it worked!
-        observer.awaitTerminalEvent();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertValue(response);
 
         verify(delegate)

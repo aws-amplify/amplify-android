@@ -103,4 +103,6 @@ amplifyconfiguration.json
 test-results/
 build-artifacts/
 build-artifacts.tar.gz
-jacoco.exec
+
+# add ignore for jenv
+.java-version

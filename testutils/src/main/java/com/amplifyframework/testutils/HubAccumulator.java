@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -85,7 +86,8 @@ public final class HubAccumulator {
     /**
      * Creates a {@link HubAccumulator} that accumulates events arriving on a particular channel,
      * whose event name is the given enum value (as string). For example, the accumulator
-     * created as below will match all events with name {@link DataStoreChannelEventName#PUBLISHED_TO_CLOUD}:
+     * created as below will match all events with name
+     * {@link DataStoreChannelEventName#OUTBOX_MUTATION_PROCESSED}:
      *
      *   HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISH_TO_CLOUD);
      *
@@ -142,5 +144,56 @@ public final class HubAccumulator {
     public List<HubEvent<?>> await() {
         Latch.await(latch);
         return Immutable.of(events);
+    }
+
+    /**
+     * Wait for the desired quantity of events to be accumulated.
+     * Waits for a specified amount of time.
+     * If there are fewer than the desired amount of events right now, this method will
+     * block until the rest show up. If there are enough, they will
+     * be returned immediately.
+     * @param amount Amount of time, e.g. 5 seconds
+     * @param unit Unit attached to the amount, e.g. {@link TimeUnit#SECONDS}
+     * @return A list of as many items as requested when the accumulator was created
+     * @throws RuntimeException On failure to attain the requested number of events
+     *                          within a reasonable waiting period
+     */
+    public List<HubEvent<?>> await(int amount, TimeUnit unit) {
+        Latch.await(latch, unit.toMillis(amount));
+        return Immutable.of(events);
+    }
+
+    /**
+     * Returns the first event from the event list. If there's at least
+     * one event available, this function returns that event without waiting.
+     * If there are no events in the list yet, it will block and
+     * wait for the first items to become available.
+     * @return The first event received by the accumulator.
+     */
+    @NonNull
+    public HubEvent<?> awaitFirst() {
+        // If the event list is empty, then wait.
+        if (events.isEmpty()) {
+            Latch.await(latch);
+        }
+        return events.isEmpty() ? null : events.get(0);
+    }
+
+    /**
+     * Returns the first event from the event list. If there's at least
+     * one event available, this function returns that event without waiting.
+     * If there are no events in the list yet, it will block and
+     * wait for the first items to become available.
+     * @param amount Amount of time, e.g. 5 seconds
+     * @param unit Unit attached to the amount, e.g. {@link TimeUnit#SECONDS}
+     * @return The first event received by the accumulator.
+     */
+    @NonNull
+    public HubEvent<?> awaitFirst(int amount, TimeUnit unit) {
+        // If the event list is empty, then wait.
+        if (events.isEmpty()) {
+            Latch.await(latch, unit.toMillis(amount));
+        }
+        return events.isEmpty() ? null : events.get(0);
     }
 }

@@ -34,9 +34,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,25 +67,17 @@ public final class ModelSchema {
     // Specifies the indexes of a Model.
     private final Map<String, ModelIndex> indexes;
 
-    // Maintain a sorted copy of all the fields of a Model
-    // This is useful so code that uses the sortedFields to generate queries and other
-    // persistence-related operations guarantee that the results are always consistent.
-    private final List<ModelField> sortedFields;
+    // Class of the model this schema will represent
+    private final Class<? extends Model> modelClass;
 
-    private ModelSchema(
-            String name,
-            String pluralName,
-            List<AuthRule> authRules,
-            Map<String, ModelField> fields,
-            Map<String, ModelAssociation> associations,
-            Map<String, ModelIndex> indexes) {
-        this.name = name;
-        this.pluralName = pluralName;
-        this.authRules = authRules;
-        this.fields = fields;
-        this.associations = associations;
-        this.indexes = indexes;
-        this.sortedFields = sortModelFields();
+    private ModelSchema(Builder builder) {
+        this.name = builder.name;
+        this.pluralName = builder.pluralName;
+        this.authRules = builder.authRules;
+        this.fields = builder.fields;
+        this.associations = builder.associations;
+        this.indexes = builder.indexes;
+        this.modelClass = builder.modelClass;
     }
 
     /**
@@ -110,7 +99,7 @@ public final class ModelSchema {
     @NonNull
     public static ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) throws AmplifyException {
         try {
-            final List<Field> classFields = FieldFinder.findFieldsIn(clazz);
+            final List<Field> classFields = FieldFinder.findModelFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
             final TreeMap<String, ModelAssociation> associations = new TreeMap<>();
             final TreeMap<String, ModelIndex> indexes = new TreeMap<>();
@@ -154,6 +143,7 @@ public final class ModelSchema {
                     .fields(fields)
                     .associations(associations)
                     .indexes(indexes)
+                    .modelClass(clazz)
                     .build();
         } catch (Exception exception) {
             throw new AmplifyException(
@@ -178,7 +168,7 @@ public final class ModelSchema {
             }
             return ModelField.builder()
                     .name(fieldName)
-                    .type(fieldType)
+                    .javaClassForValue(fieldType)
                     .targetType(targetType.isEmpty() ? fieldType.getSimpleName() : targetType)
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
@@ -296,109 +286,13 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns a sorted copy of all the fields of a Model.
+     * Returns the class of {@link Model}.
      *
-     * @return list of fieldName and the fieldObject of all
-     *          the fields of the model in sorted order.
-     */
-    @SuppressWarnings("unused")
-    @NonNull
-    public List<ModelField> getSortedFields() {
-        return Immutable.of(sortedFields);
-    }
-
-    /**
-     * Creates a map of the fields in this schema to the actual values in the provided object.
-     * @param instance An instance of this model populated with values to map
-     * @return a map of the target fields in the schema to the actual values in the provided object
-     * @throws AmplifyException if the object does not match the fields in this schema
+     * @return the class of {@link Model}.
      */
     @NonNull
-    public Map<String, Object> getMapOfFieldNameAndValues(@NonNull Model instance) throws AmplifyException {
-        Objects.requireNonNull(instance);
-
-        HashMap<String, Object> result = new HashMap<>();
-
-        if (!instance.getClass().getSimpleName().equals(this.getName())) {
-            throw new AmplifyException(
-                    "The object provided is not an instance of this Model.",
-                    "Please provide an instance of " + this.getName() + " which this is a schema for.");
-        }
-
-        for (ModelField modelField : this.fields.values()) {
-            try {
-                Field privateField = instance.getClass().getDeclaredField(modelField.getName());
-                privateField.setAccessible(true);
-
-                final ModelAssociation association = associations.get(modelField.getName());
-                if (association == null) {
-                    result.put(modelField.getName(), privateField.get(instance));
-                } else if (association.isOwner()) {
-                    // All ModelAssociation targets are required to be instances of Model so this is a safe cast
-                    Model target = (Model) Objects.requireNonNull(privateField.get(instance));
-                    result.put(association.getTargetName(), target.getId());
-                }
-                // Ignore if field is associated, but is not a "belongsTo" relationship
-            } catch (Exception exception) {
-                throw new AmplifyException("An invalid field was provided - " +
-                        modelField.getName() +
-                        " is not present in " +
-                        instance.getClass().getSimpleName(),
-                        exception,
-                        "Check if this model schema is a correct representation of the fields in the provided Object");
-            }
-        }
-
-        /**
-         * If the owner field is exists on the model, and the value is null, it should be omitted when performing a
-         * mutation because the AppSync server will automatically populate it using the authentication token provided
-         * in the request header.  The logic below filters out the owner field if null for this scenario.
-         */
-        for (AuthRule authRule : getAuthRules()) {
-            if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
-                String ownerField = authRule.getOwnerFieldOrDefault();
-                if (result.containsKey(ownerField) && result.get(ownerField) == null) {
-                    result.remove(ownerField);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private List<ModelField> sortModelFields() {
-        if (fields == null) {
-            return null;
-        }
-
-        // Create a list from elements of sortedFields
-        final List<ModelField> modelFieldEntries = new LinkedList<>(fields.values());
-
-        // Returns an array of the values sorted by some pre-defined rules:
-        //
-        // 1. ID comes always first
-        // 2. The other sortedFields are sorted alphabetically
-        //
-        // This is useful so code that uses the sortedFields to generate queries and other
-        // persistence-related operations guarantee that the results are always consistent.
-        Collections.sort(modelFieldEntries, (fieldOne, fieldOther) -> {
-
-            if (fieldOne.isId()) {
-                return -1;
-            }
-            if (fieldOther.isId()) {
-                return 1;
-            }
-            if (associations.containsKey(fieldOne.getName()) && !associations.containsKey(fieldOther.getName())) {
-                return 1;
-            }
-            if (associations.containsKey(fieldOther.getName()) && !associations.containsKey(fieldOne.getName())) {
-                return -1;
-            }
-            return fieldOne.getName().compareTo(fieldOther.getName());
-        });
-
-        return modelFieldEntries;
+    public Class<? extends Model> getModelClass() {
+        return modelClass;
     }
 
     @Override
@@ -409,13 +303,13 @@ public final class ModelSchema {
             return false;
         } else {
             ModelSchema that = (ModelSchema) obj;
-
             return ObjectsCompat.equals(getName(), that.getName()) &&
                 ObjectsCompat.equals(getPluralName(), that.getPluralName()) &&
                 ObjectsCompat.equals(getAuthRules(), that.getAuthRules()) &&
                 ObjectsCompat.equals(getFields(), that.getFields()) &&
                 ObjectsCompat.equals(getAssociations(), that.getAssociations()) &&
-                ObjectsCompat.equals(getIndexes(), that.getIndexes());
+                ObjectsCompat.equals(getIndexes(), that.getIndexes()) &&
+                ObjectsCompat.equals(getModelClass(), that.getModelClass());
         }
     }
 
@@ -427,7 +321,8 @@ public final class ModelSchema {
                 getAuthRules(),
                 getFields(),
                 getAssociations(),
-                getIndexes()
+                getIndexes(),
+                getModelClass()
         );
     }
 
@@ -436,10 +331,11 @@ public final class ModelSchema {
         return "ModelSchema{" +
             "name='" + name + '\'' +
             ", pluralName='" + pluralName + '\'' +
-            ", authRules='" + authRules + '\'' +
+            ", authRules=" + authRules +
             ", fields=" + fields +
-            ", associations" + associations +
+            ", associations=" + associations +
             ", indexes=" + indexes +
+            ", modelClass=" + modelClass +
             '}';
     }
 
@@ -451,6 +347,7 @@ public final class ModelSchema {
         private final Map<String, ModelField> fields;
         private final Map<String, ModelAssociation> associations;
         private final Map<String, ModelIndex> indexes;
+        private Class<? extends Model> modelClass;
         private String name;
         private String pluralName;
         private final List<AuthRule> authRules;
@@ -463,7 +360,7 @@ public final class ModelSchema {
         }
 
         /**
-         * Set the the name of the Model class.
+         * Set the name of the Model class.
          * @param name the name of the Model class.
          * @return the builder object
          */
@@ -540,6 +437,17 @@ public final class ModelSchema {
         }
 
         /**
+         * The class of the Model this schema represents.
+         * @param modelClass the class of the model.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
+            this.modelClass = modelClass;
+            return this;
+        }
+
+        /**
          * Return the ModelSchema object.
          * @return the ModelSchema object.
          */
@@ -547,14 +455,7 @@ public final class ModelSchema {
         @NonNull
         public ModelSchema build() {
             Objects.requireNonNull(name);
-            return new ModelSchema(
-                name,
-                pluralName,
-                authRules,
-                fields,
-                associations,
-                indexes
-            );
+            return new ModelSchema(Builder.this);
         }
     }
 }

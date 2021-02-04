@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -x
+set -e
+
+# This bucket contains a collection of config files that are used by the
+# integration tests. The configuration files contain sensitive
+# tokens/credentials/identifiers, so are not published publicly.
+readonly config_bucket=$1
+
+readonly config_files=(
+    # Core
+    "core/src/androidTest/res/raw/amplifyconfiguration.json"
+
+    # Analytics
+    "aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json"
+
+    # API
+    "aws-api/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-api/src/androidTest/res/raw/awsconfiguration.json"
+    "aws-api/src/androidTest/res/raw/credentials.json"
+
+    # DataStore
+    "aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-datastore/src/androidTest/res/raw/awsconfiguration.json"
+
+    # Predictions
+    "aws-predictions/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-predictions/src/androidTest/res/raw/awsconfiguration.json"
+
+    # Storage
+    "aws-storage-s3/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-storage-s3/src/androidTest/res/raw/awsconfiguration.json"
+    "aws-storage-s3/src/androidTest/res/raw/credentials.json"
+)
+
+# Copy remote files into the local directory.
+for config_file in ${config_files[@]}; do
+    aws s3 cp "s3://$config_bucket/$config_file" "$config_file" &
+done
+
+wait

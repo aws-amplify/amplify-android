@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,7 +37,9 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
+import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
@@ -52,18 +53,17 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Completable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long PLUGIN_INIT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
-    private static final long PLUGIN_TERMINATE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long LIFECYCLE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -75,11 +75,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // Keeps track of whether of not the category is initialized yet
     private final CountDownLatch categoryInitializationsPending;
 
-    private final AtomicBoolean isOrchestratorReady;
-
-    // Used to interrogate plugins, to understand if sync should be automatically turned on
-    private final ApiCategory api;
-
     // User-provided configuration for the plugin.
     private final DataStoreConfiguration userProvidedConfiguration;
 
@@ -87,7 +82,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // overrides provided via the userProvidedConfiguration
     private DataStoreConfiguration pluginConfiguration;
 
-    @SuppressLint("CheckResult")
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
@@ -95,14 +89,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @Nullable DataStoreConfiguration userProvidedConfiguration) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
-        this.isOrchestratorReady = new AtomicBoolean(false);
-        this.api = api;
+        // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
             modelSchemaRegistry,
             sqliteStorageAdapter,
             AppSyncClient.via(api),
-            () -> pluginConfiguration
+            () -> pluginConfiguration,
+            () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
     }
@@ -122,9 +116,30 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      *
      * @throws DataStoreException If it is not possible to access the code-generated model provider
      */
-    @SuppressWarnings("unused") // This is a public API.
     public AWSDataStorePlugin() throws DataStoreException {
         this(ModelProviderLocator.locate(), Amplify.API);
+    }
+
+    /**
+     * Constructs an {@link AWSDataStorePlugin} using a user-provided configuration.
+     * The plugin will be able to warehouse models as described in
+     * {@link AWSDataStorePlugin#AWSDataStorePlugin()}.
+     * @param userProvidedConfiguration
+     *        Additionally, consider these user-provided configuration options.
+     *        These values override anything found in `amplifyconfiguration.json`.
+     *        This configuration may also include hooks for conflict resolution
+     *        and or global error handling.
+     * @throws DataStoreException
+     *         If not possible to locate the code-generated model provider,
+     *         com.amplifyframework.datastore.generated.model.AmplifyModelProvider.
+     */
+    public AWSDataStorePlugin(@NonNull DataStoreConfiguration userProvidedConfiguration) throws DataStoreException {
+        this(
+            ModelProviderLocator.locate(),
+            ModelSchemaRegistry.instance(),
+            Amplify.API,
+            Objects.requireNonNull(userProvidedConfiguration)
+        );
     }
 
     /**
@@ -133,7 +148,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * then remote synchronization will be performed through {@link Amplify#API}.
      * @param modelProvider Provider of models to be usable by plugin
      */
-    @SuppressWarnings({"unused", "WeakerAccess"}) // This is a public API.
     public AWSDataStorePlugin(@NonNull ModelProvider modelProvider) {
         this(Objects.requireNonNull(modelProvider), Amplify.API);
     }
@@ -167,7 +181,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
-    @SuppressLint("CheckResult")
     @Override
     public void configure(
             @NonNull JSONObject pluginConfiguration,
@@ -197,18 +210,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @WorkerThread
     @Override
     public void initialize(@NonNull Context context) throws AmplifyException {
-        Throwable initError = initializeStorageAdapter(context)
-            .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (initError != null) {
-            throw new AmplifyException("Failed to initialize the local storage adapter for the DataStore plugin.",
-                                        initError,
-                                        AmplifyException.TODO_RECOVERY_SUGGESTION);
-        }
-        // Kick off orchestrator asynchronously.
-        synchronized (isOrchestratorReady) {
-            initializeOrchestrator()
-                .subscribeOn(Schedulers.io())
-                .subscribe();
+        try {
+            initializeStorageAdapter(context)
+                .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (Throwable initError) {
+            throw new AmplifyException(
+                "Failed to initialize the local storage adapter for the DataStore plugin.",
+                initError, AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
     }
 
@@ -224,19 +233,57 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         ));
     }
 
+    private Completable waitForInitialization() {
+        return Completable.fromAction(() -> categoryInitializationsPending.await())
+            .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .subscribeOn(Schedulers.io())
+            .doOnError(error -> LOG.error("DataStore initialization timed out.", error));
+    }
+
     /**
-     * Terminate use of the plugin.
-     * @throws AmplifyException On failure to terminate use of the plugin
+     * {@inheritDoc}
      */
-    @SuppressWarnings("unused")
-    synchronized void terminate() throws AmplifyException {
-        Throwable throwable = orchestrator.stop()
-            .andThen(
-                Completable.fromAction(sqliteStorageAdapter::terminate)
-            ).blockingGet(PLUGIN_TERMINATE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (throwable != null) {
-            LOG.warn("An error occurred while terminating the DataStore plugin.", throwable);
-        }
+    @Override
+    public void start(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        waitForInitialization()
+            .andThen(orchestrator.start())
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                onComplete::call,
+                error -> onError.accept(new DataStoreException("Failed to start DataStore.", error, "Retry."))
+            );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stop(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        waitForInitialization()
+            .andThen(orchestrator.stop())
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                onComplete::call,
+                error -> onError.accept(new DataStoreException("Failed to stop DataStore.", error, "Retry."))
+            );
+    }
+
+    /**
+     * Stops all synchronization processes and invokes the clear method of the underlying storage adapter. Any items
+     * pending synchronization in the outbound queue will be lost. Synchronization processes will be restarted on the
+     * next interaction with the DataStore.
+     *
+     * @param onComplete Invoked if the call is successful.
+     * @param onError Invoked if not successful
+     */
+    @Override
+    public void clear(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        stop(() -> Completable.create(emitter -> sqliteStorageAdapter.clear(emitter::onComplete, emitter::onError))
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(onComplete::call,
+                            throwable -> onError.accept(new DataStoreException("Clear operation failed",
+                                    throwable, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION))),
+                onError);
     }
 
     /**
@@ -246,6 +293,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public Void getEscapeHatch() {
         return null;
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 
     /**
@@ -268,19 +321,19 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
             @NonNull Consumer<DataStoreException> onFailureToSave) {
-        beforeOperation(() -> sqliteStorageAdapter.save(
+        start(() -> sqliteStorageAdapter.save(
             item,
             StorageItemChange.Initiator.DATA_STORE_API,
             predicate,
             itemSave -> {
                 try {
-                    onItemSaved.accept(toDataStoreItemChange(itemSave));
+                    onItemSaved.accept(ItemChangeMapper.map(itemSave));
                 } catch (DataStoreException dataStoreException) {
                     onFailureToSave.accept(dataStoreException);
                 }
             },
             onFailureToSave
-        ));
+        ), onFailureToSave);
     }
 
     /**
@@ -303,18 +356,34 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
             @NonNull Consumer<DataStoreException> onFailureToDelete) {
-        beforeOperation(() -> sqliteStorageAdapter.delete(
+        start(() -> sqliteStorageAdapter.delete(
             item,
             StorageItemChange.Initiator.DATA_STORE_API,
+            predicate,
             itemDeletion -> {
                 try {
-                    onItemDeleted.accept(toDataStoreItemChange(itemDeletion));
+                    onItemDeleted.accept(ItemChangeMapper.map(itemDeletion));
                 } catch (DataStoreException dataStoreException) {
                     onFailureToDelete.accept(dataStoreException);
                 }
             },
             onFailureToDelete
-        ));
+        ), onFailureToDelete);
+    }
+
+    @Override
+    public <T extends Model> void delete(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate predicate,
+            @NonNull Action onItemsDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete) {
+        start(() -> sqliteStorageAdapter.delete(
+                itemClass,
+                StorageItemChange.Initiator.DATA_STORE_API,
+                predicate,
+                onItemsDeleted,
+                onFailureToDelete
+        ), onFailureToDelete);
     }
 
     /**
@@ -325,7 +394,25 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Class<T> itemClass,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
-        beforeOperation(() -> sqliteStorageAdapter.query(itemClass, onQueryResults, onQueryFailure));
+        start(() ->
+            sqliteStorageAdapter.query(itemClass, Where.matchesAll(), onQueryResults, onQueryFailure), onQueryFailure);
+    }
+
+    /**
+     * Query the DataStore to find all items of the requested model (by name).
+     * NOTE: This private method is used only by hybrid platforms (Flutter, React Native),
+     * and should not be included into the {@link DataStoreCategory} spec.
+     * @param modelName name of the Model to query
+     * @param options Filtering, paging, and sorting options
+     * @param onQueryResults Called when a query successfully returns 0 or more results
+     * @param onQueryFailure Called when a failure interrupts successful completion of a query
+     */
+    public void query(
+            @NonNull String modelName,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Iterator<? extends Model>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure) {
+        start(() -> sqliteStorageAdapter.query(modelName, options, onQueryResults, onQueryFailure), onQueryFailure);
     }
 
     /**
@@ -346,8 +433,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull QueryOptions options,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
-        beforeOperation(() ->
-                sqliteStorageAdapter.query(itemClass, options, onQueryResults, onQueryFailure));
+        start(() -> sqliteStorageAdapter.query(itemClass, options, onQueryResults, onQueryFailure), onQueryFailure);
     }
 
     @Override
@@ -356,17 +442,17 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        beforeOperation(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+        start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
-                    onDataStoreItemChange.accept(toDataStoreItemChange(itemChange));
+                    onDataStoreItemChange.accept(ItemChangeMapper.map(itemChange));
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
                 }
             },
             onObservationFailure,
             onObservationCompleted
-        )));
+        )), onObservationFailure);
     }
 
     @Override
@@ -376,13 +462,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        beforeOperation(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+        start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
-                    if (itemChange.itemClass().equals(itemClass)) {
+                    if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName())) {
                         @SuppressWarnings("unchecked") // This was just checked, right above.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
-                        onDataStoreItemChange.accept(toDataStoreItemChange(typedChange));
+                        onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
                     }
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
@@ -390,7 +476,43 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             },
             onObservationFailure,
             onObservationCompleted
-        )));
+        )), onObservationFailure);
+    }
+
+    /**
+     * Observe changes to a certain type of item(s) in the DataStore.
+     * @param modelName The name of the model to observe
+     * @param onObservationStarted Called when observation begins
+     * @param onDataStoreItemChange Called 0..n times, whenever there is a change to an
+     *                              item of the requested class
+     * @param onObservationFailure Called if observation of the DataStore terminates
+     *                             with a non-recoverable failure
+     * @param onObservationCompleted Called when observation completes gracefully
+     */
+    public void observe(
+            @NonNull String modelName,
+            @NonNull Consumer<Cancelable> onObservationStarted,
+            @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+        start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+            itemChange -> {
+                try {
+                    if (itemChange.modelSchema().getModelClass().equals(SerializedModel.class)) {
+                        if (((SerializedModel) itemChange.item()).getModelName().equals(modelName)) {
+                            @SuppressWarnings("unchecked") // This was just checked, right above.
+                            StorageItemChange<SerializedModel> typedChange =
+                                    (StorageItemChange<SerializedModel>) itemChange;
+                            onDataStoreItemChange.accept(ItemChangeMapper.map(itemChange));
+                        }
+                    }
+                } catch (DataStoreException dataStoreException) {
+                    onObservationFailure.accept(dataStoreException);
+                }
+            },
+            onObservationFailure,
+            onObservationCompleted
+        )), onObservationFailure);
     }
 
     @Override
@@ -401,13 +523,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        beforeOperation(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+        start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             itemChange -> {
                 try {
-                    if (itemChange.itemClass().equals(itemClass) && itemChange.item().getId().equals(uniqueId)) {
+                    if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName()) &&
+                            itemChange.item().getId().equals(uniqueId)) {
                         @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
-                        onDataStoreItemChange.accept(toDataStoreItemChange(typedChange));
+                        onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
                     }
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
@@ -415,7 +538,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             },
             onObservationFailure,
             onObservationCompleted
-        )));
+        )), onObservationFailure);
     }
 
     @Override
@@ -427,132 +550,5 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
         onObservationFailure.accept(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
-    }
-
-    /**
-     * Stops all synchronization processes and invokes
-     * the clear method of the underlying storage
-     * adapter. Any items pending synchronization in the outbound queue will
-     * be lost. Synchronization processes will be restarted on the
-     * next interaction with the DataStore.
-     * @param onComplete Invoked if the call is successful.
-     * @param onError Invoked if not successful
-     */
-    @Override
-    public void clear(@NonNull Action onComplete,
-                      @NonNull Consumer<DataStoreException> onError) {
-        // We shouldn't call beforeOperation when clearing the DataStore. The
-        // only thing we have to wait for is the category initialization latch.
-        boolean isCategoryInitialized = false;
-        try {
-            isCategoryInitialized = categoryInitializationsPending.await(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException exception) {
-            LOG.warn("Execution interrupted while waiting for DataStore to be initialized.");
-        }
-        if (!isCategoryInitialized) {
-            onError.accept(new DataStoreException("DataStore not ready to be cleared.", "Retry your request."));
-            return;
-        }
-        isOrchestratorReady.set(false);
-        orchestrator.stop()
-            .subscribeOn(Schedulers.io())
-            .andThen(Completable.fromAction(() -> sqliteStorageAdapter.clear(() -> {
-                // Invoke the consumer's callback once the clear operation is finished.
-                onComplete.call();
-                // Kick off the orchestrator asynchronously.
-                initializeOrchestrator()
-                    .doOnError(throwable -> LOG.warn("Failed to restart orchestrator after clearing.", throwable))
-                    .doOnComplete(() -> LOG.info("Orchestrator restarted after clear operation."))
-                    .subscribe();
-            }, onError)))
-            .doOnError(throwable -> LOG.warn("Clear operation failed", throwable))
-            .doOnComplete(() -> LOG.debug("Clear operation completed."))
-            .subscribe();
-    }
-
-    private void beforeOperation(@NonNull final Runnable runnable) {
-        Throwable throwable = Completable.fromAction(categoryInitializationsPending::await)
-            .repeatUntil(() -> {
-                // Repeat until this is true or the blockingGet call times out.
-                synchronized (isOrchestratorReady) {
-                    return isOrchestratorReady.get();
-                }
-            })
-            .andThen(Completable.fromRunnable(runnable))
-            .blockingGet(PLUGIN_INIT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (!(throwable == null && isOrchestratorReady.get())) {
-            if (!isOrchestratorReady.get()) {
-                LOG.warn("Failed to execute request because DataStore is not fully initialized.");
-            } else {
-                LOG.warn("Failed to execute request due to an unexpected error.", throwable);
-            }
-        }
-    }
-
-    private Completable initializeOrchestrator() {
-        if (api.getPlugins().isEmpty()) {
-            isOrchestratorReady.set(true);
-            return Completable.complete();
-        } else {
-            // Let's prevent the orchestrator startup from possibly running in main.
-            return orchestrator.start(() -> {
-                // This callback is invoked when the local storage observer gets initialized.
-                isOrchestratorReady.set(true);
-            })
-            .repeatUntil(() -> isOrchestratorReady.get())
-            .observeOn(Schedulers.io())
-            .subscribeOn(Schedulers.io());
-        }
-    }
-
-    /**
-     * Converts an {@link StorageItemChange} into an {@link DataStoreItemChange}.
-     * @param storageItemChange A storage item change
-     * @param <T> Type of data that was changed in the storage layer
-     * @return A data store item change representing the change in storage layer
-     */
-    private static <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(
-            final StorageItemChange<T> storageItemChange) throws DataStoreException {
-
-        final DataStoreItemChange.Initiator dataStoreItemChangeInitiator;
-        switch (storageItemChange.initiator()) {
-            case SYNC_ENGINE:
-                dataStoreItemChangeInitiator = DataStoreItemChange.Initiator.REMOTE;
-                break;
-            case DATA_STORE_API:
-                dataStoreItemChangeInitiator = DataStoreItemChange.Initiator.LOCAL;
-                break;
-            default:
-                throw new DataStoreException(
-                        "Unknown initiator of storage change: " + storageItemChange.initiator(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                );
-        }
-
-        final DataStoreItemChange.Type dataStoreItemChangeType;
-        switch (storageItemChange.type()) {
-            case DELETE:
-                dataStoreItemChangeType = DataStoreItemChange.Type.DELETE;
-                break;
-            case UPDATE:
-                dataStoreItemChangeType = DataStoreItemChange.Type.UPDATE;
-                break;
-            case CREATE:
-                dataStoreItemChangeType = DataStoreItemChange.Type.CREATE;
-                break;
-            default:
-                throw new DataStoreException(
-                        "Unknown type of storage change: " + storageItemChange.type(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                );
-        }
-
-        return DataStoreItemChange.<T>builder()
-            .initiator(dataStoreItemChangeInitiator)
-            .item(storageItemChange.item())
-            .itemClass(storageItemChange.itemClass())
-            .type(dataStoreItemChangeType)
-            .uuid(storageItemChange.changeId().toString())
-            .build();
     }
 }

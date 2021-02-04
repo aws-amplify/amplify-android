@@ -1,0 +1,71 @@
+{
+  "name": "Meeting",
+  "pluralName": "Meetings",
+  "authRules": [],
+  "fields": {
+    "date": {
+      "name": "date",
+      "javaClassForValue": "com.amplifyframework.core.model.temporal.Temporal$Date",
+      "targetType": "AWSDate",
+      "isRequired": false,
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "authRules": []
+    },
+    "dateTime": {
+      "name": "dateTime",
+      "javaClassForValue": "com.amplifyframework.core.model.temporal.Temporal$DateTime",
+      "targetType": "AWSDateTime",
+      "isRequired": false,
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "authRules": []
+    },
+    "id": {
+      "name": "id",
+      "javaClassForValue": "java.lang.String",
+      "targetType": "ID",
+      "isRequired": true,
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "authRules": []
+    },
+    "name": {
+      "name": "name",
+      "javaClassForValue": "java.lang.String",
+      "targetType": "String",
+      "isRequired": true,
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "authRules": []
+    },
+    "time": {
+      "name": "time",
+      "javaClassForValue": "com.amplifyframework.core.model.temporal.Temporal$Time",
+      "targetType": "AWSTime",
+      "isRequired": false,
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "authRules": []
+    },
+    "timestamp": {
+      "name": "timestamp",
+      "javaClassForValue": "com.amplifyframework.core.model.temporal.Temporal$Timestamp",
+      "targetType": "AWSTimestamp",
+      "isRequired": false,
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "authRules": []
+    }
+  },
+  "associations": {},
+  "indexes": {},
+  "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel"
+}
+

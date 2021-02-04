@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePlugin;
@@ -28,26 +29,33 @@ import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadInputStreamOperation;
+import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.options.AWSS3StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
-import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 import com.amplifyframework.storage.s3.service.StorageService;
 
@@ -57,6 +65,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +75,6 @@ import java.util.concurrent.TimeUnit;
  * repository.
  */
 public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
-
     private static final String AWS_S3_STORAGE_PLUGIN_KEY = "awsS3StoragePlugin";
 
     private final StorageService.Factory storageServiceFactory;
@@ -79,6 +87,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     /**
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
      */
+    @SuppressWarnings("unused") // This is a public API.
     public AWSS3StoragePlugin() {
         this(new AWSMobileClientAuthProvider());
     }
@@ -175,6 +184,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
     @NonNull
     @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
+    }
+
+    @NonNull
+    @Override
     public StorageGetUrlOperation<?> getUrl(
             @NonNull String key,
             @NonNull Consumer<StorageGetUrlResult> onSuccess,
@@ -221,7 +236,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance(), onSuccess, onError);
+        StorageDownloadFileOptions options = StorageDownloadFileOptions.defaultInstance();
+        return downloadFile(key, local, options, NoOpConsumer.create(), onSuccess, onError);
     }
 
     @NonNull
@@ -230,6 +246,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull String key,
             @NonNull File local,
             @NonNull StorageDownloadFileOptions options,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return downloadFile(key, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageDownloadFileOperation<?> downloadFile(
+            @NonNull String key,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
@@ -242,8 +271,9 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 options.getTargetIdentityId()
         );
 
-        AWSS3StorageDownloadFileOperation operation =
-                new AWSS3StorageDownloadFileOperation(storageService, cognitoAuthProvider, request, onSuccess, onError);
+        AWSS3StorageDownloadFileOperation operation = new AWSS3StorageDownloadFileOperation(
+            storageService, cognitoAuthProvider, request, onProgress, onSuccess, onError
+        );
         operation.start();
 
         return operation;
@@ -257,7 +287,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        return uploadFile(key, local, StorageUploadFileOptions.defaultInstance(), onSuccess, onError);
+        StorageUploadFileOptions options = StorageUploadFileOptions.defaultInstance();
+        return uploadFile(key, local, options, NoOpConsumer.create(), onSuccess, onError);
     }
 
     @NonNull
@@ -269,7 +300,20 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        AWSS3StorageUploadFileRequest request = new AWSS3StorageUploadFileRequest(
+        return uploadFile(key, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadFileOperation<?> uploadFile(
+            @NonNull String key,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        AWSS3StorageUploadRequest<File> request = new AWSS3StorageUploadRequest<>(
                 key,
                 local,
                 options.getAccessLevel() != null
@@ -277,12 +321,71 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                         : defaultAccessLevel,
                 options.getTargetIdentityId(),
                 options.getContentType(),
+                options instanceof AWSS3StorageUploadFileOptions
+                        ? ((AWSS3StorageUploadFileOptions) options).getServerSideEncryption()
+                        : ServerSideEncryption.NONE,
                 options.getMetadata()
         );
 
-        AWSS3StorageUploadFileOperation operation =
-                new AWSS3StorageUploadFileOperation(storageService, cognitoAuthProvider, request, onSuccess, onError);
+        AWSS3StorageUploadFileOperation operation = new AWSS3StorageUploadFileOperation(
+            storageService, cognitoAuthProvider, request, onProgress, onSuccess, onError
+        );
+        operation.start();
 
+        return operation;
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        StorageUploadInputStreamOptions options = StorageUploadInputStreamOptions.defaultInstance();
+        return uploadInputStream(key, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return uploadInputStream(key, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        AWSS3StorageUploadRequest<InputStream> request = new AWSS3StorageUploadRequest<>(
+                key,
+                local,
+                options.getAccessLevel() != null
+                        ? options.getAccessLevel()
+                        : defaultAccessLevel,
+                options.getTargetIdentityId(),
+                options.getContentType(),
+                options instanceof AWSS3StorageUploadInputStreamOptions
+                        ? ((AWSS3StorageUploadInputStreamOptions) options).getServerSideEncryption()
+                        : ServerSideEncryption.NONE,
+                options.getMetadata()
+        );
+
+        AWSS3StorageUploadInputStreamOperation operation = new AWSS3StorageUploadInputStreamOperation(
+                storageService, cognitoAuthProvider, request, onProgress, onSuccess, onError
+        );
         operation.start();
 
         return operation;
@@ -405,4 +508,3 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         }
     }
 }
-

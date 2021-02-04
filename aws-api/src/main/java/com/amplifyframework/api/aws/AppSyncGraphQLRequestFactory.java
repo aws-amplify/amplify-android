@@ -15,13 +15,19 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.model.AuthRule;
+import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelAssociation;
+import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
 import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
@@ -38,14 +44,18 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.util.Casing;
+import com.amplifyframework.util.TypeMaker;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Converts provided model or class type into a request container
@@ -56,7 +66,7 @@ public final class AppSyncGraphQLRequestFactory {
     private static final int DEFAULT_QUERY_LIMIT = 1000;
 
     // This class should not be instantiated
-    private AppSyncGraphQLRequestFactory() { }
+    private AppSyncGraphQLRequestFactory() {}
 
     /**
      * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result.
@@ -93,7 +103,7 @@ public final class AppSyncGraphQLRequestFactory {
     /**
      * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result.
      * The request will be created with the correct document based on the model schema and variables
-     * for filtering based on the the given predicate.
+     * for filtering based on the given predicate.
      *
      * @param modelClass the model class.
      * @param predicate the model predicate.
@@ -106,7 +116,7 @@ public final class AppSyncGraphQLRequestFactory {
             Class<T> modelClass,
             QueryPredicate predicate
     ) {
-        Type dataType = TypeMaker.getParameterizedType(Iterable.class, modelClass);
+        Type dataType = TypeMaker.getParameterizedType(PaginatedResult.class, modelClass);
         return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType);
     }
 
@@ -115,7 +125,7 @@ public final class AppSyncGraphQLRequestFactory {
      * within a certain range (i.e. paginated).
      *
      * The request will be created with the correct document based on the model schema and variables
-     * for filtering based on the the given predicate and pagination.
+     * for filtering based on the given predicate and pagination.
      *
      * @param modelClass the model class.
      * @param predicate the predicate for filtering.
@@ -173,15 +183,13 @@ public final class AppSyncGraphQLRequestFactory {
      * @return a valid {@link GraphQLRequest} instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
      */
-    @SuppressWarnings("unchecked")
     public static <R, T extends Model> GraphQLRequest<R> buildMutation(
             T model,
             QueryPredicate predicate,
             MutationType type
     ) {
         try {
-            // model is of type T so this is a safe cast - hence the warning suppression
-            Class<T> modelClass = (Class<T>) model.getClass();
+            Class<? extends Model> modelClass = model.getClass();
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
             String graphQlTypeName = schema.getName();
 
@@ -191,24 +199,22 @@ public final class AppSyncGraphQLRequestFactory {
                     .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(modelClass);
 
-            String inputType = new StringBuilder()
-                .append(Casing.capitalize(type.toString()))
-                .append(Casing.capitalizeFirst(graphQlTypeName))
-                .append("Input!")
-                .toString(); // CreateTodoInput
+            String inputType =
+                    Casing.capitalize(type.toString()) +
+                    Casing.capitalizeFirst(graphQlTypeName) +
+                    "Input!"; // CreateTodoInput
 
             if (MutationType.DELETE.equals(type)) {
                 builder.variable("input", inputType, Collections.singletonMap("id", model.getId()));
             } else {
-                builder.variable("input", inputType, schema.getMapOfFieldNameAndValues(model));
+                builder.variable("input", inputType, getMapOfFieldNameAndValues(schema, model));
             }
 
             if (!QueryPredicates.all().equals(predicate)) {
-                String conditionType = new StringBuilder()
-                    .append("Model")
-                    .append(Casing.capitalizeFirst(graphQlTypeName))
-                    .append("ConditionInput")
-                    .toString();
+                String conditionType =
+                        "Model" +
+                        Casing.capitalizeFirst(graphQlTypeName) +
+                        "ConditionInput";
                 builder.variable("condition", conditionType, parsePredicate(predicate));
             }
 
@@ -231,7 +237,6 @@ public final class AppSyncGraphQLRequestFactory {
      * @return a valid {@link GraphQLRequest} instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
      */
-    @SuppressWarnings("SameParameterValue")
     public static <R, T extends Model> GraphQLRequest<R> buildSubscription(
             Class<T> modelClass,
             SubscriptionType subscriptionType
@@ -253,7 +258,7 @@ public final class AppSyncGraphQLRequestFactory {
 
     private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) {
         if (queryPredicate instanceof QueryPredicateOperation) {
-            QueryPredicateOperation<?> qpo = (QueryPredicateOperation) queryPredicate;
+            QueryPredicateOperation<?> qpo = (QueryPredicateOperation<?>) queryPredicate;
             QueryOperator<?> op = qpo.operator();
             return Collections.singletonMap(
                     qpo.field(),
@@ -322,17 +327,17 @@ public final class AppSyncGraphQLRequestFactory {
             case EQUAL:
                 return ((EqualQueryOperator) qOp).value();
             case LESS_OR_EQUAL:
-                return ((LessOrEqualQueryOperator) qOp).value();
+                return ((LessOrEqualQueryOperator<?>) qOp).value();
             case LESS_THAN:
-                return ((LessThanQueryOperator) qOp).value();
+                return ((LessThanQueryOperator<?>) qOp).value();
             case GREATER_OR_EQUAL:
-                return ((GreaterOrEqualQueryOperator) qOp).value();
+                return ((GreaterOrEqualQueryOperator<?>) qOp).value();
             case GREATER_THAN:
-                return ((GreaterThanQueryOperator) qOp).value();
+                return ((GreaterThanQueryOperator<?>) qOp).value();
             case CONTAINS:
                 return ((ContainsQueryOperator) qOp).value();
             case BETWEEN:
-                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator) qOp;
+                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator<?>) qOp;
                 return Arrays.asList(betweenOp.start(), betweenOp.end());
             case BEGINS_WITH:
                 return ((BeginsWithQueryOperator) qOp).value();
@@ -342,5 +347,53 @@ public final class AppSyncGraphQLRequestFactory {
                     "has been created which is not implemented yet."
                 );
         }
+    }
+
+    private static Map<String, Object> getMapOfFieldNameAndValues(
+            @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
+        if (!instance.getClass().getSimpleName().equals(schema.getName())) {
+            throw new AmplifyException(
+                "The object provided is not an instance of " + schema.getName() + ".",
+                "Please provide an instance of " + schema.getName() + " that matches the schema type."
+            );
+        }
+        final Map<String, Object> result = new HashMap<>();
+        for (ModelField modelField : schema.getFields().values()) {
+            String fieldName = modelField.getName();
+            try {
+                Field privateField = instance.getClass().getDeclaredField(modelField.getName());
+                privateField.setAccessible(true);
+                Object fieldValue = privateField.get(instance);
+                final ModelAssociation association = schema.getAssociations().get(fieldName);
+                if (association == null) {
+                    result.put(fieldName, fieldValue);
+                } else if (association.isOwner()) {
+                    Model target = (Model) Objects.requireNonNull(fieldValue);
+                    result.put(association.getTargetName(), target.getId());
+                }
+                // Ignore if field is associated, but is not a "belongsTo" relationship
+            } catch (Exception exception) {
+                throw new AmplifyException(
+                    "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
+                    exception,
+                    "Check if this model schema is a correct representation of the fields in the provided Object");
+            }
+        }
+
+        /*
+         * If the owner field exists on the model, and the value is null, it should be omitted when performing a
+         * mutation because the AppSync server will automatically populate it using the authentication token provided
+         * in the request header.  The logic below filters out the owner field if null for this scenario.
+         */
+        for (AuthRule authRule : schema.getAuthRules()) {
+            if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+                String ownerField = authRule.getOwnerFieldOrDefault();
+                if (result.containsKey(ownerField) && result.get(ownerField) == null) {
+                    result.remove(ownerField);
+                }
+            }
+        }
+
+        return result;
     }
 }

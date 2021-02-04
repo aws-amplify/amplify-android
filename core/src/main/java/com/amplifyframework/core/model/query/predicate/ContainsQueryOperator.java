@@ -41,7 +41,7 @@ public final class ContainsQueryOperator extends QueryOperator<String> {
     }
 
     /**
-     * Returns true if the the provided field value contains
+     * Returns true if the provided field value contains
      * the value associated with this operator.
      * @param field the field value to operate on
      * @return evaluated result of the operator

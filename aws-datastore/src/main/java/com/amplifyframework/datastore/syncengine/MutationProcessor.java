@@ -21,21 +21,26 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.datastore.DataStoreChannelEventName;
+import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
+import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.SerializedModel;
+import com.amplifyframework.datastore.events.OutboxStatusEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * The {@link MutationProcessor} observes the {@link MutationOutbox}, and publishes its items to an
@@ -46,22 +51,32 @@ final class MutationProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final long ITEM_PROCESSING_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
-    private final VersionRepository versionRepository;
     private final Merger merger;
-    private final AppSync appSync;
+    private final VersionRepository versionRepository;
+    private final ModelSchemaRegistry modelSchemaRegistry;
     private final MutationOutbox mutationOutbox;
+    private final AppSync appSync;
+    private final ConflictResolver conflictResolver;
     private final CompositeDisposable ongoingOperationsDisposable;
 
-    MutationProcessor(
-            @NonNull Merger merger,
-            @NonNull VersionRepository versionRepository,
-            @NonNull MutationOutbox mutationOutbox,
-            @NonNull AppSync appSync) {
-        this.merger = Objects.requireNonNull(merger);
-        this.versionRepository = Objects.requireNonNull(versionRepository);
-        this.appSync = Objects.requireNonNull(appSync);
-        this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
+    private MutationProcessor(Builder builder) {
+        this.merger = Objects.requireNonNull(builder.merger);
+        this.versionRepository = Objects.requireNonNull(builder.versionRepository);
+        this.modelSchemaRegistry = Objects.requireNonNull(builder.modelSchemaRegistry);
+        this.mutationOutbox = Objects.requireNonNull(builder.mutationOutbox);
+        this.appSync = Objects.requireNonNull(builder.appSync);
+        this.conflictResolver = Objects.requireNonNull(builder.conflictResolver);
         this.ongoingOperationsDisposable = new CompositeDisposable();
+    }
+
+    /**
+     * Returns a step builder to begin construction of a new
+     * {@link MutationProcessor} instance.
+     * @return The first step in a sequence of steps to build an instance
+     *          of the mutation processor
+     */
+    public static BuilderSteps.MergerStep builder() {
+        return new Builder();
     }
 
     /**
@@ -80,7 +95,7 @@ final class MutationProcessor {
                         "Pending mutations will be published to the cloud."
                 )
             )
-            .startWith(MutationOutbox.OutboxEvent.CONTENT_AVAILABLE) // To start draining immediately
+            .startWithItem(MutationOutbox.OutboxEvent.CONTENT_AVAILABLE) // To start draining immediately
             .subscribeOn(Schedulers.single())
             .observeOn(Schedulers.single())
             .flatMapCompletable(event -> drainMutationOutbox())
@@ -109,14 +124,6 @@ final class MutationProcessor {
     }
 
     /**
-     * Checks if the mutation processor is actively observing the mutation outbox.
-     * @return True if the mutation processor is subscribed the mutation outbox.
-     */
-    boolean isDrainingMutationOutbox() {
-        return ongoingOperationsDisposable.size() > 0;
-    }
-
-    /**
      * Process an item in the mutation outbox.
      * @param mutationOutboxItem An item in the mutation outbox
      * @param <T> Type of model
@@ -127,12 +134,17 @@ final class MutationProcessor {
         return mutationOutbox.markInFlight(mutationOutboxItem.getMutationId())
             // Then, put it "into flight"
             .andThen(publishToNetwork(mutationOutboxItem)
+                .map(modelWithMetadata -> ensureModelHasSchema(mutationOutboxItem, modelWithMetadata))
                 .flatMapCompletable(modelWithMetadata ->
                     // Once the server knows about it, it's safe to remove from the outbox.
                     // This is done before merging, because the merger will refuse to merge
                     // if there are outstanding mutations in the outbox.
                     mutationOutbox.remove(mutationOutboxItem.getMutationId())
                         .andThen(merger.merge(modelWithMetadata))
+                        .doOnComplete(() -> {
+                            String modelName = mutationOutboxItem.getModelSchema().getName();
+                            announceMutationProcessed(modelName, modelWithMetadata);
+                        })
                 )
             )
             .doOnComplete(() -> {
@@ -140,21 +152,83 @@ final class MutationProcessor {
                     "Pending mutation was published to cloud successfully, " +
                         "and removed from the mutation outbox: " + mutationOutboxItem
                 );
-                announceSuccessfulPublication(mutationOutboxItem);
+                publishCurrentOutboxStatus();
             })
-            .doOnError(error -> LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error));
+            // If caused by an AppSync error, then publish it to hub, swallow,
+            // and then remove from the outbox to unblock the queue.
+            // Otherwise, pass it through.
+            .onErrorResumeNext(error -> {
+                if (error instanceof DataStoreException.GraphQLResponseException) {
+                    DataStoreException.GraphQLResponseException appSyncError =
+                        (DataStoreException.GraphQLResponseException) error;
+                    return mutationOutbox.remove(mutationOutboxItem.getMutationId())
+                        .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, appSyncError));
+                }
+                return Completable.error(error);
+            })
+            // Finally, catch all.
+            .doOnError(error -> {
+                LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error);
+            });
+    }
+
+    private <T extends Model> ModelWithMetadata<? extends Model> ensureModelHasSchema(
+        PendingMutation<T> mutationOutboxItem,
+        ModelWithMetadata<T> modelWithMetadata
+    ) {
+        return (modelWithMetadata.getModel() instanceof SerializedModel)
+            ? modelWithSchemaAdded(modelWithMetadata, mutationOutboxItem.getModelSchema())
+            : modelWithMetadata;
+    }
+
+    private <T extends Model> ModelWithMetadata<? extends Model> modelWithSchemaAdded(
+        ModelWithMetadata<T> modelWithMetadata,
+        ModelSchema modelSchema
+    ) {
+        final SerializedModel originalModel = (SerializedModel) modelWithMetadata.getModel();
+        final SerializedModel newModel = SerializedModel.builder()
+            .serializedData(originalModel.getSerializedData())
+            .modelSchema(modelSchema)
+            .build();
+        return new ModelWithMetadata<>(newModel, modelWithMetadata.getSyncMetadata());
     }
 
     /**
-     * Publish a successfully processed pending mutation to hub.
-     * @param processedMutation A mutation that has been successfully processed and removed from outbox
+     * Publish a successfully mutated model and its metadata to hub.
+     * @param modelWithMetadata A model that was successfully mutated and its sync metadata
      * @param <T> Type of model
      */
-    private <T extends Model> void announceSuccessfulPublication(PendingMutation<T> processedMutation) {
-        Amplify.Hub.publish(
-            HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation)
-        );
+    private <T extends Model> void announceMutationProcessed(
+            String modelName,
+            ModelWithMetadata<T> modelWithMetadata
+    ) {
+        OutboxMutationEvent<T> mutationEvent = OutboxMutationEvent.create(modelName, modelWithMetadata);
+        Amplify.Hub.publish(HubChannel.DATASTORE, mutationEvent.toHubEvent());
+    }
+
+    /**
+     * Publish hub event to indicate that mutation failed to publish.
+     * @param pendingMutation Pending mutation that triggered AppSync error response
+     * @param error Exception containing AppSync errors
+     * @param <T> Type of model
+     */
+    private <T extends Model> void announceMutationFailed(
+            PendingMutation<T> pendingMutation,
+            DataStoreException.GraphQLResponseException error
+    ) {
+        List<GraphQLResponse.Error> errors = error.getErrors();
+        OutboxMutationFailedEvent<T> errorEvent =
+                OutboxMutationFailedEvent.create(pendingMutation, errors);
+        Amplify.Hub.publish(HubChannel.DATASTORE, errorEvent.toHubEvent());
+    }
+
+    /**
+     * Publish current outbox status to hub.
+     */
+    private void publishCurrentOutboxStatus() {
+        HubEvent<OutboxStatusEvent> hubEvent =
+            new OutboxStatusEvent(mutationOutbox.peek() == null).toHubEvent();
+        Amplify.Hub.publish(HubChannel.DATASTORE, hubEvent);
     }
 
     /**
@@ -192,26 +266,33 @@ final class MutationProcessor {
     // For an item in the outbox, dispatch an update mutation
     private <T extends Model> Single<ModelWithMetadata<T>> update(PendingMutation<T> mutation) {
         final T updatedItem = mutation.getMutatedItem();
+        final ModelSchema updatedItemSchema =
+            this.modelSchemaRegistry.getModelSchemaForModelClass(getModelName(updatedItem));
         return versionRepository.findModelVersion(updatedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
-                appSync.update(model, version, mutation.getPredicate(), onSuccess, onError)
+                appSync.update(model, updatedItemSchema, version, mutation.getPredicate(), onSuccess, onError)
             )
         );
     }
 
     // For an item in the outbox, dispatch a create mutation
     private <T extends Model> Single<ModelWithMetadata<T>> create(PendingMutation<T> mutation) {
-        return publishWithStrategy(mutation, appSync::create);
+        final T createdItem = mutation.getMutatedItem();
+        final ModelSchema createdItemSchema =
+            this.modelSchemaRegistry.getModelSchemaForModelClass(getModelName(createdItem));
+        return publishWithStrategy(mutation, (model, onSuccess, onError) ->
+            appSync.create(model, createdItemSchema, onSuccess, onError));
     }
 
     // For an item in the outbox, dispatch a delete mutation
     private <T extends Model> Single<ModelWithMetadata<T>> delete(PendingMutation<T> mutation) {
         final T deletedItem = mutation.getMutatedItem();
-        final Class<T> deletedItemClass = mutation.getClassOfMutatedItem();
+        final ModelSchema deletedItemSchema =
+            this.modelSchemaRegistry.getModelSchemaForModelClass(getModelName(deletedItem));
         return versionRepository.findModelVersion(deletedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
                 appSync.delete(
-                    deletedItemClass, deletedItem.getId(), version, mutation.getPredicate(), onSuccess, onError
+                    deletedItemSchema, deletedItem.getId(), version, mutation.getPredicate(), onSuccess, onError
                 )
             )
         );
@@ -225,27 +306,61 @@ final class MutationProcessor {
      * @return A single which emits the model with its metadata, upon success; emits
      *         a failure, if publication does not succeed
      */
+    @NonNull
     private <T extends Model> Single<ModelWithMetadata<T>> publishWithStrategy(
-            PendingMutation<T> mutation, PublicationStrategy<T> publicationStrategy) {
-        T mutatedItem = mutation.getMutatedItem();
-        String modelClassName = mutation.getClassOfMutatedItem().getSimpleName();
-        return Single.defer(() -> Single.create(subscriber ->
-            publicationStrategy.publish(
-                mutatedItem,
-                result -> {
-                    if (!result.hasErrors() && result.hasData()) {
-                        subscriber.onSuccess(result.getData());
-                        return;
-                    }
-                    subscriber.onError(new DataStoreException(
-                        "Mutation failed. Failed mutation = " + mutation + ". " +
-                            "AppSync response contained errors = " + result.getErrors(),
-                        "Verify that your AppSync endpoint is able to store " + modelClassName + " models."
-                    ));
-                },
-                subscriber::onError
+            @NonNull PendingMutation<T> mutation,
+            @NonNull PublicationStrategy<T> publicationStrategy) {
+        return Single
+            .<GraphQLResponse<ModelWithMetadata<T>>>create(subscriber ->
+                publicationStrategy.publish(mutation.getMutatedItem(), subscriber::onSuccess, subscriber::onError)
             )
+            .flatMap(response -> {
+                // If there are no errors, and the response has data, just return.
+                if (!response.hasErrors() && response.hasData()) {
+                    return Single.just(response.getData());
+                } else {
+                    return handleResponseErrors(mutation, response.getErrors());
+                }
+            });
+    }
+
+    /**
+     * Handle errors that come back from AppSync while attempting to publish a mutation.
+     * @param <T> Type of model for which a publication had response errors
+     * @return A ModelWithMetadata representing the data as AppSync understands it;
+     *         the MutationProcessor should apply this data into the local store,
+     *         in a later step.
+     */
+    @SuppressWarnings("unchecked")
+    private <T extends Model> Single<ModelWithMetadata<T>> handleResponseErrors(
+            PendingMutation<T> pendingMutation,
+            List<GraphQLResponse.Error> errors) {
+        // At this point, we know something wrong. Check if the mutation failed
+        // due to ConflictUnhandled. If so, invoke our user-provided handler
+        // to try and recover. We don't know how to resolve other types of errors,
+        // so we just bubble those out in a DataStoreException.
+        Class<T> modelClazz = (Class<T>) pendingMutation.getModelSchema().getModelClass();
+        AppSyncConflictUnhandledError<T> unhandledConflict =
+            AppSyncConflictUnhandledError.findFirst(modelClazz, errors);
+        if (unhandledConflict != null) {
+            return conflictResolver.resolve(pendingMutation, unhandledConflict);
+        }
+
+        // If error was not due to ConflictUnhandled, then mark it as an AppSync
+        // error and bubble it up further to be taken care of inside
+        // processOutboxItem() method.
+        return Single.error(new DataStoreException.GraphQLResponseException(
+            "Mutation failed. Failed mutation = " + pendingMutation + ". " +
+                "AppSync response contained errors = " + errors, errors
         ));
+    }
+
+    private static String getModelName(@NonNull Model model) {
+        if (model.getClass() == SerializedModel.class) {
+            return ((SerializedModel) model).getModelName();
+        } else {
+            return model.getClass().getSimpleName();
+        }
     }
 
     /**
@@ -264,5 +379,106 @@ final class MutationProcessor {
             Consumer<GraphQLResponse<ModelWithMetadata<T>>> onSuccess,
             Consumer<DataStoreException> onFailure
         );
+    }
+
+    static final class Builder implements
+            BuilderSteps.MergerStep,
+            BuilderSteps.VersionRepositoryStep,
+            BuilderSteps.ModelSchemaRegistryStep,
+            BuilderSteps.MutationOutboxStep,
+            BuilderSteps.AppSyncStep,
+            BuilderSteps.ConflictResolverStep,
+            BuilderSteps.BuildStep {
+        private Merger merger;
+        private VersionRepository versionRepository;
+        private ModelSchemaRegistry modelSchemaRegistry;
+        private MutationOutbox mutationOutbox;
+        private AppSync appSync;
+        private ConflictResolver conflictResolver;
+
+        @NonNull
+        @Override
+        public BuilderSteps.VersionRepositoryStep merger(@NonNull Merger merger) {
+            Builder.this.merger = Objects.requireNonNull(merger);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuilderSteps.ModelSchemaRegistryStep versionRepository(@NonNull VersionRepository versionRepository) {
+            Builder.this.versionRepository = Objects.requireNonNull(versionRepository);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuilderSteps.MutationOutboxStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
+            Builder.this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuilderSteps.AppSyncStep mutationOutbox(@NonNull MutationOutbox mutationOutbox) {
+            Builder.this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuilderSteps.ConflictResolverStep appSync(@NonNull AppSync appSync) {
+            Builder.this.appSync = Objects.requireNonNull(appSync);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuilderSteps.BuildStep conflictResolver(@NonNull ConflictResolver conflictResolver) {
+            this.conflictResolver = Objects.requireNonNull(conflictResolver);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public MutationProcessor build() {
+            return new MutationProcessor(Builder.this);
+        }
+    }
+
+    interface BuilderSteps {
+        interface MergerStep {
+            @NonNull
+            VersionRepositoryStep merger(@NonNull Merger merger);
+        }
+
+        interface VersionRepositoryStep {
+            @NonNull
+            ModelSchemaRegistryStep versionRepository(@NonNull VersionRepository versionRepository);
+        }
+
+        interface ModelSchemaRegistryStep {
+            @NonNull
+            MutationOutboxStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry);
+        }
+
+        interface MutationOutboxStep {
+            @NonNull
+            AppSyncStep mutationOutbox(@NonNull MutationOutbox mutationOutbox);
+        }
+
+        interface AppSyncStep {
+            @NonNull
+            ConflictResolverStep appSync(@NonNull AppSync appSync);
+        }
+
+        interface ConflictResolverStep {
+            @NonNull
+            BuildStep conflictResolver(@NonNull ConflictResolver conflictResolver);
+        }
+
+        interface BuildStep {
+            @NonNull
+            MutationProcessor build();
+        }
     }
 }

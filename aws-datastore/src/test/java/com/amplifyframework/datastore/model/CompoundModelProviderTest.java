@@ -15,17 +15,21 @@
 
 package com.amplifyframework.datastore.model;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Test;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
+import io.reactivex.rxjava3.core.Observable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -65,16 +69,20 @@ public final class CompoundModelProviderTest {
      * If a component provider A provides models 1, 2,
      * and another provider B provides models 2, 3,
      * The compound shall provide 1,2,3.
+     * @throws AmplifyException when converting modelClass to modelSchema
      */
     @Test
-    public void compoundProvidesAllComponentModels() {
+    public void compoundProvidesAllComponentModels() throws AmplifyException {
         SimpleModelProvider oneTwoProvider = SimpleModelProvider.withRandomVersion(Blog.class, BlogOwner.class);
         SimpleModelProvider twoThreeProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class, Author.class);
         CompoundModelProvider compound = CompoundModelProvider.of(oneTwoProvider, twoThreeProvider);
 
         assertEquals(
-            new HashSet<>(Arrays.asList(Blog.class, BlogOwner.class, Author.class)),
-            compound.models()
+            Observable.fromArray(Author.class, BlogOwner.class, Blog.class)
+                .map(ModelSchema::fromModelClass)
+                .toList()
+                .blockingGet(),
+            new ArrayList<>(compound.modelSchemas().values())
         );
     }
 

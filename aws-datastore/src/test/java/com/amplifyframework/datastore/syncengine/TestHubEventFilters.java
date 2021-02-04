@@ -17,26 +17,54 @@ package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
+import com.amplifyframework.datastore.events.OutboxStatusEvent;
 import com.amplifyframework.hub.HubEventFilter;
 
 final class TestHubEventFilters {
     private TestHubEventFilters() {}
 
-    static <T extends Model> HubEventFilter publicationOf(T model) {
+    static <T extends Model> HubEventFilter isProcessed(T model) {
         return event -> {
             DataStoreChannelEventName eventName = DataStoreChannelEventName.fromString(event.getName());
-            if (!DataStoreChannelEventName.PUBLISHED_TO_CLOUD.equals(eventName)) {
+            if (!DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED.equals(eventName)) {
                 return false;
             }
-            PendingMutation<? extends Model> pendingMutation = (PendingMutation<? extends Model>) event.getData();
-            if (pendingMutation == null) {
+            return hasModelData(model, (OutboxMutationEvent<? extends Model>) event.getData());
+        };
+    }
+
+    static <T extends Model> HubEventFilter isEnqueued(T model) {
+        return event -> {
+            DataStoreChannelEventName eventName = DataStoreChannelEventName.fromString(event.getName());
+            if (!DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED.equals(eventName)) {
                 return false;
             }
-            if (!model.getClass().isAssignableFrom(pendingMutation.getClassOfMutatedItem())) {
+            return hasModelData(model, (OutboxMutationEvent<? extends Model>) event.getData());
+        };
+    }
+
+    private static <T extends Model> boolean hasModelData(T model, OutboxMutationEvent<? extends Model> mutationEvent) {
+        if (mutationEvent == null) {
+            return false;
+        }
+        if (!model.getClass().getSimpleName().equals(mutationEvent.getModelName())) {
+            return false;
+        }
+        String actualId = mutationEvent.getElement().getModel().getId();
+        return model.getId().equals(actualId);
+    }
+
+    static HubEventFilter isOutboxEmpty(boolean isEmpty) {
+        return event -> {
+            DataStoreChannelEventName eventName = DataStoreChannelEventName.fromString(event.getName());
+            if (!DataStoreChannelEventName.OUTBOX_STATUS.equals(eventName)) {
                 return false;
             }
-            String actualId = pendingMutation.getMutatedItem().getId();
-            return model.getId().equals(actualId);
+            OutboxStatusEvent status = (OutboxStatusEvent) event.getData();
+            if (status == null) {
+                return false;
+            }
+            return isEmpty == status.isEmpty();
         };
     }
 }

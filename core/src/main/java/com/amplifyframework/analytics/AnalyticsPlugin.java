@@ -38,7 +38,6 @@ public abstract class AnalyticsPlugin<E> implements AnalyticsCategoryBehavior, P
 
     @WorkerThread
     @Override
-    public void initialize(@NonNull Context context) throws AmplifyException {
-    }
+    public void initialize(@NonNull Context context) throws AmplifyException {}
 }
 

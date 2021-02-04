@@ -54,13 +54,13 @@ public final class ModelQuery {
     /**
      * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result.
      * The request will be created with the correct document based on the model schema and variables
-     * for filtering based on the the given predicate.
+     * for filtering based on the given predicate.
      * @param modelType the model class.
      * @param predicate the predicate for filtering.
      * @param <M> the concrete model type.
      * @return a valid {@link GraphQLRequest} instance.
      */
-    public static <M extends Model> GraphQLRequest<Iterable<M>> list(
+    public static <M extends Model> GraphQLRequest<PaginatedResult<M>> list(
             @NonNull Class<M> modelType,
             @NonNull QueryPredicate predicate
     ) {
@@ -77,7 +77,7 @@ public final class ModelQuery {
      * @return a valid {@link GraphQLRequest} instance.
      * @see #list(Class, QueryPredicate)
      */
-    public static <M extends Model> GraphQLRequest<Iterable<M>> list(@NonNull Class<M> modelType) {
+    public static <M extends Model> GraphQLRequest<PaginatedResult<M>> list(@NonNull Class<M> modelType) {
         return list(modelType, QueryPredicates.all());
     }
 
@@ -86,7 +86,7 @@ public final class ModelQuery {
      * within a certain range (i.e. paginated).
      * 
      * The request will be created with the correct document based on the model schema and variables
-     * for filtering based on the the given predicate and pagination.
+     * for filtering based on the given predicate and pagination.
      * 
      * @param modelType the model class.
      * @param predicate the predicate for filtering.

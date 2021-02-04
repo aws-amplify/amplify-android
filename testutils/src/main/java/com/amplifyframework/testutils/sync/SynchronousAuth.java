@@ -20,18 +20,27 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
+import com.amplifyframework.auth.AuthCodeDeliveryDetails;
+import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
+import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthSignInOptions;
+import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.VoidResult;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -227,19 +236,17 @@ public final class SynchronousAuth {
      * Complete password recovery process by inputting user's desired new password and confirmation code.
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    @NonNull
-    public Object confirmResetPassword(
+    public void confirmResetPassword(
             @NonNull String newPassword,
             @NonNull String confirmationCode
     ) throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.confirmResetPassword(
                     newPassword,
                     confirmationCode,
-                    () -> onResult.accept(new Object()),
+                    () -> onResult.accept(VoidResult.instance()),
                     onError
                 )
         );
@@ -252,38 +259,153 @@ public final class SynchronousAuth {
      */
     @NonNull
     public AuthSession fetchAuthSession() throws AuthException {
-        return Await.<AuthSession, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.fetchAuthSession(onResult, onError)
+        return Await.result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchAuthSession);
+    }
+
+    /**
+     * Remember current device synchronously.
+     * @throws AuthException exception
+     */
+    public void rememberDevice() throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.rememberDevice(() -> onResult.accept(VoidResult.instance()), onError)
         );
+    }
+
+    /**
+     * Forget the current device synchronously.
+     * @throws AuthException exception
+     */
+    public void forgetDevice() throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.forgetDevice(() -> onResult.accept(VoidResult.instance()), onError)
+        );
+    }
+
+    /**
+     * Forget the current device synchronously.
+     * @param device Auth device to forget
+     * @throws AuthException exception
+     */
+    public void forgetDevice(@NonNull AuthDevice device) throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.forgetDevice(device, () -> onResult.accept(VoidResult.instance()), onError)
+        );
+    }
+
+    /**
+     * Fetch a list of remembered devices synchronously.
+     * @return List of remembered Auth devices upon successful fetch
+     * @throws AuthException exception
+     */
+    public List<AuthDevice> fetchDevices() throws AuthException {
+        return Await.result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchDevices);
     }
 
     /**
      * Update the password of an existing user - must be signed in to perform this action.
      * @param oldPassword The user's existing password
      * @param newPassword The new password desired on the user account
-     * @return Dummy object - just indicates it completed successfully
      * @throws AuthException exception
      */
-    @NonNull
-    public Object updatePassword(
+    public void updatePassword(
             @NonNull String oldPassword,
             @NonNull String newPassword
     ) throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.updatePassword(oldPassword, newPassword, () -> onResult.accept(new Object()), onError)
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.updatePassword(oldPassword, newPassword,
+                    () -> onResult.accept(VoidResult.instance()), onError)
         );
     }
 
     /**
-     * Sign out synchronously.
-     * @return Dummy object - just indicates it completed successfully
+     * Fetch a list of user attributes synchronously.
+     * @return List of user attributes upon successful fetch
      * @throws AuthException exception
      */
-    @NonNull
-    public Object signOut() throws AuthException {
-        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+    public List<AuthUserAttribute> fetchUserAttribute() throws AuthException {
+        return Await.<List<AuthUserAttribute>, AuthException>result((onResult, onError) -> {
+            asyncDelegate.fetchUserAttributes(onResult, onError);
+        });
+    }
+
+    /**
+     * Update user attribute synchronously.
+     * @param attribute The user attribute to be updated
+     * @return result object
+     * @throws AuthException exception
+     */
+    public AuthUpdateAttributeResult updateUserAttribute(@NonNull AuthUserAttribute attribute) throws AuthException {
+        return Await.<AuthUpdateAttributeResult, AuthException>result((onResult, onError) -> {
+            asyncDelegate.updateUserAttribute(attribute, onResult, onError);
+        });
+    }
+
+    /**
+     * Update user attributes synchronously.
+     * @param attributes The user attributes to be updated
+     * @return result object
+     * @throws AuthException exception
+     */
+    public Map<AuthUserAttributeKey, AuthUpdateAttributeResult> updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes) throws AuthException {
+        return Await.<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>, AuthException>result((
+            (onResult, onError) -> {
+                asyncDelegate.updateUserAttributes(attributes, onResult, onError);
+            }));
+    }
+
+    /**
+     * Resend user attribute confirmation code to verify user attribute synchronously.
+     * @param attributeKey The user attribute key
+     * @return result object
+     * @throws AuthException exception
+     */
+    public AuthCodeDeliveryDetails resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey) throws AuthException {
+        return Await.<AuthCodeDeliveryDetails, AuthException>result((onResult, onError) -> {
+            asyncDelegate.resendUserAttributeConfirmationCode(attributeKey, onResult, onError);
+        });
+    }
+
+    /**
+     * Confirm user attribute synchronously.
+     * @param attributeKey The user attribute key
+     * @param confirmationCode The confirmation code the user received after starting the confirmUserAttribute process
+     * @throws AuthException exception
+     */
+    public void confirmUserAttribute(@NonNull AuthUserAttributeKey attributeKey,
+                                     @NonNull String confirmationCode) throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) -> {
+            asyncDelegate.confirmUserAttribute(
+                    attributeKey, confirmationCode, () -> onResult.accept(VoidResult.instance()), onError
+            );
+        });
+    }
+
+    /**
+     * Sign out synchronously.
+     * @throws AuthException exception
+     */
+    public void signOut() throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.signOut(
-                    () -> onResult.accept(new Object()),
+                    () -> onResult.accept(VoidResult.instance()),
+                    onError
+                )
+        );
+    }
+
+    /**
+     * Sign out synchronously with options.
+     * @param options Advanced options for signing out
+     * @throws AuthException exception
+     */
+    public void signOut(AuthSignOutOptions options) throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.signOut(
+                    options,
+                    () -> onResult.accept(VoidResult.instance()),
                     onError
                 )
         );

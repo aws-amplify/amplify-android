@@ -19,6 +19,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.BuildConfig;
 import com.amplifyframework.core.plugin.Plugin;
 
 import org.json.JSONObject;
@@ -62,6 +63,12 @@ final class FakePlugin<T> implements Plugin<T> {
     @Override
     public T getEscapeHatch() {
         return escapeHatch;
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 
     @NonNull

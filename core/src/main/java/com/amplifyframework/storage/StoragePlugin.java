@@ -38,6 +38,5 @@ public abstract class StoragePlugin<E> implements StorageCategoryBehavior, Plugi
 
     @WorkerThread
     @Override
-    public void initialize(@NonNull Context context) throws AmplifyException {
-    }
+    public void initialize(@NonNull Context context) throws AmplifyException {}
 }

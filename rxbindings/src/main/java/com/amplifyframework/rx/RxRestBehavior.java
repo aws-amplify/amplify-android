@@ -22,7 +22,7 @@ import com.amplifyframework.api.rest.RestBehavior;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 /**
  * An Rx-idiomatic expression of Amplify's {@link RestBehavior}.

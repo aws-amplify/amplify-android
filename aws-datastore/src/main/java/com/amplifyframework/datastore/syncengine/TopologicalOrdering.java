@@ -18,7 +18,6 @@ package com.amplifyframework.datastore.syncengine;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -65,8 +64,7 @@ final class TopologicalOrdering {
             @NonNull ModelProvider modelProvider) {
         Objects.requireNonNull(modelProvider);
         final List<ModelSchema> schemaForModels = new ArrayList<>();
-        for (Class<? extends Model> modelClass : modelProvider.models()) {
-            final String modelClassName = modelClass.getSimpleName();
+        for (String modelClassName : modelProvider.modelNames()) {
             final ModelSchema schemaForModelClass = modelSchemaRegistry.getModelSchemaForModelClass(modelClassName);
             schemaForModels.add(schemaForModelClass);
         }

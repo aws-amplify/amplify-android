@@ -30,6 +30,7 @@ import com.amplifyframework.util.Immutable;
 
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -44,6 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *            support, e.g. StoragePlugin, AnalyticsPlugin, etc.
  */
 public abstract class Category<P extends Plugin<?>> implements CategoryTypeable {
+
     /**
      * Map of the { pluginKey => plugin } object.
      */
@@ -172,18 +174,21 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * Retrieve a plugin by its key.
      * @param pluginKey A key that identifies a plugin implementation
      * @return The plugin object associated to pluginKey, if registered
-     * @throws IllegalStateException If the requested plugin does not exist
+     * @throws IllegalStateException If the requested plugin does not exist, or has not been configured.
      */
     @NonNull
     public final P getPlugin(@NonNull final String pluginKey) throws IllegalStateException {
         P plugin = plugins.get(pluginKey);
-        if (plugin != null) {
-            return plugin;
-        } else {
+        if (plugin == null) {
             throw new IllegalStateException(
                 "Tried to get a plugin but that plugin was not present. " +
                 "Check if the plugin was added originally or perhaps was already removed."
             );
+        } else if (!isConfigured()) {
+            throw new IllegalStateException(
+                    "Tried to get a plugin before it was configured.  Make sure you call Amplify.configure() first.");
+        } else {
+            return plugin;
         }
     }
 
@@ -205,7 +210,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      *         been configured
      */
     @NonNull
-    protected final P getSelectedPlugin() throws IllegalStateException {
+    protected P getSelectedPlugin() throws IllegalStateException {
         if (plugins.isEmpty()) {
             throw new IllegalStateException(
                 "Tried to get a plugin but that plugin was not present. " +
@@ -216,14 +221,24 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
                 "Tried to get a default plugin but there are more than one to choose from in this category. " +
                 "Call getPlugin(pluginKey) to choose the specific plugin you want to use in this case."
             );
+        } else if (!isConfigured()) {
+            throw new IllegalStateException(
+                    "Tried to get a plugin before it was configured.  Make sure you call Amplify.configure() first.");
         }
-
         return getPlugins().iterator().next();
     }
 
     /**
-     * Gets the current state of the category.
-     * @return Current category state
+     * Returns whether the category has been configured.
+     * @return whether the category has been configured.
+     */
+    protected synchronized boolean isConfigured() {
+        return Arrays.asList(State.CONFIGURED, State.INITIALIZING, State.INITIALIZED).contains(state.get());
+    }
+
+    /**
+     * Returns whether the category has been initialized.
+     * @return whether the category has been initialized.
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     protected synchronized boolean isInitialized() {

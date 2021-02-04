@@ -15,7 +15,6 @@
 
 package com.amplifyframework.testutils.sync;
 
-import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
@@ -23,6 +22,7 @@ import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.VoidResult;
 import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
@@ -30,9 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-
-import io.reactivex.Completable;
 
 /**
  * A utility to facilitate synchronous calls to the Amplify DataStore category.
@@ -41,7 +38,6 @@ import io.reactivex.Completable;
  * that a DataStore operation has completed with some kind of terminal result.
  */
 public final class SynchronousDataStore {
-    private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private final DataStoreCategoryBehavior asyncDelegate;
 
     private SynchronousDataStore(DataStoreCategoryBehavior asyncDelegate) {
@@ -108,15 +104,27 @@ public final class SynchronousDataStore {
     }
 
     /**
-     * Call the clear method of the underlying DataStore implementation.
+     * Calls the start method of the underlying DataStore implementation.
+     * @throws DataStoreException On failure to start data store.
      */
-    @SuppressLint("CheckResult")
-    public void clear() {
-        Completable.fromSingle(single -> {
-            asyncDelegate.clear(() -> {
-                single.onSuccess(true);
-            }, single::onError);
-        }).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+    public void start() throws DataStoreException {
+        await((onComplete, onError) -> asyncDelegate.start(() -> onComplete.accept(VoidResult.instance()), onError));
+    }
+
+    /**
+     * Call the clear method of the underlying DataStore implementation.
+     * @throws DataStoreException On failure to clear data store.
+     */
+    public void clear() throws DataStoreException {
+        await((onComplete, onError) -> asyncDelegate.clear(() -> onComplete.accept(VoidResult.instance()), onError));
+    }
+
+    /**
+     * Calls the save method of the underlying DataStore implementation.
+     * @throws DataStoreException On failure to stop data store.
+     */
+    public void stop() throws DataStoreException {
+        await((onComplete, onError) -> asyncDelegate.stop(() -> onComplete.accept(VoidResult.instance()), onError));
     }
 
     // Syntax fluff to get rid of type bounds at location of call
@@ -132,5 +140,11 @@ public final class SynchronousDataStore {
             Await.ResultErrorEmitter<Iterator<T>, DataStoreException> resultErrorEmitter)
             throws DataStoreException {
         return Await.result(resultErrorEmitter);
+    }
+
+    // Syntax fluff to get rid of type bounds at location of call
+    private void await(Await.ResultErrorEmitter<VoidResult, DataStoreException> resultErrorEmitter)
+            throws DataStoreException {
+        Await.result(resultErrorEmitter);
     }
 }

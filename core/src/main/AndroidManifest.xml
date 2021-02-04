@@ -17,5 +17,9 @@
 <manifest package="com.amplifyframework.core"
         xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <application>
+        <activity android:name="com.amplifyframework.devmenu.DeveloperMenuActivity"
+            android:theme="@style/OverlayActivity" />
+    </application>
 </manifest>
 

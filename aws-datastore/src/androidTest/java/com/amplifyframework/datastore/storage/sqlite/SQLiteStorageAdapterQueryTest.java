@@ -24,6 +24,7 @@ import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 
@@ -33,13 +34,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
-import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
+import static com.amplifyframework.core.model.query.predicate.QueryPredicate.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -144,6 +148,46 @@ public final class SQLiteStorageAdapterQueryTest {
     }
 
     /**
+     * Test that querying the saved item with a foreign key
+     * also populates that instance variable with object.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void querySavedDataWithMultiLevelJoins() throws DataStoreException {
+        final BlogOwner blogOwner = BlogOwner.builder()
+            .name("Alan Turing")
+            .build();
+
+        final Blog blog = Blog.builder()
+            .name("Alan's Software Blog")
+            .owner(blogOwner)
+            .build();
+
+        final Post post = Post.builder()
+            .title("Alan's first post")
+            .status(PostStatus.ACTIVE)
+            .rating(2)
+            .blog(blog)
+            .build();
+
+        final Comment comment = Comment.builder()
+            .content("Alan's first comment")
+            .post(post)
+            .build();
+
+        adapter.save(blogOwner);
+        adapter.save(blog);
+        adapter.save(post);
+        adapter.save(comment);
+
+        final List<Comment> comments = adapter.query(Comment.class);
+        assertTrue(comments.contains(comment));
+        assertEquals(comments.get(0).getPost(), post);
+        assertEquals(comments.get(0).getPost().getBlog(), blog);
+        assertEquals(comments.get(0).getPost().getBlog().getOwner(), blogOwner);
+    }
+
+    /**
      * Test querying the saved item in the SQLite database with
      * predicate conditions.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
@@ -152,11 +196,18 @@ public final class SQLiteStorageAdapterQueryTest {
     public void querySavedDataWithNumericalPredicates() throws DataStoreException {
         final List<Post> savedModels = new ArrayList<>();
         final int numModels = 10;
+
+        BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
+        adapter.save(blogOwner);
+        Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
+        adapter.save(blog);
+
         for (int counter = 0; counter < numModels; counter++) {
             final Post post = Post.builder()
                 .title("titlePrefix:" + counter)
                 .status(PostStatus.INACTIVE)
                 .rating(counter)
+                .blog(blog)
                 .build();
             adapter.save(post);
             savedModels.add(post);
@@ -191,12 +242,19 @@ public final class SQLiteStorageAdapterQueryTest {
     @Test
     public void querySavedDataWithStringPredicates() throws DataStoreException {
         final List<Post> savedModels = new ArrayList<>();
+        
+        BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
+        adapter.save(blogOwner);
+        Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
+        adapter.save(blog);
+
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
             final Post post = Post.builder()
                 .title(counter + "-title")
                 .status(PostStatus.INACTIVE)
                 .rating(counter)
+                .blog(blog)
                 .build();
             adapter.save(post);
             savedModels.add(post);
@@ -279,7 +337,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         List<BlogOwner> result = adapter.query(
             BlogOwner.class,
-            Where.matchesAll().paginated(Page.startingAt(0).withLimit(pageSize))
+            Where.paginated(Page.startingAt(0).withLimit(pageSize))
         );
         assertNotNull(result);
         assertEquals(pageSize, result.size());
@@ -297,7 +355,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         List<BlogOwner> result = adapter.query(
             BlogOwner.class,
-            Where.matchesAll().paginated(Page.firstPage())
+            Where.paginated(Page.firstPage())
         );
         assertNotNull(result);
         assertEquals(pageSize, result.size());
@@ -316,10 +374,47 @@ public final class SQLiteStorageAdapterQueryTest {
 
         List<BlogOwner> result = adapter.query(
             BlogOwner.class,
-            Where.matchesAll().paginated(Page.firstResult())
+            Where.paginated(Page.firstResult())
         );
         assertNotNull(result);
         assertEquals(1, result.size());
+    }
+
+    /**
+     * Test query with order by.  Validate that a list of BlogOwners can be sorted first by name in descending order,
+     * then by wea in ascending order.
+     * @throws DataStoreException On failure to arrange items into store, or from the query action itself
+     */
+    @Test
+    public void queryWithOrderBy() throws DataStoreException {
+        // Expect
+        List<String> names = Arrays.asList("Joe", "Joe", "Joe", "Bob", "Bob", "Bob", "Dan", "Dan", "Dan");
+        List<String> weas = Arrays.asList("pon", "lth", "ver", "kly", "ken", "sel", "ner", "rer", "ned");
+        List<BlogOwner> owners = new ArrayList<>();
+
+        for (int i = 0; i < names.size(); i++) {
+            BlogOwner owner = BlogOwner.builder()
+                    .name(names.get(i))
+                    .wea(weas.get(i))
+                    .build();
+            adapter.save(owner);
+            owners.add(owner);
+        }
+
+        // Act
+        List<BlogOwner> result = adapter.query(
+                BlogOwner.class,
+                Where.sorted(BlogOwner.NAME.descending(), BlogOwner.WEA.ascending())
+        );
+
+        // Verify
+        List<BlogOwner> sorted = new ArrayList<>(owners);
+        Collections.sort(sorted, Comparator
+                .comparing(BlogOwner::getName)
+                .reversed()
+                .thenComparing(BlogOwner::getWea)
+        );
+        assertEquals(sorted, result);
     }
 
     private void createBlogOwnerRecords(final int count) throws DataStoreException {

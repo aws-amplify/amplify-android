@@ -17,9 +17,14 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.util.Log;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
+import com.amplifyframework.datastore.appsync.SerializedModel;
+import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
@@ -30,10 +35,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -201,6 +211,35 @@ public final class SQLiteStorageAdapterSaveTest {
     }
 
     /**
+     * Test save with predicate. Conditional insert is not viable since conditional write
+     * applies predicate to existing data. Insert is only performed if there isn't any existing
+     * data. Save operation should fail.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    @SuppressWarnings("ThrowableNotThrown")
+    public void saveModelWithPredicateFailsInsert() throws DataStoreException {
+        final BlogOwner john = BlogOwner.builder()
+                .name("John")
+                .build();
+        final BlogOwner jane = BlogOwner.builder()
+                .name("Jane")
+                .build();
+        final BlogOwner mark = BlogOwner.builder()
+                .name("Mark")
+                .build();
+
+        // Try inserting with predicate
+        final QueryPredicate predicate = BlogOwner.NAME.beginsWith("J");
+        adapter.saveExpectingError(john, predicate);
+        adapter.saveExpectingError(jane, predicate);
+        adapter.saveExpectingError(mark, predicate);
+
+        // Nothing was saved
+        assertTrue(adapter.query(BlogOwner.class).isEmpty());
+    }
+
+    /**
      * Test save with predicate. Conditional write is useful for making sure that
      * no data is overwritten with outdated assumptions.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
@@ -246,5 +285,71 @@ public final class SQLiteStorageAdapterSaveTest {
                 .map(HashSet::new)
                 .blockingGet()
         );
+    }
+
+    /**
+     * Verify that saving an item that already exists emits a StorageItemChange event with a patchItem that only
+     * contains the fields that are different.
+     *
+     * @throws AmplifyException On failure to obtain ModelSchema from model class.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     */
+    @Test
+    public void patchItemOnlyHasChangedFields() throws AmplifyException, InterruptedException {
+        // Create a BlogOwner.
+        final BlogOwner johnSmith = BlogOwner.builder()
+                .name("John Smith")
+                .wea("ther")
+                .build();
+        adapter.save(johnSmith);
+
+        // Start observing for changes
+        TestObserver<StorageItemChange<? extends Model>> observer = adapter.observe().test();
+
+        // Update one field on the BlogOwner.
+        BlogOwner johnAdams = johnSmith.copyOfBuilder().name("John Adams").build();
+        adapter.save(johnAdams);
+
+        // Observe that the StorageItemChange contains an item with only the fields that changed (`id`, and `name`, but
+        // not `wea`)
+        Map<String, Object> serializedData = new HashMap<>();
+        serializedData.put("id", johnAdams.getId());
+        serializedData.put("name", "John Adams");
+        SerializedModel expectedItem = SerializedModel.builder()
+                .serializedData(serializedData)
+                .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                .build();
+        observer.await(1, TimeUnit.SECONDS);
+        observer.assertValueCount(1);
+        observer.assertValueAt(0, storageItemChange -> storageItemChange.patchItem().equals(expectedItem));
+    }
+
+    /**
+     * Test save with predicate. Confirms that conditionally updating a nested model also works.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void saveModelWithPredicateUpdatesForNestedModels() throws DataStoreException {
+        // Save a model
+        final BlogOwner mark = BlogOwner.builder()
+                .name("Mark")
+                .build();
+        adapter.save(mark);
+
+        // Save a model that belongs to another model
+        final Blog marksBlog = Blog.builder()
+                .name("Mark's very first blog.")
+                .owner(mark)
+                .build();
+        adapter.save(marksBlog);
+
+        // Update a model that belongs to another model
+        final Blog marksBlogEdit = marksBlog.copyOfBuilder()
+                .name("Mark's edited blog.")
+                .build();
+        adapter.save(marksBlogEdit);
+
+        // Assert that update went through successfully
+        assertEquals(Collections.singletonList(marksBlogEdit), adapter.query(Blog.class));
     }
 }

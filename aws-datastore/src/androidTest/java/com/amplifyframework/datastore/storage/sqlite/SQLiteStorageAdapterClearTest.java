@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -93,9 +93,10 @@ public final class SQLiteStorageAdapterClearTest {
      * Then call clear and verify that the database file is re-created
      * and is writable.
      * @throws DataStoreException bubbles up exceptions thrown from the adapter
+     * @throws InterruptedException If interrupted while test observer awaits terminal result
      */
     @Test
-    public void clearDeletesAndRecreatesDatabase() throws DataStoreException {
+    public void clearDeletesAndRecreatesDatabase() throws DataStoreException, InterruptedException {
         assertDbFileExists();
         assertEquals(0, fileObserver.createFileEventCount);
         assertEquals(0, fileObserver.deleteFileEventCount);
@@ -127,10 +128,10 @@ public final class SQLiteStorageAdapterClearTest {
         adapter.terminate();
         //Verify observer was disposed.
         observer.assertComplete();
-        observer.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        observer.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 
-    private BlogOwner createBlogger(String name) throws DataStoreException {
+    private BlogOwner createBlogger(String name) {
         return BlogOwner.builder()
             .name(name)
             .build();
@@ -138,7 +139,7 @@ public final class SQLiteStorageAdapterClearTest {
 
     private void assertObserverReceivedRecord(BlogOwner blogger) {
         for (StorageItemChange<? extends Model> owner : observer.values()) {
-            if (BlogOwner.class.isAssignableFrom(owner.itemClass()) &&
+            if (BlogOwner.class.isAssignableFrom(owner.modelSchema().getModelClass()) &&
                     blogger.equals((owner.item()))) {
                 return;
             }
@@ -171,10 +172,9 @@ public final class SQLiteStorageAdapterClearTest {
          *
          * @param path Directory to watch
          */
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("deprecation") // super(...)
         TestFileObserver(@NonNull String path) {
             super(path, FileObserver.CREATE | FileObserver.DELETE | FileObserver.DELETE_SELF);
-
             this.deleteFileEventCount = 0;
             this.createFileEventCount = 0;
         }

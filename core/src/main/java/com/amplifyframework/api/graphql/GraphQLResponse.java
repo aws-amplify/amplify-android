@@ -22,7 +22,6 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.util.Immutable;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -235,12 +234,11 @@ public final class GraphQLResponse<R> {
          * @param request The request which resulted in this GraphQLResponse
          * @param apiResponseJson Response from the endpoint, containing a string response
          *
-         * @param typeOfR The typeOfR to which the JSON string should be interpreted
          * @param <R> The typeOfR of the response object
          * @return An instance of provided typeOfR which models the data provided in the response JSON string
          * @throws ApiException If the class provided mismatches the data
          */
-        <R> GraphQLResponse<R> buildResponse(GraphQLRequest<R> request, String apiResponseJson, Type typeOfR)
+        <R> GraphQLResponse<R> buildResponse(GraphQLRequest<R> request, String apiResponseJson)
             throws ApiException;
     }
 }

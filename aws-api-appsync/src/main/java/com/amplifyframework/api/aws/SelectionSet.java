@@ -22,8 +22,15 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
+import com.amplifyframework.core.model.AuthRule;
+import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelAssociation;
+import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.types.JavaFieldType;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Wrap;
@@ -31,9 +38,11 @@ import com.amplifyframework.util.Wrap;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -51,8 +60,17 @@ public final class SelectionSet {
      * Copy constructor.
      * @param selectionSet node to copy
      */
+    @SuppressWarnings("CopyConstructorMissesField") // It is cloned, by recursion
     public SelectionSet(SelectionSet selectionSet) {
         this(selectionSet.value, new HashSet<>(selectionSet.nodes));
+    }
+
+    /**
+     * Constructor for a leaf node (no children).
+     * @param value String value of the field.
+     */
+    public SelectionSet(String value) {
+        this(value, Collections.emptySet());
     }
 
     /**
@@ -60,15 +78,16 @@ public final class SelectionSet {
      * @param value String value of the field
      * @param nodes Set of child nodes
      */
-    public SelectionSet(String value, Set<SelectionSet> nodes) {
+    public SelectionSet(String value, @NonNull Set<SelectionSet> nodes) {
         this.value = value;
-        this.nodes = nodes;
+        this.nodes = Objects.requireNonNull(nodes);
     }
 
     /**
      * Returns child nodes.
      * @return child nodes
      */
+    @NonNull
     public Set<SelectionSet> getNodes() {
         return nodes;
     }
@@ -153,11 +172,17 @@ public final class SelectionSet {
         private Class<? extends Model> modelClass;
         private Operation operation;
         private GraphQLRequestOptions requestOptions;
+        private ModelSchema modelSchema;
 
         Builder() { }
 
         public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
             this.modelClass = Objects.requireNonNull(modelClass);
+            return Builder.this;
+        }
+
+        public Builder modelSchema(@NonNull ModelSchema modelSchema) {
+            this.modelSchema = Objects.requireNonNull(modelSchema);
             return Builder.this;
         }
 
@@ -177,9 +202,15 @@ public final class SelectionSet {
          * @throws AmplifyException if a ModelSchema cannot be created from the provided model class.
          */
         public SelectionSet build() throws AmplifyException {
-            Objects.requireNonNull(this.modelClass);
+            if (this.modelClass == null && this.modelSchema == null) {
+                throw new AmplifyException("Both modelClass and modelSchema cannot be null",
+                        "Provide either a modelClass or a modelSchema to build the selection set");
+            }
             Objects.requireNonNull(this.operation);
-            SelectionSet node = new SelectionSet(null, getModelFields(modelClass, requestOptions.maxDepth()));
+            SelectionSet node = new SelectionSet(null,
+                    SerializedModel.class == modelClass
+                            ? getModelFields(modelSchema, requestOptions.maxDepth())
+                            : getModelFields(modelClass, requestOptions.maxDepth()));
             if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
                 node = wrapPagination(node);
             }
@@ -193,7 +224,7 @@ public final class SelectionSet {
          *  - "nextToken"
          *
          * @param node a root node, with a value of null, and pagination fields
-         * @return
+         * @return A selection set
          */
         private SelectionSet wrapPagination(SelectionSet node) {
             return new SelectionSet(null, wrapPagination(node.getNodes()));
@@ -203,11 +234,21 @@ public final class SelectionSet {
             Set<SelectionSet> paginatedSet = new HashSet<>();
             paginatedSet.add(new SelectionSet(requestOptions.listField(), nodes));
             for (String metaField : requestOptions.paginationFields()) {
-                paginatedSet.add(new SelectionSet(metaField, null));
+                paginatedSet.add(new SelectionSet(metaField));
             }
             return paginatedSet;
         }
 
+        /**
+         * Gets a selection set for the given class.
+         * TODO: this is mostly duplicative of {@link #getModelFields(ModelSchema, int)}.
+         * Long-term, we want to remove this current method and rely only on the ModelSchema-based
+         * version.
+         * @param clazz Class from which to build selection set
+         * @param depth Number of children deep to explore
+         * @return Selection Set
+         * @throws AmplifyException On faiulre to build selection set
+         */
         @SuppressWarnings("unchecked") // Cast to Class<Model>
         private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth)
                 throws AmplifyException {
@@ -218,12 +259,12 @@ public final class SelectionSet {
             Set<SelectionSet> result = new HashSet<>();
 
             if (depth == 0 && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())) {
-                result.add(new SelectionSet("id", null));
+                result.add(new SelectionSet("id"));
                 return result;
             }
 
             ModelSchema schema = ModelSchema.fromModelClass(clazz);
-            for (Field field : FieldFinder.findFieldsIn(clazz)) {
+            for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
                     if (List.class.isAssignableFrom(field.getType())) {
@@ -237,12 +278,115 @@ public final class SelectionSet {
                         Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1);
                         result.add(new SelectionSet(fieldName, fields));
                     }
+                } else if (isCustomType(field)) {
+                    result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
                 } else {
-                    result.add(new SelectionSet(fieldName, null));
+                    result.add(new SelectionSet(fieldName));
+                }
+                for (AuthRule authRule : schema.getAuthRules()) {
+                    if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+                        result.add(new SelectionSet(authRule.getOwnerFieldOrDefault()));
+                        break;
+                    }
                 }
             }
             for (String fieldName : requestOptions.modelMetaFields()) {
-                result.add(new SelectionSet(fieldName, null));
+                result.add(new SelectionSet(fieldName));
+            }
+            return result;
+        }
+
+        /**
+         * We handle customType fields differently as DEPTH does not apply here.
+         * @param clazz class we wish to build selection set for
+         * @return A set of selection sets
+         */
+        private Set<SelectionSet> getNestedCustomTypeFields(Class<?> clazz) {
+            Set<SelectionSet> result = new HashSet<>();
+            for (Field field : FieldFinder.findNonTransientFieldsIn(clazz)) {
+                String fieldName = field.getName();
+                if (isCustomType(field)) {
+                    result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
+                } else {
+                    result.add(new SelectionSet(fieldName));
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Helper to determine if field is a custom type. If custom types we need to build nested selection set.
+         * @param field field we wish to check
+         * @return True if the field is of a custom type
+         */
+        private static boolean isCustomType(@NonNull Field field) {
+            Class<?> cls = getClassForField(field);
+            if (Model.class.isAssignableFrom(cls) || Enum.class.isAssignableFrom(cls)) {
+                return false;
+            }
+            try {
+                JavaFieldType.from(cls);
+                return false;
+            } catch (IllegalArgumentException exception) {
+                // if we get here then field is  a custom type
+                return true;
+            }
+        }
+
+        /**
+         * Get the class of a field. If field is a collection, it returns the Generic type
+         * @return The class of the field
+         */
+        static Class<?> getClassForField(Field field) {
+            Class<?> typeClass;
+            if (Collection.class.isAssignableFrom(field.getType())) {
+                ParameterizedType listType = (ParameterizedType) field.getGenericType();
+                typeClass = (Class<?>) listType.getActualTypeArguments()[0];
+            } else {
+                typeClass = field.getType();
+            }
+            return typeClass;
+        }
+
+        // TODO: this method is tech debt. We added it to support usage of the library from Flutter.
+        // This version of the method needs to be unified with getModelFields(Class<? extends Model> clazz, int depth).
+        private Set<SelectionSet> getModelFields(ModelSchema modelSchema, int depth) {
+            if (depth < 0) {
+                return new HashSet<>();
+            }
+            Set<SelectionSet> result = new HashSet<>();
+            if (depth == 0 && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())) {
+                result.add(new SelectionSet("id"));
+                return result;
+            }
+            for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
+                String fieldName = entry.getKey();
+                ModelAssociation association = modelSchema.getAssociations().get(fieldName);
+                if (association != null) {
+                    if (depth >= 1) {
+                        String associatedModelName = association.getAssociatedType();
+                        ModelSchema associateModelSchema = ModelSchemaRegistry.instance()
+                                .getModelSchemaForModelClass(associatedModelName);
+                        Set<SelectionSet> fields;
+                        if (entry.getValue().isArray()) { // If modelField is an Array
+                            fields = wrapPagination(getModelFields(associateModelSchema, depth - 1));
+                        } else {
+                            fields = getModelFields(associateModelSchema, depth - 1);
+                        }
+                        result.add(new SelectionSet(fieldName, fields));
+                    }
+                } else {
+                    result.add(new SelectionSet(fieldName));
+                }
+                for (AuthRule authRule : modelSchema.getAuthRules()) {
+                    if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
+                        result.add(new SelectionSet(authRule.getOwnerFieldOrDefault()));
+                        break;
+                    }
+                }
+            }
+            for (String fieldName : requestOptions.modelMetaFields()) {
+                result.add(new SelectionSet(fieldName));
             }
             return result;
         }

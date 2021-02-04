@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -23,30 +23,21 @@ import java.util.Objects;
 /**
  * The result of a file upload operation in the Storage category.
  */
-public final class StorageUploadFileResult {
-    private final String key;
+public final class StorageUploadFileResult extends StorageUploadResult {
 
     private StorageUploadFileResult(String key) {
-        this.key = key;
+        super(key);
     }
 
     /**
      * Creates a new StorageUploadFileResult from a storage item key.
+     *
      * @param key Key for an item that was uploaded successfully
      * @return A storage upload result containing the item key
      */
     @NonNull
     public static StorageUploadFileResult fromKey(@NonNull String key) {
         return new StorageUploadFileResult(Objects.requireNonNull(key));
-    }
-
-    /**
-     * Gets the key for the item was successfully uploaded.
-     * @return Key for item that was uploaded
-     */
-    @NonNull
-    public String getKey() {
-        return key;
     }
 
     @Override
@@ -60,11 +51,11 @@ public final class StorageUploadFileResult {
 
         StorageUploadFileResult that = (StorageUploadFileResult) thatObject;
 
-        return ObjectsCompat.equals(key, that.key);
+        return ObjectsCompat.equals(super.getKey(), that.getKey());
     }
 
     @Override
     public int hashCode() {
-        return key != null ? key.hashCode() : 0;
+        return super.hashCode();
     }
 }

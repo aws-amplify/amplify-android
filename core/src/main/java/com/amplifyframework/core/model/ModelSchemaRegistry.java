@@ -36,16 +36,33 @@ public final class ModelSchemaRegistry {
     }
 
     /**
-     * Create the ModelSchema objects for all Model classes.
+     * Computes ModelSchema for each of the provided models, and registers them.
      * @param models the set that contains all the Model classes.
      * @throws AmplifyException if unable to create a Model Schema for a model
      */
-    public synchronized void load(@NonNull Set<Class<? extends Model>> models) throws AmplifyException {
+    public synchronized void register(@NonNull Set<Class<? extends Model>> models) throws AmplifyException {
         for (Class<? extends Model> modelClass : models) {
             final String modelClassName = modelClass.getSimpleName();
             final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);
             modelSchemaMap.put(modelClassName, modelSchema);
         }
+    }
+
+    /**
+     * Registers the modelSchemas provided.
+     * @param modelSchemas the map that contains mapping of ModelName to ModelSchema.
+     */
+    public synchronized void register(@NonNull Map<String, ModelSchema> modelSchemas) {
+        modelSchemaMap.putAll(modelSchemas);
+    }
+
+    /**
+     * Registers the modelSchema for the given modelName.
+     * @param modelName name of the model
+     * @param modelSchema schema of the model to be registered.
+     */
+    public synchronized void register(@NonNull String modelName, @NonNull ModelSchema modelSchema) {
+        modelSchemaMap.put(modelName, modelSchema);
     }
 
     /**
@@ -56,6 +73,16 @@ public final class ModelSchemaRegistry {
      */
     public synchronized ModelSchema getModelSchemaForModelClass(@NonNull String classSimpleName) {
         return modelSchemaMap.get(classSimpleName);
+    }
+
+    /**
+     * Retrieve the ModelSchema object for the given Model class.
+     * @param modelClass A model class
+     * @param <T> Type of item for which a schema is being built
+     * @return the ModelSchema object for the given Model class.
+     */
+    public synchronized <T extends Model> ModelSchema getModelSchemaForModelClass(@NonNull Class<T> modelClass) {
+        return modelSchemaMap.get(modelClass.getSimpleName());
     }
 
     /**

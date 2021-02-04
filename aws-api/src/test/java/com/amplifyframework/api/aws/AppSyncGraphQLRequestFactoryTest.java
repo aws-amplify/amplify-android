@@ -15,11 +15,15 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiException;
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
@@ -34,7 +38,11 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests the {@link AppSyncGraphQLRequestFactory}.
@@ -44,11 +52,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
     /**
      * Validate construction of a GraphQL query from a class and an object ID.
-     * @throws ApiException from possible query builder failure
      * @throws JSONException from JSONAssert.assertEquals
      */
     @Test
-    public void buildQueryFromClassAndId() throws ApiException, JSONException {
+    public void buildQueryFromClassAndId() throws JSONException {
         // Arrange a hard-coded ID as found int the expected data file.
         final String uuidForExpectedQuery = "9a1bee5c-248f-4746-a7da-58f703ec572d";
 
@@ -66,11 +73,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
     /**
      * Validate construction of a GraphQL query from a class and a predicate.
-     * @throws AmplifyException from buildQuery().
      * @throws JSONException from JSONAssert.assertEquals
      */
     @Test
-    public void buildQueryFromClassAndPredicate() throws AmplifyException, JSONException {
+    public void buildQueryFromClassAndPredicate() throws JSONException {
         // Arrange - ID for predicate, hard-coded version of what's in the expected txt
         final String expectedId = "aca4a318-181e-445a-beb9-7656f5005c7b";
 
@@ -89,19 +95,18 @@ public final class AppSyncGraphQLRequestFactoryTest {
     /**
      * Validates construction of a mutation query from a Person instance, a predicate,
      * and an {@link MutationType}.
-     * @throws AmplifyException From buildMutation().
      * @throws JSONException from JSONAssert.assertEquals
      */
     @SuppressWarnings("deprecation")
     @Test
-    public void buildMutationFromPredicateAndMutationType() throws AmplifyException, JSONException {
+    public void buildMutationFromPredicateAndMutationType() throws JSONException {
         // Arrange a person to delete, using UUID from test resource file
         final String expectedId = "dfcdac69-0662-41df-a67b-48c62a023f97";
         final Person tony = Person.builder()
             .firstName("Tony")
             .lastName("Swanson")
             .age(19)
-            .dob(new Date(2000, 1, 15))
+            .dob(new Temporal.Date(new Date(2000, 1, 15)))
             .id(expectedId)
             .relationship(MaritalStatus.single)
             .build();
@@ -122,11 +127,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
     /**
      * Validates construction of a subscription request using a class and an
      * {@link SubscriptionType}.
-     * @throws ApiException from subscription builder potential failure
      * @throws JSONException from JSONAssert.assertEquals
      */
     @Test
-    public void buildSubscriptionFromClassAndSubscriptionType() throws ApiException, JSONException {
+    public void buildSubscriptionFromClassAndSubscriptionType() throws JSONException {
         GraphQLRequest<Person> subscriptionRequest = AppSyncGraphQLRequestFactory.buildSubscription(
             Person.class, SubscriptionType.ON_CREATE
         );
@@ -140,11 +144,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
     /**
      * Validates date serialization when creating GraphQLRequest.
-     * @throws ApiException from buildMutation potential failure
      * @throws JSONException from JSONAssert.assertEquals JSON parsing error
      */
     @Test
-    public void validateDateSerializer() throws ApiException, JSONException {
+    public void validateDateSerializer() throws JSONException {
         // Create expectation
         final Meeting meeting1 = Meeting.builder()
                 .name("meeting1")
@@ -162,5 +165,75 @@ public final class AppSyncGraphQLRequestFactoryTest {
         // Assert: expected is actual
         JSONAssert.assertEquals(Resources.readAsString("create-meeting1.txt"),
                 requestToCreateMeeting1.getContent(), true);
+    }
+
+    /**
+     * Verify that the owner field is removed if the value is null.
+     */
+    @Test
+    public void ownerFieldIsRemovedIfNull() {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "111");
+        expected.put("description", "Mop the floor");
+
+        // Act
+        Todo todo = new Todo("111", "Mop the floor", null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> actual = (Map<String, Object>)
+            AppSyncGraphQLRequestFactory.buildMutation(todo, QueryPredicates.all(), MutationType.CREATE)
+                .getVariables()
+                .get("input");
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+    /**
+     * Verify that the owner field is NOT removed if the value is set..
+     */
+    @Test
+    public void ownerFieldIsNotRemovedIfSet() {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "111");
+        expected.put("description", "Mop the floor");
+        expected.put("owner", "johndoe");
+
+        // Act
+        Todo todo = new Todo("111", "Mop the floor", "johndoe");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> actual = (Map<String, Object>)
+            AppSyncGraphQLRequestFactory.buildMutation(todo, QueryPredicates.all(), MutationType.CREATE)
+                .getVariables()
+                .get("input");
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
+    static final class Todo implements Model {
+        @com.amplifyframework.core.model.annotations.ModelField(targetType = "ID", isRequired = true)
+        private final String id;
+
+        @com.amplifyframework.core.model.annotations.ModelField(isRequired = true)
+        private final String description;
+
+        @com.amplifyframework.core.model.annotations.ModelField
+        private final String owner;
+
+        @SuppressWarnings("ParameterName") // checkstyle wants variable names to be >2 chars, but id is only 2.
+        Todo(String id, String description, String owner) {
+            this.id = id;
+            this.description = description;
+            this.owner = owner;
+        }
+
+        @NonNull
+        @Override
+        public String getId() {
+            return "111";
+        }
     }
 }

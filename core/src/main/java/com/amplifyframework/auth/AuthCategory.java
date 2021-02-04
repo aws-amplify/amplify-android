@@ -27,10 +27,14 @@ import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Defines the Client API consumed by the application.
@@ -159,6 +163,39 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
+    public void rememberDevice(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().rememberDevice(onSuccess, onError);
+    }
+
+    @Override
+    public void forgetDevice(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().forgetDevice(onSuccess, onError);
+    }
+
+    @Override
+    public void forgetDevice(
+            @NonNull AuthDevice device,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().forgetDevice(device, onSuccess, onError);
+    }
+
+    @Override
+    public void fetchDevices(
+            @NonNull Consumer<List<AuthDevice>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().fetchDevices(onSuccess, onError);
+    }
+
+    @Override
     public void resetPassword(
             @NonNull String username,
             @NonNull Consumer<AuthResetPasswordResult> onSuccess,
@@ -181,10 +218,55 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     public void updatePassword(
             @NonNull String oldPassword,
             @NonNull String newPassword,
-            @Nullable Action onSuccess,
-            @Nullable Consumer<AuthException> onError
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().updatePassword(oldPassword, newPassword, onSuccess, onError);
+    }
+
+    @Override
+    public void fetchUserAttributes(
+            @NonNull Consumer<List<AuthUserAttribute>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().fetchUserAttributes(onSuccess, onError);
+    }
+
+    @Override
+    public void updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull Consumer<AuthUpdateAttributeResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().updateUserAttribute(attribute, onSuccess, onError);
+    }
+
+    @Override
+    public void updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().updateUserAttributes(attributes, onSuccess, onError);
+    }
+
+    @Override
+    public void resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().resendUserAttributeConfirmationCode(attributeKey, onSuccess, onError);
+    }
+
+    @Override
+    public void confirmUserAttribute(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull String confirmationCode,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().confirmUserAttribute(attributeKey, confirmationCode, onSuccess, onError);
     }
 
     @Override

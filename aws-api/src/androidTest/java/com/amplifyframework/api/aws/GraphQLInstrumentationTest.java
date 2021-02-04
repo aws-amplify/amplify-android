@@ -15,12 +15,15 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
@@ -29,6 +32,7 @@ import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -36,7 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
@@ -102,6 +106,7 @@ public final class GraphQLInstrumentationTest {
      *          expected response from the endpoint
      */
     @Test
+    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void subscriptionReceivesMutationOverAwsIam() throws ApiException {
         currentApiName = API_WITH_AWS_IAM;
         subscriptionReceivesMutation();
@@ -118,6 +123,7 @@ public final class GraphQLInstrumentationTest {
      *          to sign in as a valid user
      */
     @Test
+    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void subscriptionReceivesMutationOverCognitoUserPools() throws
             ApiException, JSONException, SynchronousMobileClient.MobileClientException {
         currentApiName = API_WITH_COGNITO_USER_POOLS;
@@ -241,15 +247,24 @@ public final class GraphQLInstrumentationTest {
      * for the purposes of our tests, we just model a Comment as a thing containing
      * a String content message. This is enough for a simple assertion: "yup, same one".
      */
-    static final class Comment {
+    static final class Comment implements Model {
         private final String content;
+        private final String id;
 
-        Comment(final String content) {
+        @SuppressWarnings("checkstyle:ParameterName")
+        Comment(final String id, final String content) {
+            this.id = id;
             this.content = content;
         }
 
         String content() {
             return content;
+        }
+
+        @NonNull
+        @Override
+        public String getId() {
+            return id;
         }
     }
 
@@ -257,7 +272,7 @@ public final class GraphQLInstrumentationTest {
      * Model of an Event, which we create as part of this test, so that we can
      * associate comments to the event.
      */
-    static final class Event {
+    static final class Event implements Model {
         private final String id;
         private final String name;
         private final String when;
@@ -296,6 +311,12 @@ public final class GraphQLInstrumentationTest {
 
         String description() {
             return description;
+        }
+
+        @NonNull
+        @Override
+        public String getId() {
+            return id;
         }
     }
 }

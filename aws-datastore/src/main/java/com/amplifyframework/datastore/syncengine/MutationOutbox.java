@@ -21,8 +21,8 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
 
 /*
  * The {@link MutationOutbox} is a persistently-backed in-order staging ground
@@ -92,7 +92,7 @@ interface MutationOutbox {
     /**
      * Marks a pending mutation as "in-flight." An in-flight mutation becomes
      * frozen to any further modifications, until it can be removed from the outbox, entirely.
-     * Mutations enter this state while they are being processed, and published the the cloud.
+     * Mutations enter this state while they are being processed, and published the cloud.
      * Mutations leave this state when the are removed from the outbox.
      * The "in-flight" status is NOT persisted, by design. When the system restarts,
      * no mutation is regarded as "in-flight."

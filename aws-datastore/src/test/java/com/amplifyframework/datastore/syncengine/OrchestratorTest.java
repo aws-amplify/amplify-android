@@ -16,40 +16,103 @@
 package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
-import com.amplifyframework.datastore.appsync.AppSync;
-import com.amplifyframework.datastore.appsync.AppSyncMocking;
+import com.amplifyframework.datastore.appsync.AppSyncClient;
+import com.amplifyframework.datastore.appsync.ModelMetadata;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.HubAccumulator;
+import com.amplifyframework.testutils.mocks.ApiMocking;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.shadows.ShadowLog;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
 
-import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isProcessed;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests the {@link Orchestrator}.
  */
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
-    private static final long ORCHESTRATOR_TEST_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore:test");
+
+    private Orchestrator orchestrator;
+    private HubAccumulator orchestratorInitObserver;
+    private GraphQLBehavior mockApi;
+    private InMemoryStorageAdapter localStorageAdapter;
+    private BlogOwner susan;
+
+    /**
+     * Setup mocks and other common elements.
+     * @throws AmplifyException Not expected.
+     */
+    @SuppressWarnings("unchecked")
+    @Before
+    public void setup() throws AmplifyException {
+        ShadowLog.stream = System.out;
+        // Arrange: create a BlogOwner
+        susan = BlogOwner.builder().name("Susan Quimby").build();
+
+        // SYNC_QUERIES_READY indicates that the sync queries have completed.
+        orchestratorInitObserver =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.SYNC_QUERIES_READY, 1)
+                          .start();
+
+        ModelMetadata metadata = new ModelMetadata(susan.getId(),
+                                                   false,
+                                                   1,
+                                                   Temporal.Timestamp.now());
+        ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(susan, metadata);
+        // Mock behaviors from for the API category
+        mockApi = mock(GraphQLBehavior.class);
+        ApiMocking.mockSubscriptionStart(mockApi);
+        ApiMocking.mockSuccessfulMutation(mockApi, susan.getId(), modelWithMetadata);
+        ApiMocking.mockSuccessfulQuery(mockApi, modelWithMetadata);
+        AppSyncClient appSync = AppSyncClient.via(mockApi);
+
+        localStorageAdapter = InMemoryStorageAdapter.create();
+        ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry.clear();
+        modelSchemaRegistry.register(modelProvider.models());
+
+        orchestrator =
+            new Orchestrator(modelProvider,
+                modelSchemaRegistry,
+                localStorageAdapter,
+                appSync,
+                DataStoreConfiguration::defaults,
+                () -> Orchestrator.State.SYNC_VIA_API
+            );
+    }
 
     /**
      * When an item is placed into storage, a cascade of
@@ -61,48 +124,53 @@ public final class OrchestratorTest {
     @SuppressWarnings("unchecked") // Casting ? in HubEvent<?> to PendingMutation<? extends Model>
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
-        // Arrange: create a BlogOwner
-        final BlogOwner susan = BlogOwner.builder()
-            .name("Susan Quimby")
-            .build();
+        // Arrange: orchestrator is running
+        orchestrator.start().test();
 
+        orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         HubAccumulator accumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(susan), 1)
-                .start();
-
-        AppSync appSync = mock(AppSync.class);
-        AppSyncMocking.onCreate(appSync).mockResponse(susan);
-
-        InMemoryStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
-        ModelProvider modelProvider = SimpleModelProvider.withRandomVersion();
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.clear();
-        modelSchemaRegistry.load(modelProvider.models());
-
-        Orchestrator orchestrator =
-            new Orchestrator(modelProvider,
-                modelSchemaRegistry,
-                localStorageAdapter,
-                appSync,
-                DataStoreConfiguration::defaults
-            );
-
-        // Arrange: storage engine is running
-        orchestrator.start(EmptyAction.create()).blockingAwait();
-
+            HubAccumulator.create(HubChannel.DATASTORE, isProcessed(susan), 1)
+                  .start();
         // Act: Put BlogOwner into storage, and wait for it to complete.
         SynchronousStorageAdapter.delegatingTo(localStorageAdapter).save(susan);
 
+        // Assert that the event is published out to the API
         assertEquals(
             Collections.singletonList(susan),
-            Observable.fromIterable(accumulator.await())
+            Observable.fromIterable(accumulator.await(10, TimeUnit.SECONDS))
                 .map(HubEvent::getData)
-                .map(data -> (PendingMutation<BlogOwner>) data)
-                .map(PendingMutation::getMutatedItem)
+                .map(data -> (OutboxMutationEvent<BlogOwner>) data)
+                .map(OutboxMutationEvent::getElement)
+                .map(OutboxMutationEvent.OutboxMutationEventElement::getModel)
                 .toList()
                 .blockingGet()
         );
 
-        orchestrator.stop().blockingGet(ORCHESTRATOR_TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        assertTrue(orchestrator.stop().blockingAwait(5, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Verify preventing concurrent state transitions from happening.
+     */
+    @Test
+    public void preventConcurrentStateTransitions() {
+        // Arrange: orchestrator is running
+        orchestrator.start().test();
+
+        // Try to start it in a new thread.
+        boolean success = Completable.create(emitter -> {
+            new Thread(() -> orchestrator.start()
+                .subscribe(emitter::onComplete, emitter::onError)
+            ).start();
+
+            // Try to start it again on the current thread.
+            orchestrator.start().test();
+        }).blockingAwait(5, TimeUnit.SECONDS);
+        assertTrue("Failed to start orchestrator on a background thread", success);
+
+        orchestratorInitObserver.await(10, TimeUnit.SECONDS);
+        verify(mockApi, times(1)).query(any(), any(), any());
+
+        assertTrue(orchestrator.stop().blockingAwait(5, TimeUnit.SECONDS));
     }
 }

@@ -38,6 +38,5 @@ public abstract class AuthPlugin<E> implements AuthCategoryBehavior, Plugin<E> {
 
     @WorkerThread
     @Override
-    public void initialize(@NonNull Context context) throws AmplifyException {
-    }
+    public void initialize(@NonNull Context context) throws AmplifyException {}
 }

@@ -25,8 +25,10 @@ import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.random.RandomBytes;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.random.RandomTempFile;
 
@@ -41,8 +43,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -265,13 +269,49 @@ public final class StorageComponentTest {
     }
 
     /**
+     * Test that calling upload inputStream method from Storage category correctly
+     * invokes the registered AWSS3StoragePlugin instance and returns a
+     * {@link StorageUploadFileResult} with correct remote key.
+     *
+     * @throws Exception when an error is encountered while uploading
+     */
+    @Test
+    public void testUploadInputStreamGetsKey() throws Exception {
+        final String toRemoteKey = RandomString.string();
+        final InputStream inputStream = new ByteArrayInputStream(RandomBytes.bytes());
+
+        TransferObserver observer = mock(TransferObserver.class);
+        when(storageService.uploadInputStream(anyString(), any(InputStream.class), any(ObjectMetadata.class)))
+                .thenReturn(observer);
+
+        doAnswer(invocation -> {
+            TransferListener listener = invocation.getArgument(0);
+            listener.onStateChanged(0, TransferState.COMPLETED);
+            return null;
+        }).when(observer)
+                .setTransferListener(any(TransferListener.class));
+
+        StorageUploadInputStreamResult result =
+                Await.<StorageUploadInputStreamResult, StorageException>result((onResult, onError) ->
+                        storage.uploadInputStream(
+                                toRemoteKey,
+                                inputStream,
+                                onResult,
+                                onError
+                        )
+                );
+
+        assertEquals(toRemoteKey, result.getKey());
+    }
+
+    /**
      * Test that calling upload file method from Storage category fails
      * successfully when {@link TransferListener} emits an error.
      *
      * @throws IOException when the upload file cannot be created
      */
     @Test
-    public void testUploadError() throws IOException {
+    public void testUploadFileError() throws IOException {
         final StorageException testError = new StorageException(
                 "Test error message",
                 "Test recovery message"
@@ -296,6 +336,46 @@ public final class StorageComponentTest {
                         storage.uploadFile(
                                 toRemoteKey,
                                 fromLocalFile,
+                                onResult,
+                                onError
+                        )
+                );
+
+        assertEquals(testError, error.getCause());
+    }
+
+    /**
+     * Test that calling upload inputStream method from Storage category fails
+     * successfully when {@link TransferListener} emits an error.
+     *
+     * @throws IOException when the upload file cannot be created
+     */
+    @Test
+    public void testInputStreamError() throws IOException {
+        final StorageException testError = new StorageException(
+                "Test error message",
+                "Test recovery message"
+        );
+
+        final String toRemoteKey = RandomString.string();
+        final InputStream inputStream = new ByteArrayInputStream(RandomBytes.bytes());
+
+        TransferObserver observer = mock(TransferObserver.class);
+        when(storageService.uploadInputStream(anyString(), any(InputStream.class), any(ObjectMetadata.class)))
+                .thenReturn(observer);
+
+        doAnswer(invocation -> {
+            TransferListener listener = invocation.getArgument(0);
+            listener.onError(0, testError);
+            return null;
+        }).when(observer)
+                .setTransferListener(any(TransferListener.class));
+
+        StorageException error =
+                Await.<StorageUploadInputStreamResult, StorageException>error((onResult, onError) ->
+                        storage.uploadInputStream(
+                                toRemoteKey,
+                                inputStream,
                                 onResult,
                                 onError
                         )

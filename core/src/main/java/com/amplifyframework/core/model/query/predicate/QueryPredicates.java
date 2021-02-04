@@ -25,7 +25,15 @@ public final class QueryPredicates {
      * Creates a {@link QueryPredicate} which matches any object it is asked to evaluate.
      * @return A query predicate that matches everything.
      */
-    public static MatchAllQueryPredicate all() {
+    public static QueryPredicate all() {
         return MatchAllQueryPredicate.instance();
+    }
+
+    /**
+     * Creates a {@link QueryPredicate} which matches nothing.
+     * @return A query predicate that matches nothing.
+     */
+    public static QueryPredicate none() {
+        return MatchNoneQueryPredicate.instance();
     }
 }

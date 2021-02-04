@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
+import io.reactivex.rxjava3.core.Completable;
 
 /**
  * Class that defines inner classes and interfaces related to retry strategies.
@@ -36,9 +36,7 @@ public final class RetryStrategy {
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private RetryStrategy() {
-
-    }
+    private RetryStrategy() {}
 
     /**
      * Simple implementation of an exponential backoff startegy that can be used with RxCompletables.

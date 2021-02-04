@@ -48,8 +48,7 @@ public final class BadInitLoggingPlugin extends LoggingPlugin<Void> {
     }
 
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) {
-    }
+    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) {}
 
     @Override
     public void initialize(@NonNull Context context) throws AmplifyException {
@@ -63,6 +62,12 @@ public final class BadInitLoggingPlugin extends LoggingPlugin<Void> {
     @Override
     public Void getEscapeHatch() {
         return null;
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 
     @NonNull

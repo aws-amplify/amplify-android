@@ -66,22 +66,6 @@ public interface LocalStorageAdapter {
     );
 
     /**
-     * Save an item into local storage. A {@link Consumer} will be invoked when the
-     * save operation is completed, to notify the caller of success or error.
-     * @param <T> The type of the item being stored
-     * @param item the item to save into the repository
-     * @param initiator An identification of the actor who initiated this save
-     * @param onSuccess A callback that will be invoked if the save succeeds
-     * @param onError A callback that will be invoked if the save fails with an error
-     */
-    <T extends Model> void save(
-            @NonNull T item,
-            @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError
-    );
-
-    /**
      * Save an item into local storage only if the data being overwritten meets the
      * specific conditions. A {@link Consumer} will be invoked when the
      * save operation is completed, to notify the caller of success or failure.
@@ -101,19 +85,6 @@ public interface LocalStorageAdapter {
     );
 
     /**
-     * Query the storage for items of a given type.
-     * @param itemClass Items that have this class will be solicited
-     * @param onSuccess A callback that will be invoked if the query succeeds
-     * @param onError A callback that will be invoked if the query fails with an error
-     * @param <T> Type type of the items that are being queried
-     */
-    <T extends Model> void query(
-            @NonNull Class<T> itemClass,
-            @NonNull Consumer<Iterator<T>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError
-    );
-
-    /**
      * Query the storage for items of a given type with specific conditions.
      * @param itemClass Items that have this class will be solicited
      * @param options options, such as predicates, pagination to apply to query
@@ -129,17 +100,16 @@ public interface LocalStorageAdapter {
     );
 
     /**
-     * Deletes an item from storage.
-     * @param <T> The type of item being deleted
-     * @param item Item to delete
-     * @param initiator An identification of the actor who initiated this deletion
-     * @param onSuccess A callback that will be invoked when deletion succeeds
-     * @param onError A callback that will be invoked when deletion fails with an error
+     * Query the storage for items of a given type with specific conditions.
+     * @param modelName name of the Model to query
+     * @param options options, such as predicates, pagination to apply to query
+     * @param onSuccess A callback that will be notified if the query succeeds
+     * @param onError A callback that will be notified if the query fails with an error
      */
-    <T extends Model> void delete(
-            @NonNull T item,
-            @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange<T>> onSuccess,
+    void query(
+            @NonNull String modelName,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 
@@ -159,6 +129,25 @@ public interface LocalStorageAdapter {
             @NonNull StorageItemChange.Initiator initiator,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<StorageItemChange<T>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    );
+
+    /**
+     * Deletes all items of a given type from storage that meet the
+     * specific conditions. A {@link Consumer} will be invoked when the
+     * save operation is completed, to notify the caller of success or failure.
+     * @param <T> The type of item being deleted
+     * @param itemClass Item to delete
+     * @param initiator An identification of the actor who initiated this deletion
+     * @param predicate Predicate condition for conditional delete
+     * @param onSuccess A callback that will be invoked when deletion succeeds
+     * @param onError A callback that will be invoked when deletion fails with an error
+     */
+    <T extends Model> void delete(
+            @NonNull Class<T> itemClass,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull QueryPredicate predicate,
+            @NonNull Action onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 

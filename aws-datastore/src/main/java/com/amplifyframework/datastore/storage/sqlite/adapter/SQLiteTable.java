@@ -19,10 +19,12 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.PrimaryKey;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteDataType;
 import com.amplifyframework.datastore.storage.sqlite.TypeConverter;
 import com.amplifyframework.util.Immutable;
@@ -150,12 +152,12 @@ public final class SQLiteTable {
      * Return "id" if no column identifies as primary key.
      * @return the column name of primary key
      */
-    @Nullable
+    @NonNull
     public String getPrimaryKeyColumnName() {
         if (getPrimaryKey() == null) {
             return PrimaryKey.fieldName();
         }
-        return getPrimaryKey().getColumnName();
+        return getPrimaryKey().getQuotedColumnName();
     }
 
     /**
@@ -171,6 +173,22 @@ public final class SQLiteTable {
             }
         }
         return Immutable.of(foreignKeys);
+    }
+
+    /**
+     * Returns the SQLiteColumn for the provided column name.
+     * @param columnName name of the column
+     * @return the SQLiteColumn for the provided column name.
+     * @throws DataStoreException if no column is found for the provided columnName.
+     */
+    @NonNull
+    public SQLiteColumn getColumn(@NonNull String columnName) throws DataStoreException {
+        SQLiteColumn column = columns.get(Objects.requireNonNull(columnName));
+        if (column == null) {
+            throw new DataStoreException("Column with columnName " + columnName + " not found in " + name,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION);
+        }
+        return column;
     }
 
     /**

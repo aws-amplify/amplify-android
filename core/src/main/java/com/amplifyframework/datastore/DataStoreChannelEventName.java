@@ -25,34 +25,70 @@ import com.amplifyframework.hub.HubEvent;
 import java.util.Objects;
 
 /**
- * An enumeration of the names of events relating the the {@link DataStoreCategory},
+ * An enumeration of the names of events relating the {@link DataStoreCategory},
  * that are published via {@link HubCategory#publish(HubChannel, HubEvent)} on the
  * {@link HubChannel#DATASTORE} channel.
  */
 public enum DataStoreChannelEventName {
     /**
-     * An item in the local storage has been published to the cloud.
-     * An event that uses this value for {@link HubEvent#getName()} will contain a model object
-     * in the {@link HubEvent#getData()}.
+     * The DataStore as a whole (not just the sync piece) is ready. At this point all data is available.
      */
-    PUBLISHED_TO_CLOUD("published_to_cloud"),
+    READY("ready"),
 
     /**
-     * A model was updated locally, from a model version that was received from the cloud.
-     * An event that uses this value for {@link HubEvent#getName()} will contain a model object
-     * in the {@link HubEvent#getData()}.
+     * Indicates that the network is active or not.
+     * It is triggered on DataStore start and also every time the network status changes.
      */
-    RECEIVED_FROM_CLOUD("received_from_cloud"),
+    NETWORK_STATUS("networkStatus"),
 
     /**
-     * The remote synchonization processes started.
+     * The WebSocket connection has been established, in addition to all of the GraphQL
+     * subscriptions it hosts.
      */
-    REMOTE_SYNC_STARTED("remote_sync_started"),
+    SUBSCRIPTIONS_ESTABLISHED("subscriptionsEstablished"),
 
     /**
-     * The remote synchonization processes stopped.
+     * The server sent the client data over the WebSocket subscription. The data was
+     * successfully melded back into the local store.
      */
-    REMOTE_SYNC_STOPPED("remote_sync_stopped");
+    SUBSCRIPTION_DATA_PROCESSED("subscriptionDataProcessed"),
+
+    /**
+     * Notifies if there are mutations in the outbox.
+     */
+    OUTBOX_STATUS("outboxStatus"),
+
+    /**
+     * A local mutation was placed on the outbox.
+     */
+    OUTBOX_MUTATION_ENQUEUED("outboxMutationEnqueued"),
+
+    /**
+     * A mutation from the outbox has been successfully sent and merged to the backend.
+     */
+    OUTBOX_MUTATION_PROCESSED("outboxMutationProcessed"),
+
+    /**
+     * A mutation from the outbox was sent but was met with an error response.
+     */
+    OUTBOX_MUTATION_FAILED("outboxMutationFailed"),
+
+    /**
+     * The DataStore is about to start the Sync Queries.
+     */
+    SYNC_QUERIES_STARTED("syncQueriesStarted"),
+
+    /**
+     * All models have been synced.
+     */
+    SYNC_QUERIES_READY("syncQueriesReady"),
+
+    /**
+     * The sync process for one of the models has completed. This
+     * event is emitted with metrics related to the latest sync
+     * for the model.
+     */
+    MODEL_SYNCED("modelSynced");
 
     private final String hubEventName;
 

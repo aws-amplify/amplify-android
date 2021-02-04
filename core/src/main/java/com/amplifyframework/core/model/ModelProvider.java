@@ -15,6 +15,11 @@
 
 package com.amplifyframework.core.model;
 
+import com.amplifyframework.AmplifyException;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -33,4 +38,43 @@ public interface ModelProvider {
      * @return the version string of the models.
      */
     String version();
+
+    /**
+     * A default method to keep backwards compatibility with models
+     * that do not provide modelSchemas. This method iterates over
+     * all the models that _this_ modelProvider provides and returns
+     * modelName to modelSchema map.
+     * @return the map of model name to schema of all the models.
+     */
+    default Map<String, ModelSchema> modelSchemas() {
+        final Map<String, ModelSchema> modelSchemaMap = new HashMap<>();
+        if (models() == null) {
+            return modelSchemaMap;
+        }
+        for (Class<? extends Model> modelClass : models()) {
+            try {
+                final String modelClassName = modelClass.getSimpleName();
+                final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);
+                modelSchemaMap.put(modelClassName, modelSchema);
+            } catch (AmplifyException exception) {
+                exception.printStackTrace();
+            }
+        }
+        return modelSchemaMap;
+    }
+
+    /**
+     * A default helper method to return all the model names.
+     * @return a set of all model names.
+     */
+    default Set<String> modelNames() {
+        final Set<String> modelNames = new HashSet<>();
+        if (models() == null) {
+            return modelNames;
+        }
+        for (Class<? extends Model> modelClass : models()) {
+            modelNames.add(modelClass.getSimpleName());
+        }
+        return modelNames;
+    }
 }

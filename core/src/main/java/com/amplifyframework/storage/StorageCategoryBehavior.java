@@ -23,18 +23,23 @@ import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
 import java.io.File;
+import java.io.InputStream;
 
 /**
  * Defines the behavior of the Storage category that clients will use.
@@ -77,7 +82,7 @@ public interface StorageCategoryBehavior {
             @NonNull Consumer<StorageException> onError);
 
     /**
-     * Download object to file from storage.
+     * Download a remote resource and store it as a local file.
      * Provide callbacks to obtain the download results.
      * @param key the unique identifier for the object in storage
      * @param local the path to a local file
@@ -94,7 +99,7 @@ public interface StorageCategoryBehavior {
             @NonNull Consumer<StorageException> onError);
 
     /**
-     * Download object to memory from storage.
+     * Download a remote resource and store it as a local file.
      * Set advanced options such as the access level of the object
      * you want to retrieve (you can have different objects with
      * the same name under different access levels).
@@ -116,7 +121,32 @@ public interface StorageCategoryBehavior {
             @NonNull Consumer<StorageException> onError);
 
     /**
-     * Upload local file on given path to storage.
+     * Download a remote resource and store it as a local file.
+     * Set advanced options such as the access level of the object
+     * you want to retrieve (you can have different objects with
+     * the same name under different access levels).
+     * Provide callbacks to obtain the results of the download, as
+     * well as intermediary progress updates.
+     * @param key the unique identifier for the object in storage
+     * @param local the path to a local file
+     * @param options parameters specific to plugin behavior
+     * @param onProgress Called periodically to provides updates on download progress
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageDownloadFileOperation<?> downloadFile(
+        @NonNull String key,
+        @NonNull File local,
+        @NonNull StorageDownloadFileOptions options,
+        @NonNull Consumer<StorageTransferProgress> onProgress,
+        @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+        @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Upload a local File, storing it as a remote resource.
      * Register consumers to obtain the results of the upload.
      * @param key the unique identifier of the object in storage
      * @param local the local file
@@ -133,12 +163,13 @@ public interface StorageCategoryBehavior {
             @NonNull Consumer<StorageException> onError);
 
     /**
-     * Upload local file on given path to storage.
+     * Upload a local File, storing it as a remote resource.
      * Specify options such as the access level the file should have.
      * Register consumers to observe results of upload request.
      * @param key the unique identifier of the object in storage
      * @param local the local file
      * @param options parameters specific to plugin behavior
+     * @param onProgress Called periodically to provides updates on upload progress
      * @param onSuccess Called if operation completed successfully and furnishes a result
      * @param onError Called if an error occurs during operation
      * @return an operation object that provides notifications and
@@ -149,7 +180,88 @@ public interface StorageCategoryBehavior {
             @NonNull String key,
             @NonNull File local,
             @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Upload a local File, storing it as a remote resource.
+     * Specify options such as the access level the file should have.
+     * Register consumers to observe results of upload request,
+     * as well as intermediary progress updates.
+     * @param key the unique identifier of the object in storage
+     * @param local the local file
+     * @param options parameters specific to plugin behavior
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageUploadFileOperation<?> uploadFile(
+        @NonNull String key,
+        @NonNull File local,
+        @NonNull StorageUploadFileOptions options,
+        @NonNull Consumer<StorageUploadFileResult> onSuccess,
+        @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Upload a local InputStream, storing it as a remote resource.
+     * Register consumers to obtain the results of the upload.
+     * @param key the unique identifier of the object in storage
+     * @param local the local InputStream
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageUploadInputStreamOperation<?> uploadInputStream(
+        @NonNull String key,
+        @NonNull InputStream local,
+        @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+        @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Upload a local InputStream, storing it as a remote resource.
+     * Specify options such as the access level the file should have.
+     * Register consumers to observe results of upload request,
+     * as well as intermediary progress updates.
+     * @param key the unique identifier of the object in storage
+     * @param local the local InputStream
+     * @param options parameters specific to plugin behavior
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    StorageUploadInputStreamOperation<?> uploadInputStream(
+        @NonNull String key,
+        @NonNull InputStream local,
+        @NonNull StorageUploadInputStreamOptions options,
+        @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+        @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Upload a local InputStream, storing it as a remote resource.
+     * Specify options such as the access level the file should have.
+     * Register consumers to observe results of upload request.
+     * @param key the unique identifier of the object in storage
+     * @param local the local InputStream
+     * @param options parameters specific to plugin behavior
+     * @param onProgress Called periodically to provides updates on upload progress
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError);
 
     /**

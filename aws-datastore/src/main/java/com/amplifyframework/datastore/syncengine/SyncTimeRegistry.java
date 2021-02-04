@@ -16,11 +16,12 @@
 package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange.Initiator;
@@ -29,8 +30,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 
 final class SyncTimeRegistry {
     private final LocalStorageAdapter localStorageAdapter;
@@ -39,14 +40,13 @@ final class SyncTimeRegistry {
         this.localStorageAdapter = localStorageAdapter;
     }
 
-    <T extends Model> Single<SyncTime> lookupLastSyncTime(@NonNull Class<T> modelClazz) {
+    Single<SyncTime> lookupLastSyncTime(@NonNull String modelClassName) {
         return Single.create(emitter -> {
-            String modelClassName = modelClazz.getSimpleName();
             QueryPredicate hasMatchingModelClassName = QueryField.field("modelClassName").eq(modelClassName);
 
             localStorageAdapter.query(LastSyncMetadata.class, Where.matches(hasMatchingModelClassName), results -> {
                 try {
-                    LastSyncMetadata syncMetadata = extractSingleResult(modelClazz, results);
+                    LastSyncMetadata syncMetadata = extractSingleResult(modelClassName, results);
                     emitter.onSuccess(SyncTime.from(syncMetadata.getLastSyncTime()));
                 } catch (DataStoreException queryResultFailure) {
                     emitter.onError(queryResultFailure);
@@ -55,24 +55,40 @@ final class SyncTimeRegistry {
         });
     }
 
-    <T extends Model> Completable saveLastSyncTime(@NonNull Class<T> modelClazz, SyncTime syncTime) {
-        LastSyncMetadata metadata = syncTime.exists() ?
-            LastSyncMetadata.lastSyncedAt(modelClazz, syncTime.toLong()) :
-            LastSyncMetadata.neverSynced(modelClazz);
+    Completable saveLastDeltaSyncTime(@NonNull String modelClassName, @Nullable SyncTime syncTime) {
+        LastSyncMetadata metadata = syncTime != null && syncTime.exists() ?
+            LastSyncMetadata.deltaSyncedAt(modelClassName, syncTime.toLong()) :
+            LastSyncMetadata.neverSynced(modelClassName);
 
         return Completable.create(emitter ->
             localStorageAdapter.save(
                 metadata,
                 Initiator.SYNC_ENGINE,
+                QueryPredicates.all(),
                 saveResult -> emitter.onComplete(),
                 emitter::onError
             )
         );
     }
 
-    private <T extends Model> LastSyncMetadata extractSingleResult(
-            Class<T> modelClass, Iterator<LastSyncMetadata> metadataIterator) throws DataStoreException {
-        final String modelClassName = modelClass.getSimpleName();
+    Completable saveLastBaseSyncTime(@NonNull String modelClassName, @Nullable SyncTime syncTime) {
+        LastSyncMetadata metadata = syncTime != null && syncTime.exists() ?
+            LastSyncMetadata.baseSyncedAt(modelClassName, syncTime.toLong()) :
+            LastSyncMetadata.neverSynced(modelClassName);
+
+        return Completable.create(emitter ->
+            localStorageAdapter.save(
+                metadata,
+                Initiator.SYNC_ENGINE,
+                QueryPredicates.all(),
+                saveResult -> emitter.onComplete(),
+                emitter::onError
+            )
+        );
+    }
+
+    private LastSyncMetadata extractSingleResult(
+            String modelClassName, Iterator<LastSyncMetadata> metadataIterator) throws DataStoreException {
         final List<LastSyncMetadata> lastSyncMetadata = new ArrayList<>();
         while (metadataIterator.hasNext()) {
             lastSyncMetadata.add(metadataIterator.next());
@@ -85,7 +101,7 @@ final class SyncTimeRegistry {
         } else if (lastSyncMetadata.size() == 1) {
             return lastSyncMetadata.get(0);
         } else {
-            return LastSyncMetadata.neverSynced(modelClass);
+            return LastSyncMetadata.neverSynced(modelClassName);
         }
     }
 }

@@ -1,51 +1,39 @@
 <img src="https://s3.amazonaws.com/aws-mobile-hub-images/aws-amplify-logo.png" alt="AWS Amplify" width="550">
+ 
+[![DiscordChat](https://img.shields.io/discord/308323056592486420?logo=discord)](https://discord.gg/jWVbPfC)
+[![GitHub release](https://img.shields.io/github/release/aws-amplify/amplify-android.svg)](https://github.com/aws-amplify/amplify-android/releases)
+[![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core.svg)](https://search.maven.org/search?q=g:com.amplifyframework%20a:core)
+-------------------------------------------------------
 
- <a href="https://discord.gg/jWVbPfC" target="_blank">
-   <img src="https://img.shields.io/discord/308323056592486420?logo=discord" alt="Discord Chat" />  
- </a>
- <a href="https://codecov.io/gh/aws-amplify/amplify-android">
-   <img src="https://codecov.io/gh/aws-amplify/amplify-android/branch/main/graph/badge.svg" />
- </a>
+The Amplify Android library is AWS' preferred mechanism for interacting
+with AWS services from an Android device.
 
+The library provides a high-level interface to perform different
+**categories** of cloud operations. Each category may be fulfilled by a
+**plugin**, which you configure during setup.
 
-AWS Amplify provides a high-level interface to perform different categories of
-cloud operations. Each category is fulfilled by a _plugin_. You specify which
-plugins to use during setup.
-
-The default plugins that we provide are designed to facilitate interaction with
-Amazon Web Services (AWS). But, the Amplify framework is designed to be
-extensible to any other backend or service.
+The default plugins that we provide are designed to facilitate
+interaction with Amazon Web Services (AWS). But, the Amplify Framework
+is designed to be extensible to any other backend or service.
 
 To familiarize yourself with Amplify, checkout our [Getting Started
 Guide](https://docs.amplify.aws/start/q/integration/android).
 
-## Features / APIs
+## Categories
 
-- **[Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)**
-  APIs and building blocks for developers who want to create user authentication
-  experiences.
-- **[Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android)**
-  Provides a simple mechanism for managing user content for your app in public,
-  protected or private storage buckets
-- **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**
-  Provides a programming model for leveraging shared and distributed data
-  without writing additional code for offline and online scenarios.
-- **[API
-  (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)**
-  Interact with your GraphQL server or AWS AppSync API with an easy-to-use &
-  configured GraphQL client.
-- **[API
-  (REST)](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/android)**
-  Provides a simple solution when making HTTP requests. It provides an
-  automatic, lightweight signing process which complies with AWS Signature
-  Version 4.
-- **[Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android)**
-  Easily collect analytics data for your app. Analytics data includes user
-  sessions and other custom events.
-- **[Predictions](https://docs.amplify.aws/lib/predictions/getting-started/q/platform/android)**
-  Connect your application with machine learning cloud services to enhance your
-  application with natural language processing, computer vision, text to speech,
-  and more.
+| Category                                                                                        | AWS Provider | Description                                |
+|-------------------------------------------------------------------------------------------------|--------------|--------------------------------------------|
+| **[Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)**      | Cognito      | Building blocks to create auth experiences |
+| **[Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android)**          | S3           | Manages content in public, protected, private storage buckets |
+| **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**      | AppSync      | Programming model for shared and distributed data, with simple online/offline synchronization |
+| **[API (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)** | AppSync      | Interact with your GraphQL or AppSync endpoint |
+| **[API (REST)](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/android)**       | API Gateway  | Sigv4 signing and AWS auth for API Gateway and other REST endpoints |
+| **[Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android)**      | Pinpoint     | Collect Analytics data for your app including tracking user sessions |
+| **[Predictions](https://docs.amplify.aws/lib/predictions/getting-started/q/platform/android)**  | Various*     | Connect your app with machine learning services like NLP, computer vision, TTS, and more. |
+
+\* Predictions utilizes a range of Amazon's Machine Learning services,
+including: Amazon Comprehend, Amazon Polly, Amazon Rekognition, Amazon
+Textract, and Amazon Translate.
 
 ## Platform Support
 
@@ -63,31 +51,46 @@ dependencies section:
 
 ```groovy
 dependencies {
-    implementation 'com.amplifyframework:core:1.0.0'
-
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:1.0.0'
-    implementation 'com.amplifyframework:aws-api:1.0.0'
-    implementation 'com.amplifyframework:aws-auth-cognito:1.0.0'
-    implementation 'com.amplifyframework:aws-datastore:1.0.0'
-    implementation 'com.amplifyframework:aws-predictions:1.0.0'
-    implementation 'com.amplifyframework:aws-storage-s3:1.0.0'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:1.16.11'
+    implementation 'com.amplifyframework:aws-api:1.16.11'
+    implementation 'com.amplifyframework:aws-auth-cognito:1.16.11'
+    implementation 'com.amplifyframework:aws-datastore:1.16.11'
+    implementation 'com.amplifyframework:aws-predictions:1.16.11'
+    implementation 'com.amplifyframework:aws-storage-s3:1.16.11'
 }
 ```
 
-### Java 8 Compatibility
+### Java 8 Requirement
 
-Amplify Android uses Java 8 features. Please add a `compileOptions`
+Amplify Android _requires_ Java 8 features. Please add a `compileOptions`
 block inside your app's `build.gradle`, as below:
 
 ```gradle
 android {
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 ```
+In the same file, add core library desugaring in your `dependencies`
+block:
+```gradle
+dependencies {
+    // Add this line
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.10'
+}
+```
+
+### Rx Support
+
+By default, Amplify's interfaces render results through async callbacks.
+However, we also offer an Rx-compatible front-end to Amplify.
+
+See [Using RxJava with Amplify](https://docs.amplify.aws/lib/project-setup/rxjava/q/platform/android)
+for more information.
 
 ### Authentication
 

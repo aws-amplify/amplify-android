@@ -15,11 +15,8 @@
 
 package com.amplifyframework.core.model;
 
-import androidx.annotation.NonNull;
-
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.model.annotations.AuthRule;
-import com.amplifyframework.core.model.annotations.ModelConfig;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 
@@ -27,7 +24,6 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,7 +36,6 @@ import static org.junit.Assert.assertSame;
  * Tests the {@link ModelSchema}.
  */
 public final class ModelSchemaTest {
-
     /**
      * The factory {@link ModelSchema#fromModelClass(Class)} will produce
      * an {@link ModelSchema} that meets our expectations for the {@link Person} model.
@@ -52,34 +47,34 @@ public final class ModelSchemaTest {
         expectedFields.put("id", ModelField.builder()
             .targetType("ID")
             .name("id")
-            .type(String.class)
+            .javaClassForValue(String.class)
             .isRequired(true)
             .build());
         expectedFields.put("first_name", ModelField.builder()
             .targetType("String")
             .name("first_name")
-            .type(String.class)
+            .javaClassForValue(String.class)
             .isRequired(true)
             .build());
         expectedFields.put("last_name", ModelField.builder()
             .targetType("String")
             .name("last_name")
-            .type(String.class)
+            .javaClassForValue(String.class)
             .isRequired(true)
             .build());
         expectedFields.put("dob", ModelField.builder()
             .targetType("AWSDate")
             .name("dob")
-            .type(Date.class)
+            .javaClassForValue(Temporal.Date.class)
             .build());
         expectedFields.put("age", ModelField.builder()
             .targetType("Int")
             .name("age")
-            .type(Integer.class)
+            .javaClassForValue(Integer.class)
             .build());
         expectedFields.put("relationship", ModelField.builder()
             .name("relationship")
-            .type(MaritalStatus.class)
+            .javaClassForValue(MaritalStatus.class)
             .targetType("MaritalStatus")
             .isEnum(true)
             .build());
@@ -93,6 +88,7 @@ public final class ModelSchemaTest {
             .fields(expectedFields)
             .indexes(Collections.singletonMap("first_name_and_age_based_index", expectedModelIndex))
             .name("Person")
+            .modelClass(Person.class)
             .build();
         ModelSchema actualModelSchema = ModelSchema.fromModelClass(Person.class);
         assertEquals(expectedModelSchema, actualModelSchema);
@@ -110,71 +106,4 @@ public final class ModelSchemaTest {
         // showed that the object was already in the collection.
         assertSame(actualModelSchema, modelSchemaSet.iterator().next());
     }
-
-    /**
-     * Verify that the owner field is removed if the value is null.
-     * @throws AmplifyException if ModelSchema can't be derived from class.
-     */
-    @Test
-    public void ownerFieldIsRemovedIfNull() throws AmplifyException {
-        // Expect
-        Map<String, Object> expected = new HashMap<>();
-        expected.put("id", "111");
-        expected.put("description", "Mop the floor");
-
-        // Act
-        ModelSchema modelSchema = ModelSchema.fromModelClass(Todo.class);
-        Todo todo = new Todo("111", "Mop the floor", null);
-        Map<String, Object> actual = modelSchema.getMapOfFieldNameAndValues(todo);
-
-        // Assert
-        assertEquals(expected, actual);
-    }
-
-    /**
-     * Verify that the owner field is NOT removed if the value is set..
-     * @throws AmplifyException if ModelSchema can't be derived from class.
-     */
-    @Test
-    public void ownerFieldIsNotRemovedIfSet() throws AmplifyException {
-        // Expect
-        Map<String, Object> expected = new HashMap<>();
-        expected.put("id", "111");
-        expected.put("description", "Mop the floor");
-        expected.put("owner", "johndoe");
-
-        // Act
-        ModelSchema modelSchema = ModelSchema.fromModelClass(Todo.class);
-        Todo todo = new Todo("111", "Mop the floor", "johndoe");
-        Map<String, Object> actual = modelSchema.getMapOfFieldNameAndValues(todo);
-
-        // Assert
-        assertEquals(expected, actual);
-    }
-
-    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
-    class Todo implements Model {
-        @com.amplifyframework.core.model.annotations.ModelField(targetType = "ID", isRequired = true)
-        private final String id;
-
-        @com.amplifyframework.core.model.annotations.ModelField(isRequired = true)
-        private final String description;
-
-        @com.amplifyframework.core.model.annotations.ModelField
-        private final String owner;
-
-        @SuppressWarnings("ParameterName") // checkstyle wants variable names to be >2 chars, but id is only 2.
-        Todo(String id, String description, String owner) {
-            this.id = id;
-            this.description = description;
-            this.owner = owner;
-        }
-
-        @NonNull
-        @Override
-        public String getId() {
-            return "111";
-        }
-    }
-
 }

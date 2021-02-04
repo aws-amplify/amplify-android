@@ -28,12 +28,15 @@ import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteModelFieldTypeConverter;
 import com.amplifyframework.datastore.storage.sqlite.SqlKeyword;
 import com.amplifyframework.datastore.storage.sqlite.TypeConverter;
+import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
+import com.amplifyframework.util.Wrap;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -99,38 +102,47 @@ public final class SQLPredicate {
     private void addBinding(Object value) {
         final JavaFieldType fieldType = TypeConverter.getJavaFieldTypeFromValue(value);
         final Object sqlValue = SQLiteModelFieldTypeConverter.convertRawValueToTarget(
-                value, fieldType, null);
+                value, fieldType, GsonFactory.instance());
         bindings.add(sqlValue);
     }
 
     // Utility method to recursively parse a given predicate.
     private StringBuilder parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
+        if (QueryPredicates.all().equals(queryPredicate)) {
+            return new StringBuilder("1 = 1");
+        }
+        if (QueryPredicates.none().equals(queryPredicate)) {
+            return new StringBuilder("1 = 0");
+        }
         if (queryPredicate instanceof QueryPredicateOperation) {
-            QueryPredicateOperation<?> qpo = (QueryPredicateOperation) queryPredicate;
+            QueryPredicateOperation<?> qpo = (QueryPredicateOperation<?>) queryPredicate;
             return parsePredicateOperation(qpo);
-        } else if (queryPredicate instanceof QueryPredicateGroup) {
+        }
+        if (queryPredicate instanceof QueryPredicateGroup) {
             QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
             return parsePredicateGroup(qpg);
-        } else {
-            throw new DataStoreException(
-                    "Tried to parse an unsupported QueryPredicate",
-                    "Try changing to one of the supported values: " +
-                            "QueryPredicateOperation, QueryPredicateGroup."
-            );
         }
+        throw new DataStoreException(
+                "Tried to parse an unsupported QueryPredicate",
+                "Try changing to one of the supported values: " +
+                        "QueryPredicateOperation, QueryPredicateGroup, " +
+                        "MatchAllQueryPredicate, or MatchNoneQueryPredicate."
+        );
     }
 
     // Utility method to recursively parse a given predicate operation.
     private StringBuilder parsePredicateOperation(QueryPredicateOperation<?> operation) throws DataStoreException {
         final StringBuilder builder = new StringBuilder();
-        final String field = operation.field();
+        final String model = Wrap.inBackticks(operation.modelName());
+        final String field = Wrap.inBackticks(operation.field());
+        final String column = model == null ? operation.field() : model + "." + field;
         final QueryOperator<?> op = operation.operator();
         switch (op.type()) {
             case BETWEEN:
-                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator) op;
+                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator<?>) op;
                 addBinding(betweenOp.start());
                 addBinding(betweenOp.end());
-                return builder.append(field)
+                return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.BETWEEN)
                         .append(SqlKeyword.DELIMITER)
@@ -143,7 +155,7 @@ public final class SQLPredicate {
                 ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
                 addBinding(containsOp.value());
                 return builder.append("instr(")
-                        .append(field)
+                        .append(column)
                         .append(",")
                         .append("?")
                         .append(")")
@@ -154,7 +166,7 @@ public final class SQLPredicate {
             case BEGINS_WITH:
                 BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
                 addBinding(beginsWithOp.value() + "%");
-                return builder.append(field)
+                return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.LIKE)
                         .append(SqlKeyword.DELIMITER)
@@ -166,7 +178,7 @@ public final class SQLPredicate {
             case LESS_OR_EQUAL:
             case GREATER_OR_EQUAL:
                 addBinding(getOperatorValue(op));
-                return builder.append(field)
+                return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQueryOperator(op.type()))
                         .append(SqlKeyword.DELIMITER)
@@ -218,18 +230,17 @@ public final class SQLPredicate {
             case EQUAL:
                 return ((EqualQueryOperator) qOp).value();
             case LESS_OR_EQUAL:
-                return ((LessOrEqualQueryOperator) qOp).value();
+                return ((LessOrEqualQueryOperator<?>) qOp).value();
             case LESS_THAN:
-                return ((LessThanQueryOperator) qOp).value();
+                return ((LessThanQueryOperator<?>) qOp).value();
             case GREATER_OR_EQUAL:
-                return ((GreaterOrEqualQueryOperator) qOp).value();
+                return ((GreaterOrEqualQueryOperator<?>) qOp).value();
             case GREATER_THAN:
-                return ((GreaterThanQueryOperator) qOp).value();
+                return ((GreaterThanQueryOperator<?>) qOp).value();
             default:
                 throw new DataStoreException(
                         "Tried to parse an unsupported QueryOperator type",
-                        "Check if a new QueryOperator.Type enum has been created which is not supported " +
-                                "in the AppSyncGraphQLRequestFactory."
+                        "Check if a new QueryOperator.Type enum has been created which is not supported."
                 );
         }
     }

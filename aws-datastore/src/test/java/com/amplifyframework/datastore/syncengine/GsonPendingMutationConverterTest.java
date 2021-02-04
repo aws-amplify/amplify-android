@@ -15,12 +15,12 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -29,15 +29,16 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Tests the functionality of the {@link GsonPendingMutationConverter}.
  */
-public class GsonPendingMutationConverterTest {
+public final class GsonPendingMutationConverterTest {
     /**
      * Validate that the {@link GsonPendingMutationConverter} can be
      * used to convert a sample {@link PendingMutation} to a
      * {@link PendingMutation.PersistentRecord}, and vice-versa.
      * @throws DataStoreException from DataStore conversion
+     * @throws AmplifyException On failure to arrange model schema
      */
     @Test
-    public void convertStorageItemChangeToRecordAndBack() throws DataStoreException {
+    public void convertStorageItemChangeToRecordAndBack() throws AmplifyException {
         // Arrange a PendingMutation<Blog>
         Blog blog = Blog.builder()
             .name("A neat blog")
@@ -45,7 +46,8 @@ public class GsonPendingMutationConverterTest {
                 .name("Joe Swanson")
                 .build())
             .build();
-        PendingMutation<Blog> originalMutation = PendingMutation.creation(blog, Blog.class);
+        ModelSchema schema = ModelSchema.fromModelClass(Blog.class);
+        PendingMutation<Blog> originalMutation = PendingMutation.creation(blog, schema);
         String expectedMutationId = originalMutation.getMutationId().toString();
 
         // Instantiate the object under test
@@ -59,24 +61,5 @@ public class GsonPendingMutationConverterTest {
         // Now, try to convert it back...
         PendingMutation<Blog> reconstructedItemChange = converter.fromRecord(record);
         assertEquals(originalMutation, reconstructedItemChange);
-    }
-
-    /**
-     * Tests the functionality of just the
-     * {@link GsonPendingMutationConverter.TimeBasedUuidTypeAdapter}
-     * in isolation.
-     */
-    @Test
-    public void canConvertTimeBasedUuid() {
-        TimeBasedUuid original = TimeBasedUuid.create();
-
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(TimeBasedUuid.class, new GsonPendingMutationConverter.TimeBasedUuidTypeAdapter())
-            .create();
-
-        String json = gson.toJson(original);
-        TimeBasedUuid reconstructed = gson.fromJson(json, TimeBasedUuid.class);
-
-        assertEquals(original, reconstructed);
     }
 }

@@ -68,7 +68,8 @@ public interface DataStoreCategoryBehavior {
     );
 
     /**
-     * Deletes an item from the DataStore.
+     * Deletes an item from the DataStore. If item doesn't exist, then
+     * operation succeeds with no-op.
      * @param item An item to delete from the DataStore
      * @param onItemDeleted Called upon successful deletion of item
      * @param onFailureToDelete Called upon failure to delete item
@@ -83,7 +84,8 @@ public interface DataStoreCategoryBehavior {
     /**
      * Deletes an item from the DataStore if the data being deleted meets the
      * provided conditions. This is useful for making sure that no data is being
-     * deleted with an outdated/incorrect assumption.
+     * deleted with an outdated/incorrect assumption. If item doesn't exist,
+     * then operation succeeds with no-op.
      * @param item An item to delete from the DataStore
      * @param predicate Predicate condition to apply for conditional write
      * @param onItemDeleted Called upon successful deletion of item
@@ -94,6 +96,23 @@ public interface DataStoreCategoryBehavior {
             @NonNull T item,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete
+    );
+
+    /**
+     * Deletes every item of given type from the DataStore that meets the provided
+     * conditions. If there is no match, then nothing is deleted and operation
+     * succeeds.
+     * @param itemClass Item type to delete from the DataStore
+     * @param predicate Predicate condition to filter items to delete
+     * @param onItemDeleted Called upon successful deletion of item
+     * @param onFailureToDelete Called upon failure to delete item
+     * @param <T> The type of item being deleted
+     */
+    <T extends Model> void delete(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate predicate,
+            @NonNull Action onItemDeleted,
             @NonNull Consumer<DataStoreException> onFailureToDelete
     );
 
@@ -127,10 +146,10 @@ public interface DataStoreCategoryBehavior {
     );
 
     /**
-     * Query the DataStore to find items of the requests Java class, using the provided
-     * {@link QueryOptions}. The query options include support for filtering and paging.
+     * Query the DataStore to find items of the requested Java class, using the provided
+     * {@link QueryOptions}. The query options include support for filtering, paging, and sorting.
      * @param itemClass Class of items that will be queried
-     * @param options Filtering and paging options
+     * @param options Filtering, paging, and sorting options
      * @param onQueryResults Called when there are results available
      * @param onQueryFailure Called when there is a failure that prevents results from being rendered
      * @param <T> The type of items being queried
@@ -227,7 +246,31 @@ public interface DataStoreCategoryBehavior {
     );
 
     /**
-     * Resets the underlying DataStore to its pre-initialized state such that no data remains on the local
+     * Starts the DataStore's synchronization with a remote system, if DataStore is configured to support
+     * remote synchronization. This only needs to be called if you wish to start the synchronization eagerly.
+     * If you don't call start(), the synchronization will start automatically, prior to executing any other
+     * operations (#query, #save, #delete, #observe).
+     *
+     * @param onComplete Invoked after DataStore is initialized.  This does not block until subscriptions and
+     *                  sync are complete.  To block until sync and subscriptions are complete, use
+     *                   Amplify.Hub.subscribe to listen for the DataStoreChannelEventName.READY event on
+     *                   HubChannel.DATASTORE.
+     * @param onError Invoked if an exception occurs.
+     */
+    void start(@NonNull Action onComplete,
+               @NonNull Consumer<DataStoreException> onError);
+
+    /**
+     * Stops the underlying DataStore, resetting the plugin to the initialized state.
+     *
+     * @param onComplete Invoked if the call is successful.
+     * @param onError Invoked if an exception occurs.
+     */
+    void stop(@NonNull Action onComplete,
+              @NonNull Consumer<DataStoreException> onError);
+
+    /**
+     * Stops the underlying DataStore, resetting the plugin to the initialized state, and deletes all data on the local
      * device. Every implementation of this behavior may have its own interpretation of what clear means.
      * This is meant to be a destructive operation that allows for safe disposal of data stored locally.
      *

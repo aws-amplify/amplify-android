@@ -15,28 +15,45 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
+import com.amplifyframework.core.model.query.QuerySortBy;
+import com.amplifyframework.core.model.query.QuerySortOrder;
+
 /**
  * Represents a property in a model with methods for chaining conditions.
  */
 public final class QueryField {
+    private final String modelName;
     private final String fieldName;
 
     /**
      * Constructs a new QueryField for a given model property.
      * This would not be used by the developer but rather is called from the static factory method.
+     * @param modelName the name of the model owning this field
      * @param fieldName the model property this QueryField represents
      */
-    private QueryField(String fieldName) {
+    private QueryField(String modelName, String fieldName) {
+        this.modelName = modelName;
         this.fieldName = fieldName;
     }
 
     /**
      * Public factory method to create a new QueryField from the name of the property in the model.
+     * This factory method ignores model name
      * @param fieldName the model property this QueryField represents
      * @return a new QueryField which represents the given model property
      */
     public static QueryField field(String fieldName) {
-        return new QueryField(fieldName);
+        return field(null, fieldName);
+    }
+
+    /**
+     * Public factory method to create a new QueryField from the name of the property in the model.
+     * @param modelName the name of the model owning this field
+     * @param fieldName the model property this QueryField represents
+     * @return a new QueryField which represents the given model property
+     */
+    public static QueryField field(String modelName, String fieldName) {
+        return new QueryField(modelName, fieldName);
     }
 
     /**
@@ -45,7 +62,7 @@ public final class QueryField {
      * @return an operation object representing the equality condition
      */
     public QueryPredicateOperation<Object> eq(Object value) {
-        return new QueryPredicateOperation<>(fieldName, new EqualQueryOperator(value));
+        return new QueryPredicateOperation<>(modelName, fieldName, new EqualQueryOperator(value));
     }
 
     /**
@@ -54,7 +71,7 @@ public final class QueryField {
      * @return an operation object representing the not equal condition
      */
     public QueryPredicateOperation<Object> ne(Object value) {
-        return new QueryPredicateOperation<>(fieldName, new NotEqualQueryOperator(value));
+        return new QueryPredicateOperation<>(modelName, fieldName, new NotEqualQueryOperator(value));
     }
 
     /**
@@ -64,7 +81,7 @@ public final class QueryField {
      * @return an operation object representing the greater or equal condition
      */
     public <T extends Comparable<T>> QueryPredicateOperation<T> ge(T value) {
-        return new QueryPredicateOperation<>(fieldName, new GreaterOrEqualQueryOperator<>(value));
+        return new QueryPredicateOperation<>(modelName, fieldName, new GreaterOrEqualQueryOperator<>(value));
     }
 
     /**
@@ -74,7 +91,7 @@ public final class QueryField {
      * @return an operation object representing the greater than condition
      */
     public <T extends Comparable<T>> QueryPredicateOperation<T> gt(T value) {
-        return new QueryPredicateOperation<>(fieldName, new GreaterThanQueryOperator<>(value));
+        return new QueryPredicateOperation<>(modelName, fieldName, new GreaterThanQueryOperator<>(value));
     }
 
     /**
@@ -84,7 +101,7 @@ public final class QueryField {
      * @return an operation object representing the less or equal condition
      */
     public <T extends Comparable<T>> QueryPredicateOperation<T> le(T value) {
-        return new QueryPredicateOperation<>(fieldName, new LessOrEqualQueryOperator<>(value));
+        return new QueryPredicateOperation<>(modelName, fieldName, new LessOrEqualQueryOperator<>(value));
     }
 
     /**
@@ -94,7 +111,7 @@ public final class QueryField {
      * @return an operation object representing the less than condition
      */
     public <T extends Comparable<T>> QueryPredicateOperation<T> lt(T value) {
-        return new QueryPredicateOperation<>(fieldName, new LessThanQueryOperator<>(value));
+        return new QueryPredicateOperation<>(modelName, fieldName, new LessThanQueryOperator<>(value));
     }
 
     /**
@@ -105,7 +122,7 @@ public final class QueryField {
      * @return an operation object representing the between condition
      */
     public <T extends Comparable<T>> QueryPredicateOperation<T> between(T start, T end) {
-        return new QueryPredicateOperation<>(fieldName, new BetweenQueryOperator<>(start, end));
+        return new QueryPredicateOperation<>(modelName, fieldName, new BetweenQueryOperator<>(start, end));
     }
 
     /**
@@ -114,7 +131,7 @@ public final class QueryField {
      * @return an operation object representing the beginsWith condition
      */
     public QueryPredicateOperation<String> beginsWith(String value) {
-        return new QueryPredicateOperation<>(fieldName, new BeginsWithQueryOperator(value));
+        return new QueryPredicateOperation<>(modelName, fieldName, new BeginsWithQueryOperator(value));
     }
 
     /**
@@ -123,6 +140,24 @@ public final class QueryField {
      * @return an operation object representing the contains condition
      */
     public QueryPredicateOperation<String> contains(String value) {
-        return new QueryPredicateOperation<>(fieldName, new ContainsQueryOperator(value));
+        return new QueryPredicateOperation<>(modelName, fieldName, new ContainsQueryOperator(value));
+    }
+
+    /**
+     * Generates a new sort object specifying a field that should be sorted in ascending order for a query.
+     *
+     * @return a QuerySortBy object, representing a field that should be sorted in ascending order for a query.
+     */
+    public QuerySortBy ascending() {
+        return new QuerySortBy(modelName, fieldName, QuerySortOrder.ASCENDING);
+    }
+
+    /**
+     * Generates a new sort object specifying a field that should be sorted in descending order for a query.
+     *
+     * @return a QuerySortBy object, representing a field that should be sorted in descending order for a query.
+     */
+    public QuerySortBy descending() {
+        return new QuerySortBy(modelName, fieldName, QuerySortOrder.DESCENDING);
     }
 }

@@ -19,6 +19,10 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreConfiguration.ConfigKey;
+import com.amplifyframework.datastore.DataStoreConflictHandler.AlwaysApplyRemoteHandler;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,6 +30,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -52,8 +57,9 @@ public final class DataStoreConfigurationTest {
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().intValue());
 
-        assertTrue(dataStoreConfiguration.getDataStoreConflictHandler() instanceof ApplyRemoteConflictHandler);
-        assertTrue(dataStoreConfiguration.getDataStoreErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
+        assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertEquals(Collections.emptyMap(), dataStoreConfiguration.getSyncExpressions());
     }
 
     /**
@@ -68,21 +74,22 @@ public final class DataStoreConfigurationTest {
         Long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
         Integer expectedSyncMaxRecords = 3;
         JSONObject jsonConfigFromFile = new JSONObject()
-            .put(DataStoreConfiguration.ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes)
-            .put(DataStoreConfiguration.ConfigKey.SYNC_MAX_RECORDS.toString(), expectedSyncMaxRecords);
+            .put(ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes)
+            .put(ConfigKey.SYNC_MAX_RECORDS.toString(), expectedSyncMaxRecords);
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.builder(jsonConfigFromFile).build();
         assertEquals(expectedSyncIntervalMs, dataStoreConfiguration.getSyncIntervalMs());
         assertEquals(expectedSyncMaxRecords, dataStoreConfiguration.getSyncMaxRecords());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().longValue());
 
-        assertTrue(dataStoreConfiguration.getDataStoreConflictHandler() instanceof ApplyRemoteConflictHandler);
-        assertTrue(dataStoreConfiguration.getDataStoreErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
+        assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertEquals(Collections.emptyMap(), dataStoreConfiguration.getSyncExpressions());
     }
 
     /**
      * When building a configuration from both a config file and a configuration object,
-     * default values should be overriden, and the provided ones shall be used, instead.
+     * default values should be overridden, and the provided ones shall be used, instead.
      * @throws JSONException While arranging config file JSON
      * @throws DataStoreException While building DataStoreConfiguration instances via build()
      */
@@ -94,15 +101,17 @@ public final class DataStoreConfigurationTest {
         DummyConflictHandler dummyConflictHandler = new DummyConflictHandler();
         DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
 
+        DataStoreSyncExpression syncExpression = () -> BlogOwner.ID.beginsWith(RandomString.string());
         DataStoreConfiguration configObject = DataStoreConfiguration
             .builder()
             .syncMaxRecords(expectedSyncMaxRecords)
-            .dataStoreConflictHandler(dummyConflictHandler)
-            .dataStoreErrorHandler(errorHandler)
+            .conflictHandler(dummyConflictHandler)
+            .errorHandler(errorHandler)
+            .syncExpression(BlogOwner.class, syncExpression)
             .build();
 
         JSONObject jsonConfigFromFile = new JSONObject()
-            .put(DataStoreConfiguration.ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes);
+            .put(ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes);
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration
             .builder(jsonConfigFromFile, configObject)
             .build();
@@ -112,8 +121,10 @@ public final class DataStoreConfigurationTest {
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().longValue());
 
-        assertEquals(dummyConflictHandler, dataStoreConfiguration.getDataStoreConflictHandler());
-        assertEquals(errorHandler, dataStoreConfiguration.getDataStoreErrorHandler());
+        assertEquals(dummyConflictHandler, dataStoreConfiguration.getConflictHandler());
+        assertEquals(errorHandler, dataStoreConfiguration.getErrorHandler());
+        assertEquals(Collections.singletonMap(BlogOwner.class.getSimpleName(), syncExpression),
+                dataStoreConfiguration.getSyncExpressions());
     }
 
     /**
@@ -132,9 +143,10 @@ public final class DataStoreConfigurationTest {
 
     private static final class DummyConflictHandler implements DataStoreConflictHandler {
         @Override
-        public <T extends Model> void resolveConflict(@NonNull DataStoreConflictData<T> conflictData,
-                                                      @NonNull Consumer<DataStoreConflictHandlerResult> onResult) {
-            onResult.accept(DataStoreConflictHandlerResult.RETRY);
+        public void onConflictDetected(
+                @NonNull ConflictData<? extends Model> conflictData,
+                @NonNull Consumer<ConflictResolutionDecision<? extends Model>> onDecision) {
+            onDecision.accept(ConflictResolutionDecision.retry(null));
         }
     }
 }

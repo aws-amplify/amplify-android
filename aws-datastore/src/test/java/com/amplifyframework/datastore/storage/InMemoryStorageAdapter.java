@@ -18,24 +18,24 @@ package com.amplifyframework.datastore.storage;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
-import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import io.reactivex.disposables.Disposable;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 /**
  * A simple in-memory implementation of the LocalStorageAdapter
@@ -63,20 +63,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull Context context,
             @NonNull Consumer<List<ModelSchema>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
-    ) {
-    }
+    ) {}
 
-    @Override
-    public <T extends Model> void save(
-            @NonNull final T item,
-            @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull final Consumer<DataStoreException> onError
-    ) {
-        save(item, initiator, QueryPredicates.all(), onSuccess, onError);
-    }
-
-    @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
     public <T extends Model> void save(
             @NonNull final T item,
@@ -86,10 +74,12 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<DataStoreException> onError) {
         StorageItemChange.Type type = StorageItemChange.Type.CREATE;
         final int index = indexOf(item);
+        Model savedItem = null;
         if (index > -1) {
             // There is an existing record with that ID; this is an update.
             type = StorageItemChange.Type.UPDATE;
-            Model savedItem = items.get(index);
+            savedItem = items.get(index);
+
             if (!predicate.evaluate(savedItem)) {
                 onError.accept(new DataStoreException(
                     "Conditional check failed.",
@@ -99,26 +89,26 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
                 items.remove(index);
             }
         }
-
+        final ModelSchema schema;
+        try {
+            schema = ModelSchema.fromModelClass(item.getClass());
+        } catch (AmplifyException schemaBuildFailure) {
+            onError.accept(new DataStoreException(
+                "Failed to build model schema.", schemaBuildFailure, "Verify your model."
+            ));
+            return;
+        }
         items.add(item);
         StorageItemChange<T> change = StorageItemChange.<T>builder()
             .item(item)
-            .itemClass((Class<T>) item.getClass())
+            .patchItem(SerializedModel.difference(item, savedItem, schema))
+            .modelSchema(schema)
             .type(type)
             .predicate(predicate)
             .initiator(initiator)
             .build();
         itemChangeStream.onNext(change);
         onSuccess.accept(change);
-    }
-
-    @Override
-    public <T extends Model> void query(
-            @NonNull final Class<T> itemClass,
-            @NonNull final Consumer<Iterator<T>> onSuccess,
-            @NonNull final Consumer<DataStoreException> onError
-    ) {
-        query(itemClass, Where.matchesAll(), onSuccess, onError);
     }
 
     @SuppressWarnings("unchecked") // (T) item *is* checked, via isAssignableFrom().
@@ -140,13 +130,19 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     }
 
     @Override
-    public <T extends Model> void delete(
-            @NonNull final T item,
-            @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull final Consumer<DataStoreException> onError
-    ) {
-        delete(item, initiator, QueryPredicates.all(), onSuccess, onError);
+    public void query(
+            @NonNull String modelName,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        final List<Model> result = new ArrayList<>();
+        final QueryPredicate predicate = options.getQueryPredicate();
+        for (Model item : items) {
+            if (modelName.equals(item.getClass().getSimpleName()) && predicate.evaluate(item)) {
+                result.add(item); //TODO, add tests for new query method.
+            }
+        }
+        onSuccess.accept(result.iterator());
     }
 
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
@@ -168,6 +164,15 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         }
         Model savedItem = items.remove(index);
 
+        final ModelSchema schema;
+        try {
+            schema = ModelSchema.fromModelClass(item.getClass());
+        } catch (AmplifyException schemaBuildFailure) {
+            onError.accept(new DataStoreException(
+                "Failed to build model schema.", schemaBuildFailure, "Verify your model."
+            ));
+            return;
+        }
         if (!predicate.evaluate(savedItem)) {
             onError.accept(new DataStoreException(
                     "Conditional check failed.",
@@ -176,13 +181,51 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         }
         StorageItemChange<T> deletion = StorageItemChange.<T>builder()
             .item((T) savedItem)
-            .itemClass((Class<T>) savedItem.getClass())
+            .patchItem(SerializedModel.create(savedItem, schema))
+            .modelSchema(schema)
             .type(StorageItemChange.Type.DELETE)
             .predicate(predicate)
             .initiator(initiator)
             .build();
         itemChangeStream.onNext(deletion);
         onSuccess.accept(deletion);
+    }
+
+    @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
+    @Override
+    public <T extends Model> void delete(
+            @NonNull Class<T> itemClass,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull QueryPredicate predicate,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    ) {
+        final ModelSchema schema;
+        try {
+            schema = ModelSchema.fromModelClass(itemClass);
+        } catch (AmplifyException schemaBuildFailure) {
+            onError.accept(new DataStoreException(
+                    "Failed to build model schema.", schemaBuildFailure, "Verify your model."
+            ));
+            return;
+        }
+
+        for (Model savedItem : items) {
+            if (!itemClass.isInstance(savedItem) || !predicate.evaluate(savedItem)) {
+                continue;
+            }
+            items.remove(savedItem);
+
+            StorageItemChange<T> deletion = StorageItemChange.<T>builder()
+                    .item((T) savedItem)
+                    .modelSchema(schema)
+                    .type(StorageItemChange.Type.DELETE)
+                    .predicate(predicate)
+                    .initiator(initiator)
+                    .build();
+            itemChangeStream.onNext(deletion);
+        }
+        onSuccess.call();
     }
 
     @NonNull
