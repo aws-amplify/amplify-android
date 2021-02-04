@@ -498,7 +498,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelInstance(cascadedModel);
                     itemChangeSubject.onNext(StorageItemChange.builder()
                         .item(cascadedModel)
-                        .patchItem(SerializedModel.create(cascadedModel, modelSchema))
+                        .patchItem(SerializedModel.create(cascadedModel, schema))
                         .modelSchema(schema)
                         .type(StorageItemChange.Type.DELETE)
                         .predicate(QueryPredicates.all())
@@ -578,6 +578,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelInstance(model);
                     itemChangeSubject.onNext(StorageItemChange.builder()
                             .item(model)
+                            .patchItem(SerializedModel.create(model, schema))
                             .modelSchema(schema)
                             .type(StorageItemChange.Type.DELETE)
                             .predicate(QueryPredicates.all())
@@ -728,8 +729,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final ModelSchema modelSchema =
                 modelSchemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-        final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
-        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(item.getId());
+        final String primaryKeyName = sqliteTable.getPrimaryKey().getName();
+        final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName).eq(item.getId());
 
         // Generate SQL command for given action
         final SqlCommand sqlCommand;
@@ -835,9 +836,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable table = SQLiteTable.fromSchema(schema);
         final String tableName = table.getName();
-        final String primaryKeyName = table.getPrimaryKeyColumnName();
+        final String primaryKeyName = table.getPrimaryKey().getName();
 
-        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getId());
+        final QueryPredicate matchId = QueryField.field(tableName, primaryKeyName).eq(model.getId());
         final QueryPredicate condition = matchId.and(predicate);
         try (Cursor cursor = getQueryAllCursor(tableName, Where.matches(condition))) {
             return cursor.moveToFirst();
@@ -854,8 +855,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final String modelName = getModelName(model);
         final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable table = SQLiteTable.fromSchema(schema);
-        final String primaryKeyName = table.getPrimaryKeyColumnName();
-        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getId());
+        final String primaryKeyName = table.getPrimaryKey().getName();
+        final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName).eq(model.getId());
 
         Iterator<? extends Model> result = Single.<Iterator<? extends Model>>create(emitter -> {
             if (model instanceof SerializedModel) {

@@ -16,11 +16,13 @@
 package com.amplifyframework.core.model.query;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
+import com.amplifyframework.util.Wrap;
 
 import java.util.Objects;
 
@@ -32,6 +34,7 @@ import java.util.Objects;
  * {@link QueryField#descending()} helper methods (e.g. Todo.DESCRIPTION.ascending() or Todo.DESCRIPTION.descending())
  */
 public final class QuerySortBy {
+    private final String modelName;
     private final String field;
     private final QuerySortOrder sortOrder;
 
@@ -42,14 +45,36 @@ public final class QuerySortBy {
      * @param sortOrder order to sort by, either ASCENDING or DESCENDING.
      */
     public QuerySortBy(@NonNull String field, @NonNull QuerySortOrder sortOrder) {
+        this(null, field, sortOrder);
+    }
+
+    /**
+     * Constructor for {@code QuerySortBy}.
+     *
+     * @param modelName name of the model being sorted.
+     * @param field name of field to sort by.
+     * @param sortOrder order to sort by, either ASCENDING or DESCENDING.
+     */
+    public QuerySortBy(@Nullable String modelName, @NonNull String field, @NonNull QuerySortOrder sortOrder) {
+        this.modelName = modelName;
         this.field = Objects.requireNonNull(field);
         this.sortOrder = Objects.requireNonNull(sortOrder);
+    }
+
+    /**
+     * Returns the model being sorted.
+     * @return the model being sorted.
+     */
+    @Nullable
+    public String getModelName() {
+        return modelName;
     }
 
     /**
      * Returns the field to sort by.
      * @return the field to sort by.
      */
+    @NonNull
     public String getField() {
         return field;
     }
@@ -58,6 +83,7 @@ public final class QuerySortBy {
      * Returns the order to sort by, either ASCENDING or DESCENDING.
      * @return the order to sort by, either ASCENDING or DESCENDING.
      */
+    @NonNull
     public QuerySortOrder getSortOrder() {
         return sortOrder;
     }
@@ -73,19 +99,21 @@ public final class QuerySortBy {
         }
 
         QuerySortBy that = (QuerySortBy) object;
-        return ObjectsCompat.equals(field, that.field) &&
+        return ObjectsCompat.equals(modelName, that.modelName) &&
+                ObjectsCompat.equals(field, that.field) &&
                 ObjectsCompat.equals(sortOrder, that.sortOrder);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(field, sortOrder);
+        return ObjectsCompat.hash(modelName, field, sortOrder);
     }
 
     @Override
     public String toString() {
         return "QuerySortBy{" +
-                "field='" + field + '\'' +
+                "model=" + (modelName == null ? null : Wrap.inSingleQuotes(modelName)) +
+                ", field=" + Wrap.inSingleQuotes(field) +
                 ", sortOrder=" + sortOrder +
                 '}';
     }

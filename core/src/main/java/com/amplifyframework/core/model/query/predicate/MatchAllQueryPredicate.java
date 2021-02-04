@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 /**
  * A {@link QueryPredicate} that matches any/all objects passed to it.
  */
-public final class MatchAllQueryPredicate implements QueryPredicate {
+final class MatchAllQueryPredicate implements QueryPredicate {
     private MatchAllQueryPredicate() {}
 
     /**
