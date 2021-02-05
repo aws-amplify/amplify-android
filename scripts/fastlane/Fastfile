@@ -1,0 +1,165 @@
+RELEASE_TAG_PREFIX = 'release_v'
+default_platform(:android)
+
+platform :android do
+  desc "Create a pre-release version by pushing a tag to GitHub, and publishing to Maven"
+  
+  gradle_properties_path = File.expand_path("../../../gradle.properties", __FILE__)
+  gradle_project_root = File.dirname(gradle_properties_path)
+  version_regex = /(\d*)\.(\d*)\.(\d*)(?:-unstable\.)?(\d*)?/
+
+  lane :unstable do
+    latest_tag = last_git_tag(pattern: "#{RELEASE_TAG_PREFIX}*")
+
+    UI.message("Last version #{latest_tag}")
+    next_version = calculate_next_canary_version(prerelease_identifier: 'unstable', 
+                                                release_tag_prefix: RELEASE_TAG_PREFIX,
+                                                from_tag: latest_tag )
+    UI.message("Next version: #{next_version}")
+
+    # Update version information in gradle.properties
+    increment_versions(version: next_version)
+
+    gradle(
+      project_dir: gradle_project_root,
+      task: "assemble",
+      build_type: "Release"
+    )
+
+    # Create tag and push to origin
+    add_tag(version: RELEASE_TAG_PREFIX + next_version.to_s)
+
+    # # Push to maven
+    UI.message("Pushing #{next_version.to_s} to maven")
+    publish_to_maven
+
+    # cleanup
+  end
+
+  desc "Create a release version by building and committing a changelog, pushing a tag to GitHub, and publishing to Maven"  
+  lane :release do
+    # Exclude unstable release tags
+    latest_tag = last_git_tag(pattern: "#{RELEASE_TAG_PREFIX}*[0-9].*[0-9].*[0-9][!*]")
+    UI.message("Last version #{latest_tag.gsub(RELEASE_TAG_PREFIX,"")}")
+    next_version, commits = calculate_next_release_version(release_tag_prefix: RELEASE_TAG_PREFIX, 
+                                                          from_tag: latest_tag)
+
+    UI.message("Releasing version: #{next_version}")
+
+    # Increment all specs and plists
+    increment_versions(version: next_version)
+
+    changelog = changelog_from_git_commits(between: [latest_tag,'HEAD'])
+    # changelog = build_changelog(version: next_version, commits: commits)
+
+    # write_changelog(changelog: changelog, path: 'CHANGELOG.md')
+
+    # Commit and push 
+    # release_commit(version: next_version)
+
+    # Create tag and push to origin
+    add_tag(version: RELEASE_TAG_PREFIX + next_version.to_s)
+
+    # Push to maven
+    UI.message("Pushing release #{next_version.to_s} to maven")
+    publish_to_maven
+
+    # cleanup
+  end
+
+  desc "Increment versions"
+  private_lane :increment_versions do |options|
+    version = options[:version].to_s
+    segments = version.match(version_regex).captures # version.split('.')
+    prerelease = segments.length() > 3 ?  0 : segments[-1].to_i
+
+    # Derive the version code from version segements and pre-release number (if applicable)
+    version_code = segments[0].to_i * 100000 + segments[1].to_i * 1000 + segments[2].to_i * 10 + prerelease
+
+    UI.message("Updating versionName and versionCode in gradle.properties")
+
+    set_key_value(file: gradle_properties_path, key: 'VERSION_NAME', value: version)
+    set_key_value(file: gradle_properties_path, key: 'VERSION_CODE', value: version_code.to_s)
+
+  end
+
+  desc "Commit and push"
+  private_lane :release_commit do |options|
+    next_version = options[:version]
+
+    sh('git', 'config', '--global', 'user.email', ENV['GITHUB_EMAIL'])
+    sh('git', 'config', '--global', 'user.name', ENV['GITHUB_USER'])
+
+    commit_message = "chore: release #{next_version} [skip ci]"
+    sh('git', 'commit', '-am', commit_message)
+
+    # push to origin
+    sh('git', 'push', 'origin', 'release')
+  end
+
+  desc "Tag in git and push to GitHub"
+  private_lane :add_tag do |options|
+    next_version = options[:version]
+
+    add_git_tag(tag: next_version)
+    # push_git_tags(tag: next_version)
+  end
+
+  desc "Publish release to maven"
+  private_lane :publish_to_maven do |options|
+    gradle(
+      project_dir: gradle_project_root,
+      task: "uploadArchives",
+      print_command: false,
+      flags: '--stacktrace',
+      properties: {
+        "SONATYPE_NEXUS_USERNAME": ConfigValueReader.from_environment_variable('SONATYPE_NEXUS_USERNAME').strip!,
+        "SONATYPE_NEXUS_PASSWORD": ConfigValueReader.from_environment_variable('SONATYPE_NEXUS_PASSWORD').strip!,
+        "signing.inMemoryKey": ConfigValueReader.from_environment_variable('signing.inMemoryKey').strip!,
+        "signing.password": ConfigValueReader.from_environment_variable('signing.password').strip!,
+        "signing.keyId": ConfigValueReader.from_environment_variable('signing.keyId').strip!,
+        "signing.secretKeyRingFile": ConfigValueReader.from_environment_variable('signing.secretKeyRingFile').strip!
+      }
+    )
+  end
+
+  desc "Publish release to maven without overriding gradle properties"
+  private_lane :publish_to_maven_no_overrides do |options|
+    gradle(
+      project_dir: gradle_project_root,
+      task: "uploadArchives",
+      print_command: false,
+      flags: '--stacktrace'
+    )
+  end
+
+  desc "Retrieve a parameter value from SSM."
+  private_lane :get_param_value do |options|
+    sh(
+      command: "aws ssm get-parameter --name #{options[:param_name]} --with-decryption --region us-east-1 --query Parameter.Value --output text",
+      log: false
+    )
+  end
+
+  desc "Cleanup all the build artifacts"
+  private_lane :cleanup do |options|
+    gradle(
+      project_dir: gradle_project_root,
+      task: "clean"
+    )
+  end
+end
+
+module ConfigValueReader
+  def self.from_environment_variable(param_name)
+    ENV[param_name.gsub('.','_')]
+  end
+
+  def self.from_ssm(param_name)
+    result = `aws ssm get-parameter --name #{param_name} --with-decryption --region us-east-1 --query Parameter.Value --output text`
+    if $?.exitstatus != 0
+      raise "Failed to get value for parameter #{param_name}"
+    end
+    result
+  end
+end
