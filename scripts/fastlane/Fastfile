@@ -22,7 +22,7 @@ platform :android do
 
     gradle(
       project_dir: gradle_project_root,
-      task: "assemble",
+      task: "build",
       build_type: "Release"
     )
 
