@@ -81,9 +81,37 @@ public class SQLPredicateTest {
         validateSQLExpressionForContains(sqlPredicate, "tags");
     }
 
+    /**
+     * Test notContains in the context of a String field.
+     * @throws DataStoreException Not thrown.
+     */
+    @Test
+    public void testNotContainsForStringField() throws DataStoreException {
+        QueryPredicate predicate = Where.matches(Blog.NAME.notContains("something")).getQueryPredicate();
+        SQLPredicate sqlPredicate = new SQLPredicate(predicate);
+        validateSQLExpressionForNotContains(sqlPredicate, "name");
+    }
+
+    /**
+     * Test notContains in the context of a list.
+     * @throws DataStoreException Not thrown.
+     */
+    @Test
+    public void testNotContainsForStringList() throws DataStoreException {
+        QueryPredicateOperation<String> predicate = Blog.TAGS.notContains("something");
+        SQLPredicate sqlPredicate = new SQLPredicate(predicate);
+        validateSQLExpressionForNotContains(sqlPredicate, "tags");
+    }
+
     private void validateSQLExpressionForContains(SQLPredicate sqlPredicate, String fieldName) {
         assertEquals(1, sqlPredicate.getBindings().size());
         assertEquals("something", sqlPredicate.getBindings().get(0));
         assertEquals("instr(" + fieldName + ",?) > 0", sqlPredicate.toString());
+    }
+
+    private void validateSQLExpressionForNotContains(SQLPredicate sqlPredicate, String fieldName) {
+        assertEquals(1, sqlPredicate.getBindings().size());
+        assertEquals("something", sqlPredicate.getBindings().get(0));
+        assertEquals("instr(" + fieldName + ",?) = 0", sqlPredicate.toString());
     }
 }
