@@ -20,9 +20,9 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "Comments")
 public final class Comment implements Model {
-  public static final QueryField ID = field("id");
-  public static final QueryField CONTENT = field("content");
-  public static final QueryField POST = field("commentPostId");
+  public static final QueryField ID = field("Comment", "id");
+  public static final QueryField CONTENT = field("Comment", "content");
+  public static final QueryField POST = field("Comment", "commentPostId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String content;
   private final @ModelField(targetType="Post") @BelongsTo(targetName = "commentPostId", type = Post.class) Post post;

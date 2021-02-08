@@ -21,11 +21,11 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "Posts")
 public final class Post implements Model {
-  public static final QueryField ID = field("id");
-  public static final QueryField TITLE = field("title");
-  public static final QueryField BLOG = field("postBlogId");
-  public static final QueryField STATUS = field("status");
-  public static final QueryField RATING = field("rating");
+  public static final QueryField ID = field("Post", "id");
+  public static final QueryField TITLE = field("Post", "title");
+  public static final QueryField BLOG = field("Post", "postBlogId");
+  public static final QueryField STATUS = field("Post", "status");
+  public static final QueryField RATING = field("Post", "rating");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String title;
   private final @ModelField(targetType="Blog") @BelongsTo(targetName = "postBlogId", type = Blog.class) Blog blog;

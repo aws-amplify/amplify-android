@@ -20,8 +20,8 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "Authors")
 public final class Author implements Model {
-  public static final QueryField ID = field("id");
-  public static final QueryField NAME = field("name");
+  public static final QueryField ID = field("Author", "id");
+  public static final QueryField NAME = field("Author", "name");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="PostAuthorJoin") @HasMany(associatedWith = "author", type = PostAuthorJoin.class) List<PostAuthorJoin> posts = null;
