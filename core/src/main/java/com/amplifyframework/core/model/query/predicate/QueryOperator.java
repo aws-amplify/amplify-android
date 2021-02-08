@@ -72,6 +72,10 @@ public abstract class QueryOperator<T> implements Evaluable<T> {
          */
         CONTAINS,
         /**
+         * Does not contain some value comparison.
+         */
+        NOT_CONTAINS,
+        /**
          * Between two values comparison.
          */
         BETWEEN,
