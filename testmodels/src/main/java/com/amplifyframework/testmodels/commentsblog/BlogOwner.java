@@ -17,9 +17,9 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "BlogOwners")
 public final class BlogOwner implements Model {
-  public static final QueryField NAME = field("name");
-  public static final QueryField ID = field("id");
-  public static final QueryField WEA = field("wea");
+  public static final QueryField NAME = field("BlogOwner", "name");
+  public static final QueryField ID = field("BlogOwner", "id");
+  public static final QueryField WEA = field("BlogOwner", "wea");
   private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="Blog") @HasOne(associatedWith = "owner", type = Blog.class) Blog blog = null;

@@ -220,8 +220,13 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             Iterator<QuerySortBy> sortByIterator = sortByList.iterator();
             while (sortByIterator.hasNext()) {
                 final QuerySortBy sortBy = sortByIterator.next();
-                SQLiteColumn column = table.getColumn(sortBy.getField());
-                rawQuery.append(Wrap.inBackticks(column.getAliasedName()))
+                String modelName = Wrap.inBackticks(sortBy.getModelName());
+                String fieldName = Wrap.inBackticks(sortBy.getField());
+                if (modelName == null) {
+                    modelName = Wrap.inBackticks(tableName);
+                }
+                final String columnName = modelName + "." + fieldName;
+                rawQuery.append(columnName)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQuerySortOrder(sortBy.getSortOrder()));
 
