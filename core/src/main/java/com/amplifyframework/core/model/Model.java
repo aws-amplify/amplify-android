@@ -30,4 +30,12 @@ public interface Model {
      */
     @NonNull
     String getId();
+
+    /**
+     * Returns the name of this model as a String.
+     * @return the name of this model as a String.
+     */
+    default String getModelName() {
+        return getClass().getSimpleName();
+    }
 }

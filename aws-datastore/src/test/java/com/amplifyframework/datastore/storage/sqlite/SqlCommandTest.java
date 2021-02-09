@@ -28,8 +28,12 @@ import com.amplifyframework.core.model.query.QueryPaginationInput;
 import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.query.QuerySortOrder;
 import com.amplifyframework.core.model.query.Where;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.syncengine.PendingMutation;
+import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testutils.random.RandomString;
+import com.amplifyframework.util.GsonFactory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +41,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -67,7 +72,7 @@ public class SqlCommandTest {
     @Before
     public void createSqlCommandFactory() {
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry);
+        sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry, GsonFactory.instance());
     }
 
     /**
@@ -242,6 +247,20 @@ public class SqlCommandTest {
                 sqlCommand.sqlStatement()
         );
         assertEquals(0, sqlCommand.getBindings().size());
+    }
+
+    /**
+     * Verify the SqlCommand generated to check if a model exists is as expected.
+     * @throws DataStoreException From {@link SQLCommandFactory#existsFor(ModelSchema, QueryPredicate)}
+     */
+    @Test
+    public void existsFor() throws DataStoreException {
+        final ModelSchema personSchema = getPersonModelSchema();
+        String personId = RandomString.string();
+        final SqlCommand sqlCommand = sqlCommandFactory.existsFor(personSchema, Person.ID.eq(personId));
+        assertEquals("SELECT EXISTS(SELECT 1 FROM `Person` WHERE id = ?);",
+            sqlCommand.sqlStatement());
+        assertEquals(Arrays.asList(personId), sqlCommand.getBindings());
     }
 
     private static ModelSchema getPersonModelSchema() {

@@ -15,13 +15,12 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
@@ -29,22 +28,26 @@ import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.QueryPaginationInput;
 import com.amplifyframework.core.model.query.QuerySortBy;
+import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -53,27 +56,19 @@ import java.util.Set;
  * {@link Model} and {@link ModelSchema}.
  */
 final class SQLiteCommandFactory implements SQLCommandFactory {
-    private final ModelSchemaRegistry modelSchemaRegistry;
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    // Connection handle to a SQLiteDatabase.
-    private final SQLiteDatabase databaseConnectionHandle;
+    private final ModelSchemaRegistry modelSchemaRegistry;
+    private final Gson gson;
 
     /**
      * Default constructor.
      */
-    SQLiteCommandFactory(ModelSchemaRegistry modelSchemaRegistry) {
-        this(modelSchemaRegistry, null);
-    }
-
-    /**
-     * Constructor with databaseConnectionHandle.
-     * @param databaseConnectionHandle connection to a SQLiteDatabase.
-     */
     SQLiteCommandFactory(
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
-            @Nullable SQLiteDatabase databaseConnectionHandle) {
+            @NonNull Gson gson) {
         this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
-        this.databaseConnectionHandle = databaseConnectionHandle;
+        this.gson = Objects.requireNonNull(gson);
     }
 
     /**
@@ -142,9 +137,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
     /**
      * {@inheritDoc}
-     *
-     * This method should be invoked from a worker thread and not from the main thread
-     * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
     @NonNull
     @WorkerThread
@@ -254,19 +246,57 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
-        return new SqlCommand(table.getName(), queryString, columns, bindings);
+        return new SqlCommand(table.getName(), queryString, bindings);
     }
+
+    @NonNull
+    public SqlCommand existsFor(@NonNull ModelSchema modelSchema,
+                                @NonNull QueryPredicate predicate) throws DataStoreException {
+        final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
+        final String tableName = table.getName();
+        StringBuilder rawQuery = new StringBuilder();
+        final List<Object> bindings = new ArrayList<>();
+
+        // Start SELECT statement.
+        // SELECT EXISTS(SELECT 1 FROM tableName
+        rawQuery.append(SqlKeyword.SELECT)
+                .append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.EXISTS)
+                .append("(")
+                .append(SqlKeyword.SELECT)
+                .append(SqlKeyword.DELIMITER)
+                .append("1")
+                .append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.FROM)
+                .append(SqlKeyword.DELIMITER)
+                .append(Wrap.inBackticks(tableName));
+
+        // Append predicates.
+        // WHERE condition
+        if (!QueryPredicates.all().equals(predicate)) {
+            final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
+            bindings.addAll(sqlPredicate.getBindings());
+            rawQuery.append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.WHERE)
+                    .append(SqlKeyword.DELIMITER)
+                    .append(sqlPredicate);
+        }
+
+        // Close the parentheses for EXISTS, and end with a semicolon.
+        rawQuery.append(");");
+        final String queryString = rawQuery.toString();
+        return new SqlCommand(table.getName(), queryString, bindings);
+    }
+
 
     /**
      * {@inheritDoc}
-     *
-     * This method should be invoked from a worker thread and not from the main thread
-     * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
     @NonNull
     @WorkerThread
     @Override
-    public SqlCommand insertFor(@NonNull ModelSchema modelSchema) {
+    public <T extends Model> SqlCommand insertFor(@NonNull ModelSchema modelSchema,
+                                                  @NonNull T item) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("INSERT INTO")
@@ -297,24 +327,21 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         }
         stringBuilder.append(")");
         final String preparedInsertStatement = stringBuilder.toString();
-        final SQLiteStatement compiledInsertStatement =
-                databaseConnectionHandle == null ?
-                null : databaseConnectionHandle.compileStatement(preparedInsertStatement);
-        return new SqlCommand(table.getName(), preparedInsertStatement, columns,
-                Collections.emptyList(), compiledInsertStatement);
+
+        return new SqlCommand(table.getName(),
+                preparedInsertStatement,
+                extractFieldValues(item) // VALUES clause
+        );
     }
 
     /**
      * {@inheritDoc}
-     *
-     * This method should be invoked from a worker thread and not from the main thread
-     * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
     @NonNull
     @WorkerThread
     @Override
-    public SqlCommand updateFor(@NonNull ModelSchema modelSchema,
-                                @NonNull QueryPredicate predicate) throws DataStoreException {
+    public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
+                                                  @NonNull T model) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("UPDATE")
@@ -342,7 +369,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         }
 
         // Append WHERE statement
-        SQLPredicate sqlPredicate = new SQLPredicate(predicate);
+        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+        final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
+        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getId());
+        SQLPredicate sqlPredicate = new SQLPredicate(matchId);
         stringBuilder.append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.WHERE)
                 .append(SqlKeyword.DELIMITER)
@@ -350,15 +380,11 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 .append(";");
 
         final String preparedUpdateStatement = stringBuilder.toString();
-        final SQLiteStatement compiledUpdateStatement =
-                databaseConnectionHandle == null ?
-                null : databaseConnectionHandle.compileStatement(preparedUpdateStatement);
+        List<Object> bindings = extractFieldValues(model); // SET clause
+        bindings.addAll(sqlPredicate.getBindings()); // WHERE clause
         return new SqlCommand(table.getName(),
                 preparedUpdateStatement,
-                columns,
-                sqlPredicate.getBindings(),
-                compiledUpdateStatement
-        );
+                bindings);
     }
 
     /**
@@ -380,15 +406,27 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 SqlKeyword.DELIMITER +
                 sqlPredicate +
                 ";";
-        final SQLiteStatement compiledDeleteStatement =
-                databaseConnectionHandle == null ?
-                null : databaseConnectionHandle.compileStatement(preparedDeleteStatement);
         return new SqlCommand(table.getName(),
                 preparedDeleteStatement,
-                Collections.emptyList(),
-                sqlPredicate.getBindings(),
-                compiledDeleteStatement
+                sqlPredicate.getBindings() // WHERE clause
         );
+    }
+
+    // extract model field values to save in database
+    private List<Object> extractFieldValues(@NonNull Model model) throws DataStoreException {
+        final String modelName = model.getModelName();
+        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final SQLiteTable table = SQLiteTable.fromSchema(schema);
+        final SQLiteModelFieldTypeConverter converter =
+                new SQLiteModelFieldTypeConverter(schema, modelSchemaRegistry, gson);
+        final Map<String, ModelField> modelFields = schema.getFields();
+        final List<Object> bindings = new ArrayList<>();
+        for (SQLiteColumn column : table.getSortedColumns()) {
+            final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getFieldName()));
+            final Object fieldValue = converter.convertValueFromTarget(model, modelField);
+            bindings.add(fieldValue);
+        }
+        return bindings;
     }
 
     /**

@@ -108,6 +108,11 @@ public enum SqlKeyword {
     LIKE("LIKE"),
 
     /**
+     * SQL keyword to check if an item EXISTS.
+     */
+    EXISTS("EXISTS"),
+
+    /**
      * SQL keyword to begin a SELECT statement.
      */
     SELECT("SELECT"),
