@@ -238,7 +238,7 @@ public class SqlCommandTest {
         );
         assertNotNull(sqlCommand);
         assertEquals(
-                PERSON_BASE_QUERY + " ORDER BY `Person_lastName` ASC, `Person_firstName` DESC;",
+                PERSON_BASE_QUERY + " ORDER BY `Person`.`lastName` ASC, `Person`.`firstName` DESC;",
                 sqlCommand.sqlStatement()
         );
         assertEquals(0, sqlCommand.getBindings().size());
