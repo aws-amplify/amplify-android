@@ -22,8 +22,7 @@ platform :android do
 
     gradle(
       project_dir: gradle_project_root,
-      task: "build",
-      build_type: "Release"
+      task: "build"
     )
 
     # Create tag and push to origin
