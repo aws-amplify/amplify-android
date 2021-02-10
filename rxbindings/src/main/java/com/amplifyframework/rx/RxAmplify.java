@@ -19,26 +19,28 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.logging.LoggingCategory;
 
 /**
  * A collection of bindings to facilitate use of the Amplify framework with Rx-centered APIs.
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"unused", "RedundantSuppression"})
 public final class RxAmplify {
     private RxAmplify() {}
 
     // Breaking the rules, here. Don't look.
-    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxAuthCategoryBehavior Auth = new RxAuthBinding();
-    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxApiCategoryBehavior API = new RxApiBinding();
-    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxDataStoreCategoryBehavior DataStore = new RxDataStoreBinding();
-    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxHubCategoryBehavior Hub = new RxHubBinding();
-    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxStorageCategoryBehavior Storage = new RxStorageBinding();
-    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxPredictionsCategoryBehavior Predictions = new RxPredictionsBinding();
-    // Logging currently has no callback/async behaviors
-    // Analytics currently has no callback/async behaviors
+    @SuppressWarnings({"checkstyle:all"}) public static final AnalyticsCategory Analytics = new AnalyticsCategory();
+    @SuppressWarnings({"checkstyle:all"}) public static final RxApiCategoryBehavior API = new RxApiBinding();
+    @SuppressWarnings({"checkstyle:all"}) public static final RxAuthCategoryBehavior Auth = new RxAuthBinding();
+    @SuppressWarnings({"checkstyle:all"}) public static final LoggingCategory Logging = new LoggingCategory();
+    @SuppressWarnings({"checkstyle:all"}) public static final RxStorageCategoryBehavior Storage = new RxStorageBinding();
+    @SuppressWarnings({"checkstyle:all"}) public static final RxHubCategoryBehavior Hub = new RxHubBinding();
+    @SuppressWarnings({"checkstyle:all"}) public static final RxDataStoreCategoryBehavior DataStore = new RxDataStoreBinding();
+    @SuppressWarnings({"checkstyle:all"}) public static final RxPredictionsCategoryBehavior Predictions = new RxPredictionsBinding();
 
     /**
      * Read the configuration from amplifyconfiguration.json file.
