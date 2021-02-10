@@ -260,7 +260,7 @@ public class SqlCommandTest {
         final SqlCommand sqlCommand = sqlCommandFactory.existsFor(personSchema, Person.ID.eq(personId));
         assertEquals("SELECT EXISTS(SELECT 1 FROM `Person` WHERE id = ?);",
             sqlCommand.sqlStatement());
-        assertEquals(Arrays.asList(personId), sqlCommand.getBindings());
+        assertEquals(Collections.singletonList(personId), sqlCommand.getBindings());
     }
 
     private static ModelSchema getPersonModelSchema() {
