@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
@@ -26,11 +27,13 @@ import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
@@ -62,6 +65,24 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    public Single<StorageGetUrlResult> getUrl(String key) {
+        return toSingle((onResult, onError) -> {
+            storage.getUrl(key, onResult, onError);
+            return new NoOpCancelable();
+        });
+    }
+
+    @NonNull
+    @Override
+    public Single<StorageGetUrlResult> getUrl(@NonNull String key, @NonNull StorageGetUrlOptions options) {
+        return toSingle((onResult, onError) -> {
+            storage.getUrl(key, options, onResult, onError);
+            return new NoOpCancelable();
+        });
+    }
+
+    @NonNull
+    @Override
     public RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(@NonNull String key,
                                                                                   @NonNull File local) {
         return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance());
@@ -71,9 +92,9 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
     @Override
     public RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
             @NonNull String key, @NonNull File local, @NonNull StorageDownloadFileOptions options) {
-        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) -> {
-            return storage.downloadFile(key, local, options, onProgress, onResult, onError);
-        });
+        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) ->
+            storage.downloadFile(key, local, options, onProgress, onResult, onError)
+        );
     }
 
     @NonNull
@@ -87,9 +108,9 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
     @Override
     public RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
             @NonNull String key, @NonNull File local, @NonNull StorageUploadFileOptions options) {
-        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) -> {
-            return storage.uploadFile(key, local, options, onProgress, onResult, onError);
-        });
+        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) ->
+            storage.uploadFile(key, local, options, onProgress, onResult, onError)
+        );
     }
 
     @NonNull
@@ -103,9 +124,9 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
     @Override
     public RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
             @NonNull String key, @NonNull InputStream local, @NonNull StorageUploadInputStreamOptions options) {
-        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) -> {
-            return storage.uploadInputStream(key, local, options, onProgress, onResult, onError);
-        });
+        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) ->
+            storage.uploadInputStream(key, local, options, onProgress, onResult, onError)
+        );
     }
 
     @NonNull
@@ -154,10 +175,9 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
      * @param <T> The type that represents the result of a given operation.
      */
     public static final class RxProgressAwareSingleOperation<T> implements RxAdapters.RxSingleOperation<T> {
-
-        private PublishSubject<StorageTransferProgress> progressSubject;
-        private ReplaySubject<T> resultSubject;
-        private Cancelable amplifyOperation;
+        private final PublishSubject<StorageTransferProgress> progressSubject;
+        private final ReplaySubject<T> resultSubject;
+        private final Cancelable amplifyOperation;
 
         RxProgressAwareSingleOperation(RxStorageTransferCallbackMapper<T> callbacks) {
             progressSubject = PublishSubject.create();
@@ -194,5 +214,17 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
         public Observable<StorageTransferProgress> observeProgress() {
             return progressSubject;
         }
+    }
+
+    /**
+     * Type alias that defines the generic parameters for a download operation.
+     * @param <T> The type that represents the result of a given operation.
+     */
+    interface RxStorageTransferCallbackMapper<T> {
+        Cancelable emitTo(
+                Consumer<StorageTransferProgress> onProgress,
+                Consumer<T> onItem,
+                Consumer<StorageException> onError
+        );
     }
 }

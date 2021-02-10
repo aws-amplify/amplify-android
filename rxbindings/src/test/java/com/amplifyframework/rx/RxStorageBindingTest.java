@@ -25,14 +25,17 @@ import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePlugin;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
+import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
@@ -48,6 +51,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -101,6 +106,55 @@ public final class RxStorageBindingTest {
         localFile = File.createTempFile("random", "data");
         localInputStream = new ByteArrayInputStream(RandomBytes.bytes());
         remoteKey = RandomString.string();
+    }
+
+    /**
+     * When the delegate returns a result from the
+     * {@link StorageCategoryBehavior#getUrl(String, StorageGetUrlOptions, Consumer, Consumer)},
+     * the binding should emit the result via the single.
+     * @throws MalformedURLException Not expected; it's part of the URL constructor signature, though
+     */
+    @Test
+    public void getUrlReturnsResult() throws MalformedURLException {
+        URL someRandomUrl = new URL("https://bogus.tld/foo");
+        StorageGetUrlResult expectedResult = StorageGetUrlResult.fromUrl(someRandomUrl);
+
+        doAnswer(invocation -> {
+            int indexOfResultConsumer = 2;
+            Consumer<StorageGetUrlResult> onResult = invocation.getArgument(indexOfResultConsumer);
+            onResult.accept(expectedResult);
+            return mock(StorageGetUrlOperation.class);
+        }).when(delegate)
+            .getUrl(eq(remoteKey), any(StorageGetUrlOptions.class), anyConsumer(), anyConsumer());
+
+        rxStorage.getUrl(remoteKey, StorageGetUrlOptions.defaultInstance())
+            .test()
+            .awaitCount(1)
+            .assertNoErrors()
+            .assertValue(expectedResult);
+    }
+
+    /**
+     * When the delegate emits a failure from the
+     * {@link StorageCategoryBehavior#getUrl(String, StorageGetUrlOptions, Consumer, Consumer)},
+     * the binding should emit a failure to its single observer.
+     */
+    @Test
+    public void getUrlEmitsFailure() {
+        StorageException expectedException = new StorageException("oh", "boy!");
+
+        doAnswer(invocation -> {
+            int indexOfErrorConsumer = 3;
+            Consumer<StorageException> onError = invocation.getArgument(indexOfErrorConsumer);
+            onError.accept(expectedException);
+            return mock(StorageGetUrlOperation.class);
+        }).when(delegate)
+            .getUrl(eq(remoteKey), any(StorageGetUrlOptions.class), anyConsumer(), anyConsumer());
+
+        rxStorage.getUrl(remoteKey, StorageGetUrlOptions.defaultInstance())
+            .test()
+            .awaitDone(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .assertError(expectedException);
     }
 
     /**

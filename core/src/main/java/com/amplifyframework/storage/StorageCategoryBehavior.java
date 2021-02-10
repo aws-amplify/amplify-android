@@ -44,7 +44,6 @@ import java.io.InputStream;
 /**
  * Defines the behavior of the Storage category that clients will use.
  */
-@SuppressWarnings("unused")
 public interface StorageCategoryBehavior {
 
     /**
