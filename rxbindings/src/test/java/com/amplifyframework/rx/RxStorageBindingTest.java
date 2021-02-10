@@ -120,7 +120,7 @@ public final class RxStorageBindingTest {
             Consumer<StorageTransferProgress> progressConsumer = invocation.getArgument(indexOfProgressConsumer);
             Consumer<StorageDownloadFileResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
 
-            Observable.interval(100, TimeUnit.MILLISECONDS)
+            Observable.interval(100, 100, TimeUnit.MILLISECONDS)
                       .take(5)
                       .doOnNext(aLong -> progressConsumer.accept(new StorageTransferProgress(aLong, 500)))
                       .doOnComplete(() -> resultConsumer.accept(result))
@@ -186,7 +186,7 @@ public final class RxStorageBindingTest {
             Consumer<StorageUploadFileResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
             Consumer<StorageTransferProgress> progressConsumer = invocation.getArgument(indexOfProgressConsumer);
 
-            Observable.interval(100, TimeUnit.MILLISECONDS)
+            Observable.interval(100, 100, TimeUnit.MILLISECONDS)
                       .take(5)
                       .doOnNext(aLong -> progressConsumer.accept(new StorageTransferProgress(aLong, 500)))
                       .doOnComplete(() -> resultConsumer.accept(result))
@@ -225,7 +225,7 @@ public final class RxStorageBindingTest {
             Consumer<StorageUploadInputStreamResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
             Consumer<StorageTransferProgress> progressConsumer = invocation.getArgument(indexOfProgressConsumer);
 
-            Observable.interval(100, TimeUnit.MILLISECONDS)
+            Observable.interval(100, 100, TimeUnit.MILLISECONDS)
                     .take(5)
                     .doOnNext(aLong -> progressConsumer.accept(new StorageTransferProgress(aLong, 500)))
                     .doOnComplete(() -> resultConsumer.accept(result))
