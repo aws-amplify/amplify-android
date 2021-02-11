@@ -53,6 +53,7 @@ interface SQLCommandFactory {
      * the {@link ModelSchema}.
      *
      * @param modelSchema schema of the model
+     * @param options options to apply to the query
      * @return the QUERY SQL command
      */
     @NonNull
@@ -64,6 +65,7 @@ interface SQLCommandFactory {
      * the {@link ModelSchema}.
      *
      * @param modelSchema schema of the model
+     * @param predicate predicate to filter by
      * @return the QUERY SQL command
      */
     @NonNull
@@ -75,6 +77,7 @@ interface SQLCommandFactory {
      * prepared statement that can be bound later with inputs.
      *
      * @param modelSchema schema of the model
+     * @param item the Model to insert
      * @return the SQL command that encapsulates the INSERT INTO command
      */
     @NonNull
@@ -85,6 +88,7 @@ interface SQLCommandFactory {
      * prepared statement that can be bound later with inputs.
      *
      * @param modelSchema schema of the model
+     * @param item the Model to update
      * @return the SQL command that encapsulates the UPDATE command
      */
     @NonNull

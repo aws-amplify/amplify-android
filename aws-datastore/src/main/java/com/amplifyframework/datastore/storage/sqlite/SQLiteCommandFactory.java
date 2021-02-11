@@ -139,7 +139,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * {@inheritDoc}
      */
     @NonNull
-    @WorkerThread
     @Override
     public SqlCommand queryFor(@NonNull ModelSchema modelSchema,
                                @NonNull QueryOptions options) throws DataStoreException {
@@ -250,6 +249,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     @NonNull
+    @Override
     public SqlCommand existsFor(@NonNull ModelSchema modelSchema,
                                 @NonNull QueryPredicate predicate) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
@@ -293,7 +293,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * {@inheritDoc}
      */
     @NonNull
-    @WorkerThread
     @Override
     public <T extends Model> SqlCommand insertFor(@NonNull ModelSchema modelSchema,
                                                   @NonNull T item) throws DataStoreException {
@@ -338,7 +337,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * {@inheritDoc}
      */
     @NonNull
-    @WorkerThread
     @Override
     public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
                                                   @NonNull T model) throws DataStoreException {

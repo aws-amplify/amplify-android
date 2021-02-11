@@ -29,6 +29,11 @@ import com.amplifyframework.logging.Logger;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Responsible for compiling, binding values to, and executing SQLiteStatements.   Currently, each statement is run in
+ * its own transaction.  In the future, we can extend this class to support batching  multiple commands in the same
+ * transaction to improve performance.
+ */
 final class SQLCommandProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
