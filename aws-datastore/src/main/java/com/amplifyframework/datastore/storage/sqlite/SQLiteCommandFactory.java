@@ -71,9 +71,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         this.gson = Objects.requireNonNull(gson);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
     public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
@@ -99,9 +96,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         return new SqlCommand(table.getName(), createSqlStatement);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
     public Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema) {
@@ -135,9 +129,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         return Immutable.of(indexCommands);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
     public SqlCommand queryFor(@NonNull ModelSchema modelSchema,
@@ -288,10 +279,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         return new SqlCommand(table.getName(), queryString, bindings);
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
     public <T extends Model> SqlCommand insertFor(@NonNull ModelSchema modelSchema,
@@ -333,9 +320,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         );
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
     public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
@@ -385,9 +369,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 bindings);
     }
 
-    /**
-     * {@inheritDoc}.
-     */
+
     @NonNull
     @Override
     public SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
