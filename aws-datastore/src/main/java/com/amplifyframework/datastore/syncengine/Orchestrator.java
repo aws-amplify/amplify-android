@@ -275,7 +275,8 @@ public final class Orchestrator {
             }
         } catch (Throwable throwable) {
             throw new DataStoreException("Timed out while starting to observe storage changes.",
-                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
+                throwable,
+                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
         }
     }
 
