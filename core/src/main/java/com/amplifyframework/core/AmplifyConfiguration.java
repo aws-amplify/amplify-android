@@ -64,7 +64,7 @@ public final class AmplifyConfiguration {
     @VisibleForTesting
     @SuppressWarnings("WeakerAccess") // These are created and accessed as public API
     public AmplifyConfiguration(@NonNull Map<String, CategoryConfiguration> configs) {
-        // Dev menu is enabled by default in debug mode
+        // Dev menu is disabled by default
         this(configs, new LinkedHashMap<>(), false);
     }
 
