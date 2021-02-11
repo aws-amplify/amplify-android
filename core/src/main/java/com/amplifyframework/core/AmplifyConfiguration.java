@@ -65,7 +65,7 @@ public final class AmplifyConfiguration {
     @SuppressWarnings("WeakerAccess") // These are created and accessed as public API
     public AmplifyConfiguration(@NonNull Map<String, CategoryConfiguration> configs) {
         // Dev menu is enabled by default in debug mode
-        this(configs, new LinkedHashMap<>(), true);
+        this(configs, new LinkedHashMap<>(), false);
     }
 
     /**
@@ -261,7 +261,7 @@ public final class AmplifyConfiguration {
     public static final class Builder {
         private final Map<String, CategoryConfiguration> categoryConfiguration;
         private final Map<UserAgent.Platform, String> platformVersions;
-        private boolean devMenuEnabled = true; // Dev menu is enabled by default in debug mode
+        private boolean devMenuEnabled = false; // Dev menu is disabled by default
 
         private Builder(Map<String, CategoryConfiguration> categoryConfiguration) {
             this.categoryConfiguration = categoryConfiguration;
