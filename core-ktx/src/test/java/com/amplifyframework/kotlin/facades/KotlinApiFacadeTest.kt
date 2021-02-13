@@ -26,9 +26,12 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.kotlin.GraphQL.ConnectionState
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -137,15 +140,17 @@ class KotlinApiFacadeTest {
             val onResultArg = it.invocation.args[/* index of result consumer = */ 2]
             val onStart = onStartArg as Consumer<String>
             val onResult = onResultArg as Consumer<GraphQLResponse<String>>
-            onStart.accept("startToken")
-            onResult.accept(expectedResponse)
+            GlobalScope.launch(Dispatchers.IO) {
+                onStart.accept("startToken")
+                onResult.accept(expectedResponse)
+            }
             expectedOperation
         }
         every { expectedOperation.cancel() } answers {}
 
         val operation = api.subscribe(request)
-        assertEquals(ConnectionState.CONNECTED, operation.connectionState.first())
-        assertEquals(expectedResponse, operation.subscriptionData.first())
+        assertEquals(ConnectionState.CONNECTED, operation.connectionState().first())
+        assertEquals(expectedResponse, operation.subscriptionData().first())
     }
 
     /**
@@ -165,11 +170,12 @@ class KotlinApiFacadeTest {
         } answers {
             val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<ApiException>
-            onError.accept(expectedFailure)
+            GlobalScope.launch(Dispatchers.IO) { onError.accept(expectedFailure) }
             operation
         }
         api.subscribe(request)
-            .subscriptionData.first() // Wait for data that never comes, instead an error
+            .subscriptionData()
+            .first() // Wait for data that never comes, instead an error
     }
 
     /**

@@ -41,7 +41,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
-@Suppress("unused")
 interface Storage {
     @Throws(StorageException::class)
     suspend fun getUrl(
@@ -100,12 +99,17 @@ interface Storage {
             delegate?.cancel()
         }
 
+        fun progress(): Flow<StorageTransferProgress> {
+            return progress
+        }
+
         @Suppress("UNCHECKED_CAST")
         suspend fun result(): T {
             // We want to take the first item from either one,
             // without waiting for the other.
             // Maybe there's a cleaner way to achieve this.
-            return flowOf(errors, results).flattenMerge()
+            return flowOf(errors, results)
+                .flattenMerge()
                 .onEach { emission ->
                     if (emission is StorageException) {
                         throw emission

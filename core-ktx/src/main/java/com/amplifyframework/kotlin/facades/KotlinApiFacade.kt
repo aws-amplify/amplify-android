@@ -24,7 +24,6 @@ import com.amplifyframework.api.rest.RestResponse
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.async.Cancelable
 import com.amplifyframework.kotlin.Api
-import com.amplifyframework.kotlin.GraphQL.ConnectionState
 import com.amplifyframework.kotlin.GraphQL.ConnectionState.CONNECTED
 import com.amplifyframework.kotlin.GraphQL.ConnectionState.CONNECTING
 import com.amplifyframework.kotlin.GraphQL.ConnectionState.DISCONNECTED
@@ -33,9 +32,10 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
-import kotlinx.coroutines.channels.sendBlocking
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
@@ -86,50 +86,39 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
     @ExperimentalCoroutinesApi
     @FlowPreview
     override fun <T> subscribe(request: GraphQLRequest<T>, apiName: String?): Subscription<T> {
-        val subscriptionChannel = ConflatedBroadcastChannel<GraphQLResponse<T>>()
-        val connectionChannel = ConflatedBroadcastChannel<ConnectionState>()
-        connectionChannel.sendBlocking(CONNECTING)
+        val subscriptionData = MutableSharedFlow<GraphQLResponse<T>>(replay = 1)
+        val connectionState = MutableStateFlow(CONNECTING)
+        val errors = MutableSharedFlow<ApiException>(replay = 1)
+
         val operation = if (apiName != null) {
             delegate.subscribe(
                 apiName,
                 request,
-                { connectionChannel.sendBlocking(CONNECTED) },
-                { subscriptionChannel.sendBlocking(it) },
+                { connectionState.tryEmit(CONNECTED) },
+                { subscriptionData.tryEmit(it) },
                 {
-                    subscriptionChannel.close(it)
-                    connectionChannel.sendBlocking(DISCONNECTED)
-                    connectionChannel.close(it)
+                    connectionState.tryEmit(DISCONNECTED)
+                    errors.tryEmit(it)
                 },
-                {
-                    subscriptionChannel.close()
-                    connectionChannel.sendBlocking(DISCONNECTED)
-                    connectionChannel.close()
-                }
+                { connectionState.tryEmit(DISCONNECTED) }
             )
         } else {
             delegate.subscribe(
                 request,
-                { connectionChannel.sendBlocking(CONNECTED) },
-                { subscriptionChannel.sendBlocking(it) },
+                { connectionState.tryEmit(CONNECTED) },
+                { subscriptionData.tryEmit(it) },
                 {
-                    subscriptionChannel.close(it)
-                    connectionChannel.sendBlocking(DISCONNECTED)
-                    connectionChannel.close(it)
+                    connectionState.tryEmit(DISCONNECTED)
+                    errors.tryEmit(it)
                 },
-                {
-                    subscriptionChannel.close()
-                    connectionChannel.sendBlocking(DISCONNECTED)
-                    connectionChannel.close()
-                }
+                { connectionState.tryEmit(DISCONNECTED) }
             )
         }
 
-        subscriptionChannel.invokeOnClose { operation?.cancel() }
-        connectionChannel.invokeOnClose { operation?.cancel() }
-
         return Subscription(
-            subscriptionChannel.asFlow(),
-            connectionChannel.asFlow(),
+            subscriptionData.asSharedFlow(),
+            connectionState.asStateFlow(),
+            errors.asSharedFlow(),
             operation as Cancelable
         )
     }

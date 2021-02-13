@@ -22,6 +22,12 @@ import com.amplifyframework.core.async.Cancelable
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flattenMerge
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 interface GraphQL {
     /**
@@ -58,12 +64,29 @@ interface GraphQL {
     /**
      * Models an ongoing subscription to a GraphQL API.
      */
+    @FlowPreview
     data class Subscription<T>(
-        val subscriptionData: Flow<GraphQLResponse<T>>,
-        val connectionState: Flow<ConnectionState>,
+        private val subscriptionData: SharedFlow<GraphQLResponse<T>>,
+        private val connectionState: StateFlow<ConnectionState>,
+        private val errors: SharedFlow<ApiException>,
         private val cancelDelegate: Cancelable
     ) : Cancelable {
         override fun cancel() = cancelDelegate.cancel()
+
+        fun connectionState(): Flow<ConnectionState> {
+            return connectionState
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        fun subscriptionData(): Flow<GraphQLResponse<T>> {
+            return flowOf(subscriptionData, errors)
+                .flattenMerge()
+                .onEach {
+                    if (it is ApiException) {
+                        throw it
+                    }
+                }.map { it as GraphQLResponse<T> }
+        }
     }
 
     /**

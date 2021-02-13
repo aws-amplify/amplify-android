@@ -26,6 +26,7 @@ import com.amplifyframework.storage.result.StorageDownloadFileResult
 import com.amplifyframework.storage.result.StorageGetUrlResult
 import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.result.StorageRemoveResult
+import com.amplifyframework.storage.result.StorageTransferProgress
 import com.amplifyframework.storage.result.StorageUploadFileResult
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult
 import io.mockk.every
@@ -36,6 +37,11 @@ import java.net.URL
 import java.util.Date
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -93,20 +99,32 @@ class KotlinStorageFacadeTest {
         val fromRemoteKey = "kool-pic.png"
         val toLocalFile = File("/local/path/kool-pic.png")
 
+        val progressEvents = (0L until 101 step 50)
+            .map { amount -> StorageTransferProgress(amount, 100) }
+
         val cancelable = mockk<StorageDownloadFileOperation<*>>()
         every { cancelable.cancel() } answers {}
 
         every {
             delegate.downloadFile(eq(fromRemoteKey), eq(toLocalFile), any(), any(), any(), any())
         } answers {
-            val indexOfResultConsumer = 4
-            val arg = it.invocation.args[indexOfResultConsumer]
-            val onResult = arg as Consumer<StorageDownloadFileResult>
-            onResult.accept(StorageDownloadFileResult.fromFile(toLocalFile))
+            val onProgressArg = it.invocation.args[/* index of progress consumer = */ 3]
+            val onProgress = onProgressArg as Consumer<StorageTransferProgress>
+            val onResultArg = it.invocation.args[/* index of result consumer = */ 4]
+            val onResult = onResultArg as Consumer<StorageDownloadFileResult>
+            GlobalScope.launch {
+                progressEvents.forEach { progressEvent ->
+                    delay(200)
+                    onProgress.accept(progressEvent)
+                }
+                onResult.accept(StorageDownloadFileResult.fromFile(toLocalFile))
+            }
             cancelable
         }
 
         val download = storage.downloadFile(fromRemoteKey, toLocalFile)
+        val actualProgressEvents = download.progress().take(progressEvents.size).toList()
+        assertEquals(progressEvents, actualProgressEvents)
         assertEquals(toLocalFile, download.result().file)
     }
 
@@ -145,20 +163,32 @@ class KotlinStorageFacadeTest {
         val toRemoteKey = "kool-pic.png"
         val fromLocalFile = File("/local/path/kool-pic.png")
 
+        val progressEvents = (0L until 101 step 50)
+            .map { amount -> StorageTransferProgress(amount, 100) }
+
         val cancelable = mockk<StorageUploadFileOperation<*>>()
         every { cancelable.cancel() } answers {}
 
         every {
             delegate.uploadFile(eq(toRemoteKey), eq(fromLocalFile), any(), any(), any(), any())
         } answers {
-            val indexOfResultConsumer = 4
-            val arg = it.invocation.args[indexOfResultConsumer]
-            val onResult = arg as Consumer<StorageUploadFileResult>
-            onResult.accept(StorageUploadFileResult.fromKey(toRemoteKey))
+            val onProgressArg = it.invocation.args[/* index of progress consumer = */ 3]
+            val onProgress = onProgressArg as Consumer<StorageTransferProgress>
+            val onResultArg = it.invocation.args[/* index of result consumer = */ 4]
+            val onResult = onResultArg as Consumer<StorageUploadFileResult>
+            GlobalScope.launch {
+                progressEvents.forEach { progressEvent ->
+                    delay(200)
+                    onProgress.accept(progressEvent)
+                }
+                onResult.accept(StorageUploadFileResult.fromKey(toRemoteKey))
+            }
             cancelable
         }
 
         val upload = storage.uploadFile(toRemoteKey, fromLocalFile)
+        val receivedProgressEvents = upload.progress().take(3).toList()
+        assertEquals(progressEvents, receivedProgressEvents)
         assertEquals(toRemoteKey, upload.result().key)
     }
 
@@ -197,20 +227,32 @@ class KotlinStorageFacadeTest {
         val toRemoteKey = "kool-pic.png"
         val fromStream = mockk<InputStream>()
 
+        val progressEvents = (0L until 101 step 50)
+            .map { amount -> StorageTransferProgress(amount, 100) }
+
         val cancelable = mockk<StorageUploadInputStreamOperation<*>>()
         every { cancelable.cancel() } answers {}
 
         every {
             delegate.uploadInputStream(eq(toRemoteKey), eq(fromStream), any(), any(), any(), any())
         } answers {
-            val indexOfResultConsumer = 4
-            val onResult = it.invocation.args[indexOfResultConsumer]
-                as Consumer<StorageUploadInputStreamResult>
-            onResult.accept(StorageUploadInputStreamResult.fromKey(toRemoteKey))
+            val onProgressArg = it.invocation.args[/* index of progress consumer = */ 3]
+            val onProgress = onProgressArg as Consumer<StorageTransferProgress>
+            val onResultArg = it.invocation.args[/* index of result consumer = */ 4]
+            val onResult = onResultArg as Consumer<StorageUploadInputStreamResult>
+            GlobalScope.launch {
+                progressEvents.forEach { progressEvent ->
+                    delay(200)
+                    onProgress.accept(progressEvent)
+                }
+                onResult.accept(StorageUploadInputStreamResult.fromKey(toRemoteKey))
+            }
             cancelable
         }
 
         val upload = storage.uploadInputStream(toRemoteKey, fromStream)
+        val receivedProgressEvents = upload.progress().take(3).toList()
+        assertEquals(progressEvents, receivedProgressEvents)
         assertEquals(toRemoteKey, upload.result().key)
     }
 

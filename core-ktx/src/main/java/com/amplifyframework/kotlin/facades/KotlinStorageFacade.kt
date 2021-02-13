@@ -62,7 +62,7 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
     @FlowPreview
     override fun downloadFile(key: String, local: File, options: StorageDownloadFileOptions):
         InProgressStorageOperation<StorageDownloadFileResult> {
-            val progress = MutableSharedFlow<StorageTransferProgress>(replay = 0)
+            val progress = MutableSharedFlow<StorageTransferProgress>(replay = 1)
             val results = MutableSharedFlow<StorageDownloadFileResult>(replay = 1)
             val errors = MutableSharedFlow<StorageException>(replay = 1)
             val operation = delegate.downloadFile(
@@ -85,7 +85,7 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
     @FlowPreview
     override fun uploadFile(key: String, local: File, options: StorageUploadFileOptions):
         InProgressStorageOperation<StorageUploadFileResult> {
-            val progress = MutableSharedFlow<StorageTransferProgress>(replay = 0)
+            val progress = MutableSharedFlow<StorageTransferProgress>(replay = 1)
             val results = MutableSharedFlow<StorageUploadFileResult>(replay = 1)
             val errors = MutableSharedFlow<StorageException>(replay = 1)
             val operation = delegate.uploadFile(
@@ -112,7 +112,7 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
         options: StorageUploadInputStreamOptions
     ):
         InProgressStorageOperation<StorageUploadInputStreamResult> {
-            val progress = MutableSharedFlow<StorageTransferProgress>(replay = 0)
+            val progress = MutableSharedFlow<StorageTransferProgress>(replay = 1)
             val results = MutableSharedFlow<StorageUploadInputStreamResult>(replay = 1)
             val errors = MutableSharedFlow<StorageException>(replay = 1)
             val cancelable = delegate.uploadInputStream(
