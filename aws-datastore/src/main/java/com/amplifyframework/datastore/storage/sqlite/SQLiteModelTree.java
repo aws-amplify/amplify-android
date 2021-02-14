@@ -96,10 +96,18 @@ final class SQLiteModelTree {
         for (Map.Entry<ModelSchema, Set<String>> entry : modelMap.entrySet()) {
             ModelSchema schema = entry.getKey();
             for (String id : entry.getValue()) {
-                // Create dummy model instance using just the ID and model type
-                String dummyJson = gson.toJson(Collections.singletonMap("id", id));
-                Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
-                descendants.add(dummyItem);
+                if (root.iterator().next().getClass() == SerializedModel.class) {
+                    SerializedModel dummyItem = SerializedModel.builder()
+                            .serializedData(Collections.singletonMap("id", id))
+                            .modelSchema(schema)
+                            .build();
+                    descendants.add(dummyItem);
+                } else {
+                    // Create dummy model instance using just the ID and model type
+                    String dummyJson = gson.toJson(Collections.singletonMap("id", id));
+                    Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
+                    descendants.add(dummyItem);
+                }
             }
         }
         return descendants;
