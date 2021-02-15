@@ -30,6 +30,7 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
@@ -84,7 +85,7 @@ final class SQLiteModelTree {
             return new ArrayList<>();
         }
         Map<ModelSchema, Set<String>> modelMap = new LinkedHashMap<>();
-        ModelSchema rootSchema = registry.getModelSchemaForModelInstance(root.iterator().next());
+        ModelSchema rootSchema = registry.getModelSchemaForModelClass(getModelName(root.iterator().next()));
         Set<String> rootIds = new HashSet<>();
         for (T model : root) {
             rootIds.add(model.getId());
@@ -95,10 +96,18 @@ final class SQLiteModelTree {
         for (Map.Entry<ModelSchema, Set<String>> entry : modelMap.entrySet()) {
             ModelSchema schema = entry.getKey();
             for (String id : entry.getValue()) {
-                // Create dummy model instance using just the ID and model type
-                String dummyJson = gson.toJson(Collections.singletonMap("id", id));
-                Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
-                descendants.add(dummyItem);
+                if (root.iterator().next().getClass() == SerializedModel.class) {
+                    SerializedModel dummyItem = SerializedModel.builder()
+                            .serializedData(Collections.singletonMap("id", id))
+                            .modelSchema(schema)
+                            .build();
+                    descendants.add(dummyItem);
+                } else {
+                    // Create dummy model instance using just the ID and model type
+                    String dummyJson = gson.toJson(Collections.singletonMap("id", id));
+                    Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
+                    descendants.add(dummyItem);
+                }
             }
         }
         return descendants;
@@ -171,5 +180,13 @@ final class SQLiteModelTree {
         final String rawQuery = sqlCommand.sqlStatement();
         final String[] bindings = sqlCommand.getBindingsAsArray();
         return database.rawQuery(rawQuery, bindings);
+    }
+
+    private String getModelName(@NonNull Model model) {
+        if (model.getClass() == SerializedModel.class) {
+            return ((SerializedModel) model).getModelName();
+        } else {
+            return model.getClass().getSimpleName();
+        }
     }
 }
