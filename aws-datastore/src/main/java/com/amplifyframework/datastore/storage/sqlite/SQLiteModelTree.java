@@ -85,7 +85,8 @@ final class SQLiteModelTree {
             return new ArrayList<>();
         }
         Map<ModelSchema, Set<String>> modelMap = new LinkedHashMap<>();
-        ModelSchema rootSchema = registry.getModelSchemaForModelClass(getModelName(root.iterator().next()));
+        Model rootModel = root.iterator().next();
+        ModelSchema rootSchema = registry.getModelSchemaForModelClass(getModelName(rootModel));
         Set<String> rootIds = new HashSet<>();
         for (T model : root) {
             rootIds.add(model.getId());
@@ -96,7 +97,7 @@ final class SQLiteModelTree {
         for (Map.Entry<ModelSchema, Set<String>> entry : modelMap.entrySet()) {
             ModelSchema schema = entry.getKey();
             for (String id : entry.getValue()) {
-                if (root.iterator().next().getClass() == SerializedModel.class) {
+                if (rootModel.getClass() == SerializedModel.class) {
                     SerializedModel dummyItem = SerializedModel.builder()
                             .serializedData(Collections.singletonMap("id", id))
                             .modelSchema(schema)
