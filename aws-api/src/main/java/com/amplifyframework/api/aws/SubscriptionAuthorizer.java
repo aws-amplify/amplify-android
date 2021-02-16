@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import android.net.Uri;
+import android.util.Log;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
@@ -26,6 +27,7 @@ import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.model.ModelOperation;
 
 import com.amazonaws.DefaultRequest;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -40,25 +42,51 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 final class SubscriptionAuthorizer {
+    private static final String TAG = "SubscriptionAuthorizer";
     private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
 
     private final ApiConfiguration configuration;
     private final ApiAuthProviders authProviders;
+    private final AuthProviderChainRepository authProviderChains;
 
     SubscriptionAuthorizer(ApiConfiguration configuration) {
-        this(configuration, ApiAuthProviders.noProviderOverrides());
+        this(configuration, ApiAuthProviders.noProviderOverrides(), null);
     }
 
-    SubscriptionAuthorizer(ApiConfiguration configuration, ApiAuthProviders authProviders) {
+    SubscriptionAuthorizer(ApiConfiguration configuration, ApiAuthProviders authProviders,
+                           AuthProviderChainRepository authProviderChains) {
         this.configuration = configuration;
         this.authProviders = authProviders;
+        this.authProviderChains = authProviderChains;
     }
 
     /**
      * Return authorization json to be used explicitly for subscription registration.
      */
     JSONObject createHeadersForSubscription(GraphQLRequest<?> request) throws ApiException {
-        return createHeaders(request, false);
+        //TODO: Duplicated code between this and createHeadersForConnection
+        if (authProviderChains != null) {
+            String modelName = ((AppSyncGraphQLRequest<?>) request).getModelSchema().getName();
+            AuthProviderChainRepository.AuthProviderChain chain =
+                authProviderChains.getChain(modelName, ModelOperation.READ.name());
+            JSONObject result = null;
+            while (result == null && chain != null && chain.getCurrent() != null) {
+                Log.d(TAG, "Subscription attempt => Auth chain state: " + chain.toString());
+                try {
+                    result = createHeaders(request, false, AuthorizationType.from(chain.getCurrent().name()));
+                } catch (ApiException apiException) {
+                    Log.w(TAG, "Unable to create headers for subscription request.", apiException);
+                    chain.nextProvider();
+                }
+            }
+            if (result == null) {
+                //TODO: suggestions
+                throw new ApiException("Unable to establish subscription", "");
+            }
+            return result;
+        } else {
+            return createHeaders(request, false);
+        }
     }
 
     /**
@@ -68,8 +96,42 @@ final class SubscriptionAuthorizer {
         return createHeaders(null, true);
     }
 
+    /**
+     * Return authorization json to be used explicitly for establishing connection.
+     */
+    JSONObject createHeadersForConnection(GraphQLRequest<?> request) throws ApiException {
+        if (authProviderChains != null) {
+            String modelName = ((AppSyncGraphQLRequest<?>) request).getModelSchema().getName();
+            AuthProviderChainRepository.AuthProviderChain chain =
+                authProviderChains.getChain(modelName, ModelOperation.READ.name());
+            JSONObject result = null;
+            while (result == null && chain != null && chain.getCurrent() != null) {
+                try {
+                    result = createHeaders(request, true, AuthorizationType.from(chain.getCurrent().name()));
+                } catch (ApiException apiException) {
+                    Log.w(TAG, "Unable to create headers for subscription request.", apiException);
+                    chain.nextProvider();
+                }
+            }
+            if (result == null) {
+                throw new ApiException("Unable to establish subscription", "");
+            }
+            return result;
+        } else {
+            return createHeaders(request, true);
+        }
+    }
+
     private JSONObject createHeaders(GraphQLRequest<?> request, boolean connectionFlag) throws ApiException {
-        switch (configuration.getAuthorizationType()) {
+        return createHeaders(request, connectionFlag, configuration.getAuthorizationType());
+    }
+
+    // TODO: Maybe createHeaders can be added as a second method of the AWSRequestSigner interface.
+    private JSONObject createHeaders(GraphQLRequest<?> request,
+                                     boolean connectionFlag,
+                                     AuthorizationType authorizationType) throws ApiException {
+
+        switch (authorizationType) {
             case API_KEY:
                 ApiKeyAuthProvider keyProvider = authProviders.getApiKeyAuthProvider();
                 if (keyProvider == null) {

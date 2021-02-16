@@ -107,7 +107,7 @@ final class SubscriptionEndpoint {
             webSocketListener = new AmplifyWebSocketListener();
             try {
                 webSocket = okHttpClient.newWebSocket(new Request.Builder()
-                    .url(buildConnectionRequestUrl())
+                    .url(buildConnectionRequestUrl(request))
                     .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
                     .build(), webSocketListener);
             } catch (ApiException apiException) {
@@ -273,9 +273,9 @@ final class SubscriptionEndpoint {
      * AppSync endpoint : https://xxxxxxxxxxxx.appsync-api.ap-southeast-2.amazonaws.com/graphql
      * Discovered WebSocket endpoint : wss:// xxxxxxxxxxxx.appsync-realtime-api.ap-southeast-2.amazonaws.com/graphql
      */
-    private String buildConnectionRequestUrl() throws ApiException {
+    private String buildConnectionRequestUrl(GraphQLRequest<?> request) throws ApiException {
         // Construct the authorization header for connection request
-        final byte[] rawHeader = authorizer.createHeadersForConnection()
+        final byte[] rawHeader = authorizer.createHeadersForConnection(request)
             .toString()
             .getBytes();
 

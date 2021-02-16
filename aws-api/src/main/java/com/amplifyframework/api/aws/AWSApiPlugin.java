@@ -25,11 +25,14 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
+import com.amplifyframework.api.aws.sigv4.AppSyncRequestSigner;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.rest.HttpMethod;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
@@ -38,6 +41,8 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.ModelOperation;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.util.UserAgent;
 
@@ -76,12 +81,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     private final Set<String> restApis;
     private final Set<String> gqlApis;
+    private final AuthProviderChainRepository authProviderChains;
 
     /**
      * Default constructor for this plugin without any override.
      */
     public AWSApiPlugin() {
-        this(ApiAuthProviders.noProviderOverrides());
+        this(ApiAuthProviders.noProviderOverrides(), null);
     }
 
     /**
@@ -95,6 +101,21 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      * @param apiAuthProvider configured instance of {@link ApiAuthProviders}
      */
     public AWSApiPlugin(@NonNull ApiAuthProviders apiAuthProvider) {
+        this(apiAuthProvider, null);
+    }
+
+    /**
+     * Constructs an instance of AWSApiPlugin with
+     * configured auth providers to override default modes
+     * of authorization.
+     * If no Auth provider implementation is provided, then
+     * the plugin will assume default behavior for that specific
+     * mode of authorization.
+     *
+     * @param apiAuthProvider configured instance of {@link ApiAuthProviders}
+     * @param authProviderChains configured instance of {@link com.amplifyframework.api.aws.AuthProviderChainRepository}
+     */
+    public AWSApiPlugin(@NonNull ApiAuthProviders apiAuthProvider, AuthProviderChainRepository authProviderChains) {
         this.apiDetails = new HashMap<>();
         this.gqlResponseFactory = new GsonGraphQLResponseFactory();
         this.authProvider = Objects.requireNonNull(apiAuthProvider);
@@ -102,6 +123,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.gqlApis = new HashSet<>();
         this.executorService = Executors.newCachedThreadPool();
         this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
+        this.authProviderChains = authProviderChains;
     }
 
     @NonNull
@@ -119,9 +141,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         AWSApiPluginConfiguration pluginConfig =
                 AWSApiPluginConfigurationReader.readFrom(pluginConfiguration);
 
-        final InterceptorFactory interceptorFactory =
-                new AppSyncSigV4SignerInterceptorFactory(authProvider);
-
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
             final ApiConfiguration apiConfiguration = entry.getValue();
@@ -129,12 +148,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             final OkHttpClient.Builder builder = new OkHttpClient.Builder();
             builder.addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string));
             builder.eventListener(new ApiConnectionEventListener());
-            if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
-                builder.addInterceptor(interceptorFactory.create(apiConfiguration));
-            }
             final OkHttpClient okHttpClient = builder.build();
             final SubscriptionAuthorizer subscriptionAuthorizer =
-                    new SubscriptionAuthorizer(apiConfiguration, authProvider);
+                    new SubscriptionAuthorizer(apiConfiguration, authProvider, authProviderChains);
             final SubscriptionEndpoint subscriptionEndpoint =
                     new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
             if (EndpointType.REST.equals(endpointType)) {
@@ -143,7 +159,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             if (EndpointType.GRAPHQL.equals(endpointType)) {
                 gqlApis.add(apiName);
             }
-            apiDetails.put(apiName, new ClientDetails(apiConfiguration, okHttpClient, subscriptionEndpoint));
+            AppSyncRequestSigner requestSigner = new AppSyncRequestSigner(authProvider,
+                                                                          apiConfiguration.getApiKey(),
+                                                                          apiConfiguration.getRegion());
+            apiDetails.put(apiName, new ClientDetails(apiConfiguration,
+                                                      okHttpClient,
+                                                      subscriptionEndpoint,
+                                                      requestSigner));
         }
     }
 
@@ -567,11 +589,28 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             );
         }
 
+        //TODO: Verify that at the very least, a provider chain with the default auth mode from the config is set.
+        AuthProviderChainRepository.AuthProviderChain authProviderChain = null;
+        if (graphQLRequest instanceof AppSyncGraphQLRequest<?>) {
+            AppSyncGraphQLRequest<R> appSyncGraphQLRequest = (AppSyncGraphQLRequest<R>) graphQLRequest;
+            Operation operation = appSyncGraphQLRequest.getOperation();
+            ModelSchema modelSchema = appSyncGraphQLRequest.getModelSchema();
+            String opName;
+            if (operation instanceof MutationType) {
+                opName = ((MutationType) operation).name();
+            } else {
+                opName = ModelOperation.READ.name();
+            }
+            authProviderChain = authProviderChains.getChain(modelSchema.getName(), opName);
+        }
         return AppSyncGraphQLOperation.<R>builder()
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
                 .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
                 .responseFactory(gqlResponseFactory)
+                .authProviderChain(authProviderChain)
+                .apiAuthProviders(authProvider)
+                .requestSigner(clientDetails.requestSigner)
                 .onResponse(onResponse)
                 .onFailure(onFailure)
                 .build();
@@ -646,18 +685,21 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         private final ApiConfiguration apiConfiguration;
         private final OkHttpClient okHttpClient;
         private final SubscriptionEndpoint subscriptionEndpoint;
+        private final AppSyncRequestSigner requestSigner;
 
         /**
          * Constructs a client detail object containing client and url.
          * It associates a http client with its dedicated endpoint.
          */
         ClientDetails(
-                final ApiConfiguration apiConfiguration,
-                final OkHttpClient okHttpClient,
-                final SubscriptionEndpoint subscriptionEndpoint) {
+            final ApiConfiguration apiConfiguration,
+            final OkHttpClient okHttpClient,
+            final SubscriptionEndpoint subscriptionEndpoint,
+            final AppSyncRequestSigner requestSigner) {
             this.apiConfiguration = apiConfiguration;
             this.okHttpClient = okHttpClient;
             this.subscriptionEndpoint = subscriptionEndpoint;
+            this.requestSigner = requestSigner;
         }
 
         ApiConfiguration getApiConfiguration() {

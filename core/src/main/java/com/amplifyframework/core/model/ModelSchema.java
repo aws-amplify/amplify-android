@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Schema of a Model that implements the {@link Model} interface.
@@ -152,6 +153,18 @@ public final class ModelSchema {
                     AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }
+    }
+
+    /**
+     * Returns the applicable auth rules for a given operation.
+     * @param operationType The desired operation type (read, create, update, delete).
+     * @return A list of {@link AuthRule}s for the given operation.
+     */
+    public List<AuthRule> getApplicableRules(ModelOperation operationType) {
+        return authRules
+            .stream()
+            .filter(rule -> rule.getOperationsOrDefault().contains(operationType))
+            .collect(Collectors.toList());
     }
 
     // Utility method to extract field metadata

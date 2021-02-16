@@ -16,10 +16,13 @@
 package com.amplifyframework.api.aws;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.sigv4.AWSRequestSigner;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -30,6 +33,7 @@ import com.amplifyframework.logging.Logger;
 import java.io.IOException;
 import java.util.Objects;
 
+import okhttp3.Authenticator;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -38,6 +42,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.Route;
 
 /**
  * An operation to enqueue a GraphQL request to OkHttp client,
@@ -48,11 +53,15 @@ import okhttp3.ResponseBody;
 public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
+    private static final String TAG = "AppSyncGraphQLOperation";
 
     private final String endpoint;
     private final OkHttpClient client;
     private final Consumer<GraphQLResponse<R>> onResponse;
     private final Consumer<ApiException> onFailure;
+    private final AuthProviderChainRepository.AuthProviderChain authProviderChain;
+    private final ApiAuthProviders authProviders;
+    private final AWSRequestSigner requestSigner;
 
     private Call ongoingCall;
 
@@ -65,16 +74,23 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
      * @param onResponse Invoked when response is attained from endpoint
      * @param onFailure Invoked upon failure to obtain response from endpoint
      */
+    @SuppressWarnings("ParameterNumber") //TODO: This is ugly. Need something better.
     private AppSyncGraphQLOperation(
             @NonNull String endpoint,
             @NonNull OkHttpClient client,
             @NonNull GraphQLRequest<R> request,
             @NonNull GraphQLResponse.Factory responseFactory,
+            @Nullable AuthProviderChainRepository.AuthProviderChain authProviderChain,
+            @NonNull ApiAuthProviders authProviders,
+            @NonNull AWSRequestSigner requestSigner,
             @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         super(request, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
+        this.authProviderChain = authProviderChain;
+        this.authProviders = authProviders;
+        this.requestSigner = requestSigner;
         this.onResponse = onResponse;
         this.onFailure = onFailure;
     }
@@ -88,12 +104,42 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
         try {
             LOG.debug("Request: " + getRequest().getContent());
-            ongoingCall = client.newCall(new Request.Builder()
-                    .url(endpoint)
-                    .addHeader("accept", CONTENT_TYPE)
-                    .addHeader("content-type", CONTENT_TYPE)
-                    .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
-                    .build());
+            Request httpRequest = new Request.Builder()
+                .url(endpoint)
+                .addHeader("accept", CONTENT_TYPE)
+                .addHeader("content-type", CONTENT_TYPE)
+                .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
+                .build();
+            Log.d(TAG, "First attempt => Auth chain state: " + authProviderChain.toString());
+            ongoingCall = client.newBuilder().authenticator(new Authenticator() {
+                @org.jetbrains.annotations.Nullable
+                @Override
+                public Request authenticate(Route route,
+                                            Response response) throws IOException {
+                    if (authProviderChain.nextProvider()) {
+                        Log.d(TAG, "Retry attempt => Auth chain state: " + authProviderChain.toString());
+                        Request clonedHttpRequest = response.request()
+                                                            .newBuilder()
+                                                            .removeHeader("Authorization")
+                                                            .removeHeader("x-api-key")
+                                                            .build();
+                        try {
+                            return requestSigner.sign(clonedHttpRequest,
+                                                      AuthorizationType.from(authProviderChain.getCurrent().name()));
+                        } catch (ApiException apiException) {
+                            Log.w(TAG,
+                                  "Failed to retry the HTTP request with provider " + authProviderChain,
+                                  apiException);
+                            return null;
+                        }
+                    } else {
+                        return null;
+                    }
+
+                }
+            }).build().newCall(
+                requestSigner.sign(httpRequest,
+                                   AuthorizationType.from(authProviderChain.getCurrent().name())));
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {
             // Cancel if possible
@@ -158,6 +204,9 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         private GraphQLResponse.Factory responseFactory;
         private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
+        private AuthProviderChainRepository.AuthProviderChain authProviderChain;
+        private ApiAuthProviders apiAuthProviders;
+        private AWSRequestSigner requestSigner;
 
         Builder<R> endpoint(@NonNull String endpoint) {
             this.endpoint = Objects.requireNonNull(endpoint);
@@ -179,6 +228,21 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             return this;
         }
 
+        Builder<R> apiAuthProviders(ApiAuthProviders apiAuthProviders) {
+            this.apiAuthProviders = apiAuthProviders;
+            return this;
+        }
+
+        Builder<R> authProviderChain(AuthProviderChainRepository.AuthProviderChain authProviderChain) {
+            this.authProviderChain = authProviderChain;
+            return this;
+        }
+
+        Builder<R> requestSigner(AWSRequestSigner requestSigner) {
+            this.requestSigner = requestSigner;
+            return this;
+        }
+
         Builder<R> onResponse(@NonNull Consumer<GraphQLResponse<R>> onResponse) {
             this.onResponse = Objects.requireNonNull(onResponse);
             return this;
@@ -196,6 +260,9 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 Objects.requireNonNull(client),
                 Objects.requireNonNull(request),
                 Objects.requireNonNull(responseFactory),
+                authProviderChain,
+                Objects.requireNonNull(apiAuthProviders),
+                Objects.requireNonNull(requestSigner),
                 Objects.requireNonNull(onResponse),
                 Objects.requireNonNull(onFailure)
             );
