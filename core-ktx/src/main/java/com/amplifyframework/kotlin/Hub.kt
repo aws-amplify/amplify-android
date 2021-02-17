@@ -27,7 +27,7 @@ interface Hub {
      * @param channel Hub channel onto which to publish
      * @param event Event to publish
      */
-   fun publish(channel: HubChannel, event: HubEvent<*>)
+    fun publish(channel: HubChannel, event: HubEvent<*>)
 
     /**
      * Subscribe to events on a particular channel.

@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
 class KotlinHubFacade(private val delegate: Delegate = Amplify.Hub) : Hub {
-    override suspend fun publish(channel: HubChannel, event: HubEvent<*>) {
+    override fun publish(channel: HubChannel, event: HubEvent<*>) {
         delegate.publish(channel, event)
     }
 
