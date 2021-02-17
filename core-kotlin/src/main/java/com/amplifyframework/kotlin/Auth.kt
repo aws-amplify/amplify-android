@@ -101,7 +101,7 @@ interface Auth {
     suspend fun signIn(
         username: String? = null,
         password: String? = null,
-        options: AuthSignInOptions? = null
+        options: AuthSignInOptions = AuthSignInOptions.defaults()
     ):
         AuthSignInResult
 

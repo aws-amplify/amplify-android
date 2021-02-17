@@ -83,25 +83,16 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     override suspend fun signIn(
         username: String?,
         password: String?,
-        options: AuthSignInOptions?
+        options: AuthSignInOptions
     ): AuthSignInResult {
         return suspendCoroutine { continuation ->
-            if (options == null) {
-                delegate.signIn(
-                    username,
-                    password,
-                    { continuation.resume(it) },
-                    { continuation.resumeWithException(it) }
-                )
-            } else {
-                delegate.signIn(
-                    username,
-                    password,
-                    options,
-                    { continuation.resume(it) },
-                    { continuation.resumeWithException(it) }
-                )
-            }
+            delegate.signIn(
+                username,
+                password,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
         }
     }
 
