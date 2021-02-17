@@ -18,7 +18,6 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
@@ -32,11 +31,11 @@ import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
-import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.mocks.ApiMocking;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isProcessed;
 import static org.junit.Assert.assertEquals;
@@ -62,8 +62,7 @@ import static org.mockito.Mockito.verify;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore:test");
-
+    private CompositeDisposable disposables;
     private Orchestrator orchestrator;
     private HubAccumulator orchestratorInitObserver;
     private GraphQLBehavior mockApi;
@@ -78,6 +77,9 @@ public final class OrchestratorTest {
     @Before
     public void setup() throws AmplifyException {
         ShadowLog.stream = System.out;
+
+        disposables = new CompositeDisposable();
+
         // Arrange: create a BlogOwner
         susan = BlogOwner.builder().name("Susan Quimby").build();
 
@@ -115,6 +117,15 @@ public final class OrchestratorTest {
     }
 
     /**
+     * Cleanup any remaining resources.
+     */
+    @After
+    public void cleanup() {
+        assertTrue(orchestrator.stop().blockingAwait(5, TimeUnit.SECONDS));
+        disposables.clear();
+    }
+
+    /**
      * When an item is placed into storage, a cascade of
      * things happen which should ultimately result in a mutation call
      * to the API category, with an {@link MutationType} corresponding to the type of
@@ -125,7 +136,7 @@ public final class OrchestratorTest {
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
         // Arrange: orchestrator is running
-        orchestrator.start().test();
+        disposables.add(orchestrator.start().subscribe());
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         HubAccumulator accumulator =
@@ -145,8 +156,6 @@ public final class OrchestratorTest {
                 .toList()
                 .blockingGet()
         );
-
-        assertTrue(orchestrator.stop().blockingAwait(5, TimeUnit.SECONDS));
     }
 
     /**
@@ -155,22 +164,21 @@ public final class OrchestratorTest {
     @Test
     public void preventConcurrentStateTransitions() {
         // Arrange: orchestrator is running
-        orchestrator.start().test();
+        disposables.add(orchestrator.start().subscribe());
 
         // Try to start it in a new thread.
         boolean success = Completable.create(emitter -> {
-            new Thread(() -> orchestrator.start()
-                .subscribe(emitter::onComplete, emitter::onError)
+            new Thread(() ->
+                disposables.add(orchestrator.start()
+                    .subscribe(emitter::onComplete, emitter::onError))
             ).start();
 
             // Try to start it again on the current thread.
-            orchestrator.start().test();
+            disposables.add(orchestrator.start().subscribe());
         }).blockingAwait(5, TimeUnit.SECONDS);
         assertTrue("Failed to start orchestrator on a background thread", success);
 
         orchestratorInitObserver.await(10, TimeUnit.SECONDS);
         verify(mockApi, times(1)).query(any(), any(), any());
-
-        assertTrue(orchestrator.stop().blockingAwait(5, TimeUnit.SECONDS));
     }
 }
