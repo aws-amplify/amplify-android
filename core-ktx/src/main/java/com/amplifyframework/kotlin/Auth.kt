@@ -150,7 +150,6 @@ interface Auth {
      * Handles the response which comes back from {@link #signInWithWebUI(Activity, Consumer, Consumer)}.
      * @param intent The app activity's intent
      */
-    @Throws(AuthException::class)
     fun handleWebUISignInResponse(intent: Intent)
 
     /**
