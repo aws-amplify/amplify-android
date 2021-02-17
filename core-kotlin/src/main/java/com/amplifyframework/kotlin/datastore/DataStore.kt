@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin
+package com.amplifyframework.kotlin.datastore
 
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.query.QueryOptions

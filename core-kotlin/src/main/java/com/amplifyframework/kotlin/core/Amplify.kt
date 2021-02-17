@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin
+package com.amplifyframework.kotlin.core
 
 import android.content.Context
 import com.amplifyframework.AmplifyException
@@ -21,18 +21,18 @@ import com.amplifyframework.analytics.AnalyticsCategory
 import com.amplifyframework.core.Amplify as delegate
 import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.plugin.Plugin
-import com.amplifyframework.kotlin.facades.KotlinApiFacade
-import com.amplifyframework.kotlin.facades.KotlinAuthFacade
-import com.amplifyframework.kotlin.facades.KotlinDataStoreFacade
-import com.amplifyframework.kotlin.facades.KotlinHubFacade
-import com.amplifyframework.kotlin.facades.KotlinPredictionsFacade
-import com.amplifyframework.kotlin.facades.KotlinStorageFacade
+import com.amplifyframework.kotlin.api.KotlinApiFacade
+import com.amplifyframework.kotlin.auth.KotlinAuthFacade
+import com.amplifyframework.kotlin.datastore.KotlinDataStoreFacade
+import com.amplifyframework.kotlin.hub.KotlinHubFacade
+import com.amplifyframework.kotlin.predictions.KotlinPredictionsFacade
+import com.amplifyframework.kotlin.storage.KotlinStorageFacade
 import com.amplifyframework.logging.LoggingCategory
 
 /**
  * A Kotlin-language facade to the Amplify framework.
  * This is not to be confused with the Java-language facade of the same name.
- * If you are using Kotlin, be sure to import com.amplifyframework.kotlin.Amplify
+ * If you are using Kotlin, be sure to import com.amplifyframework.kotlin.core.Amplify
  * instead of com.amplifyframework.core.Amplify.
  */
 @Suppress("unused")

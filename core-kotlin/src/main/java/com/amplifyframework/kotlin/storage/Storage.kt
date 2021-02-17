@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin
+package com.amplifyframework.kotlin.storage
 
 import com.amplifyframework.core.async.Cancelable
 import com.amplifyframework.storage.StorageException
@@ -56,7 +56,7 @@ interface Storage {
         local: File,
         options: StorageDownloadFileOptions = StorageDownloadFileOptions.defaultInstance()
     ):
-        InProgressStorageOperation<StorageDownloadFileResult>
+            InProgressStorageOperation<StorageDownloadFileResult>
 
     @ExperimentalCoroutinesApi
     @FlowPreview
@@ -65,7 +65,7 @@ interface Storage {
         local: File,
         options: StorageUploadFileOptions = StorageUploadFileOptions.defaultInstance()
     ):
-        InProgressStorageOperation<StorageUploadFileResult>
+            InProgressStorageOperation<StorageUploadFileResult>
 
     @FlowPreview
     @ExperimentalCoroutinesApi

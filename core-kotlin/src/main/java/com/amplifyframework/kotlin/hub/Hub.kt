@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin
+package com.amplifyframework.kotlin.hub
 
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent

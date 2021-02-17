@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.facades
+package com.amplifyframework.kotlin.auth
 
 import android.app.Activity
 import android.content.Intent
@@ -34,7 +34,6 @@ import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.kotlin.Auth
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine

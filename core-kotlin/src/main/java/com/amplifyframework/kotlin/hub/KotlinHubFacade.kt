@@ -13,14 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.facades
+package com.amplifyframework.kotlin.hub
 
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubCategoryBehavior as Delegate
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.hub.HubEventFilter
-import com.amplifyframework.kotlin.Hub
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose

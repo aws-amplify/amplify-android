@@ -13,12 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.facades
+package com.amplifyframework.kotlin.storage
 
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.async.Cancelable
-import com.amplifyframework.kotlin.Storage
-import com.amplifyframework.kotlin.Storage.InProgressStorageOperation
+import com.amplifyframework.kotlin.storage.Storage.InProgressStorageOperation
 import com.amplifyframework.storage.StorageCategoryBehavior as Delegate
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.options.StorageDownloadFileOptions

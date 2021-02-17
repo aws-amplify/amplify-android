@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin
+package com.amplifyframework.kotlin.api
 
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.rest.RestOptions

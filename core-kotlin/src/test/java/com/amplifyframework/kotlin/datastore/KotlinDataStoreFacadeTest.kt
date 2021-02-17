@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.facades
+package com.amplifyframework.kotlin.datastore
 
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer

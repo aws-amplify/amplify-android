@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.facades
+package com.amplifyframework.kotlin.api
 
 import com.amplifyframework.api.ApiCategoryBehavior as Delegate
 import com.amplifyframework.api.ApiException
@@ -23,11 +23,10 @@ import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.api.rest.RestResponse
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.async.Cancelable
-import com.amplifyframework.kotlin.Api
-import com.amplifyframework.kotlin.GraphQL.ConnectionState.CONNECTED
-import com.amplifyframework.kotlin.GraphQL.ConnectionState.CONNECTING
-import com.amplifyframework.kotlin.GraphQL.ConnectionState.DISCONNECTED
-import com.amplifyframework.kotlin.GraphQL.Subscription
+import com.amplifyframework.kotlin.api.GraphQL.ConnectionState.CONNECTED
+import com.amplifyframework.kotlin.api.GraphQL.ConnectionState.CONNECTING
+import com.amplifyframework.kotlin.api.GraphQL.ConnectionState.DISCONNECTED
+import com.amplifyframework.kotlin.api.GraphQL.Subscription
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.facades
+package com.amplifyframework.kotlin.api
 
 import com.amplifyframework.api.ApiCategoryBehavior
 import com.amplifyframework.api.ApiException
@@ -23,7 +23,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.api.rest.RestResponse
 import com.amplifyframework.core.Consumer
-import com.amplifyframework.kotlin.GraphQL.ConnectionState
+import com.amplifyframework.kotlin.api.GraphQL.ConnectionState
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers

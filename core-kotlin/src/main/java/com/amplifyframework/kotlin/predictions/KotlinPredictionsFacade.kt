@@ -13,11 +13,10 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.facades
+package com.amplifyframework.kotlin.predictions
 
 import android.graphics.Bitmap
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.kotlin.Predictions
 import com.amplifyframework.predictions.PredictionsCategoryBehavior as Delegate
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.models.IdentifyAction

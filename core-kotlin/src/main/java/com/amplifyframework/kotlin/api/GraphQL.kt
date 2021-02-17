@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin
+package com.amplifyframework.kotlin.api
 
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
@@ -66,10 +66,10 @@ interface GraphQL {
      */
     @FlowPreview
     data class Subscription<T>(
-        private val subscriptionData: SharedFlow<GraphQLResponse<T>>,
-        private val connectionState: StateFlow<ConnectionState>,
-        private val errors: SharedFlow<ApiException>,
-        private val cancelDelegate: Cancelable
+            private val subscriptionData: SharedFlow<GraphQLResponse<T>>,
+            private val connectionState: StateFlow<ConnectionState>,
+            private val errors: SharedFlow<ApiException>,
+            private val cancelDelegate: Cancelable
     ) : Cancelable {
         override fun cancel() = cancelDelegate.cancel()
 

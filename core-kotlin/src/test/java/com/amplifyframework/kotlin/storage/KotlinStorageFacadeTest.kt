@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.facades
+package com.amplifyframework.kotlin.storage
 
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageCategoryBehavior

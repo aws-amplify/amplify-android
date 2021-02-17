@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.facades
+package com.amplifyframework.kotlin.datastore
 
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.async.Cancelable
@@ -23,7 +23,6 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.datastore.DataStoreCategoryBehavior as Delegate
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreItemChange
-import com.amplifyframework.kotlin.DataStore
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException

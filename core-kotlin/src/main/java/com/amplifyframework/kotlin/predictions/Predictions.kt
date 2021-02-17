@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin
+package com.amplifyframework.kotlin.predictions
 
 import android.graphics.Bitmap
 import com.amplifyframework.predictions.PredictionsException

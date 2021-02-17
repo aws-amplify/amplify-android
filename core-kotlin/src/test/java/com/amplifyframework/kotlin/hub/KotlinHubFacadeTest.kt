@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.facades
+package com.amplifyframework.kotlin.hub
 
 import com.amplifyframework.hub.AWSHubPlugin
 import com.amplifyframework.hub.HubChannel.HUB
