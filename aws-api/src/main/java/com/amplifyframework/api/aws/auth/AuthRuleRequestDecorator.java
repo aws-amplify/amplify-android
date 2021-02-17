@@ -84,6 +84,7 @@ public final class AuthRuleRequestDecorator {
         AppSyncGraphQLRequest<R> appSyncRequest = (AppSyncGraphQLRequest<R>) request;
         AuthRule ownerRuleWithReadRestriction = null;
         Map<String, Set<String>> readAuthorizedGroupsMap = new HashMap<>();
+        boolean hasPublicRead = false;
 
         // Note that we are intentionally supporting only one owner rule with a READ operation at this time.
         // If there is more than one, the operation will fail because AppSync generates a parameter for each
@@ -116,7 +117,11 @@ public final class AuthRuleRequestDecorator {
         // and either there are no group auth rules with read access or there are but the user isn't in any of
         // them.
         if (ownerRuleWithReadRestriction != null
-                && userNotInReadRestrictingGroups(readAuthorizedGroupsMap, authType)) {
+                && userNotInReadRestrictingGroups(readAuthorizedGroupsMap, authType)
+                //TODO: Confirm this: only try to add the owner if the authType is UP or OIDC
+                //otherwise it makes no sense. For example, if there's a public read rule.
+                && ((authType.equals(AuthorizationType.AMAZON_COGNITO_USER_POOLS) ||
+                    (authType.equals(AuthorizationType.OPENID_CONNECT))))) {
             String idClaim = ownerRuleWithReadRestriction.getIdentityClaimOrDefault();
             String key = ownerRuleWithReadRestriction.getOwnerFieldOrDefault();
             String value = getIdentityValue(idClaim, authType);
@@ -134,6 +139,11 @@ public final class AuthRuleRequestDecorator {
         }
 
         return request;
+    }
+
+    private boolean isPublicRead(AuthRule authRule) {
+        return AuthStrategy.PUBLIC.equals(authRule.getAuthStrategy())
+            && authRule.getOperationsOrDefault().contains(ModelOperation.READ);
     }
 
     private boolean isReadRestrictingOwner(AuthRule authRule) {

@@ -24,6 +24,8 @@ import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,16 @@ import java.util.Map;
  */
 public class AuthProviderChainRepository {
     private static final String TAG = "AuthProviderChainRepository";
+    //TODO: Use enums for keys. Right now we have a couple different enums, so we may need to consolidate.
     private Map<String, Map<String, AuthProviderChain>> authProviderChains;
+
+    /**
+     * Convenience constructor if the caller want to pass in a map.
+     * @param modelSchemas
+     */
+    public AuthProviderChainRepository(Map<String, ModelSchema> modelSchemas) {
+        this(new ArrayList<ModelSchema>(modelSchemas.values()));
+    }
 
     /**
      * Default constructor.

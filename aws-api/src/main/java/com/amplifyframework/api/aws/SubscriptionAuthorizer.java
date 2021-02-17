@@ -53,7 +53,8 @@ final class SubscriptionAuthorizer {
         this(configuration, ApiAuthProviders.noProviderOverrides(), null);
     }
 
-    SubscriptionAuthorizer(ApiConfiguration configuration, ApiAuthProviders authProviders,
+    SubscriptionAuthorizer(ApiConfiguration configuration,
+                           ApiAuthProviders authProviders,
                            AuthProviderChainRepository authProviderChains) {
         this.configuration = configuration;
         this.authProviders = authProviders;

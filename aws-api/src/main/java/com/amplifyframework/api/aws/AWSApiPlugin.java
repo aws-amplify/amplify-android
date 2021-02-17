@@ -16,6 +16,8 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -25,7 +27,9 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
+import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncRequestSigner;
+import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -42,8 +46,10 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelOperation;
+import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubSubscriber;
 import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONObject;
@@ -73,21 +79,23 @@ import okhttp3.Protocol;
  */
 @SuppressWarnings("TypeParameterHidesVisibleType") // <R> shadows >com.amplifyframework.api.aws.R
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
+    public static final String TAG = "AWSApiPlugin";
     private final Map<String, ClientDetails> apiDetails;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
     private final ExecutorService executorService;
-    private final AuthRuleRequestDecorator requestDecorator;
 
     private final Set<String> restApis;
     private final Set<String> gqlApis;
     private final AuthProviderChainRepository authProviderChains;
+    private final ModelProvider modelProvider;
+    private AuthRuleRequestDecorator requestDecorator;
 
     /**
      * Default constructor for this plugin without any override.
      */
     public AWSApiPlugin() {
-        this(ApiAuthProviders.noProviderOverrides(), null);
+        this(ApiAuthProviders.noProviderOverrides());
     }
 
     /**
@@ -101,7 +109,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      * @param apiAuthProvider configured instance of {@link ApiAuthProviders}
      */
     public AWSApiPlugin(@NonNull ApiAuthProviders apiAuthProvider) {
-        this(apiAuthProvider, null);
+        this.apiDetails = new HashMap<>();
+        this.gqlResponseFactory = new GsonGraphQLResponseFactory();
+        this.authProvider = Objects.requireNonNull(apiAuthProvider);
+        this.restApis = new HashSet<>();
+        this.gqlApis = new HashSet<>();
+        this.executorService = Executors.newCachedThreadPool();
+        this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
+        this.authProviderChains = null;
+        this.modelProvider = null;
     }
 
     /**
@@ -112,18 +128,20 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      * the plugin will assume default behavior for that specific
      * mode of authorization.
      *
-     * @param apiAuthProvider configured instance of {@link ApiAuthProviders}
-     * @param authProviderChains configured instance of {@link com.amplifyframework.api.aws.AuthProviderChainRepository}
+     * @param apiAuthProvider configured instance of {@link ApiAuthProviders}.
+     * @param modelProvider an instance of a class that implements the {@link ModelProvider} interface.
      */
-    public AWSApiPlugin(@NonNull ApiAuthProviders apiAuthProvider, AuthProviderChainRepository authProviderChains) {
+    public AWSApiPlugin(ModelProvider modelProvider) {
         this.apiDetails = new HashMap<>();
         this.gqlResponseFactory = new GsonGraphQLResponseFactory();
-        this.authProvider = Objects.requireNonNull(apiAuthProvider);
+        this.authProvider = null;
         this.restApis = new HashSet<>();
         this.gqlApis = new HashSet<>();
         this.executorService = Executors.newCachedThreadPool();
-        this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
-        this.authProviderChains = authProviderChains;
+        //TODO: Moved this into ClientDetails so each api can have their own.
+        //this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
+        this.modelProvider = modelProvider;
+        this.authProviderChains = new AuthProviderChainRepository(modelProvider.modelSchemas());
     }
 
     @NonNull
@@ -140,6 +158,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         // Null-check for configuration is done inside readFrom method
         AWSApiPluginConfiguration pluginConfig =
                 AWSApiPluginConfigurationReader.readFrom(pluginConfiguration);
+        DefaultCognitoUserPoolsAuthProvider defaultCognitoUserPoolsAuthProvider =
+            new DefaultCognitoUserPoolsAuthProvider();
 
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
@@ -149,8 +169,20 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             builder.addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string));
             builder.eventListener(new ApiConnectionEventListener());
             final OkHttpClient okHttpClient = builder.build();
+            //TODO: Need a better way to allow for easier injection of providers
+            // on a per-api basis
+            ApiAuthProviders apiAuthProvider = ApiAuthProviders.builder()
+                                                               .cognitoUserPoolsAuthProvider(defaultCognitoUserPoolsAuthProvider)
+                                                               .apiKeyAuthProvider(new ApiKeyAuthProvider() {
+                                                                   @Override
+                                                                   public String getAPIKey() {
+                                                                       return apiConfiguration.getApiKey();
+                                                                   }
+                                                               })
+                                                               .build();
             final SubscriptionAuthorizer subscriptionAuthorizer =
-                    new SubscriptionAuthorizer(apiConfiguration, authProvider, authProviderChains);
+                    new SubscriptionAuthorizer(apiConfiguration, apiAuthProvider, authProviderChains);
+
             final SubscriptionEndpoint subscriptionEndpoint =
                     new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
             if (EndpointType.REST.equals(endpointType)) {
@@ -159,14 +191,22 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             if (EndpointType.GRAPHQL.equals(endpointType)) {
                 gqlApis.add(apiName);
             }
-            AppSyncRequestSigner requestSigner = new AppSyncRequestSigner(authProvider,
+            AuthRuleRequestDecorator authRuleRequestDecorator = new AuthRuleRequestDecorator(apiAuthProvider);
+            AppSyncRequestSigner requestSigner = new AppSyncRequestSigner(apiAuthProvider,
                                                                           apiConfiguration.getApiKey(),
                                                                           apiConfiguration.getRegion());
             apiDetails.put(apiName, new ClientDetails(apiConfiguration,
                                                       okHttpClient,
                                                       subscriptionEndpoint,
-                                                      requestSigner));
+                                                      requestSigner,
+                                                      authRuleRequestDecorator,
+                                                      apiAuthProvider));
         }
+
+        Amplify.Hub.subscribe(HubChannel.AUTH, HubSubscriber.create(event -> {
+            Log.i(TAG, "Received auth event: " + event + ". Resetting auth provider chains.");
+            authProviderChains.reset();
+        }));
     }
 
     @NonNull
@@ -302,9 +342,18 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         // Decorate the request according to the auth rule parameters.
         try {
             AuthorizationType authType = clientDetails
-                    .getApiConfiguration()
-                    .getAuthorizationType();
-            authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
+                .getApiConfiguration()
+                .getAuthorizationType();
+            if (graphQLRequest instanceof AppSyncGraphQLRequest<?>) {
+                String modelName = ((AppSyncGraphQLRequest<?>) graphQLRequest).getModelSchema().getName();
+                AuthProviderChainRepository.AuthProviderChain authChain =
+                    authProviderChains.getChain(modelName, ModelOperation.READ.name());
+                if (authChain != null) {
+                    authType = AuthorizationType.from(authChain.getCurrent().name());
+                }
+
+            }
+            authDecoratedRequest = clientDetails.getSubscriptionRequestDecorator().decorate(graphQLRequest, authType);
         } catch (ApiException exception) {
             onSubscriptionFailure.accept(exception);
             return null;
@@ -609,7 +658,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .request(graphQLRequest)
                 .responseFactory(gqlResponseFactory)
                 .authProviderChain(authProviderChain)
-                .apiAuthProviders(authProvider)
+                .apiAuthProviders(clientDetails.apiAuthProvider)
                 .requestSigner(clientDetails.requestSigner)
                 .onResponse(onResponse)
                 .onFailure(onFailure)
@@ -686,6 +735,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         private final OkHttpClient okHttpClient;
         private final SubscriptionEndpoint subscriptionEndpoint;
         private final AppSyncRequestSigner requestSigner;
+        private final AuthRuleRequestDecorator subscriptionRequestDecorator;
+        private final ApiAuthProviders apiAuthProvider;
 
         /**
          * Constructs a client detail object containing client and url.
@@ -695,11 +746,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             final ApiConfiguration apiConfiguration,
             final OkHttpClient okHttpClient,
             final SubscriptionEndpoint subscriptionEndpoint,
-            final AppSyncRequestSigner requestSigner) {
+            final AppSyncRequestSigner requestSigner,
+            final AuthRuleRequestDecorator subscriptionRequestDecorator, ApiAuthProviders apiAuthProvider) {
             this.apiConfiguration = apiConfiguration;
             this.okHttpClient = okHttpClient;
             this.subscriptionEndpoint = subscriptionEndpoint;
             this.requestSigner = requestSigner;
+            this.subscriptionRequestDecorator = subscriptionRequestDecorator;
+            this.apiAuthProvider = apiAuthProvider;
         }
 
         ApiConfiguration getApiConfiguration() {
@@ -712,6 +766,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         SubscriptionEndpoint getSubscriptionEndpoint() {
             return subscriptionEndpoint;
+        }
+
+        AuthRuleRequestDecorator getSubscriptionRequestDecorator() {
+            return this.subscriptionRequestDecorator;
+        }
+
+        ApiAuthProviders getApiAuthProvider() {
+            return this.apiAuthProvider;
         }
 
         @Override
