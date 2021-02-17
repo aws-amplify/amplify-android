@@ -46,8 +46,7 @@ interface Storage {
     suspend fun getUrl(
         key: String,
         options: StorageGetUrlOptions = StorageGetUrlOptions.defaultInstance()
-    ):
-        StorageGetUrlResult
+    ): StorageGetUrlResult
 
     @ExperimentalCoroutinesApi
     @FlowPreview
@@ -55,8 +54,7 @@ interface Storage {
         key: String,
         local: File,
         options: StorageDownloadFileOptions = StorageDownloadFileOptions.defaultInstance()
-    ):
-            InProgressStorageOperation<StorageDownloadFileResult>
+    ): InProgressStorageOperation<StorageDownloadFileResult>
 
     @ExperimentalCoroutinesApi
     @FlowPreview
@@ -64,8 +62,7 @@ interface Storage {
         key: String,
         local: File,
         options: StorageUploadFileOptions = StorageUploadFileOptions.defaultInstance()
-    ):
-            InProgressStorageOperation<StorageUploadFileResult>
+    ): InProgressStorageOperation<StorageUploadFileResult>
 
     @FlowPreview
     @ExperimentalCoroutinesApi
