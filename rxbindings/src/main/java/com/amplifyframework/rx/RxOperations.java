@@ -53,10 +53,9 @@ public final class RxOperations {
             onConnected = new OnConnectedConsumer();
             connectionStateSubject = BehaviorSubject.create();
             subscriptionData = Observable.create(emitter -> {
-                amplifyOperation = callbacks.streamTo(onConnected::accept,
-                                                      emitter::onNext,
-                                                      emitter::onError,
-                                                      emitter::onComplete);
+                amplifyOperation = callbacks.streamTo(
+                    onConnected, emitter::onNext, emitter::tryOnError, emitter::onComplete
+                );
             });
         }
 
