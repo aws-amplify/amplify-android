@@ -27,8 +27,10 @@ import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelPagination;
 import com.amplifyframework.api.graphql.model.ModelQuery;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.AuthRuleProvider;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.HubAccumulator;
@@ -59,6 +61,9 @@ import okhttp3.mockwebserver.MockWebServer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests the {@link AWSApiPlugin}.
@@ -89,7 +94,21 @@ public final class AWSApiPluginTest {
                 .put("authorizationType", "API_KEY")
                 .put("apiKey", "FAKE-API-KEY"));
 
-        this.plugin = new AWSApiPlugin();
+        AuthProviderChainRepository chainRepository = mock(AuthProviderChainRepository.class);
+//        when(chainRepository.get(anyString(),anyString())).thenReturn(chain);
+        this.plugin = new AWSApiPlugin(AmplifyModelProvider.getInstance());
+        AuthProviderChainRepository.AuthProviderChain chain = mock(AuthProviderChainRepository.AuthProviderChain.class);
+
+        doAnswer(invocation -> {
+
+            return AuthRuleProvider.API_KEY;
+        }).when(chain).getCurrent();
+
+        doAnswer(invocation -> {
+            System.out.println("Inside mock");
+            return chain;
+        }).when(chainRepository).getChain(anyString(), anyString());
+
         this.plugin.configure(configuration, ApplicationProvider.getApplicationContext());
     }
 

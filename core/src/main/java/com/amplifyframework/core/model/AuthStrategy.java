@@ -15,6 +15,7 @@
 
 package com.amplifyframework.core.model;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -27,29 +28,45 @@ public enum AuthStrategy {
      * Owner authorization specifies whether a user can access or operate against an object.  To use OWNER, the API
      * must have Cognito User Pool configured.
      */
-    OWNER(AuthRuleProvider.AMAZON_COGNITO_USER_POOLS, List.of(AuthRuleProvider.AMAZON_COGNITO_USER_POOLS,
-                                                              AuthRuleProvider.OPENID_CONNECT)),
+    OWNER(AuthRuleProvider.AMAZON_COGNITO_USER_POOLS,
+        Arrays.asList(new AuthRuleProvider[] {
+            AuthRuleProvider.AMAZON_COGNITO_USER_POOLS,
+            AuthRuleProvider.OPENID_CONNECT
+        })
+    ),
 
     /**
      * Group authorization specifies whether a group can access or operate against an object.  To use GROUPS, the API
      * must have Cognito User Pool configured.
      */
-    GROUPS(AuthRuleProvider.AMAZON_COGNITO_USER_POOLS, List.of(AuthRuleProvider.AMAZON_COGNITO_USER_POOLS,
-                                                               AuthRuleProvider.OPENID_CONNECT)),
+    GROUPS(AuthRuleProvider.AMAZON_COGNITO_USER_POOLS,
+       Arrays.asList(new AuthRuleProvider[] {
+           AuthRuleProvider.AMAZON_COGNITO_USER_POOLS,
+           AuthRuleProvider.OPENID_CONNECT
+       })
+    ),
 
     /**
      * The private authorization specifies that everyone will be allowed to access the API with a valid JWT token from
      * the configured Cognito User Pool. To use PRIVATE, the API must have Cognito User Pool configured.
      */
-    PRIVATE(AuthRuleProvider.AMAZON_COGNITO_USER_POOLS, List.of(AuthRuleProvider.AMAZON_COGNITO_USER_POOLS,
-                                                                AuthRuleProvider.AWS_IAM)),
+    PRIVATE(AuthRuleProvider.AMAZON_COGNITO_USER_POOLS,
+        Arrays.asList(new AuthRuleProvider[] {
+            AuthRuleProvider.AMAZON_COGNITO_USER_POOLS,
+            AuthRuleProvider.AWS_IAM
+        })
+    ),
 
     /**
      * The public authorization specifies that everyone will be allowed to access the API, behind the scenes the API
      * will be protected with an API Key. To use PUBLIC, the API must have API Key configured.
      */
-    PUBLIC(AuthRuleProvider.API_KEY, List.of(AuthRuleProvider.API_KEY,
-                                             AuthRuleProvider.AMAZON_COGNITO_USER_POOLS));
+    PUBLIC(AuthRuleProvider.API_KEY,
+       Arrays.asList(new AuthRuleProvider[] {
+           AuthRuleProvider.API_KEY,
+           AuthRuleProvider.AMAZON_COGNITO_USER_POOLS
+       })
+    );
 
     private AuthRuleProvider defaultProvider;
     private List<AuthRuleProvider> compatibleProviders;

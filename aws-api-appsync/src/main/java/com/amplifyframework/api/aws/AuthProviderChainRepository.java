@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,17 +15,16 @@
 
 package com.amplifyframework.api.aws;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthRuleProvider;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.logging.Logger;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,14 +32,14 @@ import java.util.Map;
 /**
  * Cache of auth provider chains by model/operation.
  */
-public class AuthProviderChainRepository {
-    private static final String TAG = "AuthProviderChainRepository";
+public final class AuthProviderChainRepository {
+    private static final Logger LOG = Amplify.Logging.forNamespace("ampify:aws-api");
     //TODO: Use enums for keys. Right now we have a couple different enums, so we may need to consolidate.
     private Map<String, Map<String, AuthProviderChain>> authProviderChains;
 
     /**
      * Convenience constructor if the caller want to pass in a map.
-     * @param modelSchemas
+     * @param modelSchemas List of schemas for the graphQL APIs
      */
     public AuthProviderChainRepository(Map<String, ModelSchema> modelSchemas) {
         this(new ArrayList<ModelSchema>(modelSchemas.values()));
@@ -75,7 +74,7 @@ public class AuthProviderChainRepository {
      * @param operation The operation type (READ, CREATE, UPDATE, DELETE).
      * @return The auth provider chain for the given parameters.
      */
-    public final AuthProviderChain getChain(String modelName, String operation) {
+    public AuthProviderChain getChain(String modelName, String operation) {
         //TODO: Check for missing item
         return authProviderChains != null ? authProviderChains.get(modelName).get(operation) : null;
     }
@@ -83,7 +82,7 @@ public class AuthProviderChainRepository {
     /**
      * Resets the active auth mode for all model/operation combinations currently in the cache.
      */
-    public final void reset() {
+    public void reset() {
         for (Map<String, AuthProviderChain> modelChain : authProviderChains.values()) {
             modelChain.values().forEach(AuthProviderChain::reset);
         }
@@ -106,7 +105,7 @@ public class AuthProviderChainRepository {
 
         public void addProvider(AuthRuleProvider provider) {
             if (!providers.contains(provider)) {
-                Log.i(TAG, "Before adding " + provider.name() + " to " + this.toString());
+                LOG.debug("Before adding " + provider.name() + " to " + this.toString());
                 if (head == null) { // chain is empty
                     head = new AuthProviderChainNode(provider, null);
                     tail = head;
@@ -115,7 +114,7 @@ public class AuthProviderChainRepository {
                     tail = tail.next;
                 }
                 providers.add(provider);
-                Log.i(TAG, "After adding " + provider.name() + " to " + this.toString());
+                LOG.debug("After adding " + provider.name() + " to " + this.toString());
             }
         }
 
@@ -127,7 +126,7 @@ public class AuthProviderChainRepository {
         }
 
         public boolean nextProvider() {
-            Log.i(TAG, "Before moving next " + this.toString());
+            LOG.debug("Before moving next " + this.toString());
             if (current == null) { // Set current to be the first provider
                 if (head != null) {
                     current = head;

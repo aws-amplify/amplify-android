@@ -16,8 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -50,6 +48,7 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubSubscriber;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONObject;
@@ -79,7 +78,7 @@ import okhttp3.Protocol;
  */
 @SuppressWarnings("TypeParameterHidesVisibleType") // <R> shadows >com.amplifyframework.api.aws.R
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
-    public static final String TAG = "AWSApiPlugin";
+    private static final Logger LOG = Amplify.Logging.forNamespace("ampify:aws-api");
     private final Map<String, ClientDetails> apiDetails;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
@@ -128,7 +127,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      * the plugin will assume default behavior for that specific
      * mode of authorization.
      *
-     * @param apiAuthProvider configured instance of {@link ApiAuthProviders}.
      * @param modelProvider an instance of a class that implements the {@link ModelProvider} interface.
      */
     public AWSApiPlugin(ModelProvider modelProvider) {
@@ -172,14 +170,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             //TODO: Need a better way to allow for easier injection of providers
             // on a per-api basis
             ApiAuthProviders apiAuthProvider = ApiAuthProviders.builder()
-                                                               .cognitoUserPoolsAuthProvider(defaultCognitoUserPoolsAuthProvider)
-                                                               .apiKeyAuthProvider(new ApiKeyAuthProvider() {
-                                                                   @Override
-                                                                   public String getAPIKey() {
-                                                                       return apiConfiguration.getApiKey();
-                                                                   }
-                                                               })
-                                                               .build();
+                                                   .cognitoUserPoolsAuthProvider(defaultCognitoUserPoolsAuthProvider)
+                                                   .apiKeyAuthProvider(new ApiKeyAuthProvider() {
+                                                       @Override
+                                                       public String getAPIKey() {
+                                                           return apiConfiguration.getApiKey();
+                                                       }
+                                                   })
+                                                   .build();
             final SubscriptionAuthorizer subscriptionAuthorizer =
                     new SubscriptionAuthorizer(apiConfiguration, apiAuthProvider, authProviderChains);
 
@@ -204,7 +202,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         Amplify.Hub.subscribe(HubChannel.AUTH, HubSubscriber.create(event -> {
-            Log.i(TAG, "Received auth event: " + event + ". Resetting auth provider chains.");
+            LOG.info("Received auth event: " + event + ". Resetting auth provider chains.");
             authProviderChains.reset();
         }));
     }

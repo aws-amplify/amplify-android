@@ -30,6 +30,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 /**
  * Test that Subscription authorizer can correctly generate appropriate
@@ -74,7 +75,7 @@ public final class SubscriptionAuthorizerTest {
                 .region(RandomString.string())
                 .authorizationType(AuthorizationType.API_KEY)
                 .build();
-        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
+        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders, null);
         JSONObject header = authorizer.createHeadersForConnection();
         assertEquals(authenticationSecret, header.getString("x-api-key"));
     }
@@ -92,7 +93,9 @@ public final class SubscriptionAuthorizerTest {
                 .region(RandomString.string())
                 .authorizationType(AuthorizationType.AMAZON_COGNITO_USER_POOLS)
                 .build();
-        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
+        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config,
+                                                                       apiAuthProviders,
+                                                                       mock(AuthProviderChainRepository.class));
         JSONObject header = authorizer.createHeadersForConnection();
         assertEquals(authenticationSecret, header.getString("Authorization"));
     }
@@ -110,7 +113,9 @@ public final class SubscriptionAuthorizerTest {
                 .region(RandomString.string())
                 .authorizationType(AuthorizationType.OPENID_CONNECT)
                 .build();
-        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
+        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config,
+                                                                       apiAuthProviders,
+                                                                       mock(AuthProviderChainRepository.class));
         JSONObject header = authorizer.createHeadersForConnection();
         assertEquals(authenticationSecret, header.getString("Authorization"));
     }

@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 /**
  * Schema of a Model that implements the {@link Model} interface.
@@ -161,10 +160,13 @@ public final class ModelSchema {
      * @return A list of {@link AuthRule}s for the given operation.
      */
     public List<AuthRule> getApplicableRules(ModelOperation operationType) {
-        return authRules
-            .stream()
-            .filter(rule -> rule.getOperationsOrDefault().contains(operationType))
-            .collect(Collectors.toList());
+        List<AuthRule> result = new ArrayList<>();
+        for (AuthRule rule : authRules) {
+            if (rule.getOperationsOrDefault().contains(operationType)) {
+                result.add(rule);
+            }
+        }
+        return result;
     }
 
     // Utility method to extract field metadata
