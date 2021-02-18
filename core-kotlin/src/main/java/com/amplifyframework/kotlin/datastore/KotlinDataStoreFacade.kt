@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlin.reflect.KClass
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.sendBlocking
@@ -52,6 +53,18 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
             delegate.delete(
                 item,
                 predicate,
+                { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    @Throws(DataStoreException::class)
+    override suspend fun <T : Model> delete(byClass: KClass<T>, filter: QueryPredicate) {
+        return suspendCoroutine { continuation ->
+            delegate.delete(
+                byClass.java,
+                filter,
                 { continuation.resume(Unit) },
                 { continuation.resumeWithException(it) }
             )

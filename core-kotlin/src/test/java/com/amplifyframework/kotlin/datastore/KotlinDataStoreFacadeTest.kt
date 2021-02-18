@@ -100,11 +100,11 @@ class KotlinDataStoreFacadeTest {
     }
 
     /**
-     * When delete() coroutine is called, it passes through to the delegate.
-     * When delegate succeeds, so too does the coroutine API.
+     * When item-based delete() coroutine is called, it passes through to
+     * the delegate When delegate succeeds, so too does the coroutine API.
      */
     @Test
-    fun deleteSucceeds() = runBlocking {
+    fun deleteItemSucceeds() = runBlocking {
         val bart = BlogOwner.builder()
             .name("Bart Simpson")
             .build()
@@ -130,11 +130,11 @@ class KotlinDataStoreFacadeTest {
     }
 
     /**
-     * Verify that a call to delete() falls through to the delegate.
+     * Verify that a call to the item-based delete() falls through to the delegate.
      * When the delegate emits an error, the coroutine API should throw it.
      */
     @Test(expected = DataStoreException::class)
-    fun deleteFails() = runBlocking {
+    fun deleteItemFails() = runBlocking {
         val bart = BlogOwner.builder()
             .name("Bart Simpson")
             .build()
@@ -147,6 +147,43 @@ class KotlinDataStoreFacadeTest {
             onError.accept(error)
         }
         dataStore.delete(bart)
+    }
+
+    /**
+     * When class-based delete() coroutine is called, it passes through to
+     * the delegate When delegate succeeds, so too does the coroutine API.
+     */
+    @Test
+    fun deleteByClassSucceeds() = runBlocking {
+        every {
+            delegate.delete(eq(BlogOwner::class.java), any(), any(), any())
+        } answers {
+            val indexOfCompletionAction = 2
+            val onCompletion = it.invocation.args[indexOfCompletionAction] as Action
+            onCompletion.call()
+        }
+        dataStore.delete(BlogOwner::class)
+        verify {
+            delegate.delete(eq(BlogOwner::class.java), any(), any(), any())
+        }
+    }
+
+    /**
+     * Verify that a call to the class-based delete() falls through to the delegate.
+     * When the delegate emits an error, the coroutine API should throw it.
+     */
+    @Test(expected = DataStoreException::class)
+    fun deleteByClassThrows() = runBlocking {
+        val error = DataStoreException("uh", "oh")
+        every {
+            delegate.delete(eq(BlogOwner::class.java), any(), any(), any())
+        } answers {
+            val indexOfErrorConsumer = 3
+            val onErrorArg = it.invocation.args[indexOfErrorConsumer]
+            val onError = onErrorArg as Consumer<DataStoreException>
+            onError.accept(error)
+        }
+        dataStore.delete(BlogOwner::class)
     }
 
     /**

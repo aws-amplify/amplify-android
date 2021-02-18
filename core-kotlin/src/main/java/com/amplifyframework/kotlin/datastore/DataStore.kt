@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreItemChange
+import kotlin.reflect.KClass
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 
@@ -46,6 +47,18 @@ interface DataStore {
      */
     @Throws(DataStoreException::class)
     suspend fun <T : Model> delete(item: T, predicate: QueryPredicate = QueryPredicates.all())
+
+    /**
+     * Delete item(s) of a given class from the DataStore.
+     * @param byClass The class of item(s) being deleted
+     * @param filter Items must additionally match this filter, to be targeted for deletion.
+     *               If no filter is specified, an "allow all" predicate is used.
+     */
+    @Throws(DataStoreException::class)
+    suspend fun <T : Model> delete(
+        byClass: KClass<T>,
+        filter: QueryPredicate = QueryPredicates.all()
+    )
 
     /**
      * Query the DataStore for items meeting certain criteria.
