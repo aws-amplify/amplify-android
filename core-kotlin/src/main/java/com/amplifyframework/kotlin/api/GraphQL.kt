@@ -18,16 +18,9 @@ package com.amplifyframework.kotlin.api
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
-import com.amplifyframework.core.async.Cancelable
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flattenMerge
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 
 interface GraphQL {
     /**
@@ -52,6 +45,10 @@ interface GraphQL {
 
     /**
      * Subscribe to realtime events observed on a GraphQL API.
+     * This function suspends until the subscription is established --
+     * or, throws an error if it can't be. When established, the function
+     * returns a Flow of subscription events. The Flow may close or may throw
+     * an error, if the subscription fails.
      * @param request Subscription request
      * @param apiName The name of an API as configured in your configuration file;
      *                if not provided, the first GraphQL API in your config is used
@@ -59,42 +56,6 @@ interface GraphQL {
      */
     @ExperimentalCoroutinesApi
     @FlowPreview
-    fun <T> subscribe(request: GraphQLRequest<T>, apiName: String? = null): Subscription<T>
-
-    /**
-     * Models an ongoing subscription to a GraphQL API.
-     */
-    @FlowPreview
-    data class Subscription<T>(
-        private val subscriptionData: SharedFlow<GraphQLResponse<T>>,
-        private val connectionState: StateFlow<ConnectionState>,
-        private val errors: SharedFlow<ApiException>,
-        private val cancelDelegate: Cancelable
-    ) : Cancelable {
-        override fun cancel() = cancelDelegate.cancel()
-
-        fun connectionState(): Flow<ConnectionState> {
-            return connectionState
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        fun subscriptionData(): Flow<GraphQLResponse<T>> {
-            return flowOf(subscriptionData, errors)
-                .flattenMerge()
-                .onEach {
-                    if (it is ApiException) {
-                        throw it
-                    }
-                }.map { it as GraphQLResponse<T> }
-        }
-    }
-
-    /**
-     * The various connection states modeled by the GraphQL subscription.
-     */
-    enum class ConnectionState {
-        CONNECTING,
-        CONNECTED,
-        DISCONNECTED
-    }
+    suspend fun <T> subscribe(request: GraphQLRequest<T>, apiName: String? = null):
+        Flow<GraphQLResponse<T>>
 }

@@ -23,18 +23,19 @@ import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.api.rest.RestResponse
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.async.Cancelable
-import com.amplifyframework.kotlin.api.GraphQL.ConnectionState.CONNECTED
-import com.amplifyframework.kotlin.api.GraphQL.ConnectionState.CONNECTING
-import com.amplifyframework.kotlin.api.GraphQL.ConnectionState.DISCONNECTED
-import com.amplifyframework.kotlin.api.GraphQL.Subscription
+import com.amplifyframework.core.async.NoOpCancelable
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flattenMerge
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
@@ -84,42 +85,31 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
 
     @ExperimentalCoroutinesApi
     @FlowPreview
-    override fun <T> subscribe(request: GraphQLRequest<T>, apiName: String?): Subscription<T> {
-        val subscriptionData = MutableSharedFlow<GraphQLResponse<T>>(replay = 1)
-        val connectionState = MutableStateFlow(CONNECTING)
-        val errors = MutableSharedFlow<ApiException>(replay = 1)
-
+    override suspend fun <T> subscribe(
+        request: GraphQLRequest<T>,
+        apiName: String?
+    ): Flow<GraphQLResponse<T>> {
+        val subscription = Subscription<GraphQLResponse<T>>()
         val operation = if (apiName != null) {
             delegate.subscribe(
                 apiName,
                 request,
-                { connectionState.tryEmit(CONNECTED) },
-                { subscriptionData.tryEmit(it) },
-                {
-                    connectionState.tryEmit(DISCONNECTED)
-                    errors.tryEmit(it)
-                },
-                { connectionState.tryEmit(DISCONNECTED) }
+                { subscription.starts.tryEmit(Unit) },
+                { subscription.data.tryEmit(it) },
+                { subscription.failures.tryEmit(it) },
+                { subscription.completions.tryEmit(Unit) }
             )
         } else {
             delegate.subscribe(
                 request,
-                { connectionState.tryEmit(CONNECTED) },
-                { subscriptionData.tryEmit(it) },
-                {
-                    connectionState.tryEmit(DISCONNECTED)
-                    errors.tryEmit(it)
-                },
-                { connectionState.tryEmit(DISCONNECTED) }
+                { subscription.starts.tryEmit(Unit) },
+                { subscription.data.tryEmit(it) },
+                { subscription.failures.tryEmit(it) },
+                { subscription.completions.tryEmit(Unit) }
             )
         }
-
-        return Subscription(
-            subscriptionData.asSharedFlow(),
-            connectionState.asStateFlow(),
-            errors.asSharedFlow(),
-            operation as Cancelable
-        )
+        subscription.cancelable = operation as Cancelable
+        return subscription.awaitStart()
     }
 
     @Throws(ApiException::class)
@@ -245,6 +235,44 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
                 )
             }
             continuation.invokeOnCancellation { operation?.cancel() }
+        }
+    }
+
+    /**
+     * Models an ongoing subscription to a GraphQL API.
+     */
+    @FlowPreview
+    internal class Subscription<T>(
+        internal val starts: MutableSharedFlow<Unit> = MutableSharedFlow(replay = 1),
+        internal val data: MutableSharedFlow<T> = MutableSharedFlow(replay = 1),
+        internal val failures: MutableSharedFlow<ApiException> = MutableSharedFlow(replay = 1),
+        internal val completions: MutableSharedFlow<Unit> = MutableSharedFlow(replay = 1),
+        internal var cancelable: Cancelable = NoOpCancelable()
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        internal suspend fun awaitStart(): Flow<T> {
+            // Wait for a start signal (or a failure to start)
+            flowOf(starts, failures)
+                .flattenMerge()
+                .map {
+                    if (it is ApiException) {
+                        throw it
+                    } else {
+                        it as Unit
+                    }
+                }
+                .first()
+            return flowOf(data, failures, completions)
+                .flattenMerge()
+                .takeWhile { it !is Unit }
+                .map {
+                    if (it is ApiException) {
+                        throw it
+                    } else {
+                        it as T
+                    }
+                }
+                .onCompletion { cancelable.cancel() }
         }
     }
 }

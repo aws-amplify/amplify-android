@@ -23,7 +23,6 @@ import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.api.rest.RestResponse
 import com.amplifyframework.core.Consumer
-import com.amplifyframework.kotlin.api.GraphQL.ConnectionState
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -147,10 +146,7 @@ class KotlinApiFacadeTest {
             expectedOperation
         }
         every { expectedOperation.cancel() } answers {}
-
-        val operation = api.subscribe(request)
-        assertEquals(ConnectionState.CONNECTED, operation.connectionState().first())
-        assertEquals(expectedResponse, operation.subscriptionData().first())
+        assertEquals(expectedResponse, api.subscribe(request).first())
     }
 
     /**
@@ -173,9 +169,9 @@ class KotlinApiFacadeTest {
             GlobalScope.launch(Dispatchers.IO) { onError.accept(expectedFailure) }
             operation
         }
-        api.subscribe(request)
-            .subscriptionData()
-            .first() // Wait for data that never comes, instead an error
+
+        // Wait for data that never comes, instead an error is thrown
+        api.subscribe(request).first()
     }
 
     /**
