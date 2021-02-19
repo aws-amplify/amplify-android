@@ -210,7 +210,7 @@ class KotlinDataStoreFacadeTest {
             val onError = it.invocation.args[indexOfResultConsumer] as Consumer<Iterator<BlogOwner>>
             onError.accept(blogOwners.iterator())
         }
-        assertEquals(blogOwners, dataStore.query(BlogOwner::class.java).toList())
+        assertEquals(blogOwners, dataStore.query(BlogOwner::class).toList())
     }
 
     /**
@@ -219,16 +219,15 @@ class KotlinDataStoreFacadeTest {
      */
     @Test(expected = DataStoreException::class)
     fun queryFails(): Unit = runBlocking {
-        val clazz = BlogOwner::class.java
         val error = DataStoreException("uh", "oh")
         every {
-            delegate.query(eq(clazz), any<QueryOptions>(), any(), any())
+            delegate.query(eq(BlogOwner::class.java), any<QueryOptions>(), any(), any())
         } answers {
             val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<DataStoreException>
             onError.accept(error)
         }
-        dataStore.query(BlogOwner::class.java)
+        dataStore.query(BlogOwner::class)
             .toList() // Sufficient to exhaust the call chain
     }
 
@@ -295,19 +294,25 @@ class KotlinDataStoreFacadeTest {
     @Test
     fun observeByClassSucceeds(): Unit = runBlocking {
         val cancelable = mockk<Cancelable>()
-        val clazz = BlogOwner::class.java
         val itemCreated = DataStoreItemChange.builder<BlogOwner>()
             .item(
                 BlogOwner.builder()
                     .name("Susan S. Sweeney")
                     .build()
             )
-            .itemClass(clazz)
+            .itemClass(BlogOwner::class.java)
             .initiator(LOCAL)
             .type(CREATE)
             .build()
         every {
-            delegate.observe(eq(clazz), any<QueryPredicate>(), any(), any(), any(), any())
+            delegate.observe(
+                eq(BlogOwner::class.java),
+                any<QueryPredicate>(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             val onStartArg = it.invocation.args[/* index of on start = */ 2]
             val onNextArg = it.invocation.args[/* index of on next = */ 3]
@@ -318,7 +323,7 @@ class KotlinDataStoreFacadeTest {
         }
         every { cancelable.cancel() } answers {}
 
-        val actualValue = dataStore.observe(clazz, BlogOwner.NAME.contains("Susan"))
+        val actualValue = dataStore.observe(BlogOwner::class, BlogOwner.NAME.contains("Susan"))
             .take(1) // Modify the flow so it will complete automatically after 1
             .first() // Then take the 1 item, thus completing the flow
         assertEquals(itemCreated, actualValue)
@@ -341,7 +346,7 @@ class KotlinDataStoreFacadeTest {
             val onError = it.invocation.args[indexOfOnError] as Consumer<DataStoreException>
             onError.accept(error)
         }
-        dataStore.observe(clazz, BlogOwner.NAME.contains("Susan"))
+        dataStore.observe(BlogOwner::class, BlogOwner.NAME.contains("Susan"))
             .first() // sufficient to call through and cause error
     }
 

@@ -69,7 +69,7 @@ interface DataStore {
      */
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    fun <T : Model> query(itemClass: Class<T>, options: QueryOptions = Where.matchesAll()): Flow<T>
+    fun <T : Model> query(itemClass: KClass<T>, options: QueryOptions = Where.matchesAll()): Flow<T>
 
     /**
      * Observe all changes to items in the DataStore.
@@ -94,7 +94,7 @@ interface DataStore {
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     suspend fun <T : Model> observe(
-        itemClass: Class<T>,
+        itemClass: KClass<T>,
         uniqueId: String
     ): Flow<DataStoreItemChange<T>>
 
@@ -112,7 +112,7 @@ interface DataStore {
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     suspend fun <T : Model> observe(
-        itemClass: Class<T>,
+        itemClass: KClass<T>,
         selectionCriteria: QueryPredicate = QueryPredicates.all()
     ): Flow<DataStoreItemChange<T>>
 

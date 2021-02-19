@@ -80,10 +80,10 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
 
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    override fun <T : Model> query(itemClass: Class<T>, options: QueryOptions): Flow<T> {
+    override fun <T : Model> query(itemClass: KClass<T>, options: QueryOptions): Flow<T> {
         return callbackFlow {
             delegate.query(
-                itemClass,
+                itemClass.java,
                 options,
                 {
                     while (it.hasNext()) {
@@ -114,11 +114,11 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
     @FlowPreview
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    override suspend fun <T : Model> observe(itemClass: Class<T>, uniqueId: String):
+    override suspend fun <T : Model> observe(itemClass: KClass<T>, uniqueId: String):
         Flow<DataStoreItemChange<T>> {
             val observation = Observation<DataStoreItemChange<T>>()
             delegate.observe(
-                itemClass,
+                itemClass.java,
                 uniqueId,
                 { observation.starts.tryEmit(it) },
                 { observation.changes.tryEmit(it) },
@@ -132,12 +132,12 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     override suspend fun <T : Model> observe(
-        itemClass: Class<T>,
+        itemClass: KClass<T>,
         selectionCriteria: QueryPredicate
     ): Flow<DataStoreItemChange<T>> {
         val observation = Observation<DataStoreItemChange<T>>()
         delegate.observe(
-            itemClass,
+            itemClass.java,
             selectionCriteria,
             { observation.starts.tryEmit(it) },
             { observation.changes.tryEmit(it) },
