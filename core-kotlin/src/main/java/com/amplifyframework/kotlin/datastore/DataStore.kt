@@ -73,25 +73,37 @@ interface DataStore {
 
     /**
      * Observe all changes to items in the DataStore.
+     * This function suspends until observation has been setup.
+     * Once the observation begins, the function resumes and returns a Flow.
+     * The returned Flow represents a stream of changes to the DataStore.
      * @return A flow of changes to the items in the DataStore
      */
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    fun observe(): Flow<DataStoreItemChange<out Model>>
+    suspend fun observe(): Flow<DataStoreItemChange<out Model>>
 
     /**
      * Observe the DataStore for changes to a particular item.
+     * This function suspends until observation has been setup.
+     * Once the observation begins, the function resumes and returns a Flow.
+     * The returned Flow represents a stream of changes to the DataStore.
      * @param itemClass The class of the model being observed
      * @param uniqueId The ID of the item being observed
      * @return A flow of changes to the requested model
      */
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    fun <T : Model> observe(itemClass: Class<T>, uniqueId: String): Flow<DataStoreItemChange<T>>
+    suspend fun <T : Model> observe(
+        itemClass: Class<T>,
+        uniqueId: String
+    ): Flow<DataStoreItemChange<T>>
 
     /**
      * Observe the DataStore for changes to a particular type of model
      * where the items also match some additional search criteria.
+     * This function suspends until observation has been setup.
+     * Once the observation begins, the function resumes and returns a Flow.
+     * The returned Flow represents a stream of changes to the DataStore.
      * @param itemClass Class of item being observed
      * @param selectionCriteria Only observe items meeting this criteria.
      *                          If not provided, a match-all predicate is used by default.
@@ -99,7 +111,7 @@ interface DataStore {
      */
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    fun <T : Model> observe(
+    suspend fun <T : Model> observe(
         itemClass: Class<T>,
         selectionCriteria: QueryPredicate = QueryPredicates.all()
     ): Flow<DataStoreItemChange<T>>

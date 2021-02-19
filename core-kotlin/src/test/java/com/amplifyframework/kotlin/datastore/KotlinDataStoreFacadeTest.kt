@@ -32,6 +32,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -43,8 +44,9 @@ import org.junit.Test
  * Verifies that calls to the Kotlin DataStore APIs are correctly wired
  * to the underlying DataStoreCategoryBehavior delegate.
  */
-@ExperimentalCoroutinesApi
+@FlowPreview
 @Suppress("UNCHECKED_CAST")
+@ExperimentalCoroutinesApi
 class KotlinDataStoreFacadeTest {
     private val delegate = mockk<DataStoreCategoryBehavior>()
     private val dataStore = KotlinDataStoreFacade(delegate)

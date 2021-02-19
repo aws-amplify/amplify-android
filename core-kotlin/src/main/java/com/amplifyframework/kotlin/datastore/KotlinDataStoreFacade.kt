@@ -23,16 +23,23 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.datastore.DataStoreCategoryBehavior as Delegate
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreItemChange
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KClass
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flattenMerge
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.takeWhile
 
 class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) : DataStore {
     @Throws(DataStoreException::class)
@@ -90,56 +97,55 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         }
     }
 
+    @FlowPreview
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    override fun observe(): Flow<DataStoreItemChange<out Model>> {
-        return callbackFlow {
-            val cancelable = AtomicReference<Cancelable?>()
-            delegate.observe(
-                { cancelable.set(it) },
-                { change -> sendBlocking(change) },
-                { failure -> close(failure) },
-                { close() }
-            )
-            awaitClose { cancelable.get()?.cancel() }
-        }
+    override suspend fun observe(): Flow<DataStoreItemChange<out Model>> {
+        val observation = Observation<DataStoreItemChange<out Model>>()
+        delegate.observe(
+            { observation.starts.tryEmit(it) },
+            { observation.changes.tryEmit(it) },
+            { observation.failures.tryEmit(it) },
+            { observation.completions.tryEmit(Unit) }
+        )
+        return observation.waitForStart()
     }
 
+    @FlowPreview
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    override fun <T : Model> observe(itemClass: Class<T>, uniqueId: String):
+    override suspend fun <T : Model> observe(itemClass: Class<T>, uniqueId: String):
         Flow<DataStoreItemChange<T>> {
-            return callbackFlow {
-                val cancelable = AtomicReference<Cancelable?>()
-                delegate.observe(
-                    itemClass,
-                    uniqueId,
-                    { cancelable.set(it) },
-                    { change -> sendBlocking(change) },
-                    { failure -> close(failure) },
-                    { close() }
-                )
-                awaitClose { cancelable.get()?.cancel() }
-            }
+            val observation = Observation<DataStoreItemChange<T>>()
+            delegate.observe(
+                itemClass,
+                uniqueId,
+                { observation.starts.tryEmit(it) },
+                { observation.changes.tryEmit(it) },
+                { observation.failures.tryEmit(it) },
+                { observation.completions.tryEmit(Unit) }
+            )
+            return observation.waitForStart()
         }
 
+    @FlowPreview
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    override fun <T : Model> observe(itemClass: Class<T>, selectionCriteria: QueryPredicate):
-        Flow<DataStoreItemChange<T>> {
-            return callbackFlow {
-                val cancelable = AtomicReference<Cancelable?>()
-                delegate.observe(
-                    itemClass,
-                    selectionCriteria,
-                    { cancelable.set(it) },
-                    { change -> sendBlocking(change) },
-                    { failure -> close(failure) },
-                    { close() }
-                )
-                awaitClose { cancelable.get()?.cancel() }
-            }
-        }
+    override suspend fun <T : Model> observe(
+        itemClass: Class<T>,
+        selectionCriteria: QueryPredicate
+    ): Flow<DataStoreItemChange<T>> {
+        val observation = Observation<DataStoreItemChange<T>>()
+        delegate.observe(
+            itemClass,
+            selectionCriteria,
+            { observation.starts.tryEmit(it) },
+            { observation.changes.tryEmit(it) },
+            { observation.failures.tryEmit(it) },
+            { observation.completions.tryEmit(Unit) }
+        )
+        return observation.waitForStart()
+    }
 
     @Throws(DataStoreException::class)
     override suspend fun start() {
@@ -168,6 +174,40 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
                 { continuation.resume(Unit) },
                 { continuation.resumeWithException(it) }
             )
+        }
+    }
+
+    internal class Observation<T>(
+        internal val starts: MutableSharedFlow<Cancelable> = MutableSharedFlow(1),
+        internal val changes: MutableSharedFlow<T> = MutableSharedFlow(1),
+        internal val failures: MutableSharedFlow<DataStoreException> = MutableSharedFlow(1),
+        internal val completions: MutableSharedFlow<Unit> = MutableSharedFlow(1)
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        @FlowPreview
+        internal suspend fun waitForStart(): Flow<T> {
+            // Observation either begins with signal from onError or onStart (with Cancelable token).
+            val cancelable = flowOf(starts, failures)
+                .flattenMerge()
+                .map {
+                    if (it is DataStoreException) {
+                        throw it
+                    } else {
+                        it as Cancelable
+                    }
+                }
+                .first()
+            return flowOf(changes, failures, completions)
+                .flattenMerge()
+                .takeWhile { it !is Unit }
+                .map {
+                    if (it is DataStoreException) {
+                        throw it
+                    } else {
+                        it as T
+                    }
+                }
+                .onCompletion { cancelable.cancel() }
         }
     }
 }
