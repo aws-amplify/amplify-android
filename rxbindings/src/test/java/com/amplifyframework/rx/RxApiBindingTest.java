@@ -382,7 +382,7 @@ public final class RxApiBindingTest {
             .build();
         byte[] data = "{\"movies\":[\"Spider Man\"]}".getBytes(); // JSONObject would need to bring in Robolectric
         final int httpOkStatus = 200;
-        RestResponse response = new RestResponse(httpOkStatus, data);
+        RestResponse response = new RestResponse(httpOkStatus, Collections.emptyMap(), data);
         doAnswer(invocation -> {
             final int positionOfResponseConsumer = 1;
             Consumer<RestResponse> onResponse = invocation.getArgument(positionOfResponseConsumer);
@@ -446,7 +446,7 @@ public final class RxApiBindingTest {
             .addBody(body)
             .build();
         final int httpOkStatus = 200;
-        RestResponse response = new RestResponse(httpOkStatus, body); // Re-use body
+        RestResponse response = new RestResponse(httpOkStatus, Collections.emptyMap(), body); // Re-use body
         doAnswer(invocation -> {
             final int positionOfResponseConsumer = 1; // 0 = options, 1 = onResponse, 2 = onFailure
             Consumer<RestResponse> onResponse = invocation.getArgument(positionOfResponseConsumer);

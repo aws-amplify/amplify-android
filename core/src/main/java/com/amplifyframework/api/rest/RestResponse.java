@@ -19,12 +19,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Range;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * Response from rest request.
@@ -32,22 +34,26 @@ import java.util.Arrays;
 public final class RestResponse {
     private final Data data;
     private final Code code;
+    private final Map<String, String> headers;
 
     /**
      * Constructs a response for the rest operation with empty data.
      * @param statusCode Status code of the response
+     * @param headers Map of HTTP headers of the response
      */
-    public RestResponse(int statusCode) {
-        this(statusCode, null);
+    public RestResponse(int statusCode, Map<String, String> headers) {
+        this(statusCode, headers, null);
     }
 
     /**
      * Constructs a response for the rest operation.
      * @param statusCode Status code of the response
      * @param data Data returned by the operation
+     * @param headers Map of HTTP headers of the response
      */
-    public RestResponse(int statusCode, byte[] data) {
+    public RestResponse(int statusCode, Map<String, String> headers, byte[] data) {
         this.data = new Data(data);
+        this.headers = headers;
         this.code = new Code(statusCode);
     }
 
@@ -65,6 +71,14 @@ public final class RestResponse {
      */
     public Code getCode() {
         return code;
+    }
+
+    /**
+     * Get the HTTP request headers of the response.
+     * @return Map of HTTP request headers of the response.
+     */
+    public Map<String, String> getHeaders() {
+        return Immutable.of(headers);
     }
 
     @Override
