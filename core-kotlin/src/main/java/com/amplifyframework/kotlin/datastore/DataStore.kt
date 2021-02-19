@@ -88,14 +88,14 @@ interface DataStore {
      * Once the observation begins, the function resumes and returns a Flow.
      * The returned Flow represents a stream of changes to the DataStore.
      * @param itemClass The class of the model being observed
-     * @param uniqueId The ID of the item being observed
+     * @param itemId The ID of the item being observed
      * @return A flow of changes to the requested model
      */
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     suspend fun <T : Model> observe(
         itemClass: KClass<T>,
-        uniqueId: String
+        itemId: String
     ): Flow<DataStoreItemChange<T>>
 
     /**
