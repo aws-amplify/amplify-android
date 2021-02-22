@@ -38,11 +38,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Utility class to help traverse a tree of models by relationship.
@@ -125,7 +125,6 @@ final class SQLiteModelTree {
                             .getTargetName(); // get the target field (parent) name
 
                     // Collect every children one level deeper than current level
-                    // SELECT * FROM <CHILD_TABLE> WHERE <PARENT> = <ID_1> OR <PARENT> = <ID_2> OR ...
                     Set<String> childrenIds = new HashSet<>();
                     try (Cursor cursor = queryChildren(childTable.getName(), childId, parentId, parentIds)) {
                         if (cursor != null && cursor.moveToFirst()) {
@@ -162,6 +161,14 @@ final class SQLiteModelTree {
             @NonNull String parentIdField,
             @NonNull Collection<String> parentIds
     ) {
+        // Wrap each ID with single quote
+        StringBuilder quotedIds = new StringBuilder();
+        for (Iterator<String> ids = parentIds.iterator(); ids.hasNext();) {
+            quotedIds.append(Wrap.inSingleQuotes(ids.next()));
+            if (ids.hasNext()) {
+                quotedIds.append(SqlKeyword.SEPARATOR);
+            }
+        }
         // SELECT <child_id>, <parent_id> FROM <child_table> WHERE <parent_id> IN (<id_1>, <id_2>, ...)
         String queryString = String.valueOf(SqlKeyword.SELECT) +
                 SqlKeyword.DELIMITER +
@@ -179,10 +186,7 @@ final class SQLiteModelTree {
                 SqlKeyword.DELIMITER +
                 SqlKeyword.IN +
                 SqlKeyword.DELIMITER +
-                Wrap.inParentheses(parentIds
-                    .stream()
-                    .map(Wrap::inSingleQuotes)
-                    .collect(Collectors.joining(SqlKeyword.SEPARATOR.toString()))) +
+                Wrap.inParentheses(quotedIds.toString()) +
                 ";";
         return database.rawQuery(queryString, new String[0]);
     }
