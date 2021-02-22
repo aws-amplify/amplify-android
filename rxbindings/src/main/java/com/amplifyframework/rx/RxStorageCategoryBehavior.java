@@ -17,19 +17,18 @@ package com.amplifyframework.rx;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
-import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
@@ -44,11 +43,34 @@ import io.reactivex.rxjava3.core.Single;
 public interface RxStorageCategoryBehavior {
 
     /**
+     * Retrieve the remote URL for the object from storage.
+     * Provide callbacks to obtain the URL retrieval results.
+     * @param key the unique identifier for the object in storage
+     * @return A Single which emits a result on success, or an {@link StorageException}
+     *         on failure to get the URL for the requested key
+     */
+    @NonNull
+    Single<StorageGetUrlResult> getUrl(String key);
+
+    /**
+     * Retrieve the remote URL for the object from storage.
+     * Set advanced options such as the access level of the object
+     * or the expiration details of the URL.
+     * Provide callbacks to obtain the URL retrieval results.
+     * @param key the unique identifier for the object in storage
+     * @param options parameters specific to plugin behavior
+     * @return A Single which emits a result on success, or an {@link StorageException}
+     *         if not able to get a url for the requested key
+     */
+    @NonNull
+    Single<StorageGetUrlResult> getUrl(@NonNull String key, @NonNull StorageGetUrlOptions options);
+
+   /**
      * Download a file.
      * @param key Remote key of file
      * @param local Local file to which to save
-     * @return An instance of {@link RxStorageBinding.RxStorageDownloadOperation} which emits a
-     *         download result or failure as a {@link Single}
+     * @return An instance of {@link RxStorageBinding.RxProgressAwareSingleOperation}
+    *          which emits a download result or failure as a {@link Single}
      */
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
@@ -61,10 +83,10 @@ public interface RxStorageCategoryBehavior {
      * @param key Remote key of file
      * @param local Local file to which to save
      * @param options Additional download options
-     * @return An instance of {@link RxStorageBinding.RxStorageDownloadOperation} which emits a
-     *         download result or failure as a {@link Single}. It also
+     * @return An instance of {@link RxStorageBinding.RxProgressAwareSingleOperation}
+     *          which emits a download result or failure as a {@link Single}. It also
      *         provides progress information when the caller subscribes to
-     *         {@link RxStorageBinding.RxStorageDownloadOperation#observeProgress()}.
+     *         {@link RxStorageBinding.RxProgressAwareSingleOperation#observeProgress()}.
      *         The download does not begin until subscription. You can cancel the download
      *         by disposing the single subscription.
      */
@@ -186,15 +208,4 @@ public interface RxStorageCategoryBehavior {
             @NonNull String path,
             @NonNull StorageListOptions options
     );
-
-    /**
-     * Type alias that defines the generic parameters for a download operation.
-     * @param <T> The type that represents the result of a given operation.
-     * @see RxAdapters.RxProgressAwareCallbackMapper
-     */
-    interface RxStorageTransferCallbackMapper<T> {
-        Cancelable emitTo(Consumer<StorageTransferProgress> onProgress,
-                          Consumer<T> onItem,
-                          Consumer<StorageException> onError);
-    }
 }

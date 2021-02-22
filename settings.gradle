@@ -29,6 +29,6 @@ include ':testutils'
 include ':testmodels'
 
 // Bindings and accessory modules
+include ':core-kotlin'
 include ':rxbindings'
 include ':aws-api-appsync'
-

@@ -16,12 +16,21 @@
 package com.amplifyframework.auth.options;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * The shared options among all Auth plugins.
  * Note: This is currently empty but exists here to support common sign in options in the future.
  */
 public abstract class AuthSignInOptions {
+    /**
+     * Use the default sign-in options.
+     * @return Default sign-in options.
+     */
+    public static DefaultAuthSignInOptions defaults() {
+        return new DefaultAuthSignInOptions();
+    }
+
     /**
      * The builder for this class.
      * @param <T> The type of builder - used to support plugin extensions of this.
@@ -39,5 +48,29 @@ public abstract class AuthSignInOptions {
          */
         @NonNull
         public abstract AuthSignInOptions build();
+    }
+
+    /**
+     * Default sign-in options. This works like a sentinel, to be used instead of "null".
+     * The only way to create this is by calling {@link AuthSignInOptions#defaults()}.
+     */
+    public static final class DefaultAuthSignInOptions extends AuthSignInOptions {
+        private DefaultAuthSignInOptions() {}
+
+        @Override
+        public int hashCode() {
+            return DefaultAuthSignInOptions.class.hashCode();
+        }
+
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            return obj instanceof DefaultAuthSignInOptions;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return DefaultAuthSignInOptions.class.getSimpleName();
+        }
     }
 }

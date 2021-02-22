@@ -23,7 +23,6 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.query.predicate.MatchAllQueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
@@ -230,7 +229,7 @@ public final class AppSyncMockingTest {
                     schema,
                     StrawMen.TONY_MODEL.getId(),
                     1,
-                    MatchAllQueryPredicate.instance(),
+                    QueryPredicates.all(),
                     emitter::onSuccess,
                     emitter::onError
                 )
@@ -257,7 +256,7 @@ public final class AppSyncMockingTest {
                 schema,
                 StrawMen.JOE_MODEL.getId(),
                 1,
-                MatchAllQueryPredicate.instance(),
+                QueryPredicates.all(),
                 emitter::onSuccess,
                 emitter::onError
             ))

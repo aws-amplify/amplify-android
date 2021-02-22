@@ -18,8 +18,11 @@ phases:
     runtime-versions:
       android: 29
       nodejs: 12
+      python: 3.8
     commands:
       - echo 'Install phase starting'
+      - npm install -g xunit-viewer
+      - pip3 install junit-xml
     finally:
       - echo 'Install phase completed.'
   pre_build:
@@ -45,10 +48,26 @@ phases:
   post_build:
     commands:
       - echo 'Post-build phase starting'
+      - mkdir -p build/reports/instrumented
+      - xunit-viewer -r build/allTests -o build/reports/instrumented/${CODEBUILD_RESOLVED_SOURCE_VERSION}.html
     finally:
       - echo 'Post-build phase completed.'
+reports:
+  amplify-android-devicefarm-tests:
+    files:
+      - '**/*'
+    base-directory: 'build/allTests'
+    discard-paths: no
+    file-format: JUNITXML
 artifacts:
   files:
     - '**/*.apk'
   name: AmplifyAndroidCatApks
   discard-paths: yes
+  secondary-artifacts:
+    reports:
+      files:
+        - '**/*'
+      name: DevicefarmTestRunReport
+      base-directory: 'build/reports/instrumented'
+      discard-paths: no

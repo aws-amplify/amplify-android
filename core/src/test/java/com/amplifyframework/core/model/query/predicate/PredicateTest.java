@@ -78,6 +78,8 @@ public final class PredicateTest {
         assertTrue(Person.FIRST_NAME.eq("Jane").evaluate(jane));
         assertTrue(Person.FIRST_NAME.beginsWith("J").evaluate(jane));
         assertTrue(Person.FIRST_NAME.contains("Jan").evaluate(jane));
+        assertTrue(Person.FIRST_NAME.notContains("D").evaluate(jane));
+        assertFalse(Person.FIRST_NAME.notContains("Jan").evaluate(jane));
         assertFalse(Person.LAST_NAME.eq("Jane").evaluate(jane));
     }
 

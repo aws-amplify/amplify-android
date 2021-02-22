@@ -37,6 +37,7 @@ import com.amplifyframework.core.model.query.predicate.GreaterOrEqualQueryOperat
 import com.amplifyframework.core.model.query.predicate.GreaterThanQueryOperator;
 import com.amplifyframework.core.model.query.predicate.LessOrEqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.LessThanQueryOperator;
+import com.amplifyframework.core.model.query.predicate.NotContainsQueryOperator;
 import com.amplifyframework.core.model.query.predicate.NotEqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -336,6 +337,8 @@ public final class AppSyncGraphQLRequestFactory {
                 return ((GreaterThanQueryOperator<?>) qOp).value();
             case CONTAINS:
                 return ((ContainsQueryOperator) qOp).value();
+            case NOT_CONTAINS:
+                return ((NotContainsQueryOperator) qOp).value();
             case BETWEEN:
                 BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator<?>) qOp;
                 return Arrays.asList(betweenOp.start(), betweenOp.end());

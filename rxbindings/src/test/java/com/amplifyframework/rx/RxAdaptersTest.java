@@ -20,6 +20,7 @@ import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
 import com.amplifyframework.rx.RxAdapters.VoidBehaviors;
 import com.amplifyframework.testutils.SimpleCancelable;
+import com.amplifyframework.testutils.Sleep;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Test;
@@ -27,6 +28,8 @@ import org.junit.Test;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.exceptions.UndeliverableException;
 import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertTrue;
@@ -188,5 +191,27 @@ public final class RxAdaptersTest {
         observer.dispose();
         assertTrue(observer.isDisposed());
         assertTrue(cancelable.isCanceled());
+    }
+
+    /**
+     * If a subscriber has been disposed, then the Rx actor should
+     * not try to fire an error on it. Otherwise, it would cause an
+     * {@link UndeliverableException}.
+     *
+     * Theoretically there are six of these to test (Void and Cancelable each
+     * have adapters for Single, Completable, and Observable.) Let's just test it
+     * once and assume the others work the same way.
+     */
+    @Test
+    public void doesNotFireErrorWhenDisposed() {
+        Completable completable = VoidBehaviors.toCompletable((onResult, onError) ->
+            new Thread(() -> {
+                Sleep.milliseconds(75);
+                onError.accept(new Throwable(RandomString.string()));
+            }).start()
+        );
+        Disposable disposable = completable.subscribe();
+        disposable.dispose();
+        Sleep.milliseconds(150);
     }
 }

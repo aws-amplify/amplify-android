@@ -203,5 +203,18 @@ public final class OperatorTest {
         assertFalse(operator.evaluate("World"));
         assertFalse(operator.evaluate(""));
     }
+
+    /**
+     * Test the accuracy of notContains operator evaluation.
+     */
+    @Test
+    public void testNotContainsOperator() {
+        final NotContainsQueryOperator operator = new NotContainsQueryOperator("e");
+
+        assertFalse(operator.evaluate("Hello"));
+        assertFalse(operator.evaluate("e"));
+        assertTrue(operator.evaluate("World"));
+        assertTrue(operator.evaluate(""));
+    }
 }
 
