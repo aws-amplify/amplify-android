@@ -7,7 +7,7 @@ greatly value your feedback and contributions.
 
 Please read through this document before submitting any issues or pull
 requests. Doing so will help to ensure that the project maintainers have
-all information neessary to effectively respond to your bug report or
+all information necessary to effectively respond to your bug report or
 contribution.
 
 - [Contributing Guidelines](#contributing-guidelines)
@@ -98,10 +98,12 @@ allprojects {
     }
 }
 ```
-Then, specify `local` instead of a version number to point to mavenLocal inside `build.gradle(Module)` file:
+Then, find the `VERSION_NAME` of the *library* inside `gradle.properties` file.
+
+Use the above version to specify dependencies in your *app*'s `build.gradle (:app)` file:
 ```
 dependencies {
-    implementation 'com.amplifyframework:core:local'
+    implementation 'com.amplifyframework:core:VERSION_NAME'
 }
 ```
 
