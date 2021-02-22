@@ -41,14 +41,14 @@ final class RxAdapters {
 
         static <E extends Throwable> Completable toCompletable(ActionEmitter<E> behavior) {
             return Completable.create(subscriber -> {
-                Cancelable cancelable = behavior.emitTo(subscriber::onComplete, subscriber::onError);
+                Cancelable cancelable = behavior.emitTo(subscriber::onComplete, subscriber::tryOnError);
                 subscriber.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
             });
         }
 
         static <T, E extends Throwable> Single<T> toSingle(ResultEmitter<T, E> behavior) {
             return Single.create(subscriber -> {
-                Cancelable cancelable = behavior.emitTo(subscriber::onSuccess, subscriber::onError);
+                Cancelable cancelable = behavior.emitTo(subscriber::onSuccess, subscriber::tryOnError);
                 subscriber.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
             });
         }
@@ -58,7 +58,7 @@ final class RxAdapters {
                 Cancelable cancelable = behavior.streamTo(
                     NoOpConsumer.create(),
                     subscriber::onNext,
-                    subscriber::onError,
+                    subscriber::tryOnError,
                     subscriber::onComplete
                 );
                 subscriber.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
@@ -114,11 +114,11 @@ final class RxAdapters {
         private VoidBehaviors() {}
 
         static <E extends Throwable> Completable toCompletable(ActionEmitter<E> behavior) {
-            return Completable.create(subscriber -> behavior.emitTo(subscriber::onComplete, subscriber::onError));
+            return Completable.create(subscriber -> behavior.emitTo(subscriber::onComplete, subscriber::tryOnError));
         }
 
         static <T, E extends Throwable> Single<T> toSingle(ResultEmitter<T, E> behavior) {
-            return Single.create(subscriber -> behavior.emitTo(subscriber::onSuccess, subscriber::onError));
+            return Single.create(subscriber -> behavior.emitTo(subscriber::onSuccess, subscriber::tryOnError));
         }
 
         static <S, T, E extends Throwable> Observable<T> toObservable(StreamEmitter<S, T, E> behavior) {
@@ -126,7 +126,7 @@ final class RxAdapters {
                 behavior.streamTo(
                     NoOpConsumer.create(),
                     subscriber::onNext,
-                    subscriber::onError,
+                    subscriber::tryOnError,
                     subscriber::onComplete
                 );
             });

@@ -60,6 +60,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *      Amplify.configure(getApplicationContext());
  *     }
  * </pre>
+ *
+ * Note: there is also a Kotlin facade class called Amplify.
+ * If you are writing Java, import this version of Amplify.
+ * If you are writing Kotlin, import com.amplifyframework.kotlin.Amplify instead.
  */
 public final class Amplify {
     // These static references provide an entry point to the different categories.
@@ -247,3 +251,4 @@ public final class Amplify {
         }
     }
 }
+

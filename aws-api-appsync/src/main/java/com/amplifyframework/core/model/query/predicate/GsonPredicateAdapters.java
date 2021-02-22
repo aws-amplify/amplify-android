@@ -64,6 +64,8 @@ public final class GsonPredicateAdapters {
             switch (QueryOperator.Type.valueOf(operatorType)) {
                 case CONTAINS:
                     return context.deserialize(json, ContainsQueryOperator.class);
+                case NOT_CONTAINS:
+                    return context.deserialize(json, NotContainsQueryOperator.class);
                 case GREATER_OR_EQUAL:
                     return context.deserialize(json, GreaterOrEqualQueryOperator.class);
                 case LESS_OR_EQUAL:
@@ -93,6 +95,8 @@ public final class GsonPredicateAdapters {
         public JsonElement serialize(QueryOperator<?> operator, Type type, JsonSerializationContext context) {
             if (operator instanceof ContainsQueryOperator) {
                 return context.serialize(operator, ContainsQueryOperator.class);
+            } else if (operator instanceof NotContainsQueryOperator) {
+                return context.serialize(operator, NotContainsQueryOperator.class);
             } else if (operator instanceof GreaterOrEqualQueryOperator) {
                 return context.serialize(operator, GreaterOrEqualQueryOperator.class);
             } else if (operator instanceof LessOrEqualQueryOperator) {

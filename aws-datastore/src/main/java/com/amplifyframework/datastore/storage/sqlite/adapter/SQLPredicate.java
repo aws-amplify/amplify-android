@@ -23,6 +23,7 @@ import com.amplifyframework.core.model.query.predicate.GreaterOrEqualQueryOperat
 import com.amplifyframework.core.model.query.predicate.GreaterThanQueryOperator;
 import com.amplifyframework.core.model.query.predicate.LessOrEqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.LessThanQueryOperator;
+import com.amplifyframework.core.model.query.predicate.NotContainsQueryOperator;
 import com.amplifyframework.core.model.query.predicate.NotEqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -161,6 +162,19 @@ public final class SQLPredicate {
                         .append(")")
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQueryOperator(QueryOperator.Type.GREATER_THAN))
+                        .append(SqlKeyword.DELIMITER)
+                        .append("0");
+
+            case NOT_CONTAINS:
+                NotContainsQueryOperator notContainsOp = (NotContainsQueryOperator) op;
+                addBinding(notContainsOp.value());
+                return builder.append("instr(")
+                        .append(column)
+                        .append(",")
+                        .append("?")
+                        .append(")")
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.fromQueryOperator(QueryOperator.Type.EQUAL))
                         .append(SqlKeyword.DELIMITER)
                         .append("0");
             case BEGINS_WITH:
