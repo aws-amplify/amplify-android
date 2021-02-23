@@ -1,7 +1,7 @@
 name: Manage next release
 on:
   push:
-    branches: [ releases/next ]
+    branches: [ releases/next, rjuliano/ci-cd ]
   workflow_dispatch:
     inputs:
       name:
