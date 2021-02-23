@@ -169,12 +169,10 @@ final class SQLiteModelTree {
                 quotedIds.append(SqlKeyword.SEPARATOR);
             }
         }
-        // SELECT <child_id>, <parent_id> FROM <child_table> WHERE <parent_id> IN (<id_1>, <id_2>, ...)
+        // SELECT <child_id> FROM <child_table> WHERE <parent_id> IN (<id_1>, <id_2>, ...)
         String queryString = String.valueOf(SqlKeyword.SELECT) +
                 SqlKeyword.DELIMITER +
                 Wrap.inBackticks(childIdField) +
-                SqlKeyword.SEPARATOR +
-                Wrap.inBackticks(parentIdField) +
                 SqlKeyword.DELIMITER +
                 SqlKeyword.FROM +
                 SqlKeyword.DELIMITER +
