@@ -172,7 +172,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(context);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
-        this.threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        // Create a thread pool large enough to take advantage of parallelization, but small enough to avoid
+        // OutOfMemoryError and CursorWindowAllocationException issues.
+        this.threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 20);
         this.context = context;
         threadPool.submit(() -> {
             try {
