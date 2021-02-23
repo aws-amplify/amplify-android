@@ -37,7 +37,7 @@ jobs:
     - name: Update gradle.properties and CHANGELOG.md
       run: |
         bundle exec fastlane android next_version_pr
-    - name: Check files
+    - name: Check modified file content
       run: |
         cat ../gradle.properties
         git status
