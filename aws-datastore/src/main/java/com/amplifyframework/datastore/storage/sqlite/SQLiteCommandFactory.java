@@ -47,7 +47,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * A factory that produces the SQLite commands for a given
@@ -95,8 +94,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         stringBuilder.append("(").append(parseColumns(table));
         if (!table.getForeignKeys().isEmpty()) {
-            stringBuilder.append(SqlKeyword.SEPARATOR)
-                .append(parseForeignKeys(table));
+            stringBuilder.append(",")
+                    .append(SqlKeyword.DELIMITER)
+                    .append(parseForeignKeys(table));
         }
         stringBuilder.append(");");
 
@@ -130,7 +130,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 final String indexColumnName = iterator.next();
                 stringBuilder.append(Wrap.inBackticks(indexColumnName));
                 if (iterator.hasNext()) {
-                    stringBuilder.append(SqlKeyword.SEPARATOR);
+                    stringBuilder.append(",").append(SqlKeyword.DELIMITER);
                 }
             }
             stringBuilder.append(");");
@@ -177,7 +177,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append(Wrap.inBackticks(column.getAliasedName()));
 
             if (columnsIterator.hasNext()) {
-                selectColumns.append(SqlKeyword.SEPARATOR);
+                selectColumns.append(",").append(SqlKeyword.DELIMITER);
             }
         }
 
@@ -231,7 +231,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                         .append(SqlKeyword.fromQuerySortOrder(sortBy.getSortOrder()));
 
                 if (sortByIterator.hasNext()) {
-                    rawQuery.append(SqlKeyword.SEPARATOR);
+                    rawQuery.append(",")
+                            .append(SqlKeyword.DELIMITER);
                 }
             }
         }
@@ -242,11 +243,11 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             rawQuery.append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.LIMIT)
                 .append(SqlKeyword.DELIMITER)
-                .append(SqlKeyword.VARIABLE)
+                .append("?")
                 .append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.OFFSET)
                 .append(SqlKeyword.DELIMITER)
-                .append(SqlKeyword.VARIABLE);
+                .append("?");
             bindings.add(paginationInput.getLimit());
             bindings.add(paginationInput.getPage() * paginationInput.getLimit());
         }
@@ -279,18 +280,22 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final String columnName = columnsIterator.next().getName();
             stringBuilder.append(Wrap.inBackticks(columnName));
             if (columnsIterator.hasNext()) {
-                stringBuilder.append(SqlKeyword.SEPARATOR);
+                stringBuilder.append(",").append(SqlKeyword.DELIMITER);
             }
         }
         stringBuilder.append(")")
                 .append(SqlKeyword.DELIMITER)
                 .append("VALUES")
                 .append(SqlKeyword.DELIMITER)
-                .append("(")
-                .append(Collections.nCopies(columns.size(), SqlKeyword.VARIABLE.toString())
-                        .stream()
-                        .collect(Collectors.joining(SqlKeyword.SEPARATOR.toString())))
-                .append(")");
+                .append("(");
+        for (int i = 0; i < columns.size(); i++) {
+            if (i == columns.size() - 1) {
+                stringBuilder.append("?");
+            } else {
+                stringBuilder.append("?, ");
+            }
+        }
+        stringBuilder.append(")");
         final String preparedInsertStatement = stringBuilder.toString();
         final SQLiteStatement compiledInsertStatement =
                 databaseConnectionHandle == null ?
@@ -330,9 +335,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.EQUAL)
                     .append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.VARIABLE);
+                    .append("?");
             if (columnsIterator.hasNext()) {
-                stringBuilder.append(SqlKeyword.SEPARATOR);
+                stringBuilder.append(", ");
             }
         }
 
@@ -447,7 +452,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             }
 
             if (columnsIterator.hasNext()) {
-                builder.append(SqlKeyword.SEPARATOR);
+                builder.append(",").append(SqlKeyword.DELIMITER);
             }
         }
         return builder;
@@ -466,17 +471,17 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
             builder.append("FOREIGN KEY")
                     .append(SqlKeyword.DELIMITER)
-                    .append(Wrap.inParentheses(Wrap.inBackticks(connectedName)))
+                    .append("(" + Wrap.inBackticks(connectedName) + ")")
                     .append(SqlKeyword.DELIMITER)
                     .append("REFERENCES")
                     .append(SqlKeyword.DELIMITER)
                     .append(Wrap.inBackticks(connectedType))
-                    .append(Wrap.inParentheses(Wrap.inBackticks(connectedId)))
+                    .append("(" + Wrap.inBackticks(connectedId) + ")")
                     .append(SqlKeyword.DELIMITER)
                     .append("ON DELETE CASCADE");
 
             if (foreignKeyIterator.hasNext()) {
-                builder.append(SqlKeyword.SEPARATOR);
+                builder.append(",").append(SqlKeyword.DELIMITER);
             }
         }
         return builder;
