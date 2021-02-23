@@ -14,6 +14,17 @@ platform :android do |options|
     sh('git', 'fetch')
   end
 
+  lane :next_version_pr do 
+    latest_tag = last_git_tag(pattern: "#{RELEASE_TAG_PREFIX}*")
+    next_version, commits = calculate_next_release_version(release_tag_prefix: RELEASE_TAG_PREFIX, from_tag: latest_tag)
+
+    update_gradle_properties(version: next_version)
+
+    changelog = changelog_from_git_commits(between: [latest_tag,'HEAD'])
+    # write_changelog(changelog: changelog, path: 'CHANGELOG.md')
+
+  end
+
   lane :unstable do
     latest_tag = last_git_tag(pattern: "#{RELEASE_TAG_PREFIX}*")
 
