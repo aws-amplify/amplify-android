@@ -496,7 +496,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 // publish cascaded deletions
                 for (Model cascadedModel : cascadedModels) {
-                    ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(getModelName(cascadedModel));
+                    ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(cascadedModel.getModelName());
                     itemChangeSubject.onNext(StorageItemChange.builder()
                         .item(cascadedModel)
                         .patchItem(SerializedModel.create(cascadedModel, schema))
@@ -576,7 +576,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 // publish every deletion
                 for (Model model : modelsToDelete) {
-                    ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(getModelName(model));
+                    ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(model.getModelName());
                     itemChangeSubject.onNext(StorageItemChange.builder()
                             .item(model)
                             .patchItem(SerializedModel.create(model, schema))
