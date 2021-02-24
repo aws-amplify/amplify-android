@@ -33,6 +33,7 @@ import org.json.JSONObject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,7 +46,6 @@ import java.util.concurrent.atomic.AtomicReference;
  *            support, e.g. StoragePlugin, AnalyticsPlugin, etc.
  */
 public abstract class Category<P extends Plugin<?>> implements CategoryTypeable {
-
     /**
      * Map of the { pluginKey => plugin } object.
      */
@@ -56,12 +56,15 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      */
     private final AtomicReference<State> state;
 
+    private final AtomicReference<CategoryInitializationResult> categoryInitializationResult;
+
     /**
      * Constructs a new, not-yet-configured, Category.
      */
     public Category() {
         this.plugins = new ConcurrentHashMap<>();
         this.state = new AtomicReference<>(State.NOT_CONFIGURED);
+        this.categoryInitializationResult = new AtomicReference<>(null);
     }
 
     /**
@@ -89,7 +92,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
                 }
                 state.set(State.CONFIGURED);
             } catch (Throwable anyError) {
-                state.set(State.FAILED);
+                state.set(State.CONFIGURATION_FAILED);
                 throw anyError;
             }
         }
@@ -130,8 +133,9 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
 
         final CategoryInitializationResult result =
             CategoryInitializationResult.with(pluginInitializationResults);
+        categoryInitializationResult.set(result);
         if (result.isFailure()) {
-            state.set(State.FAILED);
+            state.set(State.INITIALIZATION_FAILED);
         } else {
             state.set(State.INITIALIZED);
         }
@@ -179,17 +183,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     @NonNull
     public final P getPlugin(@NonNull final String pluginKey) throws IllegalStateException {
         P plugin = plugins.get(pluginKey);
-        if (plugin == null) {
-            throw new IllegalStateException(
-                "Tried to get a plugin but that plugin was not present. " +
-                "Check if the plugin was added originally or perhaps was already removed."
-            );
-        } else if (!isConfigured()) {
-            throw new IllegalStateException(
-                    "Tried to get a plugin before it was configured.  Make sure you call Amplify.configure() first.");
-        } else {
-            return plugin;
-        }
+        return getPluginIfConfiguredOrThrow(plugin);
     }
 
     /**
@@ -211,21 +205,42 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      */
     @NonNull
     protected P getSelectedPlugin() throws IllegalStateException {
-        if (plugins.isEmpty()) {
-            throw new IllegalStateException(
-                "Tried to get a plugin but that plugin was not present. " +
-                "Check if the plugin was added originally or perhaps was already removed."
-            );
-        } else if (plugins.size() > 1) {
+        if (plugins.size() > 1) {
             throw new IllegalStateException(
                 "Tried to get a default plugin but there are more than one to choose from in this category. " +
                 "Call getPlugin(pluginKey) to choose the specific plugin you want to use in this case."
             );
+        }
+        Iterator<P> pluginsIterator = getPlugins().iterator();
+        return getPluginIfConfiguredOrThrow(pluginsIterator.hasNext() ? pluginsIterator.next() : null);
+    }
+
+    private P getPluginIfConfiguredOrThrow(P plugin) throws IllegalStateException {
+        if (plugin == null) {
+            throw new IllegalStateException(
+                "Tried to get a plugin but that plugin was not present. " +
+                "Check if the plugin was added originally or perhaps was already removed."
+            );
+        } else if (State.CONFIGURATION_FAILED.equals(state.get())) {
+            throw new IllegalStateException(
+                "Failed to get plugin because configuration previously failed.  Check for failures by logging any " +
+                "exceptions thrown by Amplify.configure()."
+            );
+        } else if (State.INITIALIZATION_FAILED.equals(state.get())) {
+            Throwable cause = null;
+            final CategoryInitializationResult result = categoryInitializationResult.get();
+            if (result != null) {
+                cause = result.getPluginInitializationFailures().get(plugin.getPluginKey());
+            }
+            throw new IllegalStateException(
+                "Failed to get plugin because initialization previously failed.  See attached exception for details.",
+                cause);
         } else if (!isConfigured()) {
             throw new IllegalStateException(
-                    "Tried to get a plugin before it was configured.  Make sure you call Amplify.configure() first.");
+                "Tried to get a plugin before it was configured.  Make sure you call Amplify.configure() first.");
+        } else {
+            return plugin;
         }
-        return getPlugins().iterator().next();
     }
 
     /**
@@ -248,8 +263,8 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     /**
      * The Category must be in exactly one of the below states. During ideal operation, the state
      * machine flows from {@link #NOT_CONFIGURED} to {@link #INITIALIZED}, in the order below.
-     * But, if there is an error at any point, the state transition will terminate in a {@link #FAILED}
-     * state.
+     * But, if there is an error at any point, the state transition will terminate in a {@link #CONFIGURATION_FAILED}
+     * or {@link #INITIALIZATION_FAILED} state.
      */
     private enum State {
         /**
@@ -279,8 +294,13 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         INITIALIZED,
 
         /**
-         * Configuration or initialization failed. This is a terminal state.
+         * Configuration failed. This is a terminal state.
          */
-        FAILED
+        CONFIGURATION_FAILED,
+
+        /**
+         * Initialization failed. This is a terminal state.
+         */
+        INITIALIZATION_FAILED
     }
 }
