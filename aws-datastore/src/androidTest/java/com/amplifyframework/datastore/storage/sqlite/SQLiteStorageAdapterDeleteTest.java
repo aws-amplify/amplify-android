@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -36,6 +37,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -127,19 +130,19 @@ public final class SQLiteStorageAdapterDeleteTest {
         }
 
         // Observe deletions
-        Set<String> deleted = new HashSet<>();
-        adapter.observe()
+        TestObserver<String> deleteObserver = adapter.observe()
                 .filter(change -> StorageItemChange.Type.DELETE.equals(change.type()))
                 .map(StorageItemChange::item)
-                .subscribe(model -> deleted.add(model.getId()));
+                .map(Model::getId)
+                .test();
 
         // Triggers a delete.
         // Deletes every saved model to prevent foreign key constraint violation
         adapter.delete(ownerModel);
 
         // Assert that cascaded deletions are observed.
-        assertEquals(13, deleted.size());
-        assertEquals(expected, deleted);
+        deleteObserver.assertValueCount(13);
+        assertEquals(expected, new HashSet<>(deleteObserver.values()));
 
         // Get data from the database and assert that everything is deleted.
         assertTrue(adapter.query(BlogOwner.class).isEmpty());
@@ -259,19 +262,19 @@ public final class SQLiteStorageAdapterDeleteTest {
         }
 
         // Observe deletions
-        Set<String> deleted = new HashSet<>();
-        adapter.observe()
+        TestObserver<String> deleteObserver = adapter.observe()
                 .filter(change -> StorageItemChange.Type.DELETE.equals(change.type()))
                 .map(StorageItemChange::item)
-                .subscribe(model -> deleted.add(model.getId()));
+                .map(Model::getId)
+                .test();
 
         // Triggers a delete of all blogs.
         // All posts will be deleted by cascade.
         adapter.delete(Blog.class, QueryPredicates.all());
 
-        // Assert that cascaded deletions are observed.
-        assertEquals(12, deleted.size());
-        assertEquals(expected, deleted);
+        // Assert 3 blogs and 9 posts are deleted.
+        deleteObserver.assertValueCount(12);
+        assertEquals(expected, new HashSet<>(deleteObserver.values()));
 
         // Get the BlogOwner from the database. Should not have been deleted.
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
@@ -300,5 +303,44 @@ public final class SQLiteStorageAdapterDeleteTest {
         // Assert that nothing was deleted
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(Collections.singletonList(john), blogOwners);
+    }
+
+    /**
+     * Test deleting item with many children does not trigger SQLite exception.
+     * SQLite places a hard limit of 1000 on expression tree depth, so chaining too many
+     * predicates can potentially trigger an error.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void deleteModelWithManyChildrenSucceeds() throws DataStoreException {
+        // Create model with more than 1000 child models
+        BlogOwner ownerModel = BlogOwner.builder()
+                .name("BlogOwner")
+                .build();
+        adapter.save(ownerModel);
+        for (int blog = 0; blog < 1001; blog++) {
+            Blog blogModel = Blog.builder()
+                    .name("Blog " + blog)
+                    .owner(ownerModel)
+                    .build();
+            adapter.save(blogModel);
+        }
+
+        // Observe deletions
+        TestObserver<String> deleteObserver = adapter.observe()
+                .filter(change -> StorageItemChange.Type.DELETE.equals(change.type()))
+                .map(StorageItemChange::item)
+                .map(Model::getId)
+                .test();
+
+        // Delete parent model
+        adapter.delete(ownerModel);
+
+        // Assert 1 blog owner and 1001 blogs are deleted.
+        deleteObserver.assertValueCount(1002);
+
+        // Assert the local deletion happened.
+        assertTrue(adapter.query(BlogOwner.class).isEmpty());
+        assertTrue(adapter.query(Blog.class).isEmpty());
     }
 }

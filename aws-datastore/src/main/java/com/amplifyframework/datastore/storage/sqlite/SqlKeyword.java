@@ -36,6 +36,16 @@ public enum SqlKeyword {
     DELIMITER(" "),
 
     /**
+     * Acts as a separator between fields in SQL.
+     */
+    SEPARATOR(", "),
+
+    /**
+     * Acts as a placeholder for value to be binded onto.
+     */
+    VARIABLE("?"),
+
+    /**
      * SQL operator to check for equality.
      */
     EQUAL("="),
