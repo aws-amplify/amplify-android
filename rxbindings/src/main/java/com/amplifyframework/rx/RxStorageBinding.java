@@ -202,7 +202,9 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
         @Override
         public Single<T> observeResult() {
             return Single.create(emitter -> {
-                resultSubject.subscribe(emitter::onSuccess, emitter::onError);
+                emitter.setDisposable(
+                    resultSubject.subscribe(emitter::onSuccess, emitter::tryOnError)
+                );
             });
         }
 
