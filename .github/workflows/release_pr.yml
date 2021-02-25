@@ -1,13 +1,8 @@
-name: Manage next release
+name: Manage PR for next release
 on:
   push:
-    branches: [ releases/next, rjuliano/ci-cd ]
-  workflow_dispatch:
-    inputs:
-      name:
-        description: 'Test'
-        required: true
-        default: 'Test'
+    branches:
+      - releases/next
 jobs:
   update_next_release:
     runs-on: ubuntu-latest
@@ -20,12 +15,8 @@ jobs:
     - uses: actions/checkout@v2
       with:
         ref: releases/next
-        token: ${{ github.token }}
+        token: ${{ github.token }} # This will need to change to a token belonging to a service account.
         fetch-depth: 0
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.8
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
@@ -36,10 +27,8 @@ jobs:
         bundle install
     - name: Update gradle.properties and CHANGELOG.md
       run: |
-        bundle exec fastlane android next_version_pr
+        bundle exec fastlane android manage_next_release_pr
     - name: Check modified file content
       run: |
         cat ../gradle.properties
         git status
-
-    
