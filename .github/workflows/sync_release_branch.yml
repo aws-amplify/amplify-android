@@ -1,0 +1,27 @@
+name: Commits pushed to main
+on:
+  push:
+    branches:
+      - main
+jobs:
+  update_release_branch:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Update git # Apparently ubuntu-latest has an older version of git that causes some issues with scripts.
+        run: |
+          sudo add-apt-repository -y ppa:git-core/ppa
+          sudo apt-get update
+          sudo apt-get install git -y
+      - uses: actions/checkout@v2
+        with:
+          ref: releases/next
+          token: ${{ github.token }} # This will need to change to a token belonging to a service account.
+          fetch-depth: 0
+      - name: Merge changes from main
+        run: |
+          cd $GITHUB_WORKSPACE
+          git fetch --tags
+          git status
+          git merge origin/main
+          git push origin releases/next
