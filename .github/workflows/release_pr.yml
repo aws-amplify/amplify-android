@@ -1,0 +1,34 @@
+name: Manage PR for next release
+on:
+  push:
+    branches:
+      - releases/next
+jobs:
+  update_next_release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Update git
+      run: |
+        sudo add-apt-repository -y ppa:git-core/ppa
+        sudo apt-get update
+        sudo apt-get install git -y
+    - uses: actions/checkout@v2
+      with:
+        ref: releases/next
+        token: ${{ github.token }} # This will need to change to a token belonging to a service account.
+        fetch-depth: 0
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+    - name: Install dependencies
+      run: |
+        cd scripts
+        bundle install
+    - name: Update gradle.properties and CHANGELOG.md
+      run: |
+        bundle exec fastlane android manage_next_release_pr
+    - name: Check modified file content
+      run: |
+        cat ../gradle.properties
+        git status
