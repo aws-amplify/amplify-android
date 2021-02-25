@@ -129,6 +129,14 @@ subprojects { project ->
 }
 
 private void configureAndroidLibrary(Project project) {
+    project.ext.VERSION_NAME = project.hasProperty('VERSION_NAME') ?
+        project.findProperty('VERSION_NAME') :
+        rootProject.findProperty('VERSION_NAME')
+
+    project.ext.VERSION_CODE = project.hasProperty('VERSION_CODE') ?
+        project.findProperty('VERSION_CODE').toInteger() :
+        rootProject.findProperty('VERSION_CODE').toInteger()
+
     project.android {
         buildToolsVersion rootProject.ext.buildToolsVersion
         compileSdkVersion rootProject.ext.compileSdkVersion
@@ -137,8 +145,8 @@ private void configureAndroidLibrary(Project project) {
             multiDexEnabled true
             minSdkVersion rootProject.ext.minSdkVersion
             targetSdkVersion rootProject.ext.targetSdkVersion
-            versionCode rootProject.findProperty('VERSION_CODE').toInteger()
-            versionName rootProject.findProperty('VERSION_NAME')
+            versionName project.ext.VERSION_NAME
+            versionCode project.ext.VERSION_CODE
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
             consumerProguardFiles rootProject.file('configuration/consumer-rules.pro')
 
