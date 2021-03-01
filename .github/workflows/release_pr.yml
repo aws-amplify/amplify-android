@@ -30,6 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd scripts
+        gem install bundler
         bundle install
     - name: Update gradle.properties and CHANGELOG.md
       run: |
