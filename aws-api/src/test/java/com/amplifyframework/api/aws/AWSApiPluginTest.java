@@ -46,6 +46,7 @@ import org.robolectric.RobolectricTestRunner;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Observable;
 import okhttp3.HttpUrl;
@@ -55,6 +56,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -89,7 +91,17 @@ public final class AWSApiPluginTest {
                 .put("authorizationType", "API_KEY")
                 .put("apiKey", "FAKE-API-KEY"));
 
-        this.plugin = new AWSApiPlugin();
+        this.plugin = AWSApiPlugin.builder()
+            .configureClient("graphQlApi", builder -> {
+                builder.addInterceptor(chain -> {
+                    return chain.proceed(chain.request().newBuilder()
+                        .addHeader("specialKey", "specialValue")
+                        .build()
+                    );
+                });
+                builder.connectTimeout(10, TimeUnit.SECONDS);
+            })
+            .build();
         this.plugin.configure(configuration, ApplicationProvider.getApplicationContext());
     }
 
@@ -247,5 +259,27 @@ public final class AWSApiPluginTest {
     public void singleConfiguredApiIsSelected() throws ApiException {
         String selectedApi = plugin.getSelectedApiName(EndpointType.GRAPHQL);
         assertEquals("graphQlApi", selectedApi);
+    }
+
+    /**
+     * Validates that the plugin adds custom headers into the outgoing OkHttp request.
+     * @throws ApiException Thrown from the query() call.
+     * @throws InterruptedException Possible thrown from takeRequest()
+     */
+    @Test
+    public void headerInterceptorsAreConfigured() throws ApiException, InterruptedException {
+        // Arrange some response. This isn't the point of the test,
+        // but it keeps the mock web server from freezing up.
+        webServer.enqueue(new MockResponse()
+            .setBody(Resources.readAsString("blog-owners-query-results.json")));
+
+        // Fire off a request
+        Await.<GraphQLResponse<PaginatedResult<BlogOwner>>, ApiException>result((onResult, onError) ->
+            plugin.query(ModelQuery.list(BlogOwner.class), onResult, onError)
+        );
+
+        RecordedRequest recordedRequest = webServer.takeRequest(5, TimeUnit.MILLISECONDS);
+        assertNotNull(recordedRequest);
+        assertEquals("specialValue", recordedRequest.getHeader("specialKey"));
     }
 }
