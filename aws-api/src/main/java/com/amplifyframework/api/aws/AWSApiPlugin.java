@@ -781,7 +781,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         /**
          * Apply customizations to an underlying OkHttpClient that will be used
          * for a particular API.
-         * @param forApiName The name of the API for which these customizations should apply
+         * @param forApiName The name of the API for which these customizations should apply.  This can be found in your `amplifyconfiguration.json` file.
          * @param byConfigurator A lambda that hands the user an OkHttpClient.Builder,
          *                       and enables the user to set come configurations on it.
          * @return A builder instance, to continue chaining configurations
