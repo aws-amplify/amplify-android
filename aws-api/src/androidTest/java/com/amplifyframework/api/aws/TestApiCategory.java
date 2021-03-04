@@ -15,12 +15,12 @@
 
 package com.amplifyframework.api.aws;
 
-import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
@@ -47,24 +47,23 @@ final class TestApiCategory {
      */
     @NonNull
     static ApiCategory fromConfiguration(@RawRes int resourceId) throws AmplifyException {
-        Context context = getApplicationContext();
+        CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider =
+            new DefaultCognitoUserPoolsAuthProvider(AWSMobileClient.getInstance());
+        ApiAuthProviders providers = ApiAuthProviders.builder()
+            .awsCredentialsProvider(AWSMobileClient.getInstance())
+            .cognitoUserPoolsAuthProvider(cognitoUserPoolsAuthProvider)
+            .build();
+        AWSApiPlugin plugin = AWSApiPlugin.builder()
+            .apiAuthProviders(providers)
+            .build();
         ApiCategory apiCategory = new ApiCategory();
-        apiCategory.addPlugin(
-                new AWSApiPlugin(
-                        ApiAuthProviders
-                                .builder()
-                                .awsCredentialsProvider(AWSMobileClient.getInstance())
-                                .cognitoUserPoolsAuthProvider(
-                                        new DefaultCognitoUserPoolsAuthProvider(AWSMobileClient.getInstance())
-                                )
-                                .build()
-                )
-        );
+        apiCategory.addPlugin(plugin);
+
         CategoryConfiguration apiConfiguration =
-            AmplifyConfiguration.fromConfigFile(context, resourceId)
+            AmplifyConfiguration.fromConfigFile(getApplicationContext(), resourceId)
                 .forCategoryType(CategoryType.API);
-        apiCategory.configure(apiConfiguration, context);
-        // apiCategory.initialize(context); Doesn't currently contain any logic, so, skip it.
+        apiCategory.configure(apiConfiguration, getApplicationContext());
+        // apiCategory.initialize(...); Doesn't currently contain any logic, so, skip it.
         return apiCategory;
     }
 }

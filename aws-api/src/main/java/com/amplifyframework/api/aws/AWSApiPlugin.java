@@ -39,6 +39,7 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONObject;
@@ -69,6 +70,7 @@ import okhttp3.Protocol;
 @SuppressWarnings("TypeParameterHidesVisibleType") // <R> shadows >com.amplifyframework.api.aws.R
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Map<String, ClientDetails> apiDetails;
+    private final Map<String, OkHttpConfigurator> apiConfigurators;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
     private final ExecutorService executorService;
@@ -78,30 +80,39 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Set<String> gqlApis;
 
     /**
-     * Default constructor for this plugin without any override.
+     * Default constructor for this plugin without any overrides.
      */
     public AWSApiPlugin() {
-        this(ApiAuthProviders.noProviderOverrides());
+        this(builder());
     }
 
     /**
-     * Constructs an instance of AWSApiPlugin with
-     * configured auth providers to override default modes
-     * of authorization.
-     * If no Auth provider implementation is provided, then
-     * the plugin will assume default behavior for that specific
-     * mode of authorization.
-     *
-     * @param apiAuthProvider configured instance of {@link ApiAuthProviders}
+     * Deprecated. Use {@link #builder()} instead.
+     * @param apiAuthProvider Don't use this
+     * @deprecated Use the fluent {@link #builder()}, instead.
      */
+    @Deprecated
     public AWSApiPlugin(@NonNull ApiAuthProviders apiAuthProvider) {
+        this(builder().apiAuthProviders(apiAuthProvider));
+    }
+
+    private AWSApiPlugin(@NonNull Builder builder) {
         this.apiDetails = new HashMap<>();
         this.gqlResponseFactory = new GsonGraphQLResponseFactory();
-        this.authProvider = Objects.requireNonNull(apiAuthProvider);
+        this.authProvider = builder.apiAuthProviders;
         this.restApis = new HashSet<>();
         this.gqlApis = new HashSet<>();
         this.executorService = Executors.newCachedThreadPool();
         this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
+        this.apiConfigurators = Immutable.of(builder.apiConfigurators);
+    }
+
+    /**
+     * Begins construction of a new AWSApiPlugin instance by using a fluent builder.
+     * @return A builder to help construct an AWSApiPlugin
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 
     @NonNull
@@ -132,7 +143,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
                 builder.addInterceptor(interceptorFactory.create(apiConfiguration));
             }
+
+            OkHttpConfigurator configurator = apiConfigurators.get(apiName);
+            if (configurator != null) {
+                configurator.applyConfiguration(builder);
+            }
             final OkHttpClient okHttpClient = builder.build();
+
             final SubscriptionAuthorizer subscriptionAuthorizer =
                     new SubscriptionAuthorizer(apiConfiguration, authProvider);
             final SubscriptionEndpoint subscriptionEndpoint =
@@ -734,6 +751,56 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 ApiEndpointStatusChangeEvent apiEndpointStatusChangeEvent = previousStatus.transitionTo(newStatus);
                 Amplify.Hub.publish(HubChannel.API, apiEndpointStatusChangeEvent.toHubEvent());
             }
+        }
+    }
+
+    /**
+     * Builds an {@link AWSApiPlugin}.
+     */
+    public static final class Builder {
+        private ApiAuthProviders apiAuthProviders;
+        private final Map<String, OkHttpConfigurator> apiConfigurators;
+
+        private Builder() {
+            this.apiAuthProviders = ApiAuthProviders.noProviderOverrides();
+            this.apiConfigurators = new HashMap<>();
+        }
+
+        /**
+         * Specify authentication providers.
+         * @param apiAuthProviders A set of authentication providers to use for API calls
+         * @return Current builder instance, for fluent construction of plugin
+         */
+        @NonNull
+        public Builder apiAuthProviders(@NonNull ApiAuthProviders apiAuthProviders) {
+            Objects.requireNonNull(apiAuthProviders);
+            Builder.this.apiAuthProviders = apiAuthProviders;
+            return Builder.this;
+        }
+
+        /**
+         * Apply customizations to an underlying OkHttpClient that will be used
+         * for a particular API.
+         * @param forApiName The name of the API for which these customizations should apply.
+                             This can be found in your `amplifyconfiguration.json` file.
+         * @param byConfigurator A lambda that hands the user an OkHttpClient.Builder,
+         *                       and enables the user to set come configurations on it.
+         * @return A builder instance, to continue chaining configurations
+         */
+        @NonNull
+        public Builder configureClient(
+                @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
+            this.apiConfigurators.put(forApiName, byConfigurator);
+            return this;
+        }
+
+        /**
+         * Builds an {@link AWSApiPlugin}.
+         * @return An AWSApiPlugin
+         */
+        @NonNull
+        public AWSApiPlugin build() {
+            return new AWSApiPlugin(Builder.this);
         }
     }
 }
