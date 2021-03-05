@@ -4,6 +4,7 @@ default_platform(:android)
 platform :android do |options|
   gradle_properties_path = File.expand_path("#{Dir.pwd()}/../../gradle.properties")
   gradle_project_root = File.dirname(gradle_properties_path)
+  change_log_path = "#{gradle_project_root}/CHANGELOG.md"
   version_regex = /(\d*)\.(\d*)\.(\d*)(?:-unstable\.)?(\d*)?/
 
   desc "Fetch all tags to ensure accurate calculation of the next release number."
@@ -13,10 +14,11 @@ platform :android do |options|
   end
 
   lane :manage_next_release_pr do 
-    latest_tag = last_git_tag(pattern: "#{RELEASE_TAG_PREFIX}*")
-    next_version, commits = calculate_next_release_version(release_tag_prefix: RELEASE_TAG_PREFIX, from_tag: latest_tag)
-    UI.message("Version change #{latest_tag} => #{next_version}")
+    last_release_tag = last_git_tag(pattern: "#{RELEASE_TAG_PREFIX}*")
+    next_version, commits = calculate_next_release_version(release_tag_prefix: RELEASE_TAG_PREFIX, from_tag: last_release_tag)
+    UI.message("Version change #{last_release_tag} => #{next_version}")
     update_gradle_properties(version: next_version)
+    update_change_log(last_release_tag: last_release_tag)
   end
 
 
@@ -25,6 +27,20 @@ platform :android do |options|
     UI.message("Pushing release #{options[:release_tag]} to maven")
     sh("git", "checkout", options[:release_tag])
     publish_to_maven
+  end
+
+  desc "Update changelog"
+  private_lane :update_change_log do |options|
+    changelog_body = changelog_from_git_commits(
+      between: [options[:last_release_tag], "HEAD"],
+      merge_commit_filtering: "exclude_merges",
+      pretty: "- %s"
+    )
+
+    open(change_log_path, 'a') { |f|
+      f.puts "# Release Amplify Android #{options[:next_version]}\n\n"
+      f.puts "#{changelog_body}\n\n"
+    }
   end
 
   desc "Increment versions"
