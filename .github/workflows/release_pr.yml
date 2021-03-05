@@ -38,4 +38,5 @@ jobs:
     - name: Check modified file content
       run: |
         cat ../gradle.properties
+        cat ../CHANGELOG.md
         git status
