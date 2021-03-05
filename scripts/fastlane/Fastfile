@@ -19,6 +19,8 @@ platform :android do |options|
     UI.message("Version change #{last_release_tag} => #{next_version}")
     update_gradle_properties(version: next_version)
     update_change_log(last_release_tag: last_release_tag)
+
+    git_add(path: [gradle_properties_path, change_log_path])
   end
 
 
