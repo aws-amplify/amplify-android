@@ -17,10 +17,6 @@ platform :android do |options|
     next_version, commits = calculate_next_release_version(release_tag_prefix: RELEASE_TAG_PREFIX, from_tag: latest_tag)
     UI.message("Version change #{latest_tag} => #{next_version}")
     update_gradle_properties(version: next_version)
-
-    # For initial debugging only
-    sh('git', 'status')
-    sh('cat', 'gradle.properties')
   end
 
 
