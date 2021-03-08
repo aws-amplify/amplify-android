@@ -127,7 +127,9 @@ public final class OwnerBasedAuthTest {
             // This shouldn't happen...
         }
 
-        plugin = new AWSApiPlugin(providers);
+        plugin = AWSApiPlugin.builder()
+            .apiAuthProviders(providers)
+            .build();
         plugin.configure(configuration, ApplicationProvider.getApplicationContext());
     }
 

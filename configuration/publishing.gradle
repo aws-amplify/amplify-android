@@ -17,12 +17,8 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 apply plugin: 'maven-publish'
 
-version = VERSION_NAME
-group = GROUP
-
-def isReleaseBuild() {
-    return VERSION_NAME.contains("SNAPSHOT") == false
-}
+version = project.ext.VERSION_NAME
+group = POM_GROUP
 
 def getReleaseRepositoryUrl() {
     return hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL :
@@ -42,8 +38,6 @@ def getRepositoryPassword() {
     return hasProperty('SONATYPE_NEXUS_PASSWORD') ? SONATYPE_NEXUS_PASSWORD : ""
 }
 
-archivesBaseName = POM_ARTIFACT_ID
-
 afterEvaluate { project ->
     uploadArchives {
         repositories {
@@ -51,9 +45,9 @@ afterEvaluate { project ->
                 mavenDeployer {
                     beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-                    pom.groupId = GROUP
+                    pom.groupId = POM_GROUP
                     pom.artifactId = POM_ARTIFACT_ID
-                    pom.version = VERSION_NAME
+                    pom.version = project.ext.VERSION_NAME
 
                     repository(url: getReleaseRepositoryUrl()) {
                         authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
@@ -95,16 +89,19 @@ afterEvaluate { project ->
                 }
             } else {
                 mavenInstaller {
-                    pom.groupId = GROUP
+                    pom.groupId = POM_GROUP
                     pom.artifactId = POM_ARTIFACT_ID
-                    pom.version = VERSION_NAME
+                    pom.version = project.ext.VERSION_NAME
                 }
             }
         }
     }
 
     signing {
-        required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
+        required {
+            project.ext.VERSION_NAME.contains("SNAPSHOT") == false &&
+                gradle.taskGraph.hasTask("uploadArchives")
+        }
         sign configurations.archives
     }
 
@@ -114,9 +111,9 @@ afterEvaluate { project ->
             repositories.mavenInstaller {
                 configuration = configurations.archives
 
-                pom.groupId = GROUP
+                pom.groupId = POM_GROUP
                 pom.artifactId = POM_ARTIFACT_ID
-                pom.version = VERSION_NAME
+                pom.version = project.ext.VERSION_NAME
 
                 pom.project {
                     name POM_NAME
@@ -166,9 +163,9 @@ afterEvaluate { project ->
     } else {
         install {
             repositories.mavenInstaller {
-                pom.groupId = GROUP
+                pom.groupId = POM_GROUP
                 pom.artifactId = POM_ARTIFACT_ID
-                pom.version = VERSION_NAME
+                pom.version = project.ext.VERSION_NAME
 
                 pom.project {
                     name POM_NAME
@@ -219,9 +216,9 @@ afterEvaluate { project ->
     publishing {
         publications {
             library(MavenPublication) {
-                groupId GROUP
+                groupId POM_GROUP
                 artifactId POM_ARTIFACT_ID
-                version VERSION_NAME
+                version project.ext.VERSION_NAME
                 artifact("${buildDir}/outputs/aar/${artifactId}-release.aar")
                 pom.withXml {
                     def dependenciesNode = asNode().appendNode('dependencies')
