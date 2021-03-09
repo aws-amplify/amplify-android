@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.appsync.SerializedModel;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
