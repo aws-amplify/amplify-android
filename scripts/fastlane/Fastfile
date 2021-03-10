@@ -49,16 +49,49 @@ platform :android do |options|
   private_lane :update_gradle_properties do |options|
     version = options[:version].to_s
     segments = version.match(version_regex).captures # version.split('.')
-    prerelease = segments.length() > 3 ?  0 : segments[-1].to_i
-
-    # Derive the version code from version segements and pre-release number (if applicable)
-    version_code = segments[0].to_i * 100000 + segments[1].to_i * 1000 + segments[2].to_i * 10 + prerelease
+    version_code = calculate_version_code(segments: segments, mode: 3)
 
     UI.message("Updating versionName and versionCode in gradle.properties")
 
     set_key_value(file: gradle_properties_path, key: 'VERSION_NAME', value: version)
     set_key_value(file: gradle_properties_path, key: 'VERSION_CODE', value: version_code.to_s)
 
+  end
+
+  # Calculate the Android version code with one of 3 different approaches.
+  # Option 1 is the default approach which results in a version code that more or less resembles
+  # the version name.
+  # Option 2 and 3 are date-based. It's more straight forward in terms of calculation, but you lose
+  # the ability to be able to relate version name to version code.
+  desc "Calculate a version code based on new version segments"
+  private_lane :calculate_version_code do |options|
+    # Default to mode = 1 (derive from new version name)
+    mode = options[:mode] != nil ? options[:mode] : 1
+    segments = options[:segments]
+    prerelease = segments.length() > 3 ?  0 : segments[-1].to_i
+    # Android version code max version = 2_100_000_000
+
+    case mode
+    when 1
+      # ======= option 1 =======
+      # Derive the version code from version segements and pre-release number (if applicable)
+      # With this approach, you're "limited" to 999 minor versions per major and 999 patches per minor version.
+      # Limits: Max version for 1.x would be 1.999.999 with version code 199_999_900
+      version_code = segments[0].to_i * 100_000_000 + segments[1].to_i * 100_000 + segments[2].to_i * 100 + prerelease
+    when 2
+      # ======= option 2 =======
+      # Date-based approach 1
+      # We can only do <YEAR><MONTH><DAY><HR> because we'd be over the limit if we were to include minutes
+      # Reference: https://www.rockandnull.com/update-app-version-android/
+      # Limits: one release per hour max.=> Result would look like 21031002
+      version_code = Time.now.utc.strftime("%y%m%d%H").to_i 
+    when 3
+      # ======= option 3 =======
+      # Or include minute and subtract 1/1/2021 00:00 from Time.now.utc.strftime("%y%m%d%H%M").to_i
+      # Limits: one release per minute => Result would look like 2_090_229
+      version_code = Time.now.utc.strftime("%y%m%d%H%M").to_i - 2_101_010_000 
+    end
+    version_code
   end
 
   desc "Create the release commit."
