@@ -34,9 +34,10 @@ jobs:
         bundle install
     - name: Update gradle.properties and CHANGELOG.md
       run: |
+        cd scripts
         bundle exec fastlane android manage_next_release_pr
     - name: Check modified file content
       run: |
-        cat ../gradle.properties
-        cat ../CHANGELOG.md
+        cat gradle.properties
+        cat CHANGELOG.md
         git status
