@@ -6,8 +6,16 @@ on:
         description: 'Release from which branch?'
         required: true
         default: 'main'
+      git_user_name:
+        description: 'Git user name'
+        required: true
+        default: 'devops'
+      git_user_email:
+        description: 'Git user name'
+        required: true
+        default: 'devops@test.com'
 jobs:
-  update_next_release:
+  create_pr_for_next_release:
     runs-on: ubuntu-latest
     steps:
     - name: Update git
@@ -24,18 +32,25 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: 2.7
-    - name: Create a branch for the release
-      run: |
-        git checkout -b releases/`date "+%Y%m%d"`
     - name: Install dependencies
       run: |
         cd scripts
         gem install bundler
         bundle install
-    - name: Update gradle.properties and CHANGELOG.md
+    - name: Configure git options
       run: |
         cd scripts
-        bundle exec fastlane android manage_next_release_pr
+        bundle exec fastlane android configure_git_options git_user_email:${{ github.event.inputs.git_user_email }} git_user_name:${{ github.event.inputs.git_user_name }}
+    - name: Create/checkout a branch for the release
+      run: |
+        branch_name=releases/`date "+%Y%m%d"` 
+        (git show-branch $branch_name &>/dev/null) && (git checkout $branch_name & git pull origin $branch_name) || (git checkout -b $branch_name)
+    - name: Create PR for next release
+      env:
+        RELEASE_MANAGER_TOKEN: ${{ secrets.RELEASE_MANAGER_TOKEN }}
+      run: |
+        cd scripts
+        bundle exec fastlane android manage_next_release_pr repo:${{ github.repository }}
     - name: Check modified file content
       run: |
         cat gradle.properties
