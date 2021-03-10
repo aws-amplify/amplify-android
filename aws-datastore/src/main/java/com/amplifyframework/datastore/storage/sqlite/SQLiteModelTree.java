@@ -133,7 +133,7 @@ final class SQLiteModelTree {
                                 childrenIds.add(cursor.getString(index));
                             } while (cursor.moveToNext());
                         }
-                    } catch (DataStoreException | SQLiteException exception) {
+                    } catch (SQLiteException exception) {
                         // Don't cut the search short. Populate rest of the tree.
                         LOG.warn("Failed to query children of deleted model(s).", exception);
                     }
