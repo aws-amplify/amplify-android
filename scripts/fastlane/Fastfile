@@ -7,7 +7,7 @@ platform :android do |options|
   change_log_path = "#{gradle_project_root}/CHANGELOG.md"
   version_regex = /(\d*)\.(\d*)\.(\d*)(?:-unstable\.)?(\d*)?/
   pr_body = %Q(
-## Tasks
+## Release PR review checklist
 - [ ] Verify version name in gradle.properties
 - [ ] Verify version code in gradle.properties
 - [ ] Verify CHANGELOG.md
