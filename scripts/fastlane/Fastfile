@@ -25,6 +25,7 @@ platform :android do |options|
   end
 
   lane :manage_next_release_pr do |options|
+    product_name = options[:product_name]
     last_release_tag = last_git_tag(pattern: "#{RELEASE_TAG_PREFIX}*")
     next_version, commits = calculate_next_release_version(release_tag_prefix: RELEASE_TAG_PREFIX, from_tag: last_release_tag)
     UI.message("Version change #{last_release_tag} => #{next_version}")
@@ -32,14 +33,14 @@ platform :android do |options|
     update_change_log(last_release_tag: last_release_tag)
 
     git_add(path: [gradle_properties_path, change_log_path])
-    git_commit(path: [gradle_properties_path, change_log_path], message: "chore: Amplify Android #{next_version}")
+    git_commit(path: [gradle_properties_path, change_log_path], message: "chore(release): #{product_name} - #{next_version}")
     push_to_git_remote(force: true)
 
 
     current_branch = sh('git', 'branch', '--show-current')
     repo_name_parts = options[:repo].split('/')
     create_pull_request(base: 'main', 
-                        title:"Release - Amplify Android #{next_version}", 
+                        title: "chore(release): #{product_name} - #{next_version}", 
                         body:pr_body, 
                         repo: options[:repo], 
                         api_token: ENV["RELEASE_MANAGER_TOKEN"])
