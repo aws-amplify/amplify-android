@@ -108,7 +108,16 @@ final class AppSyncRequestFactory {
             }
             if (!QueryPredicates.all().equals(predicate)) {
                 String filterType = "Model" + Casing.capitalizeFirst(modelSchema.getName()) + "FilterInput";
-                builder.variable("filter", filterType, parsePredicate(predicate));
+                QueryPredicate syncPredicate = predicate;
+                if (syncPredicate instanceof QueryPredicateOperation) {
+                    // When a filter is provided, wrap it with a predicate group of type AND.  By doing this, it enables
+                    // AppSync to optimize the request by performing a DynamoDB query instead of a scan.  If the
+                    // provided syncPredicate is already a QueryPredicateGroup, this is not needed.  If the provided
+                    // group is of type AND, the optimization will occur.  If the top level group is OR or NOT, the
+                    // optimization is not possible anyway.
+                    syncPredicate = new QueryPredicateGroup(QueryPredicateGroup.Type.AND, Arrays.asList(syncPredicate));
+                }
+                builder.variable("filter", filterType, parsePredicate(syncPredicate));
             }
             return builder.build();
         } catch (AmplifyException amplifyException) {
