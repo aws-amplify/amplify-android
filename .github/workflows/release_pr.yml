@@ -43,7 +43,7 @@ jobs:
         bundle exec fastlane android configure_git_options git_user_email:${{ github.event.inputs.git_user_email }} git_user_name:${{ github.event.inputs.git_user_name }}
     - name: Create/checkout a branch for the release
       run: |
-        branch_name=releases/`date "+%Y%m%d"` 
+        branch_name=release
         (git show-branch $branch_name &>/dev/null) && (git checkout $branch_name & git pull origin $branch_name) || (git checkout -b $branch_name)
     - name: Create PR for next release
       env:
