@@ -37,8 +37,8 @@ public final class QueryPredicateGroup implements QueryPredicate {
      * @param predicates the operations and/or groups of operations to group together here
      * @throws IllegalArgumentException when the group does not contain any predicate element
      */
-    public QueryPredicateGroup(@NonNull Type type,
-                               @NonNull List<QueryPredicate> predicates) {
+    QueryPredicateGroup(@NonNull Type type,
+                        @NonNull List<QueryPredicate> predicates) {
         this.type = type;
         this.predicates = new ArrayList<>(predicates);
         if (predicates.isEmpty()) {
@@ -61,6 +61,15 @@ public final class QueryPredicateGroup implements QueryPredicate {
      */
     public List<QueryPredicate> predicates() {
         return predicates;
+    }
+
+    /**
+     * Returns a group with an AND type, containing only the provided predicate.
+     * @param predicate the query predicate operation to wrap
+     * @return a group with an AND type, containing only the provided predicate.
+     */
+    public static QueryPredicate andOf(QueryPredicate predicate) {
+        return new QueryPredicateGroup(Type.AND, Arrays.asList(predicate));
     }
 
     /**

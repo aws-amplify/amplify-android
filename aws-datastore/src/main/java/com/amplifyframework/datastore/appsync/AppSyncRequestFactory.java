@@ -115,7 +115,7 @@ final class AppSyncRequestFactory {
                     // provided syncPredicate is already a QueryPredicateGroup, this is not needed.  If the provided
                     // group is of type AND, the optimization will occur.  If the top level group is OR or NOT, the
                     // optimization is not possible anyway.
-                    syncPredicate = new QueryPredicateGroup(QueryPredicateGroup.Type.AND, Arrays.asList(syncPredicate));
+                    syncPredicate = QueryPredicateGroup.andOf(syncPredicate);
                 }
                 builder.variable("filter", filterType, parsePredicate(syncPredicate));
             }
