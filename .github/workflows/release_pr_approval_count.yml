@@ -1,0 +1,30 @@
+# Checks the number of a approvals for any pull requests from release->main where the PR title starts with chore(release)
+# This should be setup as a protection rule on the main branch. PRs coming from other branches will be exempt from this rule
+name: Pull request approval checks
+on:
+  pull_request_review:
+    branches:
+      - main
+jobs:
+  count_approvals:
+    runs-on: ubuntu-latest
+    # This restricts which PRs this workflow applies to. 
+    if: ${{ github.event_name == 'pull_request_review'
+            && github.event.pull_request.head.ref == 'release' 
+            &&  startsWith(github.event.pull_request.title, 'chore(release)')
+        }}
+    steps:
+      - uses: actions/github-script@v3
+        id: get_approval_count
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |            
+            const reviews = await github.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            const approvals = reviews.data.filter(review => review.state==='APPROVED').length;
+            if (approvals < 2) {
+              core.setFailed('Not enough approvals yet :(');
+            }
