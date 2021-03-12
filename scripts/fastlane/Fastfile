@@ -9,7 +9,6 @@ platform :android do |options|
   pr_body = %Q(
 ## Release PR review checklist
 - [ ] Verify version name in gradle.properties
-- [ ] Verify version code in gradle.properties
 - [ ] Verify CHANGELOG.md
 )
 
