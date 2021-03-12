@@ -44,7 +44,8 @@ jobs:
     - name: Create/checkout a branch for the release
       run: |
         branch_name=release
-        git branch -D $branch_name
+        git fetch --all
+        (git branch -D $branch_name &>/dev/null) && (echo 'Existing $branch_name branch deleted') || (echo 'No existing $branch_name branch to delete.')
         git checkout -b $branch_name
     - name: Create PR for next release
       env:
