@@ -44,7 +44,8 @@ jobs:
     - name: Create/checkout a branch for the release
       run: |
         branch_name=release
-        (git show-branch $branch_name &>/dev/null) && (git checkout $branch_name & git pull origin $branch_name) || (git checkout -b $branch_name)
+        git branch -D $branch_name
+        git checkout -b $branch_name
     - name: Create PR for next release
       env:
         RELEASE_MANAGER_TOKEN: ${{ secrets.RELEASE_MANAGER_TOKEN }}
