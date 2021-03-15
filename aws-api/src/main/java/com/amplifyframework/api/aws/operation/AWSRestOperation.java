@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws.operation;
 
 import android.annotation.SuppressLint;
+import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -28,6 +29,9 @@ import com.amplifyframework.core.Consumer;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import okhttp3.Call;
@@ -113,13 +117,20 @@ public final class AWSRestOperation extends RestOperation {
                                @NonNull Response response) throws IOException {
             final ResponseBody responseBody = response.body();
             final int statusCode = response.code();
-
+            final Map<String, String> headersMap = new HashMap<>();
+            final Map<String, List<String>> headersMultiMap = response.headers().toMultimap();
+            for (String key : headersMultiMap.keySet()) {
+                List<String> value = headersMultiMap.get(key);
+                if (value.size() > 0) {
+                    headersMap.put(key, TextUtils.join(",", value));
+                }
+            }
             RestResponse restResponse;
             if (responseBody != null) {
                 final byte[] data = responseBody.bytes();
-                restResponse = new RestResponse(statusCode, data);
+                restResponse = new RestResponse(statusCode, headersMap, data);
             } else {
-                restResponse = new RestResponse(statusCode);
+                restResponse = new RestResponse(statusCode, headersMap);
             }
 
             onResponse.accept(restResponse);
