@@ -84,13 +84,12 @@ dependencies {
 }
 ```
 
-### Rx Support
+### Kotlin & Rx Support
 
-By default, Amplify's interfaces render results through async callbacks.
-However, we also offer an Rx-compatible front-end to Amplify.
+Amplify's default interface renders results through async callbacks. We also provide optional, adapter APIs which better integrate with RxJava and Kotlin:
 
-See [Using RxJava with Amplify](https://docs.amplify.aws/lib/project-setup/rxjava/q/platform/android)
-for more information.
+ - [Using RxJava with Amplify](https://docs.amplify.aws/lib/project-setup/rxjava/q/platform/android)
+ - [Kotlin Coroutines Support](https://docs.amplify.aws/lib/project-setup/coroutines/q/platform/android)
 
 ### Authentication
 
