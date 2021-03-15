@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
@@ -368,7 +367,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 preparedUpdateStatement,
                 bindings);
     }
-
 
     @NonNull
     @Override

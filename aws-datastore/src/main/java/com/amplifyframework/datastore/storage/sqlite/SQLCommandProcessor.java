@@ -44,7 +44,6 @@ final class SQLCommandProcessor {
     }
 
     Cursor rawQuery(SqlCommand command) throws DataStoreException {
-        SQLiteStatement sqliteStatement = sqliteDatabase.compileStatement(command.sqlStatement());
         try {
             long startTime = System.currentTimeMillis();
             Cursor result = sqliteDatabase.rawQuery(command.sqlStatement(), command.getBindingsAsArray());
@@ -52,7 +51,7 @@ final class SQLCommandProcessor {
                     + " ms inTransaction: " + sqliteDatabase.inTransaction() + " SQL: " + command.sqlStatement());
             return result;
         } catch (SQLException sqlException) {
-            throw dataStoreException(sqlException, sqliteStatement);
+            throw dataStoreException(sqlException, command.sqlStatement());
         }
     }
 
@@ -66,7 +65,7 @@ final class SQLCommandProcessor {
                     + " ms inTransaction: " + sqliteDatabase.inTransaction() + " SQL: " + command.sqlStatement());
             return result;
         } catch (SQLException sqlException) {
-            throw dataStoreException(sqlException, sqliteStatement);
+            throw dataStoreException(sqlException, command.sqlStatement());
         }
     }
 
@@ -79,13 +78,13 @@ final class SQLCommandProcessor {
             LOG.verbose("SQLCommandProcessor execute in " + (System.currentTimeMillis() - startTime)
                     + " ms inTransaction: " + sqliteDatabase.inTransaction() + " SQL: " + command.sqlStatement());
         } catch (SQLException sqlException) {
-            throw dataStoreException(sqlException, sqliteStatement);
+            throw dataStoreException(sqlException, command.sqlStatement());
         }
     }
 
-    private DataStoreException dataStoreException(SQLException sqlException, SQLiteStatement sqliteStatement) {
+    private DataStoreException dataStoreException(SQLException sqlException, String sqlStatement) {
         return new DataStoreException(
-                "Invalid SQL statement: " + sqliteStatement,
+                "Invalid SQL statement: " + sqlStatement,
                 sqlException,
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
         );
