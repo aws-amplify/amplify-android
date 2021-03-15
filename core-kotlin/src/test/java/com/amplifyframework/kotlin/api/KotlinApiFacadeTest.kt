@@ -181,7 +181,7 @@ class KotlinApiFacadeTest {
     @Test
     fun getSucceeds() = runBlocking {
         val request = RestOptions.builder().build()
-        val expectedResponse = RestResponse(200, "Nice one, bruf!".toByteArray())
+        val expectedResponse = RestResponse(200, emptyMap(), "Nice one, bruf!".toByteArray())
         every {
             delegate.get(eq(request), any(), any())
         } answers {
@@ -219,7 +219,7 @@ class KotlinApiFacadeTest {
     @Test
     fun putSucceeds() = runBlocking {
         val request = RestOptions.builder().build()
-        val expectedResponse = RestResponse(200, "Nice one, bruf!".toByteArray())
+        val expectedResponse = RestResponse(200, emptyMap(), "Nice one, bruf!".toByteArray())
         every {
             delegate.put(eq(request), any(), any())
         } answers {
@@ -257,7 +257,7 @@ class KotlinApiFacadeTest {
     @Test
     fun postSucceeds() = runBlocking {
         val request = RestOptions.builder().build()
-        val expectedResponse = RestResponse(200, "Nice one, bruf!".toByteArray())
+        val expectedResponse = RestResponse(200, emptyMap(), "Nice one, bruf!".toByteArray())
         every {
             delegate.post(eq(request), any(), any())
         } answers {
@@ -295,7 +295,7 @@ class KotlinApiFacadeTest {
     @Test
     fun deleteSucceeds() = runBlocking {
         val request = RestOptions.builder().build()
-        val expectedResponse = RestResponse(200, "Nice one, bruf!".toByteArray())
+        val expectedResponse = RestResponse(200, emptyMap(), "Nice one, bruf!".toByteArray())
         every {
             delegate.delete(eq(request), any(), any())
         } answers {
@@ -329,7 +329,7 @@ class KotlinApiFacadeTest {
     @Test
     fun headSucceeds() = runBlocking {
         val request = RestOptions.builder().build()
-        val expectedResponse = RestResponse(200, "Nice one, bruf!".toByteArray())
+        val expectedResponse = RestResponse(200, emptyMap(), "Nice one, bruf!".toByteArray())
         every {
             delegate.head(eq(request), any(), any())
         } answers {
@@ -367,7 +367,7 @@ class KotlinApiFacadeTest {
     @Test
     fun patchSucceeds() = runBlocking {
         val request = RestOptions.builder().build()
-        val expectedResponse = RestResponse(200, "Nice one, bruf!".toByteArray())
+        val expectedResponse = RestResponse(200, emptyMap(), "Nice one, bruf!".toByteArray())
         every {
             delegate.patch(eq(request), any(), any())
         } answers {

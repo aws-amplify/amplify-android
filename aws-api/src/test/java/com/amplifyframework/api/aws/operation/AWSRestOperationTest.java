@@ -26,8 +26,12 @@ import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import okhttp3.HttpUrl;
@@ -36,16 +40,19 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
 import static java.util.Collections.emptyMap;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the {@link AWSRestOperation}.
  */
+@RunWith(RobolectricTestRunner.class)
 public final class AWSRestOperationTest {
     private MockWebServer server;
     private HttpUrl baseUrl;
     private OkHttpClient client;
+    private Map<String, String> responseHeaders;
 
     /**
      * Sets up a mock web server to serve fake responses.
@@ -63,7 +70,10 @@ public final class AWSRestOperationTest {
             .setBody(new JSONObject()
                 .put("message", "thanks!")
                 .toString()
-            );
+            )
+            .addHeader("foo", "bar")
+            .addHeader("foo", "baz")
+            .addHeader("qux", "quux");
         server.enqueue(response);
 
         client = new OkHttpClient();
@@ -96,6 +106,11 @@ public final class AWSRestOperationTest {
             operation.start();
         });
         assertTrue(response.getCode().isSuccessful());
+        Map<String, String> expected = new HashMap<>();
+        expected.put("foo", "bar,baz");
+        expected.put("qux", "quux");
+        expected.put("content-length", "21");
+        assertEquals(expected, response.getHeaders());
     }
 
     /**
