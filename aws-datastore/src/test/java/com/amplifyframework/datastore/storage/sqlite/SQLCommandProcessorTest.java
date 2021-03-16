@@ -32,6 +32,8 @@ import com.amplifyframework.util.GsonFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +47,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Asserts that the SQLCommandProcessor executes SqlCommand objects as expected.
  */
+@RunWith(RobolectricTestRunner.class)
 public class SQLCommandProcessorTest {
     private SQLCommandFactory sqlCommandFactory;
     private SQLCommandProcessor sqlCommandProcessor;
@@ -89,6 +92,7 @@ public class SQLCommandProcessorTest {
      */
     @After
     public void clear() {
+        modelSchemaRegistry.clear();
         sqliteDatabase.close();
     }
 
