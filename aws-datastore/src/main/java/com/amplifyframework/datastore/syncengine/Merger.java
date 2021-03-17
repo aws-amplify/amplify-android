@@ -34,6 +34,7 @@ import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
 
@@ -82,6 +83,7 @@ final class Merger {
      */
     <T extends Model> Completable merge(
             ModelWithMetadata<T> modelWithMetadata, Consumer<StorageItemChange.Type> changeTypeConsumer) {
+        AtomicReference<Long> startTime = new AtomicReference<>();
         return Completable.defer(() -> {
             ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
             boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
@@ -124,6 +126,11 @@ final class Merger {
                 .doOnError(failure ->
                     LOG.warn("Failed to sync remote model into local storage: " + modelWithMetadata, failure)
                 );
+        })
+        .doOnSubscribe(disposable -> startTime.set(System.currentTimeMillis()))
+        .doOnTerminate(() -> {
+            long duration = System.currentTimeMillis() - startTime.get();
+            LOG.verbose("Merged a single item in " + duration + " ms.");
         });
 
     }
