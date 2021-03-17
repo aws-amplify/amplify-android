@@ -145,6 +145,13 @@ public final class AppSyncExtensions {
         CONFLICT_UNHANDLED("ConflictUnhandled"),
 
         /**
+         * This error is not for general use unless you have consulted directly with AWS.  When DataStore encounters
+         * this error, it will ignore the error and allow DataStore to continue running.  This error is subject to be
+         * deprecated/removed in the future.
+         */
+        OPERATION_DISABLED("OperationDisabled"),
+
+        /**
          * An Unauthorized error will occur if the provided credentials are not authorized for the requested operation.
          */
         UNAUTHORIZED("Unauthorized");

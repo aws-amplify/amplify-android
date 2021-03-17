@@ -32,8 +32,10 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DataStoreException.GraphQLResponseException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions;
+import com.amplifyframework.datastore.appsync.AppSyncExtensions.AppSyncErrorType;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.hub.HubChannel;
@@ -155,15 +157,15 @@ final class SubscriptionProcessor {
         }
     }
 
-    private boolean isUnauthorizedException(DataStoreException exception) {
-        if (exception instanceof DataStoreException.GraphQLResponseException) {
-            List<GraphQLResponse.Error> errors = ((DataStoreException.GraphQLResponseException) exception).getErrors();
+    private boolean isExceptionType(DataStoreException exception, AppSyncErrorType errorType) {
+        if (exception instanceof GraphQLResponseException) {
+            List<GraphQLResponse.Error> errors = ((GraphQLResponseException) exception).getErrors();
             GraphQLResponse.Error firstError = errors.get(0);
             if (Empty.check(firstError.getExtensions())) {
                 return false;
             }
             AppSyncExtensions extensions = new AppSyncExtensions(firstError.getExtensions());
-            return AppSyncExtensions.AppSyncErrorType.UNAUTHORIZED.equals(extensions.getErrorType());
+            return errorType.equals(extensions.getErrorType());
         }
         return false;
     }
@@ -186,11 +188,17 @@ final class SubscriptionProcessor {
                 },
                 emitter::onNext,
                 dataStoreException -> {
-                    // Ignore Unauthorized errors, so that DataStore can still be used even if the user is only
-                    // authorized to read a subset of the models.
-                    if (isUnauthorizedException(dataStoreException)) {
+                    if (isExceptionType(dataStoreException, AppSyncErrorType.UNAUTHORIZED)) {
+                        // Ignore Unauthorized errors, so that DataStore can still be used even if the user is only
+                        // authorized to read a subset of the models.
                         latch.countDown();
-                        LOG.warn("Unauthorized failure for " + subscriptionType.name() + " " + modelSchema.getName());
+                        LOG.warn("Unauthorized failure:" + subscriptionType.name() + " " + modelSchema.getName());
+                    } else if (isExceptionType(dataStoreException, AppSyncErrorType.OPERATION_DISABLED)) {
+                        // Ignore OperationDisabled errors, so that DataStore can be used even without subscriptions.
+                        // This logic is only in place to address a specific use case, and should not be used without
+                        // unless you have consulted with AWS.  It is subject to be deprecated/removed in the future.
+                        latch.countDown();
+                        LOG.warn("Operation disabled:" + subscriptionType.name() + " " + modelSchema.getName());
                     } else {
                         if (latch.getCount() > 0) {
                             // An error occurred during startup.  Abort and notify the Orchestrator by throwing the
