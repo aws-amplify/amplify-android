@@ -267,7 +267,7 @@ final class MutationProcessor {
     private <T extends Model> Single<ModelWithMetadata<T>> update(PendingMutation<T> mutation) {
         final T updatedItem = mutation.getMutatedItem();
         final ModelSchema updatedItemSchema =
-            this.modelSchemaRegistry.getModelSchemaForModelClass(getModelName(updatedItem));
+            this.modelSchemaRegistry.getModelSchemaForModelClass(updatedItem.getModelName());
         return versionRepository.findModelVersion(updatedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
                 appSync.update(model, updatedItemSchema, version, mutation.getPredicate(), onSuccess, onError)
@@ -279,7 +279,7 @@ final class MutationProcessor {
     private <T extends Model> Single<ModelWithMetadata<T>> create(PendingMutation<T> mutation) {
         final T createdItem = mutation.getMutatedItem();
         final ModelSchema createdItemSchema =
-            this.modelSchemaRegistry.getModelSchemaForModelClass(getModelName(createdItem));
+            this.modelSchemaRegistry.getModelSchemaForModelClass(createdItem.getModelName());
         return publishWithStrategy(mutation, (model, onSuccess, onError) ->
             appSync.create(model, createdItemSchema, onSuccess, onError));
     }
@@ -288,7 +288,7 @@ final class MutationProcessor {
     private <T extends Model> Single<ModelWithMetadata<T>> delete(PendingMutation<T> mutation) {
         final T deletedItem = mutation.getMutatedItem();
         final ModelSchema deletedItemSchema =
-            this.modelSchemaRegistry.getModelSchemaForModelClass(getModelName(deletedItem));
+            this.modelSchemaRegistry.getModelSchemaForModelClass(deletedItem.getModelName());
         return versionRepository.findModelVersion(deletedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
                 appSync.delete(
@@ -353,14 +353,6 @@ final class MutationProcessor {
             "Mutation failed. Failed mutation = " + pendingMutation + ". " +
                 "AppSync response contained errors = " + errors, errors
         ));
-    }
-
-    private static String getModelName(@NonNull Model model) {
-        if (model.getClass() == SerializedModel.class) {
-            return ((SerializedModel) model).getModelName();
-        } else {
-            return model.getClass().getSimpleName();
-        }
     }
 
     /**

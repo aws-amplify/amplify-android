@@ -46,11 +46,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.processors.BehaviorProcessor;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * "Hydrates" the local DataStore, using model metadata receive from the
@@ -137,21 +139,11 @@ final class SyncProcessor {
             .flatMap(lastSyncTime -> {
                 // Sync all the pages
                 return syncModel(schema, lastSyncTime)
-                    // For each ModelWithMetadata, merge it into the local store.
-                    .flatMapCompletable(original -> {
-                        ModelWithMetadata<? extends Model> updated;
-                        if (original.getModel() instanceof SerializedModel) {
-                            SerializedModel originalModel = (SerializedModel) original.getModel();
-                            SerializedModel newModel = SerializedModel.builder()
-                                .serializedData(originalModel.getSerializedData())
-                                .modelSchema(schema)
-                                .build();
-                            updated = new ModelWithMetadata<>(newModel, original.getSyncMetadata());
-                        } else {
-                            updated = original;
-                        }
-                        return merger.merge(updated, metricsAccumulator::increment);
-                    })
+                    // Switch to a new thread so that subsequent API fetches will happen in parallel with DB writes.
+                    .observeOn(Schedulers.io())
+                    // Flatten to a stream of ModelWithMetadata objects
+                    .concatMap(Flowable::fromIterable)
+                    .concatMapCompletable(item -> merger.merge(item, metricsAccumulator::increment))
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
             })
             .flatMapCompletable(syncType -> {
@@ -217,10 +209,12 @@ final class SyncProcessor {
      * @return a stream of all ModelWithMetadata&lt;T&gt; objects from all pages for the provided model.
      * @throws DataStoreException if dataStoreConfigurationProvider.getConfiguration() fails
      */
-    private <T extends Model> Flowable<ModelWithMetadata<T>> syncModel(ModelSchema schema, SyncTime syncTime)
+    private <T extends Model> Flowable<List<ModelWithMetadata<T>>> syncModel(ModelSchema schema, SyncTime syncTime)
             throws DataStoreException {
         final Long lastSyncTimeAsLong = syncTime.exists() ? syncTime.toLong() : null;
         final Integer syncPageSize = dataStoreConfigurationProvider.getConfiguration().getSyncPageSize();
+        final Integer syncMaxRecords = dataStoreConfigurationProvider.getConfiguration().getSyncMaxRecords();
+        AtomicReference<Integer> recordsFetched = new AtomicReference<>(0);
         QueryPredicate predicate = queryPredicateProvider.getPredicate(schema.getName());
         // Create a BehaviorProcessor, and set the default value to a GraphQLRequest that fetches the first page.
         BehaviorProcessor<GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>> processor =
@@ -235,10 +229,28 @@ final class SyncProcessor {
                         processor.onComplete();
                     }
                 })
-                // Flatten the PaginatedResult objects into a stream of ModelWithMetadata objects.
-                .concatMapIterable(PaginatedResult::getItems)
-                // Stop after fetching the maximum configured records to sync.
-                .take(dataStoreConfigurationProvider.getConfiguration().getSyncMaxRecords());
+                // If it's a SerializedModel, add the ModelSchema, since it isn't added during deserialization.
+                .map(paginatedResult -> Flowable.fromIterable(paginatedResult)
+                        .map(modelWithMetadata -> hydrateSchemaIfNeeded(modelWithMetadata, schema))
+                        .toList()
+                        .blockingGet()
+                )
+                .takeUntil(items -> recordsFetched.accumulateAndGet(items.size(), Integer::sum) >= syncMaxRecords);
+    }
+
+    @SuppressWarnings("unchecked") // Cast to T
+    private <T extends Model> ModelWithMetadata<T> hydrateSchemaIfNeeded(ModelWithMetadata<T> original,
+                                                                         ModelSchema schema) {
+        if (original.getModel() instanceof SerializedModel) {
+            SerializedModel originalModel = (SerializedModel) original.getModel();
+            SerializedModel newModel = SerializedModel.builder()
+                    .serializedData(originalModel.getSerializedData())
+                    .modelSchema(schema)
+                    .build();
+            return new ModelWithMetadata<>((T) newModel, original.getSyncMetadata());
+        } else {
+            return original;
+        }
     }
 
     /**

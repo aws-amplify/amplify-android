@@ -52,8 +52,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long TIMEOUT_SECONDS_PER_MODEL = 2;
-    private static final long NETWORK_OP_TIMEOUT_SECONDS = 10;
+    private static final long TIMEOUT_SECONDS_PER_MODEL = 20;
+    private static final long NETWORK_OP_TIMEOUT_SECONDS = 60;
     private static final long LOCAL_OP_TIMEOUT_SECONDS = 2;
 
     private final SubscriptionProcessor subscriptionProcessor;
@@ -309,10 +309,12 @@ public final class Orchestrator {
                 subscriptionProcessor.startSubscriptions();
                 publishNetworkStatusEvent(true);
 
+                long startTime = System.currentTimeMillis();
                 LOG.debug("About to hydrate...");
                 try {
                     boolean subscribed = syncProcessor.hydrate()
                             .blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
+                    LOG.debug("Hydration complete in " + (System.currentTimeMillis() - startTime) + "ms");
                     if (!subscribed) {
                         throw new TimeoutException("Timed out while performing initial model sync.");
                     }
