@@ -28,6 +28,7 @@ phases:
   pre_build:
     commands:
       - echo 'Pre-build phase starting'
+      - mkdir -p build/allTests
       - |
         if [[ -z "${CONFIG_SOURCE_BUCKET}" ]]; then
           echo 'Pulling config files from Amplify'
