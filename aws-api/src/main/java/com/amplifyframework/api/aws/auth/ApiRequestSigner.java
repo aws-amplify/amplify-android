@@ -85,8 +85,6 @@ public abstract class ApiRequestSigner {
         dr.setParameters(splitQuery(req.url().url()));
 
         addAuthHeader(dr);
-        //dr.addHeader(AUTHORIZATION, cognitoUserPoolsAuthProvider.getLatestAuthToken());
-        //dr.addHeader(AUTHORIZATION, oidcAuthProvider.getLatestAuthToken());
 
         //Copy the signed/credentialed request back into an OKHTTP Request object.
         Request.Builder okReqBuilder = new Request.Builder();
