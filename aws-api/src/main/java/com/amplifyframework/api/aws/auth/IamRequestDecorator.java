@@ -15,10 +15,10 @@
 
 package com.amplifyframework.api.aws.auth;
 
+import android.net.Uri;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
-import com.amplifyframework.util.Empty;
 
 import com.amazonaws.DefaultRequest;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -27,10 +27,8 @@ import com.amazonaws.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -118,24 +116,12 @@ public class IamRequestDecorator implements RequestDecorator {
     }
 
     // Extracts query string parameters from a URL.
-    // Source: https://stackoverflow.com/questions/13592236/parse-a-uri-string-into-name-value-collection
     @NonNull
     private static Map<String, String> splitQuery(URL url) throws IOException {
         Map<String, String> queryPairs = new LinkedHashMap<>();
-        String query = url.getQuery();
-        if (Empty.check(query)) {
-            return Collections.emptyMap();
-        }
-        String[] pairs = query.split("&");
-        for (String pair : pairs) {
-            int index = pair.indexOf("=");
-            if (index < 0) {
-                throw new MalformedURLException("URL query parameters are malformed.");
-            }
-            queryPairs.put(
-                URLDecoder.decode(pair.substring(0, index), "UTF-8"),
-                URLDecoder.decode(pair.substring(index + 1), "UTF-8")
-            );
+        Uri uri = Uri.parse(url.toString());
+        for (String paramName : uri.getQueryParameterNames()) {
+            queryPairs.put(paramName, URLDecoder.decode(uri.getQueryParameter(paramName), "UTF8"));
         }
         return queryPairs;
     }
