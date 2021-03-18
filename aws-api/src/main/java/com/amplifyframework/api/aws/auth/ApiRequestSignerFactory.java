@@ -123,6 +123,5 @@ public final class ApiRequestSignerFactory {
         } else {
             return NO_OP_REQUEST_SIGNER;
         }
-
     }
 }
