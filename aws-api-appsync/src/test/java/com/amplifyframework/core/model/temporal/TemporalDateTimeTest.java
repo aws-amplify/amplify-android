@@ -56,7 +56,7 @@ public final class TemporalDateTimeTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void parseInvalidFormat() {
-        new Temporal.DateTime("2001-02-03T01:30:15.444+05Z");
+        new Temporal.DateTime("2001-02-03T01:30:15.444+05");
     }
 
     /**

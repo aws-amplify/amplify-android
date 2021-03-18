@@ -66,7 +66,6 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         }
     }
 
-    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     @Throws(DataStoreException::class)
     override suspend fun <T : Model> delete(itemClass: KClass<T>, filter: QueryPredicate) {
         return suspendCoroutine { continuation ->
