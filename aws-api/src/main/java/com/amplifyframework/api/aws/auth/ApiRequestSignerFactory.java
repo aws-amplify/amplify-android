@@ -68,14 +68,12 @@ public final class ApiRequestSignerFactory {
     public ApiRequestSigner fromRequest(GraphQLRequest<?> graphQLRequest) {
         // If it's not a an instance of AppSyncGraphQLRequest OR
         // the request's authorization type is null
-        if (!(graphQLRequest instanceof AppSyncGraphQLRequest<?>) ||
-            ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() == null) {
-            // Use the default auth type.
-            return forAuthType(defaultAuthorizationType);
-        } else {
-            // Honor the auth type from the request.
-            return forAuthType(((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType());
+        AuthorizationType authType = defaultAuthorizationType;
+        if(graphQLRequest instanceof AppSyncGraphQLRequest<?>
+            && ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
+            authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType()
         }
+        return forAuthType(authType);
     }
 
     /**
