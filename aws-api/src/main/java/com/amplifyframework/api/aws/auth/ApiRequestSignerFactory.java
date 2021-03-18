@@ -55,12 +55,9 @@ public final class ApiRequestSignerFactory {
     public ApiRequestSignerFactory(@NonNull ApiAuthProviders apiAuthProviders,
                                    @NonNull AuthorizationType defaultAuthorizationType,
                                    @NonNull String region) {
-        Objects.requireNonNull(apiAuthProviders);
-        Objects.requireNonNull(defaultAuthorizationType);
-        Objects.requireNonNull(region);
-        this.apiAuthProviders = apiAuthProviders;
-        this.defaultAuthorizationType = defaultAuthorizationType;
-        this.region = region;
+        this.apiAuthProviders = Objects.requireNonNull(apiAuthProviders);
+        this.defaultAuthorizationType = Objects.requireNonNull(defaultAuthorizationType);
+        this.region = Objects.requireNonNull(region);
     }
 
     /**
