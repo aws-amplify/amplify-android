@@ -199,7 +199,7 @@
             <property name="separated" value="true" />
             <property name="sortStaticImportsAlphabetically" value="true" />
         </module>
-
+    
         <!-- Miscellaneous / General code quality checks. -->
         <module name="StringLiteralEquality" />
         <module name="SimplifyBooleanReturn" />
@@ -300,4 +300,3 @@
         <property name="optional" value="false"/>
     </module>
 </module>
-
