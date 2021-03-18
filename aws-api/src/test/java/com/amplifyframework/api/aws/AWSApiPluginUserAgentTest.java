@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowLog;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -65,7 +64,6 @@ public final class AWSApiPluginUserAgentTest {
      */
     @Before
     public void setUp() throws Exception {
-        ShadowLog.stream = System.out;
         // Set up backend
         server = new MockWebServer();
         server.start();
