@@ -19,12 +19,10 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 
-import com.amazonaws.Request;
-
 /**
  * Request signer that adds a header with the API key.
  */
-public final class ApiKeyApiRequestSigner extends ApiRequestSigner {
+public final class ApiKeyRequestDecorator implements RequestDecorator {
     private static final String X_API_KEY = "x-api-key";
     private final ApiKeyAuthProvider apiKeyProvider;
 
@@ -32,12 +30,14 @@ public final class ApiKeyApiRequestSigner extends ApiRequestSigner {
      * Constructor that takes in the API key provider to be used when signing the request.
      * @param apiKeyProvider An implementation of the {@link ApiKeyAuthProvider} interface.
      */
-    public ApiKeyApiRequestSigner(@NonNull ApiKeyAuthProvider apiKeyProvider) {
+    public ApiKeyRequestDecorator(@NonNull ApiKeyAuthProvider apiKeyProvider) {
         this.apiKeyProvider = apiKeyProvider;
     }
 
     @Override
-    void addAuthHeader(Request<?> request) {
-        request.addHeader(X_API_KEY, apiKeyProvider.getAPIKey());
+    public okhttp3.Request decorate(okhttp3.Request request) {
+        return request.newBuilder()
+                      .addHeader(X_API_KEY, apiKeyProvider.getAPIKey())
+                      .build();
     }
 }

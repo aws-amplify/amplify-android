@@ -26,19 +26,19 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
-import com.amazonaws.Request;
-
 import java.util.Objects;
-import java.util.function.Supplier;
+
+import okhttp3.Request;
 
 /**
- * Factory class that creates instances of different implementations of {@link ApiRequestSigner}s.
+ * Factory class that creates instances of different implementations of {@link RequestDecorator}s.
  */
-public final class ApiRequestSignerFactory {
+public final class ApiRequestDecoratorFactory {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
-    private static final ApiRequestSigner NO_OP_REQUEST_SIGNER = new ApiRequestSigner() {
+    private static final RequestDecorator NO_OP_REQUEST_SIGNER = new RequestDecorator() {
         @Override
-        void addAuthHeader(Request<?> request) {
+        public Request decorate(Request request) {
+            return request;
         }
     };
 
@@ -52,9 +52,9 @@ public final class ApiRequestSignerFactory {
      * @param defaultAuthorizationType The authorization type to use as default.
      * @param region The AWS region where the API is deployed.
      */
-    public ApiRequestSignerFactory(@NonNull ApiAuthProviders apiAuthProviders,
-                                   @NonNull AuthorizationType defaultAuthorizationType,
-                                   @NonNull String region) {
+    public ApiRequestDecoratorFactory(@NonNull ApiAuthProviders apiAuthProviders,
+                                      @NonNull AuthorizationType defaultAuthorizationType,
+                                      @NonNull String region) {
         this.apiAuthProviders = Objects.requireNonNull(apiAuthProviders);
         this.defaultAuthorizationType = Objects.requireNonNull(defaultAuthorizationType);
         this.region = Objects.requireNonNull(region);
@@ -65,13 +65,13 @@ public final class ApiRequestSignerFactory {
      * @param graphQLRequest The graphQL request sent to the API.
      * @return The request signer
      */
-    public ApiRequestSigner fromRequest(GraphQLRequest<?> graphQLRequest) {
+    public RequestDecorator fromGraphQLRequest(GraphQLRequest<?> graphQLRequest) {
         // If it's not a an instance of AppSyncGraphQLRequest OR
         // the request's authorization type is null
         AuthorizationType authType = defaultAuthorizationType;
-        if(graphQLRequest instanceof AppSyncGraphQLRequest<?>
+        if (graphQLRequest instanceof AppSyncGraphQLRequest<?>
             && ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
-            authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType()
+            authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
         }
         return forAuthType(authType);
     }
@@ -81,10 +81,10 @@ public final class ApiRequestSignerFactory {
      * @param authorizationType the authorization type to be used for the request.
      * @return the appropriate request signer for the given authorization type.
      */
-    private ApiRequestSigner forAuthType(@NonNull AuthorizationType authorizationType) {
+    private RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) {
         if (AuthorizationType.AMAZON_COGNITO_USER_POOLS.equals(authorizationType) &&
             apiAuthProviders.getCognitoUserPoolsAuthProvider() != null) {
-            return new JWTTokenApiRequestSigner(new Supplier<String>() {
+            return new JWTTokenRequestDecorator(new JWTTokenRequestDecorator.TokenSupplier() {
                 @Override
                 public String get() {
                     try {
@@ -97,7 +97,7 @@ public final class ApiRequestSignerFactory {
             });
         } else if (AuthorizationType.OPENID_CONNECT.equals(authorizationType) &&
             apiAuthProviders.getOidcAuthProvider() != null) {
-            return new JWTTokenApiRequestSigner(new Supplier<String>() {
+            return new JWTTokenRequestDecorator(new JWTTokenRequestDecorator.TokenSupplier() {
                 @Override
                 public String get() {
                     try {
@@ -110,11 +110,11 @@ public final class ApiRequestSignerFactory {
             });
         } else if (AuthorizationType.API_KEY.equals(authorizationType) &&
             apiAuthProviders.getApiKeyAuthProvider() != null) {
-            return new ApiKeyApiRequestSigner(apiAuthProviders.getApiKeyAuthProvider());
+            return new ApiKeyRequestDecorator(apiAuthProviders.getApiKeyAuthProvider());
         } else if (AuthorizationType.AWS_IAM.equals(authorizationType) &&
             apiAuthProviders.getAWSCredentialsProvider() != null) {
             AppSyncV4Signer appSyncV4Signer = new AppSyncV4Signer(region);
-            return new IamApiRequestSigner(appSyncV4Signer, apiAuthProviders.getAWSCredentialsProvider());
+            return new IamRequestDecorator(appSyncV4Signer, apiAuthProviders.getAWSCredentialsProvider());
         } else {
             return NO_OP_REQUEST_SIGNER;
         }

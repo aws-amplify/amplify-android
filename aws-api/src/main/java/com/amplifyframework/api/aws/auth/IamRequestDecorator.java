@@ -17,9 +17,11 @@ package com.amplifyframework.api.aws.auth;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.util.Empty;
 
 import com.amazonaws.DefaultRequest;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.http.HttpMethodName;
 import com.amazonaws.util.IOUtils;
 
@@ -33,30 +35,36 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import okhttp3.MediaType;
-import okhttp3.Request;
 import okhttp3.RequestBody;
 import okio.Buffer;
 
 /**
- * Abstract class that defines some basic functionality with regards to signing AppSync requests.
- * Implementations of this class should implement the {@link ApiRequestSigner#addAuthHeader(com.amazonaws.Request)}
- * method.
+ * Request signer implementatioon that uses AWS SigV4 signing.
  */
-public abstract class ApiRequestSigner {
+public class IamRequestDecorator implements RequestDecorator {
     private static final String CONTENT_TYPE = "application/json";
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(CONTENT_TYPE);
     private static final String APP_SYNC_SERVICE_NAME = "appsync";
-    private static final String API_GATEWAY_SERVICE_NAME = "apigateway";
-
-    abstract void addAuthHeader(com.amazonaws.Request<?> request);
+    private final AWSCredentialsProvider credentialsProvider;
+    private final AppSyncV4Signer v4Signer;
 
     /**
-     * Adds the appropriate headers to the provided HTTP request.
+     * Constructor that takes in the necessary dependencies used to sign the requests.
+     * @param v4Signer An instance of the {@link AppSyncV4Signer}.
+     * @param credentialsProvider The AWS credentials provider to use when retrieving AWS credentials.
+     */
+    public IamRequestDecorator(AppSyncV4Signer v4Signer, AWSCredentialsProvider credentialsProvider) {
+        this.v4Signer = v4Signer;
+        this.credentialsProvider = credentialsProvider;
+    }
+
+    /**
+     * Adds the appropriate header to the provided HTTP request.
      * @param req The request to be signed.
      * @return A new instance of the request containing the signature headers.
      * @throws IOException If the signing process fails.
      */
-    public final Request sign(Request req) throws IOException {
+    public final okhttp3.Request decorate(okhttp3.Request req) throws IOException {
         //Clone the request into a new DefaultRequest object and populate it with credentials
         final DefaultRequest<?> dr = new DefaultRequest<>(APP_SYNC_SERVICE_NAME);
         //set the endpoint
@@ -84,10 +92,10 @@ public abstract class ApiRequestSigner {
         //set the query string parameters
         dr.setParameters(splitQuery(req.url().url()));
 
-        addAuthHeader(dr);
+        v4Signer.sign(dr, credentialsProvider.getCredentials());
 
         //Copy the signed/credentialed request back into an OKHTTP Request object.
-        Request.Builder okReqBuilder = new Request.Builder();
+        okhttp3.Request.Builder okReqBuilder = new okhttp3.Request.Builder();
 
         //set the headers from default request, since it contains the signed headers as well.
         for (Map.Entry<String, String> e : dr.getHeaders().entrySet()) {
@@ -131,5 +139,4 @@ public abstract class ApiRequestSigner {
         }
         return queryPairs;
     }
-
 }

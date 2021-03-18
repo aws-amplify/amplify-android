@@ -23,7 +23,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
-import com.amplifyframework.api.aws.auth.ApiRequestSignerFactory;
+import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
@@ -145,9 +145,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             }
             final OkHttpClient okHttpClient = builder.build();
 
-            ApiRequestSignerFactory signerFactory = new ApiRequestSignerFactory(authProvider,
-                                                                                apiConfiguration.getAuthorizationType(),
-                                                                                apiConfiguration.getRegion());
+            ApiRequestDecoratorFactory signerFactory =
+                new ApiRequestDecoratorFactory(authProvider,
+                                               apiConfiguration.getAuthorizationType(),
+                                               apiConfiguration.getRegion());
 
             final SubscriptionAuthorizer subscriptionAuthorizer =
                     new SubscriptionAuthorizer(apiConfiguration, authProvider);
@@ -590,7 +591,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
                 .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
-                .apiRequestSignerFactory(clientDetails.getApiRequestSignerFactory())
+                .apiRequestSignerFactory(clientDetails.getApiRequestDecoratorFactory())
                 .responseFactory(gqlResponseFactory)
                 .onResponse(onResponse)
                 .onFailure(onFailure)
@@ -666,7 +667,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         private final ApiConfiguration apiConfiguration;
         private final OkHttpClient okHttpClient;
         private final SubscriptionEndpoint subscriptionEndpoint;
-        private final ApiRequestSignerFactory apiRequestSignerFactory;
+        private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
 
         /**
          * Constructs a client detail object containing client and url.
@@ -676,11 +677,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             final ApiConfiguration apiConfiguration,
             final OkHttpClient okHttpClient,
             final SubscriptionEndpoint subscriptionEndpoint,
-            final ApiRequestSignerFactory apiRequestSignerFactory) {
+            final ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
             this.apiConfiguration = apiConfiguration;
             this.okHttpClient = okHttpClient;
             this.subscriptionEndpoint = subscriptionEndpoint;
-            this.apiRequestSignerFactory = apiRequestSignerFactory;
+            this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
         }
 
         ApiConfiguration getApiConfiguration() {
@@ -695,8 +696,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             return subscriptionEndpoint;
         }
 
-        ApiRequestSignerFactory getApiRequestSignerFactory() {
-            return apiRequestSignerFactory;
+        ApiRequestDecoratorFactory getApiRequestDecoratorFactory() {
+            return apiRequestDecoratorFactory;
         }
 
         @Override

@@ -20,8 +20,8 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.auth.ApiRequestSigner;
-import com.amplifyframework.api.aws.auth.ApiRequestSignerFactory;
+import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
+import com.amplifyframework.api.aws.auth.RequestDecorator;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -29,11 +29,14 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -55,7 +58,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private final OkHttpClient client;
     private final Consumer<GraphQLResponse<R>> onResponse;
     private final Consumer<ApiException> onFailure;
-    private final ApiRequestSignerFactory apiRequestSignerFactory;
+    private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
 
     private Call ongoingCall;
 
@@ -72,12 +75,12 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             @NonNull String endpoint,
             @NonNull OkHttpClient client,
             @NonNull GraphQLRequest<R> request,
-            @NonNull ApiRequestSignerFactory apiRequestSignerFactory,
+            @NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         super(request, responseFactory);
-        this.apiRequestSignerFactory = apiRequestSignerFactory;
+        this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
         this.endpoint = endpoint;
         this.client = client;
         this.onResponse = onResponse;
@@ -93,14 +96,25 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
         try {
             LOG.debug("Request: " + getRequest().getContent());
-            ApiRequestSigner apiRequestSigner = apiRequestSignerFactory.fromRequest(getRequest());
+            RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
             Request okHttpRequest = new Request.Builder()
                 .url(endpoint)
                 .addHeader("accept", CONTENT_TYPE)
                 .addHeader("content-type", CONTENT_TYPE)
                 .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
                 .build();
-            ongoingCall = client.newCall(apiRequestSigner.sign(okHttpRequest));
+
+            ongoingCall = client.newBuilder()
+                .addInterceptor(new Interceptor() {
+                    @NotNull
+                    @Override
+                    public Response intercept(@NotNull Chain chain) throws IOException {
+                        return chain.proceed(requestDecorator.decorate(chain.request()));
+                    }
+                })
+                .build()
+                .newCall(okHttpRequest);
+
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {
             // Cancel if possible
@@ -163,7 +177,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         private OkHttpClient client;
         private GraphQLRequest<R> request;
         private GraphQLResponse.Factory responseFactory;
-        private ApiRequestSignerFactory apiRequestSignerFactory;
+        private ApiRequestDecoratorFactory apiRequestDecoratorFactory;
         private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
 
@@ -197,8 +211,8 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             return this;
         }
 
-        Builder<R> apiRequestSignerFactory(ApiRequestSignerFactory apiRequestSignerFactory) {
-            this.apiRequestSignerFactory = apiRequestSignerFactory;
+        Builder<R> apiRequestSignerFactory(ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
+            this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
             return this;
         }
 
@@ -208,7 +222,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 Objects.requireNonNull(endpoint),
                 Objects.requireNonNull(client),
                 Objects.requireNonNull(request),
-                Objects.requireNonNull(apiRequestSignerFactory),
+                Objects.requireNonNull(apiRequestDecoratorFactory),
                 Objects.requireNonNull(responseFactory),
                 Objects.requireNonNull(onResponse),
                 Objects.requireNonNull(onFailure)
