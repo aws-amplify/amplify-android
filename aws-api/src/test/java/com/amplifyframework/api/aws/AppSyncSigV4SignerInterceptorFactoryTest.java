@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 
 import com.amazonaws.internal.StaticCredentialsProvider;
