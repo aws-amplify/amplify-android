@@ -676,7 +676,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             final ApiConfiguration apiConfiguration,
             final OkHttpClient okHttpClient,
             final SubscriptionEndpoint subscriptionEndpoint,
-            ApiRequestSignerFactory apiRequestSignerFactory) {
+            final ApiRequestSignerFactory apiRequestSignerFactory) {
             this.apiConfiguration = apiConfiguration;
             this.okHttpClient = okHttpClient;
             this.subscriptionEndpoint = subscriptionEndpoint;
