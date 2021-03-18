@@ -146,10 +146,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             }
             final OkHttpClient okHttpClient = builder.build();
 
-            ApiRequestDecoratorFactory signerFactory =
+            ApiRequestDecoratorFactory requestDecoratorFactory =
                 new ApiRequestDecoratorFactory(authProvider,
                                                apiConfiguration.getAuthorizationType(),
-                                               apiConfiguration.getRegion());
+                                               apiConfiguration.getRegion(),
+                                               apiConfiguration.getApiKey());
 
             final SubscriptionAuthorizer subscriptionAuthorizer =
                     new SubscriptionAuthorizer(apiConfiguration, authProvider);
@@ -164,7 +165,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiDetails.put(apiName, new ClientDetails(apiConfiguration,
                                                       okHttpClient,
                                                       subscriptionEndpoint,
-                                                      signerFactory));
+                                                      requestDecoratorFactory));
         }
     }
 
@@ -635,7 +636,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         type,
                         options.getPath(),
                         options.getHeaders(),
-                        options.getQueryParameters());
+                        options.getQueryParameters(),
+                        options.getAuthorizationType());
                 break;
             case PUT:
             case POST:
@@ -645,7 +647,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         options.getPath(),
                         options.getData() == null ? new byte[0] : options.getData(),
                         options.getHeaders(),
-                        options.getQueryParameters());
+                        options.getQueryParameters(),
+                        options.getAuthorizationType());
                 break;
             default:
                 throw new ApiException("Unknown REST operation type: " + type,
@@ -654,6 +657,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         AWSRestOperation operation = new AWSRestOperation(operationRequest,
                 clientDetails.apiConfiguration.getEndpoint(),
                 clientDetails.okHttpClient,
+                clientDetails.apiRequestDecoratorFactory,
                 onResponse,
                 onFailure
         );

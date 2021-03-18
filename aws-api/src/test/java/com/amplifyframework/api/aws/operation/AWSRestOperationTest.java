@@ -16,6 +16,9 @@
 package com.amplifyframework.api.aws.operation;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.AuthorizationType;
+import com.amplifyframework.api.aws.ApiAuthProviders;
+import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.rest.HttpMethod;
 import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestResponse;
@@ -98,11 +101,24 @@ public final class AWSRestOperationTest {
      */
     @Test
     public void responseEmittedWhenOperationSucceeds() throws ApiException {
+        ApiRequestDecoratorFactory apiRequestDecoratorFactory =
+            new ApiRequestDecoratorFactory(ApiAuthProviders.noProviderOverrides(),
+                                           AuthorizationType.NONE,
+                                           "us-east-1");
         RestOperationRequest request =
-            new RestOperationRequest(HttpMethod.GET, baseUrl.uri().getPath(), emptyMap(), emptyMap());
+            new RestOperationRequest(HttpMethod.GET,
+                                     baseUrl.uri().getPath(),
+                                     emptyMap(),
+                                     emptyMap(),
+                                     AuthorizationType.NONE);
         RestResponse response = Await.<RestResponse, ApiException>result((onResult, onError) -> {
             AWSRestOperation operation =
-                new AWSRestOperation(request, baseUrl.url().toString(), client, onResult, onError);
+                new AWSRestOperation(request,
+                                     baseUrl.url().toString(),
+                                     client,
+                                     apiRequestDecoratorFactory,
+                                     onResult,
+                                     onError);
             operation.start();
         });
         assertTrue(response.getCode().isSuccessful());
@@ -119,13 +135,26 @@ public final class AWSRestOperationTest {
      */
     @Test
     public void noErrorEmittedIfOperationIsCancelled() {
+        ApiRequestDecoratorFactory apiRequestDecoratorFactory =
+            new ApiRequestDecoratorFactory(ApiAuthProviders.noProviderOverrides(),
+                                           AuthorizationType.NONE,
+                                           "us-east-1");
         long timeToWaitForResponse = 300L;
         RestOperationRequest request =
-            new RestOperationRequest(HttpMethod.GET, baseUrl.uri().getPath(), emptyMap(), emptyMap());
+            new RestOperationRequest(HttpMethod.GET,
+                                     baseUrl.uri().getPath(),
+                                     emptyMap(),
+                                     emptyMap(),
+                                     AuthorizationType.NONE);
         assertTimedOut(() ->
             Await.<RestResponse, ApiException>result(timeToWaitForResponse, (onResult, onError) -> {
                 AWSRestOperation operation =
-                    new AWSRestOperation(request, baseUrl.url().toString(), client, onResult, onError);
+                    new AWSRestOperation(request,
+                                         baseUrl.url().toString(),
+                                         client,
+                                         apiRequestDecoratorFactory,
+                                         onResult,
+                                         onError);
                 operation.start();
                 operation.cancel();
             })

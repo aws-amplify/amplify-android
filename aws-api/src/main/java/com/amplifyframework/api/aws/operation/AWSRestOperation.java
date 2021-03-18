@@ -21,11 +21,15 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
+import com.amplifyframework.api.aws.auth.RequestDecorator;
 import com.amplifyframework.api.aws.utils.RestRequestFactory;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Consumer;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.URL;
@@ -36,6 +40,7 @@ import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -51,6 +56,7 @@ public final class AWSRestOperation extends RestOperation {
     private final OkHttpClient client;
     private final Consumer<RestResponse> onResponse;
     private final Consumer<ApiException> onFailure;
+    private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
 
     private Call ongoingCall;
 
@@ -59,6 +65,7 @@ public final class AWSRestOperation extends RestOperation {
      * @param request REST request that contains the query and data.
      * @param endpoint Endpoint against which the request to be made.
      * @param client OKHTTPClient to be used for the request.
+     * @param apiRequestDecoratorFactory The request decorator factory for the API.
      * @param onResponse Callback to be invoked when a response is available from endpoint
      * @param onFailure Callback to be invoked when there is a failure to obtain any response
      */
@@ -66,11 +73,13 @@ public final class AWSRestOperation extends RestOperation {
             @NonNull RestOperationRequest request,
             @NonNull String endpoint,
             @NonNull OkHttpClient client,
+            @NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory,
             @NonNull Consumer<RestResponse> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         super(Objects.requireNonNull(request));
         this.endpoint = Objects.requireNonNull(endpoint);
         this.client = Objects.requireNonNull(client);
+        this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
         this.onResponse = Objects.requireNonNull(onResponse);
         this.onFailure = Objects.requireNonNull(onFailure);
     }
@@ -82,6 +91,7 @@ public final class AWSRestOperation extends RestOperation {
             return;
         }
         try {
+            RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromRestRequest(getRequest());
             URL url = RestRequestFactory.createURL(endpoint,
                     getRequest().getPath(),
                     getRequest().getQueryParameters());
@@ -89,7 +99,17 @@ public final class AWSRestOperation extends RestOperation {
                     getRequest().getData(),
                     getRequest().getHeaders(),
                     getRequest().getHttpMethod());
-            ongoingCall = client.newCall(request);
+            ongoingCall = client.newBuilder()
+                                .addInterceptor(new Interceptor() {
+                                    @NotNull
+                                    @Override
+                                    public Response intercept(@NotNull Chain chain) throws IOException {
+                                        Request decoratedRequest = requestDecorator.decorate(chain.request());
+                                        return chain.proceed(decoratedRequest);
+                                    }
+                                })
+                                .build()
+                                .newCall(request);
             ongoingCall.enqueue(new AWSRestOperation.OkHttpCallback());
         } catch (Exception error) {
             // Cancel if possible

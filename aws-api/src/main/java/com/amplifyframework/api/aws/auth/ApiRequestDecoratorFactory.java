@@ -16,13 +16,17 @@
 package com.amplifyframework.api.aws.auth;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.AuthorizationType;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
@@ -45,6 +49,7 @@ public final class ApiRequestDecoratorFactory {
     private final ApiAuthProviders apiAuthProviders;
     private final String region;
     private final AuthorizationType defaultAuthorizationType;
+    private final String apiKey;
 
     /**
      * Constructor that accepts the API auth providers to be used with their respective request signer.
@@ -55,17 +60,33 @@ public final class ApiRequestDecoratorFactory {
     public ApiRequestDecoratorFactory(@NonNull ApiAuthProviders apiAuthProviders,
                                       @NonNull AuthorizationType defaultAuthorizationType,
                                       @NonNull String region) {
+        this(apiAuthProviders, defaultAuthorizationType, region, null);
+    }
+
+    /**
+     * Constructor that accepts the API auth providers to be used with their respective request signer.
+     * @param apiAuthProviders An instance with fully configured auth providers for use when signing requests.
+     * @param defaultAuthorizationType The authorization type to use as default.
+     * @param region The AWS region where the API is deployed.
+     * @param apiKey The API key to use for APIs with API_KEY authentication type.
+     */
+    public ApiRequestDecoratorFactory(@NonNull ApiAuthProviders apiAuthProviders,
+                                      @NonNull AuthorizationType defaultAuthorizationType,
+                                      @NonNull String region,
+                                      @Nullable String apiKey) {
         this.apiAuthProviders = Objects.requireNonNull(apiAuthProviders);
         this.defaultAuthorizationType = Objects.requireNonNull(defaultAuthorizationType);
         this.region = Objects.requireNonNull(region);
+        this.apiKey = apiKey;
     }
 
     /**
      * Return the appropriate request signer after inspecting the request.
      * @param graphQLRequest The graphQL request sent to the API.
      * @return The request signer
+     * @throws ApiException If it's unable to retrieve the decorator for the given request.
      */
-    public RequestDecorator fromGraphQLRequest(GraphQLRequest<?> graphQLRequest) {
+    public RequestDecorator fromGraphQLRequest(GraphQLRequest<?> graphQLRequest) throws ApiException {
         // If it's not a an instance of AppSyncGraphQLRequest OR
         // the request's authorization type is null
         AuthorizationType authType = defaultAuthorizationType;
@@ -77,11 +98,25 @@ public final class ApiRequestDecoratorFactory {
     }
 
     /**
+     * Return the appropriate request signer after inspecting the request.
+     * @param restOperationRequest The REST request sent to the API.
+     * @return The request signer
+     * @throws ApiException If it's unable to retrieve the decorator for the given request.
+     */
+    public RequestDecorator fromRestRequest(RestOperationRequest restOperationRequest) throws ApiException {
+        AuthorizationType authType = restOperationRequest.getAuthorizationType() != null ?
+                                     restOperationRequest.getAuthorizationType() :
+                                     defaultAuthorizationType;
+
+        return forAuthType(authType);
+    }
+
+    /**
      * Given a authorization type, it returns the appropriate request signer.
      * @param authorizationType the authorization type to be used for the request.
      * @return the appropriate request signer for the given authorization type.
      */
-    private RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) {
+    private RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiException {
         if (AuthorizationType.AMAZON_COGNITO_USER_POOLS.equals(authorizationType) &&
             apiAuthProviders.getCognitoUserPoolsAuthProvider() != null) {
             return new JWTTokenRequestDecorator(() -> {
@@ -103,9 +138,20 @@ public final class ApiRequestDecoratorFactory {
                     return null;
                 }
             });
-        } else if (AuthorizationType.API_KEY.equals(authorizationType) &&
-            apiAuthProviders.getApiKeyAuthProvider() != null) {
-            return new ApiKeyRequestDecorator(apiAuthProviders.getApiKeyAuthProvider());
+        } else if (AuthorizationType.API_KEY.equals(authorizationType)) {
+            if (apiAuthProviders.getApiKeyAuthProvider() != null) {
+                return new ApiKeyRequestDecorator(apiAuthProviders.getApiKeyAuthProvider());
+            } else if (apiKey != null) {
+                return new ApiKeyRequestDecorator(new ApiKeyAuthProvider() {
+                    @Override
+                    public String getAPIKey() {
+                        return apiKey;
+                    }
+                });
+            } else {
+                throw new ApiException("Attempting to authentication type API_KEY without an API key provider or " +
+                                           "an API key in the config file", AmplifyException.TODO_RECOVERY_SUGGESTION);
+            }
         } else if (AuthorizationType.AWS_IAM.equals(authorizationType) &&
             apiAuthProviders.getAWSCredentialsProvider() != null) {
             AppSyncV4Signer appSyncV4Signer = new AppSyncV4Signer(region);
