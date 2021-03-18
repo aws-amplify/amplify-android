@@ -84,28 +84,23 @@ public final class ApiRequestDecoratorFactory {
     private RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) {
         if (AuthorizationType.AMAZON_COGNITO_USER_POOLS.equals(authorizationType) &&
             apiAuthProviders.getCognitoUserPoolsAuthProvider() != null) {
-            return new JWTTokenRequestDecorator(new JWTTokenRequestDecorator.TokenSupplier() {
-                @Override
-                public String get() {
-                    try {
-                        return apiAuthProviders.getCognitoUserPoolsAuthProvider().getLatestAuthToken();
-                    } catch (ApiException apiException) {
-                        LOG.error("Failed to retrieve token from CognitoUserPoolsAuthProvider", apiException);
-                        return null;
-                    }
+            return new JWTTokenRequestDecorator(() -> {
+                try {
+                    return apiAuthProviders.getCognitoUserPoolsAuthProvider().getLatestAuthToken();
+                } catch (ApiException apiException) {
+                    LOG.error("Failed to retrieve token from CognitoUserPoolsAuthProvider", apiException);
+                    return null;
                 }
             });
+
         } else if (AuthorizationType.OPENID_CONNECT.equals(authorizationType) &&
             apiAuthProviders.getOidcAuthProvider() != null) {
-            return new JWTTokenRequestDecorator(new JWTTokenRequestDecorator.TokenSupplier() {
-                @Override
-                public String get() {
-                    try {
-                        return apiAuthProviders.getOidcAuthProvider().getLatestAuthToken();
-                    } catch (ApiException apiException) {
-                        LOG.error("Failed to retrieve token from OidcAuthProvider", apiException);
-                        return null;
-                    }
+            return new JWTTokenRequestDecorator(() -> {
+                try {
+                    return apiAuthProviders.getOidcAuthProvider().getLatestAuthToken();
+                } catch (ApiException apiException) {
+                    LOG.error("Failed to retrieve token from OidcAuthProvider", apiException);
+                    return null;
                 }
             });
         } else if (AuthorizationType.API_KEY.equals(authorizationType) &&
