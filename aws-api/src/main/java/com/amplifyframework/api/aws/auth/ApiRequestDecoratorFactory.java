@@ -23,7 +23,6 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.AuthorizationType;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
-import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.rest.RestOperationRequest;

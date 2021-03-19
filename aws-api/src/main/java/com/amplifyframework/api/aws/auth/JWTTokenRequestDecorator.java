@@ -17,8 +17,6 @@ package com.amplifyframework.api.aws.auth;
 
 import java.io.IOException;
 
-import okhttp3.MediaType;
-
 /**
  * Request signer that adds a JWT token to the provided request.
  */
