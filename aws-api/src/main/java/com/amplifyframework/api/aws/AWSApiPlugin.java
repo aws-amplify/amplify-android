@@ -302,8 +302,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         // Decorate the request according to the auth rule parameters.
         try {
             AuthorizationType authType = clientDetails
-                    .getApiConfiguration()
-                    .getAuthorizationType();
+                .getApiConfiguration()
+                .getAuthorizationType();
+            if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
+                ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
+                authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
+            }
+
             authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
         } catch (ApiException exception) {
             onSubscriptionFailure.accept(exception);

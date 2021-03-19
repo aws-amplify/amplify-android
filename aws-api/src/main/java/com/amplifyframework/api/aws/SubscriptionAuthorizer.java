@@ -19,6 +19,7 @@ import android.net.Uri;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
@@ -69,7 +70,12 @@ final class SubscriptionAuthorizer {
     }
 
     private JSONObject createHeaders(GraphQLRequest<?> request, boolean connectionFlag) throws ApiException {
-        switch (configuration.getAuthorizationType()) {
+        AuthorizationType authType = configuration.getAuthorizationType();
+        if (request instanceof AppSyncGraphQLRequest<?> &&
+            ((AppSyncGraphQLRequest<?>) request).getAuthorizationType() != null) {
+            authType = ((AppSyncGraphQLRequest<?>) request).getAuthorizationType();
+        }
+        switch (authType) {
             case API_KEY:
                 ApiKeyAuthProvider keyProvider = authProviders.getApiKeyAuthProvider();
                 if (keyProvider == null) {
