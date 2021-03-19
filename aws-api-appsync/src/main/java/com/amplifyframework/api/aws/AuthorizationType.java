@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api;
+package com.amplifyframework.api.aws;
 
 /**
  * The types of authorization one can use while talking to an Amazon

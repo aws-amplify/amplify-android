@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.api.AuthorizationType;
 import com.amplifyframework.util.Immutable;
 
 import java.util.Arrays;
@@ -35,7 +34,6 @@ public final class RestOptions {
     private final byte[] data;
     private final Map<String, String> headers;
     private final Map<String, String> queryParameters;
-    private final AuthorizationType authorizationType;
 
     /**
      * Construct a REST request.
@@ -43,18 +41,15 @@ public final class RestOptions {
      * @param data Data for the rest option
      * @param headers Headers for the request.
      * @param queryParameters Query parameters for the request. This value is nullable
-     * @param authorizationType The authorization type for the request.
      */
     private RestOptions(String path,
-                        byte[] data,
-                        Map<String, String> headers,
-                        Map<String, String> queryParameters,
-                        AuthorizationType authorizationType) {
+                       byte[] data,
+                       Map<String, String> headers,
+                       Map<String, String> queryParameters) {
         this.path = path;
         this.data = data == null ? null : Arrays.copyOf(data, data.length);
         this.headers = headers == null ? Collections.emptyMap() : Immutable.of(headers);
         this.queryParameters = queryParameters == null ? Collections.emptyMap() : Immutable.of(queryParameters);
-        this.authorizationType = authorizationType;
     }
 
     /**
@@ -95,14 +90,6 @@ public final class RestOptions {
      */
     public boolean hasData() {
         return data != null;
-    }
-
-    /**
-     * Returns the authorization type for the request.
-     * @return The authorization type or null if not set.
-     */
-    public AuthorizationType getAuthorizationType() {
-        return authorizationType;
     }
 
     /**
@@ -166,7 +153,6 @@ public final class RestOptions {
         private byte[] data;
         private Map<String, String> queryParameters;
         private Map<String, String> headers;
-        private AuthorizationType authorizationType;
 
         Builder() { }
 
@@ -187,16 +173,6 @@ public final class RestOptions {
          */
         public Builder addBody(final byte[] data) {
             this.data = data;
-            return this;
-        }
-
-        /**
-         * Set the authorization type for the build.
-         * @param authorizationType The authorization type for the request.
-         * @return Current Builder instance, for fluent method chaining.
-         */
-        public Builder authorizationType(final AuthorizationType authorizationType) {
-            this.authorizationType = authorizationType;
             return this;
         }
 
@@ -249,8 +225,7 @@ public final class RestOptions {
                     this.path,
                     this.data,
                     this.headers,
-                    this.queryParameters,
-                    this.authorizationType);
+                    this.queryParameters);
         }
     }
 }

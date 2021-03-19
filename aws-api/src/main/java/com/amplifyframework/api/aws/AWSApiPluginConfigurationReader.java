@@ -17,7 +17,6 @@ package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.AuthorizationType;
 
 import org.json.JSONException;
 import org.json.JSONObject;

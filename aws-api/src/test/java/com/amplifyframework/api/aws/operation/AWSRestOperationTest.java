@@ -16,8 +16,8 @@
 package com.amplifyframework.api.aws.operation;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.AuthorizationType;
 import com.amplifyframework.api.aws.ApiAuthProviders;
+import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.rest.HttpMethod;
 import com.amplifyframework.api.rest.RestOperationRequest;
@@ -109,8 +109,7 @@ public final class AWSRestOperationTest {
             new RestOperationRequest(HttpMethod.GET,
                                      baseUrl.uri().getPath(),
                                      emptyMap(),
-                                     emptyMap(),
-                                     AuthorizationType.NONE);
+                                     emptyMap());
         RestResponse response = Await.<RestResponse, ApiException>result((onResult, onError) -> {
             AWSRestOperation operation =
                 new AWSRestOperation(request,
@@ -144,8 +143,7 @@ public final class AWSRestOperationTest {
             new RestOperationRequest(HttpMethod.GET,
                                      baseUrl.uri().getPath(),
                                      emptyMap(),
-                                     emptyMap(),
-                                     AuthorizationType.NONE);
+                                     emptyMap());
         assertTimedOut(() ->
             Await.<RestResponse, ApiException>result(timeToWaitForResponse, (onResult, onError) -> {
                 AWSRestOperation operation =

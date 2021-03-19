@@ -23,7 +23,6 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
-import com.amplifyframework.api.AuthorizationType;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
@@ -641,8 +640,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         type,
                         options.getPath(),
                         options.getHeaders(),
-                        options.getQueryParameters(),
-                        options.getAuthorizationType());
+                        options.getQueryParameters());
                 break;
             case PUT:
             case POST:
@@ -652,8 +650,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         options.getPath(),
                         options.getData() == null ? new byte[0] : options.getData(),
                         options.getHeaders(),
-                        options.getQueryParameters(),
-                        options.getAuthorizationType());
+                        options.getQueryParameters());
                 break;
             default:
                 throw new ApiException("Unknown REST operation type: " + type,

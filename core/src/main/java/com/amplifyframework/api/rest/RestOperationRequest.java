@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.api.AuthorizationType;
 import com.amplifyframework.util.Immutable;
 
 import java.util.Arrays;
@@ -35,7 +34,6 @@ public final class RestOperationRequest {
     private final byte[] data;
     private final Map<String, String> headers;
     private final Map<String, String> queryParameters;
-    private final AuthorizationType authorizationType;
 
     /**
      * Constructs a request object for RestOperation.
@@ -44,20 +42,17 @@ public final class RestOperationRequest {
      * @param data Data for the rest option
      * @param headers Header map for the request
      * @param queryParameters Query parameters for the request.
-     * @param authorizationType The authorization type for the request.
      */
     public RestOperationRequest(HttpMethod httpMethod,
                                 String path,
                                 byte[] data,
                                 Map<String, String> headers,
-                                Map<String, String> queryParameters,
-                                AuthorizationType authorizationType) {
+                                Map<String, String> queryParameters) {
         this.httpMethod = httpMethod;
         this.path = path;
         this.headers = headers == null ? Collections.emptyMap() : Immutable.of(headers);
         this.data = data == null ? null : Arrays.copyOf(data, data.length);
         this.queryParameters = queryParameters == null ? Collections.emptyMap() : Immutable.of(queryParameters);
-        this.authorizationType = authorizationType;
     }
 
     /**
@@ -66,14 +61,12 @@ public final class RestOperationRequest {
      * @param path Path against which the request is made.
      * @param headers Header map for the request.
      * @param queryParameters Query parameters for the request.
-     * @param authorizationType The authorization type for the request.
      */
     public RestOperationRequest(HttpMethod httpMethod,
                                 String path,
                                 Map<String, String> headers,
-                                Map<String, String> queryParameters,
-                                AuthorizationType authorizationType) {
-        this(httpMethod, path, null, headers, queryParameters, authorizationType);
+                                Map<String, String> queryParameters) {
+        this(httpMethod, path, null, headers, queryParameters);
     }
 
     /**
@@ -114,14 +107,6 @@ public final class RestOperationRequest {
      */
     public Map<String, String> getHeaders() {
         return headers;
-    }
-
-    /**
-     * Returns the authorization type for the request.
-     * @return The authorization type for the request or null if not set.
-     */
-    public AuthorizationType getAuthorizationType() {
-        return authorizationType;
     }
 
     @NonNull

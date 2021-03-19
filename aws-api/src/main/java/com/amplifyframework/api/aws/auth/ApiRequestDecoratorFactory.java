@@ -20,9 +20,9 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.AuthorizationType;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.rest.RestOperationRequest;
@@ -97,17 +97,13 @@ public final class ApiRequestDecoratorFactory {
     }
 
     /**
-     * Return the appropriate request signer after inspecting the request.
+     * For REST APIs, we just use the default auth type.
      * @param restOperationRequest The REST request sent to the API.
      * @return The request signer
      * @throws ApiException If it's unable to retrieve the decorator for the given request.
      */
     public RequestDecorator fromRestRequest(RestOperationRequest restOperationRequest) throws ApiException {
-        AuthorizationType authType = restOperationRequest.getAuthorizationType() != null ?
-                                     restOperationRequest.getAuthorizationType() :
-                                     defaultAuthorizationType;
-
-        return forAuthType(authType);
+        return forAuthType(defaultAuthorizationType);
     }
 
     /**
