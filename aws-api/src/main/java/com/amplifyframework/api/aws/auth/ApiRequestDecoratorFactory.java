@@ -119,35 +119,21 @@ public final class ApiRequestDecoratorFactory {
     private RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiException {
         if (AuthorizationType.AMAZON_COGNITO_USER_POOLS.equals(authorizationType) &&
             apiAuthProviders.getCognitoUserPoolsAuthProvider() != null) {
-            return new JWTTokenRequestDecorator(() -> {
-                try {
-                    return apiAuthProviders.getCognitoUserPoolsAuthProvider().getLatestAuthToken();
-                } catch (ApiException apiException) {
-                    LOG.error("Failed to retrieve token from CognitoUserPoolsAuthProvider", apiException);
-                    return null;
-                }
-            });
-
+            // By calling getLatestAuthToken() here instead of inside the lambda block, makes the exception
+            // handling a little bit cleaner. If getLatestAuthToken() is called from inside the lambda expression
+            // below, we'd have to surround it with a try catch. By doing it this way, if there's a problem,
+            // the ApiException will just be bubbled up. Same for OPENID_CONNECT.
+            final String token = apiAuthProviders.getCognitoUserPoolsAuthProvider().getLatestAuthToken();
+            return new JWTTokenRequestDecorator(() -> token);
         } else if (AuthorizationType.OPENID_CONNECT.equals(authorizationType) &&
             apiAuthProviders.getOidcAuthProvider() != null) {
-            return new JWTTokenRequestDecorator(() -> {
-                try {
-                    return apiAuthProviders.getOidcAuthProvider().getLatestAuthToken();
-                } catch (ApiException apiException) {
-                    LOG.error("Failed to retrieve token from OidcAuthProvider", apiException);
-                    return null;
-                }
-            });
+            final String token = apiAuthProviders.getOidcAuthProvider().getLatestAuthToken();
+            return new JWTTokenRequestDecorator(() -> token);
         } else if (AuthorizationType.API_KEY.equals(authorizationType)) {
             if (apiAuthProviders.getApiKeyAuthProvider() != null) {
                 return new ApiKeyRequestDecorator(apiAuthProviders.getApiKeyAuthProvider());
             } else if (apiKey != null) {
-                return new ApiKeyRequestDecorator(new ApiKeyAuthProvider() {
-                    @Override
-                    public String getAPIKey() {
-                        return apiKey;
-                    }
-                });
+                return new ApiKeyRequestDecorator(() -> apiKey);
             } else {
                 throw new ApiException("Attempting to authentication type API_KEY without an API key provider or " +
                                            "an API key in the config file", AmplifyException.TODO_RECOVERY_SUGGESTION);

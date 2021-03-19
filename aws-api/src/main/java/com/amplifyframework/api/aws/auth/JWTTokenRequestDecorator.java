@@ -23,10 +23,7 @@ import okhttp3.MediaType;
  * Request signer that adds a JWT token to the provided request.
  */
 public class JWTTokenRequestDecorator implements RequestDecorator {
-    private static final String APP_SYNC_SERVICE_NAME = "appsync";
     private static final String AUTHORIZATION = "authorization";
-    private static final String CONTENT_TYPE = "application/json";
-    private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(CONTENT_TYPE);
     private final TokenSupplier tokenSupplier;
 
     /**
