@@ -43,6 +43,7 @@ platform :android do |options|
                         body:pr_body, 
                         repo: options[:repo], 
                         api_token: ENV["RELEASE_MANAGER_TOKEN"])
+    cleanup
   end
 
 
@@ -80,14 +81,6 @@ platform :android do |options|
     sh('git', 'commit', '-am', commit_message)
   end
 
-  desc "Tag in git and push to GitHub"
-  private_lane :add_tag do |options|
-    next_version = options[:version]
-
-    add_git_tag(tag: next_version)
-    push_git_tags(tag: next_version)
-  end
-
   desc "Publish release to maven using attributes from environment variables."
   private_lane :publish_to_maven do |options|
     gradle(
@@ -103,14 +96,6 @@ platform :android do |options|
         "signing.keyId": ConfigValueReader.from_environment_variable('signing.keyId'),
         "signing.secretKeyRingFile": ConfigValueReader.from_environment_variable('signing.secretKeyRingFile')
       }
-    )
-  end
-
-  desc "Retrieve a parameter value from SSM."
-  private_lane :get_param_value do |options|
-    sh(
-      command: "aws ssm get-parameter --name #{options[:param_name]} --with-decryption --region us-east-1 --query Parameter.Value --output text",
-      log: false
     )
   end
 
