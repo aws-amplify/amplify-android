@@ -46,12 +46,6 @@ platform :android do |options|
   end
 
 
-  desc "Checks out a tag and runs the uploadArchives gradle task."
-  lane :push_tag_to_maven do |options|
-    UI.message("Pushing release #{options[:release_tag]} to maven")
-    sh("git", "checkout", options[:release_tag])
-    publish_to_maven
-  end
 
   desc "Update changelog"
   private_lane :update_change_log do |options|
