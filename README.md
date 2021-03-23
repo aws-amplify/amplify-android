@@ -52,12 +52,12 @@ dependencies section:
 ```groovy
 dependencies {
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:1.17.0'
-    implementation 'com.amplifyframework:aws-api:1.17.0'
-    implementation 'com.amplifyframework:aws-auth-cognito:1.17.0'
-    implementation 'com.amplifyframework:aws-datastore:1.17.0'
-    implementation 'com.amplifyframework:aws-predictions:1.17.0'
-    implementation 'com.amplifyframework:aws-storage-s3:1.17.0'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:1.17.1'
+    implementation 'com.amplifyframework:aws-api:1.17.1'
+    implementation 'com.amplifyframework:aws-auth-cognito:1.17.1'
+    implementation 'com.amplifyframework:aws-datastore:1.17.1'
+    implementation 'com.amplifyframework:aws-predictions:1.17.1'
+    implementation 'com.amplifyframework:aws-storage-s3:1.17.1'
 }
 ```
 
@@ -84,13 +84,12 @@ dependencies {
 }
 ```
 
-### Rx Support
+### Kotlin & Rx Support
 
-By default, Amplify's interfaces render results through async callbacks.
-However, we also offer an Rx-compatible front-end to Amplify.
+Amplify's default interface renders results through async callbacks. We also provide optional, adapter APIs which better integrate with RxJava and Kotlin:
 
-See [Using RxJava with Amplify](https://docs.amplify.aws/lib/project-setup/rxjava/q/platform/android)
-for more information.
+ - [Using RxJava with Amplify](https://docs.amplify.aws/lib/project-setup/rxjava/q/platform/android)
+ - [Kotlin Coroutines Support](https://docs.amplify.aws/lib/project-setup/coroutines/q/platform/android)
 
 ### Authentication
 

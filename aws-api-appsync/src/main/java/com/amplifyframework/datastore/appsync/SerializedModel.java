@@ -131,6 +131,7 @@ public final class SerializedModel implements Model {
      * @return Name of the model in the hybrid platform.
      */
     @Nullable
+    @Override
     public String getModelName() {
         return modelSchema == null ? null : modelSchema.getName();
     }

@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -52,6 +53,7 @@ interface SQLCommandFactory {
      * the {@link ModelSchema}.
      *
      * @param modelSchema schema of the model
+     * @param options options to apply to the query
      * @return the QUERY SQL command
      */
     @NonNull
@@ -59,25 +61,38 @@ interface SQLCommandFactory {
                         @NonNull QueryOptions options) throws DataStoreException;
 
     /**
+     * Generates the SELECT EXISTS command in a raw string representation from
+     * the {@link ModelSchema}.
+     *
+     * @param modelSchema schema of the model
+     * @param predicate predicate to filter by
+     * @return the QUERY SQL command
+     */
+    @NonNull
+    SqlCommand existsFor(@NonNull ModelSchema modelSchema,
+                         @NonNull QueryPredicate predicate) throws DataStoreException;
+
+    /**
      * Generates the INSERT INTO command in a raw string representation and a compiled
      * prepared statement that can be bound later with inputs.
      *
      * @param modelSchema schema of the model
+     * @param item the Model to insert
      * @return the SQL command that encapsulates the INSERT INTO command
      */
     @NonNull
-    SqlCommand insertFor(@NonNull ModelSchema modelSchema);
+    <T extends Model> SqlCommand insertFor(@NonNull ModelSchema modelSchema, @NonNull T item) throws DataStoreException;
 
     /**
      * Generates the UPDATE command in a raw string representation and a compiled
      * prepared statement that can be bound later with inputs.
      *
      * @param modelSchema schema of the model
+     * @param item the Model to update
      * @return the SQL command that encapsulates the UPDATE command
      */
     @NonNull
-    SqlCommand updateFor(@NonNull ModelSchema modelSchema,
-                         @NonNull QueryPredicate predicate) throws DataStoreException;
+    <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema, @NonNull T item) throws DataStoreException;
 
     /**
      * Generates the DELETE command in a raw string representation.
@@ -86,6 +101,5 @@ interface SQLCommandFactory {
      * @return the SQL command that encapsulates the DELETE command
      */
     @NonNull
-    SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
-                         @NonNull QueryPredicate predicate) throws DataStoreException;
+    SqlCommand deleteFor(@NonNull ModelSchema modelSchema, @NonNull QueryPredicate predicate) throws DataStoreException;
 }
