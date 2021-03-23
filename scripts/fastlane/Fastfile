@@ -80,13 +80,6 @@ platform :android do |options|
     sh('git', 'commit', '-am', commit_message)
   end
 
-  desc "Tag in git and push to GitHub"
-  private_lane :add_tag do |options|
-    next_version = options[:version]
-
-    add_git_tag(tag: next_version)
-    push_git_tags(tag: next_version)
-  end
 
   desc "Publish release to maven using attributes from environment variables."
   private_lane :publish_to_maven do |options|
