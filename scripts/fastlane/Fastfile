@@ -46,8 +46,6 @@ platform :android do |options|
     cleanup
   end
 
-
-
   desc "Update changelog"
   private_lane :update_change_log do |options|
     changelog_body = changelog_from_git_commits(
