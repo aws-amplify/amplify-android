@@ -56,7 +56,7 @@ platform :android do |options|
     )
 
     open(change_log_path, 'a') { |f|
-      f.puts "# Release Amplify Android #{options[:next_version]}\n\n"
+      f.puts "## Release {options[:next_version]}\n\n"
       f.puts "#{changelog_body}\n\n"
     }
   end
