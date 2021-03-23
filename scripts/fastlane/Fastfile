@@ -78,19 +78,6 @@ platform :android do |options|
 
   end
 
-  # Calculate the Android version code. Leaving this here for posterity
-  # since it appears it's not necessary to increment versionCode for Android libraries.
-  desc "Calculate a version code based on new version segments"
-  private_lane :calculate_version_code do |options|
-    segments = options[:segments]
-    prerelease = segments.length() > 3 ?  0 : segments[-1].to_i
-    # Android version code max version = 2_100_000_000
-
-    # Derive the version code from version segements and pre-release number (if applicable)
-    # With this approach, you're "limited" to 999 minor versions per major and 999 patches per minor version.
-    # Limits: Max version for 1.x would be 1.999.999 with version code 199_999_900
-    segments[0].to_i * 100_000_000 + segments[1].to_i * 100_000 + segments[2].to_i * 100 + prerelease
-  end
 
   desc "Create the release commit."
   private_lane :release_commit do |options|
