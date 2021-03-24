@@ -626,7 +626,10 @@ public final class SyncProcessorTest {
         // Act: Call hydrate, and await its completion - assert it completed without error
         TestObserver<ModelWithMetadata<? extends Model>> hydrationObserver = TestObserver.create();
         syncProcessor.hydrate().subscribe(hydrationObserver);
-        assertTrue(hydrationObserver.await(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+        // Wait 2 seconds, or 1 second per 100 pages, whichever is greater
+        long timeoutMs = Math.max(OP_TIMEOUT_MS, TimeUnit.SECONDS.toMillis(numPages / 100));
+        assertTrue(hydrationObserver.await(timeoutMs, TimeUnit.MILLISECONDS));
         hydrationObserver.assertNoErrors();
         hydrationObserver.assertComplete();
 
