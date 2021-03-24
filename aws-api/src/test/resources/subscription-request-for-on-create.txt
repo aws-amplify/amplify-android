@@ -2,11 +2,13 @@
   "query": "subscription OnCreatePerson {
   onCreatePerson {
     age
+    createdAt
     dob
     first_name
     id
     last_name
     relationship
+    updatedAt
   }
 }
 ",

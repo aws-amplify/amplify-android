@@ -5,11 +5,13 @@
     _lastChangedAt
     _version
     age
+    createdAt
     dob
     first_name
     id
     last_name
     relationship
+    updatedAt
   }
 }
 ",
