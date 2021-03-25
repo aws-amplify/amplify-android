@@ -23,6 +23,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
@@ -130,37 +131,48 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         AWSApiPluginConfiguration pluginConfig =
                 AWSApiPluginConfigurationReader.readFrom(pluginConfiguration);
 
-        final InterceptorFactory interceptorFactory =
-                new AppSyncSigV4SignerInterceptorFactory(authProvider);
-
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
             final ApiConfiguration apiConfiguration = entry.getValue();
             final EndpointType endpointType = apiConfiguration.getEndpointType();
-            final OkHttpClient.Builder builder = new OkHttpClient.Builder();
-            builder.addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string));
-            builder.eventListener(new ApiConnectionEventListener());
-            if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
-                builder.addInterceptor(interceptorFactory.create(apiConfiguration));
-            }
+            final OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder();
+            okHttpClientBuilder.addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string));
+            okHttpClientBuilder.eventListener(new ApiConnectionEventListener());
 
             OkHttpConfigurator configurator = apiConfigurators.get(apiName);
             if (configurator != null) {
-                configurator.applyConfiguration(builder);
+                configurator.applyConfiguration(okHttpClientBuilder);
             }
-            final OkHttpClient okHttpClient = builder.build();
 
-            final SubscriptionAuthorizer subscriptionAuthorizer =
-                    new SubscriptionAuthorizer(apiConfiguration, authProvider);
-            final SubscriptionEndpoint subscriptionEndpoint =
-                    new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
+            ClientDetails clientDetails = null;
             if (EndpointType.REST.equals(endpointType)) {
+                final InterceptorFactory interceptorFactory =
+                    new AppSyncSigV4SignerInterceptorFactory(authProvider);
+                if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
+                    okHttpClientBuilder.addInterceptor(interceptorFactory.create(apiConfiguration));
+                }
+                clientDetails = new ClientDetails(apiConfiguration, okHttpClientBuilder.build(), null, null);
                 restApis.add(apiName);
-            }
-            if (EndpointType.GRAPHQL.equals(endpointType)) {
+            } else if (EndpointType.GRAPHQL.equals(endpointType)) {
+                final SubscriptionAuthorizer subscriptionAuthorizer =
+                    new SubscriptionAuthorizer(apiConfiguration, authProvider);
+                final SubscriptionEndpoint subscriptionEndpoint =
+                    new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
+                final ApiRequestDecoratorFactory requestDecoratorFactory =
+                    new ApiRequestDecoratorFactory(authProvider,
+                                                   apiConfiguration.getAuthorizationType(),
+                                                   apiConfiguration.getRegion(),
+                                                   apiConfiguration.getApiKey());
+
+                clientDetails = new ClientDetails(apiConfiguration,
+                                                  okHttpClientBuilder.build(),
+                                                  subscriptionEndpoint,
+                                                  requestDecoratorFactory);
                 gqlApis.add(apiName);
             }
-            apiDetails.put(apiName, new ClientDetails(apiConfiguration, okHttpClient, subscriptionEndpoint));
+            if (clientDetails != null) {
+                apiDetails.put(apiName, clientDetails);
+            }
         }
     }
 
@@ -296,9 +308,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         // Decorate the request according to the auth rule parameters.
         try {
-            AuthorizationType authType = clientDetails
-                    .getApiConfiguration()
-                    .getAuthorizationType();
+            AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
+
+            if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
+                ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
+                authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
+            }
+
             authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
         } catch (ApiException exception) {
             onSubscriptionFailure.accept(exception);
@@ -588,6 +604,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
                 .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
+                .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
                 .responseFactory(gqlResponseFactory)
                 .onResponse(onResponse)
                 .onFailure(onFailure)
@@ -663,18 +680,20 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         private final ApiConfiguration apiConfiguration;
         private final OkHttpClient okHttpClient;
         private final SubscriptionEndpoint subscriptionEndpoint;
+        private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
 
         /**
          * Constructs a client detail object containing client and url.
          * It associates a http client with its dedicated endpoint.
          */
-        ClientDetails(
-                final ApiConfiguration apiConfiguration,
-                final OkHttpClient okHttpClient,
-                final SubscriptionEndpoint subscriptionEndpoint) {
+        ClientDetails(final ApiConfiguration apiConfiguration,
+                      final OkHttpClient okHttpClient,
+                      final SubscriptionEndpoint subscriptionEndpoint,
+                      final ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
             this.apiConfiguration = apiConfiguration;
             this.okHttpClient = okHttpClient;
             this.subscriptionEndpoint = subscriptionEndpoint;
+            this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
         }
 
         ApiConfiguration getApiConfiguration() {
@@ -687,6 +706,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         SubscriptionEndpoint getSubscriptionEndpoint() {
             return subscriptionEndpoint;
+        }
+
+        ApiRequestDecoratorFactory getApiRequestDecoratorFactory() {
+            return apiRequestDecoratorFactory;
         }
 
         @Override

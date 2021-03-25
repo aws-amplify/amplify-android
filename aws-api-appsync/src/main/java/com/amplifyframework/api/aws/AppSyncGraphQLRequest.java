@@ -47,6 +47,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     private final SelectionSet selectionSet;
     private final Map<String, Object> variables;
     private final Map<String, String> variableTypes;
+    private final AuthorizationType authorizationType;
 
     /**
      * Constructor for AppSyncGraphQLRequest.
@@ -58,6 +59,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         this.selectionSet = builder.selectionSet;
         this.variables = Immutable.of(builder.variables);
         this.variableTypes = Immutable.of(builder.variableTypes);
+        this.authorizationType = builder.authorizationType;
     }
 
     /**
@@ -79,6 +81,14 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     @Override
     public Map<String, Object> getVariables() {
         return Immutable.of(variables);
+    }
+
+    /**
+     * Returns the {@link AuthorizationType} for this request.
+     * @return the {@link AuthorizationType} for this request.
+     */
+    public AuthorizationType getAuthorizationType() {
+        return authorizationType;
     }
 
     /**
@@ -205,6 +215,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         private GraphQLRequestOptions requestOptions;
         private Type responseType;
         private SelectionSet selectionSet;
+        private AuthorizationType authorizationType;
         private final Map<String, Object> variables;
         private final Map<String, String> variableTypes;
 
@@ -220,6 +231,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             this.selectionSet = new SelectionSet(request.selectionSet);
             this.variables = new HashMap<>(request.variables);
             this.variableTypes = new HashMap<>(request.variableTypes);
+            this.authorizationType = request.authorizationType;
         }
 
         /**
@@ -269,6 +281,16 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
          */
         public Builder responseType(@NonNull Type responseType) {
             this.responseType = Objects.requireNonNull(responseType);
+            return Builder.this;
+        }
+
+        /**
+         * Sets the authorization type for the request.
+         * @param authorizationType the desired authorization type.
+         * @return this builder instance.
+         */
+        public Builder authorizationType(@NonNull AuthorizationType authorizationType) {
+            this.authorizationType = Objects.requireNonNull(authorizationType);
             return Builder.this;
         }
 
