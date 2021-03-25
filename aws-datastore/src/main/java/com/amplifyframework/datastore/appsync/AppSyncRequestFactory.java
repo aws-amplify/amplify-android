@@ -340,6 +340,10 @@ final class AppSyncRequestFactory {
             ModelSchema schema, Model instance) throws AmplifyException {
         final Map<String, Object> result = new HashMap<>();
         for (ModelField modelField : schema.getFields().values()) {
+            if (modelField.isReadOnly()) {
+                // Skip read only fields, since they should not be included on the input object.
+                continue;
+            }
             String fieldName = modelField.getName();
             try {
                 final ModelAssociation association = schema.getAssociations().get(fieldName);

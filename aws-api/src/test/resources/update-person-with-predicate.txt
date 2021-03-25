@@ -1,0 +1,30 @@
+{
+  "query": "mutation UpdatePerson($condition: ModelPersonConditionInput, $input: UpdatePersonInput!) {
+  updatePerson(condition: $condition, input: $input) {
+    age
+    createdAt
+    dob
+    first_name
+    id
+    last_name
+    relationship
+    updatedAt
+  }
+}
+",
+  "variables": {
+    "input": {
+      "id": "dfcdac69-0662-41df-a67b-48c62a023f97",
+      "first_name": "Tony",
+      "last_name": "Swanson",
+      "age": 19,
+      "dob":"2000-01-15",
+      "relationship": "single"
+    },
+    "condition": {
+      "id": {
+        "beginsWith": "e6"
+      }
+    }
+  }
+}

@@ -19,8 +19,10 @@
     id
     name
     owner {
+      createdAt
       id
       name
+      updatedAt
       wea
     }
     posts {
