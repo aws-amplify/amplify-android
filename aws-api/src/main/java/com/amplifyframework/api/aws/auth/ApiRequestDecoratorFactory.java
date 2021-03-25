@@ -25,7 +25,6 @@ import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
@@ -38,7 +37,7 @@ import okhttp3.Request;
  */
 public final class ApiRequestDecoratorFactory {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
-    private static final RequestDecorator NO_OP_REQUEST_SIGNER = new RequestDecorator() {
+    private static final RequestDecorator NO_OP_REQUEST_DECORATOR = new RequestDecorator() {
         @Override
         public Request decorate(Request request) {
             return request;
@@ -97,16 +96,6 @@ public final class ApiRequestDecoratorFactory {
     }
 
     /**
-     * For REST APIs, we just use the default auth type.
-     * @param restOperationRequest The REST request sent to the API.
-     * @return The request signer
-     * @throws ApiException If it's unable to retrieve the decorator for the given request.
-     */
-    public RequestDecorator fromRestRequest(RestOperationRequest restOperationRequest) throws ApiException {
-        return forAuthType(defaultAuthorizationType);
-    }
-
-    /**
      * Given a authorization type, it returns the appropriate request signer.
      * @param authorizationType the authorization type to be used for the request.
      * @return the appropriate request signer for the given authorization type.
@@ -138,7 +127,7 @@ public final class ApiRequestDecoratorFactory {
             AppSyncV4Signer appSyncV4Signer = new AppSyncV4Signer(region);
             return new IamRequestDecorator(appSyncV4Signer, apiAuthProviders.getAWSCredentialsProvider());
         } else {
-            return NO_OP_REQUEST_SIGNER;
+            return NO_OP_REQUEST_DECORATOR;
         }
     }
 }
