@@ -20,6 +20,8 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
+import com.amplifyframework.api.aws.auth.RequestDecorator;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -53,6 +55,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private final OkHttpClient client;
     private final Consumer<GraphQLResponse<R>> onResponse;
     private final Consumer<ApiException> onFailure;
+    private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
 
     private Call ongoingCall;
 
@@ -69,10 +72,12 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             @NonNull String endpoint,
             @NonNull OkHttpClient client,
             @NonNull GraphQLRequest<R> request,
+            @NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         super(request, responseFactory);
+        this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
         this.endpoint = endpoint;
         this.client = client;
         this.onResponse = onResponse;
@@ -88,12 +93,15 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
         try {
             LOG.debug("Request: " + getRequest().getContent());
-            ongoingCall = client.newCall(new Request.Builder()
-                    .url(endpoint)
-                    .addHeader("accept", CONTENT_TYPE)
-                    .addHeader("content-type", CONTENT_TYPE)
-                    .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
-                    .build());
+            RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
+            Request okHttpRequest = new Request.Builder()
+                .url(endpoint)
+                .addHeader("accept", CONTENT_TYPE)
+                .addHeader("content-type", CONTENT_TYPE)
+                .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
+                .build();
+            ongoingCall = client.newCall(requestDecorator.decorate(okHttpRequest));
+
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {
             // Cancel if possible
@@ -156,6 +164,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         private OkHttpClient client;
         private GraphQLRequest<R> request;
         private GraphQLResponse.Factory responseFactory;
+        private ApiRequestDecoratorFactory apiRequestDecoratorFactory;
         private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
 
@@ -189,16 +198,23 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             return this;
         }
 
+        Builder<R> apiRequestDecoratorFactory(ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
+            this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
+            return this;
+        }
+
         @SuppressLint("SyntheticAccessor")
         AppSyncGraphQLOperation<R> build() {
             return new AppSyncGraphQLOperation<>(
                 Objects.requireNonNull(endpoint),
                 Objects.requireNonNull(client),
                 Objects.requireNonNull(request),
+                Objects.requireNonNull(apiRequestDecoratorFactory),
                 Objects.requireNonNull(responseFactory),
                 Objects.requireNonNull(onResponse),
                 Objects.requireNonNull(onFailure)
             );
         }
+
     }
 }

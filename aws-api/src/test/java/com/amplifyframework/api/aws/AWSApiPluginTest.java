@@ -17,12 +17,15 @@ package com.amplifyframework.api.aws;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
+import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelPagination;
 import com.amplifyframework.api.graphql.model.ModelQuery;
@@ -34,7 +37,11 @@ import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
+import com.amplifyframework.util.TypeMaker;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
@@ -44,6 +51,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +68,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -91,6 +100,32 @@ public final class AWSApiPluginTest {
                 .put("authorizationType", "API_KEY")
                 .put("apiKey", "FAKE-API-KEY"));
 
+        ApiAuthProviders apiAuthProviders = ApiAuthProviders
+            .builder()
+            .awsCredentialsProvider(new AWSCredentialsProvider() {
+                @Override
+                public AWSCredentials getCredentials() {
+                    return new BasicAWSCredentials("DUMMY_ID", "DUMMY_SECRET");
+                }
+
+                @Override
+                public void refresh() {
+
+                }
+            })
+            .cognitoUserPoolsAuthProvider(new CognitoUserPoolsAuthProvider() {
+                @Override
+                public String getLatestAuthToken() throws ApiException {
+                    return "FAKE_TOKEN";
+                }
+
+                @Override
+                public String getUsername() {
+                    return "FAKE_USER";
+                }
+            })
+            .build();
+
         this.plugin = AWSApiPlugin.builder()
             .configureClient("graphQlApi", builder -> {
                 builder.addInterceptor(chain -> {
@@ -101,6 +136,7 @@ public final class AWSApiPluginTest {
                 });
                 builder.connectTimeout(10, TimeUnit.SECONDS);
             })
+            .apiAuthProviders(apiAuthProviders)
             .build();
         this.plugin.configure(configuration, ApplicationProvider.getApplicationContext());
     }
@@ -281,5 +317,82 @@ public final class AWSApiPluginTest {
         RecordedRequest recordedRequest = webServer.takeRequest(5, TimeUnit.MILLISECONDS);
         assertNotNull(recordedRequest);
         assertEquals("specialValue", recordedRequest.getHeader("specialKey"));
+    }
+
+    /**
+     * If the auth mode is set for the individual request, ensure that the resulting request
+     * to AppSync has the correct auth header.
+     * @throws AmplifyException Not expected.
+     * @throws InterruptedException Not expected.
+     */
+    @Test
+    public void requestUsesCognitoForAuth() throws AmplifyException, InterruptedException {
+        webServer.enqueue(new MockResponse()
+                              .setBody(Resources.readAsString("blog-owners-query-results.json")));
+
+        AppSyncGraphQLRequest<PaginatedResult<BlogOwner>> appSyncGraphQLRequest =
+            createQueryRequestWithAuthMode(BlogOwner.class, AuthorizationType.AMAZON_COGNITO_USER_POOLS);
+
+        GraphQLResponse<PaginatedResult<BlogOwner>> actualResponse =
+            Await.<GraphQLResponse<PaginatedResult<BlogOwner>>, ApiException>result(
+                (onResult, onError) -> plugin.query(appSyncGraphQLRequest, onResult, onError)
+            );
+
+        RecordedRequest recordedRequest = webServer.takeRequest();
+        assertNull(recordedRequest.getHeader("x-api-key"));
+        assertNotNull(recordedRequest.getHeader("authorization"));
+        assertEquals("FAKE_TOKEN", recordedRequest.getHeader("authorization"));
+        assertEquals(
+            Arrays.asList("Curly", "Moe", "Larry"),
+            Observable.fromIterable(actualResponse.getData())
+                      .map(BlogOwner::getName)
+                      .toList()
+                      .blockingGet()
+        );
+    }
+
+    /**
+     * Ensure the auth mode used for the request is AWS_IAM. We verify this by
+     * @throws AmplifyException Not expected.
+     * @throws InterruptedException Not expected.
+     */
+    @Test
+    public void requestUsesIamForAuth() throws AmplifyException, InterruptedException {
+        webServer.enqueue(new MockResponse()
+                              .setBody(Resources.readAsString("blog-owners-query-results.json")));
+
+        AppSyncGraphQLRequest<PaginatedResult<BlogOwner>> appSyncGraphQLRequest =
+            createQueryRequestWithAuthMode(BlogOwner.class, AuthorizationType.AWS_IAM);
+
+        GraphQLResponse<PaginatedResult<BlogOwner>> actualResponse =
+            Await.<GraphQLResponse<PaginatedResult<BlogOwner>>, ApiException>result(
+                (onResult, onError) -> plugin.query(appSyncGraphQLRequest, onResult, onError)
+            );
+
+        RecordedRequest recordedRequest = webServer.takeRequest();
+        assertNull(recordedRequest.getHeader("x-api-key"));
+        assertNotNull(recordedRequest.getHeader("authorization"));
+        assertTrue(recordedRequest.getHeader("authorization").startsWith("AWS4-HMAC-SHA256"));
+        assertEquals(
+            Arrays.asList("Curly", "Moe", "Larry"),
+            Observable.fromIterable(actualResponse.getData())
+                      .map(BlogOwner::getName)
+                      .toList()
+                      .blockingGet()
+        );
+    }
+
+    private <R> AppSyncGraphQLRequest<PaginatedResult<R>>
+                    createQueryRequestWithAuthMode(Type modelType,
+                                                   AuthorizationType authMode) throws AmplifyException {
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, modelType);
+        return AppSyncGraphQLRequest
+            .builder()
+            .authorizationType(authMode)
+            .modelClass(BlogOwner.class)
+            .responseType(responseType)
+            .operation(QueryType.LIST)
+            .requestOptions(new ApiGraphQLRequestOptions())
+            .build();
     }
 }
