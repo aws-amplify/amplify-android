@@ -2,11 +2,13 @@
   "query": "mutation DeletePerson($condition: ModelPersonConditionInput, $input: DeletePersonInput!) {
   deletePerson(condition: $condition, input: $input) {
     age
+    createdAt
     dob
     first_name
     id
     last_name
     relationship
+    updatedAt
   }
 }
 ",
