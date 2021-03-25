@@ -198,7 +198,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             return this;
         }
 
-        Builder<R> apiRequestSignerFactory(ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
+        Builder<R> apiRequestDecoratorFactory(ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
             this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
             return this;
         }

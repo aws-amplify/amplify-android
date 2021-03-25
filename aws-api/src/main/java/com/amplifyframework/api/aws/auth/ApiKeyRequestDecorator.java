@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 
 /**
- * Request signer that adds a header with the API key.
+ * Request decorator that adds a header with the API key.
  */
 public final class ApiKeyRequestDecorator implements RequestDecorator {
     private static final String X_API_KEY = "x-api-key";

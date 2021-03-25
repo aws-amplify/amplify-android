@@ -37,7 +37,7 @@ import okhttp3.RequestBody;
 import okio.Buffer;
 
 /**
- * Request signer implementatioon that uses AWS SigV4 signing.
+ * Request decorator implementatioon that uses AWS SigV4 signing.
  */
 public class IamRequestDecorator implements RequestDecorator {
     private static final String CONTENT_TYPE = "application/json";

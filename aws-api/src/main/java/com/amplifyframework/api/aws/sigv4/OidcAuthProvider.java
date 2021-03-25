@@ -19,7 +19,7 @@ import com.amplifyframework.api.ApiException;
 
 /**
  * Interface to provide authentication token
- * from OpenID Connect to signer.
+ * from OpenID Connect to the caller.
  */
 public interface OidcAuthProvider {
     /**

@@ -18,7 +18,7 @@ package com.amplifyframework.api.aws.auth;
 import java.io.IOException;
 
 /**
- * Request signer that adds a JWT token to the provided request.
+ * Request decorator that adds a JWT token to the provided request.
  */
 public class JWTTokenRequestDecorator implements RequestDecorator {
     private static final String AUTHORIZATION = "authorization";

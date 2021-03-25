@@ -50,7 +50,7 @@ public final class ApiRequestDecoratorFactory {
     private final String apiKey;
 
     /**
-     * Constructor that accepts the API auth providers to be used with their respective request signer.
+     * Constructor that accepts the API auth providers to be used with their respective request decorator.
      * @param apiAuthProviders An instance with fully configured auth providers for use when signing requests.
      * @param defaultAuthorizationType The authorization type to use as default.
      * @param region The AWS region where the API is deployed.
@@ -62,7 +62,7 @@ public final class ApiRequestDecoratorFactory {
     }
 
     /**
-     * Constructor that accepts the API auth providers to be used with their respective request signer.
+     * Constructor that accepts the API auth providers to be used with their respective request decorator.
      * @param apiAuthProviders An instance with fully configured auth providers for use when signing requests.
      * @param defaultAuthorizationType The authorization type to use as default.
      * @param region The AWS region where the API is deployed.
@@ -79,9 +79,9 @@ public final class ApiRequestDecoratorFactory {
     }
 
     /**
-     * Return the appropriate request signer after inspecting the request.
+     * Return the appropriate request decorator after inspecting the request.
      * @param graphQLRequest The graphQL request sent to the API.
-     * @return The request signer
+     * @return The request decorator.
      * @throws ApiException If it's unable to retrieve the decorator for the given request.
      */
     public RequestDecorator fromGraphQLRequest(GraphQLRequest<?> graphQLRequest) throws ApiException {
@@ -97,9 +97,9 @@ public final class ApiRequestDecoratorFactory {
     }
 
     /**
-     * Given a authorization type, it returns the appropriate request signer.
+     * Given a authorization type, it returns the appropriate request decorator.
      * @param authorizationType the authorization type to be used for the request.
-     * @return the appropriate request signer for the given authorization type.
+     * @return the appropriate request decorator for the given authorization type.
      */
     private RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiException {
         if (AuthorizationType.AMAZON_COGNITO_USER_POOLS.equals(authorizationType) &&
