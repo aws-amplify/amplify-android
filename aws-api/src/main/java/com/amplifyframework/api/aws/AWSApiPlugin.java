@@ -308,9 +308,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         // Decorate the request according to the auth rule parameters.
         try {
-            AuthorizationType authType = clientDetails
-                .getApiConfiguration()
-                .getAuthorizationType();
+            AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
+
             if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
                 ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
                 authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
@@ -687,11 +686,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
          * Constructs a client detail object containing client and url.
          * It associates a http client with its dedicated endpoint.
          */
-        ClientDetails(
-            final ApiConfiguration apiConfiguration,
-            final OkHttpClient okHttpClient,
-            final SubscriptionEndpoint subscriptionEndpoint,
-            final ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
+        ClientDetails(final ApiConfiguration apiConfiguration,
+                      final OkHttpClient okHttpClient,
+                      final SubscriptionEndpoint subscriptionEndpoint,
+                      final ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
             this.apiConfiguration = apiConfiguration;
             this.okHttpClient = okHttpClient;
             this.subscriptionEndpoint = subscriptionEndpoint;

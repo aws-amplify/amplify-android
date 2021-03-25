@@ -85,9 +85,10 @@ public final class ApiRequestDecoratorFactory {
      * @throws ApiException If it's unable to retrieve the decorator for the given request.
      */
     public RequestDecorator fromGraphQLRequest(GraphQLRequest<?> graphQLRequest) throws ApiException {
-        // If it's not a an instance of AppSyncGraphQLRequest OR
-        // the request's authorization type is null
+        // Start with the default auth type.
         AuthorizationType authType = defaultAuthorizationType;
+        // If it is an instance of AppSyncGraphQLRequest AND
+        // the request's authorization type is not null
         if (graphQLRequest instanceof AppSyncGraphQLRequest<?>
             && ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
             authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();

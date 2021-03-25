@@ -29,14 +29,11 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -103,17 +100,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 .addHeader("content-type", CONTENT_TYPE)
                 .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
                 .build();
-
-            ongoingCall = client.newBuilder()
-                .addInterceptor(new Interceptor() {
-                    @NotNull
-                    @Override
-                    public Response intercept(@NotNull Chain chain) throws IOException {
-                        return chain.proceed(requestDecorator.decorate(chain.request()));
-                    }
-                })
-                .build()
-                .newCall(okHttpRequest);
+            ongoingCall = client.newCall(requestDecorator.decorate(okHttpRequest));
 
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {
