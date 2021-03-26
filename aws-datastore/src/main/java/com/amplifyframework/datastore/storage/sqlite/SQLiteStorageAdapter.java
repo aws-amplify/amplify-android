@@ -38,7 +38,6 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.appsync.ModelConverter;
 import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
@@ -369,7 +368,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 if (cursor.moveToFirst()) {
                     do {
                         Map<String, Object> map = converter.buildMapForModel(cursor);
-                        models.add(ModelConverter.fromMap(map, itemClass));
+                        String jsonString = gson.toJson(map);
+                        models.add(gson.fromJson(jsonString, itemClass));
                     } while (cursor.moveToNext());
                 }
 
