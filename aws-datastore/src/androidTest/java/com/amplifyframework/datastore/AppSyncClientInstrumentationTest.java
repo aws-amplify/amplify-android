@@ -42,12 +42,12 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.ModelOverride;
 import com.amplifyframework.testutils.Resources;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -110,8 +110,8 @@ public final class AppSyncClientInstrumentationTest {
 
         // The response from AppSync has createdAt and updatedAt fields.  We can't actually know what values to expect
         // for these, so just null them out.
-        setField(actual, "createdAt", null);
-        setField(actual, "updatedAt", null);
+        ModelOverride.setField(actual, "createdAt", null);
+        ModelOverride.setField(actual, "updatedAt", null);
 
         assertEquals(owner, actual);
         assertEquals(new Integer(1), blogOwnerCreateResult.getSyncMetadata().getVersion());
@@ -360,12 +360,5 @@ public final class AppSyncClientInstrumentationTest {
                 emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
             });
         });
-    }
-
-    private <T extends Model> void setField(T instance, String fieldName, Object value)
-            throws NoSuchFieldException, IllegalAccessException {
-        Field privateField = instance.getClass().getDeclaredField(fieldName);
-        privateField.setAccessible(true);
-        privateField.set(instance, value);
     }
 }

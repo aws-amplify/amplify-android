@@ -32,6 +32,7 @@ import com.amplifyframework.testmodels.ratingsblog.Rating;
 import com.amplifyframework.testmodels.ratingsblog.User;
 import com.amplifyframework.testmodels.teamproject.Projectfields;
 import com.amplifyframework.testmodels.teamproject.Team;
+import com.amplifyframework.testutils.ModelOverride;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 
 import org.junit.BeforeClass;
@@ -87,10 +88,19 @@ public final class CodeGenerationInstrumentationTest {
             .relationship(MaritalStatus.married)
             .build();
         Person createdPerson = api.create(PERSON_API_NAME, david);
+        try {
+            // API creates model with "createdAt" and "updatedAt" fields, which local models don't have.
+            // Manually write these in.
+            ModelOverride.setField(david, "createdAt", createdPerson.getCreatedAt());
+            ModelOverride.setField(david, "updatedAt", createdPerson.getUpdatedAt());
+        } catch (NoSuchFieldException | IllegalAccessException error) {
+            // Failure to override these fields will fail the assertion anyways
+        }
         assertEquals(david, createdPerson);
 
         // Query for that created person, expect him to be there
         Person queriedPerson = api.get(PERSON_API_NAME, Person.class, createdPerson.getId());
+        // Do NOT override createdAt/updatedAt fields here to confirm that synced items have same values.
         assertEquals(createdPerson, queriedPerson);
     }
 
