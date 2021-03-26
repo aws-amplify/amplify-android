@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,18 +46,25 @@ public final class ModelConverter {
         for (ModelField modelField : schema.getFields().values()) {
             String fieldName = modelField.getName();
             try {
+
                 final ModelAssociation association = schema.getAssociations().get(fieldName);
                 if (association == null) {
-                    if (instance instanceof SerializedModel) {
-                        Map<String, Object> serializedData = ((SerializedModel) instance).getSerializedData();
-                        if (serializedData.containsKey(modelField.getName())) {
-                            result.put(fieldName, serializedData.get(modelField.getName()));
-                        }
-                    } else {
-                        result.put(fieldName, extractFieldValue(modelField, instance));
+                    if (instance instanceof SerializedModel
+                            && !((SerializedModel) instance).getSerializedData().containsKey(modelField.getName())) {
+                        // Skip fields that are not set, so that they are not set to null in the request.
+                        continue;
                     }
+                    result.put(fieldName, extractFieldValue(modelField, instance));
                 } else if (association.isOwner()) {
-                    result.put(association.getTargetName(), extractAssociateId(modelField, instance));
+                    Object associateId = extractAssociateId(modelField, instance);
+                    if (associateId == null) {
+                        // Skip fields that are not set, so that they are not set to null in the request.
+                        continue;
+                    }
+                    result.put(fieldName, SerializedModel.builder()
+                        .serializedData(Collections.singletonMap("id", associateId))
+                        .modelSchema(null)
+                        .build());
                 }
                 // Ignore if field is associated, but is not a "belongsTo" relationship
             } catch (Exception exception) {

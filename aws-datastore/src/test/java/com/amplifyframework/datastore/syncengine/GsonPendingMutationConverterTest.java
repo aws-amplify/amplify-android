@@ -103,7 +103,7 @@ public final class GsonPendingMutationConverterTest {
      * @throws AmplifyException On failure to arrange model schema
      */
     @Test
-    public void convertPendingMutationWithSerializedModelWithChildrenToRecordAndBack() throws AmplifyException {
+    public void convertPendingMutationWithSerializedModelWithChildToRecordAndBack() throws AmplifyException {
         // Arrange a PendingMutation<SerializedModel>
         Blog blog = Blog.builder()
                 .name("A neat blog")

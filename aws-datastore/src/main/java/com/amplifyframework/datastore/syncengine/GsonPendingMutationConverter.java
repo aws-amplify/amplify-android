@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.util.GsonFactory;
 
 import com.google.gson.Gson;
@@ -46,13 +45,9 @@ final class GsonPendingMutationConverter implements PendingMutation.Converter {
     @NonNull
     @Override
     public <T extends Model> PendingMutation.PersistentRecord toRecord(@NonNull PendingMutation<T> mutation) {
-        String containedModelClassName = mutation.getModelSchema().getModelClass().getName();
-        if (mutation.getMutatedItem() instanceof SerializedModel) {
-            containedModelClassName = SerializedModel.class.getName();
-        }
         return PendingMutation.PersistentRecord.builder()
             .containedModelId(mutation.getMutatedItem().getId())
-            .containedModelClassName(containedModelClassName)
+            .containedModelClassName(mutation.getMutatedItem().getClass().getName())
             .serializedMutationData(gson.toJson(mutation))
             .mutationId(mutation.getMutationId())
             .build();

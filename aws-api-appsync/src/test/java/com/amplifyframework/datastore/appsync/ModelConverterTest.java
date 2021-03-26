@@ -22,6 +22,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,7 +68,10 @@ public class ModelConverterTest {
         Map<String, Object> expected = new HashMap<>();
         expected.put("id", blog.getId());
         expected.put("name", "A neat blog");
-        expected.put("blogOwnerId", blog.getOwner().getId());
+        expected.put("owner", SerializedModel.builder()
+                .serializedData(Collections.singletonMap("id", blog.getOwner().getId()))
+                .modelSchema(null)
+                .build());
         assertEquals(expected, actual);
     }
 }
