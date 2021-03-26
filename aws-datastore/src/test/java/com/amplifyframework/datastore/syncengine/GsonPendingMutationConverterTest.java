@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
@@ -38,7 +39,7 @@ public final class GsonPendingMutationConverterTest {
      * @throws AmplifyException On failure to arrange model schema
      */
     @Test
-    public void convertStorageItemChangeToRecordAndBack() throws AmplifyException {
+    public void convertPendingMutationToRecordAndBack() throws AmplifyException {
         // Arrange a PendingMutation<Blog>
         Blog blog = Blog.builder()
             .name("A neat blog")
@@ -60,6 +61,71 @@ public final class GsonPendingMutationConverterTest {
 
         // Now, try to convert it back...
         PendingMutation<Blog> reconstructedItemChange = converter.fromRecord(record);
+        assertEquals(originalMutation, reconstructedItemChange);
+    }
+
+    /**
+     * Validate that the {@link GsonPendingMutationConverter} can be
+     * used to convert a sample {@link PendingMutation} to a
+     * {@link PendingMutation.PersistentRecord}, and vice-versa.
+     * @throws DataStoreException from DataStore conversion
+     * @throws AmplifyException On failure to arrange model schema
+     */
+    @Test
+    public void convertPendingMutationWithSerializedModelToRecordAndBack() throws AmplifyException {
+        // Arrange a PendingMutation<SerializedModel>
+        BlogOwner blogOwner = BlogOwner.builder()
+                .name("Joe Swanson")
+                .build();
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        SerializedModel serializedBlogOwner = SerializedModel.create(blogOwner, schema);
+        PendingMutation<SerializedModel> originalMutation = PendingMutation.creation(serializedBlogOwner, schema);
+        String expectedMutationId = originalMutation.getMutationId().toString();
+
+        // Instantiate the object under test
+        PendingMutation.Converter converter = new GsonPendingMutationConverter();
+
+        // Try to construct a record from the PendingMutation instance.
+        PendingMutation.PersistentRecord record = converter.toRecord(originalMutation);
+        assertNotNull(record);
+        assertEquals(expectedMutationId, record.getId());
+
+        // Now, try to convert it back...
+        PendingMutation<SerializedModel> reconstructedItemChange = converter.fromRecord(record);
+        assertEquals(originalMutation, reconstructedItemChange);
+    }
+
+    /**
+     * Validate that the {@link GsonPendingMutationConverter} can be
+     * used to convert a sample {@link PendingMutation} to a
+     * {@link PendingMutation.PersistentRecord}, and vice-versa.
+     * @throws DataStoreException from DataStore conversion
+     * @throws AmplifyException On failure to arrange model schema
+     */
+    @Test
+    public void convertPendingMutationWithSerializedModelWithChildrenToRecordAndBack() throws AmplifyException {
+        // Arrange a PendingMutation<SerializedModel>
+        Blog blog = Blog.builder()
+                .name("A neat blog")
+                .owner(BlogOwner.builder()
+                        .name("Joe Swanson")
+                        .build())
+                .build();
+        ModelSchema schema = ModelSchema.fromModelClass(Blog.class);
+        SerializedModel serializedBlog = SerializedModel.create(blog, schema);
+        PendingMutation<SerializedModel> originalMutation = PendingMutation.creation(serializedBlog, schema);
+        String expectedMutationId = originalMutation.getMutationId().toString();
+
+        // Instantiate the object under test
+        PendingMutation.Converter converter = new GsonPendingMutationConverter();
+
+        // Try to construct a record from the PendingMutation instance.
+        PendingMutation.PersistentRecord record = converter.toRecord(originalMutation);
+        assertNotNull(record);
+        assertEquals(expectedMutationId, record.getId());
+
+        // Now, try to convert it back...
+        PendingMutation<SerializedModel> reconstructedItemChange = converter.fromRecord(record);
         assertEquals(originalMutation, reconstructedItemChange);
     }
 }

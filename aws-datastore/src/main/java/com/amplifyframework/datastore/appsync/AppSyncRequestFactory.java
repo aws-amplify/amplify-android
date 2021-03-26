@@ -27,7 +27,6 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
@@ -49,7 +48,6 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -317,7 +315,7 @@ final class AppSyncRequestFactory {
             );
         }
 
-        Map<String, Object> result = new HashMap<>(extractFieldLevelData(schema, instance));
+        Map<String, Object> result = new HashMap<>(ModelConverter.toMap(instance, schema));
 
         /*
          * If the owner field exists on the model, and the value is null, it should be omitted when performing a
@@ -333,64 +331,13 @@ final class AppSyncRequestFactory {
             }
         }
 
-        return result;
-    }
-
-    private static Map<String, Object> extractFieldLevelData(
-            ModelSchema schema, Model instance) throws AmplifyException {
-        final Map<String, Object> result = new HashMap<>();
+        // Remove read only fields, since they should not be included on the input object.
         for (ModelField modelField : schema.getFields().values()) {
             if (modelField.isReadOnly()) {
-                // Skip read only fields, since they should not be included on the input object.
-                continue;
-            }
-            String fieldName = modelField.getName();
-            try {
-                final ModelAssociation association = schema.getAssociations().get(fieldName);
-                if (association == null) {
-                    if (instance instanceof SerializedModel) {
-                        Map<String, Object> serializedData = ((SerializedModel) instance).getSerializedData();
-                        if (serializedData.containsKey(modelField.getName())) {
-                            result.put(fieldName, serializedData.get(modelField.getName()));
-                        }
-                    } else {
-                        result.put(fieldName, extractFieldValue(modelField, instance));
-                    }
-                } else if (association.isOwner()) {
-                    result.put(association.getTargetName(), extractAssociateId(modelField, instance));
-                }
-                // Ignore if field is associated, but is not a "belongsTo" relationship
-            } catch (Exception exception) {
-                throw new AmplifyException(
-                    "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
-                    exception,
-                    "Check if this model schema is a correct representation of the fields in the provided Object");
+                result.remove(modelField.getName());
             }
         }
+
         return result;
-    }
-
-    private static Object extractAssociateId(ModelField modelField, Model instance)
-            throws NoSuchFieldException, IllegalAccessException {
-        final Object fieldValue = extractFieldValue(modelField, instance);
-        if (modelField.isModel() && fieldValue instanceof Model) {
-            return ((Model) fieldValue).getId();
-        } else if (modelField.isModel() && fieldValue instanceof Map) {
-            return ((Map<?, ?>) fieldValue).get("id");
-        } else {
-            throw new IllegalStateException("Associated data is not Model or Map.");
-        }
-    }
-
-    private static Object extractFieldValue(ModelField modelField, Model instance)
-            throws NoSuchFieldException, IllegalAccessException {
-        if (instance instanceof SerializedModel) {
-            SerializedModel serializedModel = (SerializedModel) instance;
-            Map<String, Object> serializedData = serializedModel.getSerializedData();
-            return serializedData.get(modelField.getName());
-        }
-        Field privateField = instance.getClass().getDeclaredField(modelField.getName());
-        privateField.setAccessible(true);
-        return privateField.get(instance);
     }
 }
