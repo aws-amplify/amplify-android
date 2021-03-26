@@ -347,24 +347,23 @@ final class AppSyncRequestFactory {
             String fieldName = modelField.getName();
             try {
                 final ModelAssociation association = schema.getAssociations().get(fieldName);
+                if (instance instanceof SerializedModel
+                        && !((SerializedModel) instance).getSerializedData().containsKey(fieldName)) {
+                    // Skip fields that are not set, so that they are not set to null in the request.
+                    continue;
+                }
                 if (association == null) {
-                    if (instance instanceof SerializedModel) {
-                        Map<String, Object> serializedData = ((SerializedModel) instance).getSerializedData();
-                        if (serializedData.containsKey(modelField.getName())) {
-                            result.put(fieldName, serializedData.get(modelField.getName()));
-                        }
-                    } else {
-                        result.put(fieldName, extractFieldValue(modelField, instance));
-                    }
+                    result.put(fieldName, extractFieldValue(modelField, instance));
                 } else if (association.isOwner()) {
-                    result.put(association.getTargetName(), extractAssociateId(modelField, instance));
+                    String targetName = association.getTargetName();
+                    result.put(targetName, extractAssociateId(modelField, instance));
                 }
                 // Ignore if field is associated, but is not a "belongsTo" relationship
             } catch (Exception exception) {
                 throw new AmplifyException(
-                    "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
-                    exception,
-                    "Check if this model schema is a correct representation of the fields in the provided Object");
+                        "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
+                        exception,
+                        "Check if this model schema is a correct representation of the fields in the provided Object");
             }
         }
         return result;
@@ -378,7 +377,7 @@ final class AppSyncRequestFactory {
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else {
-            throw new IllegalStateException("Associated data is not Model or Map.");
+            throw new IllegalStateException("Associated data is not Model or Mapg.");
         }
     }
 
