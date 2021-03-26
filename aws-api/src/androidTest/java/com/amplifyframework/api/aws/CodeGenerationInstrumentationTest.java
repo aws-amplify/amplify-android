@@ -32,7 +32,7 @@ import com.amplifyframework.testmodels.ratingsblog.Rating;
 import com.amplifyframework.testmodels.ratingsblog.User;
 import com.amplifyframework.testmodels.teamproject.Projectfields;
 import com.amplifyframework.testmodels.teamproject.Team;
-import com.amplifyframework.testutils.ModelOverride;
+import com.amplifyframework.testutils.FieldValue;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 
 import org.junit.BeforeClass;
@@ -91,8 +91,8 @@ public final class CodeGenerationInstrumentationTest {
         try {
             // API creates model with "createdAt" and "updatedAt" fields, which local models don't have.
             // Manually write these in.
-            ModelOverride.setField(david, "createdAt", createdPerson.getCreatedAt());
-            ModelOverride.setField(david, "updatedAt", createdPerson.getUpdatedAt());
+            FieldValue.set(david, "createdAt", createdPerson.getCreatedAt());
+            FieldValue.set(david, "updatedAt", createdPerson.getUpdatedAt());
         } catch (NoSuchFieldException | IllegalAccessException error) {
             // Failure to override these fields will fail the assertion anyways
         }

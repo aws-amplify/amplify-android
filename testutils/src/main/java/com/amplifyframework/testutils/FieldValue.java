@@ -20,10 +20,10 @@ import com.amplifyframework.core.model.Model;
 import java.lang.reflect.Field;
 
 /**
- * Helper class to manipulate model data for testing purposes.
+ * Helper class to manipulate model field data for testing purposes.
  */
-public final class ModelOverride {
-    private ModelOverride() {}
+public final class FieldValue {
+    private FieldValue() {}
 
     /**
      * Sets the field value of a model to new value.
@@ -34,7 +34,7 @@ public final class ModelOverride {
      * @throws NoSuchFieldException if fieldName is not a field of given instance
      * @throws IllegalAccessException if object's field is not accessible
      */
-    public static <T extends Model> void setField(T instance, String fieldName, Object value)
+    public static <T extends Model> void set(T instance, String fieldName, Object value)
             throws NoSuchFieldException, IllegalAccessException {
         Field privateField = instance.getClass().getDeclaredField(fieldName);
         privateField.setAccessible(true);
