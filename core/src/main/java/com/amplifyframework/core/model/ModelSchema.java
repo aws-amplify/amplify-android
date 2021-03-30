@@ -154,6 +154,21 @@ public final class ModelSchema {
         }
     }
 
+    /**
+     * Returns the applicable auth rules for a given operation.
+     * @param operationType The desired operation type (read, create, update, delete).
+     * @return A list of {@link AuthRule}s for the given operation.
+     */
+    public List<AuthRule> getApplicableRules(ModelOperation operationType) {
+        List<AuthRule> result = new ArrayList<>();
+        for (AuthRule rule : authRules) {
+            if (rule.getOperationsOrDefault().contains(operationType)) {
+                result.add(rule);
+            }
+        }
+        return result;
+    }
+
     // Utility method to extract field metadata
     private static ModelField createModelField(Field field) {
         com.amplifyframework.core.model.annotations.ModelField annotation =
