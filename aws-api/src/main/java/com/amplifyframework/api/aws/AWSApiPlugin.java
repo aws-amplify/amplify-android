@@ -72,6 +72,7 @@ import okhttp3.Protocol;
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Map<String, ClientDetails> apiDetails;
     private final Map<String, OkHttpConfigurator> apiConfigurators;
+    private final Map<String, RequestAuthorizationStrategy> requestAuthorizationStrategies;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
     private final ExecutorService executorService;
@@ -106,6 +107,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.executorService = Executors.newCachedThreadPool();
         this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
         this.apiConfigurators = Immutable.of(builder.apiConfigurators);
+        this.requestAuthorizationStrategies = Immutable.of(builder.requestAuthorizationStrategies);
     }
 
     /**
@@ -151,7 +153,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
                     okHttpClientBuilder.addInterceptor(interceptorFactory.create(apiConfiguration));
                 }
-                clientDetails = new ClientDetails(apiConfiguration, okHttpClientBuilder.build(), null, null);
+                clientDetails =
+                    new ClientDetails(apiConfiguration,
+                                      okHttpClientBuilder.build(),
+                                      null,
+                                      null,
+                                      new DefaultRequestAuthorizationStrategy(apiConfiguration.getAuthorizationType()));
                 restApis.add(apiName);
             } else if (EndpointType.GRAPHQL.equals(endpointType)) {
                 final SubscriptionAuthorizer subscriptionAuthorizer =
@@ -163,11 +170,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                                                    apiConfiguration.getAuthorizationType(),
                                                    apiConfiguration.getRegion(),
                                                    apiConfiguration.getApiKey());
-
+                final RequestAuthorizationStrategy strategy =
+                    requestAuthorizationStrategies.getOrDefault(apiName,
+                                                                new DefaultRequestAuthorizationStrategy(
+                                                                    apiConfiguration.getAuthorizationType()));
                 clientDetails = new ClientDetails(apiConfiguration,
                                                   okHttpClientBuilder.build(),
                                                   subscriptionEndpoint,
-                                                  requestDecoratorFactory);
+                                                  requestDecoratorFactory,
+                                                  strategy);
                 gqlApis.add(apiName);
             }
             if (clientDetails != null) {
@@ -605,6 +616,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
                 .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
+                .requestAuthorizationStrategy(clientDetails.requestAuthorizationStrategy)
                 .responseFactory(gqlResponseFactory)
                 .onResponse(onResponse)
                 .onFailure(onFailure)
@@ -681,6 +693,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         private final OkHttpClient okHttpClient;
         private final SubscriptionEndpoint subscriptionEndpoint;
         private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
+        private final RequestAuthorizationStrategy requestAuthorizationStrategy;
 
         /**
          * Constructs a client detail object containing client and url.
@@ -689,11 +702,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         ClientDetails(final ApiConfiguration apiConfiguration,
                       final OkHttpClient okHttpClient,
                       final SubscriptionEndpoint subscriptionEndpoint,
-                      final ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
+                      final ApiRequestDecoratorFactory apiRequestDecoratorFactory,
+                      final RequestAuthorizationStrategy authorizationStrategy) {
             this.apiConfiguration = apiConfiguration;
             this.okHttpClient = okHttpClient;
             this.subscriptionEndpoint = subscriptionEndpoint;
             this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
+            this.requestAuthorizationStrategy = authorizationStrategy;
         }
 
         ApiConfiguration getApiConfiguration() {
@@ -710,6 +725,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         ApiRequestDecoratorFactory getApiRequestDecoratorFactory() {
             return apiRequestDecoratorFactory;
+        }
+
+        RequestAuthorizationStrategy getRequestAuthorizationStrategy() {
+            return requestAuthorizationStrategy;
         }
 
         @Override
@@ -783,10 +802,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public static final class Builder {
         private ApiAuthProviders apiAuthProviders;
         private final Map<String, OkHttpConfigurator> apiConfigurators;
+        private final Map<String, RequestAuthorizationStrategy> requestAuthorizationStrategies;
 
         private Builder() {
             this.apiAuthProviders = ApiAuthProviders.noProviderOverrides();
             this.apiConfigurators = new HashMap<>();
+            this.requestAuthorizationStrategies = new HashMap<>();
         }
 
         /**
@@ -814,6 +835,20 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         public Builder configureClient(
                 @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
             this.apiConfigurators.put(forApiName, byConfigurator);
+            return this;
+        }
+
+        /**
+         * Configure the request authorization strategy for a given API.
+         * @param forApiName The name of the API for which the strategy should apply.
+         *                   This can be found in your `amplifyconfiguration.json` file.
+         * @param strategy An implementation of the {@link RequestAuthorizationStrategy} interface.
+         * @return A builder instance, to continue chaining configurations.
+         */
+        @NonNull
+        public Builder configureRequestAuthorizationStrategy(
+            @NonNull String forApiName, @NonNull RequestAuthorizationStrategy strategy) {
+            this.requestAuthorizationStrategies.put(forApiName, strategy);
             return this;
         }
 
