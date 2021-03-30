@@ -29,11 +29,15 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -56,6 +60,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private final Consumer<GraphQLResponse<R>> onResponse;
     private final Consumer<ApiException> onFailure;
     private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
+    private final RequestAuthorizationStrategy authorizationStrategy;
 
     private Call ongoingCall;
 
@@ -68,16 +73,19 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
      * @param onResponse Invoked when response is attained from endpoint
      * @param onFailure Invoked upon failure to obtain response from endpoint
      */
+    @SuppressWarnings("ParameterNumber")
     private AppSyncGraphQLOperation(
             @NonNull String endpoint,
             @NonNull OkHttpClient client,
             @NonNull GraphQLRequest<R> request,
             @NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory,
+            @NonNull RequestAuthorizationStrategy authorizationStrategy,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         super(request, responseFactory);
         this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
+        this.authorizationStrategy = authorizationStrategy;
         this.endpoint = endpoint;
         this.client = client;
         this.onResponse = onResponse;
@@ -93,15 +101,30 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
         try {
             LOG.debug("Request: " + getRequest().getContent());
-            RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
-            Request okHttpRequest = new Request.Builder()
+            final boolean isAppSyncRequest = getRequest() instanceof AppSyncGraphQLRequest<?>;
+            final boolean hasAuthTypeInRequest = isAppSyncRequest &&
+                ((AppSyncGraphQLRequest<?>) getRequest()).getAuthorizationType() != null;
+            final boolean usesDefaultAuth =
+                RequestAuthorizationStrategyType.DEFAULT.equals(authorizationStrategy.getAuthorizationStrategyType());
+
+            Request originalRequest = new Request.Builder()
                 .url(endpoint)
                 .addHeader("accept", CONTENT_TYPE)
                 .addHeader("content-type", CONTENT_TYPE)
                 .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
                 .build();
-            ongoingCall = client.newCall(requestDecorator.decorate(okHttpRequest));
-
+            if (hasAuthTypeInRequest || usesDefaultAuth) {
+                RequestDecorator requestDecorator =
+                    apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
+                ongoingCall = client.newCall(requestDecorator.decorate(originalRequest));
+            } else {
+                AppSyncGraphQLRequest<?> appSyncRequest = (AppSyncGraphQLRequest<?>) getRequest();
+                Iterator<AuthorizationType> authTypes = authorizationStrategy.authTypesFor(appSyncRequest);
+                ongoingCall = client.newBuilder()
+                                    .addInterceptor(new MultiAuthInterceptor(authTypes, apiRequestDecoratorFactory))
+                                    .build()
+                                    .newCall(originalRequest);
+            }
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {
             // Cancel if possible
@@ -159,12 +182,47 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         }
     }
 
+    static final class MultiAuthInterceptor implements Interceptor {
+        private final Iterator<AuthorizationType> authTypes;
+        private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
+
+        MultiAuthInterceptor(@NonNull Iterator<AuthorizationType> authTypes,
+                             @NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
+            this.authTypes = authTypes;
+            this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
+        }
+
+        @NotNull
+        @Override
+        public Response intercept(@NotNull Chain chain) throws IOException {
+            Request httpRequest = chain.request().newBuilder().build();
+            Response response = null;
+            while (authTypes.hasNext()) {
+                AuthorizationType authorizationType = authTypes.next();
+                RequestDecorator requestDecorator = null;
+
+                try {
+                    requestDecorator = apiRequestDecoratorFactory.forAuthType(authorizationType);
+                    response = chain.proceed(requestDecorator.decorate(httpRequest));
+                    if (response.isSuccessful()) {
+                        return response;
+                    }
+                } catch (ApiException exception) {
+                    LOG.warn("An error occurred while dispatching an AppSync request with" +
+                                 " auth type " + authorizationType, exception);
+                }
+            }
+            return response;
+        }
+    }
+
     static final class Builder<R> {
         private String endpoint;
         private OkHttpClient client;
         private GraphQLRequest<R> request;
         private GraphQLResponse.Factory responseFactory;
         private ApiRequestDecoratorFactory apiRequestDecoratorFactory;
+        private RequestAuthorizationStrategy authorizationStrategy;
         private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
 
@@ -203,6 +261,11 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             return this;
         }
 
+        Builder<R> requestAuthorizationStrategy(RequestAuthorizationStrategy authorizationStrategy) {
+            this.authorizationStrategy = authorizationStrategy;
+            return this;
+        }
+
         @SuppressLint("SyntheticAccessor")
         AppSyncGraphQLOperation<R> build() {
             return new AppSyncGraphQLOperation<>(
@@ -210,6 +273,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 Objects.requireNonNull(client),
                 Objects.requireNonNull(request),
                 Objects.requireNonNull(apiRequestDecoratorFactory),
+                Objects.requireNonNull(authorizationStrategy),
                 Objects.requireNonNull(responseFactory),
                 Objects.requireNonNull(onResponse),
                 Objects.requireNonNull(onFailure)
