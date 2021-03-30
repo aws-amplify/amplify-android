@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
@@ -117,6 +118,40 @@ public final class AppSyncRequestFactoryTest {
         final GraphQLRequest<Iterable<Post>> request =
                 AppSyncRequestFactory.buildSyncRequest(schema, null, limit, QueryPredicates.all());
         JSONAssert.assertEquals(Resources.readAsString("base-sync-request-paginating-blog-owners.txt"),
+                request.getContent(),
+                true);
+    }
+
+    /**
+     * If a QueryPredicateOperation is provided, it should be wrapped in an AND group.  This enables AppSync to
+     * optimize by performing an DDB query instead of scan.
+     * @throws AmplifyException On failure to parse ModelSchema from model class
+     * @throws JSONException from JSONAssert.assertEquals.
+     */
+    @Test
+    public void validatePredicateOperationForSyncExpressionIsWrappedWithAnd() throws AmplifyException, JSONException {
+        String id = "426f8e8d-ea0f-4839-a73f-6a2a38565ba1";
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        final GraphQLRequest<Iterable<Post>> request =
+                AppSyncRequestFactory.buildSyncRequest(schema, null, null, BlogOwner.ID.eq(id));
+        JSONAssert.assertEquals(Resources.readAsString("base-sync-request-with-predicate-operation.txt"),
+                request.getContent(),
+                true);
+    }
+
+    /**
+     * If a QueryPredicateGroup is provided, it should be parsed as is, and not be wrapped with another AND group.
+     * @throws AmplifyException On failure to parse ModelSchema from model class
+     * @throws JSONException from JSONAssert.assertEquals.
+     */
+    @Test
+    public void validatePredicateGroupForSyncExpressionIsNotWrappedWithAnd() throws AmplifyException, JSONException {
+        String id = "426f8e8d-ea0f-4839-a73f-6a2a38565ba1";
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        QueryPredicate predicate = BlogOwner.ID.eq(id).and(Blog.NAME.eq("Spaghetti"));
+        final GraphQLRequest<Iterable<Post>> request =
+                AppSyncRequestFactory.buildSyncRequest(schema, null, null, predicate);
+        JSONAssert.assertEquals(Resources.readAsString("base-sync-request-with-predicate-group.txt"),
                 request.getContent(),
                 true);
     }
