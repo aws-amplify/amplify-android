@@ -274,7 +274,7 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override fun getCurrentUser(): AuthUser {
+    override fun getCurrentUser(): AuthUser? {
         return delegate.currentUser
     }
 
