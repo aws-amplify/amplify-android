@@ -256,7 +256,7 @@ interface Auth {
      * @return the currently logged in user with basic info and methods for fetching/updating user attributes
      * @return Information about the current user
      */
-    fun getCurrentUser(): AuthUser
+    fun getCurrentUser(): AuthUser?
 
     /**
      * Sign out with advanced options.
