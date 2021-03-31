@@ -778,6 +778,18 @@ class KotlinAuthFacadeTest {
     }
 
     /**
+     * When the getCurrentUser() delegate return null, the proxy API in the
+     * Kotlin facade should, too.  Essentially, the AuthUser returned is nullable.
+     */
+    @Test
+    fun getCurrentUserSucceedsWhenSignedOut() {
+        val expectedAuthUser = null
+        every { delegate.currentUser } returns expectedAuthUser
+        assertEquals(expectedAuthUser, auth.getCurrentUser())
+
+    }
+
+    /**
      * When the getCurrentUser() delegate throws an error, the proxy
      * API in the Kotlin facade should, too. Note that this API doesn't
      * have any suspending functions, this is a straight pass through verification.
