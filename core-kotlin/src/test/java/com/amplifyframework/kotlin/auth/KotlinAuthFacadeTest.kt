@@ -786,7 +786,6 @@ class KotlinAuthFacadeTest {
         val expectedAuthUser = null
         every { delegate.currentUser } returns expectedAuthUser
         assertEquals(expectedAuthUser, auth.getCurrentUser())
-
     }
 
     /**
