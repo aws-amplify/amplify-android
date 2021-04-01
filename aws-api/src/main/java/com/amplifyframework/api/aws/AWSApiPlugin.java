@@ -170,10 +170,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                                                    apiConfiguration.getAuthorizationType(),
                                                    apiConfiguration.getRegion(),
                                                    apiConfiguration.getApiKey());
+                final RequestAuthorizationStrategy defaultStrategy =
+                    new DefaultRequestAuthorizationStrategy(apiConfiguration.getAuthorizationType());
                 final RequestAuthorizationStrategy strategy =
-                    requestAuthorizationStrategies.getOrDefault(apiName,
-                                                                new DefaultRequestAuthorizationStrategy(
-                                                                    apiConfiguration.getAuthorizationType()));
+                    requestAuthorizationStrategies.getOrDefault(apiName, defaultStrategy);
                 clientDetails = new ClientDetails(apiConfiguration,
                                                   okHttpClientBuilder.build(),
                                                   subscriptionEndpoint,
@@ -747,6 +747,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             if (!ObjectsCompat.equals(okHttpClient, that.okHttpClient)) {
                 return false;
             }
+            if (!ObjectsCompat.equals(requestAuthorizationStrategy, that.requestAuthorizationStrategy)) {
+                return false;
+            }
             return ObjectsCompat.equals(subscriptionEndpoint, that.subscriptionEndpoint);
         }
 
@@ -755,6 +758,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             int result = apiConfiguration != null ? apiConfiguration.hashCode() : 0;
             result = 31 * result + (okHttpClient != null ? okHttpClient.hashCode() : 0);
             result = 31 * result + (subscriptionEndpoint != null ? subscriptionEndpoint.hashCode() : 0);
+            result = 31 * result + (requestAuthorizationStrategy != null ? requestAuthorizationStrategy.hashCode() : 0);
             return result;
         }
     }

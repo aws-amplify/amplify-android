@@ -29,8 +29,6 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
@@ -192,9 +190,9 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
         }
 
-        @NotNull
+        @NonNull
         @Override
-        public Response intercept(@NotNull Chain chain) throws IOException {
+        public Response intercept(@NonNull Chain chain) throws IOException {
             Request httpRequest = chain.request().newBuilder().build();
             Response response = null;
             while (authTypes.hasNext()) {

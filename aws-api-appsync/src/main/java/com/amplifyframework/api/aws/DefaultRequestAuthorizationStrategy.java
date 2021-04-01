@@ -47,18 +47,16 @@ final class DefaultRequestAuthorizationStrategy implements RequestAuthorizationS
     }
 
     static final class DefaultAuthorizationStrategyIterator implements Iterator<AuthorizationType> {
-        private final AuthorizationType defaultAuthorizationType;
         private final AuthorizationType[] authorizationTypes;
         private int currentIdx = 0;
 
         DefaultAuthorizationStrategyIterator(AuthorizationType defaultAuthorizationType) {
-            this.defaultAuthorizationType = defaultAuthorizationType;
             this.authorizationTypes = new AuthorizationType[] {defaultAuthorizationType};
         }
 
         @Override
         public boolean hasNext() {
-            return currentIdx == 0;
+            return currentIdx < authorizationTypes.length;
         }
 
         @Override

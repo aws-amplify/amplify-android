@@ -85,7 +85,6 @@ public final class MultiAuthRequestAuthorizationStrategy implements RequestAutho
             default:
                 throw new IllegalArgumentException("Invalid graphql operation type:"
                                                        + graphqlOperation.getOperationType());
-
         }
     }
 
@@ -94,8 +93,12 @@ public final class MultiAuthRequestAuthorizationStrategy implements RequestAutho
         return RequestAuthorizationStrategyType.MULTIAUTH;
     }
 
-    private static final class PriorityBasedAuthRuleProviderComparator implements Comparator<AuthRule> {
+    static final class PriorityBasedAuthRuleProviderComparator implements Comparator<AuthRule> {
         private final List<AuthStrategy> strategyPriority;
+
+        PriorityBasedAuthRuleProviderComparator() {
+            this.strategyPriority = DEFAULT_STRATEGY_PRIORITY;
+        }
 
         PriorityBasedAuthRuleProviderComparator(List<AuthStrategy> strategyPriority) {
             this.strategyPriority = strategyPriority;
