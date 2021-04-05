@@ -38,6 +38,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -101,6 +102,24 @@ final class SubscriptionEndpoint {
         Objects.requireNonNull(onSubscriptionError);
         Objects.requireNonNull(onSubscriptionComplete);
 
+        final AuthorizationType defaultAuthType = apiConfiguration.getAuthorizationType();
+        RequestAuthorizationStrategy requestAuthorizationStrategy =
+            new DefaultRequestAuthorizationStrategy(defaultAuthType);
+        Iterator<AuthorizationType> authTypes = Collections.singletonList(defaultAuthType).iterator();
+        if (request instanceof AppSyncGraphQLRequest<?>) {
+            AppSyncGraphQLRequest<T> appSyncGraphQLRequest = (AppSyncGraphQLRequest<T>) request;
+            boolean isMultiAuth = RequestAuthorizationStrategyType.MULTIAUTH.equals(
+                appSyncGraphQLRequest.getRequestAuthorizationStrategyType());
+            boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
+            if (hasAuthTypeInRequest) {
+                requestAuthorizationStrategy =
+                    new DefaultRequestAuthorizationStrategy(appSyncGraphQLRequest.getAuthorizationType());
+            } else if (isMultiAuth) {
+                requestAuthorizationStrategy = new MultiAuthRequestAuthorizationStrategy();
+            }
+            authTypes = requestAuthorizationStrategy.authTypesFor(appSyncGraphQLRequest);
+        }
+
         // The first call to subscribe OR a disconnected websocket listener will
         // force a new connection to be created.
         if (webSocketListener == null || webSocketListener.isDisconnectedState()) {
@@ -135,9 +154,9 @@ final class SubscriptionEndpoint {
                 .put("id", subscriptionId)
                 .put("type", "start")
                 .put("payload", new JSONObject()
-                .put("data", request.getContent())
-                .put("extensions", new JSONObject()
-                .put("authorization", authorizer.createHeadersForSubscription(request))))
+                    .put("data", request.getContent())
+                        .put("extensions", new JSONObject()
+                            .put("authorization", authorizer.createHeadersForSubscription(request))))
                 .toString()
             );
         } catch (JSONException | ApiException exception) {

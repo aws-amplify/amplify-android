@@ -72,7 +72,6 @@ import okhttp3.Protocol;
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Map<String, ClientDetails> apiDetails;
     private final Map<String, OkHttpConfigurator> apiConfigurators;
-    private final Map<String, RequestAuthorizationStrategy> requestAuthorizationStrategies;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
     private final ExecutorService executorService;
@@ -107,7 +106,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.executorService = Executors.newCachedThreadPool();
         this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
         this.apiConfigurators = Immutable.of(builder.apiConfigurators);
-        this.requestAuthorizationStrategies = Immutable.of(builder.requestAuthorizationStrategies);
     }
 
     /**
@@ -153,12 +151,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
                     okHttpClientBuilder.addInterceptor(interceptorFactory.create(apiConfiguration));
                 }
-                clientDetails =
-                    new ClientDetails(apiConfiguration,
-                                      okHttpClientBuilder.build(),
-                                      null,
-                                      null,
-                                      new DefaultRequestAuthorizationStrategy(apiConfiguration.getAuthorizationType()));
+                clientDetails = new ClientDetails(apiConfiguration, okHttpClientBuilder.build(), null, null);
                 restApis.add(apiName);
             } else if (EndpointType.GRAPHQL.equals(endpointType)) {
                 final SubscriptionAuthorizer subscriptionAuthorizer =
@@ -170,15 +163,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                                                    apiConfiguration.getAuthorizationType(),
                                                    apiConfiguration.getRegion(),
                                                    apiConfiguration.getApiKey());
-                final RequestAuthorizationStrategy defaultStrategy =
-                    new DefaultRequestAuthorizationStrategy(apiConfiguration.getAuthorizationType());
-                final RequestAuthorizationStrategy strategy =
-                    requestAuthorizationStrategies.getOrDefault(apiName, defaultStrategy);
                 clientDetails = new ClientDetails(apiConfiguration,
                                                   okHttpClientBuilder.build(),
                                                   subscriptionEndpoint,
-                                                  requestDecoratorFactory,
-                                                  strategy);
+                                                  requestDecoratorFactory);
                 gqlApis.add(apiName);
             }
             if (clientDetails != null) {
@@ -611,12 +599,31 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             );
         }
 
+        final AuthorizationType defaultAuthType = clientDetails.getApiConfiguration().getAuthorizationType();
+        final RequestAuthorizationStrategy requestAuthorizationStrategy;
+        if (graphQLRequest instanceof AppSyncGraphQLRequest) {
+            AppSyncGraphQLRequest<R> appSyncGraphQLRequest = (AppSyncGraphQLRequest<R>) graphQLRequest;
+            boolean isMultiAuth = RequestAuthorizationStrategyType.MULTIAUTH.equals(
+                appSyncGraphQLRequest.getRequestAuthorizationStrategyType());
+            boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
+            if (hasAuthTypeInRequest) {
+                requestAuthorizationStrategy =
+                    new DefaultRequestAuthorizationStrategy(appSyncGraphQLRequest.getAuthorizationType());
+            } else if (isMultiAuth) {
+                requestAuthorizationStrategy = new MultiAuthRequestAuthorizationStrategy();
+            } else {
+                requestAuthorizationStrategy = new DefaultRequestAuthorizationStrategy(defaultAuthType);
+            }
+        } else {
+            requestAuthorizationStrategy = new DefaultRequestAuthorizationStrategy(defaultAuthType);
+        }
+
         return AppSyncGraphQLOperation.<R>builder()
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
                 .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
                 .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
-                .requestAuthorizationStrategy(clientDetails.requestAuthorizationStrategy)
+                .requestAuthorizationStrategy(requestAuthorizationStrategy)
                 .responseFactory(gqlResponseFactory)
                 .onResponse(onResponse)
                 .onFailure(onFailure)
@@ -693,7 +700,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         private final OkHttpClient okHttpClient;
         private final SubscriptionEndpoint subscriptionEndpoint;
         private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
-        private final RequestAuthorizationStrategy requestAuthorizationStrategy;
 
         /**
          * Constructs a client detail object containing client and url.
@@ -702,13 +708,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         ClientDetails(final ApiConfiguration apiConfiguration,
                       final OkHttpClient okHttpClient,
                       final SubscriptionEndpoint subscriptionEndpoint,
-                      final ApiRequestDecoratorFactory apiRequestDecoratorFactory,
-                      final RequestAuthorizationStrategy authorizationStrategy) {
+                      final ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
             this.apiConfiguration = apiConfiguration;
             this.okHttpClient = okHttpClient;
             this.subscriptionEndpoint = subscriptionEndpoint;
             this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
-            this.requestAuthorizationStrategy = authorizationStrategy;
         }
 
         ApiConfiguration getApiConfiguration() {
@@ -727,10 +731,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             return apiRequestDecoratorFactory;
         }
 
-        RequestAuthorizationStrategy getRequestAuthorizationStrategy() {
-            return requestAuthorizationStrategy;
-        }
-
         @Override
         public boolean equals(Object thatObject) {
             if (this == thatObject) {
@@ -747,9 +747,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             if (!ObjectsCompat.equals(okHttpClient, that.okHttpClient)) {
                 return false;
             }
-            if (!ObjectsCompat.equals(requestAuthorizationStrategy, that.requestAuthorizationStrategy)) {
-                return false;
-            }
             return ObjectsCompat.equals(subscriptionEndpoint, that.subscriptionEndpoint);
         }
 
@@ -758,7 +755,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             int result = apiConfiguration != null ? apiConfiguration.hashCode() : 0;
             result = 31 * result + (okHttpClient != null ? okHttpClient.hashCode() : 0);
             result = 31 * result + (subscriptionEndpoint != null ? subscriptionEndpoint.hashCode() : 0);
-            result = 31 * result + (requestAuthorizationStrategy != null ? requestAuthorizationStrategy.hashCode() : 0);
             return result;
         }
     }
@@ -806,12 +802,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public static final class Builder {
         private ApiAuthProviders apiAuthProviders;
         private final Map<String, OkHttpConfigurator> apiConfigurators;
-        private final Map<String, RequestAuthorizationStrategy> requestAuthorizationStrategies;
 
         private Builder() {
             this.apiAuthProviders = ApiAuthProviders.noProviderOverrides();
             this.apiConfigurators = new HashMap<>();
-            this.requestAuthorizationStrategies = new HashMap<>();
         }
 
         /**
@@ -839,20 +833,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         public Builder configureClient(
                 @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
             this.apiConfigurators.put(forApiName, byConfigurator);
-            return this;
-        }
-
-        /**
-         * Configure the request authorization strategy for a given API.
-         * @param forApiName The name of the API for which the strategy should apply.
-         *                   This can be found in your `amplifyconfiguration.json` file.
-         * @param strategy An implementation of the {@link RequestAuthorizationStrategy} interface.
-         * @return A builder instance, to continue chaining configurations.
-         */
-        @NonNull
-        public Builder configureRequestAuthorizationStrategy(
-            @NonNull String forApiName, @NonNull RequestAuthorizationStrategy strategy) {
-            this.requestAuthorizationStrategies.put(forApiName, strategy);
             return this;
         }
 

@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.RequestAuthorizationStrategyType;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
@@ -87,13 +88,15 @@ final class AppSyncRequestFactory {
             @NonNull final ModelSchema modelSchema,
             @Nullable final Long lastSync,
             @Nullable final Integer limit,
-            @NonNull final QueryPredicate predicate)
+            @NonNull final QueryPredicate predicate,
+            @NonNull final RequestAuthorizationStrategyType strategyType)
             throws DataStoreException {
         try {
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
                     .modelClass(modelSchema.getModelClass())
                     .modelSchema(modelSchema)
                     .operation(QueryType.SYNC)
+                    .requestAuthorizationStrategyType(strategyType)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
                     .responseType(
                             TypeMaker.getParameterizedType(
@@ -117,14 +120,17 @@ final class AppSyncRequestFactory {
         }
     }
 
-    static <T> AppSyncGraphQLRequest<T> buildSubscriptionRequest(
-            ModelSchema modelSchema, SubscriptionType subscriptionType) throws DataStoreException {
+    static <T> AppSyncGraphQLRequest<T>
+        buildSubscriptionRequest(ModelSchema modelSchema,
+                                 SubscriptionType subscriptionType,
+                                 RequestAuthorizationStrategyType strategyType) throws DataStoreException {
         try {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(modelSchema.getModelClass())
                     .modelSchema(modelSchema)
                     .operation(subscriptionType)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
+                    .requestAuthorizationStrategyType(strategyType)
                     .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, modelSchema.getModelClass()))
                     .build();
         } catch (AmplifyException amplifyException) {
@@ -134,21 +140,29 @@ final class AppSyncRequestFactory {
     }
 
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildDeletionRequest(
-            ModelSchema schema, String objectId, Integer version, QueryPredicate predicate)
+            ModelSchema schema,
+            String objectId,
+            Integer version,
+            QueryPredicate predicate,
+            RequestAuthorizationStrategyType strategyType)
             throws DataStoreException {
         Map<String, Object> inputMap = new HashMap<>();
         inputMap.put("id", objectId);
         inputMap.put("_version", version);
-        return buildMutation(schema, inputMap, predicate, MutationType.DELETE);
+        return buildMutation(schema, inputMap, predicate, MutationType.DELETE, strategyType);
     }
 
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildUpdateRequest(
-            ModelSchema schema, M model, Integer version, QueryPredicate predicate) throws DataStoreException {
+            ModelSchema schema,
+            M model,
+            Integer version,
+            QueryPredicate predicate,
+            RequestAuthorizationStrategyType strategyType) throws DataStoreException {
         try {
             Map<String, Object> inputMap = new HashMap<>();
             inputMap.put("_version", version);
             inputMap.putAll(getMapOfFieldNameAndValues(schema, model));
-            return buildMutation(schema, inputMap, predicate, MutationType.UPDATE);
+            return buildMutation(schema, inputMap, predicate, MutationType.UPDATE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
@@ -156,10 +170,12 @@ final class AppSyncRequestFactory {
     }
 
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildCreationRequest(
-            ModelSchema schema, M model) throws DataStoreException {
+            ModelSchema schema,
+            M model,
+            RequestAuthorizationStrategyType strategyType) throws DataStoreException {
         try {
             Map<String, Object> inputMap = getMapOfFieldNameAndValues(schema, model);
-            return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE);
+            return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
@@ -273,7 +289,11 @@ final class AppSyncRequestFactory {
      * @return Mutation doc
      */
     private static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildMutation(
-            ModelSchema schema, Map<String, Object> inputMap, QueryPredicate predicate, MutationType mutationType)
+            ModelSchema schema,
+            Map<String, Object> inputMap,
+            QueryPredicate predicate,
+            MutationType mutationType,
+            RequestAuthorizationStrategyType strategyType)
             throws DataStoreException {
         try {
             String graphQlTypeName = schema.getName();
@@ -281,6 +301,7 @@ final class AppSyncRequestFactory {
                     .modelClass(schema.getModelClass())
                     .modelSchema(schema)
                     .operation(mutationType)
+                    .requestAuthorizationStrategyType(strategyType)
                     .requestOptions(new DataStoreGraphQLRequestOptions())
                     .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, schema.getModelClass()));
 

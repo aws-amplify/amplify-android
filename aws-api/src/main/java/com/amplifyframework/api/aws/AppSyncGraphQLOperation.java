@@ -100,10 +100,6 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         try {
             LOG.debug("Request: " + getRequest().getContent());
             final boolean isAppSyncRequest = getRequest() instanceof AppSyncGraphQLRequest<?>;
-            final boolean hasAuthTypeInRequest = isAppSyncRequest &&
-                ((AppSyncGraphQLRequest<?>) getRequest()).getAuthorizationType() != null;
-            final boolean usesDefaultAuth =
-                RequestAuthorizationStrategyType.DEFAULT.equals(authorizationStrategy.getAuthorizationStrategyType());
 
             Request originalRequest = new Request.Builder()
                 .url(endpoint)
@@ -111,17 +107,17 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 .addHeader("content-type", CONTENT_TYPE)
                 .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
                 .build();
-            if (hasAuthTypeInRequest || usesDefaultAuth) {
-                RequestDecorator requestDecorator =
-                    apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
-                ongoingCall = client.newCall(requestDecorator.decorate(originalRequest));
-            } else {
+            if (isAppSyncRequest) {
                 AppSyncGraphQLRequest<?> appSyncRequest = (AppSyncGraphQLRequest<?>) getRequest();
                 Iterator<AuthorizationType> authTypes = authorizationStrategy.authTypesFor(appSyncRequest);
                 ongoingCall = client.newBuilder()
                                     .addInterceptor(new MultiAuthInterceptor(authTypes, apiRequestDecoratorFactory))
                                     .build()
                                     .newCall(originalRequest);
+            } else {
+                RequestDecorator requestDecorator =
+                    apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
+                ongoingCall = client.newCall(requestDecorator.decorate(originalRequest));
             }
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {
