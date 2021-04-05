@@ -24,11 +24,11 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.datastore.appsync.ModelConverter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.util.GsonFactory;
 
+import com.google.gson.Gson;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,6 +53,7 @@ public class SQLCommandProcessorTest {
     private SQLCommandProcessor sqlCommandProcessor;
     private SQLiteDatabase sqliteDatabase;
     private ModelSchemaRegistry modelSchemaRegistry;
+    private Gson gson;
 
     /**
      * Sets up model registry and in-memory database.
@@ -66,6 +67,7 @@ public class SQLCommandProcessorTest {
         sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry, GsonFactory.instance());
         sqliteDatabase = createDatabase(modelProvider, modelSchemaRegistry);
         sqlCommandProcessor = new SQLCommandProcessor(sqliteDatabase);
+        gson = GsonFactory.instance();
     }
 
     private SQLiteDatabase createDatabase(ModelProvider modelProvider, ModelSchemaRegistry registry) {
@@ -122,7 +124,8 @@ public class SQLCommandProcessorTest {
         if (cursor.moveToFirst()) {
             do {
                 Map<String, Object> map = converter.buildMapForModel(cursor);
-                results.add(ModelConverter.fromMap(map, BlogOwner.class));
+                String jsonString = gson.toJson(map);
+                results.add(gson.fromJson(jsonString, BlogOwner.class));
             } while (cursor.moveToNext());
         }
         assertEquals(Arrays.asList(abigailMcGregor), results);

@@ -38,6 +38,9 @@ public final class ModelField {
     // field in the GraphQL target.
     private final String targetType;
 
+    // If the field can be modified
+    private final boolean isReadOnly;
+
     // If the field is a required or an optional field
     private final boolean isRequired;
 
@@ -61,6 +64,7 @@ public final class ModelField {
         this.name = builder.name;
         this.javaClassForValue = builder.javaClassForValue;
         this.targetType = builder.targetType;
+        this.isReadOnly = builder.isReadOnly;
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
@@ -107,6 +111,14 @@ public final class ModelField {
      */
     public boolean isId() {
         return PrimaryKey.matches(name);
+    }
+
+    /**
+     * Returns true if the field is read only.
+     * @return true if the field is read only.
+     */
+    public boolean isReadOnly() {
+        return isReadOnly;
     }
 
     /**
@@ -166,6 +178,9 @@ public final class ModelField {
 
         ModelField that = (ModelField) thatObject;
 
+        if (isReadOnly != that.isReadOnly) {
+            return false;
+        }
         if (isRequired != that.isRequired) {
             return false;
         }
@@ -192,6 +207,7 @@ public final class ModelField {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (javaClassForValue != null ? javaClassForValue.hashCode() : 0);
         result = 31 * result + (targetType != null ? targetType.hashCode() : 0);
+        result = 31 * result + (isReadOnly ? 1 : 0);
         result = 31 * result + (isRequired ? 1 : 0);
         result = 31 * result + (isArray ? 1 : 0);
         result = 31 * result + (isEnum ? 1 : 0);
@@ -205,6 +221,7 @@ public final class ModelField {
             "name='" + name + '\'' +
             ", javaClassForValue='" + javaClassForValue + '\'' +
             ", targetType='" + targetType + '\'' +
+            ", isReadOnly=" + isReadOnly +
             ", isRequired=" + isRequired +
             ", isArray=" + isArray +
             ", isEnum=" + isEnum +
@@ -225,6 +242,9 @@ public final class ModelField {
 
         // The data targetType of the field.
         private String targetType;
+
+        // If the field can be modified.
+        private boolean isReadOnly = false;
 
         // If the field is a required or an optional field
         private boolean isRequired = false;
@@ -277,6 +297,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder targetType(String targetType) {
             this.targetType = targetType;
+            return this;
+        }
+
+        /**
+         * Set the flag indicating if the field can be modified.
+         * @param isReadOnly if the field can be modified.
+         * @return the builder object
+         */
+        public ModelFieldBuilder isReadOnly(boolean isReadOnly) {
+            this.isReadOnly = isReadOnly;
             return this;
         }
 

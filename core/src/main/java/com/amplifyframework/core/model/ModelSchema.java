@@ -170,6 +170,7 @@ public final class ModelSchema {
                     .name(fieldName)
                     .javaClassForValue(fieldType)
                     .targetType(targetType.isEmpty() ? fieldType.getSimpleName() : targetType)
+                    .isReadOnly(annotation.isReadOnly())
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))

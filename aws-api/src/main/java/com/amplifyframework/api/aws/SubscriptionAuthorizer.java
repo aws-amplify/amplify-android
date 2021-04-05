@@ -69,7 +69,12 @@ final class SubscriptionAuthorizer {
     }
 
     private JSONObject createHeaders(GraphQLRequest<?> request, boolean connectionFlag) throws ApiException {
-        switch (configuration.getAuthorizationType()) {
+        AuthorizationType authType = configuration.getAuthorizationType();
+        if (request instanceof AppSyncGraphQLRequest<?> &&
+            ((AppSyncGraphQLRequest<?>) request).getAuthorizationType() != null) {
+            authType = ((AppSyncGraphQLRequest<?>) request).getAuthorizationType();
+        }
+        switch (authType) {
             case API_KEY:
                 ApiKeyAuthProvider keyProvider = authProviders.getApiKeyAuthProvider();
                 if (keyProvider == null) {

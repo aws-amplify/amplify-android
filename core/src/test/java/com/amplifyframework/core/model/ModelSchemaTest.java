@@ -78,6 +78,18 @@ public final class ModelSchemaTest {
             .targetType("MaritalStatus")
             .isEnum(true)
             .build());
+        expectedFields.put("createdAt", ModelField.builder()
+            .targetType("AWSDateTime")
+            .name("createdAt")
+            .javaClassForValue(Temporal.DateTime.class)
+            .isReadOnly(true)
+            .build());
+        expectedFields.put("updatedAt", ModelField.builder()
+            .targetType("AWSDateTime")
+            .name("updatedAt")
+            .javaClassForValue(Temporal.DateTime.class)
+            .isReadOnly(true)
+            .build());
 
         ModelIndex expectedModelIndex = ModelIndex.builder()
                 .indexName("first_name_and_age_based_index")

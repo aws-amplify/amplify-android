@@ -37,7 +37,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -93,20 +92,19 @@ public final class AppSyncGraphQLRequestFactoryTest {
     }
 
     /**
-     * Validates construction of a mutation query from a Person instance, a predicate,
-     * and an {@link MutationType}.
+     * Validates construction of a delete mutation query from a Person instance, a predicate.
      * @throws JSONException from JSONAssert.assertEquals
      */
     @SuppressWarnings("deprecation")
     @Test
-    public void buildMutationFromPredicateAndMutationType() throws JSONException {
+    public void buildDeleteMutationFromPredicate() throws JSONException {
         // Arrange a person to delete, using UUID from test resource file
         final String expectedId = "dfcdac69-0662-41df-a67b-48c62a023f97";
         final Person tony = Person.builder()
             .firstName("Tony")
             .lastName("Swanson")
             .age(19)
-            .dob(new Temporal.Date(new Date(2000, 1, 15)))
+            .dob(new Temporal.Date("2000-01-15"))
             .id(expectedId)
             .relationship(MaritalStatus.single)
             .build();
@@ -118,9 +116,39 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
         // Assert: expected is actual
         JSONAssert.assertEquals(
-            Resources.readAsString("mutate-person-with-predicate.txt"),
+            Resources.readAsString("delete-person-with-predicate.txt"),
             requestToDeleteTony.getContent(),
             true
+        );
+    }
+
+    /**
+     * Validates construction of an update mutation query from a Person instance, a predicate.
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void buildUpdateMutationFromPredicate() throws JSONException {
+        // Arrange a person to delete, using UUID from test resource file
+        final String expectedId = "dfcdac69-0662-41df-a67b-48c62a023f97";
+        final Person tony = Person.builder()
+                .firstName("Tony")
+                .lastName("Swanson")
+                .age(19)
+                .dob(new Temporal.Date("2000-01-15"))
+                .id(expectedId)
+                .relationship(MaritalStatus.single)
+                .build();
+
+        // Act: build a mutation
+        GraphQLRequest<Person> requestToDeleteTony = AppSyncGraphQLRequestFactory.buildMutation(
+                tony, Person.ID.beginsWith("e6"), MutationType.UPDATE
+        );
+
+        // Assert: expected is actual
+        JSONAssert.assertEquals(
+                Resources.readAsString("update-person-with-predicate.txt"),
+                requestToDeleteTony.getContent(),
+                true
         );
     }
 

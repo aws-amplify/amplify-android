@@ -73,8 +73,18 @@ public final class Blog implements Model {
       .toString()
       .hashCode();
   }
-  
-  public static NameStep builder() {
+
+    @Override
+    public String toString() {
+        return "Blog{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", posts=" + posts +
+                ", owner=" + owner +
+                '}';
+    }
+
+    public static NameStep builder() {
       return new Builder();
   }
   

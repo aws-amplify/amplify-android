@@ -47,7 +47,7 @@ final class GsonPendingMutationConverter implements PendingMutation.Converter {
     public <T extends Model> PendingMutation.PersistentRecord toRecord(@NonNull PendingMutation<T> mutation) {
         return PendingMutation.PersistentRecord.builder()
             .containedModelId(mutation.getMutatedItem().getId())
-            .containedModelClassName(mutation.getModelSchema().getModelClass().getName())
+            .containedModelClassName(mutation.getMutatedItem().getClass().getName())
             .serializedMutationData(gson.toJson(mutation))
             .mutationId(mutation.getMutationId())
             .build();

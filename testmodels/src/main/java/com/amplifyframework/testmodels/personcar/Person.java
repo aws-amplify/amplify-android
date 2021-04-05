@@ -60,6 +60,12 @@ public final class Person implements Model {
     @ModelField
     private final MaritalStatus relationship;
 
+    @ModelField(targetType = "AWSDateTime", isReadOnly = true)
+    private Temporal.DateTime createdAt;
+
+    @ModelField(targetType = "AWSDateTime", isReadOnly = true)
+    private Temporal.DateTime updatedAt;
+
     private Person(String id,
                    String first_name,
                    String last_name,
@@ -173,6 +179,22 @@ public final class Person implements Model {
         return relationship;
     }
 
+    /**
+     * Returns the DateTime when the model was created.
+     * @return the DateTime when the model was created.
+     */
+    public Temporal.DateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    /**
+     * Returns the DateTime when the model was last updated.
+     * @return the DateTime when the model was last updated.
+     */
+    public Temporal.DateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -186,7 +208,9 @@ public final class Person implements Model {
                     ObjectsCompat.equals(getDob(), person.getDob()) &&
                     ObjectsCompat.equals(getFirstName(), person.getFirstName()) &&
                     ObjectsCompat.equals(getLastName(), person.getLastName()) &&
-                    ObjectsCompat.equals(getRelationship(), person.getRelationship());
+                    ObjectsCompat.equals(getRelationship(), person.getRelationship()) &&
+                    ObjectsCompat.equals(getCreatedAt(), person.getCreatedAt()) &&
+                    ObjectsCompat.equals(getUpdatedAt(), person.getUpdatedAt());
         }
     }
 
@@ -199,8 +223,24 @@ public final class Person implements Model {
                 .append(getFirstName())
                 .append(getLastName())
                 .append(getRelationship())
+                .append(getCreatedAt())
+                .append(getUpdatedAt())
                 .toString()
                 .hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "id='" + id + '\'' +
+                ", first_name='" + first_name + '\'' +
+                ", last_name='" + last_name + '\'' +
+                ", age=" + age +
+                ", dob=" + dob +
+                ", relationship=" + relationship +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 
     /**

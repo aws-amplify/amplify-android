@@ -7,6 +7,7 @@ import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -24,6 +25,9 @@ public final class BlogOwner implements Model {
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="Blog") @HasOne(associatedWith = "owner", type = Blog.class) Blog blog = null;
   private final @ModelField(targetType="String") String wea;
+  private @ModelField(targetType = "AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
+  private @ModelField(targetType = "AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
+
   public String getName() {
       return name;
   }
@@ -39,7 +43,15 @@ public final class BlogOwner implements Model {
   public String getWea() {
       return wea;
   }
-  
+
+  public Temporal.DateTime getCreatedAt() {
+      return createdAt;
+  }
+
+  public Temporal.DateTime getUpdatedAt() {
+      return updatedAt;
+  }
+
   private BlogOwner(String name, String id, String wea) {
     this.name = name;
     this.id = id;
@@ -56,7 +68,9 @@ public final class BlogOwner implements Model {
       BlogOwner blogOwner = (BlogOwner) obj;
       return ObjectsCompat.equals(getName(), blogOwner.getName()) &&
               ObjectsCompat.equals(getId(), blogOwner.getId()) &&
-              ObjectsCompat.equals(getWea(), blogOwner.getWea());
+              ObjectsCompat.equals(getWea(), blogOwner.getWea()) &&
+              ObjectsCompat.equals(getCreatedAt(), blogOwner.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), blogOwner.getUpdatedAt());
       }
   }
   
@@ -66,6 +80,8 @@ public final class BlogOwner implements Model {
       .append(getName())
       .append(getId())
       .append(getWea())
+      .append(getCreatedAt())
+      .append(getUpdatedAt())
       .toString()
       .hashCode();
   }
@@ -77,6 +93,8 @@ public final class BlogOwner implements Model {
                 ", id='" + id + '\'' +
                 ", blog=" + blog +
                 ", wea='" + wea + '\'' +
+                ", createdAt='" + createdAt + '\'' +
+                ", updatedAt='" + updatedAt + '\'' +
                 '}';
     }
 
