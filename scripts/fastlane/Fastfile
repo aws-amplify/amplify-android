@@ -50,7 +50,7 @@ platform :android do |options|
     update_change_log(next_version: next_version, last_release_tag: last_release_tag, commit_format: 'default', debug: true)
 
     git_add(path: [gradle_properties_path, change_log_path])
-    git_commit(path: [gradle_properties_path, change_log_path], message: "chore(release): #{product_name} - #{next_version}")
+    git_commit(path: [gradle_properties_path, change_log_path], message: "release: #{product_name} - #{next_version}")
     push_to_git_remote(force: true)
 
 
