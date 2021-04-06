@@ -57,7 +57,7 @@ platform :android do |options|
     current_branch = sh('git', 'branch', '--show-current')
     repo_name_parts = options[:repo].split('/')
     create_pull_request(base: 'main', 
-                        title: "chore(release): #{product_name} - #{next_version}", 
+                        title: "release: #{product_name} - #{next_version}", 
                         body:pr_body, 
                         repo: options[:repo], 
                         api_token: ENV["RELEASE_MANAGER_TOKEN"])
