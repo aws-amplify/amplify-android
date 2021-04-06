@@ -23,8 +23,9 @@ phases:
     commands:
       - echo 'Build phase starting.'
       - |
-        for item in aws-* core core-kotlin rxbindings; do 
-          task_name=":$item:uploadArchives"
+        # List all available gradle tasks, grep for the uploadArchive tasks, and then use cut to strip the
+        # task description and just return the name of the task, one for each module (e.g. aws-api:uploadArchives)
+        for task_name in $(./gradlew tasks --all | grep uploadArchives | cut -d " " -f 1); do
           echo "Gradle task $task_name"
           JAVA_HOME=$JDK_8_HOME ./gradlew $task_name;
         done
