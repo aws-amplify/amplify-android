@@ -89,17 +89,3 @@ platform :android do |options|
 
 
 end
-
-module ConfigValueReader
-  def self.from_environment_variable(param_name)
-    ENV[param_name.gsub('.','_')]
-  end
-
-  def self.from_ssm(param_name)
-    result = `aws ssm get-parameter --name #{param_name} --with-decryption --region us-east-1 --query Parameter.Value --output text`
-    if $?.exitstatus != 0
-      raise "Failed to get value for parameter #{param_name}"
-    end
-    result
-  end
-end
