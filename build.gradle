@@ -132,8 +132,8 @@ private void configureAndroidLibrary(Project project) {
 
     if (project.hasProperty('signingKeyId')) {
         System.out.println("Getting signing info from protected source.")
-        project.ext.'signing.keyId' = findProperty('signingKeyId').trim()   
-        project.ext.'signing.password' = findProperty('signingPassword').trim()
+        project.ext.'signing.keyId' = findProperty('signingKeyId') 
+        project.ext.'signing.password' = findProperty('signingPassword')
         project.ext.'signing.secretKeyRingFile' = findProperty('signingSecretKeyRingFile')
         project.ext.'signing.inMemoryKey' = findProperty('signingInMemoryKey')
     }
