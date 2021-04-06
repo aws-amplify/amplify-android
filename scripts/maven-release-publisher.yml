@@ -27,7 +27,7 @@ phases:
         # task description and just return the name of the task, one for each module (e.g. aws-api:uploadArchives)
         for task_name in $(./gradlew tasks --all | grep uploadArchives | cut -d " " -f 1); do
           echo "Gradle task $task_name"
-          JAVA_HOME=$JDK_8_HOME ./gradlew $task_name;
+          JAVA_HOME=$JDK_8_HOME ./gradlew clean build $task_name;
         done
     finally:
       - echo 'Build phase completed.'
