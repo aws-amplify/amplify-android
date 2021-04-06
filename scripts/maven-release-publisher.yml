@@ -2,12 +2,12 @@ version: 0.2
 env:
   shell: /bin/sh
   secrets-manager:
-    ORG_GRADLE_PROJECT_SONATYPE_NEXUS_USERNAME: amplify/android/sonatype:username
-    ORG_GRADLE_PROJECT_SONATYPE_NEXUS_PASSWORD: amplify/android/sonatype:password
-    ORG_GRADLE_PROJECT_signingPassword:  amplify/android/signing:password
-    ORG_GRADLE_PROJECT_signingKeyId:  amplify/android/signing:keyId
-    ORG_GRADLE_PROJECT_signingInMemoryKey: amplify/android/signing:inMemoryKey
-    ORG_GRADLE_PROJECT_signingSecretKeyRingFile:  amplify/android/signing:secretKeyRingFile
+    ORG_GRADLE_PROJECT_SONATYPE_NEXUS_USERNAME: awsmobilesdk/android/sonatype:username
+    ORG_GRADLE_PROJECT_SONATYPE_NEXUS_PASSWORD: awsmobilesdk/android/sonatype:password
+    ORG_GRADLE_PROJECT_signingPassword:  awsmobilesdk/android/signing:password
+    ORG_GRADLE_PROJECT_signingKeyId:  awsmobilesdk/android/signing:keyId
+    ORG_GRADLE_PROJECT_signingInMemoryKey: awsmobilesdk/android/signing:inMemoryKey
+    ORG_GRADLE_PROJECT_signingSecretKeyRingFile:  awsmobilesdk/android/signing:secretKeyRingFile
 phases:
   install:
     commands:
