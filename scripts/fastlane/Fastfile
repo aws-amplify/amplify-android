@@ -87,12 +87,6 @@ platform :android do |options|
   end
 
 
-  desc "Create the release commit."
-  private_lane :release_commit do |options|
-    next_version = options[:version]
-    commit_message = "chore: release #{next_version} [skip ci]"
-    sh('git', 'commit', '-am', commit_message)
-  end
 
   desc "Publish release to maven using attributes from environment variables."
   private_lane :publish_to_maven do |options|
