@@ -88,23 +88,6 @@ platform :android do |options|
 
 
 
-  desc "Publish release to maven using attributes from environment variables."
-  private_lane :publish_to_maven do |options|
-    gradle(
-      project_dir: gradle_project_root,
-      task: "uploadArchives",
-      print_command: false,
-      flags: '--stacktrace',
-      properties: {
-        "SONATYPE_NEXUS_USERNAME": ConfigValueReader.from_environment_variable('SONATYPE_NEXUS_USERNAME'),
-        "SONATYPE_NEXUS_PASSWORD": ConfigValueReader.from_environment_variable('SONATYPE_NEXUS_PASSWORD'),
-        "signing.inMemoryKey": ConfigValueReader.from_environment_variable('signing.inMemoryKey'),
-        "signing.password": ConfigValueReader.from_environment_variable('signing.password'),
-        "signing.keyId": ConfigValueReader.from_environment_variable('signing.keyId'),
-        "signing.secretKeyRingFile": ConfigValueReader.from_environment_variable('signing.secretKeyRingFile')
-      }
-    )
-  end
 end
 
 module ConfigValueReader
