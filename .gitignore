@@ -68,11 +68,11 @@ freeline/
 freeline_project_description.json
 
 # fastlane
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots
-fastlane/test_output
-fastlane/readme.md
+scripts/fastlane/report.xml
+scripts/fastlane/Preview.html
+scripts/fastlane/screenshots
+scripts/fastlane/test_output
+scripts/fastlane/readme.md
 
 # maven file
 target/
