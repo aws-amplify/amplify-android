@@ -7,7 +7,6 @@ env:
     ORG_GRADLE_PROJECT_signingPassword:  awsmobilesdk/android/signing:password
     ORG_GRADLE_PROJECT_signingKeyId:  awsmobilesdk/android/signing:keyId
     ORG_GRADLE_PROJECT_signingInMemoryKey: awsmobilesdk/android/signing:inMemoryKey
-    ORG_GRADLE_PROJECT_signingSecretKeyRingFile:  awsmobilesdk/android/signing:secretKeyRingFile
 phases:
   install:
     commands:
