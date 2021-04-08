@@ -124,7 +124,7 @@ fi
 
 if [ -n "$buildspec" ]
 then
-    docker_command+=" -e \"BUILDSPEC=$(allOSRealPath "$buildspec")\""
+    docker_command+=" -e \"BUILDSPEC=$buildspec\""
 fi
 
 if [ -n "$environment_variable_file" ]

@@ -130,6 +130,13 @@ private void configureAndroidLibrary(Project project) {
         project.findProperty('VERSION_NAME') :
         rootProject.findProperty('VERSION_NAME')
 
+    if (project.hasProperty('signingKeyId')) {
+        System.out.println("Getting signing info from protected source.")
+        project.ext.'signing.keyId' = findProperty('signingKeyId') 
+        project.ext.'signing.password' = findProperty('signingPassword')
+        project.ext.'signing.inMemoryKey' = findProperty('signingInMemoryKey')
+    }
+
     project.android {
         buildToolsVersion rootProject.ext.buildToolsVersion
         compileSdkVersion rootProject.ext.compileSdkVersion
