@@ -102,14 +102,13 @@ public class AmplifyTest {
      *  NOTE: The name of this method must result in it running last, according to {@link FixMethodOrder}
      */
     @Test
-    public void secondaryAddPluginAfterConfigurationRaisesException() throws AmplifyException {
+    public void secondaryAddPluginAfterConfigurationRaisesException() throws Amplify.AlreadyConfiguredException {
         final SimpleLoggingPlugin loggingPlugin = SimpleLoggingPlugin.instance();
         Amplify.AlreadyConfiguredException actuallyThrown =
-                assertThrows(
-                        Amplify.AlreadyConfiguredException.class,
-                        () -> Amplify.addPlugin(loggingPlugin)
-
-                );
+            assertThrows(
+                Amplify.AlreadyConfiguredException.class,
+                () -> Amplify.addPlugin(loggingPlugin)
+            );
 
         assertEquals(
                 "Amplify has already been configured.",
