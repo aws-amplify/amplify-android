@@ -5,6 +5,7 @@ platform :android do |options|
   gradle_properties_path = File.expand_path("#{Dir.pwd()}/../../gradle.properties")
   gradle_project_root = File.dirname(gradle_properties_path)
   change_log_path = "#{gradle_project_root}/CHANGELOG.md"
+  readme_path = "#{gradle_project_root}/README.md"
   version_regex = /(\d*)\.(\d*)\.(\d*)(?:-unstable\.)?(\d*)?/
   pr_body = %Q(
 ## Release PR review checklist
@@ -40,10 +41,12 @@ platform :android do |options|
     update_change_log(changelog_body: changelog_body, next_version: next_version)
     # Update gradle.properties with the new version
     update_gradle_properties(version: next_version)
+    # Update the version in the README.md file
+    update_docs(version: next_version)
 
     # Commit and push those changes to the branch we're using to do the version bump.
-    git_add(path: [gradle_properties_path, change_log_path])
-    git_commit(path: [gradle_properties_path, change_log_path], message: "release: #{product_name} - #{next_version}")
+    git_add(path: [gradle_properties_path, change_log_path, readme_path])
+    git_commit(path: [gradle_properties_path, change_log_path, readme_path], message: "release: #{product_name} - #{next_version}")
     push_to_git_remote(force: true)
 
     # Create the PR for the new release
@@ -61,6 +64,17 @@ platform :android do |options|
       tag_name: release_tag_name,
       description: changelog_body,
       is_draft: true)
+  end
+
+  # Updates the version numbers in the README.md
+  private_lane :update_docs do |options|
+    readme_contents = File.read(readme_path)
+
+    # Regex voodoo. \\1 refers to the module name which is the first capture group of the regex. We need that to rebuild the string with the new version.
+    readme_contents = readme_contents.gsub(/implementation\s'com.amplifyframework:(.*):(.*)'/,"implementation \'com.amplifyframework:\\1:#{options[:version]}\'")
+    open(readme_path, 'w') { |f|
+      f.puts readme_contents
+    }
   end
   
   # Generate the changelog notes for the new release.
