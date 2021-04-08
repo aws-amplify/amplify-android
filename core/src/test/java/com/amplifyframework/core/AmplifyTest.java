@@ -100,9 +100,7 @@ public class AmplifyTest {
      * It is an error to call {@link Amplify#addPlugin(Plugin)}} after configuration.
      * @throws Amplify.AlreadyConfiguredException
      *  NOTE: The name of this method must result in it running last, according to {@link FixMethodOrder}
-     *
      */
-
     @Test
     public void secondaryAddPluginAfterConfigurationRaisesException() throws AmplifyException {
         final SimpleLoggingPlugin loggingPlugin = SimpleLoggingPlugin.instance();
