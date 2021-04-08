@@ -91,7 +91,7 @@ public class AmplifyTest {
             actuallyThrown.getMessage()
         );
         assertEquals(
-            "Remove the duplicate call to `Amplify.configure()`",
+            "Remove the duplicate call to `Amplify.configure()`.",
             actuallyThrown.getRecoverySuggestion()
         );
     }
@@ -118,7 +118,7 @@ public class AmplifyTest {
                 actuallyThrown.getMessage()
         );
         assertEquals(
-                "Remove the duplicate call to `Amplify.configure()`",
+                "Do not add plugins after calling `Amplify.configure()`.",
                 actuallyThrown.getRecoverySuggestion()
         );
     }

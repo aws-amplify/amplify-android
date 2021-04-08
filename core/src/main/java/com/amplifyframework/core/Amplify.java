@@ -136,7 +136,7 @@ public final class Amplify {
 
         synchronized (CONFIGURATION_LOCK) {
             if (CONFIGURATION_LOCK.get()) {
-                throw new AlreadyConfiguredException();
+                throw new AlreadyConfiguredException("Remove the duplicate call to `Amplify.configure()`.");
             }
 
             // Configure User-Agent utility
@@ -191,7 +191,7 @@ public final class Amplify {
 
         synchronized (CONFIGURATION_LOCK) {
             if (CONFIGURATION_LOCK.get()) {
-                throw new AlreadyConfiguredException();
+                throw new AlreadyConfiguredException("Do not add plugins after calling `Amplify.configure()`.");
             }
 
             if (Empty.check(plugin.getPluginKey())) {
@@ -241,8 +241,8 @@ public final class Amplify {
         /**
          * Constructs an AlreadyConfiguredException, indicating that Amplify has already been configured.
          */
-        private AlreadyConfiguredException() {
-            super("Amplify has already been configured.", "Remove the duplicate call to `Amplify.configure()`");
+        private AlreadyConfiguredException(@NonNull String recoverySuggestion) {
+            super("Amplify has already been configured.", recoverySuggestion);
         }
     }
 }
