@@ -5,6 +5,8 @@ platform :android do |options|
   gradle_properties_path = File.expand_path("#{Dir.pwd()}/../../gradle.properties")
   gradle_project_root = File.dirname(gradle_properties_path)
   change_log_path = "#{gradle_project_root}/CHANGELOG.md"
+  main_readme_path = "#{gradle_project_root}/README.md"
+  rx_readme_path = "#{gradle_project_root}/rxbindings/README.md"
   version_regex = /(\d*)\.(\d*)\.(\d*)(?:-unstable\.)?(\d*)?/
   pr_body = %Q(
 ## Release PR review checklist
@@ -26,6 +28,7 @@ platform :android do |options|
   lane :create_next_release_pr do |options|
     # This will be used in the commit and PR title
     product_name = options[:product_name]
+    maven_group_name = CredentialsManager::AppfileConfig.try_fetch_value(:package_name)
     # Find the tag for the last release
     last_release_tag = last_git_tag(pattern: "#{RELEASE_TAG_PREFIX}*")
     last_version = last_release_tag.dup
@@ -47,10 +50,13 @@ platform :android do |options|
       repo: options[:repo])
     # Update gradle.properties with the new version
     update_gradle_properties(version: next_version)
+    # Update the version in the README.md file
+    update_docs(file_path:main_readme_path, version: next_version, maven_group_name:maven_group_name)
+    update_docs(file_path:rx_readme_path, version: next_version, maven_group_name:maven_group_name)
 
     # Commit and push those changes to the branch we're using to do the version bump.
-    git_add(path: [gradle_properties_path, change_log_path])
-    git_commit(path: [gradle_properties_path, change_log_path], message: "release: #{product_name} - #{next_version}")
+    git_add(path: [gradle_properties_path, change_log_path, main_readme_path, rx_readme_path])
+    git_commit(path: [gradle_properties_path, change_log_path, main_readme_path, rx_readme_path], message: "release: #{product_name} - #{next_version}")
     push_to_git_remote(force: true)
 
     # Create the PR for the new release
@@ -68,6 +74,19 @@ platform :android do |options|
       tag_name: release_tag_name,
       description: changelog_body,
       is_draft: true)
+  end
+
+  # Updates the version numbers in the README.md
+  private_lane :update_docs do |options|
+    readme_path = options[:file_path]
+    readme_contents = File.read(readme_path)
+    maven_group_name = options[:maven_group_name] 
+
+    # Regex voodoo. \\1 refers to the module name which is the first capture group of the regex. We need that to rebuild the string with the new version.
+    readme_contents = readme_contents.gsub(/implementation\s'#{maven_group_name}:(.*):(.*)'/,"implementation \'#{maven_group_name}:\\1:#{options[:version]}\'")
+    open(readme_path, 'w') { |f|
+      f.puts readme_contents
+    }
   end
   
   # Generate the changelog notes for the new release.
