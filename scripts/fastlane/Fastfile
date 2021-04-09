@@ -28,7 +28,7 @@ platform :android do |options|
   lane :create_next_release_pr do |options|
     # This will be used in the commit and PR title
     product_name = options[:product_name]
-    maven_group_name = options[:maven_group_name]
+    maven_group_name = CredentialsManager::AppfileConfig.try_fetch_value(:package_name)
     # Find the tag for the last release
     last_release_tag = last_git_tag(pattern: "#{RELEASE_TAG_PREFIX}*")
     last_version = last_release_tag.dup
