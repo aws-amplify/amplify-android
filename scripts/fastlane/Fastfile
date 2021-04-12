@@ -1,147 +1,38 @@
-RELEASE_TAG_PREFIX = 'release_v'
 default_platform(:android)
 
-platform :android do |options|
-  gradle_properties_path = File.expand_path("#{Dir.pwd()}/../../gradle.properties")
-  gradle_project_root = File.dirname(gradle_properties_path)
-  change_log_path = "#{gradle_project_root}/CHANGELOG.md"
-  main_readme_path = "#{gradle_project_root}/README.md"
-  rx_readme_path = "#{gradle_project_root}/rxbindings/README.md"
-  version_regex = /(\d*)\.(\d*)\.(\d*)(?:-unstable\.)?(\d*)?/
-  pr_body = %Q(
-## Release PR review checklist
-- [ ] Verify version name in gradle.properties
-- [ ] Verify CHANGELOG.md
+import_from_git(
+    url: 'git@github.com:aws-amplify/amplify-ci-support.git',
+    branch: 'android/fastlane-actions',
+    path: './src/fastlane/release_actions/fastlane/AndroidAppsFastfile'
 )
 
-  desc "Fetch all tags to ensure accurate calculation of the next release number."
-  before_all do 
-    sh('git', 'fetch', '--tags')
-    sh('git', 'fetch')
-  end
+# When testing against local changes, comment out the above and use the line below instead.
+# import '~/github/aws-amplify/amplify-ci-support/src/fastlane/release_actions/fastlane/AndroidAppsFastfile'
 
-  lane :configure_git_options do |options|
-    sh('git', 'config', 'user.email', options[:git_user_email])
-    sh('git', 'config', 'user.name', options[:git_user_name])
-  end
-
-  lane :create_next_release_pr do |options|
-    # This will be used in the commit and PR title
-    product_name = options[:product_name]
-    maven_group_name = CredentialsManager::AppfileConfig.try_fetch_value(:package_name)
-    # Find the tag for the last release
-    last_release_tag = last_git_tag(pattern: "#{RELEASE_TAG_PREFIX}*")
-    last_version = last_release_tag.dup
-    last_version.slice! "#{RELEASE_TAG_PREFIX}"
-
-    # Calculate the next version
-    next_version, commits = calculate_next_release_version(release_tag_prefix: RELEASE_TAG_PREFIX, from_tag: last_release_tag)
-    # Build the tag name for the new release
-    release_tag_name = "#{RELEASE_TAG_PREFIX}#{next_version}"
-
-    UI.message("Version change #{last_release_tag} => #{next_version}")
-
-    # Get the changelog body and append to the change log.
-    changelog_body = generate_changelog(last_release_tag: last_release_tag)
-    update_change_log(
-      changelog_body: changelog_body,
-      last_version: last_version,
-      next_version: next_version,
-      repo: options[:repo])
-    # Update gradle.properties with the new version
-    update_gradle_properties(version: next_version)
-    # Update the version in the README.md file
-    update_docs(file_path:main_readme_path, version: next_version, maven_group_name:maven_group_name)
-    update_docs(file_path:rx_readme_path, version: next_version, maven_group_name:maven_group_name)
-
-    # Commit and push those changes to the branch we're using to do the version bump.
-    git_add(path: [gradle_properties_path, change_log_path, main_readme_path, rx_readme_path])
-    git_commit(path: [gradle_properties_path, change_log_path, main_readme_path, rx_readme_path], message: "release: #{product_name} - #{next_version}")
-    push_to_git_remote(force: true)
-
-    # Create the PR for the new release
-    create_pull_request(base: 'main', 
-                        title: "release: #{next_version}",
-                        body:pr_body, 
-                        repo: options[:repo], 
-                        api_token: ENV["RELEASE_MANAGER_TOKEN"])
-
-    # Create the new Github release in draft status. This will be updated manually after the binaries get pushed to Maven.
-    set_github_release(
-      repository_name: options[:repo],
-      api_token: ENV["RELEASE_MANAGER_TOKEN"],
-      name: "#{product_name} #{next_version}",
-      tag_name: release_tag_name,
-      description: changelog_body,
-      is_draft: true)
-  end
-
-  # Updates the version numbers in the README.md
-  private_lane :update_docs do |options|
-    readme_path = options[:file_path]
-    readme_contents = File.read(readme_path)
-    maven_group_name = options[:maven_group_name] 
-
-    # Regex voodoo. \\1 refers to the module name which is the first capture group of the regex. We need that to rebuild the string with the new version.
-    readme_contents = readme_contents.gsub(/implementation\s'#{maven_group_name}:(.*):(.*)'/,"implementation \'#{maven_group_name}:\\1:#{options[:version]}\'")
-    open(readme_path, 'w') { |f|
-      f.puts readme_contents
+platform :android do |options|
+  override_lane :build_parameters do
+    project_root = File.expand_path("#{Dir.pwd()}/../..")
+    UI.message("Building version groups for amplify-android from #{project_root}")
+    {
+      repo: 'aws-amplify/amplify-android',
+      product_name: 'Amplify Android',
+      releases: [
+        {
+          release_tag_prefix: 'release_v',
+          gradle_properties_path: "#{project_root}/gradle.properties",
+          doc_files_to_update: ["#{project_root}/README.md", "#{project_root}/rxbindings/README.md"],
+          release_title: 'Amplify Android',
+          changelog_path: "#{project_root}/CHANGELOG.md",
+        },
+        {
+          release_tag_prefix: 'release-kotlin_v',
+          gradle_properties_path: "#{project_root}/core-kotlin/gradle.properties",
+          doc_files_to_update: [],
+          release_title: 'Amplify Android Kotlin Facade',
+          changelog_path: "#{project_root}/core-kotlin/CHANGELOG.md",
+        }
+      ]
     }
-  end
-  
-  # Generate the changelog notes for the new release.
-  private_lane :generate_changelog do |options|
-    releases = { 
-      feat: "minor",
-      fix: "patch", 
-      chore: "patch",
-      refactor: "patch",
-      perf: "patch",
-      test: "patch",
-      docs: "patch",
-      no_type: "patch"
-    }
-
-    # The analyze_commits function is a pre-requisite to running conventional_changelog. However, the versioning logic
-    # used by analyze_commits increments the version number once for each commit that's part of the release. As a result,
-    # you end up "wasting" version numbers. For example, your last release is 1.1.2 and you have 5 bug fixes to go in the
-    # next release, the version calculated by analyze_commit would be 1.1.7. We'll just use the version number we
-    # get from calculate_next_release_version. We'll use semantic_release for generating the change log since it has
-    # a richer feature set.
-    isReleasable = analyze_commits(match: "#{options[:last_release_tag]}", codepush_friendly:[], releases: releases)
-    
-    # We won't display the title generated by conventional_changelog because it will have the 
-    # incorrect version.
-    conventional_changelog(
-      display_title: false,
-      display_links: false,
-      sections: {
-         feat: 'Features',
-         fix: 'Bug Fixes',
-         no_type: 'Miscellaneous'
-      }
-    )
-  end
-  
-  desc "Append the changes to the CHANGELOG file."
-  private_lane :update_change_log do |options|
-    open(change_log_path, 'a') { |f|
-      f.puts "# Release #{options[:next_version]}\n\n"
-      f.puts "#{options[:changelog_body]}\n\n"
-      last_version_tag = "#{RELEASE_TAG_PREFIX}#{options[:last_version]}"
-      next_version_tag = "#{RELEASE_TAG_PREFIX}#{options[:next_version]}"
-      compare_tags = "#{last_version_tag}...#{next_version_tag}"
-      diff_text = "See all changes between #{options[:last_version]} and #{options[:next_version]}"
-      diff_link = "https://github.com/#{options[:repo]}/compare/#{compare_tags}"
-      f.puts "[#{diff_text}](#{diff_link})"
-    }
-  end
-
-  desc "Increment versions"
-  private_lane :update_gradle_properties do |options|
-    version = options[:version].to_s
-    segments = version.match(version_regex).captures # version.split('.')
-    UI.message("Updating versionName in gradle.properties")
-    set_key_value(file: gradle_properties_path, key: 'VERSION_NAME', value: version)
   end
 end
+
