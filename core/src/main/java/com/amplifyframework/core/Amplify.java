@@ -37,7 +37,6 @@ import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
 
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -137,7 +136,7 @@ public final class Amplify {
 
         synchronized (CONFIGURATION_LOCK) {
             if (CONFIGURATION_LOCK.get()) {
-                throw new AlreadyConfiguredException();
+                throw new AlreadyConfiguredException("Remove the duplicate call to `Amplify.configure()`.");
             }
 
             // Configure User-Agent utility
@@ -192,11 +191,7 @@ public final class Amplify {
 
         synchronized (CONFIGURATION_LOCK) {
             if (CONFIGURATION_LOCK.get()) {
-                final String updateString = registryUpdateType.name().toLowerCase(Locale.US);
-                throw new AmplifyException(
-                    "The client tried to " + updateString + " a plugin after calling configure().",
-                        "Plugins may not be added or removed after configure(...) is called."
-                );
+                throw new AlreadyConfiguredException("Do not add plugins after calling `Amplify.configure()`.");
             }
 
             if (Empty.check(plugin.getPluginKey())) {
@@ -246,8 +241,8 @@ public final class Amplify {
         /**
          * Constructs an AlreadyConfiguredException, indicating that Amplify has already been configured.
          */
-        private AlreadyConfiguredException() {
-            super("Amplify has already been configured.", "Remove the duplicate call to `Amplify.configure()`");
+        private AlreadyConfiguredException(@NonNull String recoverySuggestion) {
+            super("Amplify has already been configured.", recoverySuggestion);
         }
     }
 }
