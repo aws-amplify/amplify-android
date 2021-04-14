@@ -48,7 +48,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     private final Map<String, Object> variables;
     private final Map<String, String> variableTypes;
     private final AuthorizationType authorizationType;
-    private final RequestAuthorizationStrategyType requestAuthorizationStrategyType;
+    private final AuthModeStrategyType authModeStrategyType;
 
     /**
      * Constructor for AppSyncGraphQLRequest.
@@ -61,7 +61,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         this.variables = Immutable.of(builder.variables);
         this.variableTypes = Immutable.of(builder.variableTypes);
         this.authorizationType = builder.authorizationType;
-        this.requestAuthorizationStrategyType = builder.requestAuthorizationStrategyType;
+        this.authModeStrategyType = builder.authModeStrategyType;
     }
 
     /**
@@ -94,11 +94,11 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     }
 
     /**
-     * Returns the {@link RequestAuthorizationStrategyType} for this request.
-     * @return the {@link RequestAuthorizationStrategyType} for this request.
+     * Returns the {@link AuthModeStrategyType} for this request.
+     * @return the {@link AuthModeStrategyType} for this request.
      */
-    public RequestAuthorizationStrategyType getRequestAuthorizationStrategyType() {
-        return requestAuthorizationStrategyType;
+    public AuthModeStrategyType getAuthModeStrategyType() {
+        return authModeStrategyType;
     }
 
     /**
@@ -219,7 +219,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      * Builder for a AppSyncGraphQLRequest.
      */
     public static final class Builder {
-        private RequestAuthorizationStrategyType requestAuthorizationStrategyType;
+        private AuthModeStrategyType authModeStrategyType;
         private Class<? extends Model> modelClass;
         private ModelSchema modelSchema;
         private Operation operation;
@@ -243,7 +243,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             this.variables = new HashMap<>(request.variables);
             this.variableTypes = new HashMap<>(request.variableTypes);
             this.authorizationType = request.authorizationType;
-            this.requestAuthorizationStrategyType = request.requestAuthorizationStrategyType;
+            this.authModeStrategyType = request.authModeStrategyType;
         }
 
         /**
@@ -298,7 +298,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
 
         /**
          * Sets the authorization type for the request. If this field is set,
-         * {@link Builder#requestAuthorizationStrategyType} will be ignored.
+         * {@link Builder#authModeStrategyType} will be ignored.
          * @param authorizationType the desired authorization type.
          * @return this builder instance.
          */
@@ -312,8 +312,8 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
          * @param strategyType the desired request authorization strategy type.
          * @return this builder instance.
          */
-        public Builder requestAuthorizationStrategyType(@NonNull RequestAuthorizationStrategyType strategyType) {
-            this.requestAuthorizationStrategyType = Objects.requireNonNull(strategyType);
+        public Builder requestAuthorizationStrategyType(@NonNull AuthModeStrategyType strategyType) {
+            this.authModeStrategyType = Objects.requireNonNull(strategyType);
             return Builder.this;
         }
 
@@ -367,8 +367,8 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
                         .build();
             }
 
-            if (requestAuthorizationStrategyType == null || authorizationType != null) {
-                requestAuthorizationStrategyType = RequestAuthorizationStrategyType.DEFAULT;
+            if (authModeStrategyType == null || authorizationType != null) {
+                authModeStrategyType = AuthModeStrategyType.DEFAULT;
             }
 
             return new AppSyncGraphQLRequest<>(this);

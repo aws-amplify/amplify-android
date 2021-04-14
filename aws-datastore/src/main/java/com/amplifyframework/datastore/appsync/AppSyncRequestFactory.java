@@ -20,7 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
-import com.amplifyframework.api.aws.RequestAuthorizationStrategyType;
+import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
@@ -89,7 +89,7 @@ final class AppSyncRequestFactory {
             @Nullable final Long lastSync,
             @Nullable final Integer limit,
             @NonNull final QueryPredicate predicate,
-            @NonNull final RequestAuthorizationStrategyType strategyType)
+            @NonNull final AuthModeStrategyType strategyType)
             throws DataStoreException {
         try {
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
@@ -123,7 +123,7 @@ final class AppSyncRequestFactory {
     static <T> AppSyncGraphQLRequest<T>
         buildSubscriptionRequest(ModelSchema modelSchema,
                                  SubscriptionType subscriptionType,
-                                 RequestAuthorizationStrategyType strategyType) throws DataStoreException {
+                                 AuthModeStrategyType strategyType) throws DataStoreException {
         try {
             return AppSyncGraphQLRequest.builder()
                     .modelClass(modelSchema.getModelClass())
@@ -144,7 +144,7 @@ final class AppSyncRequestFactory {
             String objectId,
             Integer version,
             QueryPredicate predicate,
-            RequestAuthorizationStrategyType strategyType)
+            AuthModeStrategyType strategyType)
             throws DataStoreException {
         Map<String, Object> inputMap = new HashMap<>();
         inputMap.put("id", objectId);
@@ -157,7 +157,7 @@ final class AppSyncRequestFactory {
             M model,
             Integer version,
             QueryPredicate predicate,
-            RequestAuthorizationStrategyType strategyType) throws DataStoreException {
+            AuthModeStrategyType strategyType) throws DataStoreException {
         try {
             Map<String, Object> inputMap = new HashMap<>();
             inputMap.put("_version", version);
@@ -172,7 +172,7 @@ final class AppSyncRequestFactory {
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildCreationRequest(
             ModelSchema schema,
             M model,
-            RequestAuthorizationStrategyType strategyType) throws DataStoreException {
+            AuthModeStrategyType strategyType) throws DataStoreException {
         try {
             Map<String, Object> inputMap = getMapOfFieldNameAndValues(schema, model);
             return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE, strategyType);
@@ -293,7 +293,7 @@ final class AppSyncRequestFactory {
             Map<String, Object> inputMap,
             QueryPredicate predicate,
             MutationType mutationType,
-            RequestAuthorizationStrategyType strategyType)
+            AuthModeStrategyType strategyType)
             throws DataStoreException {
         try {
             String graphQlTypeName = schema.getName();

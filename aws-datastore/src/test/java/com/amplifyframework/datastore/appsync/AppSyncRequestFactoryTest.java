@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
-import com.amplifyframework.api.aws.RequestAuthorizationStrategyType;
+import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthStrategy;
@@ -58,10 +58,10 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(RobolectricTestRunner.class) // Adds Android library to make TextUtils.join available for tests.
 public final class AppSyncRequestFactoryTest {
-    private static final RequestAuthorizationStrategyType DEFAULT_STRATEGY =
-        RequestAuthorizationStrategyType.DEFAULT;
-    private static final RequestAuthorizationStrategyType MULTIAUTH_STRATEGY =
-        RequestAuthorizationStrategyType.MULTIAUTH;
+    private static final AuthModeStrategyType DEFAULT_STRATEGY =
+        AuthModeStrategyType.DEFAULT;
+    private static final AuthModeStrategyType MULTIAUTH_STRATEGY =
+        AuthModeStrategyType.MULTIAUTH;
 
     /**
      * Validates the construction of a base-sync query document.

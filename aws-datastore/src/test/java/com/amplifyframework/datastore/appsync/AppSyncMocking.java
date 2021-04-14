@@ -21,7 +21,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
-import com.amplifyframework.api.aws.RequestAuthorizationStrategyType;
+import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
@@ -472,7 +472,7 @@ public final class AppSyncMocking {
                                                               lastSync,
                                                               syncPageSize,
                                                               queryPredicate,
-                                                              RequestAuthorizationStrategyType.MULTIAUTH);
+                                                              AuthModeStrategyType.MULTIAUTH);
             }).when(appSync).buildSyncRequest(any(), any(), any(), any());
             return this;
         }
@@ -543,7 +543,7 @@ public final class AppSyncMocking {
                                                            null,
                                                            null,
                                                            QueryPredicates.all(),
-                                                           RequestAuthorizationStrategyType.MULTIAUTH)
+                                                           AuthModeStrategyType.MULTIAUTH)
                         .newBuilder()
                         .variable("nextToken", "String", nextToken)
                         .build();

@@ -108,8 +108,8 @@ final class SubscriptionEndpoint {
         Iterator<AuthorizationType> authTypes = Collections.singletonList(defaultAuthType).iterator();
         if (request instanceof AppSyncGraphQLRequest<?>) {
             AppSyncGraphQLRequest<T> appSyncGraphQLRequest = (AppSyncGraphQLRequest<T>) request;
-            boolean isMultiAuth = RequestAuthorizationStrategyType.MULTIAUTH.equals(
-                appSyncGraphQLRequest.getRequestAuthorizationStrategyType());
+            boolean isMultiAuth = AuthModeStrategyType.MULTIAUTH.equals(
+                appSyncGraphQLRequest.getAuthModeStrategyType());
             boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
             if (hasAuthTypeInRequest) {
                 requestAuthorizationStrategy =

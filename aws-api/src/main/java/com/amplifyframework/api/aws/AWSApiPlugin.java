@@ -603,8 +603,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         final RequestAuthorizationStrategy requestAuthorizationStrategy;
         if (graphQLRequest instanceof AppSyncGraphQLRequest) {
             AppSyncGraphQLRequest<R> appSyncGraphQLRequest = (AppSyncGraphQLRequest<R>) graphQLRequest;
-            boolean isMultiAuth = RequestAuthorizationStrategyType.MULTIAUTH.equals(
-                appSyncGraphQLRequest.getRequestAuthorizationStrategyType());
+            boolean isMultiAuth = AuthModeStrategyType.MULTIAUTH.equals(
+                appSyncGraphQLRequest.getAuthModeStrategyType());
             boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
             if (hasAuthTypeInRequest) {
                 requestAuthorizationStrategy =

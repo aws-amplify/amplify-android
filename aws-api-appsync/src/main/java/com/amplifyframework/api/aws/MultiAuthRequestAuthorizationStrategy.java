@@ -89,8 +89,8 @@ public final class MultiAuthRequestAuthorizationStrategy implements RequestAutho
     }
 
     @Override
-    public RequestAuthorizationStrategyType getAuthorizationStrategyType() {
-        return RequestAuthorizationStrategyType.MULTIAUTH;
+    public AuthModeStrategyType getAuthorizationStrategyType() {
+        return AuthModeStrategyType.MULTIAUTH;
     }
 
     static final class PriorityBasedAuthRuleProviderComparator implements Comparator<AuthRule> {

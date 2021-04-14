@@ -23,7 +23,7 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
-import com.amplifyframework.api.aws.RequestAuthorizationStrategyType;
+import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
@@ -83,7 +83,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // overrides provided via the userProvidedConfiguration
     private DataStoreConfiguration pluginConfiguration;
 
-    private final RequestAuthorizationStrategyType authModeStrategy;
+    private final AuthModeStrategyType authModeStrategy;
 
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
@@ -97,12 +97,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             modelProvider,
             modelSchemaRegistry,
             sqliteStorageAdapter,
-            AppSyncClient.via(api, RequestAuthorizationStrategyType.MULTIAUTH),
+            AppSyncClient.via(api, AuthModeStrategyType.MULTIAUTH),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
-        this.authModeStrategy = RequestAuthorizationStrategyType.DEFAULT;
+        this.authModeStrategy = AuthModeStrategyType.DEFAULT;
     }
 
     private AWSDataStorePlugin(@NonNull Builder builder) throws DataStoreException {
@@ -116,7 +116,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         ApiCategory api = builder.apiCategory == null ? Amplify.API : builder.apiCategory;
 
         this.authModeStrategy = builder.authModeStrategy == null ?
-            RequestAuthorizationStrategyType.DEFAULT :
+            AuthModeStrategyType.DEFAULT :
             builder.authModeStrategy;
         this.userProvidedConfiguration = builder.dataStoreConfiguration;
 
@@ -128,7 +128,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             modelProvider,
             modelSchemaRegistry,
             sqliteStorageAdapter,
-            AppSyncClient.via(api, RequestAuthorizationStrategyType.MULTIAUTH),
+            AppSyncClient.via(api, AuthModeStrategyType.MULTIAUTH),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
         );
@@ -610,7 +610,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         private ModelProvider modelProvider;
         private ModelSchemaRegistry modelSchemaRegistry;
         private ApiCategory apiCategory;
-        private RequestAuthorizationStrategyType authModeStrategy;
+        private AuthModeStrategyType authModeStrategy;
 
         private Builder() {}
 
@@ -654,10 +654,10 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         /**
          * Sets the authorization mode strategy which will be used by DataStore sync engine
          * when interacting with the API plugin.
-         * @param authModeStrategy One of the options from the {@link RequestAuthorizationStrategyType} enum.
+         * @param authModeStrategy One of the options from the {@link AuthModeStrategyType} enum.
          * @return An implementation of the {@link ModelProvider} interface.
          */
-        public Builder authModeStrategy(RequestAuthorizationStrategyType authModeStrategy) {
+        public Builder authModeStrategy(AuthModeStrategyType authModeStrategy) {
             this.authModeStrategy = authModeStrategy;
             return this;
         }

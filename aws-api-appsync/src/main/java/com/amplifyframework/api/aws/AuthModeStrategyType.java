@@ -19,7 +19,7 @@ package com.amplifyframework.api.aws;
  * Represents that different auth strategies supported by the client that
  * interfaces with the AppSync backend.
  */
-public enum RequestAuthorizationStrategyType {
+public enum AuthModeStrategyType {
     /**
      * Uses the default authorization type from the API configuration
      * unless the incoming request specifies one.
@@ -36,7 +36,7 @@ public enum RequestAuthorizationStrategyType {
 
     private final String strategyName;
 
-    RequestAuthorizationStrategyType(String strategyName) {
+    AuthModeStrategyType(String strategyName) {
         this.strategyName = strategyName;
     }
 
@@ -46,8 +46,8 @@ public enum RequestAuthorizationStrategyType {
      * @param value The string value to try to match.
      * @return One of the enum items or an exception if one is not found.
      */
-    public RequestAuthorizationStrategyType from(String value) {
-        for (RequestAuthorizationStrategyType strategy : RequestAuthorizationStrategyType.values()) {
+    public AuthModeStrategyType from(String value) {
+        for (AuthModeStrategyType strategy : AuthModeStrategyType.values()) {
             if (strategy.name().equalsIgnoreCase(value) || strategy.strategyName.equalsIgnoreCase(value)) {
                 return strategy;
             }

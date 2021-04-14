@@ -26,5 +26,5 @@ interface RequestAuthorizationStrategy {
 
     Iterator<AuthorizationType> authTypesFor(AppSyncGraphQLRequest<?> appSyncGraphQLRequest);
 
-    RequestAuthorizationStrategyType getAuthorizationStrategyType();
+    AuthModeStrategyType getAuthorizationStrategyType();
 }

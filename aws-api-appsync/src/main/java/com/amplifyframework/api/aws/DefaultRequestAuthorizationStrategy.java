@@ -42,8 +42,8 @@ final class DefaultRequestAuthorizationStrategy implements RequestAuthorizationS
     }
 
     @Override
-    public RequestAuthorizationStrategyType getAuthorizationStrategyType() {
-        return RequestAuthorizationStrategyType.DEFAULT;
+    public AuthModeStrategyType getAuthorizationStrategyType() {
+        return AuthModeStrategyType.DEFAULT;
     }
 
     static final class DefaultAuthorizationStrategyIterator implements Iterator<AuthorizationType> {
