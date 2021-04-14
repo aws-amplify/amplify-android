@@ -600,22 +600,22 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         final AuthorizationType defaultAuthType = clientDetails.getApiConfiguration().getAuthorizationType();
-        final RequestAuthorizationStrategy requestAuthorizationStrategy;
+        final AuthModeStrategy authModeStrategy;
         if (graphQLRequest instanceof AppSyncGraphQLRequest) {
             AppSyncGraphQLRequest<R> appSyncGraphQLRequest = (AppSyncGraphQLRequest<R>) graphQLRequest;
             boolean isMultiAuth = AuthModeStrategyType.MULTIAUTH.equals(
                 appSyncGraphQLRequest.getAuthModeStrategyType());
             boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
             if (hasAuthTypeInRequest) {
-                requestAuthorizationStrategy =
-                    new DefaultRequestAuthorizationStrategy(appSyncGraphQLRequest.getAuthorizationType());
+                authModeStrategy =
+                    new DefaultAuthModeStrategy(appSyncGraphQLRequest.getAuthorizationType());
             } else if (isMultiAuth) {
-                requestAuthorizationStrategy = new MultiAuthRequestAuthorizationStrategy();
+                authModeStrategy = new MultiAuthModeStrategy();
             } else {
-                requestAuthorizationStrategy = new DefaultRequestAuthorizationStrategy(defaultAuthType);
+                authModeStrategy = new DefaultAuthModeStrategy(defaultAuthType);
             }
         } else {
-            requestAuthorizationStrategy = new DefaultRequestAuthorizationStrategy(defaultAuthType);
+            authModeStrategy = new DefaultAuthModeStrategy(defaultAuthType);
         }
 
         return AppSyncGraphQLOperation.<R>builder()
@@ -623,7 +623,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
                 .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
-                .requestAuthorizationStrategy(requestAuthorizationStrategy)
+                .authModeStrategy(authModeStrategy)
                 .responseFactory(gqlResponseFactory)
                 .onResponse(onResponse)
                 .onFailure(onFailure)

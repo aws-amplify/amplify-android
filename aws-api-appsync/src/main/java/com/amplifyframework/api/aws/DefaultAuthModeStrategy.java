@@ -23,11 +23,11 @@ import java.util.Iterator;
 /**
  * Default authorization strategy that only uses the value provided to the constructor.
  */
-final class DefaultRequestAuthorizationStrategy implements RequestAuthorizationStrategy {
+final class DefaultAuthModeStrategy implements AuthModeStrategy {
 
     private final AuthorizationType defaultAuthorizationType;
 
-    DefaultRequestAuthorizationStrategy(AuthorizationType defaultAuthorizationType) {
+    DefaultAuthModeStrategy(AuthorizationType defaultAuthorizationType) {
         this.defaultAuthorizationType = defaultAuthorizationType;
     }
 

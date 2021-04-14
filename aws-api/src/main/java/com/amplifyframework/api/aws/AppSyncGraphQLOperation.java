@@ -58,7 +58,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private final Consumer<GraphQLResponse<R>> onResponse;
     private final Consumer<ApiException> onFailure;
     private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
-    private final RequestAuthorizationStrategy authorizationStrategy;
+    private final AuthModeStrategy authorizationStrategy;
 
     private Call ongoingCall;
 
@@ -77,7 +77,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             @NonNull OkHttpClient client,
             @NonNull GraphQLRequest<R> request,
             @NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory,
-            @NonNull RequestAuthorizationStrategy authorizationStrategy,
+            @NonNull AuthModeStrategy authorizationStrategy,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
@@ -216,7 +216,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         private GraphQLRequest<R> request;
         private GraphQLResponse.Factory responseFactory;
         private ApiRequestDecoratorFactory apiRequestDecoratorFactory;
-        private RequestAuthorizationStrategy authorizationStrategy;
+        private AuthModeStrategy authorizationStrategy;
         private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
 
@@ -255,7 +255,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             return this;
         }
 
-        Builder<R> requestAuthorizationStrategy(RequestAuthorizationStrategy authorizationStrategy) {
+        Builder<R> authModeStrategy(AuthModeStrategy authorizationStrategy) {
             this.authorizationStrategy = authorizationStrategy;
             return this;
         }

@@ -33,7 +33,7 @@ import java.util.Map;
 /**
  * Authorization strategy that handle's multi-auth scenarios.
  */
-public final class MultiAuthRequestAuthorizationStrategy implements RequestAuthorizationStrategy {
+public final class MultiAuthModeStrategy implements AuthModeStrategy {
     private static final List<AuthStrategy> DEFAULT_STRATEGY_PRIORITY = Arrays.asList(AuthStrategy.OWNER,
                                                                                       AuthStrategy.GROUPS,
                                                                                       AuthStrategy.PRIVATE,

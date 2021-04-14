@@ -36,17 +36,17 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-public class MultiAuthRequestAuthorizationStrategyTest {
-    private MultiAuthRequestAuthorizationStrategy.PriorityBasedAuthRuleProviderComparator compWithDefaultPriority;
-    private MultiAuthRequestAuthorizationStrategy strategy;
+public class MultiAuthModeStrategyTest {
+    private MultiAuthModeStrategy.PriorityBasedAuthRuleProviderComparator compWithDefaultPriority;
+    private MultiAuthModeStrategy strategy;
 
     /**
      * Setup test fixtures.
      */
     @Before
     public void setup() {
-        compWithDefaultPriority = new MultiAuthRequestAuthorizationStrategy.PriorityBasedAuthRuleProviderComparator();
-        strategy = new MultiAuthRequestAuthorizationStrategy();
+        compWithDefaultPriority = new MultiAuthModeStrategy.PriorityBasedAuthRuleProviderComparator();
+        strategy = new MultiAuthModeStrategy();
     }
 
     /**

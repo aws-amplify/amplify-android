@@ -20,7 +20,7 @@ import com.amplifyframework.core.model.ModelSchema;
 
 import java.util.Iterator;
 
-interface RequestAuthorizationStrategy {
+interface AuthModeStrategy {
 
     Iterator<AuthorizationType> authTypesFor(ModelSchema modelSchema, ModelOperation operation);
 

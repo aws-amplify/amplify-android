@@ -103,8 +103,8 @@ final class SubscriptionEndpoint {
         Objects.requireNonNull(onSubscriptionComplete);
 
         final AuthorizationType defaultAuthType = apiConfiguration.getAuthorizationType();
-        RequestAuthorizationStrategy requestAuthorizationStrategy =
-            new DefaultRequestAuthorizationStrategy(defaultAuthType);
+        AuthModeStrategy authModeStrategy =
+            new DefaultAuthModeStrategy(defaultAuthType);
         Iterator<AuthorizationType> authTypes = Collections.singletonList(defaultAuthType).iterator();
         if (request instanceof AppSyncGraphQLRequest<?>) {
             AppSyncGraphQLRequest<T> appSyncGraphQLRequest = (AppSyncGraphQLRequest<T>) request;
@@ -112,12 +112,12 @@ final class SubscriptionEndpoint {
                 appSyncGraphQLRequest.getAuthModeStrategyType());
             boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
             if (hasAuthTypeInRequest) {
-                requestAuthorizationStrategy =
-                    new DefaultRequestAuthorizationStrategy(appSyncGraphQLRequest.getAuthorizationType());
+                authModeStrategy =
+                    new DefaultAuthModeStrategy(appSyncGraphQLRequest.getAuthorizationType());
             } else if (isMultiAuth) {
-                requestAuthorizationStrategy = new MultiAuthRequestAuthorizationStrategy();
+                authModeStrategy = new MultiAuthModeStrategy();
             }
-            authTypes = requestAuthorizationStrategy.authTypesFor(appSyncGraphQLRequest);
+            authTypes = authModeStrategy.authTypesFor(appSyncGraphQLRequest);
         }
 
         // The first call to subscribe OR a disconnected websocket listener will
