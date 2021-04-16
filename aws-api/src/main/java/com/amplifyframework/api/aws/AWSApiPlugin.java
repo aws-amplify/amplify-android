@@ -599,24 +599,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             );
         }
 
-        final AuthorizationType defaultAuthType = clientDetails.getApiConfiguration().getAuthorizationType();
-        final AuthModeStrategy authModeStrategy;
-        if (graphQLRequest instanceof AppSyncGraphQLRequest) {
-            AppSyncGraphQLRequest<R> appSyncGraphQLRequest = (AppSyncGraphQLRequest<R>) graphQLRequest;
-            boolean isMultiAuth = AuthModeStrategyType.MULTIAUTH.equals(
-                appSyncGraphQLRequest.getAuthModeStrategyType());
-            boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
-            if (hasAuthTypeInRequest) {
-                authModeStrategy =
-                    new DefaultAuthModeStrategy(appSyncGraphQLRequest.getAuthorizationType());
-            } else if (isMultiAuth) {
-                authModeStrategy = new MultiAuthModeStrategy();
-            } else {
-                authModeStrategy = new DefaultAuthModeStrategy(defaultAuthType);
-            }
-        } else {
-            authModeStrategy = new DefaultAuthModeStrategy(defaultAuthType);
-        }
+        final AuthModeStrategy authModeStrategy = getAuthModeStrategy(graphQLRequest, clientDetails);
 
         return AppSyncGraphQLOperation.<R>builder()
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
@@ -690,6 +673,25 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         );
         operation.start();
         return operation;
+    }
+
+    private <R> AuthModeStrategy getAuthModeStrategy(GraphQLRequest<R> graphQLRequest, ClientDetails clientDetails) {
+        final AuthorizationType defaultAuthType = clientDetails.getApiConfiguration().getAuthorizationType();
+        if (graphQLRequest instanceof AppSyncGraphQLRequest) {
+            AppSyncGraphQLRequest<R> appSyncGraphQLRequest = (AppSyncGraphQLRequest<R>) graphQLRequest;
+            boolean isMultiAuth =
+                AuthModeStrategyType.MULTIAUTH.equals(appSyncGraphQLRequest.getAuthModeStrategyType());
+            boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
+            if (hasAuthTypeInRequest) {
+                return new DefaultAuthModeStrategy(appSyncGraphQLRequest.getAuthorizationType());
+            } else if (isMultiAuth) {
+                return new MultiAuthModeStrategy();
+            } else {
+                return new DefaultAuthModeStrategy(defaultAuthType);
+            }
+        } else {
+            return new DefaultAuthModeStrategy(defaultAuthType);
+        }
     }
 
     /**
