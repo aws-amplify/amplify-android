@@ -42,6 +42,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.FieldValue;
 import com.amplifyframework.testutils.Resources;
 
 import org.junit.BeforeClass;
@@ -88,10 +89,12 @@ public final class AppSyncClientInstrumentationTest {
      * Tests the operations in AppSyncClient.
      * @throws DataStoreException If any call to AppSync endpoint fails to return a response
      * @throws AmplifyException On failure to obtain ModelSchema
+     * @throws NoSuchFieldException On failure to null out createdAt, updatedAt fields in response
+     * @throws IllegalAccessException On failure to null out createdAt, updatedAt fields in response
      */
     @Test
     @SuppressWarnings("MethodLength")
-    public void testAllOperations() throws AmplifyException {
+    public void testAllOperations() throws AmplifyException, NoSuchFieldException, IllegalAccessException {
         ModelSchema blogOwnerSchema = ModelSchema.fromModelClass(BlogOwner.class);
         ModelSchema postSchema = ModelSchema.fromModelClass(Post.class);
         ModelSchema blogSchema = ModelSchema.fromModelClass(Blog.class);
@@ -103,8 +106,14 @@ public final class AppSyncClientInstrumentationTest {
             .name("David")
             .build();
         ModelWithMetadata<BlogOwner> blogOwnerCreateResult = create(owner, blogOwnerSchema);
+        BlogOwner actual = blogOwnerCreateResult.getModel();
 
-        assertEquals(owner, blogOwnerCreateResult.getModel());
+        // The response from AppSync has createdAt and updatedAt fields.  We can't actually know what values to expect
+        // for these, so just null them out.
+        FieldValue.set(actual, "createdAt", null);
+        FieldValue.set(actual, "updatedAt", null);
+
+        assertEquals(owner, actual);
         assertEquals(new Integer(1), blogOwnerCreateResult.getSyncMetadata().getVersion());
         // TODO: BE AWARE THAT THE DELETED PROPERTY RETURNS NULL INSTEAD OF FALSE
         assertNull(blogOwnerCreateResult.getSyncMetadata().isDeleted());

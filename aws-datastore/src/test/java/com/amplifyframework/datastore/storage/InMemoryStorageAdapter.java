@@ -90,8 +90,10 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             }
         }
         final ModelSchema schema;
+        final SerializedModel patchItem;
         try {
             schema = ModelSchema.fromModelClass(item.getClass());
+            patchItem = SerializedModel.difference(item, savedItem, schema);
         } catch (AmplifyException schemaBuildFailure) {
             onError.accept(new DataStoreException(
                 "Failed to build model schema.", schemaBuildFailure, "Verify your model."
@@ -101,7 +103,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         items.add(item);
         StorageItemChange<T> change = StorageItemChange.<T>builder()
             .item(item)
-            .patchItem(SerializedModel.difference(item, savedItem, schema))
+            .patchItem(patchItem)
             .modelSchema(schema)
             .type(type)
             .predicate(predicate)
@@ -165,8 +167,10 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         Model savedItem = items.remove(index);
 
         final ModelSchema schema;
+        final SerializedModel patchItem;
         try {
             schema = ModelSchema.fromModelClass(item.getClass());
+            patchItem = SerializedModel.create(savedItem, schema);
         } catch (AmplifyException schemaBuildFailure) {
             onError.accept(new DataStoreException(
                 "Failed to build model schema.", schemaBuildFailure, "Verify your model."
@@ -181,7 +185,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         }
         StorageItemChange<T> deletion = StorageItemChange.<T>builder()
             .item((T) savedItem)
-            .patchItem(SerializedModel.create(savedItem, schema))
+            .patchItem(patchItem)
             .modelSchema(schema)
             .type(StorageItemChange.Type.DELETE)
             .predicate(predicate)

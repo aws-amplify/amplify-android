@@ -19,6 +19,7 @@ import android.content.Context;
 import android.os.Build;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.plugin.Plugin;
 
 import org.json.JSONObject;
 import org.junit.FixMethodOrder;
@@ -90,8 +91,32 @@ public class AmplifyTest {
             actuallyThrown.getMessage()
         );
         assertEquals(
-            "Remove the duplicate call to `Amplify.configure()`",
+            "Remove the duplicate call to `Amplify.configure()`.",
             actuallyThrown.getRecoverySuggestion()
+        );
+    }
+
+    /**
+     * It is an error to call {@link Amplify#addPlugin(Plugin)}} after configuration.
+     * @throws Amplify.AlreadyConfiguredException
+     *  NOTE: The name of this method must result in it running last, according to {@link FixMethodOrder}
+     */
+    @Test
+    public void secondaryAddPluginAfterConfigurationRaisesException() throws Amplify.AlreadyConfiguredException {
+        final SimpleLoggingPlugin loggingPlugin = SimpleLoggingPlugin.instance();
+        Amplify.AlreadyConfiguredException actuallyThrown =
+            assertThrows(
+                Amplify.AlreadyConfiguredException.class,
+                () -> Amplify.addPlugin(loggingPlugin)
+            );
+
+        assertEquals(
+                "Amplify has already been configured.",
+                actuallyThrown.getMessage()
+        );
+        assertEquals(
+                "Do not add plugins after calling `Amplify.configure()`.",
+                actuallyThrown.getRecoverySuggestion()
         );
     }
 }
