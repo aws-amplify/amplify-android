@@ -85,6 +85,28 @@ final class AppSyncRequestFactory {
      */
     @NonNull
     static <T> AppSyncGraphQLRequest<T> buildSyncRequest(
+        @NonNull final ModelSchema modelSchema,
+        @Nullable final Long lastSync,
+        @Nullable final Integer limit,
+        @NonNull final QueryPredicate predicate)
+        throws DataStoreException {
+        return buildSyncRequest(modelSchema, lastSync, limit, predicate, AuthModeStrategyType.DEFAULT);
+    }
+
+    /**
+     * Builds the query document for base and delta sync.
+     * If you provide lastSyncTime, it builds a delta sync, where the delta is computed
+     * against the provided time. Otherwise, if you provide a null lastSyncTime, a
+     * request doc is generated for a base sync.
+     * @param modelSchema Schema Class for which we want to sync.
+     * @param lastSync The last time synced. If not provided, do a base query.
+     *                 If provided, do a delta query.
+     * @param <T> The type of objects we are syncing
+     * @return A string which contains a GraphQL query doc for an base/delta sync
+     * @throws DataStoreException On Failure to inspect
+     */
+    @NonNull
+    static <T> AppSyncGraphQLRequest<T> buildSyncRequest(
             @NonNull final ModelSchema modelSchema,
             @Nullable final Long lastSync,
             @Nullable final Integer limit,
