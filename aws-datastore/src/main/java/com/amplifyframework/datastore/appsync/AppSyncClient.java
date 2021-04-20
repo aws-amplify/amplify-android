@@ -177,8 +177,8 @@ public final class AppSyncClient implements AppSync {
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      *
+     * @param model       An instance of the Model to be deleted
      * @param modelSchema The schema of the object being deleted
-     * @param objectId    ID id of the object to delete
      * @param version     The version of the model we have
      * @param onResponse  Invoked when response data is available.
      * @param onFailure   Invoked on failure to obtain response data
@@ -187,26 +187,26 @@ public final class AppSyncClient implements AppSync {
     @NonNull
     @Override
     public <T extends Model> Cancelable delete(
+            @NonNull T model,
             @NonNull ModelSchema modelSchema,
-            @NonNull String objectId,
             @NonNull Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
-        return delete(modelSchema, objectId, version, QueryPredicates.all(), onResponse, onFailure);
+        return delete(model, modelSchema, version, QueryPredicates.all(), onResponse, onFailure);
     }
 
     @NonNull
     @Override
     public <T extends Model> Cancelable delete(
+            @NonNull T model,
             @NonNull ModelSchema modelSchema,
-            @NonNull String objectId,
             @NonNull Integer version,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
             final GraphQLRequest<ModelWithMetadata<T>> request =
-                    AppSyncRequestFactory.buildDeletionRequest(modelSchema, objectId, version, predicate);
+                    AppSyncRequestFactory.buildDeletionRequest(modelSchema, model, version, predicate);
             return mutation(request, onResponse, onFailure);
         } catch (DataStoreException dataStoreException) {
             onFailure.accept(dataStoreException);

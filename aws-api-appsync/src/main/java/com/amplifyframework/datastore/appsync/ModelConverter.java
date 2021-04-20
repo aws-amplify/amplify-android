@@ -45,41 +45,33 @@ public final class ModelConverter {
         final Map<String, Object> result = new HashMap<>();
         for (ModelField modelField : schema.getFields().values()) {
             String fieldName = modelField.getName();
-            try {
-
-                final ModelAssociation association = schema.getAssociations().get(fieldName);
-                if (association == null) {
-                    if (instance instanceof SerializedModel
-                            && !((SerializedModel) instance).getSerializedData().containsKey(modelField.getName())) {
-                        // Skip fields that are not set, so that they are not set to null in the request.
-                        continue;
-                    }
-                    result.put(fieldName, extractFieldValue(modelField, instance));
-                } else if (association.isOwner()) {
-                    Object associateId = extractAssociateId(modelField, instance);
-                    if (associateId == null) {
-                        // Skip fields that are not set, so that they are not set to null in the request.
-                        continue;
-                    }
-                    result.put(fieldName, SerializedModel.builder()
-                        .serializedData(Collections.singletonMap("id", associateId))
-                        .modelSchema(null)
-                        .build());
+            final ModelAssociation association = schema.getAssociations().get(fieldName);
+            if (association == null) {
+                if (instance instanceof SerializedModel
+                        && !((SerializedModel) instance).getSerializedData().containsKey(modelField.getName())) {
+                    // Skip fields that are not set, so that they are not set to null in the request.
+                    continue;
                 }
-                // Ignore if field is associated, but is not a "belongsTo" relationship
-            } catch (Exception exception) {
-                throw new AmplifyException(
-                        "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
-                        exception,
-                        "Check if this model schema is a correct representation of the fields in the provided Object");
+                result.put(fieldName, extractFieldValue(modelField.getName(), instance, schema));
+            } else if (association.isOwner()) {
+                Object associateId = extractAssociateId(modelField, instance, schema);
+                if (associateId == null) {
+                    // Skip fields that are not set, so that they are not set to null in the request.
+                    continue;
+                }
+                result.put(fieldName, SerializedModel.builder()
+                    .serializedData(Collections.singletonMap("id", associateId))
+                    .modelSchema(null)
+                    .build());
             }
+            // Ignore if field is associated, but is not a "belongsTo" relationship
         }
         return result;
     }
 
-    private static Object extractAssociateId(ModelField modelField, Model instance)
-            throws NoSuchFieldException, IllegalAccessException {
-        final Object fieldValue = extractFieldValue(modelField, instance);
+    private static Object extractAssociateId(ModelField modelField, Model instance, ModelSchema schema)
+            throws AmplifyException {
+        final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
         if (modelField.isModel() && fieldValue instanceof Model) {
             return ((Model) fieldValue).getId();
         } else if (modelField.isModel() && fieldValue instanceof Map) {
@@ -91,15 +83,22 @@ public final class ModelConverter {
         }
     }
 
-    private static Object extractFieldValue(ModelField modelField, Model instance)
-            throws NoSuchFieldException, IllegalAccessException {
+    private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema)
+            throws AmplifyException {
         if (instance instanceof SerializedModel) {
             SerializedModel serializedModel = (SerializedModel) instance;
             Map<String, Object> serializedData = serializedModel.getSerializedData();
-            return serializedData.get(modelField.getName());
+            return serializedData.get(fieldName);
         }
-        Field privateField = instance.getClass().getDeclaredField(modelField.getName());
-        privateField.setAccessible(true);
-        return privateField.get(instance);
+        try {
+            Field privateField = instance.getClass().getDeclaredField(fieldName);
+            privateField.setAccessible(true);
+            return privateField.get(instance);
+        } catch (Exception exception) {
+            throw new AmplifyException(
+                    "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
+                    exception,
+                    "Check if this model schema is a correct representation of the fields in the provided Object");
+        }
     }
 }

@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.storage.sqlite.adapter;
 
+import androidx.core.util.ObjectsCompat;
+
 import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteDataType;
 import com.amplifyframework.util.Wrap;
@@ -132,6 +134,40 @@ public final class SQLiteColumn {
      */
     public String getColumnType() {
         return dataType.getSqliteDataType();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        SQLiteColumn that = (SQLiteColumn) obj;
+        return isNonNull == that.isNonNull &&
+                ObjectsCompat.equals(name, that.name) &&
+                ObjectsCompat.equals(fieldName, that.fieldName) &&
+                ObjectsCompat.equals(tableName, that.tableName) &&
+                ObjectsCompat.equals(ownedType, that.ownedType) &&
+                dataType == that.dataType;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(name, fieldName, tableName, ownedType, isNonNull, dataType);
+    }
+
+    @Override
+    public String toString() {
+        return "SQLiteColumn{" +
+                "name='" + name + '\'' +
+                ", fieldName='" + fieldName + '\'' +
+                ", tableName='" + tableName + '\'' +
+                ", ownedType='" + ownedType + '\'' +
+                ", isNonNull=" + isNonNull +
+                ", dataType=" + dataType +
+                '}';
     }
 
     /**
