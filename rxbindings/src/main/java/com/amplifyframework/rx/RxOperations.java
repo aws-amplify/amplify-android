@@ -17,6 +17,7 @@ package com.amplifyframework.rx;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.core.Consumer;
@@ -144,8 +145,8 @@ public final class RxOperations {
                     return false;
                 } else {
                     ConnectionStateEvent privateNote = (ConnectionStateEvent) obj;
-                    return Objects.equals(getConnectionState(), privateNote.getConnectionState()) &&
-                        Objects.equals(getSubscriptionId(), privateNote.getSubscriptionId());
+                    return ObjectsCompat.equals(getConnectionState(), privateNote.getConnectionState()) &&
+                        ObjectsCompat.equals(getSubscriptionId(), privateNote.getSubscriptionId());
                 }
             }
 
