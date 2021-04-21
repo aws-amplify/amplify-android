@@ -24,8 +24,6 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.rx.RxAdapters.CancelableBehaviors.StreamEmitter;
 
-import java.util.Objects;
-
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
