@@ -142,9 +142,9 @@ public final class RxOperations {
                 } else if (obj == null || getClass() != obj.getClass()) {
                     return false;
                 } else {
-                    ConnectionStateEvent privateNote = (ConnectionStateEvent) obj;
-                    return ObjectsCompat.equals(getConnectionState(), privateNote.getConnectionState()) &&
-                        ObjectsCompat.equals(getSubscriptionId(), privateNote.getSubscriptionId());
+                    ConnectionStateEvent event = (ConnectionStateEvent) obj;
+                    return ObjectsCompat.equals(getConnectionState(), event.getConnectionState()) &&
+                        ObjectsCompat.equals(getSubscriptionId(), event.getSubscriptionId());
                 }
             }
 
