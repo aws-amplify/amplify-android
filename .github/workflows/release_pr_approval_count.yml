@@ -1,4 +1,4 @@
-# Checks the number of a approvals for any pull requests from release->main where the PR title starts with chore(release)
+# Checks the number of a approvals for any pull requests from bump_version->main where the PR title starts with release
 # This should be setup as a protection rule on the main branch. PRs coming from other branches will be exempt from this rule
 name: Pull request approval checks
 on:
@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     # This restricts which PRs this workflow applies to. 
     if: ${{ github.event_name == 'pull_request_review'
-            && github.event.pull_request.head.ref == 'release' 
-            &&  startsWith(github.event.pull_request.title, 'chore(release)')
+            && github.event.pull_request.head.ref == 'bump_version' 
+            &&  startsWith(github.event.pull_request.title, 'release:')
         }}
     steps:
       - uses: actions/github-script@v3

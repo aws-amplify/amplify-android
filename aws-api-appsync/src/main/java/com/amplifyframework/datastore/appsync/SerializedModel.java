@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
@@ -50,10 +51,11 @@ public final class SerializedModel implements Model {
      * @param modelSchema schema for the Model object
      * @param <T> type of the Model object.
      * @return SerializedModel equivalent of the Model object.
+     * @throws AmplifyException ModelConverter.toMap
      */
-    public static <T extends Model> SerializedModel create(T model, ModelSchema modelSchema) {
+    public static <T extends Model> SerializedModel create(T model, ModelSchema modelSchema) throws AmplifyException {
         return SerializedModel.builder()
-                .serializedData(ModelConverter.toMap(model))
+                .serializedData(ModelConverter.toMap(model, modelSchema))
                 .modelSchema(modelSchema)
                 .build();
     }
@@ -67,10 +69,15 @@ public final class SerializedModel implements Model {
      * @param <T> type of the Models being compared.
      * @return a SerializedModel, containing only the values from the updated Model that are different from the
      *         corresponding values in original.
+     * @throws AmplifyException ModelConverter.toMap
      */
-    public static <T extends Model> SerializedModel difference(T updated, T original, ModelSchema modelSchema) {
-        Map<String, Object> updatedMap = ModelConverter.toMap(updated);
-        Map<String, Object> originalMap = ModelConverter.toMap(original);
+    public static <T extends Model> SerializedModel difference(T updated, T original, ModelSchema modelSchema)
+            throws AmplifyException {
+        if (original == null) {
+            return SerializedModel.create(updated, modelSchema);
+        }
+        Map<String, Object> updatedMap = ModelConverter.toMap(updated, modelSchema);
+        Map<String, Object> originalMap = ModelConverter.toMap(original, modelSchema);
         Map<String, Object> patchMap = new HashMap<>();
         for (String key : updatedMap.keySet()) {
             if ("id".equals(key) || !ObjectsCompat.equals(originalMap.get(key), updatedMap.get(key))) {
