@@ -30,6 +30,7 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -88,6 +89,13 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     @Override
     public Single<AuthSignInResult> signIn(@Nullable String username, @Nullable String password) {
         return toSingle((onResult, onError) -> delegate.signIn(username, password, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthSignInResult> confirmSignIn(
+            @Nullable String confirmationCode, @NonNull AuthConfirmSignInOptions options) {
+        return toSingle((onResult, onError) ->
+                delegate.confirmSignIn(confirmationCode, options, onResult, onError));
     }
 
     @Override

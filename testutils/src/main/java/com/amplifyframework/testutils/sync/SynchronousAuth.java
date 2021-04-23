@@ -27,6 +27,7 @@ import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -165,6 +166,23 @@ public final class SynchronousAuth {
     ) throws AuthException {
         return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.signIn(username, password, onResult, onError)
+        );
+    }
+
+    /**
+     * Confirm sign in synchronously.
+     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthSignInResult confirmSignIn(
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmSignInOptions options
+    ) throws AuthException {
+        return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.confirmSignIn(confirmationCode, options, onResult, onError)
         );
     }
 
