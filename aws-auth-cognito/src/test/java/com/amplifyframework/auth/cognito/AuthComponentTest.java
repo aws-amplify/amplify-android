@@ -336,7 +336,7 @@ public final class AuthComponentTest {
      */
     @Test
     @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
-    public void confirmSign() throws AuthException {
+    public void confirmSignIn() throws AuthException {
         SignInResult amcResult = new SignInResult(
                 SignInState.DONE,
                 new UserCodeDeliveryDetails(
