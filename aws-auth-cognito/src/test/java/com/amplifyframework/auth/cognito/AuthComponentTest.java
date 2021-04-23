@@ -382,8 +382,8 @@ public final class AuthComponentTest {
         );
 
         Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
-        AWSCognitoAuthConfirmSignInOptions.CognitoBuilder options =  AWSCognitoAuthConfirmSignInOptions.builder();
-        Map <String, String> metadata = new HashMap<String, String>();
+        AWSCognitoAuthConfirmSignInOptions.CognitoBuilder options = AWSCognitoAuthConfirmSignInOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
         metadata.put("key", "value");
         options.metadata(metadata);
         AWSCognitoAuthConfirmSignInOptions builtOptions = options.build();
