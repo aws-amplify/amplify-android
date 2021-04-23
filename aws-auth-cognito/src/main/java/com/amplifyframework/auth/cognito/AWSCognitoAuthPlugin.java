@@ -33,6 +33,7 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
@@ -40,6 +41,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOption
 import com.amplifyframework.auth.cognito.util.AuthProviderConverter;
 import com.amplifyframework.auth.cognito.util.CognitoAuthExceptionConverter;
 import com.amplifyframework.auth.cognito.util.SignInStateConverter;
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -389,10 +391,16 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public void confirmSignIn(
             @NonNull String confirmationCode,
+            @NonNull AuthConfirmSignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onException
     ) {
-        awsMobileClient.confirmSignIn(confirmationCode, new Callback<SignInResult>() {
+        final Map<String, String> metadata = new HashMap<>();
+        if (options instanceof AWSCognitoAuthConfirmSignInOptions) {
+            metadata.putAll(((AWSCognitoAuthConfirmSignInOptions) options).getMetadata());
+        }
+
+        awsMobileClient.confirmSignIn(confirmationCode, metadata, new Callback<SignInResult>() {
             @Override
             public void onResult(SignInResult result) {
                 try {
@@ -411,6 +419,15 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 );
             }
         });
+    }
+
+    @Override
+    public void confirmSignIn(
+            @NonNull String confirmationCode,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        confirmSignIn(confirmationCode, AuthConfirmSignInOptions.defaults(), onSuccess, onException);
     }
 
     @Override

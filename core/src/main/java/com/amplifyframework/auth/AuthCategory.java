@@ -20,6 +20,7 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -98,6 +99,16 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().signIn(username, password, onSuccess, onError);
+    }
+
+    @Override
+    public void confirmSignIn(
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmSignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().confirmSignIn(confirmationCode, options, onSuccess, onError);
     }
 
     @Override

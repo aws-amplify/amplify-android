@@ -29,6 +29,7 @@ import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
@@ -353,14 +354,55 @@ public final class AuthComponentTest {
         }).when(mobileClient).getTokens(any());
 
         doAnswer(invocation -> {
-            Callback<SignInResult> callback = invocation.getArgument(1);
+            Callback<SignInResult> callback = invocation.getArgument(2);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignIn(any(String.class), (Callback<SignInResult>) any());
+        }).when(mobileClient).confirmSignIn(any(String.class), any(), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE);
         validateSignInResult(result, true, AuthSignInStep.DONE);
-        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), (Callback<SignInResult>) any());
+        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), any(), (Callback<SignInResult>) any());
+    }
+
+    /**
+     * Tests that the confirmSignIn method of the Auth wrapper of AWSMobileClient (AMC) calls AMC.confirmSignIn with
+     * the confirmation code and options it received and the success callback receives a valid AuthSignInResult.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
+    public void confirmSignInWithOptions() throws AuthException {
+        SignInResult amcResult = new SignInResult(
+                SignInState.DONE,
+                new UserCodeDeliveryDetails(
+                        DESTINATION,
+                        DELIVERY_MEDIUM,
+                        ATTRIBUTE_NAME
+                )
+        );
+
+        Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
+        AWSCognitoAuthConfirmSignInOptions.CognitoBuilder options = AWSCognitoAuthConfirmSignInOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthConfirmSignInOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<Tokens> callback = invocation.getArgument(0);
+            callback.onResult(tokensResult);
+            return null;
+        }).when(mobileClient).getTokens(any());
+
+        doAnswer(invocation -> {
+            Callback<SignInResult> callback = invocation.getArgument(2);
+            callback.onResult(amcResult);
+            return null;
+        }).when(mobileClient).confirmSignIn(any(String.class), any(), (Callback<SignInResult>) any());
+
+        AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE, builtOptions);
+        validateSignInResult(result, true, AuthSignInStep.DONE);
+        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), eq(metadata), (Callback<SignInResult>) any());
     }
 
     /**

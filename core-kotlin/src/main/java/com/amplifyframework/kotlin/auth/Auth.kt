@@ -25,6 +25,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
@@ -108,10 +109,16 @@ interface Auth {
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
      * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return A sign-in result; check the nextStep field for cues on additional sign-in challenges
      */
     @Throws(AuthException::class)
-    suspend fun confirmSignIn(confirmationCode: String): AuthSignInResult
+    suspend fun confirmSignIn(
+        confirmationCode: String,
+        options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
+    ):
+        AuthSignInResult
 
     /**
      * Launch the specified auth provider's web UI sign in experience. You should also put the
