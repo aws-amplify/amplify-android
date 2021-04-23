@@ -4,7 +4,7 @@
 - Use ObjectsCompat since Objects is API 19+ (#1289)
 
 ### Miscellaneous
-- Depend on the latest SDK version (#1294)
+- Depend on the latest SDK version (#1294, #1296)
 
 [See all changes between 1.17.3 and 1.17.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.17.3...release_v1.17.4)
 
