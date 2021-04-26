@@ -5,8 +5,7 @@
 - adds ConfirmSignInOptions for confirmSignIn API method (#1297)
 
 ### Miscellaneous
-- depend on latest sdk version (#1294)
-- Upgrade dependency on the latest SDK version (#1296)
+- Upgrade dependency on the latest SDK version (#1294, #1296)
 
 [See all changes between 0.1.4 and 0.1.5](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.4...release-kotlin_v0.1.5)
 
