@@ -37,11 +37,6 @@ final class DefaultAuthModeStrategy implements AuthModeStrategy {
     }
 
     @Override
-    public Iterator<AuthorizationType> authTypesFor(AppSyncGraphQLRequest<?> appSyncGraphQLRequest) {
-        return new DefaultAuthorizationStrategyIterator(defaultAuthorizationType);
-    }
-
-    @Override
     public AuthModeStrategyType getAuthorizationStrategyType() {
         return AuthModeStrategyType.DEFAULT;
     }

@@ -131,7 +131,7 @@ public class MultiAuthModeStrategyTest {
                                                                      .build();
 
         Iterator<AuthorizationType> results =
-            strategy.authTypesFor(request);
+            strategy.authTypesFor(request.getModelSchema(), request.getAuthRuleOperation());
 
         assertEquals(AuthorizationType.AMAZON_COGNITO_USER_POOLS, results.next());
         assertEquals(AuthorizationType.API_KEY, results.next());
@@ -153,7 +153,7 @@ public class MultiAuthModeStrategyTest {
                                                                      .build();
 
         Iterator<AuthorizationType> results =
-            strategy.authTypesFor(request);
+            strategy.authTypesFor(request.getModelSchema(), request.getAuthRuleOperation());
 
         assertEquals(AuthorizationType.AMAZON_COGNITO_USER_POOLS, results.next());
         assertFalse(results.hasNext());

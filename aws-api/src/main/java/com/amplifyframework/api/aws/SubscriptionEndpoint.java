@@ -117,7 +117,8 @@ final class SubscriptionEndpoint {
             } else if (isMultiAuth) {
                 authModeStrategy = new MultiAuthModeStrategy();
             }
-            authTypes = authModeStrategy.authTypesFor(appSyncGraphQLRequest);
+            authTypes = authModeStrategy.authTypesFor(appSyncGraphQLRequest.getModelSchema(),
+                                                      appSyncGraphQLRequest.getAuthRuleOperation());
         }
 
         // The first call to subscribe OR a disconnected websocket listener will

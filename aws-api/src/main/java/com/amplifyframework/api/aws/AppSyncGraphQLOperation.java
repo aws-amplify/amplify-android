@@ -109,7 +109,9 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 .build();
             if (isAppSyncRequest) {
                 AppSyncGraphQLRequest<?> appSyncRequest = (AppSyncGraphQLRequest<?>) getRequest();
-                Iterator<AuthorizationType> authTypes = authorizationStrategy.authTypesFor(appSyncRequest);
+                Iterator<AuthorizationType> authTypes =
+                    authorizationStrategy.authTypesFor(appSyncRequest.getModelSchema(),
+                                                       appSyncRequest.getAuthRuleOperation());
                 ongoingCall = client.newBuilder()
                                     .addInterceptor(new MultiAuthInterceptor(authTypes, apiRequestDecoratorFactory))
                                     .build()

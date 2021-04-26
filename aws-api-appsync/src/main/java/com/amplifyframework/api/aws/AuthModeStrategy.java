@@ -24,7 +24,5 @@ interface AuthModeStrategy {
 
     Iterator<AuthorizationType> authTypesFor(ModelSchema modelSchema, ModelOperation operation);
 
-    Iterator<AuthorizationType> authTypesFor(AppSyncGraphQLRequest<?> appSyncGraphQLRequest);
-
     AuthModeStrategyType getAuthorizationStrategyType();
 }

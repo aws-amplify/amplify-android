@@ -21,9 +21,11 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.Immutable;
@@ -99,6 +101,27 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      */
     public AuthModeStrategyType getAuthModeStrategyType() {
         return authModeStrategyType;
+    }
+
+    /**
+     * Returns the {@link ModelOperation} for this request. This is used to during
+     * auth rule evaluation.
+     * @return the {@link ModelOperation} for this request.
+     * @throws IllegalArgumentException if unable to map the request's {@link #getOperation()} to one of
+     *          the enum values in {@link ModelOperation}
+     */
+    public ModelOperation getAuthRuleOperation() {
+        switch (this.getOperation().getOperationType()) {
+            case QUERY:
+            case SUBSCRIPTION:
+                return ModelOperation.READ;
+            case MUTATION:
+                MutationType mutationType = (MutationType) this.getOperation();
+                return ModelOperation.valueOf(mutationType.name());
+            default:
+                throw new IllegalArgumentException("Invalid graphql operation type:"
+                                                       + this.getOperation().getOperationType());
+        }
     }
 
     /**

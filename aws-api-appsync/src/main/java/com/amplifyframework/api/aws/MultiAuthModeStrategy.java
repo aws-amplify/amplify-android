@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.ModelOperation;
@@ -69,23 +67,6 @@ public final class MultiAuthModeStrategy implements AuthModeStrategy {
                 return DEFAULT_AUTH_TYPES.get(effectiveRule.getAuthStrategy());
             }
         };
-    }
-
-    @Override
-    public Iterator<AuthorizationType> authTypesFor(AppSyncGraphQLRequest<?> appSyncGraphQLRequest) {
-        Operation graphqlOperation = appSyncGraphQLRequest.getOperation();
-        switch (graphqlOperation.getOperationType()) {
-            case QUERY:
-            case SUBSCRIPTION:
-                return authTypesFor(appSyncGraphQLRequest.getModelSchema(), ModelOperation.READ);
-            case MUTATION:
-                MutationType mutationType = (MutationType) graphqlOperation;
-                return authTypesFor(appSyncGraphQLRequest.getModelSchema(),
-                                    ModelOperation.valueOf(mutationType.name()));
-            default:
-                throw new IllegalArgumentException("Invalid graphql operation type:"
-                                                       + graphqlOperation.getOperationType());
-        }
     }
 
     @Override
