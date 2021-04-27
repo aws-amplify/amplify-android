@@ -198,14 +198,15 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                 }
                                 break;
                             case SIGNED_IN:
-                                fetchAndSetUserId(() -> { /* No response needed */ });
-                                if (lastEvent != AuthChannelEventName.SIGNED_IN) {
-                                    lastEvent = AuthChannelEventName.SIGNED_IN;
-                                    Amplify.Hub.publish(
-                                            HubChannel.AUTH,
-                                            HubEvent.create(AuthChannelEventName.SIGNED_IN)
-                                    );
-                                }
+                                fetchAndSetUserId(() -> {
+                                    if (lastEvent != AuthChannelEventName.SIGNED_IN) {
+                                        lastEvent = AuthChannelEventName.SIGNED_IN;
+                                        Amplify.Hub.publish(
+                                                HubChannel.AUTH,
+                                                HubEvent.create(AuthChannelEventName.SIGNED_IN)
+                                        );
+                                    }
+                                });
                                 break;
                             case SIGNED_OUT_FEDERATED_TOKENS_INVALID:
                             case SIGNED_OUT_USER_POOLS_TOKENS_INVALID:
