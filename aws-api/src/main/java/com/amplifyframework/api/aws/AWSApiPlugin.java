@@ -48,9 +48,11 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -302,10 +304,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             ));
             return null;
         }
-
+        final Iterator<AuthorizationType> authTypes = getAuthTypes(graphQLRequest, clientDetails);
         final GraphQLRequest<R> authDecoratedRequest;
 
         // Decorate the request according to the auth rule parameters.
+        //TODO: FIGURE OUT WHAT TO DO WITH THIS BLOCK
         try {
             AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
 
@@ -323,6 +326,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         SubscriptionOperation<R> operation = SubscriptionOperation.<R>builder()
             .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
             .graphQlRequest(authDecoratedRequest)
+            .authTypes(authTypes)
             .responseFactory(gqlResponseFactory)
             .executorService(executorService)
             .onSubscriptionStart(onSubscriptionEstablished)
@@ -599,14 +603,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             );
         }
 
-        final AuthModeStrategy authModeStrategy = getAuthModeStrategy(graphQLRequest, clientDetails);
-
         return AppSyncGraphQLOperation.<R>builder()
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
                 .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
                 .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
-                .authModeStrategy(authModeStrategy)
+                .authTypes(getAuthTypes(graphQLRequest, clientDetails))
                 .responseFactory(gqlResponseFactory)
                 .onResponse(onResponse)
                 .onFailure(onFailure)
@@ -675,7 +677,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return operation;
     }
 
-    private <R> AuthModeStrategy getAuthModeStrategy(GraphQLRequest<R> graphQLRequest, ClientDetails clientDetails) {
+    private <R> Iterator<AuthorizationType> getAuthTypes(GraphQLRequest<R> graphQLRequest,
+                                                         ClientDetails clientDetails) {
         final AuthorizationType defaultAuthType = clientDetails.getApiConfiguration().getAuthorizationType();
         if (graphQLRequest instanceof AppSyncGraphQLRequest) {
             AppSyncGraphQLRequest<R> appSyncGraphQLRequest = (AppSyncGraphQLRequest<R>) graphQLRequest;
@@ -683,14 +686,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 AuthModeStrategyType.MULTIAUTH.equals(appSyncGraphQLRequest.getAuthModeStrategyType());
             boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
             if (hasAuthTypeInRequest) {
-                return new DefaultAuthModeStrategy(appSyncGraphQLRequest.getAuthorizationType());
+                return Arrays.asList(appSyncGraphQLRequest.getAuthorizationType()).iterator();
             } else if (isMultiAuth) {
-                return new MultiAuthModeStrategy();
+                return new MultiAuthModeStrategy().authTypesFor(appSyncGraphQLRequest.getModelSchema(),
+                                                                appSyncGraphQLRequest.getAuthRuleOperation());
             } else {
-                return new DefaultAuthModeStrategy(defaultAuthType);
+                return Arrays.asList(defaultAuthType).iterator();
             }
         } else {
-            return new DefaultAuthModeStrategy(defaultAuthType);
+            return Arrays.asList(defaultAuthType).iterator();
         }
     }
 

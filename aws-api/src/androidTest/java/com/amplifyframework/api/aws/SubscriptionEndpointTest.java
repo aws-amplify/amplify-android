@@ -137,6 +137,7 @@ public final class SubscriptionEndpointTest {
             executor.execute(() ->
                 subscriptionEndpoint.requestSubscription(
                     request,
+                    AuthorizationType.NONE,
                     onResult,
                     item -> {
                         final String message;

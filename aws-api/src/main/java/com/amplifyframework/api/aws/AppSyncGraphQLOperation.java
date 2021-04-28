@@ -35,7 +35,6 @@ import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -58,7 +57,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private final Consumer<GraphQLResponse<R>> onResponse;
     private final Consumer<ApiException> onFailure;
     private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
-    private final AuthModeStrategy authorizationStrategy;
+    private final Iterator<AuthorizationType> authTypes;
 
     private Call ongoingCall;
 
@@ -77,13 +76,13 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             @NonNull OkHttpClient client,
             @NonNull GraphQLRequest<R> request,
             @NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory,
-            @NonNull AuthModeStrategy authorizationStrategy,
+            @NonNull Iterator<AuthorizationType> authTypes,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         super(request, responseFactory);
         this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
-        this.authorizationStrategy = authorizationStrategy;
+        this.authTypes = authTypes;
         this.endpoint = endpoint;
         this.client = client;
         this.onResponse = onResponse;
@@ -96,42 +95,69 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         if (ongoingCall != null && ongoingCall.isExecuted()) {
             return;
         }
-
-        try {
-            LOG.debug("Request: " + getRequest().getContent());
-            final boolean isAppSyncRequest = getRequest() instanceof AppSyncGraphQLRequest<?>;
-
-            Request originalRequest = new Request.Builder()
-                .url(endpoint)
-                .addHeader("accept", CONTENT_TYPE)
-                .addHeader("content-type", CONTENT_TYPE)
-                .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
-                .build();
-            if (isAppSyncRequest) {
-                AppSyncGraphQLRequest<?> appSyncRequest = (AppSyncGraphQLRequest<?>) getRequest();
-                Iterator<AuthorizationType> authTypes =
-                    authorizationStrategy.authTypesFor(appSyncRequest.getModelSchema(),
-                                                       appSyncRequest.getAuthRuleOperation());
-                ongoingCall = client.newBuilder()
-                                    .addInterceptor(new MultiAuthInterceptor(authTypes, apiRequestDecoratorFactory))
-                                    .build()
-                                    .newCall(originalRequest);
-            } else {
-                RequestDecorator requestDecorator =
-                    apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
+        while (authTypes.hasNext()) {
+            try {
+                AuthorizationType autyType = authTypes.next();
+                LOG.debug("Request: " + getRequest().getContent());
+                LOG.debug("Auth type: " + autyType);
+                Request originalRequest = new Request.Builder()
+                    .url(endpoint)
+                    .addHeader("accept", CONTENT_TYPE)
+                    .addHeader("content-type", CONTENT_TYPE)
+                    .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
+                    .build();
+                RequestDecorator requestDecorator = apiRequestDecoratorFactory.forAuthType(autyType);
                 ongoingCall = client.newCall(requestDecorator.decorate(originalRequest));
-            }
-            ongoingCall.enqueue(new OkHttpCallback());
-        } catch (Exception error) {
-            // Cancel if possible
-            if (ongoingCall != null) {
-                ongoingCall.cancel();
-            }
 
-            onFailure.accept(new ApiException(
-                "OkHttp client failed to make a successful request.",
-                error, AmplifyException.TODO_RECOVERY_SUGGESTION
-            ));
+                ongoingCall.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(@NonNull Call call, @NonNull IOException exception) {
+                        if (!authTypes.hasNext()) {
+                            onFailure.accept(new ApiException(
+                                "OkHttp client request failed.",
+                                exception,
+                                "See attached exception for more details."
+                            ));
+                        }
+                    }
+
+                    @Override
+                    public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                        final ResponseBody responseBody = response.body();
+                        String jsonResponse = null;
+                        if (responseBody != null) {
+                            try {
+                                jsonResponse = responseBody.string();
+                            } catch (IOException exception) {
+                                onFailure.accept(new ApiException(
+                                    "Could not retrieve the response body from the returned JSON",
+                                    exception, AmplifyException.TODO_RECOVERY_SUGGESTION
+                                ));
+                                return;
+                            }
+                        }
+
+                        try {
+                            onResponse.accept(wrapResponse(jsonResponse));
+                            //TODO: Dispatch to hub
+                        } catch (ApiException exception) {
+                            onFailure.accept(exception);
+                        }
+                    }
+                });
+            } catch (Exception error) {
+                if (!authTypes.hasNext()) {
+                    // Cancel if possible
+                    if (ongoingCall != null) {
+                        ongoingCall.cancel();
+                    }
+
+                    onFailure.accept(new ApiException(
+                        "OkHttp client failed to make a successful request.",
+                        error, AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
+                }
+            }
         }
     }
 
@@ -178,47 +204,13 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         }
     }
 
-    static final class MultiAuthInterceptor implements Interceptor {
-        private final Iterator<AuthorizationType> authTypes;
-        private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
-
-        MultiAuthInterceptor(@NonNull Iterator<AuthorizationType> authTypes,
-                             @NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
-            this.authTypes = authTypes;
-            this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
-        }
-
-        @NonNull
-        @Override
-        public Response intercept(@NonNull Chain chain) throws IOException {
-            Request httpRequest = chain.request().newBuilder().build();
-            Response response = null;
-            while (authTypes.hasNext()) {
-                AuthorizationType authorizationType = authTypes.next();
-                RequestDecorator requestDecorator = null;
-
-                try {
-                    requestDecorator = apiRequestDecoratorFactory.forAuthType(authorizationType);
-                    response = chain.proceed(requestDecorator.decorate(httpRequest));
-                    if (response.isSuccessful()) {
-                        return response;
-                    }
-                } catch (ApiException exception) {
-                    LOG.warn("An error occurred while dispatching an AppSync request with" +
-                                 " auth type " + authorizationType, exception);
-                }
-            }
-            return response;
-        }
-    }
-
     static final class Builder<R> {
         private String endpoint;
         private OkHttpClient client;
         private GraphQLRequest<R> request;
         private GraphQLResponse.Factory responseFactory;
         private ApiRequestDecoratorFactory apiRequestDecoratorFactory;
-        private AuthModeStrategy authorizationStrategy;
+        private Iterator<AuthorizationType> authTypes;
         private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
 
@@ -257,8 +249,8 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             return this;
         }
 
-        Builder<R> authModeStrategy(AuthModeStrategy authorizationStrategy) {
-            this.authorizationStrategy = authorizationStrategy;
+        Builder<R> authTypes(Iterator<AuthorizationType> authTypes) {
+            this.authTypes = authTypes;
             return this;
         }
 
@@ -269,7 +261,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 Objects.requireNonNull(client),
                 Objects.requireNonNull(request),
                 Objects.requireNonNull(apiRequestDecoratorFactory),
-                Objects.requireNonNull(authorizationStrategy),
+                Objects.requireNonNull(authTypes),
                 Objects.requireNonNull(responseFactory),
                 Objects.requireNonNull(onResponse),
                 Objects.requireNonNull(onFailure)

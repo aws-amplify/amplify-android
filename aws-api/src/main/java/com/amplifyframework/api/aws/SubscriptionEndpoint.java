@@ -38,7 +38,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -92,6 +91,7 @@ final class SubscriptionEndpoint {
 
     synchronized <T> void requestSubscription(
             @NonNull GraphQLRequest<T> request,
+            @NonNull AuthorizationType authType,
             @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<T>> onNextItem,
             @NonNull Consumer<ApiException> onSubscriptionError,
@@ -102,32 +102,13 @@ final class SubscriptionEndpoint {
         Objects.requireNonNull(onSubscriptionError);
         Objects.requireNonNull(onSubscriptionComplete);
 
-        final AuthorizationType defaultAuthType = apiConfiguration.getAuthorizationType();
-        AuthModeStrategy authModeStrategy =
-            new DefaultAuthModeStrategy(defaultAuthType);
-        Iterator<AuthorizationType> authTypes = Collections.singletonList(defaultAuthType).iterator();
-        if (request instanceof AppSyncGraphQLRequest<?>) {
-            AppSyncGraphQLRequest<T> appSyncGraphQLRequest = (AppSyncGraphQLRequest<T>) request;
-            boolean isMultiAuth = AuthModeStrategyType.MULTIAUTH.equals(
-                appSyncGraphQLRequest.getAuthModeStrategyType());
-            boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
-            if (hasAuthTypeInRequest) {
-                authModeStrategy =
-                    new DefaultAuthModeStrategy(appSyncGraphQLRequest.getAuthorizationType());
-            } else if (isMultiAuth) {
-                authModeStrategy = new MultiAuthModeStrategy();
-            }
-            authTypes = authModeStrategy.authTypesFor(appSyncGraphQLRequest.getModelSchema(),
-                                                      appSyncGraphQLRequest.getAuthRuleOperation());
-        }
-
         // The first call to subscribe OR a disconnected websocket listener will
         // force a new connection to be created.
         if (webSocketListener == null || webSocketListener.isDisconnectedState()) {
             webSocketListener = new AmplifyWebSocketListener();
             try {
                 webSocket = okHttpClient.newWebSocket(new Request.Builder()
-                    .url(buildConnectionRequestUrl())
+                    .url(buildConnectionRequestUrl(authType))
                     .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
                     .build(), webSocketListener);
             } catch (ApiException apiException) {
@@ -157,7 +138,7 @@ final class SubscriptionEndpoint {
                 .put("payload", new JSONObject()
                     .put("data", request.getContent())
                         .put("extensions", new JSONObject()
-                            .put("authorization", authorizer.createHeadersForSubscription(request))))
+                            .put("authorization", authorizer.createHeadersForSubscription(request, authType))))
                 .toString()
             );
         } catch (JSONException | ApiException exception) {
@@ -293,9 +274,9 @@ final class SubscriptionEndpoint {
      * AppSync endpoint : https://xxxxxxxxxxxx.appsync-api.ap-southeast-2.amazonaws.com/graphql
      * Discovered WebSocket endpoint : wss:// xxxxxxxxxxxx.appsync-realtime-api.ap-southeast-2.amazonaws.com/graphql
      */
-    private String buildConnectionRequestUrl() throws ApiException {
+    private String buildConnectionRequestUrl(AuthorizationType authorizationType) throws ApiException {
         // Construct the authorization header for connection request
-        final byte[] rawHeader = authorizer.createHeadersForConnection()
+        final byte[] rawHeader = authorizer.createHeadersForConnection(authorizationType)
             .toString()
             .getBytes();
 

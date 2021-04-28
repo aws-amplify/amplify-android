@@ -87,9 +87,7 @@ final class AWSApiPluginConfigurationReader {
                         .region(apiSpec.getString(ConfigKey.REGION.key()))
                         .authorizationType(authorizationType);
 
-                if (AuthorizationType.API_KEY.equals(authorizationType)) {
-                    apiConfigBuilder.apiKey(apiSpec.getString(ConfigKey.API_KEY.key()));
-                }
+                apiConfigBuilder.apiKey(apiSpec.getString(ConfigKey.API_KEY.key()));
 
                 configBuilder.addApi(apiName, apiConfigBuilder.build());
             }
