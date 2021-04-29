@@ -307,25 +307,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         final Iterator<AuthorizationType> authTypes = getAuthTypes(graphQLRequest, clientDetails);
         final GraphQLRequest<R> authDecoratedRequest;
 
-        // Decorate the request according to the auth rule parameters.
-        //TODO: FIGURE OUT WHAT TO DO WITH THIS BLOCK
-        try {
-            AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
-
-            if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
-                ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
-                authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
-            }
-
-            authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
-        } catch (ApiException exception) {
-            onSubscriptionFailure.accept(exception);
-            return null;
-        }
-
         SubscriptionOperation<R> operation = SubscriptionOperation.<R>builder()
             .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
-            .graphQlRequest(authDecoratedRequest)
+            .graphQlRequest(graphQLRequest)
+            .subscriptionRequestDecorator(requestDecorator)
             .authTypes(authTypes)
             .responseFactory(gqlResponseFactory)
             .executorService(executorService)

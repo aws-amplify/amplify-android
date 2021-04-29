@@ -49,24 +49,10 @@ public final class MultiAuthModeStrategy implements AuthModeStrategy {
         new PriorityBasedAuthRuleProviderComparator(DEFAULT_STRATEGY_PRIORITY);
 
     @Override
-    public Iterator<AuthorizationType> authTypesFor(ModelSchema modelSchema, ModelOperation operation) {
+    public PriorityBasedAuthRuleIterator authTypesFor(ModelSchema modelSchema, ModelOperation operation) {
         final List<AuthRule> applicableRules = modelSchema.getApplicableRules(operation);
         Collections.sort(applicableRules, DEFAULT_COMPARATOR);
-
-        return new Iterator<AuthorizationType>() {
-            private int currentIdx = 0;
-            @Override
-            public boolean hasNext() {
-                return currentIdx < applicableRules.size();
-            }
-
-            @Override
-            public AuthorizationType next() {
-                AuthRule effectiveRule = applicableRules.get(currentIdx++);
-                //TODO: provider needs to be added to the
-                return DEFAULT_AUTH_TYPES.get(effectiveRule.getAuthStrategy());
-            }
-        };
+        return new PriorityBasedAuthRuleIterator(applicableRules);
     }
 
     @Override
@@ -90,6 +76,32 @@ public final class MultiAuthModeStrategy implements AuthModeStrategy {
             Integer o1Priority = Integer.valueOf(strategyPriority.indexOf(authRule1.getAuthStrategy()));
             Integer o2Priority = Integer.valueOf(strategyPriority.indexOf(authRule2.getAuthStrategy()));
             return o1Priority.compareTo(o2Priority);
+        }
+    }
+
+    static final class PriorityBasedAuthRuleIterator implements Iterator<AuthorizationType> {
+        private int currentIdx = 0;
+        private AuthRule effectiveRule;
+        private final List<AuthRule> authRules;
+
+        PriorityBasedAuthRuleIterator(List<AuthRule> authRules) {
+            this.authRules = authRules;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return currentIdx < authRules.size();
+        }
+
+        @Override
+        public AuthorizationType next() {
+            effectiveRule = authRules.get(currentIdx++);
+            //TODO: provider needs to be added to the
+            return DEFAULT_AUTH_TYPES.get(effectiveRule.getAuthStrategy());
+        }
+
+        public AuthStrategy getAuthRuleStrategy() {
+            return effectiveRule.getAuthStrategy();
         }
     }
 }
