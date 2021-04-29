@@ -292,7 +292,7 @@ final class MutationProcessor {
         return versionRepository.findModelVersion(deletedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
                 appSync.delete(
-                    deletedItemSchema, deletedItem.getId(), version, mutation.getPredicate(), onSuccess, onError
+                    deletedItem, deletedItemSchema, version, mutation.getPredicate(), onSuccess, onError
                 )
             )
         );

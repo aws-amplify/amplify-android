@@ -198,7 +198,7 @@ public final class AppSyncClientInstrumentationTest {
         assertTrue(updatedBlogLastChangedAt.getSecondsSinceEpoch() > updateBlogStartTimeSeconds);
 
         // Delete one of the posts
-        ModelWithMetadata<Post> post1DeleteResult = delete(postSchema, post1.getId(), 1);
+        ModelWithMetadata<Post> post1DeleteResult = delete(post1, postSchema, 1);
         assertEquals(
             post1.copyOfBuilder()
                 .blog(Blog.justId(blog.getId()))
@@ -209,7 +209,7 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(Boolean.TRUE, isDeleted);
 
         // Try to delete a post with a bad version number
-        List<GraphQLResponse.Error> post2DeleteErrors = deleteExpectingResponseErrors(postSchema, post2.getId(), 0);
+        List<GraphQLResponse.Error> post2DeleteErrors = deleteExpectingResponseErrors(post2, postSchema, 0);
         assertEquals("Conflict resolver rejects mutation.", post2DeleteErrors.get(0).getMessage());
 
         // Run sync on Blogs
@@ -268,8 +268,8 @@ public final class AppSyncClientInstrumentationTest {
 
     /**
      * Deletes an instance of a model.
+     * @param model The the model instance to delete
      * @param schema The schema of model being deleted
-     * @param modelId The ID of the model instance to delete
      * @param version The version of the model being deleted as understood by client
      * @param <T> Type of model being deleted
      * @return Model hat was deleted from endpoint, coupled with metadata about the deletion
@@ -277,34 +277,34 @@ public final class AppSyncClientInstrumentationTest {
      */
     @NonNull
     private <T extends Model> ModelWithMetadata<T> delete(
-            @NonNull ModelSchema schema, String modelId, int version)
+            @NonNull T model, @NonNull ModelSchema schema, int version)
         throws DataStoreException {
-        return delete(schema, modelId, version, QueryPredicates.all());
+        return delete(model, schema, version, QueryPredicates.all());
     }
 
     @NonNull
     private <T extends Model> ModelWithMetadata<T> delete(
-            @NonNull ModelSchema schema, String modelId, int version, QueryPredicate predicate)
+            @NonNull T model, @NonNull ModelSchema schema, int version, QueryPredicate predicate)
             throws DataStoreException {
         return awaitResponseData((onResult, onError) ->
-            api.delete(schema, modelId, version, predicate, onResult, onError));
+            api.delete(model, schema, version, predicate, onResult, onError));
     }
 
     /**
      * Try to delete an item, but expect it to error.
      * Return the errors that were contained in the GraphQLResponse returned from endpoint.
+     * @param model item for which delete is attempted
      * @param schema Schema of item for which a delete is attempted
-     * @param modelId ID of item for which delete is attempted
      * @param version Version of item for which deleted is attempted
      * @param <T> Type of item for which delete is attempted
      * @return List of GraphQLResponse.Error which explain why delete failed
      * @throws DataStoreException If API delete call fails to render any response from AppSync endpoint
      */
     private <T extends Model> List<GraphQLResponse.Error> deleteExpectingResponseErrors(
-            @NonNull ModelSchema schema, String modelId, int version) throws DataStoreException {
+            @NonNull T model, @NonNull ModelSchema schema, int version) throws DataStoreException {
         return awaitResponseErrors((Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResult,
                                     Consumer<DataStoreException> onError) ->
-                api.delete(schema, modelId, version, onResult, onError)
+                api.delete(model, schema, version, onResult, onError)
         );
     }
 

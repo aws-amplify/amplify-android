@@ -143,12 +143,17 @@ final class AppSyncRequestFactory {
     }
 
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildDeletionRequest(
-            ModelSchema schema, String objectId, Integer version, QueryPredicate predicate)
+            ModelSchema schema, M model, Integer version, QueryPredicate predicate)
             throws DataStoreException {
-        Map<String, Object> inputMap = new HashMap<>();
-        inputMap.put("id", objectId);
-        inputMap.put("_version", version);
-        return buildMutation(schema, inputMap, predicate, MutationType.DELETE);
+        try {
+            Map<String, Object> inputMap = new HashMap<>();
+            inputMap.put("_version", version);
+            inputMap.putAll(getDeleteMutationInputMap(schema, model));
+            return buildMutation(schema, inputMap, predicate, MutationType.DELETE);
+        } catch (AmplifyException amplifyException) {
+            throw new DataStoreException("Failed to get fields for model.",
+                    amplifyException, "Validate your model file.");
+        }
     }
 
     static <M extends Model> AppSyncGraphQLRequest<ModelWithMetadata<M>> buildUpdateRequest(
@@ -315,6 +320,15 @@ final class AppSyncRequestFactory {
         }
     }
 
+    private static Map<String, Object> getDeleteMutationInputMap(
+            @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
+        final Map<String, Object> input = new HashMap<>();
+        for (String fieldName : schema.getPrimaryIndexFields()) {
+            input.put(fieldName, extractFieldValue(fieldName, instance, schema));
+        }
+        return input;
+    }
+
     private static Map<String, Object> getMapOfFieldNameAndValues(
             @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
         boolean isSerializedModel = instance instanceof SerializedModel;
@@ -354,33 +368,26 @@ final class AppSyncRequestFactory {
                 continue;
             }
             String fieldName = modelField.getName();
-            try {
-                final ModelAssociation association = schema.getAssociations().get(fieldName);
-                if (instance instanceof SerializedModel
-                        && !((SerializedModel) instance).getSerializedData().containsKey(fieldName)) {
-                    // Skip fields that are not set, so that they are not set to null in the request.
-                    continue;
-                }
-                if (association == null) {
-                    result.put(fieldName, extractFieldValue(modelField, instance));
-                } else if (association.isOwner()) {
-                    String targetName = association.getTargetName();
-                    result.put(targetName, extractAssociateId(modelField, instance));
-                }
-                // Ignore if field is associated, but is not a "belongsTo" relationship
-            } catch (Exception exception) {
-                throw new AmplifyException(
-                        "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
-                        exception,
-                        "Check if this model schema is a correct representation of the fields in the provided Object");
+            final ModelAssociation association = schema.getAssociations().get(fieldName);
+            if (instance instanceof SerializedModel
+                    && !((SerializedModel) instance).getSerializedData().containsKey(fieldName)) {
+                // Skip fields that are not set, so that they are not set to null in the request.
+                continue;
             }
+            if (association == null) {
+                result.put(fieldName, extractFieldValue(modelField.getName(), instance, schema));
+            } else if (association.isOwner()) {
+                String targetName = association.getTargetName();
+                result.put(targetName, extractAssociateId(modelField, instance, schema));
+            }
+            // Ignore if field is associated, but is not a "belongsTo" relationship
         }
         return result;
     }
 
-    private static Object extractAssociateId(ModelField modelField, Model instance)
-            throws NoSuchFieldException, IllegalAccessException {
-        final Object fieldValue = extractFieldValue(modelField, instance);
+    private static Object extractAssociateId(ModelField modelField, Model instance, ModelSchema schema)
+            throws AmplifyException {
+        final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
         if (modelField.isModel() && fieldValue instanceof Model) {
             return ((Model) fieldValue).getId();
         } else if (modelField.isModel() && fieldValue instanceof Map) {
@@ -390,15 +397,22 @@ final class AppSyncRequestFactory {
         }
     }
 
-    private static Object extractFieldValue(ModelField modelField, Model instance)
-            throws NoSuchFieldException, IllegalAccessException {
+    private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema)
+            throws AmplifyException {
         if (instance instanceof SerializedModel) {
             SerializedModel serializedModel = (SerializedModel) instance;
             Map<String, Object> serializedData = serializedModel.getSerializedData();
-            return serializedData.get(modelField.getName());
+            return serializedData.get(fieldName);
         }
-        Field privateField = instance.getClass().getDeclaredField(modelField.getName());
-        privateField.setAccessible(true);
-        return privateField.get(instance);
+        try {
+            Field privateField = instance.getClass().getDeclaredField(fieldName);
+            privateField.setAccessible(true);
+            return privateField.get(instance);
+        } catch (Exception exception) {
+            throw new AmplifyException(
+                "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
+                exception,
+                "Check if this model schema is a correct representation of the fields in the provided Object");
+        }
     }
 }

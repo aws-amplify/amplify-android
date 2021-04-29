@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage.sqlite.adapter;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelAssociation;
@@ -242,6 +243,34 @@ public final class SQLiteTable {
         });
 
         return columnEntries;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        SQLiteTable that = (SQLiteTable) obj;
+        return ObjectsCompat.equals(name, that.name) &&
+                ObjectsCompat.equals(columns, that.columns) &&
+                ObjectsCompat.equals(sortedColumns, that.sortedColumns);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(name, columns, sortedColumns);
+    }
+
+    @Override
+    public String toString() {
+        return "SQLiteTable{" +
+                "name='" + name + '\'' +
+                ", columns=" + columns +
+                ", sortedColumns=" + sortedColumns +
+                '}';
     }
 
     /**

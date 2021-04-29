@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -80,7 +81,8 @@ public final class SerializedModel implements Model {
         Map<String, Object> originalMap = ModelConverter.toMap(original, modelSchema);
         Map<String, Object> patchMap = new HashMap<>();
         for (String key : updatedMap.keySet()) {
-            if ("id".equals(key) || !ObjectsCompat.equals(originalMap.get(key), updatedMap.get(key))) {
+            List<String> primaryIndexFields = modelSchema.getPrimaryIndexFields();
+            if (primaryIndexFields.contains(key) || !ObjectsCompat.equals(originalMap.get(key), updatedMap.get(key))) {
                 patchMap.put(key, updatedMap.get(key));
             }
         }

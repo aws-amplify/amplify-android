@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.annotations.Index;
+import com.amplifyframework.core.model.annotations.Indexes;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Immutable;
@@ -119,8 +120,14 @@ public final class ModelSchema {
             }
 
             for (Annotation annotation : clazz.getAnnotations()) {
-                ModelIndex modelIndex = createModelIndex(annotation);
-                if (modelIndex != null) {
+                if (annotation.annotationType().isAssignableFrom(Indexes.class)) {
+                    Indexes indexesAnnotation = (Indexes) annotation;
+                    for (Index indexAnnotation : indexesAnnotation.value()) {
+                        ModelIndex modelIndex = createModelIndex(indexAnnotation);
+                        indexes.put(modelIndex.getIndexName(), modelIndex);
+                    }
+                } else if (annotation.annotationType().isAssignableFrom(Index.class)) {
+                    ModelIndex modelIndex = createModelIndex((Index) annotation);
                     indexes.put(modelIndex.getIndexName(), modelIndex);
                 }
             }
@@ -211,15 +218,11 @@ public final class ModelSchema {
     }
 
     // Utility method to extract model index metadata
-    private static ModelIndex createModelIndex(Annotation annotation) {
-        if (annotation.annotationType().isAssignableFrom(Index.class)) {
-            Index indexAnnotation = (Index) annotation;
-            return ModelIndex.builder()
-                    .indexName(indexAnnotation.name())
-                    .indexFieldNames(Arrays.asList(indexAnnotation.fields()))
-                    .build();
-        }
-        return null;
+    private static ModelIndex createModelIndex(Index indexAnnotation) {
+        return ModelIndex.builder()
+                .indexName(indexAnnotation.name())
+                .indexFieldNames(Arrays.asList(indexAnnotation.fields()))
+                .build();
     }
 
     /**
@@ -284,6 +287,29 @@ public final class ModelSchema {
     @NonNull
     public Map<String, ModelIndex> getIndexes() {
         return indexes;
+    }
+
+    /**
+     * Returns the list of fields that make up the primary key for the {@link Model}.
+     * @return the list of fields that make up the primary key for the {@link Model}.
+     */
+    @NonNull
+    public List<String> getPrimaryIndexFields() {
+        ModelIndex customPrimaryIndex = indexes.get("undefined");
+        if (customPrimaryIndex != null && customPrimaryIndex.getIndexFieldNames().size() >= 1) {
+            return customPrimaryIndex.getIndexFieldNames();
+        } else {
+            return Arrays.asList(PrimaryKey.fieldName());
+        }
+    }
+
+    /**
+      * Returns the hash key for the {@link Model}, which should be used as the unique identifier.
+      * @return the hash key for the {@link Model}, which should be used as the unique identifier.
+     */
+    @NonNull
+    public String getPrimaryKeyName() {
+        return getPrimaryIndexFields().get(0);
     }
 
     /**

@@ -106,14 +106,6 @@ public final class ModelField {
     }
 
     /**
-     * Returns true if the field represents a unique ID.
-     * @return True if the field represents a unique ID.
-     */
-    public boolean isId() {
-        return PrimaryKey.matches(name);
-    }
-
-    /**
      * Returns true if the field is read only.
      * @return true if the field is read only.
      */
