@@ -125,8 +125,8 @@ public final class SynchronousAppSync {
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
+     * @param object model to delete
      * @param schema The schema of the Model we are deleting
-     * @param objectId Id of the object to delete
      * @param version The version of the model we have
      * @param <T> The type of data in the response. Must extend Model.
      * @return Response data from AppSync.
@@ -134,14 +134,14 @@ public final class SynchronousAppSync {
      */
     @NonNull
     <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
-            @NonNull ModelSchema schema, @NonNull String objectId, @NonNull Integer version) throws DataStoreException {
-        return delete(schema, objectId, version, QueryPredicates.all());
+            @NonNull T object, @NonNull ModelSchema schema, @NonNull Integer version) throws DataStoreException {
+        return delete(object, schema, version, QueryPredicates.all());
     }
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
+     * @param object model to delete
      * @param schema The schema of the Model we are deleting
-     * @param objectId Id of the object to delete
      * @param version The version of the model we have
      * @param predicate The condition to be applied to the delete.
      * @param <T> The type of data in the response. Must extend Model.
@@ -150,12 +150,12 @@ public final class SynchronousAppSync {
      */
     @NonNull
     <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
+            @NonNull T object,
             @NonNull ModelSchema schema,
-            @NonNull String objectId,
             @NonNull Integer version,
             @NonNull QueryPredicate predicate) throws DataStoreException {
         return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result((onResult, onError) ->
-            appSync.delete(schema, objectId, version, predicate, onResult, onError)
+            appSync.delete(object, schema, version, predicate, onResult, onError)
         );
     }
 

@@ -1,0 +1,18 @@
+{
+  "query": "mutation DeleteItem($input: DeleteItemInput!) {\n  deleteItem(input: $input) {
+    createdAt
+    id
+    name
+    orderId
+    status
+  }
+}
+",
+  "variables": {
+    "input" : {
+      "createdAt":"2021-04-20T15:20:32.651Z",
+      "orderId":"123a7asa",
+      "status":"IN_TRANSIT"
+    }
+  }
+}
