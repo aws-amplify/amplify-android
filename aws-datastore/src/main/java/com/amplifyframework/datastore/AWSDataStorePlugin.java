@@ -92,17 +92,17 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @Nullable DataStoreConfiguration userProvidedConfiguration) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
+        this.authModeStrategy = AuthModeStrategyType.DEFAULT;
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
             modelSchemaRegistry,
             sqliteStorageAdapter,
-            AppSyncClient.via(api, AuthModeStrategyType.MULTIAUTH),
+            AppSyncClient.via(api),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
-        this.authModeStrategy = AuthModeStrategyType.DEFAULT;
     }
 
     private AWSDataStorePlugin(@NonNull Builder builder) throws DataStoreException {
@@ -128,7 +128,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             modelProvider,
             modelSchemaRegistry,
             sqliteStorageAdapter,
-            AppSyncClient.via(api, AuthModeStrategyType.MULTIAUTH),
+            AppSyncClient.via(api, this.authModeStrategy),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
         );

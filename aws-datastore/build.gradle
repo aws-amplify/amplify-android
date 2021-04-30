@@ -39,6 +39,7 @@ dependencies {
     androidTestImplementation project(path: ':testmodels')
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation project(path: ':aws-api')
+    androidTestImplementation project(path: ':aws-auth-cognito')
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
