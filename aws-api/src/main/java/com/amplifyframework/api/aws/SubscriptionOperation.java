@@ -80,6 +80,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         boolean hasRuleInfo = authTypes instanceof MultiAuthModeStrategy.PriorityBasedAuthRuleIterator;
         subscriptionFuture = executorService.submit(() -> {
             LOG.debug("Requesting subscription: " + getRequest().getContent());
+            LOG.debug("Using auth types: " + authTypes.toString());
             while (authTypes.hasNext() && !isStarted.get()) {
                 AuthorizationType authType = authTypes.next();
                 LOG.debug("Attempting to setup subscription with authType = " + authType);

@@ -15,6 +15,10 @@
 
 package com.amplifyframework.api.aws;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.ModelOperation;
@@ -102,6 +106,15 @@ public final class MultiAuthModeStrategy implements AuthModeStrategy {
 
         public AuthStrategy getAuthRuleStrategy() {
             return effectiveRule.getAuthStrategy();
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "PriorityBasedAuthRuleIterator - " +
+                "items(" + authRules.size() + ") - " +
+                "[" + authRules.toString() + "] - " +
+                "position:" + currentIdx;
         }
     }
 }
