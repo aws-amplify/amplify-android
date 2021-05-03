@@ -25,6 +25,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
@@ -95,10 +96,14 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun confirmSignIn(confirmationCode: String): AuthSignInResult {
+    override suspend fun confirmSignIn(
+        confirmationCode: String,
+        options: AuthConfirmSignInOptions
+    ): AuthSignInResult {
         return suspendCoroutine { continuation ->
             delegate.confirmSignIn(
                 confirmationCode,
+                options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )

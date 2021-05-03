@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
@@ -26,6 +27,9 @@ import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.testmodels.ecommerce.Item;
+import com.amplifyframework.testmodels.ecommerce.Status;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
@@ -118,6 +122,27 @@ public final class AppSyncGraphQLRequestFactoryTest {
         JSONAssert.assertEquals(
             Resources.readAsString("delete-person-with-predicate.txt"),
             requestToDeleteTony.getContent(),
+            true
+        );
+    }
+
+    /**
+     * Checks that we're getting the expected output for a delete mutation for an object with a custom primary key.
+     * @throws DataStoreException If the output does not match.
+     * @throws AmplifyException On failure to parse ModelSchema from model class
+     * @throws JSONException from JSONAssert.assertEquals.
+     */
+    @Test
+    public void validateDeleteWithCustomPrimaryKey() throws AmplifyException, JSONException {
+        final Item item = Item.builder()
+                .orderId("123a7asa")
+                .status(Status.IN_TRANSIT)
+                .createdAt(new Temporal.DateTime("2021-04-20T15:20:32.651Z"))
+                .name("Gummy Bears")
+                .build();
+        JSONAssert.assertEquals(
+            Resources.readAsString("delete-item.txt"),
+            AppSyncGraphQLRequestFactory.buildMutation(item, QueryPredicates.all(), MutationType.DELETE).getContent(),
             true
         );
     }

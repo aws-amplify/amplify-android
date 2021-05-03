@@ -17,6 +17,9 @@ package com.amplifyframework.core.model;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.ecommerce.Item;
+import com.amplifyframework.testmodels.ecommerce.Order;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 
@@ -117,5 +120,48 @@ public final class ModelSchemaTest {
         // The call to add expectedModelSchema was a no-op since hashCode()
         // showed that the object was already in the collection.
         assertSame(actualModelSchema, modelSchemaSet.iterator().next());
+    }
+
+    /**
+     * A model with no @Index annotations should return the default primary index fields. ["id"]
+     * @throws AmplifyException from model schema parsing
+     */
+    @Test
+    public void modelWithNoIndexesReturnsDefaultPrimaryIndexFields() throws AmplifyException {
+        ModelSchema actualModelSchema = ModelSchema.fromModelClass(BlogOwner.class);
+        assertEquals(Arrays.asList("id"), actualModelSchema.getPrimaryIndexFields());
+    }
+
+    /**
+     * A model with a secondary @Index defined, but no primary @Index defined, should return the default primary
+     * index fields, ["id"].
+     * @throws AmplifyException from model schema parsing
+     */
+    @Test
+    public void modelWithSecondaryIndexReturnsDefaultPrimaryIndexFields() throws AmplifyException {
+        ModelSchema actualModelSchema = ModelSchema.fromModelClass(Person.class);
+        assertEquals(Arrays.asList("id"), actualModelSchema.getPrimaryIndexFields());
+    }
+
+    /**
+     * A model with a single primary key @Index, should return the primary key fields.
+     * @throws AmplifyException from model schema parsing
+     */
+    @Test
+    public void modelWithIndexReturnsExpectedPrimaryIndexFields() throws AmplifyException {
+        ModelSchema actualModelSchema = ModelSchema.fromModelClass(Order.class);
+        assertEquals(Arrays.asList("customerEmail", "createdAt"), actualModelSchema.getPrimaryIndexFields());
+    }
+
+    /**
+     * A model with a primary and a secondary @Index annotation, should return the primary key fields.  Validates that
+     * we parse the @Indexes wrapper correctly, which is only present when the number of @Index annotations is greater
+     * than 1.
+     * @throws AmplifyException from model schema parsing
+     */
+    @Test
+    public void modelWithIndexesReturnsExpectedPrimaryIndexFields() throws AmplifyException {
+        ModelSchema actualModelSchema = ModelSchema.fromModelClass(Item.class);
+        assertEquals(Arrays.asList("orderId", "status", "createdAt"), actualModelSchema.getPrimaryIndexFields());
     }
 }

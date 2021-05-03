@@ -29,6 +29,7 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -107,6 +108,18 @@ public interface RxAuthCategoryBehavior {
      *         {@link AuthException} on failure
      */
     Single<AuthSignInResult> signIn(@Nullable String username, @Nullable String password);
+
+    /**
+     * Submit the confirmation code received as part of multi-factor Authentication during sign in.
+     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthSignInResult> confirmSignIn(
+            @Nullable String confirmationCode,
+            @NonNull AuthConfirmSignInOptions options
+    );
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.

@@ -17,13 +17,12 @@ package com.amplifyframework.rx;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.rx.RxAdapters.CancelableBehaviors.StreamEmitter;
-
-import java.util.Objects;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
@@ -143,9 +142,9 @@ public final class RxOperations {
                 } else if (obj == null || getClass() != obj.getClass()) {
                     return false;
                 } else {
-                    ConnectionStateEvent privateNote = (ConnectionStateEvent) obj;
-                    return Objects.equals(getConnectionState(), privateNote.getConnectionState()) &&
-                        Objects.equals(getSubscriptionId(), privateNote.getSubscriptionId());
+                    ConnectionStateEvent event = (ConnectionStateEvent) obj;
+                    return ObjectsCompat.equals(getConnectionState(), event.getConnectionState()) &&
+                        ObjectsCompat.equals(getSubscriptionId(), event.getSubscriptionId());
                 }
             }
 

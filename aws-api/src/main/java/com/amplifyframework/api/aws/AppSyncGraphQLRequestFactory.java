@@ -206,7 +206,7 @@ public final class AppSyncGraphQLRequestFactory {
                     "Input!"; // CreateTodoInput
 
             if (MutationType.DELETE.equals(type)) {
-                builder.variable("input", inputType, Collections.singletonMap("id", model.getId()));
+                builder.variable("input", inputType, getDeleteMutationInputMap(schema, model));
             } else {
                 builder.variable("input", inputType, getMapOfFieldNameAndValues(schema, model));
             }
@@ -352,6 +352,15 @@ public final class AppSyncGraphQLRequestFactory {
         }
     }
 
+    private static Map<String, Object> getDeleteMutationInputMap(
+            @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
+        final Map<String, Object> input = new HashMap<>();
+        for (String fieldName : schema.getPrimaryIndexFields()) {
+            input.put(fieldName, extractFieldValue(fieldName, instance, schema));
+        }
+        return input;
+    }
+
     private static Map<String, Object> getMapOfFieldNameAndValues(
             @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
         if (!instance.getClass().getSimpleName().equals(schema.getName())) {
@@ -367,24 +376,15 @@ public final class AppSyncGraphQLRequestFactory {
                 continue;
             }
             String fieldName = modelField.getName();
-            try {
-                Field privateField = instance.getClass().getDeclaredField(modelField.getName());
-                privateField.setAccessible(true);
-                Object fieldValue = privateField.get(instance);
-                final ModelAssociation association = schema.getAssociations().get(fieldName);
-                if (association == null) {
-                    result.put(fieldName, fieldValue);
-                } else if (association.isOwner()) {
-                    Model target = (Model) Objects.requireNonNull(fieldValue);
-                    result.put(association.getTargetName(), target.getId());
-                }
-                // Ignore if field is associated, but is not a "belongsTo" relationship
-            } catch (Exception exception) {
-                throw new AmplifyException(
-                    "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
-                    exception,
-                    "Check if this model schema is a correct representation of the fields in the provided Object");
+            Object fieldValue = extractFieldValue(fieldName, instance, schema);
+            final ModelAssociation association = schema.getAssociations().get(fieldName);
+            if (association == null) {
+                result.put(fieldName, fieldValue);
+            } else if (association.isOwner()) {
+                Model target = (Model) Objects.requireNonNull(fieldValue);
+                result.put(association.getTargetName(), target.getId());
             }
+            // Ignore if field is associated, but is not a "belongsTo" relationship
         }
 
         /*
@@ -402,5 +402,19 @@ public final class AppSyncGraphQLRequestFactory {
         }
 
         return result;
+    }
+
+    private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema)
+            throws AmplifyException {
+        try {
+            Field privateField = instance.getClass().getDeclaredField(fieldName);
+            privateField.setAccessible(true);
+            return privateField.get(instance);
+        } catch (Exception exception) {
+            throw new AmplifyException(
+                    "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
+                    exception,
+                    "Check if this model schema is a correct representation of the fields in the provided Object");
+        }
     }
 }

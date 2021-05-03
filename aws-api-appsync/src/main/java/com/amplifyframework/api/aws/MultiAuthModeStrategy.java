@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.AuthRule;

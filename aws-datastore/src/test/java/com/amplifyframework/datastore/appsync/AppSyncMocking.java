@@ -361,8 +361,8 @@ public final class AppSyncMocking {
                 @NonNull T model, int version, @NonNull GraphQLResponse<ModelWithMetadata<T>> response) {
             callOnSuccess(/* onSuccess position = */ 4, response)
                 .when(appSync).delete(
+                    eq(model), // model
                     any(), // ModelSchema
-                    eq(model.getId()), // model ID
                     eq(version), // version
                     any(), // predicate
                     any(), // onResponse
@@ -370,8 +370,8 @@ public final class AppSyncMocking {
                 );
             callOnSuccess(/* onSuccess position = */ 3, response)
                 .when(appSync).delete(
+                    eq(model), // model
                     any(), // ModelSchema
-                    eq(model.getId()), // model ID
                     eq(version), // version
                     any(), // onResponse
                     any() // onFailure
