@@ -163,13 +163,13 @@ public final class ModelSchema {
 
     /**
      * Returns the applicable auth rules for a given operation.
-     * @param operationType The desired operation type (read, create, update, delete).
+     * @param modelOperation The desired operation type (read, create, update, delete).
      * @return A list of {@link AuthRule}s for the given operation.
      */
     public List<AuthRule> getApplicableRules(ModelOperation modelOperation) {
         List<AuthRule> result = new ArrayList<>();
         for (AuthRule rule : authRules) {
-            if (rule.getOperationsOrDefault().contains(operationType)) {
+            if (rule.getOperationsOrDefault().contains(modelOperation)) {
                 result.add(rule);
             }
         }
