@@ -166,7 +166,7 @@ public final class ModelSchema {
      * @param operationType The desired operation type (read, create, update, delete).
      * @return A list of {@link AuthRule}s for the given operation.
      */
-    public List<AuthRule> getApplicableRules(ModelOperation operationType) {
+    public List<AuthRule> getApplicableRules(ModelOperation modelOperation) {
         List<AuthRule> result = new ArrayList<>();
         for (AuthRule rule : authRules) {
             if (rule.getOperationsOrDefault().contains(operationType)) {

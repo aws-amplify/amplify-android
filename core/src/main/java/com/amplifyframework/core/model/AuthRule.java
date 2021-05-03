@@ -103,7 +103,7 @@ public final class AuthRule {
      * @return the auth provider for this {@link AuthRule}
      */
     public String getAuthProvider() {
-        return authProvider == null || "".equals(authProvider) ? authStrategy.getDefaultAuthProvider() : authProvider;
+        return Empty.check(authProvider) ? authStrategy.getDefaultAuthProvider() : authProvider;
     }
 
     /**
