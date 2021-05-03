@@ -25,23 +25,33 @@ public enum AuthStrategy {
      * Owner authorization specifies whether a user can access or operate against an object.  To use OWNER, the API
      * must have Cognito User Pool configured.
      */
-    OWNER,
+    OWNER("userPools"),
 
     /**
      * Group authorization specifies whether a group can access or operate against an object.  To use GROUPS, the API
      * must have Cognito User Pool configured.
      */
-    GROUPS,
+    GROUPS("userPools"),
 
     /**
      * The private authorization specifies that everyone will be allowed to access the API with a valid JWT token from
      * the configured Cognito User Pool. To use PRIVATE, the API must have Cognito User Pool configured.
      */
-    PRIVATE,
+    PRIVATE("userPools"),
 
     /**
      * The public authorization specifies that everyone will be allowed to access the API, behind the scenes the API
      * will be protected with an API Key. To use PUBLIC, the API must have API Key configured.
      */
-    PUBLIC,
+    PUBLIC("apiKey");
+
+    private final String defaultAuthProvider;
+
+    AuthStrategy(String defaultAuthProvider) {
+        this.defaultAuthProvider = defaultAuthProvider;
+    }
+
+    String getDefaultAuthProvider() {
+        return defaultAuthProvider;
+    }
 }
