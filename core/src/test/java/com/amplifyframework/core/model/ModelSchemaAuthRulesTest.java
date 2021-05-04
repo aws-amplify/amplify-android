@@ -45,7 +45,7 @@ public final class ModelSchemaAuthRulesTest {
         ModelSchema modelSchema = ModelSchema.fromModelClass(OwnerAuth.class);
         assertEquals(1, modelSchema.getAuthRules().size());
         AuthRule authRule = modelSchema.getAuthRules().get(0);
-        assertEquals("userPools", authRule.getAuthProvider());
+        assertEquals(AuthorizationType.AMAZON_COGNITO_USER_POOLS, authRule.getAuthProvider());
     }
 
     /**
@@ -58,7 +58,7 @@ public final class ModelSchemaAuthRulesTest {
         ModelSchema modelSchema = ModelSchema.fromModelClass(OwnerAuthNonDefaultProvider.class);
         assertEquals(1, modelSchema.getAuthRules().size());
         AuthRule authRule = modelSchema.getAuthRules().get(0);
-        assertEquals("oidc", authRule.getAuthProvider());
+        assertEquals(AuthorizationType.OPENID_CONNECT, authRule.getAuthProvider());
     }
 
     /**
@@ -66,10 +66,10 @@ public final class ModelSchemaAuthRulesTest {
      */
     @Test
     public void modelWithDefaultAuthProviderUsingBuilderTest() {
-        ModelSchema schema = fromBuilder(null);
+        ModelSchema schema = fromBuilder(AuthorizationType.DEFAULT);
         assertEquals(1, schema.getAuthRules().size());
         AuthRule authRule = schema.getAuthRules().get(0);
-        assertEquals("userPools", authRule.getAuthProvider());
+        assertEquals(AuthorizationType.AMAZON_COGNITO_USER_POOLS, authRule.getAuthProvider());
     }
 
     /**
@@ -77,10 +77,10 @@ public final class ModelSchemaAuthRulesTest {
      */
     @Test
     public void modelWithNonDefaultAuthProviderUsingBuilderTest() {
-        ModelSchema schema = fromBuilder("oidc");
+        ModelSchema schema = fromBuilder(AuthorizationType.OPENID_CONNECT);
         assertEquals(1, schema.getAuthRules().size());
         AuthRule authRule = schema.getAuthRules().get(0);
-        assertEquals("oidc", authRule.getAuthProvider());
+        assertEquals(AuthorizationType.OPENID_CONNECT, authRule.getAuthProvider());
     }
 
     /**
@@ -88,7 +88,7 @@ public final class ModelSchemaAuthRulesTest {
      */
     @Test
     public void getApplicableRulesTest() {
-        ModelSchema schema = fromBuilder(null);
+        ModelSchema schema = fromBuilder(AuthorizationType.DEFAULT);
         List<AuthRule> rulesForCreateOperation = schema.getApplicableRules(ModelOperation.CREATE);
         List<AuthRule> rulesForDeleteOperation = schema.getApplicableRules(ModelOperation.DELETE);
         List<AuthRule> rulesForUpdateOperation = schema.getApplicableRules(ModelOperation.UPDATE);
@@ -100,7 +100,7 @@ public final class ModelSchemaAuthRulesTest {
         assertEquals(0, rulesForReadOperation.size());
     }
 
-    private ModelSchema fromBuilder(String authProvider) {
+    private ModelSchema fromBuilder(AuthorizationType authProvider) {
         ModelField modelId = ModelField.builder()
                                        .isRequired(true)
                                        .targetType("ID")

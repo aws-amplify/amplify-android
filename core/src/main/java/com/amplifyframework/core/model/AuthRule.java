@@ -41,7 +41,7 @@ public final class AuthRule {
     private static final String DEFAULT_GROUP_CLAIM = "cognito:groups";
 
     private final AuthStrategy authStrategy;
-    private final String authProvider;
+    private final AuthorizationType authProvider;
     private final String ownerField;
     private final String identityClaim;
     private final String groupsField;
@@ -102,8 +102,10 @@ public final class AuthRule {
      * Returns the auth provider for this {@link AuthRule}.
      * @return the auth provider for this {@link AuthRule}
      */
-    public String getAuthProvider() {
-        return Empty.check(authProvider) ? authStrategy.getDefaultAuthProvider() : authProvider;
+    public AuthorizationType getAuthProvider() {
+        return AuthorizationType.DEFAULT.equals(authProvider) ?
+                                                        authStrategy.getDefaultAuthProvider() :
+                                                        authProvider;
     }
 
     /**
@@ -240,7 +242,7 @@ public final class AuthRule {
      */
     public static final class Builder {
         private AuthStrategy authStrategy;
-        private String authProvider;
+        private AuthorizationType authProvider;
         private String ownerField;
         private String identityClaim;
         private String groupClaim;
@@ -265,8 +267,8 @@ public final class AuthRule {
          * @return Current builder instance.
          */
         @NonNull
-        public AuthRule.Builder authProvider(@Nullable String authProvider) {
-            this.authProvider = authProvider;
+        public AuthRule.Builder authProvider(@Nullable AuthorizationType authProvider) {
+            this.authProvider = Objects.requireNonNull(authProvider);
             return this;
         }
 

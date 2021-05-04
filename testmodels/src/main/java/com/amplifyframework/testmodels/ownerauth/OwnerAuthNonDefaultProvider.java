@@ -4,6 +4,7 @@ package com.amplifyframework.testmodels.ownerauth;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.AuthorizationType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.annotations.AuthRule;
@@ -21,7 +22,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @ModelConfig(pluralName = "OwnerAuths", authRules = {
         @AuthRule(
             allow = AuthStrategy.OWNER,
-            provider = "oidc",
+            provider = AuthorizationType.OPENID_CONNECT,
             ownerField = "owner",
             identityClaim = "cognito:username",
             operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }

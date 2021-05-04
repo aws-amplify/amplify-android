@@ -16,6 +16,7 @@
 package com.amplifyframework.core.model.annotations;
 
 import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.AuthorizationType;
 import com.amplifyframework.core.model.ModelOperation;
 
 import java.lang.annotation.ElementType;
@@ -52,7 +53,7 @@ public @interface AuthRule {
      * for the given AuthStrategy should be used.
      * @return The name of the auth provider.
      */
-    String provider() default "";
+    AuthorizationType provider() default AuthorizationType.DEFAULT;
 
     /**
      * Used for owner authorization.  Defaults to "owner" when using AuthStrategy.OWNER.
