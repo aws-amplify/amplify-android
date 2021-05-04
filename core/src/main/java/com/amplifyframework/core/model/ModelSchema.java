@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.HasOne;
@@ -168,10 +169,16 @@ public final class ModelSchema {
      */
     public List<AuthRule> getApplicableRules(ModelOperation modelOperation) {
         List<AuthRule> result = new ArrayList<>();
-        for (AuthRule rule : authRules) {
-            if (rule.getOperationsOrDefault().contains(modelOperation)) {
-                result.add(rule);
+        Consumer<List<AuthRule>> filterAuthRules = authRules -> {
+            for (AuthRule rule : authRules) {
+                if (rule.getOperationsOrDefault().contains(modelOperation)) {
+                    result.add(rule);
+                }
             }
+        };
+        filterAuthRules.accept(authRules);
+        for (ModelField field : getFields().values()) {
+            filterAuthRules.accept(field.getAuthRules());
         }
         return result;
     }
