@@ -19,6 +19,8 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.model.AuthorizationType;
+
 import java.util.Objects;
 
 /**

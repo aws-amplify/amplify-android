@@ -39,6 +39,7 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.AuthorizationType;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
