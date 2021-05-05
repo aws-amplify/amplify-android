@@ -1,16 +1,19 @@
 package com.amplifyframework.testmodels.commentsblog;
 
+import com.amplifyframework.core.model.annotations.HasOne;
+import com.amplifyframework.core.model.temporal.Temporal;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.Objects;
+
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.annotations.HasOne;
+import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
-import com.amplifyframework.core.model.temporal.Temporal;
-
-import java.util.Objects;
-import java.util.UUID;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
@@ -18,22 +21,21 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "BlogOwners")
 public final class BlogOwner implements Model {
-  public static final QueryField NAME = field("BlogOwner", "name");
   public static final QueryField ID = field("BlogOwner", "id");
+  public static final QueryField NAME = field("BlogOwner", "name");
   public static final QueryField WEA = field("BlogOwner", "wea");
-  private final @ModelField(targetType="String", isRequired = true) String name;
+  public static final QueryField CREATED_AT = field("BlogOwner", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
+  private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="Blog") @HasOne(associatedWith = "owner", type = Blog.class) Blog blog = null;
   private final @ModelField(targetType="String") String wea;
-  private @ModelField(targetType = "AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
-  private @ModelField(targetType = "AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-
-  public String getName() {
-      return name;
-  }
-  
+  private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   public String getId() {
       return id;
+  }
+  
+  public String getName() {
+      return name;
   }
   
   public Blog getBlog() {
@@ -43,19 +45,16 @@ public final class BlogOwner implements Model {
   public String getWea() {
       return wea;
   }
-
+  
   public Temporal.DateTime getCreatedAt() {
       return createdAt;
   }
-
-  public Temporal.DateTime getUpdatedAt() {
-      return updatedAt;
-  }
-
-  private BlogOwner(String name, String id, String wea) {
-    this.name = name;
+  
+  private BlogOwner(String id, String name, String wea, Temporal.DateTime createdAt) {
     this.id = id;
+    this.name = name;
     this.wea = wea;
+    this.createdAt = createdAt;
   }
   
   @Override
@@ -66,39 +65,37 @@ public final class BlogOwner implements Model {
         return false;
       } else {
       BlogOwner blogOwner = (BlogOwner) obj;
-      return ObjectsCompat.equals(getName(), blogOwner.getName()) &&
-              ObjectsCompat.equals(getId(), blogOwner.getId()) &&
+      return ObjectsCompat.equals(getId(), blogOwner.getId()) &&
+              ObjectsCompat.equals(getName(), blogOwner.getName()) &&
               ObjectsCompat.equals(getWea(), blogOwner.getWea()) &&
-              ObjectsCompat.equals(getCreatedAt(), blogOwner.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), blogOwner.getUpdatedAt());
+              ObjectsCompat.equals(getCreatedAt(), blogOwner.getCreatedAt());
       }
   }
   
   @Override
    public int hashCode() {
     return new StringBuilder()
-      .append(getName())
       .append(getId())
+      .append(getName())
       .append(getWea())
       .append(getCreatedAt())
-      .append(getUpdatedAt())
       .toString()
       .hashCode();
   }
-
-    @Override
-    public String toString() {
-        return "BlogOwner{" +
-                "name='" + name + '\'' +
-                ", id='" + id + '\'' +
-                ", blog=" + blog +
-                ", wea='" + wea + '\'' +
-                ", createdAt='" + createdAt + '\'' +
-                ", updatedAt='" + updatedAt + '\'' +
-                '}';
-    }
-
-    public static NameStep builder() {
+  
+  @Override
+   public String toString() {
+    return new StringBuilder()
+      .append("BlogOwner {")
+      .append("id=" + String.valueOf(getId()) + ", ")
+      .append("name=" + String.valueOf(getName()) + ", ")
+      .append("wea=" + String.valueOf(getWea()) + ", ")
+      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("}")
+      .toString();
+  }
+  
+  public static NameStep builder() {
       return new Builder();
   }
   
@@ -110,7 +107,7 @@ public final class BlogOwner implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    * @throws IllegalArgumentException Checks that ID is in the proper format
-   **/
+   */
   public static BlogOwner justId(String id) {
     try {
       UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
@@ -124,14 +121,16 @@ public final class BlogOwner implements Model {
     return new BlogOwner(
       id,
       null,
+      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
-    return new CopyOfBuilder(name,
-      id,
-      wea);
+    return new CopyOfBuilder(id,
+      name,
+      wea,
+      createdAt);
   }
   public interface NameStep {
     BuildStep name(String name);
@@ -142,21 +141,24 @@ public final class BlogOwner implements Model {
     BlogOwner build();
     BuildStep id(String id) throws IllegalArgumentException;
     BuildStep wea(String wea);
+    BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
 
   public static class Builder implements NameStep, BuildStep {
-    private String name;
     private String id;
+    private String name;
     private String wea;
+    private Temporal.DateTime createdAt;
     @Override
      public BlogOwner build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
         return new BlogOwner(
-          name,
           id,
-          wea);
+          name,
+          wea,
+          createdAt);
     }
     
     @Override
@@ -172,13 +174,19 @@ public final class BlogOwner implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep createdAt(Temporal.DateTime createdAt) {
+        this.createdAt = createdAt;
+        return this;
+    }
+    
     /** 
      * WARNING: Do not set ID when creating a new object. Leave this blank and one will be auto generated for you.
      * This should only be set when referring to an already existing object.
      * @param id id
      * @return Current Builder instance, for fluent method chaining
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     **/
+     */
     public BuildStep id(String id) throws IllegalArgumentException {
         this.id = id;
         
@@ -195,10 +203,11 @@ public final class BlogOwner implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String name, String id, String wea) {
+    private CopyOfBuilder(String id, String name, String wea, Temporal.DateTime createdAt) {
       super.id(id);
       super.name(name)
-        .wea(wea);
+        .wea(wea)
+        .createdAt(createdAt);
     }
     
     @Override
@@ -209,6 +218,11 @@ public final class BlogOwner implements Model {
     @Override
      public CopyOfBuilder wea(String wea) {
       return (CopyOfBuilder) super.wea(wea);
+    }
+    
+    @Override
+     public CopyOfBuilder createdAt(Temporal.DateTime createdAt) {
+      return (CopyOfBuilder) super.createdAt(createdAt);
     }
   }
   

@@ -28,6 +28,8 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -36,17 +38,22 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
+import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Comment;
+import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.commentsblog.PostAuthorJoin;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
@@ -60,16 +67,8 @@ import static org.junit.Assert.assertEquals;
  * which were defined by the schema in:
  * testmodels/src/main/java/com/amplifyframework/testmodels/commentsblog/schema.graphql.
  */
-@Ignore(
-    "Over time, this test will create a large DynamoDB table. Even if we delete the content " +
-    "through the AppSyncClient utility, the database will have lots of tombstone'd rows. " +
-    "These entries will be synced, the next time this test runs, and the DataStore initializes. " +
-    "After several runs, that sync will grow large and timeout the test, before the test can " +
-    "run any business logic. A manual workaround exists, by running this cleanup script: " +
-    "https://gist.github.com/jamesonwilliams/c76169676cb99c51d997ef0817eb9278#quikscript-to-clear-appsync-tables"
-)
 public final class BasicCloudSyncInstrumentationTest {
-    private static final int TIMEOUT_SECONDS = 10;
+    private static final int TIMEOUT_SECONDS = 30;
 
     private SynchronousApi api;
     private SynchronousAppSync appSync;
@@ -82,7 +81,6 @@ public final class BasicCloudSyncInstrumentationTest {
      * {@link AWSDataStorePlugin}, which is the thing we're actually testing.
      * @throws AmplifyException On failure to read config, setup API or DataStore categories
      */
-    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Before
     public void setup() throws AmplifyException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
@@ -103,15 +101,29 @@ public final class BasicCloudSyncInstrumentationTest {
         api = SynchronousApi.delegatingTo(apiCategory);
         appSync = SynchronousAppSync.using(AppSyncClient.via(apiCategory));
 
+        long tenMinutesAgo = new Date().getTime() - TimeUnit.MINUTES.toMillis(10);
+        Temporal.DateTime tenMinutesAgoDateTime = new Temporal.DateTime(new Date(tenMinutesAgo), 0);
         DataStoreCategory dataStoreCategory = DataStoreCategoryConfigurator.begin()
             .api(apiCategory)
-            .clearDatabase(true)
             .context(context)
             .modelProvider(AmplifyModelProvider.getInstance())
             .resourceId(configResourceId)
             .timeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .dataStoreConfiguration(DataStoreConfiguration.builder()
+                .syncExpression(BlogOwner.class, () -> BlogOwner.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Blog.class, () -> Blog.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Post.class, () -> Post.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Comment.class,() -> Comment.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Author.class,() -> Author.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(PostAuthorJoin.class,() -> PostAuthorJoin.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .build())
             .finish();
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
+    }
+
+    @After
+    public void teardown() throws DataStoreException {
+        dataStore.clear();
     }
 
     /**
@@ -122,7 +134,6 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
      *                          {@link DataStoreCategoryConfigurator}
      */
-    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Test
     public void syncUpToCloudIsWorking() throws AmplifyException {
         // Start listening for model publication events on the Hub.
@@ -157,7 +168,6 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
      *                          {@link DataStoreCategoryConfigurator}
      */
-    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Test
     public void syncDownFromCloudIsWorking() throws AmplifyException {
         // This model will get saved to the cloud.

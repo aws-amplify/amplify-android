@@ -29,6 +29,7 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 
 import java.util.Objects;
@@ -42,6 +43,7 @@ final class DataStoreCategoryConfigurator {
     private boolean clearRequested;
     private int timeoutAmount;
     private TimeUnit timeoutUnit;
+    private DataStoreConfiguration dataStoreConfiguration;
 
     private DataStoreCategoryConfigurator() {}
 
@@ -82,6 +84,12 @@ final class DataStoreCategoryConfigurator {
     }
 
     @NonNull
+    DataStoreCategoryConfigurator dataStoreConfiguration(@NonNull DataStoreConfiguration dataStoreConfiguration) {
+        this.dataStoreConfiguration = dataStoreConfiguration;
+        return DataStoreCategoryConfigurator.this;
+    }
+
+    @NonNull
     DataStoreCategoryConfigurator timeout(
             @IntRange(from = 0) int amount,
             @SuppressWarnings("SameParameterValue") @NonNull TimeUnit timeUnit) {
@@ -110,17 +118,18 @@ final class DataStoreCategoryConfigurator {
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
 
-        CategoryConfiguration dataStoreConfiguration =
+        CategoryConfiguration dataStoreCategoryConfiguration =
             AmplifyConfiguration.fromConfigFile(context, resourceId)
                 .forCategoryType(CategoryType.DATASTORE);
 
         AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
                                                                   .modelProvider(modelProvider)
                                                                   .apiCategory(api)
+                                                                  .dataStoreConfiguration(dataStoreConfiguration)
                                                                   .build();
         DataStoreCategory dataStoreCategory = new DataStoreCategory();
         dataStoreCategory.addPlugin(awsDataStorePlugin);
-        dataStoreCategory.configure(dataStoreConfiguration, context);
+        dataStoreCategory.configure(dataStoreCategoryConfiguration, context);
         dataStoreCategory.initialize(context);
         dataStoreCategory.start(NoOpAction.create(), NoOpConsumer.create());
 
