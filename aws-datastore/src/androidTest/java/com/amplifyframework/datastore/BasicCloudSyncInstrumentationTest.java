@@ -28,7 +28,6 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
@@ -121,6 +120,10 @@ public final class BasicCloudSyncInstrumentationTest {
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
     }
 
+    /**
+     * Clear the DataStore after each test.
+     * @throws DataStoreException On failure to clear DataStore.
+     */
     @After
     public void teardown() throws DataStoreException {
         dataStore.clear();
