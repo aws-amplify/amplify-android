@@ -28,6 +28,7 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
@@ -104,7 +105,6 @@ public final class BasicCloudSyncInstrumentationTest {
         Temporal.DateTime tenMinutesAgoDateTime = new Temporal.DateTime(new Date(tenMinutesAgo), 0);
         DataStoreCategory dataStoreCategory = DataStoreCategoryConfigurator.begin()
             .api(apiCategory)
-            .clearDatabase(true)
             .context(context)
             .modelProvider(AmplifyModelProvider.getInstance())
             .resourceId(configResourceId)
@@ -119,6 +119,11 @@ public final class BasicCloudSyncInstrumentationTest {
                 .build())
             .finish();
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
+    }
+
+    @After
+    public void teardown() throws DataStoreException {
+        dataStore.clear();
     }
 
     /**

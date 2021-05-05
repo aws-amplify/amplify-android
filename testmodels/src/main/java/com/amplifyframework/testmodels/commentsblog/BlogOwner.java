@@ -74,8 +74,7 @@ public final class BlogOwner implements Model {
       return ObjectsCompat.equals(getId(), blogOwner.getId()) &&
               ObjectsCompat.equals(getName(), blogOwner.getName()) &&
               ObjectsCompat.equals(getWea(), blogOwner.getWea()) &&
-              ObjectsCompat.equals(getCreatedAt(), blogOwner.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), blogOwner.getUpdatedAt());
+              ObjectsCompat.equals(getCreatedAt(), blogOwner.getCreatedAt());
       }
   }
   
@@ -86,7 +85,6 @@ public final class BlogOwner implements Model {
       .append(getName())
       .append(getWea())
       .append(getCreatedAt())
-      .append(getUpdatedAt())
       .toString()
       .hashCode();
   }
