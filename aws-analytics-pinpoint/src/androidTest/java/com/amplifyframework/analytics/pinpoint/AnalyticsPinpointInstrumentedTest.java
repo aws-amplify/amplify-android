@@ -281,12 +281,16 @@ public class AnalyticsPinpointInstrumentedTest {
                 .add("TestStringProperty", "TestStringValue")
                 .add("TestDoubleProperty", 1.0)
                 .build();
+        AnalyticsProperties userAttributes = AnalyticsProperties.builder()
+                .add("SomeUserAttribute", "User attribute value")
+                .build();
         UserProfile userProfile = UserProfile.builder()
                 .name("test-user")
                 .email("user@test.com")
                 .plan("test-plan")
                 .location(location)
                 .customProperties(properties)
+                .userAttributes(userAttributes)
                 .build();
 
         Amplify.Analytics.identifyUser("userId", userProfile);
@@ -304,6 +308,11 @@ public class AnalyticsPinpointInstrumentedTest {
         assertEquals("USA", endpointProfileLocation.getCountry());
         assertEquals("TestStringValue", endpointProfile.getAttribute("TestStringProperty").get(0));
         assertEquals((Double) 1.0, endpointProfile.getMetric("TestDoubleProperty"));
+
+        assertEquals("User attribute value", endpointProfile.getUser()
+                                                            .getUserAttributes()
+                                                            .get("SomeUserAttribute")
+                                                            .get(0));
     }
 
     private void waitForAutoFlush(AnalyticsClient analyticsClient) {
