@@ -56,7 +56,7 @@ public final class AuthRule {
      */
     public AuthRule(com.amplifyframework.core.model.annotations.AuthRule authRule) {
         this.authStrategy = authRule.allow();
-        this.authProvider = authRule.provider();
+        this.authProvider = AuthorizationType.from(authRule);
         this.ownerField = authRule.ownerField();
         this.identityClaim = authRule.identityClaim();
         this.groupClaim = authRule.groupClaim();
