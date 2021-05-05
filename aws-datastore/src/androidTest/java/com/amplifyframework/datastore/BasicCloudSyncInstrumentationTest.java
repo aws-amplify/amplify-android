@@ -28,7 +28,6 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
@@ -113,14 +112,18 @@ public final class BasicCloudSyncInstrumentationTest {
                 .syncExpression(BlogOwner.class, () -> BlogOwner.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Blog.class, () -> Blog.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Post.class, () -> Post.CREATED_AT.gt(tenMinutesAgoDateTime))
-                .syncExpression(Comment.class,() -> Comment.CREATED_AT.gt(tenMinutesAgoDateTime))
-                .syncExpression(Author.class,() -> Author.CREATED_AT.gt(tenMinutesAgoDateTime))
-                .syncExpression(PostAuthorJoin.class,() -> PostAuthorJoin.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Comment.class, () -> Comment.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Author.class, () -> Author.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(PostAuthorJoin.class, () -> PostAuthorJoin.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .build())
             .finish();
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
     }
 
+    /**
+     * Clear the DataStore after each test.
+     * @throws DataStoreException On failure to clear DataStore.
+     */
     @After
     public void teardown() throws DataStoreException {
         dataStore.clear();

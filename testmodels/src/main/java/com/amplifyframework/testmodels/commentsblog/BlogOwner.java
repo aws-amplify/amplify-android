@@ -30,6 +30,8 @@ public final class BlogOwner implements Model {
   private final @ModelField(targetType="Blog") @HasOne(associatedWith = "owner", type = Blog.class) Blog blog = null;
   private final @ModelField(targetType="String") String wea;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
+  private @ModelField(targetType = "AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
+
   public String getId() {
       return id;
   }
@@ -48,6 +50,10 @@ public final class BlogOwner implements Model {
   
   public Temporal.DateTime getCreatedAt() {
       return createdAt;
+  }
+
+  public Temporal.DateTime getUpdatedAt() {
+      return updatedAt;
   }
   
   private BlogOwner(String id, String name, String wea, Temporal.DateTime createdAt) {
@@ -68,7 +74,8 @@ public final class BlogOwner implements Model {
       return ObjectsCompat.equals(getId(), blogOwner.getId()) &&
               ObjectsCompat.equals(getName(), blogOwner.getName()) &&
               ObjectsCompat.equals(getWea(), blogOwner.getWea()) &&
-              ObjectsCompat.equals(getCreatedAt(), blogOwner.getCreatedAt());
+              ObjectsCompat.equals(getCreatedAt(), blogOwner.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), blogOwner.getUpdatedAt());
       }
   }
   
@@ -79,6 +86,7 @@ public final class BlogOwner implements Model {
       .append(getName())
       .append(getWea())
       .append(getCreatedAt())
+      .append(getUpdatedAt())
       .toString()
       .hashCode();
   }
@@ -91,6 +99,7 @@ public final class BlogOwner implements Model {
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("wea=" + String.valueOf(getWea()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
