@@ -124,13 +124,16 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         // Assign userId to the endpoint.
         EndpointProfileUser user = new EndpointProfileUser();
         user.setUserId(userId);
+        if (userProfile.getUserAttributes() != null) {
+            addUserAttributes(user, userProfile.getUserAttributes());
+        }
         endpointProfile.setUser(user);
         // Add user-specific data to the endpoint
         if (userProfile != null) {
             addUserProfileToEndpoint(endpointProfile, userProfile);
         }
         // update endpoint
-        targetingClient.updateEndpointProfile();
+        targetingClient.updateEndpointProfile(endpointProfile);
     }
 
     /**
@@ -200,6 +203,28 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
             } else if (property instanceof AnalyticsIntegerProperty) {
                 Double value = ((AnalyticsIntegerProperty) property).getValue().doubleValue();
                 endpointProfile.addMetric(entry.getKey(), value);
+            }
+        }
+    }
+
+    private void addUserAttributes(@NonNull EndpointProfileUser user,
+                                   @NonNull AnalyticsProperties userAttributes) {
+        for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : userAttributes) {
+            String key = entry.getKey();
+            AnalyticsPropertyBehavior<?> property = entry.getValue();
+
+            if (property instanceof AnalyticsStringProperty) {
+                String value = ((AnalyticsStringProperty) property).getValue();
+                user.addUserAttribute(key, Collections.singletonList(value));
+            } else if (property instanceof AnalyticsBooleanProperty) {
+                String value = ((AnalyticsBooleanProperty) property).getValue().toString();
+                user.addUserAttribute(key, Collections.singletonList(value));
+            } else if (property instanceof AnalyticsDoubleProperty) {
+                Double value = ((AnalyticsDoubleProperty) property).getValue();
+                user.addUserAttribute(entry.getKey(), Collections.singletonList(value.toString()));
+            } else if (property instanceof AnalyticsIntegerProperty) {
+                Double value = ((AnalyticsIntegerProperty) property).getValue().doubleValue();
+                user.addUserAttribute(entry.getKey(), Collections.singletonList(value.toString()));
             }
         }
     }

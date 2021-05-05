@@ -30,6 +30,7 @@ public final class UserProfile {
     private final String plan;
     private final Location location;
     private final AnalyticsProperties customProperties;
+    private final AnalyticsProperties userAttributes;
 
     private UserProfile(@NonNull Builder builder) {
         this.name = builder.name;
@@ -37,6 +38,7 @@ public final class UserProfile {
         this.plan = builder.plan;
         this.location = builder.location;
         this.customProperties = builder.customProperties;
+        this.userAttributes = builder.userAttributes;
     }
 
     /**
@@ -82,6 +84,15 @@ public final class UserProfile {
     @Nullable
     public AnalyticsProperties getCustomProperties() {
         return customProperties;
+    }
+
+    /**
+     * Gets all the available user attributes.
+     * @return The user's attributes.
+     */
+    @Nullable
+    public AnalyticsProperties getUserAttributes() {
+        return userAttributes;
     }
 
     /**
@@ -150,6 +161,7 @@ public final class UserProfile {
         private String plan;
         private Location location;
         private AnalyticsProperties customProperties;
+        private AnalyticsProperties userAttributes;
 
         /**
          * Configures the name to be used in the next-built UserProfile.
@@ -208,6 +220,18 @@ public final class UserProfile {
         public Builder customProperties(@NonNull final AnalyticsProperties properties) {
             Objects.requireNonNull(properties);
             this.customProperties = properties;
+            return this;
+        }
+
+        /**
+         * Sets the user's attributes of the builder instance.
+         * @param userAttributes The collection of attributes.
+         * @return Current builder instance, for method chaining.
+         */
+        @NonNull
+        public Builder userAttributes(@NonNull final AnalyticsProperties userAttributes) {
+            Objects.requireNonNull(userAttributes);
+            this.userAttributes = userAttributes;
             return this;
         }
 
