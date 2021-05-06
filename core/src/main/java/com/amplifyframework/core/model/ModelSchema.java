@@ -183,6 +183,15 @@ public final class ModelSchema {
         return result;
     }
 
+    /**
+     * Indicates whether this model has any auth rules at the model level. This should be
+     * used to assert whether the API's default auth provider should be used.
+     * @return True if there are no model-level auth rules; false otherwise.
+     */
+    public boolean hasModelLevelRules() {
+        return this.authRules.size() > 0;
+    }
+
     // Utility method to extract field metadata
     private static ModelField createModelField(Field field) {
         com.amplifyframework.core.model.annotations.ModelField annotation =

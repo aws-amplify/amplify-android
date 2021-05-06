@@ -56,7 +56,7 @@ public final class AuthRule {
      */
     public AuthRule(com.amplifyframework.core.model.annotations.AuthRule authRule) {
         this.authStrategy = authRule.allow();
-        this.authProvider = AuthorizationType.from(authRule);
+        this.authProvider = Empty.check(authRule.provider()) ? null : AuthorizationType.from(authRule);
         this.ownerField = authRule.ownerField();
         this.identityClaim = authRule.identityClaim();
         this.groupClaim = authRule.groupClaim();
@@ -103,9 +103,7 @@ public final class AuthRule {
      * @return the auth provider for this {@link AuthRule}
      */
     public AuthorizationType getAuthProvider() {
-        return AuthorizationType.DEFAULT.equals(authProvider) ?
-                                                        authStrategy.getDefaultAuthProvider() :
-                                                        authProvider;
+        return authProvider == null ? authStrategy.getDefaultAuthProvider() : authProvider;
     }
 
     /**

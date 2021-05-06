@@ -57,12 +57,7 @@ public enum AuthorizationType {
     /**
      * No authorization.
      */
-    NONE,
-
-    /**
-     * Use the default auth type for a given auth rule strategy.
-     */
-    DEFAULT;
+    NONE;
 
     /**
      * Look up an AuthorizationType by its String name.
