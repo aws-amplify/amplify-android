@@ -46,6 +46,14 @@ public @interface AuthRule {
      */
     AuthStrategy allow();
 
+
+    /**
+     * Determines which auth provider will be used for a given rule. If blank, the default provider
+     * for the given AuthStrategy should be used.
+     * @return The name of the auth provider.
+     */
+    String provider() default "";
+
     /**
      * Used for owner authorization.  Defaults to "owner" when using AuthStrategy.OWNER.
      *

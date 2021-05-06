@@ -16,6 +16,7 @@
 package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.Empty;
@@ -40,6 +41,7 @@ public final class AuthRule {
     private static final String DEFAULT_GROUP_CLAIM = "cognito:groups";
 
     private final AuthStrategy authStrategy;
+    private final AuthorizationType authProvider;
     private final String ownerField;
     private final String identityClaim;
     private final String groupsField;
@@ -54,6 +56,7 @@ public final class AuthRule {
      */
     public AuthRule(com.amplifyframework.core.model.annotations.AuthRule authRule) {
         this.authStrategy = authRule.allow();
+        this.authProvider = Empty.check(authRule.provider()) ? null : AuthorizationType.from(authRule);
         this.ownerField = authRule.ownerField();
         this.identityClaim = authRule.identityClaim();
         this.groupClaim = authRule.groupClaim();
@@ -68,6 +71,7 @@ public final class AuthRule {
      */
     private AuthRule(@NonNull AuthRule.Builder builder) {
         this.authStrategy = builder.authStrategy;
+        this.authProvider = builder.authProvider;
         this.ownerField = builder.ownerField;
         this.identityClaim = builder.identityClaim;
         this.groupClaim = builder.groupClaim;
@@ -92,6 +96,14 @@ public final class AuthRule {
     @NonNull
     public AuthStrategy getAuthStrategy() {
         return authStrategy;
+    }
+
+    /**
+     * Returns the auth provider for this {@link AuthRule}.
+     * @return the auth provider for this {@link AuthRule}
+     */
+    public AuthorizationType getAuthProvider() {
+        return authProvider == null ? authStrategy.getDefaultAuthProvider() : authProvider;
     }
 
     /**
@@ -228,6 +240,7 @@ public final class AuthRule {
      */
     public static final class Builder {
         private AuthStrategy authStrategy;
+        private AuthorizationType authProvider;
         private String ownerField;
         private String identityClaim;
         private String groupClaim;
@@ -238,7 +251,7 @@ public final class AuthRule {
         /**
          * Sets the auth strategy of this rule.
          * @param authStrategy AuthStrategy is the type of auth strategy to use.
-         * @return the association model with given name
+         * @return Current builder instance.
          */
         @NonNull
         public AuthRule.Builder authStrategy(@NonNull AuthStrategy authStrategy) {
@@ -247,9 +260,20 @@ public final class AuthRule {
         }
 
         /**
+         * Sets the auth provider of this rule.
+         * @param authProvider The name of the auth provider.
+         * @return Current builder instance.
+         */
+        @NonNull
+        public AuthRule.Builder authProvider(@Nullable AuthorizationType authProvider) {
+            this.authProvider = Objects.requireNonNull(authProvider);
+            return this;
+        }
+
+        /**
          * Sets the owner field of this rule.
          * @param ownerField OwnerField is the owner authorization.
-         * @return the association model with give target name
+         * @return Current builder instance.
          */
         @NonNull
         public AuthRule.Builder ownerField(@NonNull String ownerField) {
@@ -260,7 +284,7 @@ public final class AuthRule {
         /**
          * Sets the identity claim of this rule.
          * @param identityClaim IdentityClaim specifies a custom claim.
-         * @return the association model with given associated name
+         * @return Current builder instance.
          */
         @NonNull
         public AuthRule.Builder identityClaim(@NonNull String identityClaim) {
@@ -271,7 +295,7 @@ public final class AuthRule {
         /**
          * Sets the group claim of this rule.
          * @param groupClaim GroupClaim specified a custom claim.
-         * @return the association model with given associated type
+         * @return Current builder instance.
          */
         @NonNull
         public AuthRule.Builder groupClaim(@NonNull String groupClaim) {
@@ -282,7 +306,7 @@ public final class AuthRule {
         /**
          * Sets the groups this rule applies to.
          * @param groups Groups is static group authorization.
-         * @return the association model with given associated type
+         * @return Current builder instance.
          */
         @NonNull
         public AuthRule.Builder groups(@NonNull List<String> groups) {
@@ -293,7 +317,7 @@ public final class AuthRule {
         /**
          * Sets the groupsField of this rule.
          * @param groupsField GroupsField is for dynamic group authorization.
-         * @return the association model with given associated type
+         * @return Current builder instance.
          */
         @NonNull
         public AuthRule.Builder groupsField(@NonNull String groupsField) {
@@ -304,7 +328,7 @@ public final class AuthRule {
         /**
          * Sets the operations allowed for this rule.
          * @param operations Operations specifies which {@link ModelOperation}s are protected by this {@link AuthRule}.
-         * @return the association model with given associated type
+         * @return Current builder instance.
          */
         @NonNull
         public AuthRule.Builder operations(@NonNull List<ModelOperation> operations) {

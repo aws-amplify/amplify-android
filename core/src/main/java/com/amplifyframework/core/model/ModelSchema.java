@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.HasOne;
@@ -163,17 +164,32 @@ public final class ModelSchema {
 
     /**
      * Returns the applicable auth rules for a given operation.
-     * @param operationType The desired operation type (read, create, update, delete).
+     * @param modelOperation The desired operation type (read, create, update, delete).
      * @return A list of {@link AuthRule}s for the given operation.
      */
-    public List<AuthRule> getApplicableRules(ModelOperation operationType) {
+    public List<AuthRule> getApplicableRules(ModelOperation modelOperation) {
         List<AuthRule> result = new ArrayList<>();
-        for (AuthRule rule : authRules) {
-            if (rule.getOperationsOrDefault().contains(operationType)) {
-                result.add(rule);
+        Consumer<List<AuthRule>> filterAuthRules = authRules -> {
+            for (AuthRule rule : authRules) {
+                if (rule.getOperationsOrDefault().contains(modelOperation)) {
+                    result.add(rule);
+                }
             }
+        };
+        filterAuthRules.accept(authRules);
+        for (ModelField field : getFields().values()) {
+            filterAuthRules.accept(field.getAuthRules());
         }
         return result;
+    }
+
+    /**
+     * Indicates whether this model has any auth rules at the model level. This should be
+     * used to assert whether the API's default auth provider should be used.
+     * @return True if there are no model-level auth rules; false otherwise.
+     */
+    public boolean hasModelLevelRules() {
+        return this.authRules.size() > 0;
     }
 
     // Utility method to extract field metadata
