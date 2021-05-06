@@ -1,3 +1,11 @@
+## [Release 0.1.6](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.6)
+
+### Bug Fixes
+- signed in hub event is now fired after currentUser is set, instead of before (#1300)
+- **datastore,api:** Update and delete mutations now work when custom primary key is defined (#1292)
+
+[See all changes between 0.1.5 and 0.1.6](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.5...release-kotlin_v0.1.6)
+
 ## [Release 0.1.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.5)
 
 ### Bug Fixes
