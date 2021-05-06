@@ -27,6 +27,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.AuthorizationType;
 import com.amplifyframework.logging.Logger;
 
 import java.io.IOException;

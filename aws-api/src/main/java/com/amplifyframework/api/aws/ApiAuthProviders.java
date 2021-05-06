@@ -21,6 +21,7 @@ import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.model.AuthorizationType;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 
