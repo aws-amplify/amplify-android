@@ -20,6 +20,7 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
+import com.amplifyframework.core.model.AuthorizationType;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
