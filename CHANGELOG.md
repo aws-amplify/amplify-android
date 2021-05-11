@@ -1,3 +1,11 @@
+## [Release 1.17.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.17.5)
+
+### Bug Fixes
+- signed in hub event is now fired after currentUser is set, instead of before (#1300)
+- **datastore,api:** Update and delete mutations now work when custom primary key is defined (#1292)
+
+[See all changes between 1.17.4 and 1.17.5](https://github.com/aws-amplify/amplify-android/compare/release_v1.17.4...release_v1.17.5)
+
 ## [Release 1.17.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.17.4)
 
 ### Bug Fixes
