@@ -104,6 +104,7 @@ public final class BasicCloudSyncInstrumentationTest {
         Temporal.DateTime tenMinutesAgoDateTime = new Temporal.DateTime(new Date(tenMinutesAgo), 0);
         DataStoreCategory dataStoreCategory = DataStoreCategoryConfigurator.begin()
             .api(apiCategory)
+            .clearDatabase(true)
             .context(context)
             .modelProvider(AmplifyModelProvider.getInstance())
             .resourceId(configResourceId)
@@ -121,7 +122,8 @@ public final class BasicCloudSyncInstrumentationTest {
     }
 
     /**
-     * Clear the DataStore after each test.
+     * Clear the DataStore after each test.  Without calling clear in between tests, all tests after the first will fail
+     * with this error: android.database.sqlite.SQLiteReadOnlyDatabaseException: attempt to write a readonly database.
      * @throws DataStoreException On failure to clear DataStore.
      */
     @After
