@@ -114,7 +114,10 @@ public final class AWSDataStorePluginTest {
     public void configureAndInitialize() throws AmplifyException {
         //Configure DataStore with an empty config (All defaults)
         ApiCategory emptyApiCategory = spy(ApiCategory.class);
-        AWSDataStorePlugin standAloneDataStorePlugin = new AWSDataStorePlugin(modelProvider, emptyApiCategory);
+        AWSDataStorePlugin standAloneDataStorePlugin = AWSDataStorePlugin.builder()
+                                                                         .modelProvider(modelProvider)
+                                                                         .apiCategory(emptyApiCategory)
+                                                                         .build();
         standAloneDataStorePlugin.configure(new JSONObject(), context);
         standAloneDataStorePlugin.initialize(context);
     }
@@ -130,7 +133,10 @@ public final class AWSDataStorePluginTest {
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.READY, 1)
                 .start();
         ApiCategory emptyApiCategory = spy(ApiCategory.class);
-        AWSDataStorePlugin standAloneDataStorePlugin = new AWSDataStorePlugin(modelProvider, emptyApiCategory);
+        AWSDataStorePlugin standAloneDataStorePlugin = AWSDataStorePlugin.builder()
+                                                                         .modelProvider(modelProvider)
+                                                                         .apiCategory(emptyApiCategory)
+                                                                         .build();
         SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(standAloneDataStorePlugin);
         standAloneDataStorePlugin.configure(new JSONObject(), context);
         standAloneDataStorePlugin.initialize(context);
@@ -168,7 +174,10 @@ public final class AWSDataStorePluginTest {
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
-        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
+                                                                  .modelProvider(modelProvider)
+                                                                  .apiCategory(mockApiCategory)
+                                                                  .build();
         SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
@@ -202,7 +211,10 @@ public final class AWSDataStorePluginTest {
         ApiCategory mockApiCategory = mockApiPluginWithExceptions();
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
-        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
+                                                                  .modelProvider(modelProvider)
+                                                                  .apiCategory(mockApiCategory)
+                                                                  .build();
         SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
@@ -231,7 +243,10 @@ public final class AWSDataStorePluginTest {
         ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
-        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
+                                                                  .modelProvider(modelProvider)
+                                                                  .apiCategory(mockApiCategory)
+                                                                  .build();
         SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
@@ -319,7 +334,10 @@ public final class AWSDataStorePluginTest {
         ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
         JSONObject dataStorePluginJson = new JSONObject()
                 .put("syncIntervalInMinutes", 60);
-        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
+                                                                  .modelProvider(modelProvider)
+                                                                  .apiCategory(mockApiCategory)
+                                                                  .build();
         SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);

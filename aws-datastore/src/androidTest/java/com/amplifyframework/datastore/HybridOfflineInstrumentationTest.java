@@ -73,7 +73,7 @@ public final class HybridOfflineInstrumentationTest {
         HubAccumulator initializationObserver =
             HubAccumulator.create(HubChannel.DATASTORE, InitializationStatus.SUCCEEDED, 1)
                 .start();
-        AWSDataStorePlugin plugin = new AWSDataStorePlugin(schemaProvider);
+        AWSDataStorePlugin plugin = AWSDataStorePlugin.builder().modelProvider(schemaProvider).build();
         DataStoreCategory dataStoreCategory = new DataStoreCategory();
         dataStoreCategory.addPlugin(plugin);
         dataStoreCategory.configure(new DataStoreCategoryConfiguration(), getApplicationContext());
