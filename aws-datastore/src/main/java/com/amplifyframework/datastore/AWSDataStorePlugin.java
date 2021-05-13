@@ -143,7 +143,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @Deprecated
     public AWSDataStorePlugin() throws DataStoreException {
-        this(ModelProviderLocator.locate(), Amplify.API);
+        this(AWSDataStorePlugin.builder());
     }
 
     /**
