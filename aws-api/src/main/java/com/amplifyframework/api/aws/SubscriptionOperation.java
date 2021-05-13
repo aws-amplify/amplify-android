@@ -219,6 +219,5 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         public SubscriptionOperation<T> build() {
             return new SubscriptionOperation<>(this);
         }
-
     }
 }

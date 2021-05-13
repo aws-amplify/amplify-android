@@ -112,14 +112,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         ModelProvider modelProvider = builder.modelProvider == null ?
             ModelProviderLocator.locate() :
             builder.modelProvider;
-
-        ApiCategory api = builder.apiCategory == null ? Amplify.API : builder.apiCategory;
-
         this.authModeStrategy = builder.authModeStrategy == null ?
             AuthModeStrategyType.DEFAULT :
             builder.authModeStrategy;
+        ApiCategory api = builder.apiCategory == null ? Amplify.API : builder.apiCategory;
         this.userProvidedConfiguration = builder.dataStoreConfiguration;
-
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
 
