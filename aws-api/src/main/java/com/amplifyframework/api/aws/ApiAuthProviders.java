@@ -24,9 +24,9 @@ import com.amplifyframework.core.Amplify;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Wrapper class to contain Auth providers for
@@ -78,12 +78,12 @@ public final class ApiAuthProviders {
     }
 
     /**
-     * Returns a list of the auth providers currently configured.
+     * Returns a set of auth providers currently configured.
      * @param apiConfiguration A reference to the API configuration.
-     * @return a list of {@link AuthorizationType}
+     * @return a set of {@link AuthorizationType}.
      */
-    public List<AuthorizationType> getAvailableAuthorizationTypes(ApiConfiguration apiConfiguration) {
-        List<AuthorizationType> result = new ArrayList<>();
+    public Set<AuthorizationType> getAvailableAuthorizationTypes(ApiConfiguration apiConfiguration) {
+        HashSet<AuthorizationType> result = new HashSet<>();
         if (cognitoUserPoolsAuthProvider != null || Amplify.Auth.getPlugins().size() > 0) {
             result.add(AuthorizationType.AMAZON_COGNITO_USER_POOLS);
         }
