@@ -25,8 +25,6 @@ import com.amplifyframework.core.model.AuthorizationType;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -76,28 +74,6 @@ public final class ApiAuthProviders {
      */
     public CognitoUserPoolsAuthProvider getCognitoUserPoolsAuthProvider() {
         return this.cognitoUserPoolsAuthProvider;
-    }
-
-    /**
-     * Returns a list of the auth providers currently configured.
-     * @param apiConfiguration A reference to the API configuration.
-     * @return a list of {@link AuthorizationType}
-     */
-    public List<AuthorizationType> getAvailableAuthorizationTypes(ApiConfiguration apiConfiguration) {
-        List<AuthorizationType> result = new ArrayList<>();
-        if (cognitoUserPoolsAuthProvider != null || Amplify.Auth.getPlugins().size() > 0) {
-            result.add(AuthorizationType.AMAZON_COGNITO_USER_POOLS);
-        }
-        if (oidcAuthProvider != null) {
-            result.add(AuthorizationType.OPENID_CONNECT);
-        }
-        if (awsCredentialsProvider != null) {
-            result.add(AuthorizationType.AWS_IAM);
-        }
-        if (apiKeyAuthProvider != null || apiConfiguration.getApiKey() != null) {
-            result.add(AuthorizationType.API_KEY);
-        }
-        return result;
     }
 
     /**
