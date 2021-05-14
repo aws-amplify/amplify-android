@@ -30,6 +30,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.UserAgent;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -57,7 +58,7 @@ import okhttp3.WebSocketListener;
  * Manages the lifecycle of a single WebSocket connection,
  * and multiple GraphQL subscriptions that work on top of it.
  */
-final class GraphQLSubscriptionEndpoint {
+final class GraphQLSubscriptionEndpoint implements SubscriptionEndpoint {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final int CONNECTION_ACKNOWLEDGEMENT_TIMEOUT = 30 /* seconds */;
     private static final int NORMAL_CLOSURE_STATUS = 1000;
@@ -89,7 +90,7 @@ final class GraphQLSubscriptionEndpoint {
             .build();
     }
 
-    synchronized <T> void requestSubscription(
+    public synchronized <T> void requestSubscription(
             @NonNull GraphQLRequest<T> request,
             @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<T>> onNextItem,
@@ -226,7 +227,7 @@ final class GraphQLSubscriptionEndpoint {
         dispatcher.dispatchNextMessage(data);
     }
 
-    synchronized void releaseSubscription(String subscriptionId) throws ApiException {
+    public synchronized void releaseSubscription(String subscriptionId) throws ApiException {
         // First thing we should do is remove it from the pending subscription collection so
         // the other methods can't grab a hold of the subscription.
         final Subscription<?> subscription = subscriptions.get(subscriptionId);
@@ -605,6 +606,15 @@ final class GraphQLSubscriptionEndpoint {
 
         public boolean hasFailure() {
             return failureReason != null;
+        }
+    }
+
+    public static final class Factory implements SubscriptionEndpointFactory {
+        @Override
+        public SubscriptionEndpoint create(@NotNull ApiConfiguration apiConfiguration,
+                                           @NotNull GraphQLResponse.Factory responseFactory,
+                                           @NotNull SubscriptionAuthorizer authorizer) throws ApiException {
+            return new GraphQLSubscriptionEndpoint(apiConfiguration, responseFactory, authorizer);
         }
     }
 

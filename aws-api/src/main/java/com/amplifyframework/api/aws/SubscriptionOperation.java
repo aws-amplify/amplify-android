@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
 
-    private final GraphQLSubscriptionEndpoint subscriptionEndpoint;
+    private final SubscriptionEndpoint subscriptionEndpoint;
     private final ExecutorService executorService;
     private final Consumer<String> onSubscriptionStart;
     private final Consumer<GraphQLResponse<T>> onNextItem;
@@ -105,7 +105,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     }
 
     static final class Builder<T> {
-        private GraphQLSubscriptionEndpoint subscriptionEndpoint;
+        private SubscriptionEndpoint subscriptionEndpoint;
         private GraphQLRequest<T> graphQlRequest;
         private GraphQLResponse.Factory responseFactory;
         private ExecutorService executorService;
@@ -115,7 +115,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         private Action onSubscriptionComplete;
 
         @NonNull
-        public Builder<T> subscriptionEndpoint(@NonNull GraphQLSubscriptionEndpoint subscriptionEndpoint) {
+        public Builder<T> subscriptionEndpoint(@NonNull SubscriptionEndpoint subscriptionEndpoint) {
             this.subscriptionEndpoint = Objects.requireNonNull(subscriptionEndpoint);
             return this;
         }
