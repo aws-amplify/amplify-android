@@ -139,9 +139,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * If remote synchronization is enabled, it will be performed via {@link Amplify#API}.
      *
      * @throws DataStoreException If it is not possible to access the code-generated model provider
-     * @deprecated Use {@link Builder} instead.
      */
-    @Deprecated
     public AWSDataStorePlugin() throws DataStoreException {
         this(AWSDataStorePlugin.builder());
     }
