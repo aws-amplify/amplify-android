@@ -4,6 +4,7 @@
     _deleted
     _lastChangedAt
     _version
+    createdAt
     id
     name
     owner {
