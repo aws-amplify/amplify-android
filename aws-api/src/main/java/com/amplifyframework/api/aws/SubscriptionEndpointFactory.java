@@ -20,7 +20,19 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 
-interface SubscriptionEndpointFactory {
+/**
+ * Defines the contract for a factory class that creates instances of {@link SubscriptionEndpoint}.
+ */
+public interface SubscriptionEndpointFactory {
+    /**
+     * Given the necessart parameters, an implementation of this function should return an
+     * instance of a class that implements the {@link SubscriptionEndpoint} interface.
+     * @param apiConfiguration The API configuration.
+     * @param responseFactory The appropriate reponse factory for the subscription endpoint.
+     * @param authorizer A subscription authorizer to create the auth headers.
+     * @return An instance of a class that implements {@link SubscriptionEndpoint}.
+     * @throws ApiException If there is an error during creation of the subscription endpoint.
+     */
     SubscriptionEndpoint create(
         @NonNull ApiConfiguration apiConfiguration,
         @NonNull GraphQLResponse.Factory responseFactory,
