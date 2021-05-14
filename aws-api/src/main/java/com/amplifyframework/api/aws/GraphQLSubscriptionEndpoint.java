@@ -57,7 +57,7 @@ import okhttp3.WebSocketListener;
  * Manages the lifecycle of a single WebSocket connection,
  * and multiple GraphQL subscriptions that work on top of it.
  */
-final class SubscriptionEndpoint {
+final class GraphQLSubscriptionEndpoint {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final int CONNECTION_ACKNOWLEDGEMENT_TIMEOUT = 30 /* seconds */;
     private static final int NORMAL_CLOSURE_STATUS = 1000;
@@ -72,7 +72,7 @@ final class SubscriptionEndpoint {
     private WebSocket webSocket;
     private AmplifyWebSocketListener webSocketListener;
 
-    SubscriptionEndpoint(
+    GraphQLSubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull SubscriptionAuthorizer authorizer

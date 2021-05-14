@@ -156,8 +156,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             } else if (EndpointType.GRAPHQL.equals(endpointType)) {
                 final SubscriptionAuthorizer subscriptionAuthorizer =
                     new SubscriptionAuthorizer(apiConfiguration, authProvider);
-                final SubscriptionEndpoint subscriptionEndpoint =
-                    new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
+                final GraphQLSubscriptionEndpoint subscriptionEndpoint =
+                    new GraphQLSubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
                 final ApiRequestDecoratorFactory requestDecoratorFactory =
                     new ApiRequestDecoratorFactory(authProvider,
                                                    apiConfiguration.getAuthorizationType(),
@@ -679,7 +679,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     static final class ClientDetails {
         private final ApiConfiguration apiConfiguration;
         private final OkHttpClient okHttpClient;
-        private final SubscriptionEndpoint subscriptionEndpoint;
+        private final GraphQLSubscriptionEndpoint subscriptionEndpoint;
         private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
 
         /**
@@ -688,7 +688,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
          */
         ClientDetails(final ApiConfiguration apiConfiguration,
                       final OkHttpClient okHttpClient,
-                      final SubscriptionEndpoint subscriptionEndpoint,
+                      final GraphQLSubscriptionEndpoint subscriptionEndpoint,
                       final ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
             this.apiConfiguration = apiConfiguration;
             this.okHttpClient = okHttpClient;
@@ -704,7 +704,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             return okHttpClient;
         }
 
-        SubscriptionEndpoint getSubscriptionEndpoint() {
+        GraphQLSubscriptionEndpoint getSubscriptionEndpoint() {
             return subscriptionEndpoint;
         }
 
