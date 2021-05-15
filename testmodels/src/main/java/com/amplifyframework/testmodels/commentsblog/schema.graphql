@@ -3,6 +3,7 @@ type Blog @model {
   name: String!
   posts: [Post] @connection(name: "BlogPosts")
   owner: BlogOwner! @connection(name: "BlogOwner")
+  createdAt: AWSDateTime
 }
 
 type BlogOwner @model {
@@ -10,6 +11,7 @@ type BlogOwner @model {
   id: ID!
   blog: Blog @connection(name: "BlogOwner")
   wea: String
+  createdAt: AWSDateTime
 }
 
 enum PostStatus {
@@ -25,18 +27,21 @@ type Post @model {
   authors: [PostAuthorJoin] @connection(keyName: "byPost", fields: ["id"])
   status: PostStatus!
   rating: Int!
+  createdAt: AWSDateTime
 }
 
 type Comment @model {
   id: ID!
   content: String
   post: Post @connection(name: "PostComments")
+  createdAt: AWSDateTime
 }
 
 type Author @model {
   id: ID!
   name: String!
   posts: [PostAuthorJoin] @connection(keyName: "byAuthor", fields: ["id"])
+  createdAt: AWSDateTime
 }
 
 type PostAuthorJoin
@@ -48,5 +53,7 @@ type PostAuthorJoin
   postId: ID!
   author: Author @connection(fields: ["authorId"])
   post: Post @connection(fields: ["postId"])
+  createdAt: AWSDateTime
 }
+
 

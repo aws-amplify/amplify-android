@@ -109,9 +109,9 @@ public final class AppSyncClientInstrumentationTest {
         BlogOwner actual = blogOwnerCreateResult.getModel();
 
         // The response from AppSync has createdAt and updatedAt fields.  We can't actually know what values to expect
-        // for these, so just null them out.
-        FieldValue.set(actual, "createdAt", null);
-        FieldValue.set(actual, "updatedAt", null);
+        // beforehand, so updated the "expected" object with the "actual" values.
+        FieldValue.set(owner, "createdAt", actual.getCreatedAt());
+        FieldValue.set(owner, "updatedAt", actual.getUpdatedAt());
 
         assertEquals(owner, actual);
         assertEquals(new Integer(1), blogOwnerCreateResult.getSyncMetadata().getVersion());
@@ -163,7 +163,9 @@ public final class AppSyncClientInstrumentationTest {
             .blog(blog)
             .build();
         Post post1ModelResult = create(post1, postSchema).getModel();
+        FieldValue.set(post1, "createdAt", post1ModelResult.getCreatedAt());
         Post post2ModelResult = create(post2, postSchema).getModel();
+        FieldValue.set(post2, "createdAt", post2ModelResult.getCreatedAt());
 
         // Results only have blog ID so strip out other information from the original post blog
         assertEquals(

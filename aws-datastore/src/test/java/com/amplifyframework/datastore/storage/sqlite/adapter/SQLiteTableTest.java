@@ -74,6 +74,13 @@ public class SQLiteTableTest {
                 .isNonNull(true)
                 .tableName("Post")
                 .build());
+        columns.put("createdAt", SQLiteColumn.builder()
+                .name("createdAt")
+                .fieldName("createdAt")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("Post")
+                .build());
 
         SQLiteTable expected = SQLiteTable.builder()
                 .columns(columns)
