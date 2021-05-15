@@ -21,6 +21,7 @@
       nextToken
       startedAt
     }
+    createdAt
     id
     rating
     status
