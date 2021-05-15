@@ -183,7 +183,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @Deprecated
     public AWSDataStorePlugin(@NonNull ModelProvider modelProvider) {
-        this(Objects.requireNonNull(modelProvider), Amplify.API);
+        this(Objects.requireNonNull(modelProvider), Amplify.API, null);
     }
 
     /**
@@ -196,12 +196,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @Deprecated
     @VisibleForTesting
-    AWSDataStorePlugin(@NonNull ModelProvider modelProvider, @NonNull ApiCategory api) {
+    AWSDataStorePlugin(@NonNull ModelProvider modelProvider,
+                       @NonNull ApiCategory api,
+                       @Nullable DataStoreConfiguration dataStoreConfiguration) {
         this(
             Objects.requireNonNull(modelProvider),
             ModelSchemaRegistry.instance(),
             Objects.requireNonNull(api),
-            null
+            dataStoreConfiguration
         );
     }
 

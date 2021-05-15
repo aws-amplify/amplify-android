@@ -2,6 +2,7 @@ package com.amplifyframework.testmodels.commentsblog;
 
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +27,7 @@ public final class Post implements Model {
   public static final QueryField BLOG = field("Post", "postBlogId");
   public static final QueryField STATUS = field("Post", "status");
   public static final QueryField RATING = field("Post", "rating");
+  public static final QueryField CREATED_AT = field("Post", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String title;
   private final @ModelField(targetType="Blog") @BelongsTo(targetName = "postBlogId", type = Blog.class) Blog blog;
@@ -33,6 +35,7 @@ public final class Post implements Model {
   private final @ModelField(targetType="PostAuthorJoin") @HasMany(associatedWith = "post", type = PostAuthorJoin.class) List<PostAuthorJoin> authors = null;
   private final @ModelField(targetType="PostStatus", isRequired = true) PostStatus status;
   private final @ModelField(targetType="Int", isRequired = true) Integer rating;
+  private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -61,12 +64,17 @@ public final class Post implements Model {
       return rating;
   }
   
-  private Post(String id, String title, Blog blog, PostStatus status, Integer rating) {
+  public Temporal.DateTime getCreatedAt() {
+      return createdAt;
+  }
+  
+  private Post(String id, String title, Blog blog, PostStatus status, Integer rating, Temporal.DateTime createdAt) {
     this.id = id;
     this.title = title;
     this.blog = blog;
     this.status = status;
     this.rating = rating;
+    this.createdAt = createdAt;
   }
   
   @Override
@@ -81,7 +89,8 @@ public final class Post implements Model {
               ObjectsCompat.equals(getTitle(), post.getTitle()) &&
               ObjectsCompat.equals(getBlog(), post.getBlog()) &&
               ObjectsCompat.equals(getStatus(), post.getStatus()) &&
-              ObjectsCompat.equals(getRating(), post.getRating());
+              ObjectsCompat.equals(getRating(), post.getRating()) &&
+              ObjectsCompat.equals(getCreatedAt(), post.getCreatedAt());
       }
   }
   
@@ -93,8 +102,23 @@ public final class Post implements Model {
       .append(getBlog())
       .append(getStatus())
       .append(getRating())
+      .append(getCreatedAt())
       .toString()
       .hashCode();
+  }
+  
+  @Override
+   public String toString() {
+    return new StringBuilder()
+      .append("Post {")
+      .append("id=" + String.valueOf(getId()) + ", ")
+      .append("title=" + String.valueOf(getTitle()) + ", ")
+      .append("blog=" + String.valueOf(getBlog()) + ", ")
+      .append("status=" + String.valueOf(getStatus()) + ", ")
+      .append("rating=" + String.valueOf(getRating()) + ", ")
+      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("}")
+      .toString();
   }
   
   public static TitleStep builder() {
@@ -109,7 +133,7 @@ public final class Post implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    * @throws IllegalArgumentException Checks that ID is in the proper format
-   **/
+   */
   public static Post justId(String id) {
     try {
       UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
@@ -125,6 +149,7 @@ public final class Post implements Model {
       null,
       null,
       null,
+      null,
       null
     );
   }
@@ -134,7 +159,8 @@ public final class Post implements Model {
       title,
       blog,
       status,
-      rating);
+      rating,
+      createdAt);
   }
   public interface TitleStep {
     StatusStep title(String title);
@@ -155,6 +181,7 @@ public final class Post implements Model {
     Post build();
     BuildStep id(String id) throws IllegalArgumentException;
     BuildStep blog(Blog blog);
+    BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
 
@@ -164,6 +191,7 @@ public final class Post implements Model {
     private PostStatus status;
     private Integer rating;
     private Blog blog;
+    private Temporal.DateTime createdAt;
     @Override
      public Post build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -173,7 +201,8 @@ public final class Post implements Model {
           title,
           blog,
           status,
-          rating);
+          rating,
+          createdAt);
     }
     
     @Override
@@ -203,13 +232,19 @@ public final class Post implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep createdAt(Temporal.DateTime createdAt) {
+        this.createdAt = createdAt;
+        return this;
+    }
+    
     /** 
      * WARNING: Do not set ID when creating a new object. Leave this blank and one will be auto generated for you.
      * This should only be set when referring to an already existing object.
      * @param id id
      * @return Current Builder instance, for fluent method chaining
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     **/
+     */
     public BuildStep id(String id) throws IllegalArgumentException {
         this.id = id;
         
@@ -226,12 +261,13 @@ public final class Post implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String title, Blog blog, PostStatus status, Integer rating) {
+    private CopyOfBuilder(String id, String title, Blog blog, PostStatus status, Integer rating, Temporal.DateTime createdAt) {
       super.id(id);
       super.title(title)
         .status(status)
         .rating(rating)
-        .blog(blog);
+        .blog(blog)
+        .createdAt(createdAt);
     }
     
     @Override
@@ -252,6 +288,11 @@ public final class Post implements Model {
     @Override
      public CopyOfBuilder blog(Blog blog) {
       return (CopyOfBuilder) super.blog(blog);
+    }
+    
+    @Override
+     public CopyOfBuilder createdAt(Temporal.DateTime createdAt) {
+      return (CopyOfBuilder) super.createdAt(createdAt);
     }
   }
   

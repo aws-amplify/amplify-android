@@ -68,6 +68,7 @@ public class ModelConverterTest {
         Map<String, Object> expected = new HashMap<>();
         expected.put("id", blog.getId());
         expected.put("name", "A neat blog");
+        expected.put("createdAt", null);
         expected.put("owner", SerializedModel.builder()
                 .serializedData(Collections.singletonMap("id", blog.getOwner().getId()))
                 .modelSchema(null)
