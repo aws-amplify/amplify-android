@@ -87,9 +87,11 @@ final class AWSApiPluginConfigurationReader {
                         .endpoint(apiSpec.getString(ConfigKey.ENDPOINT.key()))
                         .region(apiSpec.getString(ConfigKey.REGION.key()))
                         .authorizationType(authorizationType);
-                if (apiSpec.has(ConfigKey.API_KEY.key())) {
+
+                if (AuthorizationType.API_KEY.equals(authorizationType)) {
                     apiConfigBuilder.apiKey(apiSpec.getString(ConfigKey.API_KEY.key()));
                 }
+
                 configBuilder.addApi(apiName, apiConfigBuilder.build());
             }
         } catch (JSONException | ApiException exception) {
