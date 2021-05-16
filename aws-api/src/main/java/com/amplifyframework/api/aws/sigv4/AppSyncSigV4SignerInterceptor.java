@@ -17,8 +17,8 @@ package com.amplifyframework.api.aws.sigv4;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.EndpointType;
-import com.amplifyframework.core.model.AuthorizationType;
 import com.amplifyframework.util.Empty;
 
 import com.amazonaws.DefaultRequest;

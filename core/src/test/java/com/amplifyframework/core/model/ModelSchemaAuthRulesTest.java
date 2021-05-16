@@ -16,6 +16,7 @@
 package com.amplifyframework.core.model;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuthNonDefaultProvider;
@@ -35,8 +36,8 @@ import static org.junit.Assert.assertTrue;
  * Tests auth rule functionality from {@link ModelSchema}.
  */
 public final class ModelSchemaAuthRulesTest {
-    private static final AuthorizationType DEFAULT_AUTH_PROVIDER = AuthorizationType.AMAZON_COGNITO_USER_POOLS;
-    private static final AuthorizationType NON_DEFAULT_AUTH_PROVIDER = AuthorizationType.OPENID_CONNECT;
+    private static final AuthStrategy.Provider DEFAULT_AUTH_PROVIDER = AuthStrategy.Provider.userPools;
+    private static final AuthStrategy.Provider NON_DEFAULT_AUTH_PROVIDER = AuthStrategy.Provider.oidc;
     private static final List<ModelOperation> CREATE_ONLY = Collections.singletonList(ModelOperation.CREATE);
 
     private static final AuthRule RULE_NON_DEFAULT_PROVIDER = AuthRule.builder()
@@ -152,7 +153,7 @@ public final class ModelSchemaAuthRulesTest {
         assertEquals(0, rulesForReadOperation.size());
     }
 
-    private ModelSchema modelAuthOnly(AuthorizationType authProvider) {
+    private ModelSchema modelAuthOnly(AuthStrategy.Provider authProvider) {
         Map<String, ModelField> fields = new HashMap<>();
         fields.put("id", MODEL_ID_FIELD);
         fields.put("title", TITLE_NO_AUTH);

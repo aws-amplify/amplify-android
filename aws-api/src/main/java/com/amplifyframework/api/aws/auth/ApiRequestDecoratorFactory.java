@@ -21,12 +21,12 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.model.AuthorizationType;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
@@ -101,8 +101,9 @@ public final class ApiRequestDecoratorFactory {
      * Given a authorization type, it returns the appropriate request decorator.
      * @param authorizationType the authorization type to be used for the request.
      * @return the appropriate request decorator for the given authorization type.
+     * @throws ApiException if an exception occurs while building the request decorator.
      */
-    private RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiException {
+    public RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiException {
         if (AuthorizationType.AMAZON_COGNITO_USER_POOLS.equals(authorizationType)) {
             // Note that if there was no user-provided cognito provider passed in to initialize
             // the API plugin, we will try to default to using the DefaultCognitoUserPoolsAuthProvider.

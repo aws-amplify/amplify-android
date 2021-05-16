@@ -13,9 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model;
+package com.amplifyframework.api.aws;
 
+import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.util.Empty;
 
 /**
  * The types of authorization one can use while talking to an Amazon
@@ -81,17 +83,19 @@ public enum AuthorizationType {
      */
     public static AuthorizationType from(AuthRule authRuleAnnotation) {
         String providerName = authRuleAnnotation.provider();
-        switch (providerName) {
-            case "userPools":
+        if (Empty.check(providerName)) {
+            providerName = authRuleAnnotation.allow().getDefaultAuthProvider().name();
+        }
+        AuthStrategy.Provider authRuleProvider = AuthStrategy.Provider.valueOf(providerName);
+        switch (authRuleProvider) {
+            case userPools:
                 return AMAZON_COGNITO_USER_POOLS;
-            case "oidc":
+            case oidc:
                 return OPENID_CONNECT;
-            case "iam":
+            case iam:
                 return AWS_IAM;
-            case "apiKey":
+            case apiKey:
                 return API_KEY;
-            case "":
-                return authRuleAnnotation.allow().getDefaultAuthProvider();
             default:
                 throw new IllegalArgumentException("No such authorization type: " + providerName);
         }

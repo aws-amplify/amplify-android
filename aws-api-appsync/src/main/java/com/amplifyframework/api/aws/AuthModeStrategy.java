@@ -15,7 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.core.model.AuthorizationType;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
 

@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
-import com.amplifyframework.core.model.AuthorizationType;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
 

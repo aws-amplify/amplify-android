@@ -41,7 +41,7 @@ public final class AuthRule {
     private static final String DEFAULT_GROUP_CLAIM = "cognito:groups";
 
     private final AuthStrategy authStrategy;
-    private final AuthorizationType authProvider;
+    private final AuthStrategy.Provider authProvider;
     private final String ownerField;
     private final String identityClaim;
     private final String groupsField;
@@ -56,7 +56,9 @@ public final class AuthRule {
      */
     public AuthRule(com.amplifyframework.core.model.annotations.AuthRule authRule) {
         this.authStrategy = authRule.allow();
-        this.authProvider = Empty.check(authRule.provider()) ? null : AuthorizationType.from(authRule);
+        this.authProvider = Empty.check(authRule.provider()) ?
+                                        authStrategy.getDefaultAuthProvider() :
+                                        AuthStrategy.Provider.valueOf(authRule.provider());
         this.ownerField = authRule.ownerField();
         this.identityClaim = authRule.identityClaim();
         this.groupClaim = authRule.groupClaim();
@@ -102,7 +104,7 @@ public final class AuthRule {
      * Returns the auth provider for this {@link AuthRule}.
      * @return the auth provider for this {@link AuthRule}
      */
-    public AuthorizationType getAuthProvider() {
+    public AuthStrategy.Provider getAuthProvider() {
         return authProvider == null ? authStrategy.getDefaultAuthProvider() : authProvider;
     }
 
@@ -240,7 +242,7 @@ public final class AuthRule {
      */
     public static final class Builder {
         private AuthStrategy authStrategy;
-        private AuthorizationType authProvider;
+        private AuthStrategy.Provider authProvider;
         private String ownerField;
         private String identityClaim;
         private String groupClaim;
@@ -265,7 +267,7 @@ public final class AuthRule {
          * @return Current builder instance.
          */
         @NonNull
-        public AuthRule.Builder authProvider(@Nullable AuthorizationType authProvider) {
+        public AuthRule.Builder authProvider(@Nullable AuthStrategy.Provider authProvider) {
             this.authProvider = Objects.requireNonNull(authProvider);
             return this;
         }
