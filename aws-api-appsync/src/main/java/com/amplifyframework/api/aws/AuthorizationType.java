@@ -15,6 +15,10 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.util.Empty;
+
 /**
  * The types of authorization one can use while talking to an Amazon
  * AppSync GraphQL backend.
@@ -70,6 +74,31 @@ public enum AuthorizationType {
         }
 
         throw new IllegalArgumentException("No such authorization type: " + name);
+    }
+
+    /**
+     * Look up an AuthorizationType by inspecting an AuthRule annotation.
+     * @param authRuleAnnotation The annotation obtained from a model.
+     * @return The AuthorizationType for the provider
+     */
+    public static AuthorizationType from(AuthRule authRuleAnnotation) {
+        String providerName = authRuleAnnotation.provider();
+        if (Empty.check(providerName)) {
+            providerName = authRuleAnnotation.allow().getDefaultAuthProvider().name();
+        }
+        AuthStrategy.Provider authRuleProvider = AuthStrategy.Provider.valueOf(providerName);
+        switch (authRuleProvider) {
+            case userPools:
+                return AMAZON_COGNITO_USER_POOLS;
+            case oidc:
+                return OPENID_CONNECT;
+            case iam:
+                return AWS_IAM;
+            case apiKey:
+                return API_KEY;
+            default:
+                throw new IllegalArgumentException("No such authorization type: " + providerName);
+        }
     }
 }
 
