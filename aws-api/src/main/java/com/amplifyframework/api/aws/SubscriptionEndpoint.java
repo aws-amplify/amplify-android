@@ -136,9 +136,9 @@ final class SubscriptionEndpoint {
                 .put("id", subscriptionId)
                 .put("type", "start")
                 .put("payload", new JSONObject()
-                    .put("data", request.getContent())
-                        .put("extensions", new JSONObject()
-                            .put("authorization", authorizer.createHeadersForSubscription(request, authType))))
+                .put("data", request.getContent())
+                .put("extensions", new JSONObject()
+                .put("authorization", authorizer.createHeadersForSubscription(request, authType))))
                 .toString()
             );
         } catch (JSONException | ApiException exception) {
