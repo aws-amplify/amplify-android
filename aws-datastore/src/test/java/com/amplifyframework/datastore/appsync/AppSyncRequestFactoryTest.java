@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthStrategy;
@@ -61,6 +62,10 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(RobolectricTestRunner.class) // Adds Android library to make TextUtils.join available for tests.
 public final class AppSyncRequestFactoryTest {
+    private static final AuthModeStrategyType DEFAULT_STRATEGY =
+        AuthModeStrategyType.DEFAULT;
+    private static final AuthModeStrategyType MULTIAUTH_STRATEGY =
+        AuthModeStrategyType.MULTIAUTH;
 
     /**
      * Validates the construction of a base-sync query document.
@@ -73,7 +78,11 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         JSONAssert.assertEquals(
             Resources.readAsString("base-sync-request-document-for-blog-owner.txt"),
-            AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all()).getContent(),
+            AppSyncRequestFactory.buildSyncRequest(schema,
+                                                   null,
+                                                   null,
+                                                   QueryPredicates.all(),
+                                                   DEFAULT_STRATEGY).getContent(),
             true
         );
     }
@@ -89,7 +98,11 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
             Resources.readAsString("base-sync-request-document-for-parent.txt"),
-            AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all()).getContent(),
+            AppSyncRequestFactory.buildSyncRequest(schema,
+                                                   null,
+                                                   null,
+                                                   QueryPredicates.all(),
+                                                   MULTIAUTH_STRATEGY).getContent(),
             true
         );
     }
@@ -104,7 +117,11 @@ public final class AppSyncRequestFactoryTest {
     public void validateRequestGenerationForDeltaSync() throws AmplifyException, JSONException {
         ModelSchema schema = ModelSchema.fromModelClass(Post.class);
         JSONAssert.assertEquals(Resources.readAsString("delta-sync-request-document-for-post.txt"),
-            AppSyncRequestFactory.buildSyncRequest(schema, 123123123L, null, QueryPredicates.all()).getContent(),
+                                AppSyncRequestFactory.buildSyncRequest(schema,
+                                                                       123123123L,
+                                                                       null,
+                                                                       QueryPredicates.all(),
+                                                                       DEFAULT_STRATEGY).getContent(),
             true);
     }
 
@@ -119,7 +136,7 @@ public final class AppSyncRequestFactoryTest {
         Integer limit = 1000;
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         final GraphQLRequest<Iterable<Post>> request =
-                AppSyncRequestFactory.buildSyncRequest(schema, null, limit, QueryPredicates.all());
+                AppSyncRequestFactory.buildSyncRequest(schema, null, limit, QueryPredicates.all(), MULTIAUTH_STRATEGY);
         JSONAssert.assertEquals(Resources.readAsString("base-sync-request-paginating-blog-owners.txt"),
                 request.getContent(),
                 true);
@@ -170,8 +187,11 @@ public final class AppSyncRequestFactoryTest {
         String blogOwnerId = "926d7ee8-4ea5-40c0-8e62-3fb80b2a2edd";
         BlogOwner owner = BlogOwner.builder().name("John Doe").id(blogOwnerId).build();
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
-        AppSyncGraphQLRequest<?> request =
-            AppSyncRequestFactory.buildUpdateRequest(schema, owner, 42, BlogOwner.WEA.contains("ther"));
+        AppSyncGraphQLRequest<?> request = AppSyncRequestFactory.buildUpdateRequest(schema,
+                                                                                    owner,
+                                                                                    42,
+                                                                                    BlogOwner.WEA.contains("ther"),
+                                                                                    DEFAULT_STRATEGY);
         JSONAssert.assertEquals(
             Resources.readAsString("update-blog-owner-with-predicate.txt"),
             request.getContent(),
@@ -194,7 +214,8 @@ public final class AppSyncRequestFactoryTest {
                         schema,
                         buildTestParentModel(),
                         42,
-                        Parent.NAME.contains("Jane Doe")
+                        Parent.NAME.contains("Jane Doe"),
+                        MULTIAUTH_STRATEGY
                 ).getContent(),
                 true
         );
@@ -212,7 +233,11 @@ public final class AppSyncRequestFactoryTest {
         Person person = Person.justId("17521540-ccaa-4357-a622-34c42d8cfa24");
         JSONAssert.assertEquals(
             Resources.readAsString("delete-person-with-predicate.txt"),
-            AppSyncRequestFactory.buildDeletionRequest(schema, person, 456, Person.AGE.gt(40)).getContent(),
+            AppSyncRequestFactory.buildDeletionRequest(schema,
+                                                       person,
+                                                       456,
+                                                       Person.AGE.gt(40),
+                                                       DEFAULT_STRATEGY).getContent(),
             true
         );
     }
@@ -234,7 +259,11 @@ public final class AppSyncRequestFactoryTest {
                 .build();
         JSONAssert.assertEquals(
             Resources.readAsString("delete-item.txt"),
-            AppSyncRequestFactory.buildDeletionRequest(schema, item, 1, QueryPredicates.all()).getContent(),
+            AppSyncRequestFactory.buildDeletionRequest(schema,
+                                                       item,
+                                                       1,
+                                                       QueryPredicates.all(),
+                                                       DEFAULT_STRATEGY).getContent(),
             true
         );
     }
@@ -269,7 +298,9 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Blog.class);
         JSONAssert.assertEquals(
             Resources.readAsString("on-create-request-for-blog.txt"),
-            AppSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_CREATE).getContent(),
+            AppSyncRequestFactory.buildSubscriptionRequest(schema,
+                                                           SubscriptionType.ON_CREATE,
+                                                           DEFAULT_STRATEGY).getContent(),
             true
         );
     }
@@ -286,7 +317,9 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
             Resources.readAsString("on-create-request-for-parent.txt"),
-            AppSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_CREATE).getContent(),
+            AppSyncRequestFactory.buildSubscriptionRequest(schema,
+                                                           SubscriptionType.ON_CREATE,
+                                                           MULTIAUTH_STRATEGY).getContent(),
             true
         );
     }
@@ -303,7 +336,9 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Post.class);
         JSONAssert.assertEquals(
             Resources.readAsString("on-update-request-for-post.txt"),
-            AppSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_UPDATE).getContent(),
+            AppSyncRequestFactory.buildSubscriptionRequest(schema,
+                                                           SubscriptionType.ON_UPDATE,
+                                                           DEFAULT_STRATEGY).getContent(),
             true
         );
     }
@@ -320,7 +355,9 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         JSONAssert.assertEquals(
             Resources.readAsString("on-delete-request-for-blog-owner.txt"),
-            AppSyncRequestFactory.buildSubscriptionRequest(schema, SubscriptionType.ON_DELETE).getContent(),
+            AppSyncRequestFactory.buildSubscriptionRequest(schema,
+                                                           SubscriptionType.ON_DELETE,
+                                                           MULTIAUTH_STRATEGY).getContent(),
             true
         );
     }
@@ -342,7 +379,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Comment.class);
         JSONAssert.assertEquals(
             Resources.readAsString("create-comment-request.txt"),
-            AppSyncRequestFactory.buildCreationRequest(schema, comment).getContent(),
+            AppSyncRequestFactory.buildCreationRequest(schema, comment, DEFAULT_STRATEGY).getContent(),
             true
         );
     }
@@ -358,7 +395,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
             Resources.readAsString("create-parent-request.txt"),
-            AppSyncRequestFactory.buildCreationRequest(schema, buildTestParentModel()).getContent(),
+            AppSyncRequestFactory.buildCreationRequest(schema, buildTestParentModel(), DEFAULT_STRATEGY).getContent(),
             true
         );
     }
@@ -386,7 +423,7 @@ public final class AppSyncRequestFactoryTest {
         // Assert
         JSONAssert.assertEquals(Resources.readAsString("update-blog-owner-only-changed-fields.txt"),
             AppSyncRequestFactory.buildUpdateRequest(
-                modelSchema, blogOwner, 1, QueryPredicates.all()).getContent(), true);
+                modelSchema, blogOwner, 1, QueryPredicates.all(), MULTIAUTH_STRATEGY).getContent(), true);
     }
 
     private Parent buildTestParentModel() {
@@ -437,7 +474,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Todo.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> actual = (Map<String, Object>)
-            AppSyncRequestFactory.buildUpdateRequest(schema, todo, 1, QueryPredicates.all())
+            AppSyncRequestFactory.buildUpdateRequest(schema, todo, 1, QueryPredicates.all(), DEFAULT_STRATEGY)
                 .getVariables()
                 .get("input");
 
@@ -462,7 +499,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Todo.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> actual = (Map<String, Object>)
-            AppSyncRequestFactory.buildCreationRequest(schema, todo)
+            AppSyncRequestFactory.buildCreationRequest(schema, todo, MULTIAUTH_STRATEGY)
                 .getVariables()
                 .get("input");
 

@@ -21,6 +21,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
@@ -467,7 +468,11 @@ public final class AppSyncMocking {
                 Long lastSync = invocation.getArgument(1);
                 Integer syncPageSize = invocation.getArgument(2);
                 QueryPredicate queryPredicate = invocation.getArgument(3);
-                return AppSyncRequestFactory.buildSyncRequest(schema, lastSync, syncPageSize, queryPredicate);
+                return AppSyncRequestFactory.buildSyncRequest(schema,
+                                                              lastSync,
+                                                              syncPageSize,
+                                                              queryPredicate,
+                                                              AuthModeStrategyType.MULTIAUTH);
             }).when(appSync).buildSyncRequest(any(), any(), any(), any());
             return this;
         }
@@ -534,7 +539,11 @@ public final class AppSyncMocking {
             if (nextToken != null) {
                 ModelSchema schema = ModelSchema.fromModelClass(modelClass);
                 requestForNextResult =
-                    AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all())
+                    AppSyncRequestFactory.buildSyncRequest(schema,
+                                                           null,
+                                                           null,
+                                                           QueryPredicates.all(),
+                                                           AuthModeStrategyType.MULTIAUTH)
                         .newBuilder()
                         .variable("nextToken", "String", nextToken)
                         .build();

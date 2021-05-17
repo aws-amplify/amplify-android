@@ -30,6 +30,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Objects;
 
 import okhttp3.Call;
@@ -56,6 +57,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private final Consumer<GraphQLResponse<R>> onResponse;
     private final Consumer<ApiException> onFailure;
     private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
+    private final Iterator<AuthorizationType> authTypes;
 
     private Call ongoingCall;
 
@@ -68,16 +70,19 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
      * @param onResponse Invoked when response is attained from endpoint
      * @param onFailure Invoked upon failure to obtain response from endpoint
      */
+    @SuppressWarnings("ParameterNumber")
     private AppSyncGraphQLOperation(
             @NonNull String endpoint,
             @NonNull OkHttpClient client,
             @NonNull GraphQLRequest<R> request,
             @NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory,
+            @NonNull Iterator<AuthorizationType> authTypes,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         super(request, responseFactory);
         this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
+        this.authTypes = authTypes;
         this.endpoint = endpoint;
         this.client = client;
         this.onResponse = onResponse;
@@ -90,29 +95,69 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         if (ongoingCall != null && ongoingCall.isExecuted()) {
             return;
         }
+        while (authTypes.hasNext()) {
+            try {
+                AuthorizationType autyType = authTypes.next();
+                LOG.debug("Request: " + getRequest().getContent());
+                LOG.debug("Auth type: " + autyType);
+                Request originalRequest = new Request.Builder()
+                    .url(endpoint)
+                    .addHeader("accept", CONTENT_TYPE)
+                    .addHeader("content-type", CONTENT_TYPE)
+                    .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
+                    .build();
+                RequestDecorator requestDecorator = apiRequestDecoratorFactory.forAuthType(autyType);
+                ongoingCall = client.newCall(requestDecorator.decorate(originalRequest));
 
-        try {
-            LOG.debug("Request: " + getRequest().getContent());
-            RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
-            Request okHttpRequest = new Request.Builder()
-                .url(endpoint)
-                .addHeader("accept", CONTENT_TYPE)
-                .addHeader("content-type", CONTENT_TYPE)
-                .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
-                .build();
-            ongoingCall = client.newCall(requestDecorator.decorate(okHttpRequest));
+                ongoingCall.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(@NonNull Call call, @NonNull IOException exception) {
+                        if (!authTypes.hasNext()) {
+                            onFailure.accept(new ApiException(
+                                "OkHttp client request failed.",
+                                exception,
+                                "See attached exception for more details."
+                            ));
+                        }
+                    }
 
-            ongoingCall.enqueue(new OkHttpCallback());
-        } catch (Exception error) {
-            // Cancel if possible
-            if (ongoingCall != null) {
-                ongoingCall.cancel();
+                    @Override
+                    public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                        final ResponseBody responseBody = response.body();
+                        String jsonResponse = null;
+                        if (responseBody != null) {
+                            try {
+                                jsonResponse = responseBody.string();
+                            } catch (IOException exception) {
+                                onFailure.accept(new ApiException(
+                                    "Could not retrieve the response body from the returned JSON",
+                                    exception, AmplifyException.TODO_RECOVERY_SUGGESTION
+                                ));
+                                return;
+                            }
+                        }
+
+                        try {
+                            onResponse.accept(wrapResponse(jsonResponse));
+                            //TODO: Dispatch to hub
+                        } catch (ApiException exception) {
+                            onFailure.accept(exception);
+                        }
+                    }
+                });
+            } catch (Exception error) {
+                if (!authTypes.hasNext()) {
+                    // Cancel if possible
+                    if (ongoingCall != null) {
+                        ongoingCall.cancel();
+                    }
+
+                    onFailure.accept(new ApiException(
+                        "OkHttp client failed to make a successful request.",
+                        error, AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
+                }
             }
-
-            onFailure.accept(new ApiException(
-                "OkHttp client failed to make a successful request.",
-                error, AmplifyException.TODO_RECOVERY_SUGGESTION
-            ));
         }
     }
 
@@ -165,6 +210,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         private GraphQLRequest<R> request;
         private GraphQLResponse.Factory responseFactory;
         private ApiRequestDecoratorFactory apiRequestDecoratorFactory;
+        private Iterator<AuthorizationType> authTypes;
         private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
 
@@ -203,6 +249,11 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             return this;
         }
 
+        Builder<R> authTypes(Iterator<AuthorizationType> authTypes) {
+            this.authTypes = authTypes;
+            return this;
+        }
+
         @SuppressLint("SyntheticAccessor")
         AppSyncGraphQLOperation<R> build() {
             return new AppSyncGraphQLOperation<>(
@@ -210,6 +261,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 Objects.requireNonNull(client),
                 Objects.requireNonNull(request),
                 Objects.requireNonNull(apiRequestDecoratorFactory),
+                Objects.requireNonNull(authTypes),
                 Objects.requireNonNull(responseFactory),
                 Objects.requireNonNull(onResponse),
                 Objects.requireNonNull(onFailure)

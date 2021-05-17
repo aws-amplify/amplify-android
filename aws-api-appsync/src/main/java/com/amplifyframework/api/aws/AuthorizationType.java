@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.util.Empty;
@@ -72,22 +74,31 @@ public enum AuthorizationType {
                 return authorizationType;
             }
         }
-
         throw new IllegalArgumentException("No such authorization type: " + name);
     }
 
     /**
      * Look up an AuthorizationType by inspecting an AuthRule annotation.
      * @param authRuleAnnotation The annotation obtained from a model.
-     * @return The AuthorizationType for the provider
-     * @throws IllegalArgumentException if AuthRule's provider does not match an authorization type
+     * @return The AuthorizationType for the provider.
+     * @throws IllegalArgumentException if AuthRule's provider does not match an authorization type.
      */
-    public static AuthorizationType from(AuthRule authRuleAnnotation) {
+    public static AuthorizationType from(@NonNull AuthRule authRuleAnnotation) {
         String providerName = authRuleAnnotation.provider();
         if (Empty.check(providerName)) {
             providerName = authRuleAnnotation.allow().getDefaultAuthProvider().name();
         }
         AuthStrategy.Provider authRuleProvider = AuthStrategy.Provider.valueOf(providerName);
+        return from(authRuleProvider);
+    }
+
+    /**
+     * Look up an AuthorizationType for a given auth rule provider.
+     * @param authRuleProvider The {@link AuthStrategy.Provider} from an @auth rule.
+     * @return The corresponding {@link AuthorizationType}.
+     * @throws IllegalArgumentException if AuthRule's provider does not match an authorization type
+     */
+    public static AuthorizationType from(@NonNull AuthStrategy.Provider authRuleProvider) {
         switch (authRuleProvider) {
             case USER_POOLS:
                 return AMAZON_COGNITO_USER_POOLS;
@@ -98,7 +109,8 @@ public enum AuthorizationType {
             case API_KEY:
                 return API_KEY;
             default:
-                throw new IllegalArgumentException("No such authorization type: " + providerName);
+                throw new IllegalArgumentException("No compatible authorization type " +
+                                                       "for the requested provider:" + authRuleProvider.name());
         }
     }
 }

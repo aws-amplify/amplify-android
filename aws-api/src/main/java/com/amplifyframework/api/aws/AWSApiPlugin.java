@@ -51,6 +51,7 @@ import java.net.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -163,7 +164,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                                                    apiConfiguration.getAuthorizationType(),
                                                    apiConfiguration.getRegion(),
                                                    apiConfiguration.getApiKey());
-
                 clientDetails = new ClientDetails(apiConfiguration,
                                                   okHttpClientBuilder.build(),
                                                   subscriptionEndpoint,
@@ -303,27 +303,21 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             ));
             return null;
         }
+        final Iterator<AuthorizationType> authTypes = getAuthTypes(graphQLRequest, clientDetails);
 
-        final GraphQLRequest<R> authDecoratedRequest;
-
-        // Decorate the request according to the auth rule parameters.
-        try {
-            AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
-
-            if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
-                ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
-                authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
-            }
-
-            authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
-        } catch (ApiException exception) {
-            onSubscriptionFailure.accept(exception);
+        if (!authTypes.hasNext()) {
+            onSubscriptionFailure.accept(new ApiException(
+                "No compatible authorization providers found for this request " + graphQLRequest,
+                "Check your amplify configuration to make sure there is a correctly configured section for " + apiName
+            ));
             return null;
         }
 
         SubscriptionOperation<R> operation = SubscriptionOperation.<R>builder()
             .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
-            .graphQlRequest(authDecoratedRequest)
+            .graphQlRequest(graphQLRequest)
+            .subscriptionRequestDecorator(requestDecorator)
+            .authTypes(authTypes)
             .responseFactory(gqlResponseFactory)
             .executorService(executorService)
             .onSubscriptionStart(onSubscriptionEstablished)
@@ -605,6 +599,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
                 .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
+                .authTypes(getAuthTypes(graphQLRequest, clientDetails))
                 .responseFactory(gqlResponseFactory)
                 .onResponse(onResponse)
                 .onFailure(onFailure)
@@ -671,6 +666,27 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         );
         operation.start();
         return operation;
+    }
+
+    private <R> Iterator<AuthorizationType> getAuthTypes(GraphQLRequest<R> graphQLRequest,
+                                                         ClientDetails clientDetails) {
+        final AuthorizationType defaultAuthType = clientDetails.getApiConfiguration().getAuthorizationType();
+        if (graphQLRequest instanceof AppSyncGraphQLRequest) {
+            AuthModeStrategy effectiveAuthStrategy = new DefaultAuthModeStrategy(defaultAuthType);
+            AppSyncGraphQLRequest<R> appSyncGraphQLRequest = (AppSyncGraphQLRequest<R>) graphQLRequest;
+            boolean isMultiAuth =
+                AuthModeStrategyType.MULTIAUTH.equals(appSyncGraphQLRequest.getAuthModeStrategyType());
+            boolean hasAuthTypeInRequest = appSyncGraphQLRequest.getAuthorizationType() != null;
+            if (hasAuthTypeInRequest) {
+                effectiveAuthStrategy = new DefaultAuthModeStrategy(appSyncGraphQLRequest.getAuthorizationType());
+            } else if (isMultiAuth) {
+                effectiveAuthStrategy = MultiAuthModeStrategy.getInstance();
+            }
+            return effectiveAuthStrategy.authTypesFor(appSyncGraphQLRequest.getModelSchema(),
+                                                      appSyncGraphQLRequest.getAuthRuleOperation());
+        } else {
+            return Collections.singletonList(defaultAuthType).iterator();
+        }
     }
 
     /**

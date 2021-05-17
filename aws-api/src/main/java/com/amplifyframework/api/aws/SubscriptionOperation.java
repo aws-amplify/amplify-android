@@ -18,14 +18,18 @@ package com.amplifyframework.api.aws;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.auth.AuthorizationTypeIterator;
 import com.amplifyframework.logging.Logger;
 
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -41,6 +45,8 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private final Consumer<ApiException> onSubscriptionError;
     private final Action onSubscriptionComplete;
     private final AtomicBoolean canceled;
+    private final Iterator<AuthorizationType> authTypes;
+    private final AuthRuleRequestDecorator subscriptionRequestDecorator;
 
     private String subscriptionId;
     private Future<?> subscriptionFuture;
@@ -48,6 +54,8 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private SubscriptionOperation(Builder<T> builder) {
         super(builder.graphQlRequest, builder.responseFactory);
         this.subscriptionEndpoint = builder.subscriptionEndpoint;
+        this.subscriptionRequestDecorator = builder.subscriptionRequestDecorator;
+        this.authTypes = builder.authTypes;
         this.onSubscriptionStart = builder.onSubscriptionStart;
         this.onNextItem = builder.onNextItem;
         this.onSubscriptionError = builder.onSubscriptionError;
@@ -69,21 +77,52 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             ));
             return;
         }
+        final AtomicBoolean isStarted = new AtomicBoolean(false);
+        boolean hasRuleInfo = authTypes instanceof AuthorizationTypeIterator;
         subscriptionFuture = executorService.submit(() -> {
             LOG.debug("Requesting subscription: " + getRequest().getContent());
-            subscriptionEndpoint.requestSubscription(
-                getRequest(),
-                subscriptionId -> {
-                    SubscriptionOperation.this.subscriptionId = subscriptionId;
-                    onSubscriptionStart.accept(subscriptionId);
-                },
-                onNextItem,
-                apiException -> {
-                    cancel();
-                    onSubscriptionError.accept(apiException);
-                },
-                onSubscriptionComplete
-            );
+            LOG.debug("Using auth types: " + authTypes.toString());
+            while (authTypes.hasNext() && !isStarted.get()) {
+                AuthorizationType authType = authTypes.next();
+                LOG.debug("Attempting to setup subscription with authType = " + authType);
+                GraphQLRequest<T> request = getRequest();
+                //TODO: This is ugly
+                if (hasRuleInfo) {
+                    AuthStrategy authRuleStrategy =
+                        ((AuthorizationTypeIterator) authTypes).getAuthRuleStrategy();
+                    boolean isOwnerRule = AuthStrategy.OWNER.equals(authRuleStrategy);
+                    if (isOwnerRule) {
+                        try {
+                            request = subscriptionRequestDecorator.decorate(request, authType);
+                        } catch (ApiException apiException) {
+                            LOG.warn("Unable to decorate GraphQL request with owner info.");
+                            if (!authTypes.hasNext()) {
+                                cancel();
+                                onSubscriptionError.accept(apiException);
+                            } else {
+                                continue;
+                            }
+                        }
+                    }
+                }
+                subscriptionEndpoint.requestSubscription(
+                    request,
+                    authType,
+                    subscriptionId -> {
+                        isStarted.set(true);
+                        SubscriptionOperation.this.subscriptionId = subscriptionId;
+                        onSubscriptionStart.accept(subscriptionId);
+                    },
+                    onNextItem,
+                    apiException -> {
+                        if (!authTypes.hasNext()) {
+                            cancel();
+                            onSubscriptionError.accept(apiException);
+                        }
+                    },
+                    onSubscriptionComplete
+                );
+            }
         });
     }
 
@@ -113,6 +152,8 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         private Consumer<GraphQLResponse<T>> onNextItem;
         private Consumer<ApiException> onSubscriptionError;
         private Action onSubscriptionComplete;
+        private Iterator<AuthorizationType> authTypes;
+        private AuthRuleRequestDecorator subscriptionRequestDecorator;
 
         @NonNull
         public Builder<T> subscriptionEndpoint(@NonNull SubscriptionEndpoint subscriptionEndpoint) {
@@ -159,6 +200,18 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         @NonNull
         public Builder<T> onSubscriptionComplete(@NonNull Action onSubscriptionComplete) {
             this.onSubscriptionComplete = Objects.requireNonNull(onSubscriptionComplete);
+            return this;
+        }
+
+        @NonNull
+        public Builder<T> authTypes(Iterator<AuthorizationType> authTypes) {
+            this.authTypes = authTypes;
+            return this;
+        }
+
+        @NonNull
+        public Builder<T> subscriptionRequestDecorator(AuthRuleRequestDecorator subscriptionRequestDecorator) {
+            this.subscriptionRequestDecorator = subscriptionRequestDecorator;
             return this;
         }
 

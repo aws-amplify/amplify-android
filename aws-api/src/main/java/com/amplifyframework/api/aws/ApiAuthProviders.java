@@ -84,13 +84,14 @@ public final class ApiAuthProviders {
      */
     public Set<AuthorizationType> getAvailableAuthorizationTypes(ApiConfiguration apiConfiguration) {
         HashSet<AuthorizationType> result = new HashSet<>();
-        if (cognitoUserPoolsAuthProvider != null || Amplify.Auth.getPlugins().size() > 0) {
+        boolean hasAmplifyAuth = Amplify.Auth.getPlugins().size() > 0;
+        if (cognitoUserPoolsAuthProvider != null || hasAmplifyAuth) {
             result.add(AuthorizationType.AMAZON_COGNITO_USER_POOLS);
         }
         if (oidcAuthProvider != null) {
             result.add(AuthorizationType.OPENID_CONNECT);
         }
-        if (awsCredentialsProvider != null) {
+        if (awsCredentialsProvider != null || hasAmplifyAuth) {
             result.add(AuthorizationType.AWS_IAM);
         }
         if (apiKeyAuthProvider != null || apiConfiguration.getApiKey() != null) {

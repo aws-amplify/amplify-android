@@ -133,10 +133,11 @@ public class ApiAuthProvidersTest {
         // Add the auth plugin to Amplify.
         Amplify.addPlugin(AUTH_PLUGIN);
 
-        // withoutProvider should return 1 because we added an auth plugin.
+        // withoutProvider should return 2 because we added an auth plugin.
         results = withoutProvider.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
-        assertEquals(1, results.size());
+        assertEquals(2, results.size());
         Assert.assertTrue(results.contains(AuthorizationType.AMAZON_COGNITO_USER_POOLS));
+        Assert.assertTrue(results.contains(AuthorizationType.AWS_IAM));
     }
 
     /**

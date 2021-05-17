@@ -29,6 +29,9 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.mobile.client.AWSMobileClient;
+
 import java.util.Objects;
 
 import okhttp3.Request;
@@ -38,6 +41,7 @@ import okhttp3.Request;
  */
 public final class ApiRequestDecoratorFactory {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
+    private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final RequestDecorator NO_OP_REQUEST_DECORATOR = new RequestDecorator() {
         @Override
         public Request decorate(Request request) {
@@ -138,13 +142,20 @@ public final class ApiRequestDecoratorFactory {
                                            "ApiKeyAuthProvider is setup during the API plugin initialization.");
             }
         } else if (AuthorizationType.AWS_IAM.equals(authorizationType)) {
-            if (apiAuthProviders.getAWSCredentialsProvider() == null) {
-                throw new ApiException("Attempting to use AWS_IAM authorization without " +
-                                           "an AWS credentials provider.",
-                                       "Configure an AWSCredentialsProvider when initializing the API plugin.");
+            AWSCredentialsProvider awsCredentialsProvider = apiAuthProviders.getAWSCredentialsProvider();
+            if (awsCredentialsProvider == null) {
+                try {
+                    awsCredentialsProvider = (AWSMobileClient) Amplify.Auth
+                                                                      .getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY)
+                                                                      .getEscapeHatch();
+                } catch (IllegalStateException exception) {
+                    throw new ApiException("Attempting to use AWS_IAM authorization without " +
+                                               "an AWS credentials provider.",
+                                           "Configure an AWSCredentialsProvider when initializing the API plugin.");
+                }
             }
             AppSyncV4Signer appSyncV4Signer = new AppSyncV4Signer(region);
-            return new IamRequestDecorator(appSyncV4Signer, apiAuthProviders.getAWSCredentialsProvider());
+            return new IamRequestDecorator(appSyncV4Signer, awsCredentialsProvider);
         } else {
             return NO_OP_REQUEST_DECORATOR;
         }
