@@ -80,6 +80,7 @@ public enum AuthorizationType {
      * Look up an AuthorizationType by inspecting an AuthRule annotation.
      * @param authRuleAnnotation The annotation obtained from a model.
      * @return The AuthorizationType for the provider
+     * @throws IllegalArgumentException if AuthRule's provider does not match an authorization type
      */
     public static AuthorizationType from(AuthRule authRuleAnnotation) {
         String providerName = authRuleAnnotation.provider();
@@ -88,17 +89,16 @@ public enum AuthorizationType {
         }
         AuthStrategy.Provider authRuleProvider = AuthStrategy.Provider.valueOf(providerName);
         switch (authRuleProvider) {
-            case userPools:
+            case USER_POOLS:
                 return AMAZON_COGNITO_USER_POOLS;
-            case oidc:
+            case OIDC:
                 return OPENID_CONNECT;
-            case iam:
+            case IAM:
                 return AWS_IAM;
-            case apiKey:
+            case API_KEY:
                 return API_KEY;
             default:
                 throw new IllegalArgumentException("No such authorization type: " + providerName);
         }
     }
 }
-
