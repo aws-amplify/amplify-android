@@ -80,6 +80,7 @@ public enum AuthorizationType {
      * Look up an AuthorizationType by inspecting an AuthRule annotation.
      * @param authRuleAnnotation The annotation obtained from a model.
      * @return The AuthorizationType for the provider
+     * @throws IllegalArgumentException if AuthRule's provider does not match an authorization type
      */
     public static AuthorizationType from(AuthRule authRuleAnnotation) {
         String providerName = authRuleAnnotation.provider();
@@ -101,4 +102,3 @@ public enum AuthorizationType {
         }
     }
 }
-
