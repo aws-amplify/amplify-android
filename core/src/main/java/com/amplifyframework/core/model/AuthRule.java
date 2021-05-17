@@ -54,16 +54,17 @@ public final class AuthRule {
      * @param authRule an {@link com.amplifyframework.core.model.annotations.AuthRule} annotation.
      */
     public AuthRule(com.amplifyframework.core.model.annotations.AuthRule authRule) {
-        this.authStrategy = authRule.allow();
-        this.authProvider = Empty.check(authRule.provider()) ?
-                                        authStrategy.getDefaultAuthProvider() :
-                                        AuthStrategy.Provider.valueOf(authRule.provider());
-        this.ownerField = authRule.ownerField();
-        this.identityClaim = authRule.identityClaim();
-        this.groupClaim = authRule.groupClaim();
-        this.groups = Arrays.asList(authRule.groups());
-        this.groupsField = authRule.groupsField();
-        this.operations = Arrays.asList(authRule.operations());
+        this(builder().authStrategy(authRule.allow())
+                      .authProvider(Empty.check(authRule.provider()) ?
+                                        authRule.allow().getDefaultAuthProvider() :
+                                        AuthStrategy.Provider.valueOf(authRule.provider()))
+                      .ownerField(authRule.ownerField())
+                      .identityClaim(authRule.identityClaim())
+                      .groupClaim(authRule.groupClaim())
+                      .groups(Arrays.asList(authRule.groups()))
+                      .groupsField(authRule.groupsField())
+                      .operations(Arrays.asList(authRule.operations()))
+        );
     }
 
     /**
@@ -103,8 +104,9 @@ public final class AuthRule {
      * Returns the auth provider for this {@link AuthRule}.
      * @return the auth provider for this {@link AuthRule}
      */
+    @NonNull
     public AuthStrategy.Provider getAuthProvider() {
-        return authProvider == null ? authStrategy.getDefaultAuthProvider() : authProvider;
+        return this.authProvider;
     }
 
     /**

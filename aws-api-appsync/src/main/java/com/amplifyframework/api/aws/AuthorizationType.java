@@ -89,13 +89,13 @@ public enum AuthorizationType {
         }
         AuthStrategy.Provider authRuleProvider = AuthStrategy.Provider.valueOf(providerName);
         switch (authRuleProvider) {
-            case userPools:
+            case USER_POOLS:
                 return AMAZON_COGNITO_USER_POOLS;
-            case oidc:
+            case OIDC:
                 return OPENID_CONNECT;
-            case iam:
+            case IAM:
                 return AWS_IAM;
-            case apiKey:
+            case API_KEY:
                 return API_KEY;
             default:
                 throw new IllegalArgumentException("No such authorization type: " + providerName);
