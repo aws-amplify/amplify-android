@@ -26,7 +26,7 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.AuthStrategy;
-import com.amplifyframework.core.model.auth.AuthorizationTypeIterator;
+import com.amplifyframework.core.model.auth.MultiAuthorizationTypeIterator;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Iterator;
@@ -47,6 +47,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private final AtomicBoolean canceled;
     private final Iterator<AuthorizationType> authTypes;
     private final AuthRuleRequestDecorator subscriptionRequestDecorator;
+    private final boolean isMultiAuth;
 
     private String subscriptionId;
     private Future<?> subscriptionFuture;
@@ -62,6 +63,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         this.onSubscriptionComplete = builder.onSubscriptionComplete;
         this.executorService = builder.executorService;
         this.canceled = new AtomicBoolean(false);
+        this.isMultiAuth = authTypes instanceof MultiAuthorizationTypeIterator;
     }
 
     @NonNull
@@ -78,30 +80,30 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             return;
         }
         final AtomicBoolean isStarted = new AtomicBoolean(false);
-        boolean hasRuleInfo = authTypes instanceof AuthorizationTypeIterator;
         subscriptionFuture = executorService.submit(() -> {
             LOG.debug("Requesting subscription: " + getRequest().getContent());
             LOG.debug("Using auth types: " + authTypes.toString());
             while (authTypes.hasNext() && !isStarted.get()) {
+                boolean isOwnerRule = false;
+                if (isMultiAuth) {
+                    AuthStrategy authRuleStrategy =
+                        ((MultiAuthorizationTypeIterator) authTypes).getAuthRuleStrategy();
+                    isOwnerRule = AuthStrategy.OWNER.equals(authRuleStrategy);
+                }
                 AuthorizationType authType = authTypes.next();
                 LOG.debug("Attempting to setup subscription with authType = " + authType);
                 GraphQLRequest<T> request = getRequest();
-                //TODO: This is ugly
-                if (hasRuleInfo) {
-                    AuthStrategy authRuleStrategy =
-                        ((AuthorizationTypeIterator) authTypes).getAuthRuleStrategy();
-                    boolean isOwnerRule = AuthStrategy.OWNER.equals(authRuleStrategy);
-                    if (isOwnerRule) {
-                        try {
-                            request = subscriptionRequestDecorator.decorate(request, authType);
-                        } catch (ApiException apiException) {
-                            LOG.warn("Unable to decorate GraphQL request with owner info.");
-                            if (!authTypes.hasNext()) {
-                                cancel();
-                                onSubscriptionError.accept(apiException);
-                            } else {
-                                continue;
-                            }
+
+                if (isOwnerRule || !isMultiAuth) {
+                    try {
+                        request = subscriptionRequestDecorator.decorate(request, authType);
+                    } catch (ApiException apiException) {
+                        LOG.warn("Unable to decorate GraphQL request with owner info.");
+                        if (!authTypes.hasNext()) {
+                            cancel();
+                            onSubscriptionError.accept(apiException);
+                        } else {
+                            continue;
                         }
                     }
                 }

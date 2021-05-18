@@ -41,6 +41,7 @@ import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testutils.Resources;
+import com.amplifyframework.util.Empty;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -63,6 +64,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -156,13 +158,28 @@ public final class OwnerBasedAuthTest {
     public void ownerArgumentNotAddedWithApiKey() {
         // Set API to use API key auth mode
         apiName = GRAPHQL_API_WITH_API_KEY;
-
+        final AtomicReference<GraphQLRequest<OwnerAuth>> actualRequest = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            GraphQLRequest<OwnerAuth> requestFromInvocation = invocation.getArgument(0);
+            actualRequest.set(requestFromInvocation);
+            latch.countDown();
+            return invocation.callRealMethod();
+        }).when(mockEndpoint).requestSubscription(any(), any(), any(), any(), any(), any());
         // Attempting to subscribe to a model with owner-based auth with API key auth mode.
         GraphQLRequest<OwnerAuth> request = ModelSubscription.onCreate(OwnerAuth.class);
         GraphQLOperation<OwnerAuth> operation = subscribe(request);
 
+        try {
+            latch.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException exception) {
+            fail();
+        }
+        if (latch.getCount() != 0) {
+            fail();
+        }
         // Subscription should fail at pre-processing
-        assertNull(operation);
+        assertTrue(Empty.check(actualRequest.get().getVariables()));
     }
 
     /**
@@ -173,13 +190,29 @@ public final class OwnerBasedAuthTest {
     public void ownerArgumentIsAddedAndSerializedInRequest() throws JSONException {
         // Set API to use Cognito User Pools auth mode
         apiName = GRAPHQL_API_WITH_COGNITO;
-
+        final AtomicReference<GraphQLRequest<OwnerAuth>> actualRequest = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            GraphQLRequest<OwnerAuth> requestFromInvocation = invocation.getArgument(0);
+            actualRequest.set(requestFromInvocation);
+            latch.countDown();
+            return invocation.callRealMethod();
+        }).when(mockEndpoint).requestSubscription(any(), any(), any(), any(), any(), any());
         GraphQLRequest<OwnerAuth> request = ModelSubscription.onCreate(OwnerAuth.class);
         GraphQLOperation<OwnerAuth> operation = subscribe(request);
 
+        try {
+            latch.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException exception) {
+            fail();
+        }
+        if (latch.getCount() != 0) {
+            fail();
+        }
+
         assertNotNull(operation);
         JSONAssert.assertEquals(Resources.readAsString("request-owner-auth.json"),
-                operation.getRequest().getContent(),
+                actualRequest.get().getContent(),
                 true);
     }
 
@@ -267,7 +300,7 @@ public final class OwnerBasedAuthTest {
             GraphQLRequest<M> requestFromInvocation = invocation.getArgument(0);
             actualRequest.set(requestFromInvocation);
             latch.countDown();
-            return mock(GraphQLOperation.class);
+            return invocation.callRealMethod();
         }).when(mockEndpoint).requestSubscription(any(), any(), any(), any(), any(), any());
         GraphQLOperation<M> graphQLOperation = subscribe(request);
 

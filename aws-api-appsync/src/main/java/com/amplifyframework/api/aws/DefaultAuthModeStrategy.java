@@ -17,8 +17,8 @@ package com.amplifyframework.api.aws;
 
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.auth.SingleAuthorizationTypeIterator;
 
-import java.util.Collections;
 import java.util.Iterator;
 
 /**
@@ -34,11 +34,6 @@ final class DefaultAuthModeStrategy implements AuthModeStrategy {
 
     @Override
     public Iterator<AuthorizationType> authTypesFor(ModelSchema modelSchema, ModelOperation operation) {
-        return Collections.singletonList(defaultAuthorizationType).iterator();
-    }
-
-    @Override
-    public AuthModeStrategyType getAuthorizationStrategyType() {
-        return AuthModeStrategyType.DEFAULT;
+        return new SingleAuthorizationTypeIterator(defaultAuthorizationType);
     }
 }

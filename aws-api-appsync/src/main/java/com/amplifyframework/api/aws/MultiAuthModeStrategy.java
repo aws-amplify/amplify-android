@@ -22,9 +22,10 @@ import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.auth.AuthorizationTypeIterator;
+import com.amplifyframework.core.model.auth.MultiAuthorizationTypeIterator;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -48,8 +49,8 @@ public final class MultiAuthModeStrategy implements AuthModeStrategy {
     }
 
     @Override
-    public AuthorizationTypeIterator authTypesFor(@NonNull ModelSchema modelSchema,
-                                                  @NonNull ModelOperation operation) {
+    public Iterator<AuthorizationType> authTypesFor(@NonNull ModelSchema modelSchema,
+                                 @NonNull ModelOperation operation) {
         final List<AuthRule> applicableRules = new ArrayList<>();
         Consumer<List<AuthRule>> filterAuthRules = authRules -> {
             for (AuthRule rule : authRules) {
@@ -62,11 +63,6 @@ public final class MultiAuthModeStrategy implements AuthModeStrategy {
         for (ModelField field : modelSchema.getFields().values()) {
             filterAuthRules.accept(field.getAuthRules());
         }
-        return new AuthorizationTypeIterator(applicableRules);
-    }
-
-    @Override
-    public AuthModeStrategyType getAuthorizationStrategyType() {
-        return AuthModeStrategyType.MULTIAUTH;
+        return new MultiAuthorizationTypeIterator(applicableRules);
     }
 }

@@ -32,8 +32,7 @@ import java.util.List;
  * list of auth rules. Auth rules should be sorted in which
  * they need to be evaluated.
  */
-public final class AuthorizationTypeIterator implements Iterator<AuthorizationType> {
-
+public final class MultiAuthorizationTypeIterator implements Iterator<AuthorizationType> {
     private int currentIdx = 0;
     private AuthRule effectiveRule;
     private final List<AuthRule> authRules;
@@ -42,7 +41,7 @@ public final class AuthorizationTypeIterator implements Iterator<AuthorizationTy
      * Constructor that takes a list of auth rules and uses the default comparator.
      * @param authRules The list of auth rules.
      */
-    public AuthorizationTypeIterator(List<AuthRule> authRules) {
+    public MultiAuthorizationTypeIterator(List<AuthRule> authRules) {
         this(authRules, new PriorityBasedAuthRuleProviderComparator());
     }
 
@@ -52,8 +51,8 @@ public final class AuthorizationTypeIterator implements Iterator<AuthorizationTy
      * @param authRules The list of auth rules.
      * @param authRuleComparator The implementation of {@link Comparator} for sorting.
      */
-    public AuthorizationTypeIterator(List<AuthRule> authRules,
-                                     Comparator<AuthRule> authRuleComparator) {
+    public MultiAuthorizationTypeIterator(List<AuthRule> authRules,
+                                          Comparator<AuthRule> authRuleComparator) {
         Collections.sort(authRules, authRuleComparator);
         this.authRules = authRules;
     }
