@@ -32,6 +32,7 @@ public interface SubscriptionEndpoint {
      * Given a GraphQL subscription request, an implementation of this function should abstract the
      * steps needed to establish/manage subscriptions with the backend service.
      * @param request the GraphQL request.
+     * @param authType the authorization type for the request.
      * @param onSubscriptionStarted A callback to be invoked when a subscription starts.
      * @param onNextItem A callback invoked when the subscription receives data.
      * @param onSubscriptionError A callback invoked when an error occurs.
@@ -40,6 +41,7 @@ public interface SubscriptionEndpoint {
      */
     <T> void requestSubscription(
         @NonNull GraphQLRequest<T> request,
+        @NonNull AuthorizationType authType,
         @NonNull Consumer<String> onSubscriptionStarted,
         @NonNull Consumer<GraphQLResponse<T>> onNextItem,
         @NonNull Consumer<ApiException> onSubscriptionError,

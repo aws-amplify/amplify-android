@@ -268,7 +268,7 @@ public final class OwnerBasedAuthTest {
             actualRequest.set(requestFromInvocation);
             latch.countDown();
             return mock(GraphQLOperation.class);
-        }).when(mockEndpoint).requestSubscription(any(), any(), any(), any(), any());
+        }).when(mockEndpoint).requestSubscription(any(), any(), any(), any(), any(), any());
         GraphQLOperation<M> graphQLOperation = subscribe(request);
 
         assertNotNull(graphQLOperation);
