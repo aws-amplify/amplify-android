@@ -43,16 +43,16 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Tests the {@link SubscriptionEndpoint}.
+ * Tests the {@link GraphQLSubscriptionEndpoint}.
  */
 public final class SubscriptionEndpointTest {
     private Executor executor;
-    private SubscriptionEndpoint subscriptionEndpoint;
+    private GraphQLSubscriptionEndpoint subscriptionEndpoint;
     private String eventId;
     private Set<String> subscriptionIdsForRelease;
 
     /**
-     * Create an {@link SubscriptionEndpoint}.
+     * Create an {@link GraphQLSubscriptionEndpoint}.
      * @throws ApiException On failure to load API configuration from config file
      * @throws JSONException On failure to manipulate configuration JSON during test arrangement
      */
@@ -71,7 +71,7 @@ public final class SubscriptionEndpointTest {
 
         final GraphQLResponse.Factory responseFactory = new GsonGraphQLResponseFactory();
         final SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(apiConfiguration);
-        this.subscriptionEndpoint = new SubscriptionEndpoint(apiConfiguration, responseFactory, authorizer);
+        this.subscriptionEndpoint = new GraphQLSubscriptionEndpoint(apiConfiguration, responseFactory, authorizer);
 
         this.eventId = RandomString.string();
         this.subscriptionIdsForRelease = new HashSet<>();

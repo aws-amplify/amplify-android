@@ -23,6 +23,8 @@ import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.ApiGraphQLRequestOptions;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.SubscriptionEndpoint;
+import com.amplifyframework.api.aws.SubscriptionEndpointFactory;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -50,6 +52,9 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockWebServer;
@@ -58,6 +63,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests owner-based auth for Cognito User Pools and OIDC authorized APIs.
@@ -74,6 +83,8 @@ public final class OwnerBasedAuthTest {
     private CognitoUserPoolsAuthProvider cognitoProvider;
     private OidcAuthProvider oidcProvider;
     private String apiName;
+    private SubscriptionEndpointFactory mockSubscriptionEndpointFactory;
+    private SubscriptionEndpoint mockEndpoint;
 
     /**
      * Sets up the test.
@@ -87,6 +98,9 @@ public final class OwnerBasedAuthTest {
         baseUrl = webServer.url("/");
         cognitoProvider = new FakeCognitoAuthProvider();
         oidcProvider = new FakeOidcAuthProvider();
+        mockSubscriptionEndpointFactory = mock(SubscriptionEndpointFactory.class);
+        mockEndpoint = mock(SubscriptionEndpoint.class);
+        when(mockSubscriptionEndpointFactory.create(any(), any(), any())).thenReturn(mockEndpoint);
         configurePlugin();
     }
 
@@ -128,8 +142,9 @@ public final class OwnerBasedAuthTest {
         }
 
         plugin = AWSApiPlugin.builder()
-            .apiAuthProviders(providers)
-            .build();
+                             .apiAuthProviders(providers)
+                             .subscriptionEndpointFactory(mockSubscriptionEndpointFactory)
+                             .build();
         plugin.configure(configuration, ApplicationProvider.getApplicationContext());
     }
 
@@ -245,11 +260,29 @@ public final class OwnerBasedAuthTest {
 
     private <M extends Model> boolean isOwnerArgumentAdded(Class<M> clazz, Operation operation)
             throws AmplifyException {
+        final AtomicReference<GraphQLRequest<M>> actualRequest = new AtomicReference<>();
         GraphQLRequest<M> request = createRequest(clazz, operation);
+        CountDownLatch latch = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            GraphQLRequest<M> requestFromInvocation = invocation.getArgument(0);
+            actualRequest.set(requestFromInvocation);
+            latch.countDown();
+            return mock(GraphQLOperation.class);
+        }).when(mockEndpoint).requestSubscription(any(), any(), any(), any(), any());
         GraphQLOperation<M> graphQLOperation = subscribe(request);
 
         assertNotNull(graphQLOperation);
-        final String owner = (String) graphQLOperation.getRequest()
+
+        try {
+            latch.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException exception) {
+            return false;
+        }
+        if (latch.getCount() != 0) {
+            return false;
+        }
+
+        final String owner = (String) actualRequest.get()
             .getVariables()
             .get("owner");
         switch (apiName) {

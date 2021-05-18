@@ -24,7 +24,7 @@ import java.util.Objects;
 /**
  * API configuration details.
  */
-final class ApiConfiguration {
+public final class ApiConfiguration {
     private final EndpointType endpointType;
     private final String endpoint;
     private final String region;

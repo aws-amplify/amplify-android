@@ -39,7 +39,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-final class SubscriptionAuthorizer {
+/**
+ * This class handles the creation of the subscription headers to be sent to AppSync.
+ */
+public final class SubscriptionAuthorizer {
     private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
 
     private final ApiConfiguration configuration;
