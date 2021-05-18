@@ -21,7 +21,7 @@ import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.annotations.ModelConfig;
-import com.amplifyframework.core.model.auth.AuthorizationTypeIterator;
+import com.amplifyframework.core.model.auth.MultiAuthorizationTypeIterator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,14 +34,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class AuthorizationTypeIteratorTest {
-    private AuthorizationTypeIterator.PriorityBasedAuthRuleProviderComparator compWithDefaultPriority;
+    private MultiAuthorizationTypeIterator.PriorityBasedAuthRuleProviderComparator compWithDefaultPriority;
 
     /**
      * Setup test fixtures.
      */
     @Before
     public void setup() {
-        compWithDefaultPriority = new AuthorizationTypeIterator.PriorityBasedAuthRuleProviderComparator();
+        compWithDefaultPriority = new MultiAuthorizationTypeIterator.PriorityBasedAuthRuleProviderComparator();
     }
 
     /**
@@ -109,7 +109,7 @@ public class AuthorizationTypeIteratorTest {
         @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.PUBLIC),
         @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.OWNER)
     })
-    abstract class PublicOwner implements Model {}
+    abstract static class PublicOwner implements Model {}
 
     @ModelConfig(authRules = {
         @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.PUBLIC),
@@ -117,6 +117,6 @@ public class AuthorizationTypeIteratorTest {
         @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.PRIVATE),
         @com.amplifyframework.core.model.annotations.AuthRule(allow = AuthStrategy.GROUPS)
     })
-    abstract class Scrambled implements Model {}
+    abstract static class Scrambled implements Model {}
 
 }

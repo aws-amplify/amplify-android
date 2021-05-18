@@ -18,12 +18,8 @@ package com.amplifyframework.core.model.auth;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.aws.AuthorizationType;
-import com.amplifyframework.core.model.AuthRule;
-import com.amplifyframework.core.model.AuthStrategy;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,11 +29,15 @@ import java.util.List;
  * for consistent invocations from the calling sites. It will be used for requests
  * that will be tried with a single authorization type.
  */
-public class SingleAuthorizationTypeIterator implements Iterator<AuthorizationType> {
+public final class SingleAuthorizationTypeIterator implements Iterator<AuthorizationType> {
     private int currentIdx = 0;
     private final List<AuthorizationType> authorizationTypes;
     private AuthorizationType currentAuthorizationType;
 
+    /**
+     * Constructor that accepts the authorization type that will be used for this iterator.
+     * @param authorizationType The authorization type to be used by the iterator.
+     */
     public SingleAuthorizationTypeIterator(AuthorizationType authorizationType) {
         this.authorizationTypes = Collections.singletonList(authorizationType);
     }
