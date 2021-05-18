@@ -52,6 +52,9 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockWebServer;
@@ -61,6 +64,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -256,11 +260,29 @@ public final class OwnerBasedAuthTest {
 
     private <M extends Model> boolean isOwnerArgumentAdded(Class<M> clazz, Operation operation)
             throws AmplifyException {
+        final AtomicReference<GraphQLRequest<M>> actualRequest = new AtomicReference<>();
         GraphQLRequest<M> request = createRequest(clazz, operation);
+        CountDownLatch latch = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            GraphQLRequest<M> requestFromInvocation = invocation.getArgument(0);
+            actualRequest.set(requestFromInvocation);
+            latch.countDown();
+            return mock(GraphQLOperation.class);
+        }).when(mockEndpoint).requestSubscription(any(), any(), any(), any(), any());
         GraphQLOperation<M> graphQLOperation = subscribe(request);
 
         assertNotNull(graphQLOperation);
-        final String owner = (String) graphQLOperation.getRequest()
+
+        try {
+            latch.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException exception) {
+            return false;
+        }
+        if (latch.getCount() != 0) {
+            return false;
+        }
+
+        final String owner = (String) actualRequest.get()
             .getVariables()
             .get("owner");
         switch (apiName) {
