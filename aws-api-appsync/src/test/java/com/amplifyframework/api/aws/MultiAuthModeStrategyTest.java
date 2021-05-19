@@ -105,6 +105,7 @@ public class MultiAuthModeStrategyTest {
         assertFalse(results.hasNext());
     }
 
+    @SuppressWarnings("AnnotationUseStyle")
     @ModelConfig(pluralName = "Posts", authRules = {
         @AuthRule(allow = AuthStrategy.OWNER,
             ownerField = "owner",
@@ -115,6 +116,7 @@ public class MultiAuthModeStrategyTest {
     })
     private abstract static class Post implements Model {}
 
+    @SuppressWarnings("AnnotationUseStyle")
     @ModelConfig
     @Index(fields = {"vehicle_model"}, name = "model_based_index")
     private abstract static class Car implements Model {}
