@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
@@ -34,7 +33,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * Tests for multi auth strategy.
  */
-public class MultiAuthTest {
+public class MultiAuthModeStrategyTest {
     private ModelSchema postModelSchema;
     private ModelSchema carModelSchema;
     private MultiAuthModeStrategy strategy;
@@ -91,13 +90,6 @@ public class MultiAuthTest {
      */
     @Test
     public void testMultiAuthForMutations() throws AmplifyException {
-        AppSyncGraphQLRequest<Object> request = AppSyncGraphQLRequest.builder()
-                                                                     .modelClass(Post.class)
-                                                                     .responseType(String.class)
-                                                                     .operation(MutationType.CREATE)
-                                                                     .requestOptions(new DefaultGraphQLRequestOptions())
-                                                                     .build();
-
         Iterator<AuthorizationType> results =
             MultiAuthModeStrategy.getInstance().authTypesFor(postModelSchema, ModelOperation.CREATE);
 
