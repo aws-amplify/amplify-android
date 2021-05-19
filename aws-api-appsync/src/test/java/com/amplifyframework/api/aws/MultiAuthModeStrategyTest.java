@@ -16,11 +16,13 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.testmodels.multiauth.Post;
-import com.amplifyframework.testmodels.personcar.Car;
+import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.core.model.annotations.Index;
+import com.amplifyframework.core.model.annotations.ModelConfig;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -68,13 +70,6 @@ public class MultiAuthModeStrategyTest {
      */
     @Test
     public void testMultiAuthForSubscription() throws AmplifyException {
-        AppSyncGraphQLRequest<Object> request = AppSyncGraphQLRequest.builder()
-                                                                     .modelClass(Post.class)
-                                                                     .responseType(String.class)
-                                                                     .operation(SubscriptionType.ON_CREATE)
-                                                                     .requestOptions(new DefaultGraphQLRequestOptions())
-                                                                     .build();
-
         Iterator<AuthorizationType> results =
             MultiAuthModeStrategy.getInstance().authTypesFor(postModelSchema, ModelOperation.READ);
 
@@ -109,4 +104,18 @@ public class MultiAuthModeStrategyTest {
 
         assertFalse(results.hasNext());
     }
+
+    @ModelConfig(pluralName = "Posts", authRules = {
+        @AuthRule(allow = AuthStrategy.OWNER,
+            ownerField = "owner",
+            identityClaim = "cognito:username",
+            operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+        @AuthRule(allow = AuthStrategy.PUBLIC,
+            operations = { ModelOperation.READ })
+    })
+    private abstract static class Post implements Model {}
+
+    @ModelConfig
+    @Index(fields = {"vehicle_model"}, name = "model_based_index")
+    private abstract static class Car implements Model {}
 }
