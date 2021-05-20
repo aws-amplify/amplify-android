@@ -87,7 +87,17 @@ public enum AuthorizationType {
         if (Empty.check(providerName)) {
             providerName = authRuleAnnotation.allow().getDefaultAuthProvider().name();
         }
-        AuthStrategy.Provider authRuleProvider = AuthStrategy.Provider.valueOf(providerName);
+        AuthStrategy.Provider authRuleProvider = AuthStrategy.Provider.from(providerName);
+        return from(authRuleProvider);
+    }
+
+    /**
+     * Look up an AuthorizationType by {@link AuthStrategy.Provider}.
+     * @param authRuleProvider The auth rule provider value.
+     * @return The AuthorizationType for the given provider.
+     * @throws IllegalArgumentException if AuthRule's provider does not map to an authorization type
+     */
+    public static AuthorizationType from(AuthStrategy.Provider authRuleProvider) {
         switch (authRuleProvider) {
             case USER_POOLS:
                 return AMAZON_COGNITO_USER_POOLS;
@@ -98,7 +108,7 @@ public enum AuthorizationType {
             case API_KEY:
                 return API_KEY;
             default:
-                throw new IllegalArgumentException("No such authorization type: " + providerName);
+                throw new IllegalArgumentException("No such authorization type: " + authRuleProvider.name());
         }
     }
 }

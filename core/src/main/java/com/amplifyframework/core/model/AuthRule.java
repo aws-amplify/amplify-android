@@ -57,7 +57,7 @@ public final class AuthRule {
         this(builder().authStrategy(authRule.allow())
                       .authProvider(Empty.check(authRule.provider()) ?
                                         authRule.allow().getDefaultAuthProvider() :
-                                        AuthStrategy.Provider.valueOf(authRule.provider()))
+                                        AuthStrategy.Provider.from(authRule.provider()))
                       .ownerField(authRule.ownerField())
                       .identityClaim(authRule.identityClaim())
                       .groupClaim(authRule.groupClaim())
