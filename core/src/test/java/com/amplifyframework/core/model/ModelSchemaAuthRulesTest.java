@@ -35,7 +35,8 @@ public class ModelSchemaAuthRulesTest {
 
     /**
      * Verifies that the string values from the AuthRule annotation map to a valid enum item
-     * from AuthStrategy.Provider
+     * from AuthStrategy.Provider.
+     * @throws AmplifyException Not expected.
      */
     @Test
     public void authProviderMappingTest() throws AmplifyException {
