@@ -72,8 +72,13 @@ public final class MultiAuthorizationTypeIterator implements Iterator<Authorizat
     /**
      * Retrieves the {@link AuthStrategy} for the iterator's current rule.
      * @return The {@link AuthStrategy} of the currently selected {@link AuthRule}.
+     * @throws IllegalStateException if attempting to access the current element before calling next.
+     * for the first time.
      */
     public AuthStrategy getAuthRuleStrategy() {
+        if (effectiveRule == null) {
+            throw new IllegalStateException("No current item selected for the iterator.");
+        }
         return effectiveRule.getAuthStrategy();
     }
 

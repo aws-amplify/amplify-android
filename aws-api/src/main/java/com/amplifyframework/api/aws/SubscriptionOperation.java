@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -85,12 +86,20 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             LOG.debug("Using auth types: " + authTypes.toString());
             while (authTypes.hasNext() && !isStarted.get()) {
                 boolean isOwnerRule = false;
-                if (isMultiAuth) {
-                    AuthStrategy authRuleStrategy =
-                        ((MultiAuthorizationTypeIterator) authTypes).getAuthRuleStrategy();
-                    isOwnerRule = AuthStrategy.OWNER.equals(authRuleStrategy);
-                }
                 AuthorizationType authType = authTypes.next();
+                if (isMultiAuth) {
+                    try {
+                        AuthStrategy authRuleStrategy =
+                            ((MultiAuthorizationTypeIterator) authTypes).getAuthRuleStrategy();
+                        isOwnerRule = AuthStrategy.OWNER.equals(authRuleStrategy);
+                    } catch (IllegalStateException exception) {
+                        cancel();
+                        onSubscriptionError.accept(new ApiException("Error while trying to iterate through auth rules",
+                                                                    exception,
+                                                                    AmplifyException.TODO_RECOVERY_SUGGESTION));
+                    }
+
+                }
                 LOG.debug("Attempting to setup subscription with authType = " + authType);
                 GraphQLRequest<T> request = getRequest();
 
