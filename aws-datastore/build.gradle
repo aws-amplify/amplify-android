@@ -40,10 +40,12 @@ dependencies {
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation project(path: ':aws-api')
     androidTestImplementation project(path: ':aws-auth-cognito')
+    androidTestImplementation dependency.aws.mobileclient
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
+    androidTestImplementation dependency.okhttp
     androidTestImplementation dependency.rxjava
 }
 

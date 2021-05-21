@@ -22,12 +22,14 @@ import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testutils.HubAccumulator;
 
@@ -43,6 +45,8 @@ final class DataStoreCategoryConfigurator {
     private int timeoutAmount;
     private TimeUnit timeoutUnit;
     private DataStoreConfiguration dataStoreConfiguration;
+    private AuthModeStrategyType authModeStrategyType;
+    private ModelSchemaRegistry modelSchemaRegistry;
 
     private DataStoreCategoryConfigurator() {}
 
@@ -98,6 +102,18 @@ final class DataStoreCategoryConfigurator {
     }
 
     @NonNull
+    DataStoreCategoryConfigurator authModeStrategy(@NonNull AuthModeStrategyType authModeStrategyType) {
+        this.authModeStrategyType = authModeStrategyType;
+        return DataStoreCategoryConfigurator.this;
+    }
+
+    @NonNull
+    DataStoreCategoryConfigurator modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
+        this.modelSchemaRegistry = modelSchemaRegistry;
+        return DataStoreCategoryConfigurator.this;
+    }
+
+    @NonNull
     DataStoreCategory finish() throws AmplifyException {
         // Make sure everything was supplied.
         Objects.requireNonNull(context);
@@ -124,6 +140,8 @@ final class DataStoreCategoryConfigurator {
         AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
                                                                   .modelProvider(modelProvider)
                                                                   .apiCategory(api)
+                                                                  .authModeStrategy(authModeStrategyType)
+                                                                  .modelSchemaRegistry(modelSchemaRegistry)
                                                                   .dataStoreConfiguration(dataStoreConfiguration)
                                                                   .build();
         DataStoreCategory dataStoreCategory = new DataStoreCategory();

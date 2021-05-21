@@ -81,8 +81,8 @@ target/
 __pycache__/
 
 # Credentials
-**/awsconfiguration.json
-**/amplifyconfiguration.json
+**/awsconfiguration*
+**/amplifyconfiguration*
 **/credentials.json
 
 # IDE files

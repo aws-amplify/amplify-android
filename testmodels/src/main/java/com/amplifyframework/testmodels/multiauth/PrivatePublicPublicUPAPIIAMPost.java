@@ -1,5 +1,7 @@
 package com.amplifyframework.testmodels.multiauth;
 
+
+import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
@@ -16,23 +18,18 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the Post type in your schema. */
+/** This is an auto generated class representing the PrivatePublicPublicUPAPIIAMPost type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Posts", authRules = {
-  @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
-  @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ })
+@ModelConfig(pluralName = "PrivatePublicPublicUPAPIIAMPosts", authRules = {
+  @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "apiKey", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+  @AuthRule(allow = AuthStrategy.PUBLIC, provider = "iam", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 })
-public final class Post implements Model {
-  public static final QueryField ID = field("Post", "id");
-  public static final QueryField NAME = field("Post", "name");
-  public static final QueryField DESCRIPTION = field("Post", "description");
-  public static final QueryField STATUS = field("Post", "status");
+public final class PrivatePublicPublicUPAPIIAMPost implements Model {
+  public static final QueryField ID = field("PrivatePublicPublicUPAPIIAMPost", "id");
+  public static final QueryField NAME = field("PrivatePublicPublicUPAPIIAMPost", "name");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="String") String description;
-  private final @ModelField(targetType="String", authRules = {
-    @AuthRule(allow = AuthStrategy.GROUPS, groupClaim = "cognito:groups", groups = { "Approvers" }, operations = { ModelOperation.UPDATE })
-  }) String status;
   public String getId() {
       return id;
   }
@@ -41,19 +38,9 @@ public final class Post implements Model {
       return name;
   }
   
-  public String getDescription() {
-      return description;
-  }
-  
-  public String getStatus() {
-      return status;
-  }
-  
-  private Post(String id, String name, String description, String status) {
+  private PrivatePublicPublicUPAPIIAMPost(String id, String name) {
     this.id = id;
     this.name = name;
-    this.description = description;
-    this.status = status;
   }
   
   @Override
@@ -63,11 +50,9 @@ public final class Post implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      Post post = (Post) obj;
-      return ObjectsCompat.equals(getId(), post.getId()) &&
-              ObjectsCompat.equals(getName(), post.getName()) &&
-              ObjectsCompat.equals(getDescription(), post.getDescription()) &&
-              ObjectsCompat.equals(getStatus(), post.getStatus());
+      PrivatePublicPublicUPAPIIAMPost privatePublicPublicUpapiiamPost = (PrivatePublicPublicUPAPIIAMPost) obj;
+      return ObjectsCompat.equals(getId(), privatePublicPublicUpapiiamPost.getId()) &&
+              ObjectsCompat.equals(getName(), privatePublicPublicUpapiiamPost.getName());
       }
   }
   
@@ -76,8 +61,6 @@ public final class Post implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getName())
-      .append(getDescription())
-      .append(getStatus())
       .toString()
       .hashCode();
   }
@@ -85,11 +68,9 @@ public final class Post implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("Post {")
+      .append("PrivatePublicPublicUPAPIIAMPost {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("name=" + String.valueOf(getName()) + ", ")
-      .append("description=" + String.valueOf(getDescription()) + ", ")
-      .append("status=" + String.valueOf(getStatus()))
+      .append("name=" + String.valueOf(getName()))
       .append("}")
       .toString();
   }
@@ -107,7 +88,7 @@ public final class Post implements Model {
    * @return an instance of this model with only ID populated
    * @throws IllegalArgumentException Checks that ID is in the proper format
    */
-  public static Post justId(String id) {
+  public static PrivatePublicPublicUPAPIIAMPost justId(String id) {
     try {
       UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
     } catch (Exception exception) {
@@ -117,19 +98,15 @@ public final class Post implements Model {
               "creating a new object, use the standard builder method and leave the ID field blank."
       );
     }
-    return new Post(
+    return new PrivatePublicPublicUPAPIIAMPost(
       id,
-      null,
-      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      name,
-      description,
-      status);
+      name);
   }
   public interface NameStep {
     BuildStep name(String name);
@@ -137,45 +114,27 @@ public final class Post implements Model {
   
 
   public interface BuildStep {
-    Post build();
+    PrivatePublicPublicUPAPIIAMPost build();
     BuildStep id(String id) throws IllegalArgumentException;
-    BuildStep description(String description);
-    BuildStep status(String status);
   }
   
 
   public static class Builder implements NameStep, BuildStep {
     private String id;
     private String name;
-    private String description;
-    private String status;
     @Override
-     public Post build() {
+     public PrivatePublicPublicUPAPIIAMPost build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new Post(
+        return new PrivatePublicPublicUPAPIIAMPost(
           id,
-          name,
-          description,
-          status);
+          name);
     }
     
     @Override
      public BuildStep name(String name) {
         Objects.requireNonNull(name);
         this.name = name;
-        return this;
-    }
-    
-    @Override
-     public BuildStep description(String description) {
-        this.description = description;
-        return this;
-    }
-    
-    @Override
-     public BuildStep status(String status) {
-        this.status = status;
         return this;
     }
     
@@ -202,26 +161,14 @@ public final class Post implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String description, String status) {
+    private CopyOfBuilder(String id, String name) {
       super.id(id);
-      super.name(name)
-        .description(description)
-        .status(status);
+      super.name(name);
     }
     
     @Override
      public CopyOfBuilder name(String name) {
       return (CopyOfBuilder) super.name(name);
-    }
-    
-    @Override
-     public CopyOfBuilder description(String description) {
-      return (CopyOfBuilder) super.description(description);
-    }
-    
-    @Override
-     public CopyOfBuilder status(String status) {
-      return (CopyOfBuilder) super.status(status);
     }
   }
   
