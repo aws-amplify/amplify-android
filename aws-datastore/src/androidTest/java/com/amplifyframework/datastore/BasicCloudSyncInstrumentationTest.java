@@ -44,6 +44,7 @@ import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostAuthorJoin;
 import com.amplifyframework.testutils.HubAccumulator;
+import com.amplifyframework.testutils.ModelAssert;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
@@ -198,5 +199,43 @@ public final class BasicCloudSyncInstrumentationTest {
         BlogOwner owner = dataStore.get(BlogOwner.class, jameson.getId());
         assertEquals("Jameson Williams", owner.getName());
         assertEquals(jameson.getId(), owner.getId());
+    }
+
+    /**
+     * Verify that updating an item shortly after creating it succeeds.  This can be tricky because the _version
+     * returned in the response from the create request must be included in the input for the subsequent update request.
+     * @throws DataStoreException On failure to save or query items from DataStore.
+     * @throws ApiException On failure to query the API.
+     */
+    @Test
+    public void updateAfterCreate() throws DataStoreException, ApiException {
+        // Setup
+        BlogOwner richard = BlogOwner.builder()
+                .name("Richard")
+                .build();
+        BlogOwner updatedRichard = richard.copyOfBuilder()
+                .name("Richard McClellan")
+                .build();
+        String modelName = BlogOwner.class.getSimpleName();
+
+        // Expect two mutations to be published to AppSync.
+        HubAccumulator richardAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, richard.getId()), 2)
+                .start();
+
+        // Create an item, then update it and save it again.
+        dataStore.save(richard);
+        dataStore.save(updatedRichard);
+
+        // Verify that 2 mutations were published.
+        richardAccumulator.await(30, TimeUnit.SECONDS);
+
+        // Verify that the updatedRichard is saved in the DataStore.
+        BlogOwner localRichard = dataStore.get(BlogOwner.class, richard.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(updatedRichard, localRichard);
+
+        // Verify that the updatedRichard is saved on the backend.
+        BlogOwner remoteRichard = api.get(BlogOwner.class, richard.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(updatedRichard, remoteRichard);
     }
 }
