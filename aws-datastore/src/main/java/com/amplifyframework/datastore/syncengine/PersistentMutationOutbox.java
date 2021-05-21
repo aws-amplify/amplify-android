@@ -283,6 +283,9 @@ final class PersistentMutationOutbox implements MutationOutbox {
          * @return A completable with the actions to resolve the conflict.
          */
         Completable resolve() {
+            LOG.debug("IncomingMutationConflict - "
+                + " existing " + existing.getMutationType()
+                + " incoming " + incoming.getMutationType());
             switch (incoming.getMutationType()) {
                 case CREATE:
                     return handleIncomingCreate();
