@@ -17,7 +17,6 @@ package com.amplifyframework.datastore;
 
 import android.content.Context;
 import android.util.Log;
-
 import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
@@ -28,7 +27,6 @@ import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.auth.AuthCategory;
-import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.core.Amplify;
@@ -72,6 +70,7 @@ import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
@@ -79,6 +78,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -86,7 +86,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
@@ -117,94 +116,27 @@ public class MultiAuthInstrumentationTest {
     private SynchronousApi api;
     private SynchronousDataStore dataStore;
     private SynchronousAuth auth;
-    private Semaphore requestCheckSemaphore;
 
     private String cognitoUser;
     private String cognitoPassword;
-    private final Map<Request, Response> okHttpRequests;
 
-    @Parameterized.Parameters(name = "model:{0} requiresSignIn: {1} expectedAuthType: {2}")
-    public static Iterable<Object[]> data() {
-        //Parameters: model class, isSignedIn, expected successful auth type
-        return Arrays.asList(new Object[][]{
-            // Single rule cases.
-            { OwnerUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { OwnerOIDCPost.class, true, AuthorizationType.OPENID_CONNECT },
-            { GroupUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { PrivateUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { PublicIAMPost.class, false, AuthorizationType.AWS_IAM },
-            { PublicIAMPost.class, false, AuthorizationType.AWS_IAM },
-            { PublicAPIPost.class, false, AuthorizationType.API_KEY },
-
-            /* Test cases of models with 2 rules */
-            // Owner + private
-            { OwnerPrivateUPIAMPost.class, false, AuthorizationType.API_KEY },
-            { OwnerPrivateUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-
-            // Owner + public
-            { OwnerPublicUPAPIPost.class, false, AuthorizationType.API_KEY },
-            { OwnerPublicUPAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { OwnerPublicOIDAPIPost.class, true, AuthorizationType.OPENID_CONNECT },
-
-            // Group + private
-            { GroupPrivateUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { GroupPrivateUPIAMPost.class, false, AuthorizationType.AWS_IAM },
-
-            // Group + public
-            { GroupPublicUPAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { GroupPublicUPAPIPost.class, false, AuthorizationType.API_KEY },
-            { GroupPublicUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { GroupPublicUPIAMPost.class, false, AuthorizationType.AWS_IAM },
-
-            // Private + Private
-            { PrivatePrivateUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { PrivatePrivateUPIAMPost.class, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-
-            // Private + Public
-            { PrivatePublicUPAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { PrivatePublicUPAPIPost.class, false, AuthorizationType.API_KEY },
-            { PrivatePublicUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { PrivatePublicUPIAMPost.class, false, AuthorizationType.AWS_IAM },
-            { PrivatePublicUPAPIPost.class, true, AuthorizationType.AWS_IAM },
-            { PrivatePublicUPAPIPost.class, false, AuthorizationType.API_KEY },
-
-            // Public + Public
-            { PublicPublicIAMAPIPost.class, false, AuthorizationType.API_KEY },
-
-            /* Test cases of models with 3 or more rules */
-            { OwnerPrivatePublicUPIAMAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { OwnerPrivatePublicUPIAMAPIPost.class, false, AuthorizationType.AWS_IAM },
-
-            { GroupPrivatePublicUPIAMAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { GroupPrivatePublicUPIAMAPIPost.class, false, AuthorizationType.AWS_IAM },
-
-            { PrivatePrivatePublicUPIAMIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { PrivatePrivatePublicUPIAMIAMPost.class, false, AuthorizationType.AWS_IAM },
-
-            { PrivatePrivatePublicUPIAMAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { PrivatePrivatePublicUPIAMAPIPost.class, false, AuthorizationType.API_KEY },
-
-            { PrivatePublicPublicUPAPIIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS },
-            { PrivatePrivatePublicUPIAMAPIPost.class, false, AuthorizationType.AWS_IAM },
-
-            { PrivatePublicComboAPIPost.class, false, AuthorizationType.API_KEY },
-            { PrivatePublicComboUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS }
-        });
-    }
-
+    /**
+     * Constructor for the parameterized test.
+     * @param clazz The model type.
+     * @param requiresSignIn Does the test scenario require the user to be logged in.
+     * @param expectedAuthType The auth type that should succeed for the test.
+     * @throws AmplifyException No expected.
+     */
     public MultiAuthInstrumentationTest(Class<? extends Model> clazz,
                                         boolean requiresSignIn,
                                         AuthorizationType expectedAuthType) throws AmplifyException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
-        Log.i("DBG-MARKER", "===================STARTING TEST CASE "+ clazz.getSimpleName() + "=====================");
+        this.tag = clazz.getSimpleName();
         this.modelType = clazz;
         this.requiresSignIn = requiresSignIn;
         this.expectedAuthType = expectedAuthType;
-        this.tag = "DBG-" + clazz.getSimpleName();
-        this.requestCheckSemaphore = new Semaphore(0);
         this.modelId = UUID.randomUUID().toString();
-        this.okHttpRequests = new HashMap<>();
-        printTestCase("TestCaseConstructor");
+        logTestInfo("Configuring");
 
         MultiAuthTestModelProvider modelProvider =
             MultiAuthTestModelProvider.getInstance(Collections.singletonList(modelType));
@@ -228,8 +160,8 @@ public class MultiAuthInstrumentationTest {
         authCategory.configure(authCategoryConfiguration, context);
         auth = SynchronousAuth.delegatingTo(authCategory);
         if (this.requiresSignIn) {
-            Log.i(tag,"Calling sign-in.");
-            AuthSignInResult authSignInResult = signIn(cognitoUser, cognitoPassword);
+            Log.v(tag, "Test requires signIn.");
+            AuthSignInResult authSignInResult = auth.signIn(cognitoUser, cognitoPassword);
             if (!authSignInResult.isSignInComplete()) {
                 fail("Unable to complete initial sign-in");
             }
@@ -238,31 +170,6 @@ public class MultiAuthInstrumentationTest {
         // Setup an API
         DefaultCognitoUserPoolsAuthProvider cognitoProvider =
             new DefaultCognitoUserPoolsAuthProvider(authPlugin.getEscapeHatch());
-        Interceptor requestInterceptor = chain -> {
-            Response originalResponse = chain.proceed(chain.request());
-            Request httpRequest = originalResponse.request().newBuilder().build();
-            Log.i(tag, "Printing HTTP headers: " + httpRequest.headers());
-
-            final Buffer buffer = new Buffer();
-            RequestBody requestBody = httpRequest.body();
-            if (requestBody != null) {
-                requestBody.writeTo(buffer);
-            } else {
-                buffer.write("".getBytes());
-            }
-
-            Log.i(tag, "HTTP Request Body: " + buffer.readUtf8());
-            Request copyOfRequest = httpRequest.newBuilder().build();
-            Response copyOfResponse = originalResponse.newBuilder().build();
-            okHttpRequests.put(copyOfRequest, copyOfResponse);
-            ResponseBody responseBody = copyOfResponse.newBuilder().build().body();
-            String responseBodyString = responseBody != null ? responseBody.string() : "";
-            Log.i(tag, "HTTP Response Body: " + responseBodyString);
-
-            return originalResponse.newBuilder()
-                                   .body(ResponseBody.create(responseBodyString, originalResponse.body().contentType()))
-                                   .build();
-        };
         CategoryConfiguration apiCategoryConfiguration = amplifyConfiguration.forCategoryType(CategoryType.API);
         ApiAuthProviders apiAuthProviders = ApiAuthProviders.builder()
                                                             .cognitoUserPoolsAuthProvider(cognitoProvider)
@@ -271,7 +178,7 @@ public class MultiAuthInstrumentationTest {
         ApiCategory apiCategory = new ApiCategory();
         apiCategory.addPlugin(AWSApiPlugin.builder()
                                           .configureClient("DataStoreIntegTestsApi", okHttpClientBuilder ->
-                                              okHttpClientBuilder.addInterceptor(requestInterceptor)
+                                              okHttpClientBuilder.addInterceptor(new HttpRequestInterceptor())
                                           )
                                           .apiAuthProviders(apiAuthProviders)
                                           .build());
@@ -279,7 +186,11 @@ public class MultiAuthInstrumentationTest {
         api = SynchronousApi.delegatingTo(apiCategory);
 
         DataStoreConfiguration dsConfig = DataStoreConfiguration.builder()
-                                                                .errorHandler(value -> System.out.println("DATASTOREEXCEPTION:" + value.toString()))
+                                                                .errorHandler(exception -> {
+                                                                    Log.e(tag,
+                                                                          "DataStore error handler received an error.",
+                                                                          exception);
+                                                                })
                                                                 .build();
         DataStoreCategory dataStoreCategory = DataStoreCategoryConfigurator.begin()
                                                                            .api(apiCategory)
@@ -290,13 +201,92 @@ public class MultiAuthInstrumentationTest {
                                                                            .modelSchemaRegistry(modelSchemaRegistry)
                                                                            .resourceId(configResourceId)
                                                                            .timeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                                                                           .authModeStrategy(AuthModeStrategyType.MULTIAUTH)
+                                                                           .authModeStrategy(
+                                                                               AuthModeStrategyType.MULTIAUTH
+                                                                           )
                                                                            .finish();
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
     }
 
+    /**
+     * Builds an array of test scenarios which will be passed to the
+     * constructor of this class.
+     * @return An array of test scenarios representing the following: modelType, requiresLogin, expected auth type.
+     */
+    @Parameterized.Parameters(name = "model:{0} requiresSignIn: {1} expectedAuthType: {2}")
+    public static Iterable<Object[]> data() {
+        //Parameters: model class, isSignedIn, expected successful auth type
+        return Arrays.asList(new Object[][]{
+            // Single rule cases.
+            {OwnerUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {OwnerOIDCPost.class, true, AuthorizationType.OPENID_CONNECT},
+            {GroupUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivateUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PublicIAMPost.class, false, AuthorizationType.AWS_IAM},
+            {PublicIAMPost.class, false, AuthorizationType.AWS_IAM},
+            {PublicAPIPost.class, false, AuthorizationType.API_KEY},
+
+            /* Test cases of models with 2 rules */
+            // Owner + private
+            {OwnerPrivateUPIAMPost.class, false, AuthorizationType.API_KEY},
+            {OwnerPrivateUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+
+            // Owner + public
+            {OwnerPublicUPAPIPost.class, false, AuthorizationType.API_KEY},
+            {OwnerPublicUPAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {OwnerPublicOIDAPIPost.class, true, AuthorizationType.OPENID_CONNECT},
+
+            // Group + private
+            {GroupPrivateUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {GroupPrivateUPIAMPost.class, false, AuthorizationType.AWS_IAM},
+
+            // Group + public
+            {GroupPublicUPAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {GroupPublicUPAPIPost.class, false, AuthorizationType.API_KEY},
+            {GroupPublicUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {GroupPublicUPIAMPost.class, false, AuthorizationType.AWS_IAM},
+
+            // Private + Private
+            {PrivatePrivateUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePrivateUPIAMPost.class, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+
+            // Private + Public
+            {PrivatePublicUPAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePublicUPAPIPost.class, false, AuthorizationType.API_KEY},
+            {PrivatePublicUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePublicUPIAMPost.class, false, AuthorizationType.AWS_IAM},
+            {PrivatePublicUPAPIPost.class, true, AuthorizationType.AWS_IAM},
+            {PrivatePublicUPAPIPost.class, false, AuthorizationType.API_KEY},
+
+            // Public + Public
+            {PublicPublicIAMAPIPost.class, false, AuthorizationType.API_KEY},
+
+            /* Test cases of models with 3 or more rules */
+            {OwnerPrivatePublicUPIAMAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {OwnerPrivatePublicUPIAMAPIPost.class, false, AuthorizationType.AWS_IAM},
+
+            {GroupPrivatePublicUPIAMAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {GroupPrivatePublicUPIAMAPIPost.class, false, AuthorizationType.AWS_IAM},
+
+            {PrivatePrivatePublicUPIAMIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePrivatePublicUPIAMIAMPost.class, false, AuthorizationType.AWS_IAM},
+
+            {PrivatePrivatePublicUPIAMAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePrivatePublicUPIAMAPIPost.class, false, AuthorizationType.API_KEY},
+
+            {PrivatePublicPublicUPAPIIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePrivatePublicUPIAMAPIPost.class, false, AuthorizationType.AWS_IAM},
+
+            {PrivatePublicComboAPIPost.class, false, AuthorizationType.API_KEY},
+            {PrivatePublicComboUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS}
+        });
+    }
+
+    /**
+     * Test tear-down activities.
+     */
     @After
-    public void tearDown() throws DataStoreException, AuthException {
+    public void tearDown() {
         try {
             dataStore.stop();
         } catch (DataStoreException | RuntimeException exception) {
@@ -304,13 +294,16 @@ public class MultiAuthInstrumentationTest {
         }
         Log.i(tag, "Deleting database");
         getApplicationContext().deleteDatabase("AmplifyDatastore.db");
-
-        Log.i("DBG-MARKER", "===================FINISHED TEST CASE "+ modelType.getSimpleName() + "=====================");
+        Log.i(tag, "Teardown completed.");
     }
 
+    /**
+     * Runs the test for the parameters set in the constructor.
+     * @throws AmplifyException Not expected.
+     */
     @Test
     public void verifyScenario() throws AmplifyException {
-        printTestCase("TestCaseRun");
+        logTestInfo("Starting");
         Model record1 = createRecord();
         HubAccumulator publishedMutationsAccumulator =
             HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelType.getSimpleName(), record1.getId()), 1)
@@ -319,11 +312,16 @@ public class MultiAuthInstrumentationTest {
         publishedMutationsAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
+    /**
+     * Create a instance of the model using the private constructor via reflection.
+     * @return A instance of the model being tested.
+     */
     private Model createRecord() {
         try {
             Constructor<?> constructor = modelType.getDeclaredConstructors()[0];
             constructor.setAccessible(true);
-            return (Model) constructor.newInstance(modelId, "Dummy " + modelType.getSimpleName() + " " + RandomString.string());
+            return (Model) constructor.newInstance(modelId,
+                                                   "Dummy " + modelType.getSimpleName() + " " + RandomString.string());
         } catch (IllegalAccessException |
             InstantiationException |
             InvocationTargetException exception) {
@@ -333,9 +331,13 @@ public class MultiAuthInstrumentationTest {
 
     }
 
+    /**
+     * Reads credential information from a file. In CI, this file will be pulled from an S3 bucket.
+     * The resource file being used is in the .gitignore file to prevent accidental commit.
+     * @param context The application context.
+     */
     private void readCredsFromConfig(Context context) {
         //TODO: use secrets manager instead.
-
         @RawRes int cognitoCredsResourceId = Resources.getRawResourceId(context, "credentials");
         try {
             JSONObject credentialsJson = readJsonResourceFromId(context, cognitoCredsResourceId);
@@ -346,24 +348,53 @@ public class MultiAuthInstrumentationTest {
             cognitoPassword = credentialsJson.getJSONObject("datastore")
                                              .getJSONObject("userPool")
                                              .getString("password");
-        } catch (com.amplifyframework.core.Resources.ResourceLoadingException | JSONException e) {
+        } catch (com.amplifyframework.core.Resources.ResourceLoadingException | JSONException exception) {
             Log.e(tag, "Failed to read cognito credentials");
-            fail("Failed to read cognito credentials");
+            throw new RuntimeException("Failed to read cognito credentials");
         }
     }
 
-    private AuthSignInResult signIn(String cognitoUserName, String cognitoPassword) throws AuthException {
-        return auth.signIn(cognitoUserName, cognitoPassword);
+    private void logTestInfo(String stage) {
+        String message = "Model type: " +
+            modelType.getSimpleName() +
+            " requiresSignIn: " +
+            this.requiresSignIn +
+            " expectedAuthType: " +
+            this.expectedAuthType.name() +
+            " stage: " +
+            stage;
+        Log.i(tag, message);
     }
 
-    private void printTestCase(String tag) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("CLASS: ")
-          .append(this.modelType.getSimpleName())
-          .append(" SIGN IN: ")
-          .append(this.requiresSignIn)
-          .append(" EXPECTED AUTH TYPE: ")
-          .append(this.expectedAuthType.name());
-        Log.i(tag, sb.toString());
+    private static final class HttpRequestInterceptor implements Interceptor {
+        private final Map<Request, Response> okHttpRequests;
+
+        HttpRequestInterceptor() {
+            this.okHttpRequests = new HashMap<>();
+        }
+
+        @NotNull
+        @Override
+        public Response intercept(@NotNull Chain chain) throws IOException {
+            Response originalResponse = chain.proceed(chain.request());
+            Request httpRequest = originalResponse.request().newBuilder().build();
+            final Buffer buffer = new Buffer();
+            RequestBody requestBody = httpRequest.body();
+            if (requestBody != null) {
+                requestBody.writeTo(buffer);
+            } else {
+                buffer.write("".getBytes());
+            }
+
+            Request copyOfRequest = httpRequest.newBuilder().build();
+            Response copyOfResponse = originalResponse.newBuilder().build();
+            okHttpRequests.put(copyOfRequest, copyOfResponse);
+            ResponseBody responseBody = copyOfResponse.newBuilder().build().body();
+            String responseBodyString = responseBody != null ? responseBody.string() : "";
+
+            return originalResponse.newBuilder()
+                                   .body(ResponseBody.create(responseBodyString, originalResponse.body().contentType()))
+                                   .build();
+        }
     }
 }
