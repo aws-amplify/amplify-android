@@ -95,11 +95,11 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         if (ongoingCall != null && ongoingCall.isExecuted()) {
             return;
         }
+        LOG.verbose("Request: " + getRequest().getContent());
         while (authTypes.hasNext()) {
+            final AuthorizationType autyType = authTypes.next();
             try {
-                AuthorizationType autyType = authTypes.next();
-                LOG.debug("Request: " + getRequest().getContent());
-                LOG.debug("Auth type: " + autyType);
+                LOG.verbose("Attempting request with authType=" + autyType);
                 Request originalRequest = new Request.Builder()
                     .url(endpoint)
                     .addHeader("accept", CONTENT_TYPE)
@@ -113,11 +113,14 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                     @Override
                     public void onFailure(@NonNull Call call, @NonNull IOException exception) {
                         if (!authTypes.hasNext()) {
+                            LOG.warn("No auth types left to try for this request.");
                             onFailure.accept(new ApiException(
                                 "OkHttp client request failed.",
                                 exception,
                                 "See attached exception for more details."
                             ));
+                        } else {
+                            LOG.warn("Failure occurred for " + autyType, exception);
                         }
                     }
 
@@ -129,11 +132,13 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                             try {
                                 jsonResponse = responseBody.string();
                             } catch (IOException exception) {
-                                onFailure.accept(new ApiException(
-                                    "Could not retrieve the response body from the returned JSON",
-                                    exception, AmplifyException.TODO_RECOVERY_SUGGESTION
-                                ));
-                                return;
+                                if (!authTypes.hasNext()) {
+                                    onFailure.accept(new ApiException(
+                                        "Could not retrieve the response body from the returned JSON",
+                                        exception, AmplifyException.TODO_RECOVERY_SUGGESTION
+                                    ));
+                                    return;
+                                }
                             }
                         }
 
@@ -151,11 +156,14 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                     if (ongoingCall != null) {
                         ongoingCall.cancel();
                     }
-
+                    LOG.warn("No auth types left to attempt for the current request", error);
                     onFailure.accept(new ApiException(
                         "OkHttp client failed to make a successful request.",
                         error, AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
+                } else {
+                    LOG.error("An error occurred while attempting " +
+                                  "to start the GraphQL operation with auth type " + autyType);
                 }
             }
         }

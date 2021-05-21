@@ -120,6 +120,7 @@ public final class ApiRequestDecoratorFactory {
             // handling a little bit cleaner. If getLatestAuthToken() is called from inside the lambda expression
             // below, we'd have to surround it with a try catch. By doing it this way, if there's a problem,
             // the ApiException will just be bubbled up. Same for OPENID_CONNECT.
+            LOG.verbose("Attempting to retrieve token from user pools.");
             final String token = cognitoUserPoolsAuthProvider.getLatestAuthToken();
             return new JWTTokenRequestDecorator(() -> token);
         } else if (AuthorizationType.OPENID_CONNECT.equals(authorizationType)) {
@@ -128,6 +129,7 @@ public final class ApiRequestDecoratorFactory {
                                            "without an OIDC provider.",
                                        "Configure an OidcAuthProvider when initializing the API plugin.");
             }
+            LOG.verbose("Attempting to retrieve token from OIDC provider.");
             final String token = apiAuthProviders.getOidcAuthProvider().getLatestAuthToken();
             return new JWTTokenRequestDecorator(() -> token);
         } else if (AuthorizationType.API_KEY.equals(authorizationType)) {
