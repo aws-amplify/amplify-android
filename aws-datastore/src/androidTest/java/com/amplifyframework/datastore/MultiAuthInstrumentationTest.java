@@ -146,8 +146,7 @@ public class MultiAuthInstrumentationTest {
 
         StrictMode.enable();
         Context context = getApplicationContext();
-        //TODO: CHANGE THIS TO AMPLIFYCONFIGURATION
-        @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfiguration_dsmydevaccount");
+        @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfiguration");
         AmplifyConfiguration amplifyConfiguration = AmplifyConfiguration.fromConfigFile(context, configResourceId);
 
         readCredsFromConfig(context);
