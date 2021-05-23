@@ -37,6 +37,7 @@ public final class ApiAuthProviders {
     private final AWSCredentialsProvider awsCredentialsProvider;
     private final CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
     private final OidcAuthProvider oidcAuthProvider;
+    private HashSet<AuthorizationType> availableAuthTypes;
 
     private ApiAuthProviders(Builder builder) {
         this.apiKeyAuthProvider = builder.getApiKeyAuthProvider();
@@ -82,21 +83,24 @@ public final class ApiAuthProviders {
      * @param apiConfiguration A reference to the API configuration.
      * @return a set of {@link AuthorizationType}.
      */
-    public Set<AuthorizationType> getAvailableAuthorizationTypes(ApiConfiguration apiConfiguration) {
-        HashSet<AuthorizationType> result = new HashSet<>();
-        if (cognitoUserPoolsAuthProvider != null || Amplify.Auth.getPlugins().size() > 0) {
-            result.add(AuthorizationType.AMAZON_COGNITO_USER_POOLS);
+    public synchronized Set<AuthorizationType> getAvailableAuthorizationTypes(ApiConfiguration apiConfiguration) {
+        if (availableAuthTypes == null) {
+            availableAuthTypes = new HashSet<>();
+            boolean hasAmplifyAuth = Amplify.Auth.getPlugins().size() > 0;
+            if (cognitoUserPoolsAuthProvider != null || hasAmplifyAuth) {
+                availableAuthTypes.add(AuthorizationType.AMAZON_COGNITO_USER_POOLS);
+            }
+            if (oidcAuthProvider != null) {
+                availableAuthTypes.add(AuthorizationType.OPENID_CONNECT);
+            }
+            if (awsCredentialsProvider != null || hasAmplifyAuth) {
+                availableAuthTypes.add(AuthorizationType.AWS_IAM);
+            }
+            if (apiKeyAuthProvider != null || apiConfiguration.getApiKey() != null) {
+                availableAuthTypes.add(AuthorizationType.API_KEY);
+            }
         }
-        if (oidcAuthProvider != null) {
-            result.add(AuthorizationType.OPENID_CONNECT);
-        }
-        if (awsCredentialsProvider != null) {
-            result.add(AuthorizationType.AWS_IAM);
-        }
-        if (apiKeyAuthProvider != null || apiConfiguration.getApiKey() != null) {
-            result.add(AuthorizationType.API_KEY);
-        }
-        return result;
+        return availableAuthTypes;
     }
 
     /**
