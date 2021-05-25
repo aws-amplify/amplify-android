@@ -1,3 +1,12 @@
+## [Release 0.1.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.7)
+
+### Bug Fixes
+- checkstyle failure on Windows (#1326)
+- **datastore:** save metadata when merging even if mutation outbox has pending item (#1319)
+- **datastore:** add syncExpression method to configuration builder that takes the modelName as a String (#1330)
+
+[See all changes between 0.1.6 and 0.1.7](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.6...release-kotlin_v0.1.7)
+
 ## [Release 0.1.6](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.6)
 
 ### Bug Fixes
