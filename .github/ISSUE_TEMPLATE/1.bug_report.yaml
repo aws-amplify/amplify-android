@@ -37,10 +37,6 @@ body:
       options:
         - label: I have [searched for duplicate or closed issues](https://github.com/aws-amplify/amplify-android/issues?q=is%3Aissue+) and [discussions](https://github.com/aws-amplify/amplify-android/discussions).
           required: true
-        - label: I have read the guide for [submitting bug reports](https://github.com/aws-amplify/amplify-android/blob/release_v1.17.5/CONTRIBUTING.md#reporting-bugsfeature-requests).
-          required: true
-        - label: I have done my best to include a minimal, self-contained set of instructions for consistently reproducing the issue.
-          required: true
 
   - type: markdown
     attributes:
