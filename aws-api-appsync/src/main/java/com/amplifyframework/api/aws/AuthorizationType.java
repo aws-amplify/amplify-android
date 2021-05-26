@@ -15,6 +15,10 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.util.Empty;
+
 /**
  * The types of authorization one can use while talking to an Amazon
  * AppSync GraphQL backend.
@@ -71,5 +75,40 @@ public enum AuthorizationType {
 
         throw new IllegalArgumentException("No such authorization type: " + name);
     }
-}
 
+    /**
+     * Look up an AuthorizationType by inspecting an AuthRule annotation.
+     * @param authRuleAnnotation The annotation obtained from a model.
+     * @return The AuthorizationType for the provider
+     * @throws IllegalArgumentException if AuthRule's provider does not match an authorization type
+     */
+    public static AuthorizationType from(AuthRule authRuleAnnotation) {
+        String providerName = authRuleAnnotation.provider();
+        if (Empty.check(providerName)) {
+            providerName = authRuleAnnotation.allow().getDefaultAuthProvider().name();
+        }
+        AuthStrategy.Provider authRuleProvider = AuthStrategy.Provider.from(providerName);
+        return from(authRuleProvider);
+    }
+
+    /**
+     * Look up an AuthorizationType by {@link AuthStrategy.Provider}.
+     * @param authRuleProvider The auth rule provider value.
+     * @return The AuthorizationType for the given provider.
+     * @throws IllegalArgumentException if AuthRule's provider does not map to an authorization type
+     */
+    public static AuthorizationType from(AuthStrategy.Provider authRuleProvider) {
+        switch (authRuleProvider) {
+            case USER_POOLS:
+                return AMAZON_COGNITO_USER_POOLS;
+            case OIDC:
+                return OPENID_CONNECT;
+            case IAM:
+                return AWS_IAM;
+            case API_KEY:
+                return API_KEY;
+            default:
+                throw new IllegalArgumentException("No such authorization type: " + authRuleProvider.name());
+        }
+    }
+}
