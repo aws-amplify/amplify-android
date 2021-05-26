@@ -218,6 +218,6 @@ body:
     attributes:
       label: Additional information and screenshots
       description: |
-        If you have any additional information (i.e. `awsconfiguration.json`), workarounds, etc. for us, use the field below.
+        If you have any additional information, workarounds, etc. for us, use the field below.
         Please note, you can attach screenshots or screen recordings here, by
         dragging and dropping files in the field below.
