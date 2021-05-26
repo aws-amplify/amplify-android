@@ -417,11 +417,20 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull Consumer<AuthException> onException
     ) {
         final Map<String, String> metadata = new HashMap<>();
+        final Map<String, String> userAttributes = new HashMap<>();
         if (options instanceof AWSCognitoAuthConfirmSignInOptions) {
-            metadata.putAll(((AWSCognitoAuthConfirmSignInOptions) options).getMetadata());
+            if (((AWSCognitoAuthConfirmSignInOptions) options).getMetadata() != null) {
+                metadata.putAll(((AWSCognitoAuthConfirmSignInOptions) options).getMetadata());
+            }
+
+            if (((AWSCognitoAuthConfirmSignInOptions) options).getUserAttributes() != null) {
+                for (AuthUserAttribute attribute : ((AWSCognitoAuthConfirmSignInOptions) options).getUserAttributes()) {
+                    userAttributes.put(attribute.getKey().getKeyString(), attribute.getValue());
+                }
+            }
         }
 
-        awsMobileClient.confirmSignIn(confirmationCode, metadata, new Callback<SignInResult>() {
+        awsMobileClient.confirmSignIn(confirmationCode, metadata, userAttributes, new Callback<SignInResult>() {
             @Override
             public void onResult(SignInResult result) {
                 try {

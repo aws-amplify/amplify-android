@@ -18,10 +18,13 @@ package com.amplifyframework.auth.cognito.options;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -30,15 +33,20 @@ import java.util.Objects;
  */
 public final class AWSCognitoAuthConfirmSignInOptions extends AuthConfirmSignInOptions {
     private final Map<String, String> metadata;
+    private final List<AuthUserAttribute> userAttributes;
 
     /**
      * Advanced options for confirming sign in.
      * @param metadata Additional custom attributes to be sent to the service such as information about the client
+     * @param userAttributes A list of additional user attributes which should be
+     * associated with this user on confirmSignIn.
      */
     protected AWSCognitoAuthConfirmSignInOptions(
-            Map<String, String> metadata
+            Map<String, String> metadata,
+            List<AuthUserAttribute> userAttributes
     ) {
         this.metadata = metadata;
+        this.userAttributes = userAttributes;
     }
 
     /**
@@ -48,6 +56,15 @@ public final class AWSCognitoAuthConfirmSignInOptions extends AuthConfirmSignInO
     @NonNull
     public Map<String, String> getMetadata() {
         return metadata;
+    }
+
+    /**
+     * Get additional user attributes which should be associated with this user on confirmSignIn.
+     * @return additional user attributes which should be associated with this user on confirmSignIn
+     */
+    @NonNull
+    public List<AuthUserAttribute> getUserAttributes() {
+        return userAttributes;
     }
 
     /**
@@ -62,7 +79,8 @@ public final class AWSCognitoAuthConfirmSignInOptions extends AuthConfirmSignInO
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                getMetadata()
+                getMetadata(),
+                getUserAttributes()
         );
     }
 
@@ -74,14 +92,16 @@ public final class AWSCognitoAuthConfirmSignInOptions extends AuthConfirmSignInO
             return false;
         } else {
             AWSCognitoAuthConfirmSignInOptions authConfirmSignInOptions = (AWSCognitoAuthConfirmSignInOptions) obj;
-            return ObjectsCompat.equals(getMetadata(), authConfirmSignInOptions.getMetadata());
+            return ObjectsCompat.equals(getMetadata(), authConfirmSignInOptions.getMetadata()) &&
+                   ObjectsCompat.equals(getUserAttributes(), authConfirmSignInOptions.getUserAttributes());
         }
     }
 
     @Override
     public String toString() {
         return "AWSCognitoAuthConfirmSignInOptions{" +
-                "metadata=" + metadata +
+                "userAttributes=" + getUserAttributes() +
+                ", metadata=" + getMetadata() +
                 '}';
     }
 
@@ -90,6 +110,7 @@ public final class AWSCognitoAuthConfirmSignInOptions extends AuthConfirmSignInO
      */
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private Map<String, String> metadata;
+        private List<AuthUserAttribute> userAttributes;
 
         /**
          * Constructor for the builder.
@@ -97,6 +118,7 @@ public final class AWSCognitoAuthConfirmSignInOptions extends AuthConfirmSignInO
         public CognitoBuilder() {
             super();
             this.metadata = new HashMap<>();
+            this.userAttributes = new ArrayList<AuthUserAttribute>();
         }
 
         /**
@@ -122,13 +144,28 @@ public final class AWSCognitoAuthConfirmSignInOptions extends AuthConfirmSignInO
         }
 
         /**
+         * Set the userAttributes field for the object being built.
+         * @param userAttributes A list of additional user attributes which should be
+*        * associated with this user on confirmSignIn.
+         * @return the instance of the builder.
+         */
+        @NonNull
+        public CognitoBuilder userAttributes(@NonNull List<AuthUserAttribute> userAttributes) {
+            Objects.requireNonNull(userAttributes);
+            this.userAttributes.clear();
+            this.userAttributes.addAll(userAttributes);
+            return getThis();
+        }
+
+        /**
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthConfirmSignInOptions with the values specified in the builder.
          */
         @NonNull
         public AWSCognitoAuthConfirmSignInOptions build() {
             return new AWSCognitoAuthConfirmSignInOptions(
-                    Immutable.of(metadata));
+                Immutable.of(metadata),
+                Immutable.of(userAttributes));
         }
     }
 }
