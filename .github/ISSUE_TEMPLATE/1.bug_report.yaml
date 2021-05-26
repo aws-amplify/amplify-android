@@ -1,0 +1,227 @@
+name: Bug report
+description: Create a report to help us improve Amplify Android
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Try to include as much information as you can.
+  - type: markdown
+    attributes:
+      value: |
+        For reference, the current versions of the Amplify Android packages are listed below. Please verify your issue against the latest version(s) of the relevant package(s).
+
+        <details>
+          <summary>Click to expand package version list</summary>
+
+          | Package                                              | Version                                                                                                          |
+          | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+          | `com.amplifyframework:aws-analytics-pinpoint`        | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-analytics-pinpoint)             |
+          | `com.amplifyframework:aws-api`                       | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-api)                            |
+          | `com.amplifyframework:aws-api-appsync`               | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-api-appsync)                    |
+          | `com.amplifyframework:aws-auth-cognito`              | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-auth-cognito)                   |
+          | `com.amplifyframework:aws-datastore`                 | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-datastore)                      |
+          | `com.amplifyframework:aws-storage-s3`                | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-storage-s3)                     |
+          | `com.amplifyframework:aws-predictions`               | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-predictions)                    |
+          | `com.amplifyframework:aws-predictions-tensorflow`    | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-predictions-tensorflow)         |
+          | `com.amplifyframework:core`                          | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core)                               |
+          | `com.amplifyframework:core-kotlin`                   | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core-kotlin)                        |
+          | `com.amplifyframework:rxbindings`                    | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/rxbindings)                         |
+
+        </details>
+
+  - type: checkboxes
+    attributes:
+      label: |
+        Before opening, please confirm:
+      options:
+        - label: I have [searched for duplicate or closed issues](https://github.com/aws-amplify/amplify-android/issues?q=is%3Aissue+) and [discussions](https://github.com/aws-amplify/amplify-android/discussions).
+          required: true
+        - label: I have read the guide for [submitting bug reports](https://github.com/aws-amplify/amplify-android/blob/release_v1.17.5/CONTRIBUTING.md#reporting-bugsfeature-requests).
+          required: true
+        - label: I have done my best to include a minimal, self-contained set of instructions for consistently reproducing the issue.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Environment
+  - type: dropdown
+    attributes:
+      label: Language and Async Model
+      description: What programming language is being used?
+      multiple: true
+      options:
+        - Java
+        - Kotlin
+        - Kotlin - Coroutines
+        - RxJava
+        - Not applicable
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Amplify Categories
+      description: |
+        What [Amplify Categories](https://docs.amplify.aws/lib/q/platform/android) are being used?
+      multiple: true
+      options:
+        - Authentication
+        - Analytics
+        - REST API
+        - GraphQL API
+        - DataStore
+        - Storage
+        - Predictions
+        - Not applicable
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Gradle script dependencies
+      description: |
+        Please provide the version of Amplify Framework being used from your `build.gradle (Module: app)` file.
+      value: |
+        <details>
+
+        ```groovy
+        // Put output below this line
+
+
+        ```
+
+        </details>
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Environment information
+      description: |
+        Please run the following command inside your project and copy/paste the output below:
+        ```
+          ./gradlew --version
+        ```
+      value: |
+        <details>
+
+        ```
+        # Put output below this line
+
+
+        ```
+
+        </details>
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## Details
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction steps
+      description: |
+        How do you trigger this bug? Please walk us through it step by step. Screenshots can be attached in textarea below.
+      placeholder: |
+        1. Install '...'
+        2. Configure '...'
+        3. Go to '...'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Code Snippet
+      description: |
+        Please provide a code snippet or a link to sample code of the issue you are experiencing to help us reproduce the issue. 
+
+        **Be sure to remove any sensitive data.**
+      value: |
+        ```java
+        // Put your code below this line.
+
+        ```
+  - type: textarea
+    attributes:
+      label: Log output
+      description: |
+        For example, error messages, or stack traces.
+        
+        You can turn on the debug and verbose logs by using the below statement in your app.
+        ```java
+        Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))
+        ```
+        You also can enable [developer menu](https://docs.amplify.aws/lib/debugging/dev-menu/q/platform/android) to provide more info for us. 
+
+        **Be sure to remove any sensitive data.**
+      value: |
+        <details>
+
+        ```
+        // Put your logs below this line
+
+
+        ```
+
+        </details>
+  - type: markdown
+    attributes:
+      value: |
+        ## Configuration
+  - type: textarea
+    attributes:
+      label: amplifyconfiguration.json
+      description: If applicable, please provide your `amplifyconfiguration.json` file.
+      placeholder: |
+        ```json
+          {
+            "UserAgent": "aws-amplify-cli/2.0",
+            "Version": "1.0",
+            "api": {
+                "plugins": {
+                    "awsAPIPlugin": {
+                        "amplifyDatasource": {
+                            "endpointType": "GraphQL",
+                            "endpoint": "https://xxxxxxxxxxxxxxxxxxxxxxxxxx.appsync-api.us-east-2.amazonaws.com/graphql",
+                            "region": "us-east-2",
+                            "authorizationType": "API_KEY",
+                            "apiKey": "xxx-xxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        }
+                    }
+                }
+            }
+        }
+        ```
+  - type: textarea
+    attributes:
+      label: GraphQL Schema
+      description: If applicable, please provide your `schema.graphql` file.
+      value: |
+        <details>
+
+        ```graphql
+        // Put your schema below this line
+
+
+        ```
+
+        </details>
+  - type: textarea
+    attributes:
+      label: Additional information and screenshots
+      description: |
+        If you have any additional information (i.e. `awsconfiguration.json`), workarounds, etc. for us, use the field below.
+        Please note, you can attach screenshots or screen recordings here, by
+        dragging and dropping files in the field below.
