@@ -1,3 +1,12 @@
+## [Release 1.17.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.17.6)
+
+### Bug Fixes
+- checkstyle failure on Windows (#1326)
+- **datastore:** save metadata when merging even if mutation outbox has pending item (#1319)
+- **datastore:** add syncExpression method to configuration builder that takes the modelName as a String (#1330)
+
+[See all changes between 1.17.5 and 1.17.6](https://github.com/aws-amplify/amplify-android/compare/release_v1.17.5...release_v1.17.6)
+
 ## [Release 1.17.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.17.5)
 
 ### Bug Fixes

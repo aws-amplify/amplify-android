@@ -17,11 +17,14 @@ package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreConfiguration.ConfigKey;
 import com.amplifyframework.datastore.DataStoreConflictHandler.AlwaysApplyRemoteHandler;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
@@ -31,6 +34,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -91,23 +96,27 @@ public final class DataStoreConfigurationTest {
      * When building a configuration from both a config file and a configuration object,
      * default values should be overridden, and the provided ones shall be used, instead.
      * @throws JSONException While arranging config file JSON
-     * @throws DataStoreException While building DataStoreConfiguration instances via build()
+     * @throws AmplifyException While building DataStoreConfiguration instances via build(), or when deriving a
+     * {@link ModelSchema} from a {@link Model} class.
      */
     @Test
-    public void testDefaultOverriddenFromConfigurationAndObject() throws JSONException, DataStoreException {
+    public void testDefaultOverriddenFromConfigurationAndObject()
+            throws JSONException, AmplifyException {
         long expectedSyncIntervalMinutes = 6L;
         Long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
         Integer expectedSyncMaxRecords = 3;
         DummyConflictHandler dummyConflictHandler = new DummyConflictHandler();
         DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
 
-        DataStoreSyncExpression syncExpression = () -> BlogOwner.ID.beginsWith(RandomString.string());
+        DataStoreSyncExpression ownerSyncExpression = () -> BlogOwner.ID.beginsWith(RandomString.string());
+        DataStoreSyncExpression postSyncExpression = () -> Post.ID.beginsWith(RandomString.string());
         DataStoreConfiguration configObject = DataStoreConfiguration
             .builder()
             .syncMaxRecords(expectedSyncMaxRecords)
             .conflictHandler(dummyConflictHandler)
             .errorHandler(errorHandler)
-            .syncExpression(BlogOwner.class, syncExpression)
+            .syncExpression(BlogOwner.class, ownerSyncExpression)
+            .syncExpression("Post", postSyncExpression)
             .build();
 
         JSONObject jsonConfigFromFile = new JSONObject()
@@ -123,8 +132,11 @@ public final class DataStoreConfigurationTest {
 
         assertEquals(dummyConflictHandler, dataStoreConfiguration.getConflictHandler());
         assertEquals(errorHandler, dataStoreConfiguration.getErrorHandler());
-        assertEquals(Collections.singletonMap(BlogOwner.class.getSimpleName(), syncExpression),
-                dataStoreConfiguration.getSyncExpressions());
+
+        Map<String, DataStoreSyncExpression> expectedSyncExpressions = new HashMap<>();
+        expectedSyncExpressions.put(BlogOwner.class.getSimpleName(), ownerSyncExpression);
+        expectedSyncExpressions.put(Post.class.getSimpleName(), postSyncExpression);
+        assertEquals(expectedSyncExpressions, dataStoreConfiguration.getSyncExpressions());
     }
 
     /**
