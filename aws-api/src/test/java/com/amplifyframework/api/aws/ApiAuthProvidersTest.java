@@ -38,13 +38,20 @@ import static org.junit.Assert.assertTrue;
  */
 public class ApiAuthProvidersTest {
     private static final AWSCognitoAuthPlugin AUTH_PLUGIN = new AWSCognitoAuthPlugin();
-    private static final ApiConfiguration BASIC_API_CONFIG = ApiConfiguration.builder()
-                                                                             .endpoint("https://test.endpoint.com")
-                                                                             .region("us-east-1")
-                                                                             .authorizationType(
+    private static final ApiConfiguration API_CONFIG_NO_KEY = ApiConfiguration.builder()
+                                                                              .endpoint("https://test.endpoint.com")
+                                                                              .region("us-east-1")
+                                                                              .authorizationType(
                                                                                 AuthorizationType.API_KEY
                                                                              )
-                                                                             .build();
+                                                                              .build();
+    private static final ApiConfiguration API_CONFIG_WITH_KEY = ApiConfiguration.builder()
+                                                                                .endpoint("https://test.endpoint.com")
+                                                                                .region("us-east-1")
+                                                                                .authorizationType(
+                                                                                    AuthorizationType.API_KEY)
+                                                                                .apiKey("FROM CONFIG")
+                                                                                .build();
     private static final CognitoUserPoolsAuthProvider DUMMY_COGNITO_PROVIDER =
         new CognitoUserPoolsAuthProvider() {
             @Override
@@ -73,35 +80,33 @@ public class ApiAuthProvidersTest {
      * - The provided API configuration has an API key specified.
      */
     @Test
-    public void testApiKey() {
-        // Create an API config with an API key
-        ApiConfiguration configWithKey = ApiConfiguration.builder()
-                                                         .endpoint("https://test.endpoint.com")
-                                                         .region("us-east-1")
-                                                         .authorizationType(AuthorizationType.API_KEY)
-                                                         .apiKey("dummy")
-                                                         .build();
-
+    public void apiKeyFromProviderTest() {
         // Create an ApiAuthProviders instance with an API key provider set.
-        ApiAuthProviders withProvider = ApiAuthProviders.builder().apiKeyAuthProvider(() -> null).build();
+        ApiAuthProviders withProvider = ApiAuthProviders.builder().apiKeyAuthProvider(() -> "FROM PROVIDER").build();
+        Set<AuthorizationType> expectedAuthTypesApiKeyOnly = Collections.singleton(AuthorizationType.API_KEY);
 
+        // API Key provider set (with or without a API Key in the API config) shoult result in 1 auth type (API_KEY)
+        Set<AuthorizationType> actualAuthTypes = withProvider.getAvailableAuthorizationTypes(API_CONFIG_NO_KEY);
+        assertEquals(expectedAuthTypesApiKeyOnly, actualAuthTypes);
+        actualAuthTypes = withProvider.getAvailableAuthorizationTypes(API_CONFIG_WITH_KEY);
+        assertEquals(expectedAuthTypesApiKeyOnly, actualAuthTypes);
+
+        // The API key should be the one from the provider since the override takes precedence.
+        assertEquals("FROM PROVIDER", withProvider.getApiKeyAuthProvider().getAPIKey());
+    }
+
+    /**
+     * API_KEY should be an available auth type if there is an API key in the config file. As long as
+     * no provider override was set for API key.
+     */
+    @Test
+    public void apiKeyFromConfigTest() {
+        Set<AuthorizationType> expectedAuthTypesApiKeyOnly = Collections.singleton(AuthorizationType.API_KEY);
         // Create an empty ApiAuthProviders instance.
         ApiAuthProviders withoutProvider = ApiAuthProviders.noProviderOverrides();
 
-        Set<AuthorizationType> expectedAuthTypesApiKeyOnly = Collections.singleton(AuthorizationType.API_KEY);
-
-        // No API Key provider and no API key in the config should result in 0 auth types being returned.
-        Set<AuthorizationType> actualAuthTypes = withoutProvider.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
-        assertEquals(0, actualAuthTypes.size());
-
         // No API Key provider but there's an API key in the config should result in 1 auth type (API_KEY)
-        actualAuthTypes = withoutProvider.getAvailableAuthorizationTypes(configWithKey);
-        assertEquals(expectedAuthTypesApiKeyOnly, actualAuthTypes);
-
-        // API Key provider set (with or without a API Key in the API config) shoult result in 1 auth type (API_KEY)
-        actualAuthTypes = withProvider.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
-        assertEquals(expectedAuthTypesApiKeyOnly, actualAuthTypes);
-        actualAuthTypes = withProvider.getAvailableAuthorizationTypes(configWithKey);
+        Set<AuthorizationType> actualAuthTypes = withoutProvider.getAvailableAuthorizationTypes(API_CONFIG_WITH_KEY);
         assertEquals(expectedAuthTypesApiKeyOnly, actualAuthTypes);
     }
 
@@ -122,21 +127,25 @@ public class ApiAuthProvidersTest {
 
         // withProvider should return 1 item (AMAZON_COGNITO_USER_POOLS) because cognitoUserPoolsAuthProvider
         // was set.
-        Set<AuthorizationType> results = withProvider.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
+        Set<AuthorizationType> results = withProvider.getAvailableAuthorizationTypes(API_CONFIG_NO_KEY);
         assertEquals(1, results.size());
         Assert.assertTrue(results.contains(AuthorizationType.AMAZON_COGNITO_USER_POOLS));
 
         // withoutProvider should return 0. No cognitoUserPoolsAuthProvider was not set.
-        results = withoutProvider.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
+        results = withoutProvider.getAvailableAuthorizationTypes(API_CONFIG_NO_KEY);
         assertEquals(0, results.size());
 
         // Add the auth plugin to Amplify.
         Amplify.addPlugin(AUTH_PLUGIN);
 
-        // withoutProvider should return 1 because we added an auth plugin.
-        results = withoutProvider.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
-        assertEquals(1, results.size());
-        Assert.assertTrue(results.contains(AuthorizationType.AMAZON_COGNITO_USER_POOLS));
+        // Reset the providers
+        withoutProvider = ApiAuthProviders.noProviderOverrides();
+        // withoutProvider should return 2 because we added an auth plugin. (USER POOLS and IAM can
+        // be used when the auth plugin is present.
+        results = withoutProvider.getAvailableAuthorizationTypes(API_CONFIG_NO_KEY);
+        assertEquals(2, results.size());
+        assertTrue(results.contains(AuthorizationType.AWS_IAM));
+        assertTrue(results.contains(AuthorizationType.AMAZON_COGNITO_USER_POOLS));
     }
 
     /**
@@ -162,11 +171,11 @@ public class ApiAuthProvidersTest {
         ApiAuthProviders withoutProvider = ApiAuthProviders.noProviderOverrides();
 
         // withoutProvider should return 0 auth types.
-        Set<AuthorizationType> results = withoutProvider.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
+        Set<AuthorizationType> results = withoutProvider.getAvailableAuthorizationTypes(API_CONFIG_NO_KEY);
         assertEquals(0, results.size());
 
         // withProvider should return 1 auth type because it was explicitly set via awsCredentialsProvider.
-        results = withProvider.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
+        results = withProvider.getAvailableAuthorizationTypes(API_CONFIG_NO_KEY);
         assertEquals(1, results.size());
         Assert.assertTrue(results.contains(AuthorizationType.AWS_IAM));
     }
@@ -184,11 +193,11 @@ public class ApiAuthProvidersTest {
         ApiAuthProviders withoutProvider = ApiAuthProviders.noProviderOverrides();
 
         // withoutProvider should return 0 auth types.
-        Set<AuthorizationType> results = withoutProvider.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
+        Set<AuthorizationType> results = withoutProvider.getAvailableAuthorizationTypes(API_CONFIG_NO_KEY);
         assertEquals(0, results.size());
 
         // withProvider should return 1 auth type because it was explicitly set via oidcAuthProvider.
-        results = withProvider.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
+        results = withProvider.getAvailableAuthorizationTypes(API_CONFIG_NO_KEY);
         assertEquals(1, results.size());
         Assert.assertTrue(results.contains(AuthorizationType.OPENID_CONNECT));
     }
@@ -202,7 +211,7 @@ public class ApiAuthProvidersTest {
                                                                  .apiKeyAuthProvider(() -> null)
                                                                  .cognitoUserPoolsAuthProvider(DUMMY_COGNITO_PROVIDER)
                                                                  .build();
-        Set<AuthorizationType> results = withMultipleProviders.getAvailableAuthorizationTypes(BASIC_API_CONFIG);
+        Set<AuthorizationType> results = withMultipleProviders.getAvailableAuthorizationTypes(API_CONFIG_NO_KEY);
         assertEquals(2, results.size());
         assertTrue(results.contains(AuthorizationType.AMAZON_COGNITO_USER_POOLS));
         assertTrue(results.contains(AuthorizationType.API_KEY));
