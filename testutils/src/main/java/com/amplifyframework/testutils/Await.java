@@ -146,9 +146,6 @@ public final class Await {
                         resultContainer.set(result);
                         latch.countDown();
                     }, error -> {
-                        if (errorContainer.get() != null) {
-                            throw new RuntimeException("Error callback called more than once with error: " + error);
-                        }
                         errorContainer.set(error);
                         latch.countDown();
                     }
