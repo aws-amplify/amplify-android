@@ -49,7 +49,7 @@ cp -R build/javadoc/* docs/reference/
 # check in documents
 git add docs/reference
 git rm --cached  preserve_olddocument.sh
-git commit -m "AWS SDK for Android $release_version"
+git commit -m "Amplify Android $release_version"
 git push
 
 # Add documentation tags to gh-pages
