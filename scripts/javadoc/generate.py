@@ -89,7 +89,7 @@ def getsourceFilesWithPattern(root, module, patterns):
     return files
 
 variableDict = {}
-def resolveVaraibles(str):
+def resolveVariables(str):
     for k,v in variableDict.items():
         str = str.replace("${" + k + "}" , v)
     return str
