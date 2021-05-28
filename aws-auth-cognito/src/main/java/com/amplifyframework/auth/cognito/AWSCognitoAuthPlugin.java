@@ -849,8 +849,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                                         null)
                                         ));
                             }
-                            onSuccess.accept(resultMap);
                         }
+                        onSuccess.accept(resultMap);
                     }
 
                     @Override
