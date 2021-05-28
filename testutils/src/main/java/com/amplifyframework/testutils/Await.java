@@ -140,6 +140,9 @@ public final class Await {
             try {
                 resultErrorEmitter.emitTo(
                     result -> {
+                        if (resultContainer.get() != null) {
+                            throw new RuntimeException("Result callback called more than once with result: " + result);
+                        }
                         resultContainer.set(result);
                         latch.countDown();
                     }, error -> {
