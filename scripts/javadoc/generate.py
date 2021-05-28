@@ -96,7 +96,7 @@ def resolveVariables(str):
 def resolveList(list):
     newlist = []
     for e in list:
-        newlist.append(resolveVaraibles(e))
+        newlist.append(resolveVariables(e))
     return newlist
 
 
