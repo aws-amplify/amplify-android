@@ -102,7 +102,7 @@ def resolveList(list):
 
 def resolveDict(dict):
     for k in dict:
-        dict[k] = resolveVaraibles(dict[k])      
+        dict[k] = resolveVariables(dict[k])      
     return dict
 
 def printset(s):
