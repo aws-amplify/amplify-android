@@ -101,8 +101,9 @@ public final class ApiRequestDecoratorFactory {
      * Given a authorization type, it returns the appropriate request decorator.
      * @param authorizationType the authorization type to be used for the request.
      * @return the appropriate request decorator for the given authorization type.
+     * @throws ApiException if unable to get a request decorator.
      */
-    private RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiException {
+    public RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiException {
         if (AuthorizationType.AMAZON_COGNITO_USER_POOLS.equals(authorizationType)) {
             // Note that if there was no user-provided cognito provider passed in to initialize
             // the API plugin, we will try to default to using the DefaultCognitoUserPoolsAuthProvider.
