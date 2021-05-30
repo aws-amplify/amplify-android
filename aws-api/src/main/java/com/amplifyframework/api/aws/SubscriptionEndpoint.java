@@ -90,7 +90,22 @@ final class SubscriptionEndpoint {
     }
 
     synchronized <T> void requestSubscription(
+        @NonNull GraphQLRequest<T> request,
+        @NonNull Consumer<String> onSubscriptionStarted,
+        @NonNull Consumer<GraphQLResponse<T>> onNextItem,
+        @NonNull Consumer<ApiException> onSubscriptionError,
+        @NonNull Action onSubscriptionComplete) {
+        requestSubscription(request,
+                            apiConfiguration.getAuthorizationType(),
+                            onSubscriptionStarted,
+                            onNextItem,
+                            onSubscriptionError,
+                            onSubscriptionComplete);
+    }
+
+    synchronized <T> void requestSubscription(
             @NonNull GraphQLRequest<T> request,
+            @NonNull AuthorizationType authType,
             @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<T>> onNextItem,
             @NonNull Consumer<ApiException> onSubscriptionError,
@@ -107,7 +122,7 @@ final class SubscriptionEndpoint {
             webSocketListener = new AmplifyWebSocketListener();
             try {
                 webSocket = okHttpClient.newWebSocket(new Request.Builder()
-                    .url(buildConnectionRequestUrl())
+                    .url(buildConnectionRequestUrl(authType))
                     .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
                     .build(), webSocketListener);
             } catch (ApiException apiException) {
@@ -137,7 +152,7 @@ final class SubscriptionEndpoint {
                 .put("payload", new JSONObject()
                 .put("data", request.getContent())
                 .put("extensions", new JSONObject()
-                .put("authorization", authorizer.createHeadersForSubscription(request))))
+                .put("authorization", authorizer.createHeadersForSubscription(request, authType))))
                 .toString()
             );
         } catch (JSONException | ApiException exception) {
@@ -273,9 +288,9 @@ final class SubscriptionEndpoint {
      * AppSync endpoint : https://xxxxxxxxxxxx.appsync-api.ap-southeast-2.amazonaws.com/graphql
      * Discovered WebSocket endpoint : wss:// xxxxxxxxxxxx.appsync-realtime-api.ap-southeast-2.amazonaws.com/graphql
      */
-    private String buildConnectionRequestUrl() throws ApiException {
+    private String buildConnectionRequestUrl(AuthorizationType authType) throws ApiException {
         // Construct the authorization header for connection request
-        final byte[] rawHeader = authorizer.createHeadersForConnection()
+        final byte[] rawHeader = authorizer.createHeadersForConnection(authType)
             .toString()
             .getBytes();
 

@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -25,6 +26,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.auth.AuthorizationTypeIterator;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
@@ -32,7 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class SubscriptionOperation<T> extends GraphQLOperation<T> {
+final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
 
     private final SubscriptionEndpoint subscriptionEndpoint;
@@ -43,12 +45,12 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private final Action onSubscriptionComplete;
     private final AtomicBoolean canceled;
     private final AuthRuleRequestDecorator requestDecorator;
-    private final AuthorizationType authorizationType;
 
+    private AuthorizationTypeIterator authTypes;
     private String subscriptionId;
     private Future<?> subscriptionFuture;
 
-    private SubscriptionOperation(Builder<T> builder) {
+    private MutiAuthSubscriptionOperation(Builder<T> builder) {
         super(builder.graphQlRequest, builder.responseFactory);
         this.subscriptionEndpoint = builder.subscriptionEndpoint;
         this.onSubscriptionStart = builder.onSubscriptionStart;
@@ -58,7 +60,18 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         this.executorService = builder.executorService;
         this.canceled = new AtomicBoolean(false);
         this.requestDecorator = builder.requestDecorator;
-        this.authorizationType = builder.authorizationType;
+
+        if (!(getRequest() instanceof AppSyncGraphQLRequest)) {
+            onSubscriptionError.accept(new ApiException(
+                "Multiauth only supported with AppSyncGraphQLRequest<T>.",
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            ));
+            return;
+        }
+        AppSyncGraphQLRequest<T> appSyncRequest = (AppSyncGraphQLRequest<T>) getRequest();
+        this.authTypes = MultiAuthModeStrategy.getInstance()
+                                              .authTypesFor(appSyncRequest.getModelSchema(),
+                                                            appSyncRequest.getAuthRuleOperation());
     }
 
     @NonNull
@@ -74,31 +87,60 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             ));
             return;
         }
+        subscriptionFuture = executorService.submit(this::dispatchRequest);
+    }
 
-        subscriptionFuture = executorService.submit(() -> {
-            GraphQLRequest<T> graphQLRequest = getRequest();
-            try {
-                graphQLRequest = requestDecorator.decorate(graphQLRequest, authorizationType);
-            } catch (ApiException exception) {
-                cancel();
-                onSubscriptionError.accept(exception);
-                return;
-            }
+    private void dispatchRequest() {
+        if (authTypes.hasNext()) {
             LOG.debug("Requesting subscription: " + getRequest().getContent());
+            AuthorizationType authorizationType = authTypes.next();
+            GraphQLRequest<T> request = getRequest();
+            if (authTypes.isOwnerBasedRule()) {
+                try {
+                    request = requestDecorator.decorate(request, authorizationType);
+                } catch (ApiException exception) {
+                    LOG.warn("Unable to automatically add an owner to the request.", exception);
+                    subscriptionFuture = executorService.submit(this::dispatchRequest);
+                    return;
+                }
+            }
+            LOG.debug("Attempting to subscribe with " + authorizationType.name());
             subscriptionEndpoint.requestSubscription(
-                graphQLRequest,
+                request,
+                authorizationType,
                 subscriptionId -> {
-                    SubscriptionOperation.this.subscriptionId = subscriptionId;
+                    MutiAuthSubscriptionOperation.this.subscriptionId = subscriptionId;
                     onSubscriptionStart.accept(subscriptionId);
                 },
-                onNextItem,
+                item -> {
+                    if (item.hasErrors()) {
+                        for (GraphQLResponse.Error error : item.getErrors()) {
+                            if (error.getExtensions() != null &&
+                                "UnauthorizedException".equals(error.getExtensions().get("errorType"))) {
+                                subscriptionFuture = executorService.submit(this::dispatchRequest);
+                                return;
+                            }
+                        }
+                        onSubscriptionError.accept(new ApiException("The server returned subscription errors:" +
+                                                                        item.getErrors().toString(),
+                                                                    AmplifyException.TODO_RECOVERY_SUGGESTION));
+                    } else {
+                        onNextItem.accept(item);
+                    }
+                },
                 apiException -> {
-                    cancel();
-                    onSubscriptionError.accept(apiException);
+                    //TODO: Check if exception is auth related.
+                    LOG.warn("A subscription error occurred.", apiException);
+                    subscriptionFuture = executorService.submit(this::dispatchRequest);
                 },
                 onSubscriptionComplete
             );
-        });
+        } else {
+            cancel();
+            onSubscriptionError.accept(new ApiException("Unable to establish subscription connection.",
+                                                        AmplifyException.TODO_RECOVERY_SUGGESTION));
+        }
+
     }
 
     @Override
@@ -127,8 +169,8 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         private Consumer<GraphQLResponse<T>> onNextItem;
         private Consumer<ApiException> onSubscriptionError;
         private Action onSubscriptionComplete;
+        private AuthModeStrategyType authModeStrategyType;
         private AuthRuleRequestDecorator requestDecorator;
-        private AuthorizationType authorizationType;
 
         @NonNull
         public Builder<T> subscriptionEndpoint(@NonNull SubscriptionEndpoint subscriptionEndpoint) {
@@ -179,20 +221,19 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         }
 
         @NonNull
+        public Builder<T> authModeStrategyType(@NonNull AuthModeStrategyType authModeStrategyType) {
+            this.authModeStrategyType = Objects.requireNonNull(authModeStrategyType);
+            return this;
+        }
+
         public Builder<T> requestDecorator(AuthRuleRequestDecorator requestDecorator) {
             this.requestDecorator = requestDecorator;
             return this;
         }
 
         @NonNull
-        public Builder<T> authorizationType(AuthorizationType authorizationType) {
-            this.authorizationType = authorizationType;
-            return this;
-        }
-
-        @NonNull
-        public SubscriptionOperation<T> build() {
-            return new SubscriptionOperation<>(this);
+        public MutiAuthSubscriptionOperation<T> build() {
+            return new MutiAuthSubscriptionOperation<>(this);
         }
     }
 }

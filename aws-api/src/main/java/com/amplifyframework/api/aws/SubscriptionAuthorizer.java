@@ -57,23 +57,22 @@ final class SubscriptionAuthorizer {
     /**
      * Return authorization json to be used explicitly for subscription registration.
      */
-    JSONObject createHeadersForSubscription(GraphQLRequest<?> request) throws ApiException {
-        return createHeaders(request, false);
+    JSONObject createHeadersForSubscription(GraphQLRequest<?> request,
+                                            AuthorizationType authorizationType) throws ApiException {
+        return createHeaders(request, authorizationType, false);
     }
 
     /**
      * Return authorization json to be used explicitly for establishing connection.
      */
-    JSONObject createHeadersForConnection() throws ApiException {
-        return createHeaders(null, true);
+    JSONObject createHeadersForConnection(AuthorizationType authorizationType) throws ApiException {
+        return createHeaders(null, authorizationType, true);
     }
 
-    private JSONObject createHeaders(GraphQLRequest<?> request, boolean connectionFlag) throws ApiException {
-        AuthorizationType authType = configuration.getAuthorizationType();
-        if (request instanceof AppSyncGraphQLRequest<?> &&
-            ((AppSyncGraphQLRequest<?>) request).getAuthorizationType() != null) {
-            authType = ((AppSyncGraphQLRequest<?>) request).getAuthorizationType();
-        }
+    private JSONObject createHeaders(GraphQLRequest<?> request,
+                                     AuthorizationType authType,
+                                     boolean connectionFlag) throws ApiException {
+
         switch (authType) {
             case API_KEY:
                 ApiKeyAuthProvider keyProvider = authProviders.getApiKeyAuthProvider();
