@@ -319,15 +319,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .requestDecorator(requestDecorator)
                 .build();
         } else {
-            GraphQLRequest<R> authDecoratedRequest = graphQLRequest;
+            AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
+
+            if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
+                ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
+                authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
+            }
+            GraphQLRequest<R> authDecoratedRequest;
             try {
-                AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
-
-                if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
-                    ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
-                    authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
-                }
-
                 authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
             } catch (ApiException exception) {
                 onSubscriptionFailure.accept(exception);
@@ -343,7 +342,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .onNextItem(onNextResponse)
                 .onSubscriptionError(onSubscriptionFailure)
                 .onSubscriptionComplete(onSubscriptionComplete)
-                .requestDecorator(requestDecorator)
+                .authorizationType(authType)
                 .build();
         }
         operation.start();

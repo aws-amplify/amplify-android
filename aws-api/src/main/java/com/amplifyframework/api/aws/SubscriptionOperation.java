@@ -18,7 +18,6 @@ package com.amplifyframework.api.aws;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -42,7 +41,6 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private final Consumer<ApiException> onSubscriptionError;
     private final Action onSubscriptionComplete;
     private final AtomicBoolean canceled;
-    private final AuthRuleRequestDecorator requestDecorator;
     private final AuthorizationType authorizationType;
 
     private String subscriptionId;
@@ -57,7 +55,6 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         this.onSubscriptionComplete = builder.onSubscriptionComplete;
         this.executorService = builder.executorService;
         this.canceled = new AtomicBoolean(false);
-        this.requestDecorator = builder.requestDecorator;
         this.authorizationType = builder.authorizationType;
     }
 
@@ -76,17 +73,10 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         }
 
         subscriptionFuture = executorService.submit(() -> {
-            GraphQLRequest<T> graphQLRequest = getRequest();
-            try {
-                graphQLRequest = requestDecorator.decorate(graphQLRequest, authorizationType);
-            } catch (ApiException exception) {
-                cancel();
-                onSubscriptionError.accept(exception);
-                return;
-            }
             LOG.debug("Requesting subscription: " + getRequest().getContent());
             subscriptionEndpoint.requestSubscription(
-                graphQLRequest,
+                getRequest(),
+                authorizationType,
                 subscriptionId -> {
                     SubscriptionOperation.this.subscriptionId = subscriptionId;
                     onSubscriptionStart.accept(subscriptionId);
@@ -127,7 +117,6 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         private Consumer<GraphQLResponse<T>> onNextItem;
         private Consumer<ApiException> onSubscriptionError;
         private Action onSubscriptionComplete;
-        private AuthRuleRequestDecorator requestDecorator;
         private AuthorizationType authorizationType;
 
         @NonNull
@@ -175,12 +164,6 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         @NonNull
         public Builder<T> onSubscriptionComplete(@NonNull Action onSubscriptionComplete) {
             this.onSubscriptionComplete = Objects.requireNonNull(onSubscriptionComplete);
-            return this;
-        }
-
-        @NonNull
-        public Builder<T> requestDecorator(AuthRuleRequestDecorator requestDecorator) {
-            this.requestDecorator = requestDecorator;
             return this;
         }
 
