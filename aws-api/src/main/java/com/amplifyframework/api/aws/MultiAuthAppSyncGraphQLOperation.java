@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.aws.auth.RequestDecorator;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -52,6 +53,7 @@ import okhttp3.ResponseBody;
 public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
+    private static final String UNAUTHORIZED_EXCEPTION = "UnauthorizedException";
 
     private final String endpoint;
     private final OkHttpClient client;
@@ -96,56 +98,36 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<
             return;
         }
         executorService.submit(this::dispatchRequest);
-        /*try {
-            LOG.debug("Request: " + getRequest().getContent());
-            RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
+    }
+
+    private void dispatchRequest() {
+        if (authTypes.hasNext()) {
+            AuthorizationType authType = authTypes.next();
             Request okHttpRequest = new Request.Builder()
                 .url(endpoint)
                 .addHeader("accept", CONTENT_TYPE)
                 .addHeader("content-type", CONTENT_TYPE)
                 .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
                 .build();
-            ongoingCall = client.newCall(requestDecorator.decorate(okHttpRequest));
-
-            ongoingCall.enqueue(new OkHttpCallback());
-        } catch (Exception error) {
-            // Cancel if possible
-            if (ongoingCall != null) {
-                ongoingCall.cancel();
-            }
-
-            onFailure.accept(new ApiException(
-                "OkHttp client failed to make a successful request.",
-                error, AmplifyException.TODO_RECOVERY_SUGGESTION
-            ));
-        }*/
-    }
-
-    private void dispatchRequest() {
-        if (authTypes.hasNext()) {
-            AuthorizationType authType = authTypes.next();
+            Request decoratedOkHttpRequest;
             try {
-                LOG.debug("Request: " + getRequest().getContent());
                 RequestDecorator requestDecorator = apiRequestDecoratorFactory.forAuthType(authType);
-                Request okHttpRequest = new Request.Builder()
-                    .url(endpoint)
-                    .addHeader("accept", CONTENT_TYPE)
-                    .addHeader("content-type", CONTENT_TYPE)
-                    .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
-                    .build();
-                ongoingCall = client.newCall(requestDecorator.decorate(okHttpRequest));
-
-                ongoingCall.enqueue(new OkHttpCallback());
-            } catch (Exception error) {
-                // Cancel if possible
-                if (ongoingCall != null) {
-                    ongoingCall.cancel();
+                decoratedOkHttpRequest = requestDecorator.decorate(okHttpRequest);
+            } catch (ApiException apiException) {
+                LOG.warn("Failed to make a successful request with " + authType, apiException);
+                // Only queue up a retry if it's an auth-related exception.
+                if (apiException instanceof ApiAuthException) {
+                    executorService.submit(this::dispatchRequest);
+                } else {
+                    onFailure.accept(apiException);
                 }
-                LOG.warn("Failed to make a successful request with " + authType, error);
-                executorService.submit(this::dispatchRequest);
+                return;
             }
+            LOG.debug("Request: " + getRequest().getContent());
+            ongoingCall = client.newCall(decoratedOkHttpRequest);
+            ongoingCall.enqueue(new OkHttpCallback());
         } else {
-            onFailure.accept(new ApiException(
+            onFailure.accept(new ApiAuthException(
                 "Unable to successfully complete request with any of the compatible auth types.",
                 "Check your application logs for detail."
             ));
@@ -184,7 +166,7 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<
                 if (graphQLResponse.hasErrors()) {
                     for (GraphQLResponse.Error error : graphQLResponse.getErrors()) {
                         if (error.getExtensions() != null &&
-                            "UnauthorizedException".equals(error.getExtensions().get("errorType"))) {
+                            UNAUTHORIZED_EXCEPTION.equals(error.getExtensions().get("errorType"))) {
                             executorService.submit(MultiAuthAppSyncGraphQLOperation.this::dispatchRequest);
                             return;
                         }

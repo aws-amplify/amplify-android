@@ -15,14 +15,14 @@
 
 package com.amplifyframework.api.aws.auth;
 
-import java.io.IOException;
+import com.amplifyframework.api.ApiException.ApiAuthException;
 
 import okhttp3.Request;
 
 /**
  * Interface that defines some basic functionality with regards to decorating
  * HTTP requests that are going to be sent to AppSync
- * Implementations of this class should implement the {@link RequestDecorator#addAuthHeader(com.amazonaws.Request)}
+ * Implementations of this class should implement the {@link RequestDecorator#decorate(Request)}.
  * method.
  */
 public interface RequestDecorator {
@@ -32,7 +32,7 @@ public interface RequestDecorator {
      * and returns a new instance of {@link Request}.
      * @param request the HTTP request before modifications.
      * @return A new instance of the HTTP request after modifications (if any)
-     * @throws IOException If an issue occurs during request transformation.
+     * @throws ApiAuthException If an error occurs while attempting to add auth headers to the request.
      */
-    Request decorate(Request request) throws IOException;
+    Request decorate(Request request) throws ApiAuthException;
 }

@@ -19,6 +19,7 @@ import android.net.Uri;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
@@ -96,7 +97,7 @@ final class SubscriptionAuthorizer {
                 OidcAuthProvider oidcProvider = authProviders.getOidcAuthProvider();
                 if (oidcProvider == null) {
                     oidcProvider = () -> {
-                        throw new ApiException(
+                        throw new ApiAuthException(
                                 "OidcAuthProvider interface is not implemented.",
                                 "Please implement OidcAuthProvider interface to return " +
                                         "appropriate token from the appropriate service."
