@@ -95,7 +95,7 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
         }
 
         if (lastTokenRetrievalFailureMessage != null) {
-            throw new ApiException(lastTokenRetrievalFailureMessage, AmplifyException.TODO_RECOVERY_SUGGESTION);
+            throw new ApiAuthException(lastTokenRetrievalFailureMessage, AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
     }
 

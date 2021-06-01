@@ -93,9 +93,10 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     }
 
     private void dispatchRequest() {
+        LOG.debug("Processing subscription request: " + getRequest().getContent());
         if (authTypes.hasNext()) {
-            LOG.debug("Requesting subscription: " + getRequest().getContent());
             AuthorizationType authorizationType = authTypes.next();
+            LOG.debug("Attempting to subscribe with " + authorizationType.name());
             GraphQLRequest<T> request = getRequest();
             // if the rule we're currently processing is an owner-based rule,
             // then call the AuthRuleRequestDecorator to see if the owner needs to be
@@ -113,7 +114,6 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                     return;
                 }
             }
-            LOG.debug("Attempting to subscribe with " + authorizationType.name());
             subscriptionEndpoint.requestSubscription(
                 request,
                 authorizationType,
