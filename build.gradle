@@ -82,6 +82,7 @@ ext {
                 runner: 'androidx.test:runner:1.3.0',
                 junit: 'androidx.test.ext:junit:1.1.2',
                 espresso: 'androidx.test.espresso:espresso-core:3.3.0',
+                orchestrator: 'androidx.test:orchestrator:1.3.0',
                 navigation: "androidx.navigation:navigation-testing:$navigationVersion",
                 fragment: "androidx.fragment:fragment-testing:$fragmentVersion"
             ]
@@ -147,9 +148,11 @@ private void configureAndroidLibrary(Project project) {
             targetSdkVersion rootProject.ext.targetSdkVersion
             versionName project.ext.VERSION_NAME
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+            testInstrumentationRunnerArguments clearPackageData: 'true'
             consumerProguardFiles rootProject.file('configuration/consumer-rules.pro')
 
             testOptions {
+                execution 'ANDROIDX_TEST_ORCHESTRATOR'
                 animationsDisabled = true
                 unitTests {
                     includeAndroidResources = true
@@ -173,6 +176,7 @@ private void configureAndroidLibrary(Project project) {
 
     project.dependencies {
         coreLibraryDesugaring dependency.android.desugartools
+        androidTestUtil dependency.androidx.test.orchestrator
     }
 }
 apply from: rootProject.file("configuration/instrumentation-tests.gradle")
