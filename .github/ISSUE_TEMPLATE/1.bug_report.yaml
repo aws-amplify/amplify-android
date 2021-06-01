@@ -124,13 +124,7 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: Expected behavior
-      description: A clear and concise description of what you expected to happen.
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: Reproduction steps
+      label: Reproduction steps (if applicable)
       description: |
         How do you trigger this bug? Please walk us through it step by step. Screenshots can be attached in textarea below.
       placeholder: |
@@ -138,8 +132,6 @@ body:
         2. Configure '...'
         3. Go to '...'
         4. See error
-    validations:
-      required: true
   - type: textarea
     attributes:
       label: Code Snippet
