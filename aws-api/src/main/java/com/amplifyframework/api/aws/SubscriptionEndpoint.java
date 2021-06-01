@@ -22,6 +22,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Action;
@@ -158,13 +159,18 @@ final class SubscriptionEndpoint {
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
             if (pendingSubscriptionIds.remove(subscriptionId)) {
-                onSubscriptionError.accept(new ApiException(
-                    "Failed to construct subscription registration message.",
-                    exception,
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
-                ));
-            }
+                if (exception instanceof ApiAuthException) {
+                    // Don't wrap it if it's an ApiAuthException.
+                    onSubscriptionError.accept((ApiAuthException) exception);
+                } else {
+                    onSubscriptionError.accept(new ApiException(
+                        "Failed to construct subscription registration message.",
+                        exception,
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
+                }
 
+            }
             return;
         }
 
