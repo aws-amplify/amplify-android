@@ -28,6 +28,7 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
+import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -98,6 +99,25 @@ public final class SynchronousAuth {
     ) throws AuthException {
         return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.signUp(username, password, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Confirm sign up synchronously.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param confirmationCode The confirmation code the user received
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthSignUpResult confirmSignUp(
+            @NonNull String username,
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmSignUpOptions options
+    ) throws AuthException {
+        return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.confirmSignUp(username, confirmationCode, options, onResult, onError)
         );
     }
 
