@@ -2,6 +2,7 @@
 
 ### Bug Fixes
 - **api:** check for null ModelSchema to prevent crash in SerializedModel toString method (#1341)
+- **api:** default to mobile client for iam auth mode (#1351)
 - **Auth:** prevent multiple invocations of success callback for updateUserAttributes (#1339)
 
 ### Miscellaneous
