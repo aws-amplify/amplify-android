@@ -1,3 +1,15 @@
+## [Release 1.17.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.17.7)
+
+### Bug Fixes
+- **api:** check for null ModelSchema to prevent crash in SerializedModel toString method (#1341)
+- **api:** default to mobile client for iam auth mode (#1351)
+- **Auth:** prevent multiple invocations of success callback for updateUserAttributes (#1339)
+
+### Miscellaneous
+- refactor:add enum to represent auth rule provider (#1320)
+
+[See all changes between 1.17.6 and 1.17.7](https://github.com/aws-amplify/amplify-android/compare/release_v1.17.6...release_v1.17.7)
+
 ## [Release 1.17.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.17.6)
 
 ### Bug Fixes
