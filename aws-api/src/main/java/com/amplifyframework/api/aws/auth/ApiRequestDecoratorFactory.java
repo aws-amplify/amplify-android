@@ -30,6 +30,9 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.mobile.client.AWSMobileClient;
+
 import java.util.Objects;
 
 import okhttp3.Request;
@@ -39,6 +42,7 @@ import okhttp3.Request;
  */
 public final class ApiRequestDecoratorFactory {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
+    private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final RequestDecorator NO_OP_REQUEST_DECORATOR = new RequestDecorator() {
         @Override
         public Request decorate(Request request) {
@@ -104,19 +108,20 @@ public final class ApiRequestDecoratorFactory {
      * @return the appropriate request decorator for the given authorization type.
      * @throws ApiAuthException if unable to get a request decorator.
      */
-    public RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiAuthException {
-        if (AuthorizationType.AMAZON_COGNITO_USER_POOLS.equals(authorizationType)) {
-            // Note that if there was no user-provided cognito provider passed in to initialize
-            // the API plugin, we will try to default to using the DefaultCognitoUserPoolsAuthProvider.
-            //  If that fails, we then have no choice but to bubble up the error.
-            CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider =
-                apiAuthProviders.getCognitoUserPoolsAuthProvider() != null ?
-                    apiAuthProviders.getCognitoUserPoolsAuthProvider() :
-                    new DefaultCognitoUserPoolsAuthProvider();
-            // By calling getLatestAuthToken() here instead of inside the lambda block, makes the exception
-            // handling a little bit cleaner. If getLatestAuthToken() is called from inside the lambda expression
-            // below, we'd have to surround it with a try catch. By doing it this way, if there's a problem,
-            // the ApiException will just be bubbled up. Same for OPENID_CONNECT.
+    public RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiException {
+        switch (authorizationType) {
+            case AMAZON_COGNITO_USER_POOLS:
+                // Note that if there was no user-provided cognito provider passed in to initialize
+                // the API plugin, we will try to default to using the DefaultCognitoUserPoolsAuthProvider.
+                //  If that fails, we then have no choice but to bubble up the error.
+                CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider =
+                        apiAuthProviders.getCognitoUserPoolsAuthProvider() != null ?
+                                apiAuthProviders.getCognitoUserPoolsAuthProvider() :
+                                new DefaultCognitoUserPoolsAuthProvider();
+                // By calling getLatestAuthToken() here instead of inside the lambda block, makes the exception
+                // handling a little bit cleaner. If getLatestAuthToken() is called from inside the lambda expression
+                // below, we'd have to surround it with a try catch. By doing it this way, if there's a problem,
+                // the ApiException will just be bubbled up. Same for OPENID_CONNECT.
             final String token;
             try {
                 token = cognitoUserPoolsAuthProvider.getLatestAuthToken();
@@ -125,46 +130,57 @@ public final class ApiRequestDecoratorFactory {
                                                         exception,
                                                         "Check the application logs for details.");
             }
-            return new JWTTokenRequestDecorator(() -> token);
-        } else if (AuthorizationType.OPENID_CONNECT.equals(authorizationType)) {
-            if (apiAuthProviders.getOidcAuthProvider() == null) {
+                return new JWTTokenRequestDecorator(() -> token);
+            case OPENID_CONNECT:
+                if (apiAuthProviders.getOidcAuthProvider() == null) {
                 throw new ApiAuthException("Attempting to use OPENID_CONNECT authorization " +
                                                             "without an OIDC provider.",
                                                         "Configure an OidcAuthProvider when initializing " +
                                                             "the API plugin.");
-            }
-            final String token;
-            try {
-                token = apiAuthProviders.getOidcAuthProvider().getLatestAuthToken();
-            } catch (ApiException exception) {
-                throw new ApiAuthException("Failed to retrieve auth token from OIDC provider.",
-                                           exception,
-                                           "Check the application logs for details.");
-            }
-            return new JWTTokenRequestDecorator(() -> token);
-        } else if (AuthorizationType.API_KEY.equals(authorizationType)) {
-            if (apiAuthProviders.getApiKeyAuthProvider() != null) {
-                return new ApiKeyRequestDecorator(apiAuthProviders.getApiKeyAuthProvider());
-            } else if (apiKey != null) {
-                return new ApiKeyRequestDecorator(() -> apiKey);
-            } else {
+                }
+                final String oidcToken;
+                try {
+                    oidcToken = apiAuthProviders.getOidcAuthProvider().getLatestAuthToken();
+                } catch (ApiException exception) {
+                    throw new ApiAuthException("Failed to retrieve auth token from OIDC provider.",
+                                               exception,
+                                               "Check the application logs for details.");
+                }
+                return new JWTTokenRequestDecorator(() -> oidcToken);
+            case API_KEY:
+                if (apiAuthProviders.getApiKeyAuthProvider() != null) {
+                    return new ApiKeyRequestDecorator(apiAuthProviders.getApiKeyAuthProvider());
+                } else if (apiKey != null) {
+                    return new ApiKeyRequestDecorator(() -> apiKey);
+                } else {
                 throw new ApiAuthException("Attempting to use API_KEY authorization without " +
                                                             "an API key provider or an API key in the config file",
                                                         "Verify that an API key is in the config file or an " +
                                                             "ApiKeyAuthProvider is setup during the API " +
                                                             "plugin initialization.");
-            }
-        } else if (AuthorizationType.AWS_IAM.equals(authorizationType)) {
-            if (apiAuthProviders.getAWSCredentialsProvider() == null) {
-                throw new ApiAuthException("Attempting to use AWS_IAM authorization without " +
-                                                            "an AWS credentials provider.",
-                                                        "Configure an AWSCredentialsProvider when initializing " +
-                                                            "the API plugin.");
-            }
-            AppSyncV4Signer appSyncV4Signer = new AppSyncV4Signer(region);
-            return new IamRequestDecorator(appSyncV4Signer, apiAuthProviders.getAWSCredentialsProvider());
-        } else {
-            return NO_OP_REQUEST_DECORATOR;
+                }
+            case AWS_IAM:
+                AWSCredentialsProvider credentialsProvider = apiAuthProviders.getAWSCredentialsProvider() != null
+                        ? apiAuthProviders.getAWSCredentialsProvider()
+                        : getDefaultCredentialsProvider();
+                AppSyncV4Signer appSyncV4Signer = new AppSyncV4Signer(region);
+                return new IamRequestDecorator(appSyncV4Signer, credentialsProvider);
+            case NONE:
+            default:
+                return NO_OP_REQUEST_DECORATOR;
+        }
+    }
+
+    private AWSCredentialsProvider getDefaultCredentialsProvider() throws ApiException {
+        // Obtains AWSMobileClient from Auth Category.
+        // Throw if AWSCognitoAuthPlugin not configured.
+        try {
+            return (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
+        } catch (IllegalStateException exception) {
+            throw new ApiAuthException("Attempting to use AWS_IAM authorization without " +
+                    "an AWS credentials provider.",
+                    "Configure an AWSCredentialsProvider when initializing the API plugin or register" +
+                            "an instance of AWSCognitoAuthPlugin to Amplify.");
         }
     }
 }

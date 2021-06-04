@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
+import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -54,6 +55,22 @@ public interface AuthCategoryBehavior {
             @NonNull String username,
             @NonNull String password,
             @NonNull AuthSignUpOptions options,
+            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * If you have attribute confirmation enabled, this will allow the user
+     * to enter the confirmation code they received to activate their account.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param confirmationCode The confirmation code the user received
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void confirmSignUp(
+            @NonNull String username,
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmSignUpOptions options,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
