@@ -26,6 +26,7 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
+import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
@@ -68,11 +69,17 @@ interface Auth {
      * @param username A login identifier e.g. `tony44`; or an email/phone number,
      *                 depending on configuration
      * @param confirmationCode The confirmation code the user received
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return A sign-up result; if the code has been confirmed successfully, the result
      *         will show true for isSignUpComplete().
      */
     @Throws(AuthException::class)
-    suspend fun confirmSignUp(username: String, confirmationCode: String): AuthSignUpResult
+    suspend fun confirmSignUp(
+        username: String,
+        confirmationCode: String,
+        options: AuthConfirmSignUpOptions = AuthConfirmSignUpOptions.defaults()
+    ): AuthSignUpResult
 
     /**
      * If the user's code expires or they just missed it, this method can
