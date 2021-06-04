@@ -315,7 +315,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         final Map<String, String> clientMetadata = new HashMap<>();
 
         if (options instanceof AWSCognitoAuthConfirmSignUpOptions) {
-            clientMetadata.putAll(((AWSCognitoAuthConfirmSignUpOptions) options).getClientMetadata());
+            AWSCognitoAuthConfirmSignUpOptions cognitoOptions = (AWSCognitoAuthConfirmSignUpOptions) options;
+            clientMetadata.putAll(cognitoOptions.getClientMetadata());
         }
 
         awsMobileClient.confirmSignUp(username, confirmationCode, clientMetadata, new Callback<SignUpResult>() {
