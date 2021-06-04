@@ -30,6 +30,7 @@ import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
+import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -64,6 +65,21 @@ public interface RxAuthCategoryBehavior {
             @NonNull String username,
             @NonNull String password,
             @NonNull AuthSignUpOptions options
+    );
+
+    /**
+     * If you have attribute confirmation enabled, this will allow the user
+     * to enter the confirmation code they received to activate their account.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param confirmationCode The confirmation code the user received
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits an {@link AuthSignUpResult} on successful confirmation,
+     *         or an {@link AuthException} on failure
+     */
+    Single<AuthSignUpResult> confirmSignUp(
+            @NonNull String username,
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmSignUpOptions options
     );
 
     /**
