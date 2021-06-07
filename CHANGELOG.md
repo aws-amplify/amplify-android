@@ -1,3 +1,11 @@
+## [Release 1.17.8](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.17.8)
+
+### Bug Fixes
+- **auth:** Add ConfirmSignUpOptions for confirmSignUp API method (#1357)
+- **storage:** remove duplicate error callback (#1366)
+
+[See all changes between 1.17.7 and 1.17.8](https://github.com/aws-amplify/amplify-android/compare/release_v1.17.7...release_v1.17.8)
+
 ## [Release 1.17.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.17.7)
 
 ### Bug Fixes
