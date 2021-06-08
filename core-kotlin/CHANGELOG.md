@@ -1,3 +1,24 @@
+## [Release 0.1.9](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.9)
+
+### Bug Fixes
+- **auth:** Add ConfirmSignUpOptions for confirmSignUp API method (#1357)
+- **storage:** remove duplicate error callback (#1366)
+
+[See all changes between 0.1.8 and 0.1.9](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.8...release-kotlin_v0.1.9)
+
+## [Release 0.1.8](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.8)
+
+### Bug Fixes
+- **api:** check for null ModelSchema to prevent crash in SerializedModel toString method (#1341)
+- **Auth:** prevent multiple invocations of success callback for updateUserAttributes (#1339)
+
+### Miscellaneous
+- create stale bot GitHub action (#1337)
+- refactor:add enum to represent auth rule provider (#1320)
+- default to mobile client for iam auth mode (#1351)
+
+[See all changes between 0.1.7 and 0.1.8](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.7...release-kotlin_v0.1.8)
+
 ## [Release 0.1.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.7)
 
 ### Bug Fixes
