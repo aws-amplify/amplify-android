@@ -419,15 +419,11 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         final Map<String, String> metadata = new HashMap<>();
         final Map<String, String> userAttributes = new HashMap<>();
         if (options instanceof AWSCognitoAuthConfirmSignInOptions) {
-            if (((AWSCognitoAuthConfirmSignInOptions) options).getMetadata() != null) {
-                metadata.putAll(((AWSCognitoAuthConfirmSignInOptions) options).getMetadata());
+            metadata.putAll(((AWSCognitoAuthConfirmSignInOptions) options).getMetadata());
+            for (AuthUserAttribute attribute : ((AWSCognitoAuthConfirmSignInOptions) options).getUserAttributes()) {
+                userAttributes.put(attribute.getKey().getKeyString(), attribute.getValue());
             }
 
-            if (((AWSCognitoAuthConfirmSignInOptions) options).getUserAttributes() != null) {
-                for (AuthUserAttribute attribute : ((AWSCognitoAuthConfirmSignInOptions) options).getUserAttributes()) {
-                    userAttributes.put(attribute.getKey().getKeyString(), attribute.getValue());
-                }
-            }
         }
 
         awsMobileClient.confirmSignIn(confirmationCode, metadata, userAttributes, new Callback<SignInResult>() {

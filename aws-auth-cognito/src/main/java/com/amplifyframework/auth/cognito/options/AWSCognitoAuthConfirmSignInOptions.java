@@ -118,7 +118,7 @@ public final class AWSCognitoAuthConfirmSignInOptions extends AuthConfirmSignInO
         public CognitoBuilder() {
             super();
             this.metadata = new HashMap<>();
-            this.userAttributes = new ArrayList<AuthUserAttribute>();
+            this.userAttributes = new ArrayList<>();
         }
 
         /**
