@@ -397,6 +397,23 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     * Could not find multi-factor authentication (MFA) method in AWS Cognito.
+     */
+    public static class MFAMethodNotFoundException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Could not find multi-factor authentication (MFA) method.";
+        private static final String RECOVERY_SUGGESTION = "Configure multi-factor authentication using Amplify CLI or AWS Cognito console.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public MFAMethodNotFoundException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Could not perform the action because password needs to be reset.
      */
     public static class PasswordResetRequiredException extends AuthException {

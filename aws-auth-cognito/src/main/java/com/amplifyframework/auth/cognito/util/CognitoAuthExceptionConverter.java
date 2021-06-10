@@ -32,6 +32,7 @@ import com.amazonaws.services.cognitoidentityprovider.model.TooManyFailedAttempt
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.UsernameExistsException;
+import com.amazonaws.services.cognitoidentityprovider.model.MFAMethodNotFoundException;
 
 /**
  * Convert AWS Cognito Exceptions to AuthExceptions.
@@ -89,6 +90,10 @@ public final class CognitoAuthExceptionConverter {
 
         if (error instanceof LimitExceededException) {
             return new AuthException.LimitExceededException(error);
+        }
+
+        if (error instanceof MFAMethodNotFoundException) {
+            return new AuthException.MFAMethodNotFoundException(error);
         }
 
         if (error instanceof ResourceNotFoundException) {
