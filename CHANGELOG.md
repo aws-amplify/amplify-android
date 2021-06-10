@@ -1,3 +1,10 @@
+## [Release 1.18.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.18.0)
+
+### Features
+- **aws-auth-cognito:** Allows userattributes in confirmSignIn (#1343)
+
+[See all changes between 1.17.8 and 1.18.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.17.8...release_v1.18.0)
+
 ## [Release 1.17.8](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.17.8)
 
 ### Bug Fixes
