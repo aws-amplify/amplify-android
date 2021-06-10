@@ -64,6 +64,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.rxjava3.core.Observable;
@@ -88,6 +89,7 @@ import static org.mockito.Mockito.when;
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:datastore:test");
+    private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
 
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
     private Context context;
@@ -586,7 +588,7 @@ public final class AWSDataStorePluginTest {
             () -> { }
         );
         synchronousDataStore.save(expectedResult);
-        latch.await();
+        latch.await(TIMEOUT_MS, TimeUnit.SECONDS);
         verify(onObserveResult).accept(any());
         assertEquals(actualResult[0], expectedResult);
     }
