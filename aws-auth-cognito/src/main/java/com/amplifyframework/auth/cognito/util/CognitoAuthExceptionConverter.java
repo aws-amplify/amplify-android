@@ -26,13 +26,13 @@ import com.amazonaws.services.cognitoidentityprovider.model.ExpiredCodeException
 import com.amazonaws.services.cognitoidentityprovider.model.InvalidParameterException;
 import com.amazonaws.services.cognitoidentityprovider.model.InvalidPasswordException;
 import com.amazonaws.services.cognitoidentityprovider.model.LimitExceededException;
+import com.amazonaws.services.cognitoidentityprovider.model.MFAMethodNotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.PasswordResetRequiredException;
 import com.amazonaws.services.cognitoidentityprovider.model.ResourceNotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.TooManyFailedAttemptsException;
 import com.amazonaws.services.cognitoidentityprovider.model.UsernameExistsException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException;
-import com.amazonaws.services.cognitoidentityprovider.model.MFAMethodNotFoundException;
 
 /**
  * Convert AWS Cognito Exceptions to AuthExceptions.
