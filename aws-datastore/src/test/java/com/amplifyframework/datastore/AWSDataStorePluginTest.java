@@ -15,6 +15,9 @@
 
 package com.amplifyframework.datastore;
 
+import android.content.Context;
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryConfiguration;
@@ -57,15 +60,12 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.robolectric.RobolectricTestRunner;
 
-import android.content.Context;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import androidx.annotation.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
@@ -549,11 +549,11 @@ public final class AWSDataStorePluginTest {
     }
 
     /**
-     * Verify that the observe api returns itemChanged which matches the predicate
+     * Verify that the observe api returns itemChanged which matches the predicate.
      *
-     * @throws JSONException        on failure to arrange plugin config
-     * @throws AmplifyException     on failure to arrange API plugin via Amplify facade
-     * @throws InterruptedException If interrupted while test observer awaits terminal result
+     * @throws JSONException        on failure to arrange plugin config.
+     * @throws AmplifyException     on failure to arrange API plugin via Amplify facade.
+     * @throws InterruptedException If interrupted while test observer awaits terminal result.
      */
     @Test
     public void observeWithMatchingPredicate() throws InterruptedException, AmplifyException, JSONException {
@@ -576,11 +576,15 @@ public final class AWSDataStorePluginTest {
                 actualResult[0] = value.item();
             }
         });
-        awsDataStorePlugin.observe(Person.class, QueryField.field("type").eq(StorageItemChange.Type.CREATE), value -> {
-        }, onObserveResult, error -> {
-            LOG.error("Error: " + error);
-        }, () -> {
-        });
+        awsDataStorePlugin.observe(Person.class,
+            QueryField.field("type").eq(StorageItemChange.Type.CREATE),
+            value -> { },
+            onObserveResult,
+            error -> {
+                LOG.error("Error: " + error);
+            },
+            () -> { }
+        );
         synchronousDataStore.save(expectedResult);
         latch.await();
         verify(onObserveResult).accept(any());
@@ -588,11 +592,11 @@ public final class AWSDataStorePluginTest {
     }
 
     /**
-     * Verify that the observe api is not invoke when the item changed does not match the predicate
+     * Verify that the observe api is not invoke when the item changed does not match the predicate.
      *
-     * @throws JSONException        on failure to arrange plugin config
-     * @throws AmplifyException     on failure to arrange API plugin via Amplify facade
-     * @throws InterruptedException If interrupted while test observer awaits terminal result
+     * @throws JSONException        on failure to arrange plugin config.
+     * @throws AmplifyException     on failure to arrange API plugin via Amplify facade.
+     * @throws InterruptedException If interrupted while test observer awaits terminal result.
      */
     @Test
     public void observeWithoutMatchingPredicate() throws InterruptedException, AmplifyException, JSONException {
@@ -613,13 +617,17 @@ public final class AWSDataStorePluginTest {
                 actualResult[0] = value.item();
             }
         });
-        awsDataStorePlugin.observe(Person.class, QueryField.field("type").eq(StorageItemChange.Type.UPDATE), value -> {
-        }, onObserveResult, error -> {
-            LOG.error("Error: " + error);
-        }, () -> {
-        });
+        awsDataStorePlugin.observe(Person.class,
+            QueryField.field("type").eq(StorageItemChange.Type.UPDATE),
+            value -> { },
+            onObserveResult,
+            error -> {
+                LOG.error("Error: " + error);
+            },
+            () -> { }
+        );
         synchronousDataStore.save(expectedResult);
-        Thread.sleep(1000l);
+        Thread.sleep(1000L);
         verify(onObserveResult, never()).accept(any());
     }
 

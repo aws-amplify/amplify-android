@@ -582,20 +582,20 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
         start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
-                itemChange -> {
-                    try {
-                        if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName()) &&
-                                selectionCriteria.evaluate(itemChange)) {
-                            @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
-                            StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
-                            onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
-                        }
-                    } catch (DataStoreException dataStoreException) {
-                        onObservationFailure.accept(dataStoreException);
+            itemChange -> {
+                try {
+                    if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName()) &&
+                            selectionCriteria.evaluate(itemChange)) {
+                        @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
+                        StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
+                        onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
                     }
-                },
-                onObservationFailure,
-                onObservationCompleted
+                } catch (DataStoreException dataStoreException) {
+                    onObservationFailure.accept(dataStoreException);
+                }
+            },
+            onObservationFailure,
+            onObservationCompleted
         )), onObservationFailure);
     }
 
