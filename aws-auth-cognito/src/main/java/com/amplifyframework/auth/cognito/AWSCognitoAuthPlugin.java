@@ -725,11 +725,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                 @Override
                 public void onError(Exception error) {
-                    onException.accept(new AuthException(
-                            "An error occurred confirming password recovery code",
-                            error,
-                            "See attached exception for more details"
-                    ));
+                    onException.accept(CognitoAuthExceptionConverter.lookup(
+                            error, "Confirm reset password failed."));
                 }
             }
         );
