@@ -29,9 +29,9 @@ import com.amazonaws.services.cognitoidentityprovider.model.LimitExceededExcepti
 import com.amazonaws.services.cognitoidentityprovider.model.PasswordResetRequiredException;
 import com.amazonaws.services.cognitoidentityprovider.model.ResourceNotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.TooManyFailedAttemptsException;
+import com.amazonaws.services.cognitoidentityprovider.model.UsernameExistsException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException;
-import com.amazonaws.services.cognitoidentityprovider.model.UsernameExistsException;
 import com.amazonaws.services.cognitoidentityprovider.model.MFAMethodNotFoundException;
 
 /**
