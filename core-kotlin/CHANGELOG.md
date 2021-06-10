@@ -1,3 +1,10 @@
+## [Release 0.2.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.2.0)
+
+### Features
+- **aws-auth-cognito:** Allows userattributes in confirmSignIn (#1343)
+
+[See all changes between 0.1.9 and 0.2.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.9...release-kotlin_v0.2.0)
+
 ## [Release 0.1.9](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.9)
 
 ### Bug Fixes
