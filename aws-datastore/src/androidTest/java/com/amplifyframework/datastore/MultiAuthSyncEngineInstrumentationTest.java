@@ -113,7 +113,8 @@ public class MultiAuthSyncEngineInstrumentationTest {
     private static final String AUDIENCE = "integtest";
 
     private final Class<? extends Model> modelType;
-    private final boolean requiresSignIn;
+    private final boolean requiresCognitoSign;
+    private final boolean requiresOidcSignIn;
     private final AuthorizationType expectedAuthType;
     private final String tag;
     private final String modelId;
@@ -128,19 +129,22 @@ public class MultiAuthSyncEngineInstrumentationTest {
     /**
      * Constructor for the parameterized test.
      * @param clazz The model type.
-     * @param requiresSignIn Does the test scenario require the user to be logged in.
+     * @param signInToCognito Does the test scenario require the user to be logged in with user pools.
+     * @param signInWithOidc Does the test scenario require the user to be logged in with an OIDC provider.
      * @param expectedAuthType The auth type that should succeed for the test.
      * @throws AmplifyException No expected.
      * @throws IOException Not expected.
      */
     public MultiAuthSyncEngineInstrumentationTest(Class<? extends Model> clazz,
-                                                  boolean requiresSignIn,
+                                                  boolean signInToCognito,
+                                                  boolean signInWithOidc,
                                                   AuthorizationType expectedAuthType)
         throws AmplifyException, IOException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
         this.tag = clazz.getSimpleName();
         this.modelType = clazz;
-        this.requiresSignIn = requiresSignIn;
+        this.requiresCognitoSign = signInToCognito;
+        this.requiresOidcSignIn = signInWithOidc;
         this.expectedAuthType = expectedAuthType;
         this.modelId = UUID.randomUUID().toString();
         logTestInfo("Configuring");
@@ -165,16 +169,18 @@ public class MultiAuthSyncEngineInstrumentationTest {
         authCategory.addPlugin(authPlugin);
         authCategory.configure(authCategoryConfiguration, context);
         auth = SynchronousAuth.delegatingTo(authCategory);
-        if (this.requiresSignIn) {
+        if (this.requiresCognitoSign) {
             Log.v(tag, "Test requires signIn.");
             AuthSignInResult authSignInResult = auth.signIn(cognitoUser, cognitoPassword);
             if (!authSignInResult.isSignInComplete()) {
                 fail("Unable to complete initial sign-in");
             }
+        }
+
+        if(this.requiresOidcSignIn) {
             oidcLogin();
             if (token.get() == null) {
-                throw new AmplifyException("Unable to autenticate with OIDC provider",
-                                           AmplifyException.TODO_RECOVERY_SUGGESTION);
+                fail("Unable to autenticate with OIDC provider");
             }
         }
 
@@ -245,79 +251,80 @@ public class MultiAuthSyncEngineInstrumentationTest {
     public static Iterable<Object[]> localTest() {
         return Arrays.asList(new Object[][]{
             // Add a subset of test cases here.
-            {OwnerOIDCPost.class, true, AuthorizationType.OPENID_CONNECT}
+            {OwnerOIDCPost.class, true, false, AuthorizationType.OPENID_CONNECT}
         });
     }
 
     /**
      * Builds an array of test scenarios which will be passed to the
      * constructor of this class.
-     * @return An array of test scenarios representing the following: modelType, requiresLogin, expected auth type.
+     * @return An array of test scenarios representing the following: modelType, requiresCognitoSignIn,
+     * requiresOidcSignIn, expected auth type.
      * If expected auth type is null, it means none of the auth rules can be fulfilled and a failure should
      * be expected.
      */
     @Parameterized.Parameters(name = "model:{0} requiresSignIn: {1} expectedAuthType: {2}")
     public static Iterable<Object[]> data() {
-        //Parameters: model class, isSignedIn, expected successful auth type
+        //Parameters: model class, requiresCognitoSignIn, requiresOidcSignIn, expected successful auth type
         return Arrays.asList(new Object[][]{
             // Single rule cases.
-            {OwnerUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {OwnerOIDCPost.class, true, AuthorizationType.OPENID_CONNECT},
-            {GroupUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivateUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PublicIAMPost.class, false, AuthorizationType.AWS_IAM},
-            {PublicIAMPost.class, false, AuthorizationType.AWS_IAM},
-            {PublicAPIPost.class, false, AuthorizationType.API_KEY},
+            {OwnerUPPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {OwnerOIDCPost.class, false, true, AuthorizationType.OPENID_CONNECT},
+            {GroupUPPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivateUPPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PublicIAMPost.class, false, false, AuthorizationType.AWS_IAM},
+            {PublicIAMPost.class, false, false, AuthorizationType.AWS_IAM},
+            {PublicAPIPost.class, false, false, AuthorizationType.API_KEY},
 
             /* Test cases of models with 2 rules */
             // Owner + private
-            {OwnerPrivateUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {OwnerPrivateUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
 
             // Owner + public
-            {OwnerPublicUPAPIPost.class, false, AuthorizationType.API_KEY},
-            {OwnerPublicUPAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {OwnerPublicOIDAPIPost.class, true, AuthorizationType.OPENID_CONNECT},
+            {OwnerPublicUPAPIPost.class, false, false, AuthorizationType.API_KEY},
+            {OwnerPublicUPAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {OwnerPublicOIDAPIPost.class, false, true, AuthorizationType.OPENID_CONNECT},
 
             // Group + private
-            {GroupPrivateUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {GroupPrivateUPIAMPost.class, false, null},
+            {GroupPrivateUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {GroupPrivateUPIAMPost.class, false, false, null},
 
             // Group + public
-            {GroupPublicUPAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {GroupPublicUPAPIPost.class, false, AuthorizationType.API_KEY},
-            {GroupPublicUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {GroupPublicUPIAMPost.class, false, AuthorizationType.AWS_IAM},
+            {GroupPublicUPAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {GroupPublicUPAPIPost.class, false, false, AuthorizationType.API_KEY},
+            {GroupPublicUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {GroupPublicUPIAMPost.class, false, false, AuthorizationType.AWS_IAM},
 
             // Private + Private
-            {PrivatePrivateUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivatePrivateUPIAMPost.class, false, null},
+            {PrivatePrivateUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePrivateUPIAMPost.class, false, false, null},
 
             // Private + Public
-            {PrivatePublicUPAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivatePublicUPAPIPost.class, false, AuthorizationType.API_KEY},
-            {PrivatePublicUPIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivatePublicUPIAMPost.class, false, AuthorizationType.AWS_IAM},
+            {PrivatePublicUPAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePublicUPAPIPost.class, false, false, AuthorizationType.API_KEY},
+            {PrivatePublicUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePublicUPIAMPost.class, false, false, AuthorizationType.AWS_IAM},
 
             // Public + Public
-            {PublicPublicIAMAPIPost.class, false, AuthorizationType.API_KEY},
+            {PublicPublicIAMAPIPost.class, false, false, AuthorizationType.API_KEY},
 
             /* Test cases of models with 3 or more rules */
-            {OwnerPrivatePublicUPIAMAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {OwnerPrivatePublicUPIAMAPIPost.class, false, AuthorizationType.API_KEY},
+            {OwnerPrivatePublicUPIAMAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {OwnerPrivatePublicUPIAMAPIPost.class, false, false, AuthorizationType.API_KEY},
 
-            {GroupPrivatePublicUPIAMAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {GroupPrivatePublicUPIAMAPIPost.class, false, AuthorizationType.API_KEY},
+            {GroupPrivatePublicUPIAMAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {GroupPrivatePublicUPIAMAPIPost.class, false, false, AuthorizationType.API_KEY},
 
-            {PrivatePrivatePublicUPIAMIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivatePrivatePublicUPIAMIAMPost.class, false, AuthorizationType.AWS_IAM},
+            {PrivatePrivatePublicUPIAMIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePrivatePublicUPIAMIAMPost.class, false, false, AuthorizationType.AWS_IAM},
 
-            {PrivatePrivatePublicUPIAMAPIPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivatePrivatePublicUPIAMAPIPost.class, false, AuthorizationType.API_KEY},
+            {PrivatePrivatePublicUPIAMAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePrivatePublicUPIAMAPIPost.class, false, false, AuthorizationType.API_KEY},
 
-            {PrivatePublicPublicUPAPIIAMPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
+            {PrivatePublicPublicUPAPIIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
 
-            {PrivatePublicComboAPIPost.class, false, AuthorizationType.API_KEY},
-            {PrivatePublicComboUPPost.class, true, AuthorizationType.AMAZON_COGNITO_USER_POOLS}
+            {PrivatePublicComboAPIPost.class, false, false, AuthorizationType.API_KEY},
+            {PrivatePublicComboUPPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS}
         });
     }
 
@@ -406,7 +413,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
         String message = "Model type: " +
             modelType.getSimpleName() +
             " requiresSignIn: " +
-            this.requiresSignIn +
+            this.requiresCognitoSign +
             " expectedAuthType: " +
             (this.expectedAuthType == null ? "FAILURE" : this.expectedAuthType.name()) +
             " stage: " +
