@@ -507,7 +507,7 @@ public class AuthException extends AmplifyException {
      */
     public static class TooManyRequestsException extends AuthException {
         private static final long serialVersionUID = 1L;
-        private static final String MESSAGE = "";
+        private static final String MESSAGE = "Failed since the user made too many requests.";
         private static final String RECOVERY_SUGGESTION =
                 "Make sure the requests send are controlled and the errors are properly handled.";
 
