@@ -33,9 +33,9 @@ import com.amazonaws.services.cognitoidentityprovider.model.ResourceNotFoundExce
 import com.amazonaws.services.cognitoidentityprovider.model.SoftwareTokenMFANotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.TooManyFailedAttemptsException;
 import com.amazonaws.services.cognitoidentityprovider.model.TooManyRequestsException;
-import com.amazonaws.services.cognitoidentityprovider.model.UsernameExistsException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException;
+import com.amazonaws.services.cognitoidentityprovider.model.UsernameExistsException;
 
 /**
  * Convert AWS Cognito Exceptions to AuthExceptions.
