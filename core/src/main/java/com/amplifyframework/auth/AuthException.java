@@ -418,7 +418,7 @@ public class AuthException extends AmplifyException {
      */
     public static class NotAuthorizedException extends AuthException {
         private static final long serialVersionUID = 1L;
-        private static final String MESSAGE = "";
+        private static final String MESSAGE = "Failed since user is not authorized.";
         private static final String RECOVERY_SUGGESTION =
                 "Check whether the given values are correct and the user is authorized to perform the operation.";
 
