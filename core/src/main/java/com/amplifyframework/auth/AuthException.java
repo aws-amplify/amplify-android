@@ -414,7 +414,7 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     *
+     * Could not perform the operation since user is not authorized.
      */
     public static class NotAuthorizedException extends AuthException {
         private static final long serialVersionUID = 1L;
@@ -503,7 +503,7 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     *
+     * Could not perform the operation since user made too many requests.
      */
     public static class TooManyRequestsException extends AuthException {
         private static final long serialVersionUID = 1L;
