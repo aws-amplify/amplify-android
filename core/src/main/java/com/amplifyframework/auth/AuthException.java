@@ -449,6 +449,24 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     * Could not find software token MFA for the user.
+     */
+    public static class SoftwareTokenMFANotFoundException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Could not find software token MFA.";
+        private static final String RECOVERY_SUGGESTION =
+                "Enable the software token MFA for the user.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public SoftwareTokenMFANotFoundException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Could not perform the action because user made too many failed attempts for a given action.
      */
     public static class FailedAttemptsLimitExceededException extends AuthException {
