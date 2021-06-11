@@ -27,10 +27,12 @@ import com.amazonaws.services.cognitoidentityprovider.model.InvalidParameterExce
 import com.amazonaws.services.cognitoidentityprovider.model.InvalidPasswordException;
 import com.amazonaws.services.cognitoidentityprovider.model.LimitExceededException;
 import com.amazonaws.services.cognitoidentityprovider.model.MFAMethodNotFoundException;
+import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException;
 import com.amazonaws.services.cognitoidentityprovider.model.PasswordResetRequiredException;
 import com.amazonaws.services.cognitoidentityprovider.model.ResourceNotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.SoftwareTokenMFANotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.TooManyFailedAttemptsException;
+import com.amazonaws.services.cognitoidentityprovider.model.TooManyRequestsException;
 import com.amazonaws.services.cognitoidentityprovider.model.UsernameExistsException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException;
@@ -97,6 +99,10 @@ public final class CognitoAuthExceptionConverter {
             return new AuthException.MFAMethodNotFoundException(error);
         }
 
+        if (error instanceof NotAuthorizedException) {
+            return new AuthException.NotAuthorizedException(error);
+        }
+
         if (error instanceof ResourceNotFoundException) {
             return new AuthException.ResourceNotFoundException(error);
         }
@@ -107,6 +113,10 @@ public final class CognitoAuthExceptionConverter {
 
         if (error instanceof TooManyFailedAttemptsException) {
             return new AuthException.FailedAttemptsLimitExceededException(error);
+        }
+
+        if (error instanceof TooManyRequestsException) {
+            return new AuthException.TooManyRequestsException(error);
         }
 
         if (error instanceof PasswordResetRequiredException) {

@@ -414,6 +414,24 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     *
+     */
+    public static class NotAuthorizedException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "";
+        private static final String RECOVERY_SUGGESTION =
+                "Check whether the given values are correct and the user is authorized to perform the operation.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public NotAuthorizedException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Could not perform the action because password needs to be reset.
      */
     public static class PasswordResetRequiredException extends AuthException {
@@ -480,6 +498,24 @@ public class AuthException extends AmplifyException {
          * @param cause The original error.
          */
         public FailedAttemptsLimitExceededException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     *
+     */
+    public static class TooManyRequestsException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure the requests send are controlled and the errors are properly handled.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public TooManyRequestsException(Throwable cause) {
             super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
     }
