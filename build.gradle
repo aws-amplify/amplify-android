@@ -104,6 +104,7 @@ ext {
             coroutines: 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2'
         ],
 
+        oauth2: 'com.google.auth:google-auth-library-oauth2-http:0.26.0',
         okhttp: 'com.squareup.okhttp3:okhttp:4.9.1',
         gson: 'com.google.code.gson:gson:2.8.6',
         rxandroid: 'io.reactivex.rxjava3:rxandroid:3.0.0',
@@ -171,6 +172,13 @@ private void configureAndroidLibrary(Project project) {
             coreLibraryDesugaringEnabled true
             sourceCompatibility JavaVersion.VERSION_1_8
             targetCompatibility JavaVersion.VERSION_1_8
+        }
+
+        // Needed when running integration tests. The oauth2 library uses relies on two
+        // dependencies (Apache's httpcore and httpclient), both of which include
+        // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
+        packagingOptions {
+            exclude 'META-INF/DEPENDENCIES'
         }
     }
 

@@ -70,6 +70,8 @@ import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
+import com.google.auth.oauth2.IdToken;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
@@ -86,6 +88,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import okhttp3.Interceptor;
 import okhttp3.Request;
@@ -107,6 +110,7 @@ import static org.junit.Assert.fail;
 @RunWith(Parameterized.class)
 public class MultiAuthSyncEngineInstrumentationTest {
     private static final int TIMEOUT_SECONDS = 20;
+    private static final String AUDIENCE = "integtest";
 
     private final Class<? extends Model> modelType;
     private final boolean requiresSignIn;
@@ -116,9 +120,10 @@ public class MultiAuthSyncEngineInstrumentationTest {
     private SynchronousApi api;
     private SynchronousDataStore dataStore;
     private SynchronousAuth auth;
-
     private String cognitoUser;
     private String cognitoPassword;
+    private final AtomicReference<String> token = new AtomicReference<>();
+    private ServiceAccountCredentials googleServiceAccount;
 
     /**
      * Constructor for the parameterized test.
@@ -126,10 +131,12 @@ public class MultiAuthSyncEngineInstrumentationTest {
      * @param requiresSignIn Does the test scenario require the user to be logged in.
      * @param expectedAuthType The auth type that should succeed for the test.
      * @throws AmplifyException No expected.
+     * @throws IOException Not expected.
      */
     public MultiAuthSyncEngineInstrumentationTest(Class<? extends Model> clazz,
                                                   boolean requiresSignIn,
-                                                  AuthorizationType expectedAuthType) throws AmplifyException {
+                                                  AuthorizationType expectedAuthType)
+        throws AmplifyException, IOException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
         this.tag = clazz.getSimpleName();
         this.modelType = clazz;
@@ -164,6 +171,11 @@ public class MultiAuthSyncEngineInstrumentationTest {
             if (!authSignInResult.isSignInComplete()) {
                 fail("Unable to complete initial sign-in");
             }
+            oidcLogin();
+            if (token.get() == null) {
+                throw new AmplifyException("Unable to autenticate with OIDC provider",
+                                           AmplifyException.TODO_RECOVERY_SUGGESTION);
+            }
         }
 
         // Setup an API
@@ -174,6 +186,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
         ApiAuthProviders apiAuthProviders = ApiAuthProviders.builder()
                                                             .cognitoUserPoolsAuthProvider(cognitoProvider)
                                                             .awsCredentialsProvider(authPlugin.getEscapeHatch())
+                                                            .oidcAuthProvider(token::get)
                                                             .build();
         ApiCategory apiCategory = new ApiCategory();
         apiCategory.addPlugin(AWSApiPlugin.builder()
@@ -210,6 +223,17 @@ public class MultiAuthSyncEngineInstrumentationTest {
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
     }
 
+    // The following link was helpful in finding the right setup
+    // https://github.com/googleapis/google-auth-library-java#google-auth-library-oauth2-http
+    private void oidcLogin() {
+        try {
+            IdToken idToken = googleServiceAccount.idTokenWithAudience(AUDIENCE, Collections.emptyList());
+            token.set(idToken.getTokenValue());
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
+    }
+
     /**
      * Parameter method that can be used when troubleshooting locally.
      * Uncomment the {@code
@@ -217,10 +241,11 @@ public class MultiAuthSyncEngineInstrumentationTest {
      * } statement below, and comment out the the corresponding annotation in {@link this#data()}.
      * @return A list of parameters to use for the test.
      */
-    @Parameterized.Parameters(name = "model:{0} requiresSignIn: {1} expectedAuthType: {2}")
+//    @Parameterized.Parameters(name = "model:{0} requiresSignIn: {1} expectedAuthType: {2}")
     public static Iterable<Object[]> localTest() {
         return Arrays.asList(new Object[][]{
             // Add a subset of test cases here.
+            {OwnerOIDCPost.class, true, AuthorizationType.OPENID_CONNECT}
         });
     }
 
@@ -231,7 +256,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      * If expected auth type is null, it means none of the auth rules can be fulfilled and a failure should
      * be expected.
      */
-//    @Parameterized.Parameters(name = "model:{0} requiresSignIn: {1} expectedAuthType: {2}")
+    @Parameterized.Parameters(name = "model:{0} requiresSignIn: {1} expectedAuthType: {2}")
     public static Iterable<Object[]> data() {
         //Parameters: model class, isSignedIn, expected successful auth type
         return Arrays.asList(new Object[][]{
@@ -301,11 +326,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @After
     public void tearDown() {
-        try {
-            dataStore.stop();
-        } catch (DataStoreException | RuntimeException exception) {
-            Log.e(tag, "Failed to stop DataStore.", exception);
-        }
         Log.i(tag, "Deleting database");
         getApplicationContext().deleteDatabase("AmplifyDatastore.db");
         Log.i(tag, "Teardown completed.");
@@ -359,9 +379,10 @@ public class MultiAuthSyncEngineInstrumentationTest {
      * The resource file being used is in the .gitignore file to prevent accidental commit.
      * @param context The application context.
      */
-    private void readCredsFromConfig(Context context) {
+    private void readCredsFromConfig(Context context) throws IOException {
         //TODO: use secrets manager instead.
         @RawRes int cognitoCredsResourceId = Resources.getRawResourceId(context, "credentials");
+        @RawRes int googleCredsResourceId = Resources.getRawResourceId(context, "google_client_creds");
         try {
             JSONObject credentialsJson = readJsonResourceFromId(context, cognitoCredsResourceId);
             cognitoUser = credentialsJson.getJSONObject("datastore")
@@ -371,9 +392,13 @@ public class MultiAuthSyncEngineInstrumentationTest {
             cognitoPassword = credentialsJson.getJSONObject("datastore")
                                              .getJSONObject("userPool")
                                              .getString("password");
+
+            googleServiceAccount = ServiceAccountCredentials.fromStream(context.getResources()
+                                                                               .openRawResource(googleCredsResourceId));
+
         } catch (com.amplifyframework.core.Resources.ResourceLoadingException | JSONException exception) {
             Log.e(tag, "Failed to read cognito credentials");
-            throw new RuntimeException("Failed to read cognito credentials");
+            throw new RuntimeException("Failed to read cognito credentials", exception);
         }
     }
 

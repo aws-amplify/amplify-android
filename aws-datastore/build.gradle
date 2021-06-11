@@ -47,5 +47,6 @@ dependencies {
     androidTestImplementation dependency.androidx.test.junit
     androidTestImplementation dependency.rxjava
     androidTestImplementation dependency.okhttp
+    androidTestImplementation dependency.oauth2
 }
 
