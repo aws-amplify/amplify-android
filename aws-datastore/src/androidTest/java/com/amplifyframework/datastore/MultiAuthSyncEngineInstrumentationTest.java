@@ -39,6 +39,7 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.multiauth.GroupPrivatePublicUPIAMAPIPost;
 import com.amplifyframework.testmodels.multiauth.GroupPrivateUPIAMPost;
 import com.amplifyframework.testmodels.multiauth.GroupPublicUPAPIPost;
@@ -70,8 +71,10 @@ import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
 import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
@@ -90,6 +93,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import okhttp3.Headers;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -101,6 +105,7 @@ import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static com.amplifyframework.core.Resources.readJsonResourceFromId;
 import static com.amplifyframework.datastore.DataStoreHubEventFilters.networkStatusFailure;
 import static com.amplifyframework.datastore.DataStoreHubEventFilters.publicationOf;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 /**
@@ -109,8 +114,10 @@ import static org.junit.Assert.fail;
  */
 @RunWith(Parameterized.class)
 public class MultiAuthSyncEngineInstrumentationTest {
+    private static final Logger LOG = Amplify.Logging.forNamespace("MultiAuthSyncEngineInstrumentationTest");
     private static final int TIMEOUT_SECONDS = 20;
     private static final String AUDIENCE = "integtest";
+    private static final String GOOGLE_ISS_CLAIM = "https://accounts.google.com";
 
     private final Class<? extends Model> modelType;
     private final boolean requiresCognitoSign;
@@ -125,6 +132,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
     private String cognitoPassword;
     private final AtomicReference<String> token = new AtomicReference<>();
     private ServiceAccountCredentials googleServiceAccount;
+    private final HttpRequestInterceptor requestInterceptor;
 
     /**
      * Constructor for the parameterized test.
@@ -177,7 +185,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
             }
         }
 
-        if(this.requiresOidcSignIn) {
+        if (this.requiresOidcSignIn) {
             oidcLogin();
             if (token.get() == null) {
                 fail("Unable to autenticate with OIDC provider");
@@ -185,7 +193,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
         }
 
         // Setup an API
-
         DefaultCognitoUserPoolsAuthProvider cognitoProvider =
             new DefaultCognitoUserPoolsAuthProvider(authPlugin.getEscapeHatch());
         CategoryConfiguration apiCategoryConfiguration = amplifyConfiguration.forCategoryType(CategoryType.API);
@@ -195,15 +202,17 @@ public class MultiAuthSyncEngineInstrumentationTest {
                                                             .oidcAuthProvider(token::get)
                                                             .build();
         ApiCategory apiCategory = new ApiCategory();
+        requestInterceptor = new HttpRequestInterceptor(expectedAuthType);
         apiCategory.addPlugin(AWSApiPlugin.builder()
                                           .configureClient("DataStoreIntegTestsApi", okHttpClientBuilder ->
-                                              okHttpClientBuilder.addInterceptor(new HttpRequestInterceptor())
+                                              okHttpClientBuilder.addInterceptor(requestInterceptor)
                                           )
                                           .apiAuthProviders(apiAuthProviders)
                                           .build());
         apiCategory.configure(apiCategoryConfiguration, context);
         api = SynchronousApi.delegatingTo(apiCategory);
 
+        // Setup DataStore
         DataStoreConfiguration dsConfig = DataStoreConfiguration.builder()
                                                                 .errorHandler(exception -> {
                                                                     Log.e(tag,
@@ -236,7 +245,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
             IdToken idToken = googleServiceAccount.idTokenWithAudience(AUDIENCE, Collections.emptyList());
             token.set(idToken.getTokenValue());
         } catch (IOException exception) {
-            exception.printStackTrace();
+            LOG.warn("An error occurred while trying to authenticate against OIDC provider", exception);
         }
     }
 
@@ -251,7 +260,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
     public static Iterable<Object[]> localTest() {
         return Arrays.asList(new Object[][]{
             // Add a subset of test cases here.
-            {OwnerOIDCPost.class, true, false, AuthorizationType.OPENID_CONNECT}
         });
     }
 
@@ -305,8 +313,8 @@ public class MultiAuthSyncEngineInstrumentationTest {
             {PrivatePublicUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
             {PrivatePublicUPIAMPost.class, false, false, AuthorizationType.AWS_IAM},
 
-            // Public + Public
-            {PublicPublicIAMAPIPost.class, false, false, AuthorizationType.API_KEY},
+            // Public + Public (guest auth enabled)
+            {PublicPublicIAMAPIPost.class, false, false, AuthorizationType.AWS_IAM},
 
             /* Test cases of models with 3 or more rules */
             {OwnerPrivatePublicUPIAMAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
@@ -360,6 +368,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
         dataStore.start();
         dataStore.save(testRecord);
         expectedEventAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertFalse(requestInterceptor.hasUnexpectedRequests());
     }
 
     /**
@@ -370,8 +379,8 @@ public class MultiAuthSyncEngineInstrumentationTest {
         try {
             Constructor<?> constructor = modelType.getDeclaredConstructors()[0];
             constructor.setAccessible(true);
-            return (Model) constructor.newInstance(modelId,
-                                                   "Dummy " + modelType.getSimpleName() + " " + RandomString.string());
+            String recordDetail = "IntegTest-" + modelType.getSimpleName() + " " + RandomString.string();
+            return (Model) constructor.newInstance(modelId, recordDetail);
         } catch (IllegalAccessException |
             InstantiationException |
             InvocationTargetException exception) {
@@ -421,11 +430,41 @@ public class MultiAuthSyncEngineInstrumentationTest {
         Log.i(tag, message);
     }
 
-    private static final class HttpRequestInterceptor implements Interceptor {
-        private final Map<Request, Response> okHttpRequests;
+    private static AuthorizationType getRequestAuthType(Headers headers) {
+        String authHeaderValue = headers.get("Authorization");
+        String apiKeyHeaderValue = headers.get("x-api-key");
+        if (authHeaderValue != null && apiKeyHeaderValue != null) {
+            throw new IllegalStateException("Request contains Authorization and API key headers.");
+        }
+        if (apiKeyHeaderValue != null) {
+            return AuthorizationType.API_KEY;
+        }
+        if (authHeaderValue == null) {
+            return AuthorizationType.NONE;
+        }
+        if (authHeaderValue.startsWith("AWS4-HMAC-SHA256")) {
+            return AuthorizationType.AWS_IAM;
+        }
+        String iss = CognitoJWTParser.getClaim(authHeaderValue, "iss");
+        if (iss == null) {
+            throw new IllegalStateException("Could not find any valid auth headers");
+        }
+        if (GOOGLE_ISS_CLAIM.equals(iss)) {
+            return AuthorizationType.OPENID_CONNECT;
+        }
+        if (iss.contains("cognito")) {
+            return AuthorizationType.AMAZON_COGNITO_USER_POOLS;
+        }
+        throw new IllegalStateException("Unable to determine the authorization type of the request.");
+    }
 
-        HttpRequestInterceptor() {
-            this.okHttpRequests = new HashMap<>();
+    private static final class HttpRequestInterceptor implements Interceptor {
+        private final Map<Request, Response> unexpectedRequests;
+        private final AuthorizationType expectedAuthType;
+
+        HttpRequestInterceptor(AuthorizationType expectedAuthType) {
+            this.unexpectedRequests = new HashMap<>();
+            this.expectedAuthType = expectedAuthType;
         }
 
         @Override
@@ -442,13 +481,44 @@ public class MultiAuthSyncEngineInstrumentationTest {
 
             Request copyOfRequest = httpRequest.newBuilder().build();
             Response copyOfResponse = originalResponse.newBuilder().build();
-            okHttpRequests.put(copyOfRequest, copyOfResponse);
             ResponseBody responseBody = copyOfResponse.newBuilder().build().body();
             String responseBodyString = responseBody != null ? responseBody.string() : "";
+            AuthorizationType requestAuthType = getRequestAuthType(copyOfRequest.headers());
+            if (isUnexpectedRequest(responseBodyString, copyOfResponse.code(), requestAuthType)) {
+                unexpectedRequests.put(copyOfRequest, copyOfResponse);
+            }
 
             return originalResponse.newBuilder()
                                    .body(ResponseBody.create(responseBodyString, originalResponse.body().contentType()))
                                    .build();
+        }
+
+        public boolean hasUnexpectedRequests() {
+            return unexpectedRequests.size() > 0;
+        }
+
+        private boolean isUnexpectedRequest(String responseBodyString,
+                                            int responseCode,
+                                            AuthorizationType requestAuthType) {
+            try {
+                JSONObject responseJson = new JSONObject(responseBodyString);
+                JSONArray errors = responseJson.has("errors") ? responseJson.getJSONArray("errors") : new JSONArray();
+                if (responseCode > 399 || errors.length() > 0) {
+                    // Request failed. Make sure it's not for the expected auth type.
+                    if (expectedAuthType.equals(requestAuthType)) {
+                        return true;
+                    }
+                } else {
+                    // Request was successful. Make sure it's the expected auth type.
+                    if (!expectedAuthType.equals(requestAuthType)) {
+                        return true;
+                    }
+                }
+            } catch (JSONException | IllegalStateException exception) {
+                LOG.warn("Unable to validate authorization type for request.", exception);
+                return true;
+            }
+            return false;
         }
     }
 }
