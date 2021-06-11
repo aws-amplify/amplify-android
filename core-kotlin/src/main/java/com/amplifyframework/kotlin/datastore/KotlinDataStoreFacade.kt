@@ -67,10 +67,10 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
     }
 
     @Throws(DataStoreException::class)
-    override suspend fun <T : Model> delete(itemClass: KClass<T>, filter: QueryPredicate) {
+    override suspend fun <T : Model> delete(byClass: KClass<T>, filter: QueryPredicate) {
         return suspendCoroutine { continuation ->
             delegate.delete(
-                itemClass.java,
+                byClass.java,
                 filter,
                 { continuation.resume(Unit) },
                 { continuation.resumeWithException(it) }
