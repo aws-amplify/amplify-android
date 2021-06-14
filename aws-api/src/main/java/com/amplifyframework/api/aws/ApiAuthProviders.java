@@ -23,7 +23,6 @@ import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 
-import java.util.HashSet;
 import java.util.Objects;
 
 /**
@@ -35,7 +34,6 @@ public final class ApiAuthProviders {
     private final AWSCredentialsProvider awsCredentialsProvider;
     private final CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
     private final OidcAuthProvider oidcAuthProvider;
-    private HashSet<AuthorizationType> availableAuthTypes;
 
     private ApiAuthProviders(Builder builder) {
         this.apiKeyAuthProvider = builder.getApiKeyAuthProvider();
