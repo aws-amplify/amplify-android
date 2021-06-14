@@ -20,13 +20,11 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
-import com.amplifyframework.core.Amplify;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 
 import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * Wrapper class to contain Auth providers for
@@ -76,31 +74,6 @@ public final class ApiAuthProviders {
      */
     public CognitoUserPoolsAuthProvider getCognitoUserPoolsAuthProvider() {
         return this.cognitoUserPoolsAuthProvider;
-    }
-
-    /**
-     * Returns a set of auth providers currently configured.
-     * @param apiConfiguration A reference to the API configuration.
-     * @return a set of {@link AuthorizationType}.
-     */
-    public synchronized Set<AuthorizationType> getAvailableAuthorizationTypes(ApiConfiguration apiConfiguration) {
-        if (availableAuthTypes == null) {
-            availableAuthTypes = new HashSet<>();
-            boolean hasAmplifyAuth = Amplify.Auth.getPlugins().size() > 0;
-            if (cognitoUserPoolsAuthProvider != null || hasAmplifyAuth) {
-                availableAuthTypes.add(AuthorizationType.AMAZON_COGNITO_USER_POOLS);
-            }
-            if (oidcAuthProvider != null) {
-                availableAuthTypes.add(AuthorizationType.OPENID_CONNECT);
-            }
-            if (awsCredentialsProvider != null || hasAmplifyAuth) {
-                availableAuthTypes.add(AuthorizationType.AWS_IAM);
-            }
-            if (apiKeyAuthProvider != null || apiConfiguration.getApiKey() != null) {
-                availableAuthTypes.add(AuthorizationType.API_KEY);
-            }
-        }
-        return availableAuthTypes;
     }
 
     /**
