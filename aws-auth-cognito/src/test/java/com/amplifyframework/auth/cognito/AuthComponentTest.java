@@ -395,14 +395,14 @@ public final class AuthComponentTest {
         }).when(mobileClient).getTokens(any());
 
         doAnswer(invocation -> {
-            Callback<SignInResult> callback = invocation.getArgument(2);
+            Callback<SignInResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignIn(any(String.class), any(), (Callback<SignInResult>) any());
+        }).when(mobileClient).confirmSignIn(any(String.class), any(), any(), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE);
         validateSignInResult(result, true, AuthSignInStep.DONE);
-        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), any(), (Callback<SignInResult>) any());
+        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), any(), any(), (Callback<SignInResult>) any());
     }
 
     /**
@@ -425,8 +425,13 @@ public final class AuthComponentTest {
         Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
         AWSCognitoAuthConfirmSignInOptions.CognitoBuilder options = AWSCognitoAuthConfirmSignInOptions.builder();
         Map<String, String> metadata = new HashMap<String, String>();
+        AuthUserAttribute attribute = new AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.test");
+        List<AuthUserAttribute> attributes = Collections.singletonList(attribute);
+        Map<String, String> attributeMap = Collections.singletonMap("email", "test@test.test");
+
         metadata.put("key", "value");
         options.metadata(metadata);
+        options.userAttributes(attributes);
         AWSCognitoAuthConfirmSignInOptions builtOptions = options.build();
 
         doAnswer(invocation -> {
@@ -436,14 +441,15 @@ public final class AuthComponentTest {
         }).when(mobileClient).getTokens(any());
 
         doAnswer(invocation -> {
-            Callback<SignInResult> callback = invocation.getArgument(2);
+            Callback<SignInResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignIn(any(String.class), any(), (Callback<SignInResult>) any());
+        }).when(mobileClient).confirmSignIn(any(String.class), any(), any(), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE, builtOptions);
         validateSignInResult(result, true, AuthSignInStep.DONE);
-        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), eq(metadata), (Callback<SignInResult>) any());
+        verify(mobileClient)
+            .confirmSignIn(eq(CONFIRMATION_CODE), eq(metadata), eq(attributeMap), (Callback<SignInResult>) any());
     }
 
     /**

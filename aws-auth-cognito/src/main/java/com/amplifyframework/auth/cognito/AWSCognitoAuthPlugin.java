@@ -417,11 +417,16 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull Consumer<AuthException> onException
     ) {
         final Map<String, String> metadata = new HashMap<>();
+        final Map<String, String> userAttributes = new HashMap<>();
         if (options instanceof AWSCognitoAuthConfirmSignInOptions) {
             metadata.putAll(((AWSCognitoAuthConfirmSignInOptions) options).getMetadata());
+            for (AuthUserAttribute attribute : ((AWSCognitoAuthConfirmSignInOptions) options).getUserAttributes()) {
+                userAttributes.put(attribute.getKey().getKeyString(), attribute.getValue());
+            }
+
         }
 
-        awsMobileClient.confirmSignIn(confirmationCode, metadata, new Callback<SignInResult>() {
+        awsMobileClient.confirmSignIn(confirmationCode, metadata, userAttributes, new Callback<SignInResult>() {
             @Override
             public void onResult(SignInResult result) {
                 try {
@@ -548,11 +553,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                 @Override
                 public void onError(Exception exception) {
-                    onException.accept(new AuthException(
-                            "An error occurred while attempting to retrieve your user details",
-                            exception,
-                            "See attached exception for more details"
-                    ));
+                    onException.accept(CognitoAuthExceptionConverter.lookup(
+                            exception, "Fetching authorization session failed."));
                 }
             });
         } catch (Throwable exception) {
@@ -577,11 +579,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
-                onException.accept(new AuthException(
-                        "An error occurred while remembering a device",
-                        exception,
-                        "See attached exception for more details"
-                ));
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Remember device failed."));
             }
         });
     }
@@ -599,11 +598,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
-                onException.accept(new AuthException(
-                        "An error occurred while forgetting a device",
-                        exception,
-                        "See attached exception for more details"
-                ));
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Forget device failed."));
             }
         });
     }
@@ -622,11 +618,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
-                onException.accept(new AuthException(
-                        "An error occurred while forgetting a device",
-                        exception,
-                        "See attached exception for more details"
-                ));
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Forget device failed."));
             }
         });
     }
@@ -648,11 +641,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
-                onException.accept(new AuthException(
-                        "An error occurred while fetching remembered devices.",
-                        exception,
-                        "See attached exception for more details"
-                ));
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Fetching devices failed."));
             }
         });
     }
@@ -685,11 +675,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
-                onException.accept(new AuthException(
-                        "An error occurred triggering password recovery",
-                        exception,
-                        "See attached exception for more details"
-                ));
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Reset password failed."));
             }
         });
     }
@@ -720,11 +707,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                 @Override
                 public void onError(Exception error) {
-                    onException.accept(new AuthException(
-                            "An error occurred confirming password recovery code",
-                            error,
-                            "See attached exception for more details"
-                    ));
+                    onException.accept(CognitoAuthExceptionConverter.lookup(
+                            error, "Confirm reset password failed."));
                 }
             }
         );
@@ -744,12 +728,9 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             }
 
             @Override
-            public void onError(Exception error) {
-                onException.accept(new AuthException(
-                        "Failed to change password",
-                        error,
-                        "See attached exception for more details"
-                ));
+            public void onError(Exception exception) {
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Update password failed."));
             }
         });
     }
@@ -772,11 +753,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception error) {
-                onError.accept(new AuthException(
-                        "Failed to fetch user attributes",
-                        error,
-                        "Ensure that you are logged in and online"
-                ));
+                onError.accept(CognitoAuthExceptionConverter.lookup(
+                        error, "Fetching user attributes failed."));
             }
         });
     }
@@ -927,11 +905,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                     @Override
                     public void onError(Exception error) {
-                        onError.accept(new AuthException(
-                                "An error occurred confirming user attribute",
-                                error,
-                                "See attached exception for more details"
-                        ));
+                        onError.accept(CognitoAuthExceptionConverter.lookup(
+                                error, "Confirming user attributes failed."));
                     }
                 });
     }
