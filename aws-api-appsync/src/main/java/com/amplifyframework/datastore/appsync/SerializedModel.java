@@ -151,7 +151,7 @@ public final class SerializedModel implements Model {
         return "SerializedModel{" +
             "id='" + modelId + '\'' +
             ", serializedData=" + serializedData +
-            ", modelSchema=" + modelSchema +
+            ", modelName=" + getModelName() +
             '}';
     }
 

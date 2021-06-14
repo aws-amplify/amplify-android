@@ -397,6 +397,42 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     * Could not find multi-factor authentication (MFA) method in AWS Cognito.
+     */
+    public static class MFAMethodNotFoundException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Could not find multi-factor authentication (MFA) method.";
+        private static final String RECOVERY_SUGGESTION =
+                "Configure multi-factor authentication using Amplify CLI or AWS Cognito console.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public MFAMethodNotFoundException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the operation since user is not authorized.
+     */
+    public static class NotAuthorizedException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Failed since user is not authorized.";
+        private static final String RECOVERY_SUGGESTION =
+                "Check whether the given values are correct and the user is authorized to perform the operation.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public NotAuthorizedException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Could not perform the action because password needs to be reset.
      */
     public static class PasswordResetRequiredException extends AuthException {
@@ -432,6 +468,24 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     * Could not find software token MFA for the user.
+     */
+    public static class SoftwareTokenMFANotFoundException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Could not find software token MFA.";
+        private static final String RECOVERY_SUGGESTION =
+                "Enable the software token MFA for the user.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public SoftwareTokenMFANotFoundException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Could not perform the action because user made too many failed attempts for a given action.
      */
     public static class FailedAttemptsLimitExceededException extends AuthException {
@@ -445,6 +499,24 @@ public class AuthException extends AmplifyException {
          * @param cause The original error.
          */
         public FailedAttemptsLimitExceededException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the operation since user made too many requests.
+     */
+    public static class TooManyRequestsException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Failed since the user made too many requests.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure the requests send are controlled and the errors are properly handled.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public TooManyRequestsException(Throwable cause) {
             super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
     }

@@ -30,6 +30,7 @@ import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
@@ -242,15 +243,55 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            Callback<SignUpResult> callback = invocation.getArgument(2);
+            Callback<SignUpResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignUp(any(), any(), Mockito.<Callback<SignUpResult>>any());
+        }).when(mobileClient).confirmSignUp(any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
 
         AuthSignUpResult result = synchronousAuth.confirmSignUp(USERNAME, CONFIRMATION_CODE);
         validateSignUpResult(result, AuthSignUpStep.DONE);
         verify(mobileClient)
-            .confirmSignUp(eq(USERNAME), eq(CONFIRMATION_CODE), Mockito.<Callback<SignUpResult>>any());
+            .confirmSignUp(eq(USERNAME), eq(CONFIRMATION_CODE), any(), Mockito.<Callback<SignUpResult>>any());
+    }
+
+    /**
+     * Tests that the confirmSignUp method of the Auth wrapper of AWSMobileClient (AMC) calls AMC.confirmSignUp with
+     * the username and confirmation code and options it received.
+     * Also ensures that in the onResult case, the success callback receives a valid AuthSignUpResult.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void confirmSignUpWithOptions() throws AuthException {
+        SignUpResult amcResult = new SignUpResult(
+                true,
+                new UserCodeDeliveryDetails(
+                        DESTINATION,
+                        DELIVERY_MEDIUM,
+                        ATTRIBUTE_NAME
+                ),
+                USER_SUB
+        );
+
+        AWSCognitoAuthConfirmSignUpOptions.CognitoBuilder options = AWSCognitoAuthConfirmSignUpOptions.builder();
+        Map<String, String> clientMetadata = new HashMap<String, String>();
+        clientMetadata.put("testKey", "testValue");
+        options.clientMetadata(clientMetadata);
+        AWSCognitoAuthConfirmSignUpOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<SignUpResult> callback = invocation.getArgument(3);
+            callback.onResult(amcResult);
+            return null;
+        }).when(mobileClient).confirmSignUp(any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
+
+        AuthSignUpResult result = synchronousAuth.confirmSignUp(USERNAME, CONFIRMATION_CODE, builtOptions);
+        validateSignUpResult(result, AuthSignUpStep.DONE);
+        verify(mobileClient)
+                .confirmSignUp(
+                        eq(USERNAME),
+                        eq(CONFIRMATION_CODE),
+                        eq(clientMetadata),
+                        Mockito.<Callback<SignUpResult>>any());
     }
 
     /**
@@ -354,14 +395,14 @@ public final class AuthComponentTest {
         }).when(mobileClient).getTokens(any());
 
         doAnswer(invocation -> {
-            Callback<SignInResult> callback = invocation.getArgument(2);
+            Callback<SignInResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignIn(any(String.class), any(), (Callback<SignInResult>) any());
+        }).when(mobileClient).confirmSignIn(any(String.class), any(), any(), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE);
         validateSignInResult(result, true, AuthSignInStep.DONE);
-        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), any(), (Callback<SignInResult>) any());
+        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), any(), any(), (Callback<SignInResult>) any());
     }
 
     /**
@@ -384,8 +425,13 @@ public final class AuthComponentTest {
         Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
         AWSCognitoAuthConfirmSignInOptions.CognitoBuilder options = AWSCognitoAuthConfirmSignInOptions.builder();
         Map<String, String> metadata = new HashMap<String, String>();
+        AuthUserAttribute attribute = new AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.test");
+        List<AuthUserAttribute> attributes = Collections.singletonList(attribute);
+        Map<String, String> attributeMap = Collections.singletonMap("email", "test@test.test");
+
         metadata.put("key", "value");
         options.metadata(metadata);
+        options.userAttributes(attributes);
         AWSCognitoAuthConfirmSignInOptions builtOptions = options.build();
 
         doAnswer(invocation -> {
@@ -395,14 +441,15 @@ public final class AuthComponentTest {
         }).when(mobileClient).getTokens(any());
 
         doAnswer(invocation -> {
-            Callback<SignInResult> callback = invocation.getArgument(2);
+            Callback<SignInResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignIn(any(String.class), any(), (Callback<SignInResult>) any());
+        }).when(mobileClient).confirmSignIn(any(String.class), any(), any(), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE, builtOptions);
         validateSignInResult(result, true, AuthSignInStep.DONE);
-        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), eq(metadata), (Callback<SignInResult>) any());
+        verify(mobileClient)
+            .confirmSignIn(eq(CONFIRMATION_CODE), eq(metadata), eq(attributeMap), (Callback<SignInResult>) any());
     }
 
     /**
