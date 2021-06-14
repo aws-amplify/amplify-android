@@ -29,7 +29,6 @@ dependencies {
 
     testImplementation project(path: ':testutils')
     testImplementation project(path: ':testmodels')
-    testImplementation project(path: ':aws-auth-cognito')
     testImplementation dependency.androidx.test.core
     testImplementation dependency.jsonassert
     testImplementation dependency.junit
