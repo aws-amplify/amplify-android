@@ -78,7 +78,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -100,6 +102,8 @@ public final class SyncProcessorTest {
     private SyncProcessor syncProcessor;
     private int errorHandlerCallCount;
     private int modelCount;
+    RetryStrategy.RxRetryStrategy retryStrategy;
+
 
     /**
      * Wire up dependencies for the SyncProcessor, and build one for testing.
@@ -115,6 +119,8 @@ public final class SyncProcessorTest {
 
         this.appSync = mock(AppSync.class);
         this.errorHandlerCallCount = 0;
+        this.retryStrategy = mock(RetryStrategy.RxRetryStrategy.class);
+        doReturn(false).when(retryStrategy).retryHandler(anyInt(), any(DataStoreException.class));
 
         initSyncProcessor(10_000);
     }
@@ -152,6 +158,7 @@ public final class SyncProcessorTest {
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .queryPredicateProvider(queryPredicateProvider)
+            .retryStrategy(retryStrategy)
             .build();
     }
 
@@ -551,13 +558,34 @@ public final class SyncProcessorTest {
 
         // Act: call hydrate.
         assertTrue(
-            syncProcessor.hydrate()
-                .onErrorComplete()
-                .blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                syncProcessor.hydrate()
+                        .onErrorComplete()
+                        .blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
         );
 
         // Assert: sync process failed the first time the api threw an error
         assertEquals(1, errorHandlerCallCount);
+    }
+
+
+    /**
+     * Verify that retry is called on appsync failure.
+     * @throws DataStoreException On failure to build GraphQLRequest for sync query.
+     */
+    @Test
+    public void userProvidedErrorCallbackInvokedOnFailureAndRetried() throws DataStoreException {
+        // Arrange: mock failure when invoking hydrate on the mock object.
+        AppSyncMocking.sync(appSync)
+                .mockFailure(new DataStoreException("Something timed out during sync.",""));
+        // Act: call hydrate.
+        assertTrue(
+                syncProcessor.hydrate()
+                        .onErrorComplete()
+                        .blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        );
+
+        // Assert: AppSyc request is retried
+        verify(retryStrategy , times(1)).retryHandler(anyInt(),any(DataStoreException.class));
     }
 
     /**

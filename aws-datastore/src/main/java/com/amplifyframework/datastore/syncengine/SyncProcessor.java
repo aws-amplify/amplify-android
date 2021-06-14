@@ -73,6 +73,7 @@ final class SyncProcessor {
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
     private final String[] modelNames;
     private final QueryPredicateProvider queryPredicateProvider;
+    private RetryStrategy.RxRetryStrategy retryStrategy;
 
     private SyncProcessor(Builder builder) {
         this.modelProvider = builder.modelProvider;
@@ -85,6 +86,7 @@ final class SyncProcessor {
         this.modelNames =
             ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
                 .toArray(new String[0]);
+        this.retryStrategy = builder.retryStrategy;
     }
 
     /**
@@ -229,6 +231,7 @@ final class SyncProcessor {
                         processor.onComplete();
                     }
                 })
+                .retry(retryStrategy::retryHandler)
                 // If it's a SerializedModel, add the ModelSchema, since it isn't added during deserialization.
                 .map(paginatedResult -> Flowable.fromIterable(paginatedResult)
                         .map(modelWithMetadata -> hydrateSchemaIfNeeded(modelWithMetadata, schema))
@@ -285,7 +288,7 @@ final class SyncProcessor {
      */
     public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep,
             SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep,
-            QueryPredicateProviderStep, BuildStep {
+            QueryPredicateProviderStep, RetryStrategyStep, BuildStep {
         private ModelProvider modelProvider;
         private ModelSchemaRegistry modelSchemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
@@ -293,6 +296,7 @@ final class SyncProcessor {
         private Merger merger;
         private DataStoreConfigurationProvider dataStoreConfigurationProvider;
         private QueryPredicateProvider queryPredicateProvider;
+        private RetryStrategy.RxRetryStrategy retryStrategy;
 
         @NonNull
         @Override
@@ -339,7 +343,7 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
+        public RetryStrategyStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
             this.queryPredicateProvider = Objects.requireNonNull(queryPredicateProvider);
             return Builder.this;
         }
@@ -348,6 +352,13 @@ final class SyncProcessor {
         @Override
         public SyncProcessor build() {
             return new SyncProcessor(this);
+        }
+
+        @NonNull
+        @Override
+        public BuildStep retryStrategy(RetryStrategy.RxRetryStrategy retryStrategy) {
+            this.retryStrategy = retryStrategy;
+            return Builder.this;
         }
     }
 
@@ -384,7 +395,12 @@ final class SyncProcessor {
 
     interface QueryPredicateProviderStep {
         @NonNull
-        BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
+        RetryStrategyStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
+    }
+
+    interface RetryStrategyStep {
+        @NonNull
+        BuildStep retryStrategy(RetryStrategy.RxRetryStrategy retryStrategy);
     }
 
     interface BuildStep {
