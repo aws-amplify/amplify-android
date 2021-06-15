@@ -1,57 +1,56 @@
 {
-    "associations": {
-        "blog": {
-            "associatedName": "owner",
-            "associatedType": "Blog",
-            "name": "HasOne"
-        }
+  "associations": {
+    "blog": {
+      "associatedName": "owner",
+      "associatedType": "Blog",
+      "name": "HasOne"
+    }
+  },
+  "authRules": [],
+  "fields": {
+    "blog": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": true,
+      "isRequired": false,
+      "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+      "name": "blog",
+      "targetType": "Blog"
     },
-    "authRules": [],
-    "fields": {
-        "blog": {
-            "authRules": [],
-            "isArray": false,
-            "isEnum": false,
-            "isModel": true,
-            "isRequired": false,
-            "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
-            "name": "blog",
-            "targetType": "Blog"
-        },
-        "id": {
-            "authRules": [],
-            "isArray": false,
-            "isEnum": false,
-            "isModel": false,
-            "isRequired": true,
-            "javaClassForValue": "java.lang.String",
-            "name": "id",
-            "targetType": "ID"
-        },
-        "name": {
-            "authRules": [],
-            "isArray": false,
-            "isEnum": false,
-            "isModel": false,
-            "isRequired": true,
-            "javaClassForValue": "java.lang.String",
-            "name": "name",
-            "targetType": "String"
-        },
-        "wea": {
-            "authRules": [],
-            "isArray": false,
-            "isEnum": false,
-            "isModel": false,
-            "isRequired": false,
-            "javaClassForValue": "java.lang.String",
-            "name": "wea",
-            "targetType": "String"
-        }
+    "id": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": true,
+      "javaClassForValue": "java.lang.String",
+      "name": "id",
+      "targetType": "ID"
     },
-    "indexes": {},
-    "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel",
-    "name": "BlogOwner",
-    "pluralName": "BlogOwners"
+    "name": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": true,
+      "javaClassForValue": "java.lang.String",
+      "name": "name",
+      "targetType": "String"
+    },
+    "wea": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": false,
+      "javaClassForValue": "java.lang.String",
+      "name": "wea",
+      "targetType": "String"
+    }
+  },
+  "indexes": {},
+  "modelClass": "com.amplifyframework.core.model.SerializedModel",
+  "name": "BlogOwner",
+  "pluralName": "BlogOwners"
 }
-

@@ -1,47 +1,46 @@
 {
-    "associations": {
-        "post": {
-            "associatedType": "Post",
-            "name": "BelongsTo",
-            "targetName": "commentPostId"
-        }
+  "associations": {
+    "post": {
+      "associatedType": "Post",
+      "name": "BelongsTo",
+      "targetName": "commentPostId"
+    }
+  },
+  "authRules": [],
+  "fields": {
+    "content": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": false,
+      "javaClassForValue": "java.lang.String",
+      "name": "content",
+      "targetType": "String"
     },
-    "authRules": [],
-    "fields": {
-        "content": {
-            "authRules": [],
-            "isArray": false,
-            "isEnum": false,
-            "isModel": false,
-            "isRequired": false,
-            "javaClassForValue": "java.lang.String",
-            "name": "content",
-            "targetType": "String"
-        },
-        "id": {
-            "authRules": [],
-            "isArray": false,
-            "isEnum": false,
-            "isModel": false,
-            "isRequired": true,
-            "javaClassForValue": "java.lang.String",
-            "name": "id",
-            "targetType": "ID"
-        },
-        "post": {
-            "authRules": [],
-            "isArray": false,
-            "isEnum": false,
-            "isModel": true,
-            "isRequired": false,
-            "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
-            "name": "post",
-            "targetType": "Post"
-        }
+    "id": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": true,
+      "javaClassForValue": "java.lang.String",
+      "name": "id",
+      "targetType": "ID"
     },
-    "indexes": {},
-    "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel",
-    "name": "Comment",
-    "pluralName": "Comments"
+    "post": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": true,
+      "isRequired": false,
+      "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+      "name": "post",
+      "targetType": "Post"
+    }
+  },
+  "indexes": {},
+  "modelClass": "com.amplifyframework.core.model.SerializedModel",
+  "name": "Comment",
+  "pluralName": "Comments"
 }
-

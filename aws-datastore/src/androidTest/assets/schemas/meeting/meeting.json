@@ -66,6 +66,5 @@
   },
   "associations": {},
   "indexes": {},
-  "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel"
+  "modelClass": "com.amplifyframework.core.model.SerializedModel"
 }
-

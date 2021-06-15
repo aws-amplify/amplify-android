@@ -1,52 +1,51 @@
 {
-    "associations": {
-        "author": {
-            "associatedType": "Author",
-            "name": "BelongsTo",
-            "targetName": "authorId"
-        },
-        "post": {
-            "associatedType": "Post",
-            "name": "BelongsTo",
-            "targetName": "postId"
-        }
+  "associations": {
+    "author": {
+      "associatedType": "Author",
+      "name": "BelongsTo",
+      "targetName": "authorId"
     },
-    "authRules": [],
-    "fields": {
-        "author": {
-            "authRules": [],
-            "isArray": false,
-            "isEnum": false,
-            "isModel": true,
-            "isRequired": false,
-            "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
-            "name": "author",
-            "targetType": "Author"
-        },
-        "id": {
-            "authRules": [],
-            "isArray": false,
-            "isEnum": false,
-            "isModel": false,
-            "isRequired": true,
-            "javaClassForValue": "java.lang.String",
-            "name": "id",
-            "targetType": "ID"
-        },
-        "post": {
-            "authRules": [],
-            "isArray": false,
-            "isEnum": false,
-            "isModel": true,
-            "isRequired": false,
-            "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
-            "name": "post",
-            "targetType": "Post"
-        }
+    "post": {
+      "associatedType": "Post",
+      "name": "BelongsTo",
+      "targetName": "postId"
+    }
+  },
+  "authRules": [],
+  "fields": {
+    "author": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": true,
+      "isRequired": false,
+      "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+      "name": "author",
+      "targetType": "Author"
     },
-    "indexes": {},
-    "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel",
-    "name": "PostAuthorJoin",
-    "pluralName": "PostAuthorJoins"
+    "id": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": true,
+      "javaClassForValue": "java.lang.String",
+      "name": "id",
+      "targetType": "ID"
+    },
+    "post": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": true,
+      "isRequired": false,
+      "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+      "name": "post",
+      "targetType": "Post"
+    }
+  },
+  "indexes": {},
+  "modelClass": "com.amplifyframework.core.model.SerializedModel",
+  "name": "PostAuthorJoin",
+  "pluralName": "PostAuthorJoins"
 }
-
