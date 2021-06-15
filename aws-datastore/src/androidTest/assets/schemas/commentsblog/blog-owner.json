@@ -1,56 +1,56 @@
 {
-  "associations": {
-    "blog": {
-      "associatedName": "owner",
-      "associatedType": "Blog",
-      "name": "HasOne"
-    }
-  },
-  "authRules": [],
-  "fields": {
-    "blog": {
-      "authRules": [],
-      "isArray": false,
-      "isEnum": false,
-      "isModel": true,
-      "isRequired": false,
-      "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
-      "name": "blog",
-      "targetType": "Blog"
+    "associations": {
+        "blog": {
+            "associatedName": "owner",
+            "associatedType": "Blog",
+            "name": "HasOne"
+        }
     },
-    "id": {
-      "authRules": [],
-      "isArray": false,
-      "isEnum": false,
-      "isModel": false,
-      "isRequired": true,
-      "javaClassForValue": "java.lang.String",
-      "name": "id",
-      "targetType": "ID"
+    "authRules": [],
+    "fields": {
+        "blog": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": true,
+            "isRequired": false,
+            "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+            "name": "blog",
+            "targetType": "Blog"
+        },
+        "id": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "id",
+            "targetType": "ID"
+        },
+        "name": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "name",
+            "targetType": "String"
+        },
+        "wea": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": false,
+            "javaClassForValue": "java.lang.String",
+            "name": "wea",
+            "targetType": "String"
+        }
     },
-    "name": {
-      "authRules": [],
-      "isArray": false,
-      "isEnum": false,
-      "isModel": false,
-      "isRequired": true,
-      "javaClassForValue": "java.lang.String",
-      "name": "name",
-      "targetType": "String"
-    },
-    "wea": {
-      "authRules": [],
-      "isArray": false,
-      "isEnum": false,
-      "isModel": false,
-      "isRequired": false,
-      "javaClassForValue": "java.lang.String",
-      "name": "wea",
-      "targetType": "String"
-    }
-  },
-  "indexes": {},
-  "modelClass": "com.amplifyframework.core.model.SerializedModel",
-  "name": "BlogOwner",
-  "pluralName": "BlogOwners"
+    "indexes": {},
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
+    "name": "BlogOwner",
+    "pluralName": "BlogOwners"
 }

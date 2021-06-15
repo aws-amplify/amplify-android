@@ -1,46 +1,46 @@
 {
-  "associations": {
-    "posts": {
-      "associatedName": "author",
-      "associatedType": "PostAuthorJoin",
-      "name": "HasMany"
-    }
-  },
-  "authRules": [],
-  "fields": {
-    "id": {
-      "authRules": [],
-      "isArray": false,
-      "isEnum": false,
-      "isModel": false,
-      "isRequired": true,
-      "javaClassForValue": "java.lang.String",
-      "name": "id",
-      "targetType": "ID"
+    "associations": {
+        "posts": {
+            "associatedName": "author",
+            "associatedType": "PostAuthorJoin",
+            "name": "HasMany"
+        }
     },
-    "name": {
-      "authRules": [],
-      "isArray": false,
-      "isEnum": false,
-      "isModel": false,
-      "isRequired": true,
-      "javaClassForValue": "java.lang.String",
-      "name": "name",
-      "targetType": "String"
+    "authRules": [],
+    "fields": {
+        "id": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "id",
+            "targetType": "ID"
+        },
+        "name": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "name",
+            "targetType": "String"
+        },
+        "posts": {
+            "authRules": [],
+            "isArray": true,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": false,
+            "javaClassForValue": "java.util.List",
+            "name": "posts",
+            "targetType": "PostAuthorJoin"
+        }
     },
-    "posts": {
-      "authRules": [],
-      "isArray": true,
-      "isEnum": false,
-      "isModel": false,
-      "isRequired": false,
-      "javaClassForValue": "java.util.List",
-      "name": "posts",
-      "targetType": "PostAuthorJoin"
-    }
-  },
-  "indexes": {},
-  "modelClass": "com.amplifyframework.core.model.SerializedModel",
-  "name": "Author",
-  "pluralName": "Authors"
+    "indexes": {},
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
+    "name": "Author",
+    "pluralName": "Authors"
 }
