@@ -17,8 +17,8 @@ package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 

@@ -13,16 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.appsync;
+package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelField;
-import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
