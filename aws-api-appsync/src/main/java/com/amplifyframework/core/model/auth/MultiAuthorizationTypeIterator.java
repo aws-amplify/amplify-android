@@ -21,7 +21,6 @@ import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -103,16 +102,11 @@ public final class MultiAuthorizationTypeIterator implements AuthorizationTypeIt
      * in the comparison logic.
      */
     private static final class PriorityBasedAuthRuleProviderComparator implements Comparator<AuthRule> {
-        private static final List<AuthStrategy> DEFAULT_STRATEGY_PRIORITY = Arrays.asList(AuthStrategy.OWNER,
-                                                                                          AuthStrategy.GROUPS,
-                                                                                          AuthStrategy.PRIVATE,
-                                                                                          AuthStrategy.PUBLIC);
-
         @Override
         public int compare(AuthRule authRule1, AuthRule authRule2) {
-            Integer o1Priority = DEFAULT_STRATEGY_PRIORITY.indexOf(authRule1.getAuthStrategy());
-            Integer o2Priority = DEFAULT_STRATEGY_PRIORITY.indexOf(authRule2.getAuthStrategy());
-            return o1Priority.compareTo(o2Priority);
+            int o1Priority = authRule1.getAuthStrategy().getPriority();
+            int o2Priority = authRule2.getAuthStrategy().getPriority();
+            return Integer.compare(o1Priority, o2Priority);
         }
     }
 }
