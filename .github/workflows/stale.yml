@@ -19,6 +19,4 @@ jobs:
         # PRs wont go stale
         days-before-pr-stale: -1
         # Only issues and PRs with ALL these labels are checked.
-        only-labels: "Clarification Needed"
-        # label added after 30 days IF ALL only-labels are present
-        stale-issue-label: "Closing Soon"
+        any-of-labels: "Clarification Needed, Closing Soon"
