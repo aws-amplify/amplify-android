@@ -22,7 +22,7 @@ import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.datastore.appsync.SerializedModel;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuthExplicit;
