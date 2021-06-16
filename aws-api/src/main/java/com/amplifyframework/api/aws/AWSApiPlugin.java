@@ -638,27 +638,28 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType() != null) {
             authModeStrategyType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType();
         }
-        if (AuthModeStrategyType.MULTIAUTH.equals(authModeStrategyType)) {
-            return MultiAuthAppSyncGraphQLOperation.<R>builder()
-                .endpoint(clientDetails.getApiConfiguration().getEndpoint())
-                .client(clientDetails.getOkHttpClient())
-                .request(graphQLRequest)
-                .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
-                .responseFactory(gqlResponseFactory)
-                .onResponse(onResponse)
-                .onFailure(onFailure)
-                .executorService(executorService)
-                .build();
-        } else {
-            return AppSyncGraphQLOperation.<R>builder()
-                .endpoint(clientDetails.getApiConfiguration().getEndpoint())
-                .client(clientDetails.getOkHttpClient())
-                .request(graphQLRequest)
-                .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
-                .responseFactory(gqlResponseFactory)
-                .onResponse(onResponse)
-                .onFailure(onFailure)
-                .build();
+        switch (authModeStrategyType) {
+            case MULTIAUTH:
+                return MultiAuthAppSyncGraphQLOperation.<R>builder()
+                    .endpoint(clientDetails.getApiConfiguration().getEndpoint())
+                    .client(clientDetails.getOkHttpClient())
+                    .request(graphQLRequest)
+                    .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
+                    .responseFactory(gqlResponseFactory)
+                    .onResponse(onResponse)
+                    .onFailure(onFailure)
+                    .executorService(executorService)
+                    .build();
+            default:
+                return AppSyncGraphQLOperation.<R>builder()
+                    .endpoint(clientDetails.getApiConfiguration().getEndpoint())
+                    .client(clientDetails.getOkHttpClient())
+                    .request(graphQLRequest)
+                    .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
+                    .responseFactory(gqlResponseFactory)
+                    .onResponse(onResponse)
+                    .onFailure(onFailure)
+                    .build();
         }
     }
 
