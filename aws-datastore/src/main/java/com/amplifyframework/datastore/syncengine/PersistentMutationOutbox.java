@@ -23,6 +23,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
@@ -33,7 +34,9 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
@@ -332,10 +335,18 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     if (QueryPredicates.all().equals(incoming.getPredicate())) {
                         // If the incoming update does not have a condition, we want to delete any
                         // existing mutations for the modelId before saving the incoming one.
-                        return removeNotLocking(existing.getMutationId()).andThen(saveIncomingAndNotify());
+                        try {
+                            @SuppressWarnings("unchecked")
+                            PendingMutation<T> mergedPendingMutation = (PendingMutation<T>) merge(incoming, existing);
+                            return removeNotLocking(existing.getMutationId())
+                                    .andThen(saveIncomingAndNotify(mergedPendingMutation));
+                        } catch (Exception exception) {
+                            LOG.error("Failed to merge, skip merging. exceptions: " + exception);
+                            return removeNotLocking(existing.getMutationId()).andThen(saveIncomingAndNotify(incoming));
+                        }
                     } else {
                         // If it has a condition, we want to just add it to the queue
-                        return saveIncomingAndNotify();
+                        return saveIncomingAndNotify(incoming);
                     }
                 case DELETE:
                     // Incoming update after a delete -> throw exception
@@ -381,7 +392,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 .andThen(notifyContentAvailable());
         }
 
-        private Completable saveIncomingAndNotify() {
+        private Completable saveIncomingAndNotify(PendingMutation<T> incoming) {
             return save(incoming)
                 .andThen(notifyContentAvailable());
         }
@@ -413,6 +424,26 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 " and incoming mutation of type = " + incoming.getMutationType(),
                 "Please report at https://github.com/aws-amplify/amplify-android/issues."
             ));
+        }
+
+        private PendingMutation<Model> merge(PendingMutation<T> incoming, PendingMutation<T> existing)
+                throws AmplifyException {
+            SerializedModel incomingSerializedModel = SerializedModel.create(incoming.getMutatedItem(),
+                                                                            incoming.getModelSchema());
+            SerializedModel existingSerializedModel = SerializedModel.create(existing.getMutatedItem(),
+                                                                            existing.getModelSchema());
+            Map<String, Object> mergedSerializedData = new HashMap<>();
+            for (String key : incomingSerializedModel.getSerializedData().keySet()) {
+                Object value = incomingSerializedModel.getSerializedData().get(key) != null ?
+                        incomingSerializedModel.getSerializedData().get(key)
+                        : existingSerializedModel.getSerializedData().get(key);
+                mergedSerializedData.put(key, value);
+            }
+            SerializedModel mergedSerializedModel = SerializedModel.builder()
+                    .serializedData(mergedSerializedData)
+                    .modelSchema(incoming.getModelSchema())
+                    .build();
+            return PendingMutation.update(mergedSerializedModel, incoming.getModelSchema());
         }
     }
 }

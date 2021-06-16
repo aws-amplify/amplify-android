@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -587,11 +588,12 @@ public final class PersistentMutationOutboxTest {
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void existingUpdateIncomingUpdateWithoutConditionRewritesExistingMutation()
+    public void existingUpdateIncomingUpdateWithoutConditionMergesWithExistingMutation()
             throws DataStoreException, InterruptedException {
         // Arrange an existing update mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
+            .wea("Something")
             .build();
         PendingMutation<BlogOwner> existingUpdate =
             PendingMutation.update(modelInExistingMutation, schema);
@@ -599,9 +601,10 @@ public final class PersistentMutationOutboxTest {
         mutationOutbox.enqueue(existingUpdate).blockingAwait();
 
         // Act: try to enqueue a new update mutation when there already is one
-        BlogOwner modelInIncomingMutation = modelInExistingMutation.copyOfBuilder()
-            .name("Tony Jr.")
-            .build();
+        BlogOwner modelInIncomingMutation = BlogOwner.builder()
+                .name("Tony Jr")
+                .id(modelInExistingMutation.getId())
+                .build();
         PendingMutation<BlogOwner> incomingUpdate =
             PendingMutation.update(modelInIncomingMutation, schema);
         String incomingUpdateId = incomingUpdate.getMutationId().toString();
@@ -615,19 +618,23 @@ public final class PersistentMutationOutboxTest {
         assertRecordCountForMutationId(existingUpdateId, 0);
 
         // And the new one has been added to the queue
-        assertRecordCountForMutationId(incomingUpdateId, 1);
+        assertRecordCountForMutationId(incomingUpdateId, 0);
 
+        List<PersistentRecord> pendingMutationsFromStorage = getAllPendingMutationRecordFromStorage();
+        for (PersistentRecord record : pendingMutationsFromStorage) {
+            if (!record.getContainedModelId().equals(incomingUpdate.getMutatedItem().getId())) {
+                pendingMutationsFromStorage.remove(record);
+            }
+        }
         // Ensure the new one is in storage.
-        PendingMutation<BlogOwner> storedMutation =
-            converter.fromRecord(getPendingMutationRecordFromStorage(incomingUpdateId).get(0));
+        PendingMutation<SerializedModel> storedMutation =
+            converter.fromRecord(pendingMutationsFromStorage.get(0));
         // This is the name from the second model, not the first!!
-        assertEquals(modelInIncomingMutation.getName(), storedMutation.getMutatedItem().getName());
-
-        // The mutation in the outbox is the incoming one.
-        assertEquals(
-            incomingUpdate,
-            mutationOutbox.peek()
-        );
+        assertEquals(modelInIncomingMutation.getName(),
+                storedMutation.getMutatedItem().getSerializedData().get("name"));
+        // wea got merged from existing model!!
+        assertEquals(modelInExistingMutation.getWea(),
+                storedMutation.getMutatedItem().getSerializedData().get("wea"));
     }
 
     /**
@@ -1031,5 +1038,9 @@ public final class PersistentMutationOutboxTest {
 
     private List<PersistentRecord> getPendingMutationRecordFromStorage(String mutationId) throws DataStoreException {
         return storage.query(PersistentRecord.class, Where.id(mutationId));
+    }
+
+    private List<PersistentRecord> getAllPendingMutationRecordFromStorage() throws DataStoreException {
+        return storage.query(PersistentRecord.class, Where.matchesAll());
     }
 }
