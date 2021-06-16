@@ -62,18 +62,9 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
         this.executorService = builder.executorService;
         this.canceled = new AtomicBoolean(false);
         this.requestDecorator = builder.requestDecorator;
-
-        if (!(getRequest() instanceof AppSyncGraphQLRequest)) {
-            onSubscriptionError.accept(new ApiException(
-                "Multiauth only supported with AppSyncGraphQLRequest<T>.",
-                AmplifyException.TODO_RECOVERY_SUGGESTION
-            ));
-            return;
-        }
-        AppSyncGraphQLRequest<T> appSyncRequest = (AppSyncGraphQLRequest<T>) getRequest();
         this.authTypes = MultiAuthModeStrategy.getInstance()
-                                              .authTypesFor(appSyncRequest.getModelSchema(),
-                                                            appSyncRequest.getAuthRuleOperation());
+                                              .authTypesFor(builder.graphQlRequest.getModelSchema(),
+                                                            builder.graphQlRequest.getAuthRuleOperation());
     }
 
     @NonNull
@@ -94,7 +85,9 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
 
     private void dispatchRequest() {
         LOG.debug("Processing subscription request: " + getRequest().getContent());
+        // If the auth types iterator still has items to return;
         if (authTypes.hasNext()) {
+            // Advance the iterator, and get the next auth type to try.
             AuthorizationType authorizationType = authTypes.next();
             LOG.debug("Attempting to subscribe with " + authorizationType.name());
             GraphQLRequest<T> request = getRequest();
@@ -104,13 +97,15 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
             if (authTypes.isOwnerBasedRule()) {
                 try {
                     request = requestDecorator.decorate(request, authorizationType);
+                } catch (ApiAuthException apiAuthException) {
+                    // For ApiAuthExceptions, just queue up a dispatchRequest call. If there are no
+                    // other auth types left, it will emit the error to the client's callback
+                    // because authTypes.hasNext() will be false.
+                    subscriptionFuture = executorService.submit(this::dispatchRequest);
+                    return;
                 } catch (ApiException apiException) {
                     LOG.warn("Unable to automatically add an owner to the request.", apiException);
-                    if (apiException instanceof ApiAuthException) {
-                        subscriptionFuture = executorService.submit(this::dispatchRequest);
-                    } else {
-                        emitErrorAndCancelSubscription(apiException);
-                    }
+                    emitErrorAndCancelSubscription(apiException);
                     return;
                 }
             }
@@ -121,22 +116,7 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                     MutiAuthSubscriptionOperation.this.subscriptionId = subscriptionId;
                     onSubscriptionStart.accept(subscriptionId);
                 },
-                item -> {
-                    if (item.hasErrors()) {
-                        for (GraphQLResponse.Error error : item.getErrors()) {
-                            if (error.getExtensions() != null &&
-                                UNAUTHORIZED_EXCEPTION.equals(error.getExtensions().get("errorType"))) {
-                                subscriptionFuture = executorService.submit(this::dispatchRequest);
-                                return;
-                            }
-                        }
-                        emitErrorAndCancelSubscription(new ApiException("The server returned subscription errors:" +
-                                                                        item.getErrors().toString(),
-                                                                    AmplifyException.TODO_RECOVERY_SUGGESTION));
-                    } else {
-                        onNextItem.accept(item);
-                    }
-                },
+                onNextItem,
                 apiException -> {
                     LOG.warn("A subscription error occurred.", apiException);
                     if (apiException instanceof ApiAuthException) {
@@ -178,14 +158,13 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
 
     static final class Builder<T> {
         private SubscriptionEndpoint subscriptionEndpoint;
-        private GraphQLRequest<T> graphQlRequest;
+        private AppSyncGraphQLRequest<T> graphQlRequest;
         private GraphQLResponse.Factory responseFactory;
         private ExecutorService executorService;
         private Consumer<String> onSubscriptionStart;
         private Consumer<GraphQLResponse<T>> onNextItem;
         private Consumer<ApiException> onSubscriptionError;
         private Action onSubscriptionComplete;
-        private AuthModeStrategyType authModeStrategyType;
         private AuthRuleRequestDecorator requestDecorator;
 
         @NonNull
@@ -195,7 +174,7 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
         }
 
         @NonNull
-        public Builder<T> graphQlRequest(@NonNull GraphQLRequest<T> graphQlRequest) {
+        public Builder<T> graphQlRequest(@NonNull AppSyncGraphQLRequest<T> graphQlRequest) {
             this.graphQlRequest = Objects.requireNonNull(graphQlRequest);
             return this;
         }
@@ -233,12 +212,6 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
         @NonNull
         public Builder<T> onSubscriptionComplete(@NonNull Action onSubscriptionComplete) {
             this.onSubscriptionComplete = Objects.requireNonNull(onSubscriptionComplete);
-            return this;
-        }
-
-        @NonNull
-        public Builder<T> authModeStrategyType(@NonNull AuthModeStrategyType authModeStrategyType) {
-            this.authModeStrategyType = Objects.requireNonNull(authModeStrategyType);
             return this;
         }
 
