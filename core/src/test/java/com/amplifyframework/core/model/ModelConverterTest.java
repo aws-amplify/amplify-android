@@ -13,10 +13,9 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.appsync;
+package com.amplifyframework.core.model;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
