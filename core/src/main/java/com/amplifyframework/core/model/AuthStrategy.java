@@ -29,30 +29,32 @@ public enum AuthStrategy {
      * Owner authorization specifies whether a user can access or operate against an object.  To use OWNER, the API
      * must have Cognito User Pool configured.
      */
-    OWNER(Provider.USER_POOLS),
+    OWNER(Provider.USER_POOLS, 1),
 
     /**
      * Group authorization specifies whether a group can access or operate against an object.  To use GROUPS, the API
      * must have Cognito User Pool configured.
      */
-    GROUPS(Provider.USER_POOLS),
+    GROUPS(Provider.USER_POOLS, 2),
 
     /**
      * The private authorization specifies that everyone will be allowed to access the API with a valid JWT token from
      * the configured Cognito User Pool. To use PRIVATE, the API must have Cognito User Pool configured.
      */
-    PRIVATE(Provider.USER_POOLS),
+    PRIVATE(Provider.USER_POOLS, 3),
 
     /**
      * The public authorization specifies that everyone will be allowed to access the API, behind the scenes the API
      * will be protected with an API Key. To use PUBLIC, the API must have API Key configured.
      */
-    PUBLIC(Provider.API_KEY);
+    PUBLIC(Provider.API_KEY, 4);
 
     private final Provider defaultAuthProvider;
+    private final int priority;
 
-    AuthStrategy(Provider defaultAuthProvider) {
+    AuthStrategy(Provider defaultAuthProvider, int priority) {
         this.defaultAuthProvider = defaultAuthProvider;
+        this.priority = priority;
     }
 
     /**
@@ -61,6 +63,15 @@ public enum AuthStrategy {
      */
     public Provider getDefaultAuthProvider() {
         return defaultAuthProvider;
+    }
+
+    /**
+     * Returns an integer that represents the rank of a given
+     * strategy among its peers. (OWNER=1, GROUP=2, PRIVATE=3, PUBLIC=4)
+     * @return The priority value of the strategy.
+     */
+    public int getPriority() {
+        return this.priority;
     }
 
     /**
