@@ -34,9 +34,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
@@ -324,6 +322,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
          * Determine which action to take when the incoming mutation type is {@linkplain PendingMutation.Type#UPDATE}.
          * @return A completable with the actions needed to resolve the conflict
          */
+        @SuppressWarnings("unchecked")
         private Completable handleIncomingUpdate() {
             switch (existing.getMutationType()) {
                 case CREATE:
@@ -333,15 +332,22 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     return overwriteExistingAndNotify(PendingMutation.Type.CREATE, QueryPredicates.all());
                 case UPDATE:
                     if (QueryPredicates.all().equals(incoming.getPredicate())) {
-                        // If the incoming update does not have a condition, we want to delete any
-                        // existing mutations for the modelId before saving the incoming one.
-                        try {
-                            @SuppressWarnings("unchecked")
-                            PendingMutation<T> mergedPendingMutation = (PendingMutation<T>) merge(incoming, existing);
+                        // If the incoming & existing update is of type serializedModel
+                        // then merge the existing model data into incoming.
+                        if (incoming.getMutatedItem() instanceof SerializedModel
+                                && existing.getMutatedItem() instanceof SerializedModel) {
+                            SerializedModel mergedSerializedModel = SerializedModel.merge(
+                                    (SerializedModel) incoming.getMutatedItem(),
+                                    (SerializedModel) existing.getMutatedItem(),
+                                    incoming.getModelSchema());
+                            PendingMutation<T> mergedPendingMutation = (PendingMutation<T>) PendingMutation.update(
+                                    mergedSerializedModel,
+                                    incoming.getModelSchema());
                             return removeNotLocking(existing.getMutationId())
                                     .andThen(saveIncomingAndNotify(mergedPendingMutation));
-                        } catch (Exception exception) {
-                            LOG.error("Failed to merge, skip merging. exceptions: " + exception);
+                        } else {
+                            // If the incoming update does not have a condition, we want to delete any
+                            // existing mutations for the modelId before saving the incoming one.
                             return removeNotLocking(existing.getMutationId()).andThen(saveIncomingAndNotify(incoming));
                         }
                     } else {
@@ -424,26 +430,6 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 " and incoming mutation of type = " + incoming.getMutationType(),
                 "Please report at https://github.com/aws-amplify/amplify-android/issues."
             ));
-        }
-
-        private PendingMutation<Model> merge(PendingMutation<T> incoming, PendingMutation<T> existing)
-                throws AmplifyException {
-            SerializedModel incomingSerializedModel = SerializedModel.create(incoming.getMutatedItem(),
-                                                                            incoming.getModelSchema());
-            SerializedModel existingSerializedModel = SerializedModel.create(existing.getMutatedItem(),
-                                                                            existing.getModelSchema());
-            Map<String, Object> mergedSerializedData = new HashMap<>();
-            for (String key : incomingSerializedModel.getSerializedData().keySet()) {
-                Object value = incomingSerializedModel.getSerializedData().get(key) != null ?
-                        incomingSerializedModel.getSerializedData().get(key)
-                        : existingSerializedModel.getSerializedData().get(key);
-                mergedSerializedData.put(key, value);
-            }
-            SerializedModel mergedSerializedModel = SerializedModel.builder()
-                    .serializedData(mergedSerializedData)
-                    .modelSchema(incoming.getModelSchema())
-                    .build();
-            return PendingMutation.update(mergedSerializedModel, incoming.getModelSchema());
         }
     }
 }
