@@ -590,9 +590,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
         AuthModeStrategyType authModeStrategyType = getAuthModeStrategyType(graphQLRequest);
         if (AuthModeStrategyType.MULTIAUTH.equals(authModeStrategyType)) {
+            // If it gets here, we know that the request is an AppSyncGraphQLRequest because
+            // getAuthModeStrategyType checks for that, so we can safely cast the graphQLRequest.
             return MutiAuthSubscriptionOperation.<R>builder()
                                                 .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
-                                                .graphQlRequest(graphQLRequest)
+                                                .graphQlRequest((AppSyncGraphQLRequest<R>) graphQLRequest)
                                                 .responseFactory(gqlResponseFactory)
                                                 .executorService(executorService)
                                                 .onSubscriptionStart(onSubscriptionEstablished)
@@ -602,15 +604,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                                                 .requestDecorator(requestDecorator)
                                                 .build();
         }
-
+        // Not a multiauth request.
         AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
 
         if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
             ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
             authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
         }
+        // Since it's not multiauth, we can try to decorate the request with the owner if necessary.
+        // This allows us to keep the logic in SubscriptionOperation (non-multiauth) pretty much untouched, rather
+        // than passing in the requestDecorator and having to handle that in there. We can always refactor this.
         GraphQLRequest<R> authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
-
         return SubscriptionOperation.<R>builder()
             .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
             .graphQlRequest(authDecoratedRequest)
@@ -649,7 +653,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType() != null) {
             authModeStrategyType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType();
         }
-        if (authModeStrategyType == AuthModeStrategyType.MULTIAUTH) {
+        if (AuthModeStrategyType.MULTIAUTH.equals(authModeStrategyType)) {
             return MultiAuthAppSyncGraphQLOperation.<R>builder()
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
                 .client(clientDetails.getOkHttpClient())
@@ -661,6 +665,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .executorService(executorService)
                 .build();
         }
+        // Not multiauth, so just return the default operation.
         return AppSyncGraphQLOperation.<R>builder()
             .endpoint(clientDetails.getApiConfiguration().getEndpoint())
             .client(clientDetails.getOkHttpClient())
