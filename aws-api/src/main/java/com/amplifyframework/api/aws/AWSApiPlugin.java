@@ -602,13 +602,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                                                 .requestDecorator(requestDecorator)
                                                 .build();
         }
-
         AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
 
         if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
             ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
             authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
         }
+        // Not multiauth, so we can try to decorate the request with the owner if necessary.
         GraphQLRequest<R> authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
 
         return SubscriptionOperation.<R>builder()
@@ -649,7 +649,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType() != null) {
             authModeStrategyType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType();
         }
-        if (authModeStrategyType == AuthModeStrategyType.MULTIAUTH) {
+        if (AuthModeStrategyType.MULTIAUTH.equals(authModeStrategyType)) {
             return MultiAuthAppSyncGraphQLOperation.<R>builder()
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
                 .client(clientDetails.getOkHttpClient())
@@ -661,6 +661,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .executorService(executorService)
                 .build();
         }
+        // Not multiauth, so just return the default operation.
         return AppSyncGraphQLOperation.<R>builder()
             .endpoint(clientDetails.getApiConfiguration().getEndpoint())
             .client(clientDetails.getOkHttpClient())
