@@ -322,7 +322,6 @@ final class PersistentMutationOutbox implements MutationOutbox {
          * Determine which action to take when the incoming mutation type is {@linkplain PendingMutation.Type#UPDATE}.
          * @return A completable with the actions needed to resolve the conflict
          */
-        @SuppressWarnings("unchecked") // cast SerializedModel to Model
         private Completable handleIncomingUpdate() {
             switch (existing.getMutationType()) {
                 case CREATE:
@@ -342,6 +341,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                                     (SerializedModel) incoming.getMutatedItem(),
                                     (SerializedModel) existing.getMutatedItem(),
                                     incoming.getModelSchema());
+                            @SuppressWarnings("unchecked") // cast SerializedModel to Model
                             PendingMutation<T> mergedPendingMutation = (PendingMutation<T>) PendingMutation.update(
                                     mergedSerializedModel,
                                     incoming.getModelSchema());
