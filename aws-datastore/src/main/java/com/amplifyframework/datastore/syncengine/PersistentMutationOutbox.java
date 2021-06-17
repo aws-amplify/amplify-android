@@ -346,13 +346,13 @@ final class PersistentMutationOutbox implements MutationOutbox {
                                     mergedSerializedModel,
                                     incoming.getModelSchema());
                             return removeNotLocking(existing.getMutationId())
-                                    .andThen(saveIncomingAndNotify(mergedPendingMutation));
+                                    .andThen(saveAndNotify(mergedPendingMutation));
                         } else {
-                            return removeNotLocking(existing.getMutationId()).andThen(saveIncomingAndNotify(incoming));
+                            return removeNotLocking(existing.getMutationId()).andThen(saveAndNotify(incoming));
                         }
                     } else {
                         // If it has a condition, we want to just add it to the queue
-                        return saveIncomingAndNotify(incoming);
+                        return saveAndNotify(incoming);
                     }
                 case DELETE:
                     // Incoming update after a delete -> throw exception
@@ -398,7 +398,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 .andThen(notifyContentAvailable());
         }
 
-        private Completable saveIncomingAndNotify(PendingMutation<T> incoming) {
+        private Completable saveAndNotify(PendingMutation<T> incoming) {
             return save(incoming)
                 .andThen(notifyContentAvailable());
         }
