@@ -90,6 +90,26 @@ public final class SerializedModel implements Model {
     }
 
     /**
+     * Merge the serialized data from existing to incoming model.
+     * @param incoming the incoming Model to which serialized data fields will be added.
+     * @param existing the original Model to compare against.
+     * @param modelSchema ModelSchema for the Models between compared.
+     * @return a SerializedModel, containing the values from the incoming Model and existing Model.
+     */
+    public static SerializedModel merge(SerializedModel incoming, SerializedModel existing, ModelSchema modelSchema) {
+        Map<String, Object> mergedSerializedData = new HashMap<>(incoming.serializedData);
+        for (String key : existing.getSerializedData().keySet()) {
+            if (!mergedSerializedData.containsKey(key)) {
+                mergedSerializedData.put(key, existing.getSerializedData().get(key));
+            }
+        }
+        return SerializedModel.builder()
+                .serializedData(mergedSerializedData)
+                .modelSchema(modelSchema)
+                .build();
+    }
+
+    /**
      * Return a builder of {@link SerializedModel}.
      * @return A serialized model builder
      */

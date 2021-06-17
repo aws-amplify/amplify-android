@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -631,6 +632,70 @@ public final class PersistentMutationOutboxTest {
     }
 
     /**
+     * When there is an existing SerializedModel update mutation, and a new SerializedModel update mutation comes in,
+     * then we need to merge any existing mutations for that modelId and create the new one.
+     * @throws AmplifyException On failure to find the serializedModel difference.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     */
+    @Test
+    public void existingSerializedModelUpdateIncomingUpdateWithoutConditionMergesWithExistingMutation()
+            throws AmplifyException, InterruptedException {
+        // Arrange an existing update mutation
+        BlogOwner modelInSqlLite = BlogOwner.builder()
+                .name("Papa Tony")
+                .wea("Something")
+                .build();
+
+        BlogOwner initialUpdate = BlogOwner.builder()
+                .name("Tony Jr")
+                .id(modelInSqlLite.getId())
+                .build();
+
+        PendingMutation<SerializedModel> initialUpdatePendingMutation =
+                PendingMutation.update(SerializedModel.difference(initialUpdate, modelInSqlLite, schema), schema);
+        String existingUpdateId = initialUpdatePendingMutation.getMutationId().toString();
+        mutationOutbox.enqueue(initialUpdatePendingMutation).blockingAwait();
+
+        // Act: try to enqueue a new update mutation when there already is one
+        BlogOwner incomingUpdatedModel = BlogOwner.builder()
+                .name("Papa Tony")
+                .wea("something else")
+                .id(modelInSqlLite.getId())
+                .build();
+        PendingMutation<SerializedModel> incomingUpdate = PendingMutation.update(
+                SerializedModel.difference(incomingUpdatedModel, modelInSqlLite, schema),
+                schema);
+        String incomingUpdateId = incomingUpdate.getMutationId().toString();
+        TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
+
+        // Assert: OK. The new mutation is accepted
+        enqueueObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        enqueueObserver.assertComplete();
+
+        // Assert: the existing mutation has been removed
+        assertRecordCountForMutationId(existingUpdateId, 0);
+
+        // And the new one has been added to the queue
+        assertRecordCountForMutationId(incomingUpdateId, 0);
+
+        List<PersistentRecord> pendingMutationsFromStorage = getAllPendingMutationRecordFromStorage();
+        for (PersistentRecord record : pendingMutationsFromStorage) {
+            if (!record.getContainedModelId().equals(incomingUpdate.getMutatedItem().getId())) {
+                pendingMutationsFromStorage.remove(record);
+            }
+        }
+        // Ensure the new one is in storage.
+        PendingMutation<SerializedModel> storedMutation =
+                converter.fromRecord(pendingMutationsFromStorage.get(0));
+        // This is the name from the second model, not the first!!
+        assertEquals(initialUpdate.getName(),
+                storedMutation.getMutatedItem().getSerializedData().get("name"));
+        // wea got merged from existing model!!
+        assertEquals(incomingUpdatedModel.getWea(),
+                storedMutation.getMutatedItem().getSerializedData().get("wea"));
+    }
+
+    /**
      * When there is an existing creation mutation, and an update comes in,
      * the exiting creation should be updated with the contents of the incoming
      * mutation. The original creation mutation ID should be retained, for ordering.
@@ -1031,5 +1096,9 @@ public final class PersistentMutationOutboxTest {
 
     private List<PersistentRecord> getPendingMutationRecordFromStorage(String mutationId) throws DataStoreException {
         return storage.query(PersistentRecord.class, Where.id(mutationId));
+    }
+
+    private List<PersistentRecord> getAllPendingMutationRecordFromStorage() throws DataStoreException {
+        return storage.query(PersistentRecord.class, Where.matchesAll());
     }
 }
