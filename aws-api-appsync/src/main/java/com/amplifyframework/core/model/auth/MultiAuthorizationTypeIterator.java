@@ -23,7 +23,11 @@ import com.amplifyframework.core.model.AuthStrategy;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * An iterator of authorization types backed by a
@@ -31,9 +35,10 @@ import java.util.List;
  * they need to be evaluated.
  */
 public final class MultiAuthorizationTypeIterator implements AuthorizationTypeIterator {
-    private int currentIdx = 0;
+    private int currentPosition = 0;
     private AuthRule effectiveRule;
     private final List<AuthRule> authRules;
+    private final Iterator<AuthRule> dedupedIterator;
 
     /**
      * Constructor that takes a list of auth rules and uses the default comparator.
@@ -51,19 +56,22 @@ public final class MultiAuthorizationTypeIterator implements AuthorizationTypeIt
      */
     public MultiAuthorizationTypeIterator(List<AuthRule> authRules,
                                           Comparator<AuthRule> authRuleComparator) {
-        Collections.sort(authRules, authRuleComparator);
         this.authRules = authRules;
+        Set<AuthRule> dedupedRules = new TreeSet<>(authRuleComparator);
+        dedupedRules.addAll(authRules);
+        dedupedIterator = dedupedRules.iterator();
     }
 
     @Override
     public boolean hasNext() {
-        return currentIdx < authRules.size();
+        return dedupedIterator.hasNext();
     }
 
     @Override
     public AuthorizationType next() {
-        effectiveRule = authRules.get(currentIdx++);
+        effectiveRule = dedupedIterator.next();
         AuthStrategy.Provider authProvider = effectiveRule.getAuthProvider();
+        currentPosition++;
         return AuthorizationType.from(authProvider);
     }
 
@@ -94,7 +102,7 @@ public final class MultiAuthorizationTypeIterator implements AuthorizationTypeIt
         return "PriorityBasedAuthRuleIterator - " +
             "items(" + authRules.size() + ") - " +
             "[" + authRules.toString() + "] - " +
-            "position:" + currentIdx;
+            "position:" + currentPosition;
     }
 
     /**
@@ -106,7 +114,14 @@ public final class MultiAuthorizationTypeIterator implements AuthorizationTypeIt
         public int compare(AuthRule authRule1, AuthRule authRule2) {
             int o1Priority = authRule1.getAuthStrategy().getPriority();
             int o2Priority = authRule2.getAuthStrategy().getPriority();
-            return Integer.compare(o1Priority, o2Priority);
+            int result = Integer.compare(o1Priority, o2Priority);
+            // If strategies are the same, rank by provider precedence.
+            if (result == 0) {
+                o1Priority = authRule1.getAuthProvider().getPriority();
+                o2Priority = authRule2.getAuthProvider().getPriority();
+                result = Integer.compare(o1Priority, o2Priority);
+            }
+            return result;
         }
     }
 }
