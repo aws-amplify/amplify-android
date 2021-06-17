@@ -322,7 +322,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
          * Determine which action to take when the incoming mutation type is {@linkplain PendingMutation.Type#UPDATE}.
          * @return A completable with the actions needed to resolve the conflict
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked") // cast SerializedModel to Model
         private Completable handleIncomingUpdate() {
             switch (existing.getMutationType()) {
                 case CREATE:
@@ -331,6 +331,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     // we're simply performing the create (with the updated item item contents)
                     return overwriteExistingAndNotify(PendingMutation.Type.CREATE, QueryPredicates.all());
                 case UPDATE:
+                    // If the incoming update does not have a condition, we want to delete any
+                    // existing mutations for the modelId before saving the incoming one.
                     if (QueryPredicates.all().equals(incoming.getPredicate())) {
                         // If the incoming & existing update is of type serializedModel
                         // then merge the existing model data into incoming.
@@ -346,8 +348,6 @@ final class PersistentMutationOutbox implements MutationOutbox {
                             return removeNotLocking(existing.getMutationId())
                                     .andThen(saveIncomingAndNotify(mergedPendingMutation));
                         } else {
-                            // If the incoming update does not have a condition, we want to delete any
-                            // existing mutations for the modelId before saving the incoming one.
                             return removeNotLocking(existing.getMutationId()).andThen(saveIncomingAndNotify(incoming));
                         }
                     } else {
