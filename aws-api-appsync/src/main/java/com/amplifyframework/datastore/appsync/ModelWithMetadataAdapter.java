@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.appsync;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.util.GsonObjectConverter;
 
 import com.google.gson.GsonBuilder;

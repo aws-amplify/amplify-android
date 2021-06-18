@@ -28,6 +28,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
@@ -37,7 +38,6 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions.AppSyncErrorType;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -95,7 +95,7 @@ final class SubscriptionProcessor {
         // then 2 seconds are added to the timer per additional model count.
         this.adjustedTimeoutSeconds = Math.max(
             NETWORK_OP_TIMEOUT_SECONDS,
-            TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
+            TIMEOUT_SECONDS_PER_MODEL * modelProvider.modelSchemas().size()
         );
     }
 

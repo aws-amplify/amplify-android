@@ -1,3 +1,20 @@
+## [Release 1.19.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.19.0)
+
+### Features
+- add supporting types for multi-auth (#1346)
+
+### Bug Fixes
+- **auth:** throw correct auth exception for code mismatch (#1370)
+- **datastore:** fix subscription timeout period not increasing (#1376)
+- **datastore:** Add support for SerializedModel to predicate evaluation (#1375)
+- **datastore:** merge incoming mutation with existing update mutation (#1379)
+
+### Miscellaneous
+- chore(api):tweaks to the api init process (#1309)
+- Update stale.yml (#1380)
+
+[See all changes between 1.18.0 and 1.19.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.18.0...release_v1.19.0)
+
 ## [Release 1.18.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.18.0)
 
 ### Features

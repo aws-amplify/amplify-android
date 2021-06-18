@@ -18,6 +18,7 @@ package com.amplifyframework.util;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.annotations.ModelField;
 
 import java.lang.reflect.Field;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Utility that operates on the fields of a
@@ -98,6 +100,11 @@ public final class FieldFinder {
     @Nullable
     public static Object extractFieldValue(@NonNull Object object,
                                        @NonNull String fieldName) throws NoSuchFieldException {
+        if (object instanceof SerializedModel) {
+            SerializedModel serializedModel = (SerializedModel) object;
+            Map<String, Object> serializedData = serializedModel.getSerializedData();
+            return serializedData.get(fieldName);
+        }
         try {
             Field objectField = object.getClass().getDeclaredField(fieldName);
             objectField.setAccessible(true);
