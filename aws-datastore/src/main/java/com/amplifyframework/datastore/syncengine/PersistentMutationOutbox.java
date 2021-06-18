@@ -23,6 +23,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
@@ -329,13 +330,29 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     // we're simply performing the create (with the updated item item contents)
                     return overwriteExistingAndNotify(PendingMutation.Type.CREATE, QueryPredicates.all());
                 case UPDATE:
+                    // If the incoming update does not have a condition, we want to delete any
+                    // existing mutations for the modelId before saving the incoming one.
                     if (QueryPredicates.all().equals(incoming.getPredicate())) {
-                        // If the incoming update does not have a condition, we want to delete any
-                        // existing mutations for the modelId before saving the incoming one.
-                        return removeNotLocking(existing.getMutationId()).andThen(saveIncomingAndNotify());
+                        // If the incoming & existing update is of type serializedModel
+                        // then merge the existing model data into incoming.
+                        if (incoming.getMutatedItem() instanceof SerializedModel
+                                && existing.getMutatedItem() instanceof SerializedModel) {
+                            SerializedModel mergedSerializedModel = SerializedModel.merge(
+                                    (SerializedModel) incoming.getMutatedItem(),
+                                    (SerializedModel) existing.getMutatedItem(),
+                                    incoming.getModelSchema());
+                            @SuppressWarnings("unchecked") // cast SerializedModel to Model
+                            PendingMutation<T> mergedPendingMutation = (PendingMutation<T>) PendingMutation.update(
+                                    mergedSerializedModel,
+                                    incoming.getModelSchema());
+                            return removeNotLocking(existing.getMutationId())
+                                    .andThen(saveAndNotify(mergedPendingMutation));
+                        } else {
+                            return removeNotLocking(existing.getMutationId()).andThen(saveAndNotify(incoming));
+                        }
                     } else {
                         // If it has a condition, we want to just add it to the queue
-                        return saveIncomingAndNotify();
+                        return saveAndNotify(incoming);
                     }
                 case DELETE:
                     // Incoming update after a delete -> throw exception
@@ -381,7 +398,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 .andThen(notifyContentAvailable());
         }
 
-        private Completable saveIncomingAndNotify() {
+        private Completable saveAndNotify(PendingMutation<T> incoming) {
             return save(incoming)
                 .andThen(notifyContentAvailable());
         }

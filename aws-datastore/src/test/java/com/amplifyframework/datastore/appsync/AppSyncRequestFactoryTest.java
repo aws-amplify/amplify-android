@@ -25,6 +25,7 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
