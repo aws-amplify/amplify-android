@@ -315,7 +315,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         // authModeStrategyType is set on the request.
         if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
             ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() == null &&
-            ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType() != null) {
+            ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType() != null &&
+            ((AppSyncGraphQLRequest<?>) graphQLRequest).getModelSchema().hasModelLevelRules()) {
             return ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType();
         }
         // Assume default strategy with default auth type from config.
@@ -644,15 +645,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             );
         }
 
-        AuthModeStrategyType authModeStrategyType = AuthModeStrategyType.DEFAULT;
-        // If it's an AppSyncGraphQLRequest AND
-        // No authorizationType is set on the request AND
-        // authModeStrategyType is set on the request.
-        if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
-            ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() == null &&
-            ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType() != null) {
-            authModeStrategyType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType();
-        }
+        AuthModeStrategyType authModeStrategyType = getAuthModeStrategyType(graphQLRequest);
         if (AuthModeStrategyType.MULTIAUTH.equals(authModeStrategyType)) {
             return MultiAuthAppSyncGraphQLOperation.<R>builder()
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
