@@ -40,6 +40,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.multiauth.GroupPrivatePublicUPIAMAPIPost;
 import com.amplifyframework.testmodels.multiauth.GroupPrivateUPIAMPost;
 import com.amplifyframework.testmodels.multiauth.GroupPublicUPAPIPost;
@@ -275,6 +276,8 @@ public class MultiAuthSyncEngineInstrumentationTest {
     public static Iterable<Object[]> data() {
         //Parameters: model class, requiresCognitoSignIn, requiresOidcSignIn, expected successful auth type
         return Arrays.asList(new Object[][]{
+            // Models without rules should use the default auth type
+            { Author.class, false, false, AuthorizationType.API_KEY },
             // Single rule cases.
             {OwnerUPPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
             {OwnerOIDCPost.class, false, true, AuthorizationType.OPENID_CONNECT},
@@ -380,7 +383,12 @@ public class MultiAuthSyncEngineInstrumentationTest {
             Constructor<?> constructor = modelType.getDeclaredConstructors()[0];
             constructor.setAccessible(true);
             String recordDetail = "IntegTest-" + modelType.getSimpleName() + " " + RandomString.string();
-            return (Model) constructor.newInstance(modelId, recordDetail);
+            // Most constructor for the multiauth test models have 2 parameters.
+            if (constructor.getParameterCount() == 2) {
+                return (Model) constructor.newInstance(modelId, recordDetail);
+            }
+            // For the one exception, we just pass a null for the extra parameter.
+            return (Model) constructor.newInstance(modelId, recordDetail, null);
         } catch (IllegalAccessException |
             InstantiationException |
             InvocationTargetException exception) {
