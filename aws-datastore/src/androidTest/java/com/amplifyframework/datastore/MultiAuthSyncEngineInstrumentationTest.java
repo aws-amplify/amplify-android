@@ -80,13 +80,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -113,19 +110,18 @@ import static org.junit.Assert.fail;
  * Tests a set of possible combinations of models, auth modes and login status to
  * verify behavior when in multi-auth mode.
  */
-@RunWith(Parameterized.class)
 public class MultiAuthSyncEngineInstrumentationTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("MultiAuthSyncEngineInstrumentationTest");
     private static final int TIMEOUT_SECONDS = 20;
     private static final String AUDIENCE = "integtest";
     private static final String GOOGLE_ISS_CLAIM = "https://accounts.google.com";
 
-    private final Class<? extends Model> modelType;
-    private final boolean requiresCognitoSign;
-    private final boolean requiresOidcSignIn;
-    private final AuthorizationType expectedAuthType;
-    private final String tag;
-    private final String modelId;
+    private Class<? extends Model> modelType;
+    private boolean requiresCognitoSign;
+    private boolean requiresOidcSignIn;
+    private AuthorizationType expectedAuthType;
+    private String tag;
+    private String modelId;
     private SynchronousApi api;
     private SynchronousDataStore dataStore;
     private SynchronousAuth auth;
@@ -133,7 +129,637 @@ public class MultiAuthSyncEngineInstrumentationTest {
     private String cognitoPassword;
     private final AtomicReference<String> token = new AtomicReference<>();
     private ServiceAccountCredentials googleServiceAccount;
-    private final HttpRequestInterceptor requestInterceptor;
+    private HttpRequestInterceptor requestInterceptor;
+
+    /**
+     * Class name: Author.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.API_KEY.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testAuthorAnonymous() throws IOException, AmplifyException {
+        setupScenario(Author.class,
+                      false,
+                      false,
+                      AuthorizationType.API_KEY
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: OwnerUPPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testOwnerUPPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(OwnerUPPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: OwnerOIDCPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: true.
+     * Expected result: AuthorizationType.OPENID_CONNECT.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testOwnerOIDCPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(OwnerOIDCPost.class,
+                      false,
+                      true,
+                      AuthorizationType.OPENID_CONNECT
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: GroupUPPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testGroupUPPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(GroupUPPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivateUPPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivateUPPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(PrivateUPPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PublicIAMPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AWS_IAM.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPublicIAMPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(PublicIAMPost.class,
+                      false,
+                      false,
+                      AuthorizationType.AWS_IAM
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PublicAPIPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.API_KEY.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPublicAPIPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(PublicAPIPost.class,
+                      false,
+                      false,
+                      AuthorizationType.API_KEY
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: OwnerPrivateUPIAMPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testOwnerPrivateUPIAMPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(OwnerPrivateUPIAMPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: OwnerPublicUPAPIPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.API_KEY.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testOwnerPublicUPAPIPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(OwnerPublicUPAPIPost.class,
+                      false,
+                      false,
+                      AuthorizationType.API_KEY
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: OwnerPublicUPAPIPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testOwnerPublicUPAPIPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(OwnerPublicUPAPIPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: OwnerPublicOIDAPIPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: true.
+     * Expected result: AuthorizationType.OPENID_CONNECT.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testOwnerPublicOIDAPIPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(OwnerPublicOIDAPIPost.class,
+                      false,
+                      true,
+                      AuthorizationType.OPENID_CONNECT
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: GroupPrivateUPIAMPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testGroupPrivateUPIAMPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(GroupPrivateUPIAMPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: GroupPrivateUPIAMPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: No matching auth types.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testGroupPrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(GroupPrivateUPIAMPost.class,
+                      false,
+                      false,
+                      null
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: GroupPublicUPAPIPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testGroupPublicUPAPIPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(GroupPublicUPAPIPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: GroupPublicUPAPIPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.API_KEY.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testGroupPublicUPAPIPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(GroupPublicUPAPIPost.class,
+                      false,
+                      false,
+                      AuthorizationType.API_KEY
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: GroupPublicUPIAMPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testGroupPublicUPIAMPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(GroupPublicUPIAMPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: GroupPublicUPIAMPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AWS_IAM.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testGroupPublicUPIAMPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(GroupPublicUPIAMPost.class,
+                      false,
+                      false,
+                      AuthorizationType.AWS_IAM
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePrivateUPIAMPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePrivateUPIAMPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(PrivatePrivateUPIAMPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePrivateUPIAMPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: No matching auth types.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(PrivatePrivateUPIAMPost.class,
+                      false,
+                      false,
+                      null
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePublicUPAPIPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePublicUPAPIPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(PrivatePublicUPAPIPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePublicUPAPIPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.API_KEY.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePublicUPAPIPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(PrivatePublicUPAPIPost.class,
+                      false,
+                      false,
+                      AuthorizationType.API_KEY
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePublicUPIAMPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePublicUPIAMPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(PrivatePublicUPIAMPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePublicUPIAMPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AWS_IAM.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePublicUPIAMPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(PrivatePublicUPIAMPost.class,
+                      false,
+                      false,
+                      AuthorizationType.AWS_IAM
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PublicPublicIAMAPIPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AWS_IAM.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPublicPublicIAMAPIPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(PublicPublicIAMAPIPost.class,
+                      false,
+                      false,
+                      AuthorizationType.AWS_IAM
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: OwnerPrivatePublicUPIAMAPIPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testOwnerPrivatePublicUPIAMAPIPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(OwnerPrivatePublicUPIAMAPIPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: OwnerPrivatePublicUPIAMAPIPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.API_KEY.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testOwnerPrivatePublicUPIAMAPIPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(OwnerPrivatePublicUPIAMAPIPost.class,
+                      false,
+                      false,
+                      AuthorizationType.API_KEY
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: GroupPrivatePublicUPIAMAPIPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testGroupPrivatePublicUPIAMAPIPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(GroupPrivatePublicUPIAMAPIPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: GroupPrivatePublicUPIAMAPIPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.API_KEY.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testGroupPrivatePublicUPIAMAPIPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(GroupPrivatePublicUPIAMAPIPost.class,
+                      false,
+                      false,
+                      AuthorizationType.API_KEY
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePrivatePublicUPIAMIAMPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePrivatePublicUPIAMIAMPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(PrivatePrivatePublicUPIAMIAMPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePrivatePublicUPIAMIAMPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AWS_IAM.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePrivatePublicUPIAMIAMPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(PrivatePrivatePublicUPIAMIAMPost.class,
+                      false,
+                      false,
+                      AuthorizationType.AWS_IAM
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePrivatePublicUPIAMAPIPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePrivatePublicUPIAMAPIPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(PrivatePrivatePublicUPIAMAPIPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePrivatePublicUPIAMAPIPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.API_KEY.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePrivatePublicUPIAMAPIPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(PrivatePrivatePublicUPIAMAPIPost.class,
+                      false,
+                      false,
+                      AuthorizationType.API_KEY
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePublicPublicUPAPIIAMPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePublicPublicUPAPIIAMPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(PrivatePublicPublicUPAPIIAMPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePublicComboAPIPost.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.API_KEY.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePublicComboAPIPostAnonymous() throws IOException, AmplifyException {
+        setupScenario(PrivatePublicComboAPIPost.class,
+                      false,
+                      false,
+                      AuthorizationType.API_KEY
+        );
+        verifyScenario();
+    }
+
+    /**
+     * Class name: PrivatePublicComboUPPost.
+     * Signed in with user pools: true.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.AMAZON_COGNITO_USER_POOLS.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    public void testPrivatePublicComboUPPostAuthenticated() throws IOException, AmplifyException {
+        setupScenario(PrivatePublicComboUPPost.class,
+                      true,
+                      false,
+                      AuthorizationType.AMAZON_COGNITO_USER_POOLS
+        );
+        verifyScenario();
+    }
 
     /**
      * Constructor for the parameterized test.
@@ -144,7 +770,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      * @throws AmplifyException No expected.
      * @throws IOException Not expected.
      */
-    public MultiAuthSyncEngineInstrumentationTest(Class<? extends Model> clazz,
+    private void setupScenario(Class<? extends Model> clazz,
                                                   boolean signInToCognito,
                                                   boolean signInWithOidc,
                                                   AuthorizationType expectedAuthType)
@@ -251,95 +877,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
     }
 
     /**
-     * Parameter method that can be used when troubleshooting locally.
-     * Uncomment the {@code
-     * @Parameterized.Parameters(name = "model:{0} requiresSignIn: {1} expectedAuthType: {2}")
-     * } statement below, and comment out the the corresponding annotation in {@link this#data()}.
-     * @return A list of parameters to use for the test.
-     */
-//    @Parameterized.Parameters(name = "model:{0} requiresSignIn: {1} expectedAuthType: {2}")
-    public static Iterable<Object[]> localTest() {
-        return Arrays.asList(new Object[][]{
-            // Add a subset of test cases here.
-        });
-    }
-
-    /**
-     * Builds an array of test scenarios which will be passed to the
-     * constructor of this class.
-     * @return An array of test scenarios representing the following: modelType, requiresCognitoSignIn,
-     * requiresOidcSignIn, expected auth type.
-     * If expected auth type is null, it means none of the auth rules can be fulfilled and a failure should
-     * be expected.
-     */
-    @Parameterized.Parameters(name = "model:{0} requiresSignIn: {1} expectedAuthType: {2}")
-    public static Iterable<Object[]> data() {
-        //Parameters: model class, requiresCognitoSignIn, requiresOidcSignIn, expected successful auth type
-        return Arrays.asList(new Object[][]{
-            // Models without rules should use the default auth type
-            {Author.class, false, false, AuthorizationType.API_KEY},
-            // Single rule cases.
-            {OwnerUPPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {OwnerOIDCPost.class, false, true, AuthorizationType.OPENID_CONNECT},
-            {GroupUPPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivateUPPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PublicIAMPost.class, false, false, AuthorizationType.AWS_IAM},
-            {PublicIAMPost.class, false, false, AuthorizationType.AWS_IAM},
-            {PublicAPIPost.class, false, false, AuthorizationType.API_KEY},
-
-            /* Test cases of models with 2 rules */
-            // Owner + private
-            {OwnerPrivateUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-
-            // Owner + public
-            {OwnerPublicUPAPIPost.class, false, false, AuthorizationType.API_KEY},
-            {OwnerPublicUPAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {OwnerPublicOIDAPIPost.class, false, true, AuthorizationType.OPENID_CONNECT},
-
-            // Group + private
-            {GroupPrivateUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {GroupPrivateUPIAMPost.class, false, false, null},
-
-            // Group + public
-            {GroupPublicUPAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {GroupPublicUPAPIPost.class, false, false, AuthorizationType.API_KEY},
-            {GroupPublicUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {GroupPublicUPIAMPost.class, false, false, AuthorizationType.AWS_IAM},
-
-            // Private + Private
-            {PrivatePrivateUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivatePrivateUPIAMPost.class, false, false, null},
-
-            // Private + Public
-            {PrivatePublicUPAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivatePublicUPAPIPost.class, false, false, AuthorizationType.API_KEY},
-            {PrivatePublicUPIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivatePublicUPIAMPost.class, false, false, AuthorizationType.AWS_IAM},
-
-            // Public + Public (guest auth enabled)
-            {PublicPublicIAMAPIPost.class, false, false, AuthorizationType.AWS_IAM},
-
-            /* Test cases of models with 3 or more rules */
-            {OwnerPrivatePublicUPIAMAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {OwnerPrivatePublicUPIAMAPIPost.class, false, false, AuthorizationType.API_KEY},
-
-            {GroupPrivatePublicUPIAMAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {GroupPrivatePublicUPIAMAPIPost.class, false, false, AuthorizationType.API_KEY},
-
-            {PrivatePrivatePublicUPIAMIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivatePrivatePublicUPIAMIAMPost.class, false, false, AuthorizationType.AWS_IAM},
-
-            {PrivatePrivatePublicUPIAMAPIPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-            {PrivatePrivatePublicUPIAMAPIPost.class, false, false, AuthorizationType.API_KEY},
-
-            {PrivatePublicPublicUPAPIIAMPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
-
-            {PrivatePublicComboAPIPost.class, false, false, AuthorizationType.API_KEY},
-            {PrivatePublicComboUPPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS}
-        });
-    }
-
-    /**
      * Test tear-down activities.
      */
     @After
@@ -353,8 +890,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      * Runs the test for the parameters set in the constructor.
      * @throws AmplifyException Not expected.
      */
-    @Test
-    public void verifyScenario() throws AmplifyException {
+    private void verifyScenario() throws AmplifyException {
         logTestInfo("Starting");
         Model testRecord = createRecord();
         HubAccumulator expectedEventAccumulator = null;
