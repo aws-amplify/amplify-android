@@ -277,7 +277,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
         //Parameters: model class, requiresCognitoSignIn, requiresOidcSignIn, expected successful auth type
         return Arrays.asList(new Object[][]{
             // Models without rules should use the default auth type
-            { Author.class, false, false, AuthorizationType.API_KEY },
+            {Author.class, false, false, AuthorizationType.API_KEY},
             // Single rule cases.
             {OwnerUPPost.class, true, false, AuthorizationType.AMAZON_COGNITO_USER_POOLS},
             {OwnerOIDCPost.class, false, true, AuthorizationType.OPENID_CONNECT},
