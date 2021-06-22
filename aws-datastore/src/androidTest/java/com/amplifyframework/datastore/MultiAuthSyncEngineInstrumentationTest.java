@@ -81,7 +81,6 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
 
@@ -114,7 +113,7 @@ import static org.junit.Assert.fail;
  * Tests a set of possible combinations of models, auth modes and login status to
  * verify behavior when in multi-auth mode.
  */
-public class MultiAuthSyncEngineInstrumentationTest {
+public final class MultiAuthSyncEngineInstrumentationTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("MultiAuthSyncEngineInstrumentationTest");
     private static final int TIMEOUT_SECONDS = 20;
     private static final String AUDIENCE = "integtest";
@@ -862,11 +861,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
         Log.i("TearDown", "Cleanup completed.");
     }
 
-    /**
-     * Runs the test for the parameters set in the constructor.
-     * @throws AmplifyException Not expected.
-     */
-    protected void verifyScenario(Class<? extends Model> modelType,
+    private void verifyScenario(Class<? extends Model> modelType,
                                   boolean signInToCognito,
                                   boolean signInWithOidc,
                                   AuthorizationType expectedAuthType) throws AmplifyException, IOException {
