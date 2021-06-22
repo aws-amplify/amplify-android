@@ -153,7 +153,6 @@ private void configureAndroidLibrary(Project project) {
             consumerProguardFiles rootProject.file('configuration/consumer-rules.pro')
 
             testOptions {
-                execution 'ANDROIDX_TEST_ORCHESTRATOR'
                 animationsDisabled = true
                 unitTests {
                     includeAndroidResources = true
@@ -184,7 +183,6 @@ private void configureAndroidLibrary(Project project) {
 
     project.dependencies {
         coreLibraryDesugaring dependency.android.desugartools
-        androidTestUtil dependency.androidx.test.orchestrator
     }
 }
 apply from: rootProject.file("configuration/instrumentation-tests.gradle")

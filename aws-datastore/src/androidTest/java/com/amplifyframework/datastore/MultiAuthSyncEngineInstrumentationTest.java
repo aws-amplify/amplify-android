@@ -28,6 +28,7 @@ import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
+import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
@@ -36,6 +37,8 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
+import com.amplifyframework.datastore.storage.sqlite.TestStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
@@ -79,6 +82,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -135,7 +139,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testAuthorAnonymous() throws IOException, AmplifyException {
-        setupScenario(Author.class,
+        verifyScenario(Author.class,
                       false,
                       false,
                       AuthorizationType.API_KEY
@@ -152,7 +156,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testOwnerUPPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(OwnerUPPost.class,
+        verifyScenario(OwnerUPPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -169,7 +173,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testOwnerOIDCPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(OwnerOIDCPost.class,
+        verifyScenario(OwnerOIDCPost.class,
                       false,
                       true,
                       AuthorizationType.OPENID_CONNECT
@@ -186,7 +190,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testGroupUPPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(GroupUPPost.class,
+        verifyScenario(GroupUPPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -203,7 +207,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivateUPPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(PrivateUPPost.class,
+        verifyScenario(PrivateUPPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -220,7 +224,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPublicIAMPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(PublicIAMPost.class,
+        verifyScenario(PublicIAMPost.class,
                       false,
                       false,
                       AuthorizationType.AWS_IAM
@@ -237,7 +241,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPublicAPIPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(PublicAPIPost.class,
+        verifyScenario(PublicAPIPost.class,
                       false,
                       false,
                       AuthorizationType.API_KEY
@@ -254,7 +258,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testOwnerPrivateUPIAMPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(OwnerPrivateUPIAMPost.class,
+        verifyScenario(OwnerPrivateUPIAMPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -271,7 +275,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testOwnerPublicUPAPIPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(OwnerPublicUPAPIPost.class,
+        verifyScenario(OwnerPublicUPAPIPost.class,
                       false,
                       false,
                       AuthorizationType.API_KEY
@@ -288,7 +292,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testOwnerPublicUPAPIPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(OwnerPublicUPAPIPost.class,
+        verifyScenario(OwnerPublicUPAPIPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -305,7 +309,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testOwnerPublicOIDAPIPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(OwnerPublicOIDAPIPost.class,
+        verifyScenario(OwnerPublicOIDAPIPost.class,
                       false,
                       true,
                       AuthorizationType.OPENID_CONNECT
@@ -322,7 +326,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testGroupPrivateUPIAMPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(GroupPrivateUPIAMPost.class,
+        verifyScenario(GroupPrivateUPIAMPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -339,7 +343,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testGroupPrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(GroupPrivateUPIAMPost.class,
+        verifyScenario(GroupPrivateUPIAMPost.class,
                       false,
                       false,
                       null
@@ -356,7 +360,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testGroupPublicUPAPIPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(GroupPublicUPAPIPost.class,
+        verifyScenario(GroupPublicUPAPIPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -373,7 +377,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testGroupPublicUPAPIPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(GroupPublicUPAPIPost.class,
+        verifyScenario(GroupPublicUPAPIPost.class,
                       false,
                       false,
                       AuthorizationType.API_KEY
@@ -390,7 +394,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testGroupPublicUPIAMPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(GroupPublicUPIAMPost.class,
+        verifyScenario(GroupPublicUPIAMPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -407,7 +411,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testGroupPublicUPIAMPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(GroupPublicUPIAMPost.class,
+        verifyScenario(GroupPublicUPIAMPost.class,
                       false,
                       false,
                       AuthorizationType.AWS_IAM
@@ -424,7 +428,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePrivateUPIAMPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(PrivatePrivateUPIAMPost.class,
+        verifyScenario(PrivatePrivateUPIAMPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -441,7 +445,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(PrivatePrivateUPIAMPost.class,
+        verifyScenario(PrivatePrivateUPIAMPost.class,
                       false,
                       false,
                       null
@@ -458,7 +462,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePublicUPAPIPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(PrivatePublicUPAPIPost.class,
+        verifyScenario(PrivatePublicUPAPIPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -475,7 +479,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePublicUPAPIPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(PrivatePublicUPAPIPost.class,
+        verifyScenario(PrivatePublicUPAPIPost.class,
                       false,
                       false,
                       AuthorizationType.API_KEY
@@ -492,7 +496,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePublicUPIAMPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(PrivatePublicUPIAMPost.class,
+        verifyScenario(PrivatePublicUPIAMPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -509,7 +513,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePublicUPIAMPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(PrivatePublicUPIAMPost.class,
+        verifyScenario(PrivatePublicUPIAMPost.class,
                       false,
                       false,
                       AuthorizationType.AWS_IAM
@@ -526,7 +530,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPublicPublicIAMAPIPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(PublicPublicIAMAPIPost.class,
+        verifyScenario(PublicPublicIAMAPIPost.class,
                       false,
                       false,
                       AuthorizationType.AWS_IAM
@@ -543,7 +547,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testOwnerPrivatePublicUPIAMAPIPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(OwnerPrivatePublicUPIAMAPIPost.class,
+        verifyScenario(OwnerPrivatePublicUPIAMAPIPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -560,7 +564,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testOwnerPrivatePublicUPIAMAPIPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(OwnerPrivatePublicUPIAMAPIPost.class,
+        verifyScenario(OwnerPrivatePublicUPIAMAPIPost.class,
                       false,
                       false,
                       AuthorizationType.API_KEY
@@ -577,7 +581,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testGroupPrivatePublicUPIAMAPIPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(GroupPrivatePublicUPIAMAPIPost.class,
+        verifyScenario(GroupPrivatePublicUPIAMAPIPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -594,7 +598,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testGroupPrivatePublicUPIAMAPIPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(GroupPrivatePublicUPIAMAPIPost.class,
+        verifyScenario(GroupPrivatePublicUPIAMAPIPost.class,
                       false,
                       false,
                       AuthorizationType.API_KEY
@@ -611,7 +615,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePrivatePublicUPIAMIAMPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(PrivatePrivatePublicUPIAMIAMPost.class,
+        verifyScenario(PrivatePrivatePublicUPIAMIAMPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -628,7 +632,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePrivatePublicUPIAMIAMPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(PrivatePrivatePublicUPIAMIAMPost.class,
+        verifyScenario(PrivatePrivatePublicUPIAMIAMPost.class,
                       false,
                       false,
                       AuthorizationType.AWS_IAM
@@ -645,7 +649,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePrivatePublicUPIAMAPIPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(PrivatePrivatePublicUPIAMAPIPost.class,
+        verifyScenario(PrivatePrivatePublicUPIAMAPIPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -662,7 +666,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePrivatePublicUPIAMAPIPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(PrivatePrivatePublicUPIAMAPIPost.class,
+        verifyScenario(PrivatePrivatePublicUPIAMAPIPost.class,
                       false,
                       false,
                       AuthorizationType.API_KEY
@@ -679,7 +683,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePublicPublicUPAPIIAMPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(PrivatePublicPublicUPAPIIAMPost.class,
+        verifyScenario(PrivatePublicPublicUPAPIIAMPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -696,7 +700,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePublicComboAPIPostAnonymous() throws IOException, AmplifyException {
-        setupScenario(PrivatePublicComboAPIPost.class,
+        verifyScenario(PrivatePublicComboAPIPost.class,
                       false,
                       false,
                       AuthorizationType.API_KEY
@@ -713,7 +717,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @Test
     public void testPrivatePublicComboUPPostAuthenticated() throws IOException, AmplifyException {
-        setupScenario(PrivatePublicComboUPPost.class,
+        verifyScenario(PrivatePublicComboUPPost.class,
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
@@ -721,7 +725,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
     }
 
     /**
-     * Constructor for the parameterized test.
+     * Method used to configure each scenario.
      * @param modelType The model type.
      * @param signInToCognito Does the test scenario require the user to be logged in with user pools.
      * @param signInWithOidc Does the test scenario require the user to be logged in with an OIDC provider.
@@ -729,14 +733,13 @@ public class MultiAuthSyncEngineInstrumentationTest {
      * @throws AmplifyException No expected.
      * @throws IOException Not expected.
      */
-    private void setupScenario(Class<? extends Model> modelType,
-                                                  boolean signInToCognito,
-                                                  boolean signInWithOidc,
-                                                  AuthorizationType expectedAuthType)
+    private void configure(Class<? extends Model> modelType,
+                             boolean signInToCognito,
+                             boolean signInWithOidc,
+                             AuthorizationType expectedAuthType)
         throws AmplifyException, IOException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
         String tag = modelType.getSimpleName();
-        logTestInfo("Configuring");
 
         MultiAuthTestModelProvider modelProvider =
             MultiAuthTestModelProvider.getInstance(Collections.singletonList(modelType));
@@ -753,6 +756,17 @@ public class MultiAuthSyncEngineInstrumentationTest {
 
         // Setup an auth plugin
         CategoryConfiguration authCategoryConfiguration = amplifyConfiguration.forCategoryType(CategoryType.AUTH);
+        // Turn off persistence so the mobile client's state for one test does not interfere with the others.
+        try {
+            authCategoryConfiguration.getPluginConfig("awsCognitoAuthPlugin")
+                                     .getJSONObject("Auth")
+                                     .getJSONObject("Default")
+                                     .put("Persistence", false);
+        } catch (JSONException exception) {
+            exception.printStackTrace();
+            fail();
+            return;
+        }
         AuthCategory authCategory = new AuthCategory();
         AWSCognitoAuthPlugin authPlugin = new AWSCognitoAuthPlugin();
         authCategory.addPlugin(authPlugin);
@@ -805,7 +819,11 @@ public class MultiAuthSyncEngineInstrumentationTest {
             AmplifyConfiguration.fromConfigFile(context, configResourceId)
                                 .forCategoryType(CategoryType.DATASTORE);
 
+        String databaseName = "IntegTest" + modelType.getSimpleName() + ".db";
+        SQLiteStorageAdapter sqLiteStorageAdapter = TestStorageAdapter
+            .create(modelSchemaRegistry, modelProvider, databaseName);
         AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
+                                                                  .storageAdapter(sqLiteStorageAdapter)
                                                                   .modelProvider(modelProvider)
                                                                   .apiCategory(apiCategory)
                                                                   .authModeStrategy(AuthModeStrategyType.MULTIAUTH)
@@ -817,8 +835,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
         dataStoreCategory.configure(dataStoreCategoryConfiguration, context);
         dataStoreCategory.initialize(context);
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
-
-        verifyScenario(modelType, signInToCognito, signInWithOidc, expectedAuthType);
     }
 
     // The following link was helpful in finding the right setup
@@ -835,22 +851,26 @@ public class MultiAuthSyncEngineInstrumentationTest {
     /**
      * Test tear-down activities.
      */
-    @After
-    public void tearDown() {
-        Log.i("TearDown", "Deleting database");
-        getApplicationContext().deleteDatabase("AmplifyDatastore.db");
-        Log.i("TearDown", "Teardown completed.");
+    @AfterClass
+    public static void cleanupAfterAllTests() {
+        Log.i("TearDown", "Cleaning up databases");
+        for (String db : getApplicationContext().databaseList()) {
+            Log.i("TearDown", "Removing " + db);
+            getApplicationContext().deleteDatabase(db);
+            Log.i("TearDown", db + " removed");
+        }
+        Log.i("TearDown", "Cleanup completed.");
     }
 
     /**
      * Runs the test for the parameters set in the constructor.
      * @throws AmplifyException Not expected.
      */
-    private void verifyScenario(Class<? extends Model> modelType,
-                                boolean signInToCognito,
-                                boolean signInWithOidc,
-                                AuthorizationType expectedAuthType) throws AmplifyException {
-        logTestInfo("Starting");
+    protected void verifyScenario(Class<? extends Model> modelType,
+                                  boolean signInToCognito,
+                                  boolean signInWithOidc,
+                                  AuthorizationType expectedAuthType) throws AmplifyException, IOException {
+        configure(modelType, signInToCognito, signInWithOidc, expectedAuthType);
         String modelId = UUID.randomUUID().toString();
         Model testRecord = createRecord(modelType, modelId);
         HubAccumulator expectedEventAccumulator = null;
@@ -868,6 +888,10 @@ public class MultiAuthSyncEngineInstrumentationTest {
         dataStore.save(testRecord);
         expectedEventAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertFalse(requestInterceptor.hasUnexpectedRequests());
+        // Sign the user out if sign-in was required.
+        if (signInToCognito) {
+            auth.signOut(AuthSignOutOptions.builder().build());
+        }
     }
 
     /**
@@ -921,18 +945,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
             Log.e("ReadingCredentials", "Failed to read cognito credentials");
             throw new RuntimeException("Failed to read cognito credentials", exception);
         }
-    }
-
-    private void logTestInfo(String stage) {
-        /*String message = "Model type: " +
-            modelType.getSimpleName() +
-            " requiresSignIn: " +
-            this.requiresCognitoSign +
-            " expectedAuthType: " +
-            (this.expectedAuthType == null ? "FAILURE" : this.expectedAuthType.name()) +
-            " stage: " +
-            stage;
-        Log.i(tag, message);*/
     }
 
     private static AuthorizationType getRequestAuthType(Headers headers) {

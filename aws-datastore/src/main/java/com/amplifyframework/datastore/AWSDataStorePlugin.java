@@ -117,7 +117,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             builder.authModeStrategy;
         ApiCategory api = builder.apiCategory == null ? Amplify.API : builder.apiCategory;
         this.userProvidedConfiguration = builder.dataStoreConfiguration;
-        this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
+        this.sqliteStorageAdapter = builder.storageAdapter == null ?
+            SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider) :
+            builder.storageAdapter;
         this.categoryInitializationsPending = new CountDownLatch(1);
 
         // Used to interrogate plugins, to understand if sync should be automatically turned on
@@ -623,6 +625,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         private ModelSchemaRegistry modelSchemaRegistry;
         private ApiCategory apiCategory;
         private AuthModeStrategyType authModeStrategy;
+        private LocalStorageAdapter storageAdapter;
 
         private Builder() {}
 
@@ -657,9 +660,23 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             return this;
         }
 
-        @VisibleForTesting
+        /**
+         * Package-private method to allow for injection of an API category for testing.
+         * @param apiCategory An instance that implements ApiCategory.
+         * @return Current builder instance, for fluent construction of plugin.
+         */
         Builder apiCategory(ApiCategory apiCategory) {
             this.apiCategory = apiCategory;
+            return this;
+        }
+
+        /**
+         * Package-private method to allow for injection of a storage adapter for testing purposes.
+         * @param storageAdapter An instance that implements LocalStorageAdapter.
+         * @return Current builder instance, for fluent construction of plugin.
+         */
+        Builder storageAdapter(LocalStorageAdapter storageAdapter) {
+            this.storageAdapter = storageAdapter;
             return this;
         }
 
