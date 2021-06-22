@@ -1049,12 +1049,12 @@ public class MultiAuthSyncEngineInstrumentationTest {
                 JSONArray errors = responseJson.has("errors") ? responseJson.getJSONArray("errors") : new JSONArray();
                 if (responseCode > 399 || errors.length() > 0) {
                     // Request failed. Make sure it's not for the expected auth type.
-                    if (expectedAuthType.equals(requestAuthType)) {
+                    if (expectedAuthType != null && expectedAuthType.equals(requestAuthType)) {
                         return true;
                     }
                 } else {
                     // Request was successful. Make sure it's the expected auth type.
-                    if (!expectedAuthType.equals(requestAuthType)) {
+                    if (expectedAuthType != null && !expectedAuthType.equals(requestAuthType)) {
                         return true;
                     }
                 }
