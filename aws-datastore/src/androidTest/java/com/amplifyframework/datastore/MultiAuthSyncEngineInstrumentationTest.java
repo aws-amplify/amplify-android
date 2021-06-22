@@ -116,12 +116,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
     private static final String AUDIENCE = "integtest";
     private static final String GOOGLE_ISS_CLAIM = "https://accounts.google.com";
 
-    private Class<? extends Model> modelType;
-    private boolean requiresCognitoSign;
-    private boolean requiresOidcSignIn;
-    private AuthorizationType expectedAuthType;
-    private String tag;
-    private String modelId;
     private SynchronousApi api;
     private SynchronousDataStore dataStore;
     private SynchronousAuth auth;
@@ -146,7 +140,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.API_KEY
         );
-        verifyScenario();
     }
 
     /**
@@ -164,7 +157,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -182,7 +174,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       true,
                       AuthorizationType.OPENID_CONNECT
         );
-        verifyScenario();
     }
 
     /**
@@ -200,7 +191,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -218,7 +208,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -236,7 +225,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AWS_IAM
         );
-        verifyScenario();
     }
 
     /**
@@ -254,7 +242,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.API_KEY
         );
-        verifyScenario();
     }
 
     /**
@@ -272,7 +259,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -290,7 +276,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.API_KEY
         );
-        verifyScenario();
     }
 
     /**
@@ -308,7 +293,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -326,7 +310,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       true,
                       AuthorizationType.OPENID_CONNECT
         );
-        verifyScenario();
     }
 
     /**
@@ -344,7 +327,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -362,7 +344,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       null
         );
-        verifyScenario();
     }
 
     /**
@@ -380,7 +361,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -398,7 +378,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.API_KEY
         );
-        verifyScenario();
     }
 
     /**
@@ -416,7 +395,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -434,7 +412,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AWS_IAM
         );
-        verifyScenario();
     }
 
     /**
@@ -452,7 +429,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -470,7 +446,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       null
         );
-        verifyScenario();
     }
 
     /**
@@ -488,7 +463,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -506,7 +480,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.API_KEY
         );
-        verifyScenario();
     }
 
     /**
@@ -524,7 +497,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -542,7 +514,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AWS_IAM
         );
-        verifyScenario();
     }
 
     /**
@@ -560,7 +531,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AWS_IAM
         );
-        verifyScenario();
     }
 
     /**
@@ -578,7 +548,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -596,7 +565,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.API_KEY
         );
-        verifyScenario();
     }
 
     /**
@@ -614,7 +582,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -632,7 +599,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.API_KEY
         );
-        verifyScenario();
     }
 
     /**
@@ -650,7 +616,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -668,7 +633,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AWS_IAM
         );
-        verifyScenario();
     }
 
     /**
@@ -686,7 +650,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -704,7 +667,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.API_KEY
         );
-        verifyScenario();
     }
 
     /**
@@ -722,7 +684,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
@@ -740,7 +701,6 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.API_KEY
         );
-        verifyScenario();
     }
 
     /**
@@ -758,30 +718,24 @@ public class MultiAuthSyncEngineInstrumentationTest {
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
         );
-        verifyScenario();
     }
 
     /**
      * Constructor for the parameterized test.
-     * @param clazz The model type.
+     * @param modelType The model type.
      * @param signInToCognito Does the test scenario require the user to be logged in with user pools.
      * @param signInWithOidc Does the test scenario require the user to be logged in with an OIDC provider.
      * @param expectedAuthType The auth type that should succeed for the test.
      * @throws AmplifyException No expected.
      * @throws IOException Not expected.
      */
-    private void setupScenario(Class<? extends Model> clazz,
+    private void setupScenario(Class<? extends Model> modelType,
                                                   boolean signInToCognito,
                                                   boolean signInWithOidc,
                                                   AuthorizationType expectedAuthType)
         throws AmplifyException, IOException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
-        this.tag = clazz.getSimpleName();
-        this.modelType = clazz;
-        this.requiresCognitoSign = signInToCognito;
-        this.requiresOidcSignIn = signInWithOidc;
-        this.expectedAuthType = expectedAuthType;
-        this.modelId = UUID.randomUUID().toString();
+        String tag = modelType.getSimpleName();
         logTestInfo("Configuring");
 
         MultiAuthTestModelProvider modelProvider =
@@ -804,7 +758,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
         authCategory.addPlugin(authPlugin);
         authCategory.configure(authCategoryConfiguration, context);
         auth = SynchronousAuth.delegatingTo(authCategory);
-        if (this.requiresCognitoSign) {
+        if (signInToCognito) {
             Log.v(tag, "Test requires signIn.");
             AuthSignInResult authSignInResult = auth.signIn(cognitoUser, cognitoPassword);
             if (!authSignInResult.isSignInComplete()) {
@@ -812,7 +766,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
             }
         }
 
-        if (this.requiresOidcSignIn) {
+        if (signInWithOidc) {
             oidcLogin();
             if (token.get() == null) {
                 fail("Unable to autenticate with OIDC provider");
@@ -863,6 +817,8 @@ public class MultiAuthSyncEngineInstrumentationTest {
         dataStoreCategory.configure(dataStoreCategoryConfiguration, context);
         dataStoreCategory.initialize(context);
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
+
+        verifyScenario(modelType, signInToCognito, signInWithOidc, expectedAuthType);
     }
 
     // The following link was helpful in finding the right setup
@@ -881,18 +837,22 @@ public class MultiAuthSyncEngineInstrumentationTest {
      */
     @After
     public void tearDown() {
-        Log.i(tag, "Deleting database");
+        Log.i("TearDown", "Deleting database");
         getApplicationContext().deleteDatabase("AmplifyDatastore.db");
-        Log.i(tag, "Teardown completed.");
+        Log.i("TearDown", "Teardown completed.");
     }
 
     /**
      * Runs the test for the parameters set in the constructor.
      * @throws AmplifyException Not expected.
      */
-    private void verifyScenario() throws AmplifyException {
+    private void verifyScenario(Class<? extends Model> modelType,
+                                boolean signInToCognito,
+                                boolean signInWithOidc,
+                                AuthorizationType expectedAuthType) throws AmplifyException {
         logTestInfo("Starting");
-        Model testRecord = createRecord();
+        String modelId = UUID.randomUUID().toString();
+        Model testRecord = createRecord(modelType, modelId);
         HubAccumulator expectedEventAccumulator = null;
         if (expectedAuthType != null) {
             expectedEventAccumulator =
@@ -914,7 +874,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
      * Create a instance of the model using the private constructor via reflection.
      * @return A instance of the model being tested.
      */
-    private Model createRecord() {
+    private Model createRecord(Class<?> modelType, String modelId) {
         try {
             Constructor<?> constructor = modelType.getDeclaredConstructors()[0];
             constructor.setAccessible(true);
@@ -928,7 +888,8 @@ public class MultiAuthSyncEngineInstrumentationTest {
         } catch (IllegalAccessException |
             InstantiationException |
             InvocationTargetException exception) {
-            Log.e(tag, "Unable to create an instance of model " + modelType.getSimpleName(), exception);
+            Log.e(modelType.getSimpleName(), "Unable to create an instance of model " + modelType.getSimpleName(),
+                  exception);
             throw new RuntimeException("Unable to create an instance of model " + modelType.getSimpleName(), exception);
         }
 
@@ -957,13 +918,13 @@ public class MultiAuthSyncEngineInstrumentationTest {
                                                                                .openRawResource(googleCredsResourceId));
 
         } catch (com.amplifyframework.core.Resources.ResourceLoadingException | JSONException exception) {
-            Log.e(tag, "Failed to read cognito credentials");
+            Log.e("ReadingCredentials", "Failed to read cognito credentials");
             throw new RuntimeException("Failed to read cognito credentials", exception);
         }
     }
 
     private void logTestInfo(String stage) {
-        String message = "Model type: " +
+        /*String message = "Model type: " +
             modelType.getSimpleName() +
             " requiresSignIn: " +
             this.requiresCognitoSign +
@@ -971,7 +932,7 @@ public class MultiAuthSyncEngineInstrumentationTest {
             (this.expectedAuthType == null ? "FAILURE" : this.expectedAuthType.name()) +
             " stage: " +
             stage;
-        Log.i(tag, message);
+        Log.i(tag, message);*/
     }
 
     private static AuthorizationType getRequestAuthType(Headers headers) {
