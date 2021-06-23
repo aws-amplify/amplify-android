@@ -325,10 +325,23 @@ final class PersistentMutationOutbox implements MutationOutbox {
         private Completable handleIncomingUpdate() {
             switch (existing.getMutationType()) {
                 case CREATE:
-                    // Update after the create -> replace item of the create mutation (and keep it as a create).
+                    // Update after the create -> if the incoming & existing is of type SerializedModel
+                    // then merge the existing model.
+                    // If not, then replace the item of the create mutation (and keep it as a create).
                     // No condition needs to be provided, because as far as the remote store is concerned,
                     // we're simply performing the create (with the updated item item contents)
-                    return overwriteExistingAndNotify(PendingMutation.Type.CREATE, QueryPredicates.all());
+                    if (incoming.getMutatedItem() instanceof SerializedModel
+                            && existing.getMutatedItem() instanceof SerializedModel) {
+                        PendingMutation<T> mergedPendingMutation = mergeAndCreatePendingMutation(
+                                (SerializedModel) incoming.getMutatedItem(),
+                                (SerializedModel) existing.getMutatedItem(),
+                                incoming.getModelSchema(),
+                                PendingMutation.Type.CREATE);
+                        return removeNotLocking(existing.getMutationId())
+                                .andThen(saveAndNotify(mergedPendingMutation));
+                    } else {
+                        return overwriteExistingAndNotify(PendingMutation.Type.CREATE, QueryPredicates.all());
+                    }
                 case UPDATE:
                     // If the incoming update does not have a condition, we want to delete any
                     // existing mutations for the modelId before saving the incoming one.
@@ -337,14 +350,11 @@ final class PersistentMutationOutbox implements MutationOutbox {
                         // then merge the existing model data into incoming.
                         if (incoming.getMutatedItem() instanceof SerializedModel
                                 && existing.getMutatedItem() instanceof SerializedModel) {
-                            SerializedModel mergedSerializedModel = SerializedModel.merge(
+                            PendingMutation<T> mergedPendingMutation = mergeAndCreatePendingMutation(
                                     (SerializedModel) incoming.getMutatedItem(),
                                     (SerializedModel) existing.getMutatedItem(),
-                                    incoming.getModelSchema());
-                            @SuppressWarnings("unchecked") // cast SerializedModel to Model
-                            PendingMutation<T> mergedPendingMutation = (PendingMutation<T>) PendingMutation.update(
-                                    mergedSerializedModel,
-                                    incoming.getModelSchema());
+                                    incoming.getModelSchema(),
+                                    PendingMutation.Type.UPDATE);
                             return removeNotLocking(existing.getMutationId())
                                     .andThen(saveAndNotify(mergedPendingMutation));
                         } else {
@@ -430,6 +440,23 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 " and incoming mutation of type = " + incoming.getMutationType(),
                 "Please report at https://github.com/aws-amplify/amplify-android/issues."
             ));
+        }
+
+        private PendingMutation<T> mergeAndCreatePendingMutation(SerializedModel incomingItem,
+                                                                                SerializedModel existingItem,
+                                                                                ModelSchema modelSchema,
+                                                                                PendingMutation.Type type) {
+            SerializedModel mergedSerializedModel = SerializedModel.merge(
+                    incomingItem,
+                    existingItem,
+                    modelSchema);
+            @SuppressWarnings("unchecked") // cast SerializedModel to Model
+            PendingMutation<T> mergedPendingMutation = (PendingMutation<T>) PendingMutation.instance(
+                    mergedSerializedModel,
+                    modelSchema,
+                    type,
+                    QueryPredicates.all());
+            return mergedPendingMutation;
         }
     }
 }
