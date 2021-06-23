@@ -665,6 +665,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
          * @param apiCategory An instance that implements ApiCategory.
          * @return Current builder instance, for fluent construction of plugin.
          */
+        @VisibleForTesting
         Builder apiCategory(ApiCategory apiCategory) {
             this.apiCategory = apiCategory;
             return this;
@@ -675,6 +676,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
          * @param storageAdapter An instance that implements LocalStorageAdapter.
          * @return Current builder instance, for fluent construction of plugin.
          */
+        @VisibleForTesting
         Builder storageAdapter(LocalStorageAdapter storageAdapter) {
             this.storageAdapter = storageAdapter;
             return this;

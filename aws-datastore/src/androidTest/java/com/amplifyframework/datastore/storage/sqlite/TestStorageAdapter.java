@@ -45,7 +45,7 @@ public final class TestStorageAdapter {
      */
     public static SQLiteStorageAdapter create(ModelSchemaRegistry schemaRegistry,
                                               ModelProvider modelProvider,
-                                               String databaseName) {
+                                              String databaseName) {
         return SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider, databaseName);
     }
 

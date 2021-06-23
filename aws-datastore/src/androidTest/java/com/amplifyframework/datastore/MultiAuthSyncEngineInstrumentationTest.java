@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.TestStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
@@ -85,8 +86,6 @@ import org.junit.AfterClass;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -893,20 +892,17 @@ public final class MultiAuthSyncEngineInstrumentationTest {
      * Create a instance of the model using the private constructor via reflection.
      * @return A instance of the model being tested.
      */
-    private Model createRecord(Class<?> modelType, String modelId) {
+    private Model createRecord(Class<? extends Model> modelType, String modelId) {
         try {
-            Constructor<?> constructor = modelType.getDeclaredConstructors()[0];
-            constructor.setAccessible(true);
             String recordDetail = "IntegTest-" + modelType.getSimpleName() + " " + RandomString.string();
-            // Most constructor for the multiauth test models have 2 parameters.
-            if (constructor.getParameterCount() == 2) {
-                return (Model) constructor.newInstance(modelId, recordDetail);
-            }
-            // For the one exception, we just pass a null for the extra parameter.
-            return (Model) constructor.newInstance(modelId, recordDetail, null);
-        } catch (IllegalAccessException |
-            InstantiationException |
-            InvocationTargetException exception) {
+            Map<String, Object> modelMap = new HashMap<>();
+            modelMap.put("id", modelId);
+            modelMap.put("name", recordDetail);
+            return SerializedModel.builder()
+                                   .serializedData(modelMap)
+                                   .modelSchema(ModelSchema.fromModelClass(modelType))
+                                   .build();
+        } catch (AmplifyException exception) {
             Log.e(modelType.getSimpleName(), "Unable to create an instance of model " + modelType.getSimpleName(),
                   exception);
             throw new RuntimeException("Unable to create an instance of model " + modelType.getSimpleName(), exception);
