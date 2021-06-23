@@ -23,9 +23,10 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A container for model data, when passed from hybrid platforms.
@@ -78,7 +79,13 @@ public final class SerializedModel implements Model {
         Map<String, Object> originalMap = ModelConverter.toMap(original, modelSchema);
         Map<String, Object> patchMap = new HashMap<>();
         for (String key : updatedMap.keySet()) {
-            List<String> primaryIndexFields = modelSchema.getPrimaryIndexFields();
+            Set<String> primaryIndexFields = new HashSet<>();
+
+            // This can be removed once we fully support custom primary keys.  For now, it is required though, since
+            // SerializedModel requires the `id` field.
+            primaryIndexFields.add(PrimaryKey.fieldName());
+
+            primaryIndexFields.addAll(modelSchema.getPrimaryIndexFields());
             if (primaryIndexFields.contains(key) || !ObjectsCompat.equals(originalMap.get(key), updatedMap.get(key))) {
                 patchMap.put(key, updatedMap.get(key));
             }
