@@ -84,9 +84,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // memory errors.
     private static final int THREAD_POOL_SIZE_MULTIPLIER = 20;
 
-    // Name of the database
     @VisibleForTesting @SuppressWarnings("checkstyle:all") // Keep logger first
-    static final String DATABASE_NAME = "AmplifyDatastore.db";
+    static final String DEFAULT_DATABASE_NAME = "AmplifyDatastore.db";
+
+    private final String databaseName;
 
     // Provider of the Models that will be warehouse-able by the DataStore
     // and models that are used internally for DataStore to track metadata
@@ -141,11 +142,20 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             ModelSchemaRegistry modelSchemaRegistry,
             ModelProvider userModelsProvider,
             ModelProvider systemModelsProvider) {
+        this(modelSchemaRegistry, userModelsProvider, systemModelsProvider, DEFAULT_DATABASE_NAME);
+    }
+
+    private SQLiteStorageAdapter(
+        ModelSchemaRegistry modelSchemaRegistry,
+        ModelProvider userModelsProvider,
+        ModelProvider systemModelsProvider,
+        String databaseName) {
         this.modelSchemaRegistry = modelSchemaRegistry;
         this.modelsProvider = CompoundModelProvider.of(systemModelsProvider, userModelsProvider);
         this.gson = GsonFactory.instance();
         this.itemChangeSubject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         this.toBeDisposed = new CompositeDisposable();
+        this.databaseName = databaseName;
     }
 
     /**
@@ -162,6 +172,26 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             modelSchemaRegistry,
             Objects.requireNonNull(userModelsProvider),
             SystemModelsProviderFactory.create()
+        );
+    }
+
+    /**
+     * Gets a SQLiteStorageAdapter that can be initialized to use the provided models.
+     * @param modelSchemaRegistry Registry of schema for all models in the system
+     * @param userModelsProvider A provider of models that will be represented in SQL
+     * @param databaseName Name of the SQLite database.
+     * @return A SQLiteStorageAdapter that will host the provided models in SQL tables
+     */
+    @NonNull
+    static SQLiteStorageAdapter forModels(
+        @NonNull ModelSchemaRegistry modelSchemaRegistry,
+        @NonNull ModelProvider userModelsProvider,
+        @NonNull String databaseName) {
+        return new SQLiteStorageAdapter(
+            modelSchemaRegistry,
+            Objects.requireNonNull(userModelsProvider),
+            SystemModelsProviderFactory.create(),
+            databaseName
         );
     }
 
@@ -203,7 +233,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 CreateSqlCommands createSqlCommands = getCreateCommands(modelsProvider.modelNames());
                 sqliteStorageHelper = SQLiteStorageHelper.getInstance(
                         context,
-                        DATABASE_NAME,
+                        databaseName,
                         DATABASE_VERSION,
                         createSqlCommands);
 
@@ -681,7 +711,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         sqliteStorageHelper.close();
         databaseConnectionHandle.close();
         LOG.debug("Clearing DataStore.");
-        if (!context.deleteDatabase(DATABASE_NAME)) {
+        if (!context.deleteDatabase(databaseName)) {
             DataStoreException dataStoreException = new DataStoreException(
                 "Error while trying to clear data from the local DataStore storage.",
                 "See attached exception for details.");

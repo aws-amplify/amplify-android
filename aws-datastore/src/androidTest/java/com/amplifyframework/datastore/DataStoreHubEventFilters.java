@@ -17,6 +17,7 @@ package com.amplifyframework.datastore;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.datastore.syncengine.OutboxMutationEvent;
 import com.amplifyframework.hub.HubEventFilter;
 
@@ -70,6 +71,24 @@ public final class DataStoreHubEventFilters {
             ModelWithMetadata<? extends Model> modelWithMetadata =
                 (ModelWithMetadata<? extends Model>) event.getData();
             return modelId.equals(modelWithMetadata.getModel().getId());
+        };
+    }
+
+    /**
+     * Expect a network status failure event to be emitted by the sync engione.
+     * @return A filter that checks for network failure messages.
+     */
+    public static HubEventFilter networkStatusFailure() {
+        return event -> {
+            if (!DataStoreChannelEventName.NETWORK_STATUS.toString().equals(event.getName())) {
+                return false;
+            }
+            if (!(event.getData() instanceof NetworkStatusEvent)) {
+                return false;
+            }
+            NetworkStatusEvent outboxMutationEvent = (NetworkStatusEvent) event.getData();
+
+            return !outboxMutationEvent.getActive();
         };
     }
 }
