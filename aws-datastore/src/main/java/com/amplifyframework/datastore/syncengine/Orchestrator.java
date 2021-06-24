@@ -120,6 +120,7 @@ public final class Orchestrator {
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .queryPredicateProvider(queryPredicateProvider)
+            .retryStrategy(RetryStrategy.RX_INTERRUPTIBLE_WITH_BACKOFF)
             .build();
         this.subscriptionProcessor = SubscriptionProcessor.builder()
                 .appSync(appSync)
