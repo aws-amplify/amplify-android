@@ -2,7 +2,6 @@
 
 ### Features
 - **datastore:** adding multiauth support (#1347)
-- **datastore:** Multiauth integration tests (#1349)
 
 ### Bug Fixes
 - **datastore:** Merge mutations when create is followed by update (#1384)
@@ -10,6 +9,7 @@
 
 ### Miscellaneous
 - Update SDK version to 2.26.0 (#1386)
+- **datastore:** Multiauth integration tests (#1349)
 
 [See all changes between 0.3.0 and 0.4.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.3.0...release-kotlin_v0.4.0)
 
