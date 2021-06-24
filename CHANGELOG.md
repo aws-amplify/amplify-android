@@ -2,7 +2,6 @@
 
 ### Features
 - **datastore:** adding multiauth support (#1347)
-- **datastore:** Multiauth integration tests (#1349)
 
 ### Bug Fixes
 - **datastore:** Merge mutations when create is followed by update (#1384)
@@ -10,6 +9,7 @@
 
 ### Miscellaneous
 - Update SDK version to 2.26.0 (#1386)
+- **datastore:** Multiauth integration tests (#1349)
 
 [See all changes between 1.19.0 and 1.20.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.19.0...release_v1.20.0)
 
