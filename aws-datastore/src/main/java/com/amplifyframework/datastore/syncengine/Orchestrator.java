@@ -120,7 +120,7 @@ public final class Orchestrator {
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .queryPredicateProvider(queryPredicateProvider)
-            .retryStrategy(RetryStrategy.RX_INTERRUPTIBLE_WITH_BACKOFF)
+            .retryHandler(new RetryHandler())
             .build();
         this.subscriptionProcessor = SubscriptionProcessor.builder()
                 .appSync(appSync)
@@ -293,7 +293,6 @@ public final class Orchestrator {
 
     /**
      * Start syncing models to and from a remote API.
-     * @return A Completable that succeeds when API sync is enabled.
      */
     private void startApiSync() {
         LOG.info("Setting currentState to SYNC_VIA_API");

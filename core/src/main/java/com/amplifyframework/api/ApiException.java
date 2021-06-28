@@ -18,11 +18,12 @@ package com.amplifyframework.api;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Exception thrown by API category plugins.
  */
-public final class ApiException extends AmplifyException {
+public class ApiException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,5 +51,12 @@ public final class ApiException extends AmplifyException {
             @NonNull final String recoverySuggestion
     ) {
         super(message, recoverySuggestion);
+    }
+
+    public static final class ServerErrorException extends ApiException {
+        private static final long serialVersionUID = 1L;
+        public ServerErrorException(@NonNull @NotNull String message, @NotNull String recoverySuggestion) {
+            super(message, recoverySuggestion);
+        }
     }
 }

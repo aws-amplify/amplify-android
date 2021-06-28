@@ -73,7 +73,7 @@ final class SyncProcessor {
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
     private final String[] modelNames;
     private final QueryPredicateProvider queryPredicateProvider;
-    private RetryStrategy.RxRetryStrategy retryStrategy;
+    private final RetryHandler retryHandler;
 
     private SyncProcessor(Builder builder) {
         this.modelProvider = builder.modelProvider;
@@ -84,9 +84,9 @@ final class SyncProcessor {
         this.dataStoreConfigurationProvider = builder.dataStoreConfigurationProvider;
         this.queryPredicateProvider = builder.queryPredicateProvider;
         this.modelNames =
-            ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
-                .toArray(new String[0]);
-        this.retryStrategy = builder.retryStrategy;
+                ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
+                        .toArray(new String[0]);
+        this.retryHandler = builder.retryHandler;
     }
 
     /**
@@ -231,7 +231,7 @@ final class SyncProcessor {
                         processor.onComplete();
                     }
                 })
-                .retry(retryStrategy::retryHandler)
+
                 // If it's a SerializedModel, add the ModelSchema, since it isn't added during deserialization.
                 .map(paginatedResult -> Flowable.fromIterable(paginatedResult)
                         .map(modelWithMetadata -> hydrateSchemaIfNeeded(modelWithMetadata, schema))
@@ -260,35 +260,29 @@ final class SyncProcessor {
      * Fetches one page for a sync.
      * @param request GraphQLRequest object for the sync, obtained from {@link AppSync#buildSyncRequest}, or from
      *                response.getData().getRequestForNextResult() for subsequent requests.
-     * @param <T> The type of model to sync.
+     * @param <T>     The type of model to sync.
      */
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
         return Single.create(emitter -> {
-            Cancelable cancelable = appSync.sync(request, result -> {
-                if (result.hasErrors()) {
-                    emitter.onError(new DataStoreException(
-                            String.format("A model sync failed: %s", result.getErrors()),
-                            "Check your schema."
-                    ));
-                } else if (!result.hasData()) {
-                    emitter.onError(new DataStoreException(
-                            "Empty response from AppSync.", "Report to AWS team."
-                    ));
-                } else {
-                    emitter.onSuccess(result.getData());
-                }
-            }, emitter::onError);
+            OnSuccessConsumer<T> successConsumer = new OnSuccessConsumer<T>(emitter);
+            OnErrorConsumer<T> errorConsumer = new OnErrorConsumer<T>(emitter,
+                                                                    appSync,
+                                                                    request,
+                                                                    successConsumer,
+                                                                    retryHandler);
+            Cancelable cancelable = appSync.sync(request, successConsumer, errorConsumer);
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         });
     }
+
 
     /**
      * Builds instances of {@link SyncProcessor}s.
      */
     public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep,
             SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep,
-            QueryPredicateProviderStep, RetryStrategyStep, BuildStep {
+            QueryPredicateProviderStep, RetryHandlerStep, BuildStep {
         private ModelProvider modelProvider;
         private ModelSchemaRegistry modelSchemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
@@ -296,7 +290,7 @@ final class SyncProcessor {
         private Merger merger;
         private DataStoreConfigurationProvider dataStoreConfigurationProvider;
         private QueryPredicateProvider queryPredicateProvider;
-        private RetryStrategy.RxRetryStrategy retryStrategy;
+        private RetryHandler retryHandler;
 
         @NonNull
         @Override
@@ -337,13 +331,14 @@ final class SyncProcessor {
         @Override
         public QueryPredicateProviderStep dataStoreConfigurationProvider(
             DataStoreConfigurationProvider dataStoreConfigurationProvider) {
+                DataStoreConfigurationProvider dataStoreConfigurationProvider) {
             this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
             return Builder.this;
         }
 
         @NonNull
         @Override
-        public RetryStrategyStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
+        public RetryHandlerStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
             this.queryPredicateProvider = Objects.requireNonNull(queryPredicateProvider);
             return Builder.this;
         }
@@ -356,8 +351,8 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BuildStep retryStrategy(RetryStrategy.RxRetryStrategy retryStrategy) {
-            this.retryStrategy = retryStrategy;
+        public BuildStep retryHandler(RetryHandler retryHandler) {
+            this.retryHandler = retryHandler;
             return Builder.this;
         }
     }
@@ -395,12 +390,12 @@ final class SyncProcessor {
 
     interface QueryPredicateProviderStep {
         @NonNull
-        RetryStrategyStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
+        RetryHandlerStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
     }
 
-    interface RetryStrategyStep {
+    interface RetryHandlerStep {
         @NonNull
-        BuildStep retryStrategy(RetryStrategy.RxRetryStrategy retryStrategy);
+        BuildStep retryHandler(RetryHandler retryHandler);
     }
 
     interface BuildStep {

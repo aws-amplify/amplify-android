@@ -16,6 +16,7 @@
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
+apply plugin: 'kotlin-android'
 
 dependencies {
     implementation project(':core')
@@ -35,7 +36,10 @@ dependencies {
     testImplementation dependency.mockito
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
+    testImplementation 'org.mockito:mockito-core:3.8.0'
+    testImplementation 'io.mockk:mockk:1.11.0'
 
+    androidTestImplementation 'org.mockito:mockito-android:3.8.0'
     androidTestImplementation project(path: ':testmodels')
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation project(path: ':aws-api')

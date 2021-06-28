@@ -29,6 +29,7 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.ErrorType;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
@@ -78,9 +79,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -93,7 +92,7 @@ public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
     private static final List<String> SYSTEM_MODEL_NAMES =
-        ForEach.inCollection(SystemModelsProviderFactory.create().models(), Class::getSimpleName);
+            ForEach.inCollection(SystemModelsProviderFactory.create().models(), Class::getSimpleName);
 
     private AppSync appSync;
     private ModelProvider modelProvider;
@@ -102,7 +101,7 @@ public final class SyncProcessorTest {
     private SyncProcessor syncProcessor;
     private int errorHandlerCallCount;
     private int modelCount;
-    RetryStrategy.RxRetryStrategy retryStrategy;
+    RetryHandler retryHandler;
 
 
     /**
@@ -119,8 +118,7 @@ public final class SyncProcessorTest {
 
         this.appSync = mock(AppSync.class);
         this.errorHandlerCallCount = 0;
-        this.retryStrategy = mock(RetryStrategy.RxRetryStrategy.class);
-        doReturn(false).when(retryStrategy).retryHandler(anyInt(), any(DataStoreException.class));
+        this.retryHandler = mock(RetryHandler.class);
 
         initSyncProcessor(10_000);
     }
@@ -139,27 +137,27 @@ public final class SyncProcessorTest {
         final Merger merger = new Merger(mutationOutbox, versionRepository, inMemoryStorageAdapter);
 
         DataStoreConfigurationProvider dataStoreConfigurationProvider = () -> DataStoreConfiguration
-            .builder()
-            .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
-            .syncMaxRecords(syncMaxRecords)
-            .syncPageSize(1_000)
-            .errorHandler(dataStoreException -> errorHandlerCallCount++)
-            .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
-            .build();
+                .builder()
+                .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
+                .syncMaxRecords(syncMaxRecords)
+                .syncPageSize(1_000)
+                .errorHandler(dataStoreException -> errorHandlerCallCount++)
+                .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
+                .build();
 
         QueryPredicateProvider queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
         queryPredicateProvider.resolvePredicates();
 
         this.syncProcessor = SyncProcessor.builder()
-            .modelProvider(modelProvider)
-            .modelSchemaRegistry(modelSchemaRegistry)
-            .syncTimeRegistry(syncTimeRegistry)
-            .appSync(appSync)
-            .merger(merger)
-            .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
-            .queryPredicateProvider(queryPredicateProvider)
-            .retryStrategy(retryStrategy)
-            .build();
+                .modelProvider(modelProvider)
+                .modelSchemaRegistry(modelSchemaRegistry)
+                .syncTimeRegistry(syncTimeRegistry)
+                .appSync(appSync)
+                .merger(merger)
+                .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
+                .queryPredicateProvider(queryPredicateProvider)
+                .retryHandler(retryHandler)
+                .build();
     }
 
     /**
@@ -554,7 +552,7 @@ public final class SyncProcessorTest {
     public void userProvidedErrorCallbackInvokedOnFailure() throws DataStoreException {
         // Arrange: mock failure when invoking hydrate on the mock object.
         AppSyncMocking.sync(appSync)
-            .mockFailure(new DataStoreException("Something timed out during sync.", "Nothing to do."));
+            .mockFailure(new DataStoreException("Something timed out during sync.", "Nothing to do.", ErrorType.IRRECOVERABLE_ERROR));
 
         // Act: call hydrate.
         assertTrue(
@@ -570,22 +568,21 @@ public final class SyncProcessorTest {
 
     /**
      * Verify that retry is called on appsync failure.
+     *
      * @throws DataStoreException On failure to build GraphQLRequest for sync query.
      */
     @Test
-    public void userProvidedErrorCallbackInvokedOnFailureAndRetried() throws DataStoreException {
+    public void RetriedOnAppSyncFailure() throws DataStoreException {
         // Arrange: mock failure when invoking hydrate on the mock object.
         AppSyncMocking.sync(appSync)
-                .mockFailure(new DataStoreException("Something timed out during sync.",""));
+                .mockFailure(new DataStoreException("Something timed out during sync.", ""));
         // Act: call hydrate.
-        assertTrue(
-                syncProcessor.hydrate()
-                        .onErrorComplete()
-                        .blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        );
 
-        // Assert: AppSyc request is retried
-        verify(retryStrategy , times(1)).retryHandler(anyInt(),any(DataStoreException.class));
+        syncProcessor.hydrate()
+                .test(false)
+                .assertNotComplete();
+        verify(retryHandler, times(1)).retry(any(), any(), any(), any(), any());
+
     }
 
     /**

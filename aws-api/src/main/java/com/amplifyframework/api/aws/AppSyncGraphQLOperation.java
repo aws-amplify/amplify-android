@@ -142,6 +142,9 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                     return;
                 }
             }
+            if(response.code() >= 500) {
+                onFailure.accept(new ApiException.ServerErrorException("OkHttp client request failed.", "Server Error"));
+            }
 
             try {
                 onResponse.accept(wrapResponse(jsonResponse));
