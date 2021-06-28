@@ -35,6 +35,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.ErrorType;
 
 /**
  * An implementation of the {@link AppSync} client interface.
@@ -97,10 +98,19 @@ public final class AppSyncClient implements AppSync {
             }
         };
         final Consumer<ApiException> failureConsumer =
-            failure -> onFailure.accept(new DataStoreException(
-                "Failure performing sync query to AppSync.",
-                failure, AmplifyException.TODO_RECOVERY_SUGGESTION
-            ));
+            failure -> {
+            if(failure instanceof ApiException.ApiIrrecoverableException){
+                onFailure.accept(new DataStoreException(
+                        "Failure performing sync query to AppSync.",
+                        failure, AmplifyException.TODO_RECOVERY_SUGGESTION,
+                        ErrorType.IRRECOVERABLE_ERROR
+                ));
+            } else {
+                onFailure.accept(new DataStoreException(
+                        "Failure performing sync query to AppSync.",
+                        failure, AmplifyException.TODO_RECOVERY_SUGGESTION
+                ));
+            } };
 
         final Cancelable cancelable = api.query(request, responseConsumer, failureConsumer);
         if (cancelable != null) {
