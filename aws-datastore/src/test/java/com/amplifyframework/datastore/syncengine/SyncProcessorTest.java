@@ -137,13 +137,13 @@ public final class SyncProcessorTest {
         final Merger merger = new Merger(mutationOutbox, versionRepository, inMemoryStorageAdapter);
 
         DataStoreConfigurationProvider dataStoreConfigurationProvider = () -> DataStoreConfiguration
-                .builder()
-                .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
-                .syncMaxRecords(syncMaxRecords)
-                .syncPageSize(1_000)
-                .errorHandler(dataStoreException -> errorHandlerCallCount++)
-                .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
-                .build();
+            .builder()
+            .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
+            .syncMaxRecords(syncMaxRecords)
+            .syncPageSize(1_000)
+            .errorHandler(dataStoreException -> errorHandlerCallCount++)
+            .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
+            .build();
 
         QueryPredicateProvider queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
         queryPredicateProvider.resolvePredicates();
