@@ -101,7 +101,7 @@ public final class SyncProcessorTest {
     private SyncProcessor syncProcessor;
     private int errorHandlerCallCount;
     private int modelCount;
-    RetryHandler retryHandler;
+    private RetryHandler retryHandler;
 
 
     /**
