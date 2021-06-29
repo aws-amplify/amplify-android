@@ -2,6 +2,7 @@ package com.amplifyframework.testmodels.commentsblog;
 
 import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,10 +25,12 @@ public final class Blog implements Model {
   public static final QueryField ID = field("Blog", "id");
   public static final QueryField NAME = field("Blog", "name");
   public static final QueryField OWNER = field("Blog", "blogOwnerId");
+  public static final QueryField CREATED_AT = field("Blog", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
   private final @ModelField(targetType="BlogOwner", isRequired = true) @BelongsTo(targetName = "blogOwnerId", type = BlogOwner.class) BlogOwner owner;
+  private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -44,10 +47,15 @@ public final class Blog implements Model {
       return owner;
   }
   
-  private Blog(String id, String name, BlogOwner owner) {
+  public Temporal.DateTime getCreatedAt() {
+      return createdAt;
+  }
+  
+  private Blog(String id, String name, BlogOwner owner, Temporal.DateTime createdAt) {
     this.id = id;
     this.name = name;
     this.owner = owner;
+    this.createdAt = createdAt;
   }
   
   @Override
@@ -60,7 +68,8 @@ public final class Blog implements Model {
       Blog blog = (Blog) obj;
       return ObjectsCompat.equals(getId(), blog.getId()) &&
               ObjectsCompat.equals(getName(), blog.getName()) &&
-              ObjectsCompat.equals(getOwner(), blog.getOwner());
+              ObjectsCompat.equals(getOwner(), blog.getOwner()) &&
+              ObjectsCompat.equals(getCreatedAt(), blog.getCreatedAt());
       }
   }
   
@@ -70,21 +79,24 @@ public final class Blog implements Model {
       .append(getId())
       .append(getName())
       .append(getOwner())
+      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
-
-    @Override
-    public String toString() {
-        return "Blog{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", posts=" + posts +
-                ", owner=" + owner +
-                '}';
-    }
-
-    public static NameStep builder() {
+  
+  @Override
+   public String toString() {
+    return new StringBuilder()
+      .append("Blog {")
+      .append("id=" + String.valueOf(getId()) + ", ")
+      .append("name=" + String.valueOf(getName()) + ", ")
+      .append("owner=" + String.valueOf(getOwner()) + ", ")
+      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("}")
+      .toString();
+  }
+  
+  public static NameStep builder() {
       return new Builder();
   }
   
@@ -96,7 +108,7 @@ public final class Blog implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    * @throws IllegalArgumentException Checks that ID is in the proper format
-   **/
+   */
   public static Blog justId(String id) {
     try {
       UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
@@ -110,6 +122,7 @@ public final class Blog implements Model {
     return new Blog(
       id,
       null,
+      null,
       null
     );
   }
@@ -117,7 +130,8 @@ public final class Blog implements Model {
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       name,
-      owner);
+      owner,
+      createdAt);
   }
   public interface NameStep {
     OwnerStep name(String name);
@@ -132,6 +146,7 @@ public final class Blog implements Model {
   public interface BuildStep {
     Blog build();
     BuildStep id(String id) throws IllegalArgumentException;
+    BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
 
@@ -139,6 +154,7 @@ public final class Blog implements Model {
     private String id;
     private String name;
     private BlogOwner owner;
+    private Temporal.DateTime createdAt;
     @Override
      public Blog build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -146,7 +162,8 @@ public final class Blog implements Model {
         return new Blog(
           id,
           name,
-          owner);
+          owner,
+          createdAt);
     }
     
     @Override
@@ -163,13 +180,19 @@ public final class Blog implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep createdAt(Temporal.DateTime createdAt) {
+        this.createdAt = createdAt;
+        return this;
+    }
+    
     /** 
      * WARNING: Do not set ID when creating a new object. Leave this blank and one will be auto generated for you.
      * This should only be set when referring to an already existing object.
      * @param id id
      * @return Current Builder instance, for fluent method chaining
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     **/
+     */
     public BuildStep id(String id) throws IllegalArgumentException {
         this.id = id;
         
@@ -186,10 +209,11 @@ public final class Blog implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, BlogOwner owner) {
+    private CopyOfBuilder(String id, String name, BlogOwner owner, Temporal.DateTime createdAt) {
       super.id(id);
       super.name(name)
-        .owner(owner);
+        .owner(owner)
+        .createdAt(createdAt);
     }
     
     @Override
@@ -200,6 +224,11 @@ public final class Blog implements Model {
     @Override
      public CopyOfBuilder owner(BlogOwner owner) {
       return (CopyOfBuilder) super.owner(owner);
+    }
+    
+    @Override
+     public CopyOfBuilder createdAt(Temporal.DateTime createdAt) {
+      return (CopyOfBuilder) super.createdAt(createdAt);
     }
   }
   

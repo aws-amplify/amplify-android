@@ -1,3 +1,71 @@
+## [Release 0.4.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.4.0)
+
+### Features
+- **datastore:** adding multiauth support (#1347)
+
+### Bug Fixes
+- **datastore:** Merge mutations when create is followed by update (#1384)
+- **datastore:** explicitly include id field for update mutations, to support types with custom primary keys (#1385)
+
+### Miscellaneous
+- Update SDK version to 2.26.0 (#1386)
+
+[See all changes between 0.3.0 and 0.4.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.3.0...release-kotlin_v0.4.0)
+
+## [Release 0.3.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.3.0)
+
+### Features
+- add supporting types for multi-auth (#1346)
+
+### Bug Fixes
+- **auth:** throw correct auth exception for code mismatch (#1370)
+- **datastore:** fix subscription timeout period not increasing (#1376)
+- **datastore:** Add support for SerializedModel to predicate evaluation (#1375)
+- **datastore:** merge incoming mutation with existing update mutation (#1379)
+
+### Miscellaneous
+- chore(api):tweaks to the api init process (#1309)
+- Update stale.yml (#1380)
+
+[See all changes between 0.2.0 and 0.3.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.2.0...release-kotlin_v0.3.0)
+
+## [Release 0.2.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.2.0)
+
+### Features
+- **aws-auth-cognito:** Allows userattributes in confirmSignIn (#1343)
+
+[See all changes between 0.1.9 and 0.2.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.9...release-kotlin_v0.2.0)
+
+## [Release 0.1.9](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.9)
+
+### Bug Fixes
+- **auth:** Add ConfirmSignUpOptions for confirmSignUp API method (#1357)
+- **storage:** remove duplicate error callback (#1366)
+
+[See all changes between 0.1.8 and 0.1.9](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.8...release-kotlin_v0.1.9)
+
+## [Release 0.1.8](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.8)
+
+### Bug Fixes
+- **api:** check for null ModelSchema to prevent crash in SerializedModel toString method (#1341)
+- **Auth:** prevent multiple invocations of success callback for updateUserAttributes (#1339)
+
+### Miscellaneous
+- create stale bot GitHub action (#1337)
+- refactor:add enum to represent auth rule provider (#1320)
+- default to mobile client for iam auth mode (#1351)
+
+[See all changes between 0.1.7 and 0.1.8](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.7...release-kotlin_v0.1.8)
+
+## [Release 0.1.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.7)
+
+### Bug Fixes
+- checkstyle failure on Windows (#1326)
+- **datastore:** save metadata when merging even if mutation outbox has pending item (#1319)
+- **datastore:** add syncExpression method to configuration builder that takes the modelName as a String (#1330)
+
+[See all changes between 0.1.6 and 0.1.7](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.6...release-kotlin_v0.1.7)
+
 ## [Release 0.1.6](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.6)
 
 ### Bug Fixes

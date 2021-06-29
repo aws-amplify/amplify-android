@@ -56,7 +56,7 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 30
 
-    awsSdkVersion = '2.23.0'
+    awsSdkVersion = '2.26.0'
     fragmentVersion = '1.3.1'
     navigationVersion = '2.3.4'
     dependency = [
@@ -82,6 +82,7 @@ ext {
                 runner: 'androidx.test:runner:1.3.0',
                 junit: 'androidx.test.ext:junit:1.1.2',
                 espresso: 'androidx.test.espresso:espresso-core:3.3.0',
+                orchestrator: 'androidx.test:orchestrator:1.3.0',
                 navigation: "androidx.navigation:navigation-testing:$navigationVersion",
                 fragment: "androidx.fragment:fragment-testing:$fragmentVersion"
             ]
@@ -103,6 +104,7 @@ ext {
             coroutines: 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2'
         ],
 
+        oauth2: 'com.google.auth:google-auth-library-oauth2-http:0.26.0',
         okhttp: 'com.squareup.okhttp3:okhttp:4.9.1',
         gson: 'com.google.code.gson:gson:2.8.6',
         rxandroid: 'io.reactivex.rxjava3:rxandroid:3.0.0',
@@ -147,6 +149,7 @@ private void configureAndroidLibrary(Project project) {
             targetSdkVersion rootProject.ext.targetSdkVersion
             versionName project.ext.VERSION_NAME
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+            testInstrumentationRunnerArguments clearPackageData: 'true'
             consumerProguardFiles rootProject.file('configuration/consumer-rules.pro')
 
             testOptions {
@@ -168,6 +171,13 @@ private void configureAndroidLibrary(Project project) {
             coreLibraryDesugaringEnabled true
             sourceCompatibility JavaVersion.VERSION_1_8
             targetCompatibility JavaVersion.VERSION_1_8
+        }
+
+        // Needed when running integration tests. The oauth2 library uses relies on two
+        // dependencies (Apache's httpcore and httpclient), both of which include
+        // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
+        packagingOptions {
+            exclude 'META-INF/DEPENDENCIES'
         }
     }
 

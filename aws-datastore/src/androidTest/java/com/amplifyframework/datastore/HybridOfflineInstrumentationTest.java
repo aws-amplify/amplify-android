@@ -20,7 +20,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.datastore.appsync.SerializedModel;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
@@ -73,7 +73,7 @@ public final class HybridOfflineInstrumentationTest {
         HubAccumulator initializationObserver =
             HubAccumulator.create(HubChannel.DATASTORE, InitializationStatus.SUCCEEDED, 1)
                 .start();
-        AWSDataStorePlugin plugin = new AWSDataStorePlugin(schemaProvider);
+        AWSDataStorePlugin plugin = AWSDataStorePlugin.builder().modelProvider(schemaProvider).build();
         DataStoreCategory dataStoreCategory = new DataStoreCategory();
         dataStoreCategory.addPlugin(plugin);
         dataStoreCategory.configure(new DataStoreCategoryConfiguration(), getApplicationContext());

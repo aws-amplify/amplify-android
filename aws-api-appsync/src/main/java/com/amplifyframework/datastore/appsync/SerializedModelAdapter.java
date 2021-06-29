@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.util.GsonObjectConverter;
 
 import com.google.gson.GsonBuilder;

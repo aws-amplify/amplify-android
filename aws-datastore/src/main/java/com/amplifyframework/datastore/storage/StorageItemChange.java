@@ -20,8 +20,8 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.datastore.appsync.SerializedModel;
 
 import java.util.Objects;
 import java.util.UUID;

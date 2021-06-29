@@ -97,9 +97,9 @@ class KotlinAuthFacadeTest {
         val code = "CoolCode599"
         val signUpResult = mockk<AuthSignUpResult>()
         every {
-            delegate.confirmSignUp(eq(username), eq(code), any(), any())
+            delegate.confirmSignUp(eq(username), eq(code), any(), any(), any())
         } answers {
-            val indexOfResultConsumer = 2
+            val indexOfResultConsumer = 3
             val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSignUpResult>
             onResult.accept(signUpResult)
         }
@@ -116,9 +116,9 @@ class KotlinAuthFacadeTest {
         val code = "CoolCode599"
         val error = AuthException("uh", "oh")
         every {
-            delegate.confirmSignUp(eq(username), eq(code), any(), any())
+            delegate.confirmSignUp(eq(username), eq(code), any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 3
+            val indexOfErrorConsumer = 4
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
