@@ -30,7 +30,6 @@ public final class UserProfile {
     private final String plan;
     private final Location location;
     private final AnalyticsProperties customProperties;
-//    private final AnalyticsProperties userAttributes;
 
     private UserProfile(@NonNull Builder builder) {
         this.name = builder.name;
@@ -38,7 +37,6 @@ public final class UserProfile {
         this.plan = builder.plan;
         this.location = builder.location;
         this.customProperties = builder.customProperties;
-//        this.userAttributes = builder.userAttributes;
     }
 
     /**
