@@ -260,7 +260,7 @@ final class SyncProcessor {
      * Fetches one page for a sync.
      * @param request GraphQLRequest object for the sync, obtained from {@link AppSync#buildSyncRequest}, or from
      *                response.getData().getRequestForNextResult() for subsequent requests.
-     * @param <T>     The type of model to sync.
+     * @param <T> The type of model to sync.
      */
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
