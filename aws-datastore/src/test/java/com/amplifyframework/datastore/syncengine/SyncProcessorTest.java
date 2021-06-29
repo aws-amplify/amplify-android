@@ -92,7 +92,7 @@ public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
     private static final List<String> SYSTEM_MODEL_NAMES =
-            ForEach.inCollection(SystemModelsProviderFactory.create().models(), Class::getSimpleName);
+        ForEach.inCollection(SystemModelsProviderFactory.create().models(), Class::getSimpleName);
 
     private AppSync appSync;
     private ModelProvider modelProvider;
