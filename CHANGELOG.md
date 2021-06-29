@@ -1,3 +1,17 @@
+## [Release 1.20.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.20.0)
+
+### Features
+- **datastore:** adding multiauth support (#1347)
+
+### Bug Fixes
+- **datastore:** Merge mutations when create is followed by update (#1384)
+- **datastore:** explicitly include id field for update mutations, to support types with custom primary keys (#1385)
+
+### Miscellaneous
+- Update SDK version to 2.26.0 (#1386)
+
+[See all changes between 1.19.0 and 1.20.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.19.0...release_v1.20.0)
+
 ## [Release 1.19.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.19.0)
 
 ### Features
