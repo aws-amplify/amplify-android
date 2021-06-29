@@ -330,7 +330,7 @@ final class SyncProcessor {
         @NonNull
         @Override
         public QueryPredicateProviderStep dataStoreConfigurationProvider(
-                DataStoreConfigurationProvider dataStoreConfigurationProvider) {
+            DataStoreConfigurationProvider dataStoreConfigurationProvider) {
             this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
             return Builder.this;
         }
