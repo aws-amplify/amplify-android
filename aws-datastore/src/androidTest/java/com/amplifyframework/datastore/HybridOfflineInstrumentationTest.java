@@ -165,8 +165,8 @@ public final class HybridOfflineInstrumentationTest {
         serializedBlogData.put("id", blog.getId());
         serializedBlogData.put("name", blog.getName());
         serializedBlogData.put("owner", SerializedModel.builder()
-            .serializedData(Collections.singletonMap("id", blogOwner.getId()))
-            .modelSchema(null)
+            .serializedData(serializedBlogOwnerData)
+            .modelSchema(blogOwnerSchema)
             .build()
         );
         assertEquals(
