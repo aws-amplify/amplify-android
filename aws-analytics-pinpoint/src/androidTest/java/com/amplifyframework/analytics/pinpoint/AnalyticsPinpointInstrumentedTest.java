@@ -280,9 +280,7 @@ public class AnalyticsPinpointInstrumentedTest {
         AnalyticsProperties properties = AnalyticsProperties.builder()
                 .add("TestStringProperty", "TestStringValue")
                 .add("TestDoubleProperty", 1.0)
-                .build();
-        AnalyticsProperties userAttributes = AnalyticsProperties.builder()
-                .add("SomeUserAttribute", "User attribute value")
+                .add("user:SomeUserAttribute", "User attribute value")
                 .build();
         UserProfile userProfile = UserProfile.builder()
                 .name("test-user")
@@ -290,7 +288,6 @@ public class AnalyticsPinpointInstrumentedTest {
                 .plan("test-plan")
                 .location(location)
                 .customProperties(properties)
-                .userAttributes(userAttributes)
                 .build();
 
         Amplify.Analytics.identifyUser("userId", userProfile);

@@ -124,9 +124,6 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         // Assign userId to the endpoint.
         EndpointProfileUser user = new EndpointProfileUser();
         user.setUserId(userId);
-        if (userProfile.getUserAttributes() != null) {
-            addUserAttributes(user, userProfile.getUserAttributes());
-        }
         endpointProfile.setUser(user);
         // Add user-specific data to the endpoint
         if (userProfile != null) {
@@ -189,14 +186,24 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
                                      @NonNull AnalyticsProperties properties) {
         for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : properties) {
             String key = entry.getKey();
+            boolean isUserAttribute = key.startsWith("user:");
             AnalyticsPropertyBehavior<?> property = entry.getValue();
-
             if (property instanceof AnalyticsStringProperty) {
                 String value = ((AnalyticsStringProperty) property).getValue();
-                endpointProfile.addAttribute(key, Collections.singletonList(value));
+                if (isUserAttribute) {
+                    endpointProfile.getUser().addUserAttribute(key.replace("user:", ""),
+                                                                Collections.singletonList(value));
+                } else {
+                    endpointProfile.addAttribute(key, Collections.singletonList(value));
+                }
             } else if (property instanceof AnalyticsBooleanProperty) {
                 String value = ((AnalyticsBooleanProperty) property).getValue().toString();
-                endpointProfile.addAttribute(key, Collections.singletonList(value));
+                if (isUserAttribute) {
+                    endpointProfile.getUser().addUserAttribute(key.replace("user:", ""),
+                                                                Collections.singletonList(value));
+                } else {
+                    endpointProfile.addAttribute(key, Collections.singletonList(value));
+                }
             } else if (property instanceof AnalyticsDoubleProperty) {
                 Double value = ((AnalyticsDoubleProperty) property).getValue();
                 endpointProfile.addMetric(entry.getKey(), value);
