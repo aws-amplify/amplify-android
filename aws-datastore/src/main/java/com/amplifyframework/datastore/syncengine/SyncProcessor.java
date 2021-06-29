@@ -84,8 +84,8 @@ final class SyncProcessor {
         this.dataStoreConfigurationProvider = builder.dataStoreConfigurationProvider;
         this.queryPredicateProvider = builder.queryPredicateProvider;
         this.modelNames =
-                ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
-                        .toArray(new String[0]);
+            ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
+                .toArray(new String[0]);
         this.retryHandler = builder.retryHandler;
     }
 
