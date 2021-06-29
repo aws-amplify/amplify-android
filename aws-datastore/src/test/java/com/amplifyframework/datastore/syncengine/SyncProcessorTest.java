@@ -149,15 +149,15 @@ public final class SyncProcessorTest {
         queryPredicateProvider.resolvePredicates();
 
         this.syncProcessor = SyncProcessor.builder()
-                .modelProvider(modelProvider)
-                .modelSchemaRegistry(modelSchemaRegistry)
-                .syncTimeRegistry(syncTimeRegistry)
-                .appSync(appSync)
-                .merger(merger)
-                .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
-                .queryPredicateProvider(queryPredicateProvider)
-                .retryHandler(retryHandler)
-                .build();
+            .modelProvider(modelProvider)
+            .modelSchemaRegistry(modelSchemaRegistry)
+            .syncTimeRegistry(syncTimeRegistry)
+            .appSync(appSync)
+            .merger(merger)
+            .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
+            .queryPredicateProvider(queryPredicateProvider)
+            .retryHandler(retryHandler)
+            .build();
     }
 
     /**
