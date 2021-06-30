@@ -17,7 +17,6 @@ package com.amplifyframework.api.aws.sigv4;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.core.Amplify;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -43,14 +42,14 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
      * Creates the object with the instance of AWSMobileClient pulled over from the Auth plugin.
      * TODO: Once we come up with a proper interface, we will remove the use of AWSMobileClient directly in favor
      *  of using the AuthSession from Auth.
-     * @throws ApiAuthException Thrown if the AWSCognitoAuth plugin is not added.
+     * @throws ApiException Thrown if the AWSCognitoAuth plugin is not added.
      */
-    public DefaultCognitoUserPoolsAuthProvider() throws ApiAuthException {
+    public DefaultCognitoUserPoolsAuthProvider() throws ApiException {
         try {
             this.awsMobileClient =
                     (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
         } catch (IllegalStateException exception) {
-            throw new ApiAuthException(
+            throw new ApiException(
                     "AWSApiPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
                     exception,
                     "Before configuring Amplify, be sure to add AWSCognitoAuthPlugin same as you added AWSApiPlugin."
@@ -95,7 +94,7 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
         }
 
         if (lastTokenRetrievalFailureMessage != null) {
-            throw new ApiAuthException(lastTokenRetrievalFailureMessage, AmplifyException.TODO_RECOVERY_SUGGESTION);
+            throw new ApiException(lastTokenRetrievalFailureMessage, AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
     }
 

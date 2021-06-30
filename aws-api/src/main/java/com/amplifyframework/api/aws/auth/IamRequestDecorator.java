@@ -18,7 +18,6 @@ package com.amplifyframework.api.aws.auth;
 import android.net.Uri;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 
 import com.amazonaws.DefaultRequest;
@@ -61,9 +60,9 @@ public class IamRequestDecorator implements RequestDecorator {
      * Adds the appropriate header to the provided HTTP request.
      * @param req The request to be signed.
      * @return A new instance of the request containing the signature headers.
-     * @throws ApiAuthException If the signing process fails.
+     * @throws IOException If the signing process fails.
      */
-    public final okhttp3.Request decorate(okhttp3.Request req) throws ApiAuthException {
+    public final okhttp3.Request decorate(okhttp3.Request req) throws IOException {
         //Clone the request into a new DefaultRequest object and populate it with credentials
         final DefaultRequest<?> dr = new DefaultRequest<>(APP_SYNC_SERVICE_NAME);
         //set the endpoint
@@ -78,26 +77,19 @@ public class IamRequestDecorator implements RequestDecorator {
         //set the request body
         final byte[] bodyBytes;
         RequestBody body = req.body();
-        boolean isEmptyRequestBody = false;
-        try {
-            if (body != null) {
-                //write the body to a byte array.
-                final Buffer buffer = new Buffer();
-                body.writeTo(buffer);
-                bodyBytes = IOUtils.toByteArray(buffer.inputStream());
-            } else {
-                isEmptyRequestBody = true;
-                bodyBytes = "".getBytes();
-            }
-            dr.setParameters(splitQuery(req.url().url()));
-        } catch (IOException exception) {
-            throw new ApiAuthException("Unable to calculate SigV4 signature for the request",
-                                                    exception,
-                                                    "Check your application logs for details.");
+        if (body != null) {
+            //write the body to a byte array.
+            final Buffer buffer = new Buffer();
+            body.writeTo(buffer);
+            bodyBytes = IOUtils.toByteArray(buffer.inputStream());
+        } else {
+            bodyBytes = "".getBytes();
         }
         dr.setContent(new ByteArrayInputStream(bodyBytes));
 
         //set the query string parameters
+        dr.setParameters(splitQuery(req.url().url()));
+
         v4Signer.sign(dr, credentialsProvider.getCredentials());
 
         //Copy the signed/credentialed request back into an OKHTTP Request object.
@@ -111,7 +103,7 @@ public class IamRequestDecorator implements RequestDecorator {
         //Set the URL and Method
         okReqBuilder.url(req.url());
         final RequestBody requestBody;
-        if (!isEmptyRequestBody) {
+        if (req.body() != null && req.body().contentLength() > 0) {
             requestBody = RequestBody.create(bodyBytes, JSON_MEDIA_TYPE);
         } else {
             requestBody = null;

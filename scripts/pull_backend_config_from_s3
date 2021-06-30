@@ -24,8 +24,6 @@ readonly config_files=(
     # DataStore
     "aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-datastore/src/androidTest/res/raw/awsconfiguration.json"
-    "aws-datastore/src/androidTest/res/raw/credentials.json"
-    "aws-datastore/src/androidTest/res/raw/google_client_creds.json"
 
     # Predictions
     "aws-predictions/src/androidTest/res/raw/amplifyconfiguration.json"

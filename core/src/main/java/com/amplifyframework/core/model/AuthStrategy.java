@@ -29,32 +29,30 @@ public enum AuthStrategy {
      * Owner authorization specifies whether a user can access or operate against an object.  To use OWNER, the API
      * must have Cognito User Pool configured.
      */
-    OWNER(Provider.USER_POOLS, 1),
+    OWNER(Provider.USER_POOLS),
 
     /**
      * Group authorization specifies whether a group can access or operate against an object.  To use GROUPS, the API
      * must have Cognito User Pool configured.
      */
-    GROUPS(Provider.USER_POOLS, 2),
+    GROUPS(Provider.USER_POOLS),
 
     /**
      * The private authorization specifies that everyone will be allowed to access the API with a valid JWT token from
      * the configured Cognito User Pool. To use PRIVATE, the API must have Cognito User Pool configured.
      */
-    PRIVATE(Provider.USER_POOLS, 3),
+    PRIVATE(Provider.USER_POOLS),
 
     /**
      * The public authorization specifies that everyone will be allowed to access the API, behind the scenes the API
      * will be protected with an API Key. To use PUBLIC, the API must have API Key configured.
      */
-    PUBLIC(Provider.API_KEY, 4);
+    PUBLIC(Provider.API_KEY);
 
     private final Provider defaultAuthProvider;
-    private final int priority;
 
-    AuthStrategy(Provider defaultAuthProvider, int priority) {
+    AuthStrategy(Provider defaultAuthProvider) {
         this.defaultAuthProvider = defaultAuthProvider;
-        this.priority = priority;
     }
 
     /**
@@ -66,45 +64,33 @@ public enum AuthStrategy {
     }
 
     /**
-     * Returns an integer that represents the rank of a given
-     * strategy among its peers. (OWNER=1, GROUP=2, PRIVATE=3, PUBLIC=4)
-     * @return The priority value of the strategy.
-     */
-    public int getPriority() {
-        return this.priority;
-    }
-
-    /**
      * Represents the the value of the provider field of the @auth directive.
      */
     public enum Provider {
         /**
          * The userPools provider of the @auth rule directive.
          */
-        USER_POOLS("userPools", 1),
+        USER_POOLS("userPools"),
 
         /**
          * The userPools provider of the @auth rule directive.
          */
-        OIDC("oidc", 2),
+        OIDC("oidc"),
 
         /**
          * The userPools provider of the @auth rule directive.
          */
-        IAM("iam", 3),
+        IAM("iam"),
 
         /**
          * The userPools provider of the @auth rule directive.
          */
-        API_KEY("apiKey", 4);
+        API_KEY("apiKey");
 
         private final String authDirectiveProviderName;
-        private final int priority;
 
-        Provider(String authDirectiveProviderName,
-                 int priority) {
+        Provider(String authDirectiveProviderName) {
             this.authDirectiveProviderName = authDirectiveProviderName;
-            this.priority = priority;
         }
 
         /**
@@ -113,15 +99,6 @@ public enum AuthStrategy {
          */
         public String getAuthDirectiveProviderName() {
             return this.authDirectiveProviderName;
-        }
-
-        /**
-         * Returns an integer that represents the rank of a given
-         * provider among its peers. (USER_POOLS=1, OIDC=2, IAM=3, API_KEY=4)
-         * @return The priority value of the strategy.
-         */
-        public int getPriority() {
-            return priority;
         }
 
         /**

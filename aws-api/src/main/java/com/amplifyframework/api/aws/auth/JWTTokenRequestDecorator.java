@@ -15,7 +15,7 @@
 
 package com.amplifyframework.api.aws.auth;
 
-import com.amplifyframework.api.ApiException.ApiAuthException;
+import java.io.IOException;
 
 /**
  * Request decorator that adds a JWT token to the provided request.
@@ -36,9 +36,9 @@ public class JWTTokenRequestDecorator implements RequestDecorator {
      * Adds the appropriate header to the provided HTTP request.
      * @param req The request to be signed.
      * @return A new instance of the request containing the signature headers.
-     * @throws ApiAuthException If the signing process fails.
+     * @throws IOException If the signing process fails.
      */
-    public final okhttp3.Request decorate(okhttp3.Request req) throws ApiAuthException {
+    public final okhttp3.Request decorate(okhttp3.Request req) throws IOException {
         return req.newBuilder().addHeader(AUTHORIZATION, tokenSupplier.get()).build();
     }
 

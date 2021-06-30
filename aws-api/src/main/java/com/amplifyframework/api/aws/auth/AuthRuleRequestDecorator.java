@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthorizationType;
@@ -95,7 +94,7 @@ public final class AuthRuleRequestDecorator {
                 if (ownerRuleWithReadRestriction == null) {
                     ownerRuleWithReadRestriction = authRule;
                 } else {
-                    throw new ApiAuthException(
+                    throw new ApiException(
                         "Detected multiple owner type auth rules with a READ operation",
                         "We currently do not support this use case. Please limit your type to just one owner " +
                             "auth rule with a READ operation restriction.");
@@ -128,7 +127,7 @@ public final class AuthRuleRequestDecorator {
                     .build();
             } catch (AmplifyException error) {
                 // This should not happen normally
-                throw new ApiAuthException(
+                throw new ApiException(
                     "Failed to set owner field on AppSyncGraphQLRequest.", error,
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
             }
@@ -154,14 +153,14 @@ public final class AuthRuleRequestDecorator {
                     .getPayload(getAuthToken(authType))
                     .getString(identityClaim);
         } catch (JSONException error) {
-            throw new ApiAuthException(
+            throw new ApiException(
                 "Attempted to subscribe to a model with owner-based authorization without " + identityClaim + " " +
                     "which was specified (or defaulted to) as the identity claim.",
                 "If you did not specify a custom identityClaim in your schema, make sure you are logged in. If " +
                     "you did, check that the value you specified in your schema is present in the access key."
             );
         } catch (CognitoParameterInvalidException error) {
-            throw new ApiAuthException(
+            throw new ApiException(
                 "Failed to parse the ID token for identity claim: " + error.getMessage(),
                 "Please verify the validity of token vended by the registered auth provider."
             );
@@ -229,7 +228,7 @@ public final class AuthRuleRequestDecorator {
             case OPENID_CONNECT:
                 OidcAuthProvider oidcProvider = authProvider.getOidcAuthProvider();
                 if (oidcProvider == null) {
-                    throw new ApiAuthException(
+                    throw new ApiException(
                         "OidcAuthProvider interface is not implemented.",
                         "Configure AWSApiPlugin with ApiAuthProviders containing an implementation of " +
                             "OidcAuthProvider interface that can vend a valid JWT token."
@@ -240,7 +239,7 @@ public final class AuthRuleRequestDecorator {
             case AWS_IAM:
             case NONE:
             default:
-                throw new ApiAuthException(
+                throw new ApiException(
                     "Tried to use owner/group-based authorization on an API that is not configured " +
                         "with either Cognito User Pools or OpenID Connect.",
                     "Verify that the API is configured with either Cognito User Pools or OpenID Connect. @auth " +

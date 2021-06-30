@@ -41,7 +41,6 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private final Consumer<ApiException> onSubscriptionError;
     private final Action onSubscriptionComplete;
     private final AtomicBoolean canceled;
-    private final AuthorizationType authorizationType;
 
     private String subscriptionId;
     private Future<?> subscriptionFuture;
@@ -55,7 +54,6 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         this.onSubscriptionComplete = builder.onSubscriptionComplete;
         this.executorService = builder.executorService;
         this.canceled = new AtomicBoolean(false);
-        this.authorizationType = builder.authorizationType;
     }
 
     @NonNull
@@ -71,12 +69,10 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             ));
             return;
         }
-
         subscriptionFuture = executorService.submit(() -> {
             LOG.debug("Requesting subscription: " + getRequest().getContent());
             subscriptionEndpoint.requestSubscription(
                 getRequest(),
-                authorizationType,
                 subscriptionId -> {
                     SubscriptionOperation.this.subscriptionId = subscriptionId;
                     onSubscriptionStart.accept(subscriptionId);
@@ -117,7 +113,6 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         private Consumer<GraphQLResponse<T>> onNextItem;
         private Consumer<ApiException> onSubscriptionError;
         private Action onSubscriptionComplete;
-        private AuthorizationType authorizationType;
 
         @NonNull
         public Builder<T> subscriptionEndpoint(@NonNull SubscriptionEndpoint subscriptionEndpoint) {
@@ -164,12 +159,6 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         @NonNull
         public Builder<T> onSubscriptionComplete(@NonNull Action onSubscriptionComplete) {
             this.onSubscriptionComplete = Objects.requireNonNull(onSubscriptionComplete);
-            return this;
-        }
-
-        @NonNull
-        public Builder<T> authorizationType(AuthorizationType authorizationType) {
-            this.authorizationType = authorizationType;
             return this;
         }
 
