@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.CustomAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -34,12 +35,14 @@ public final class ApiAuthProviders {
     private final AWSCredentialsProvider awsCredentialsProvider;
     private final CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
     private final OidcAuthProvider oidcAuthProvider;
+    private final CustomAuthProvider customAuthProvider;
 
     private ApiAuthProviders(Builder builder) {
         this.apiKeyAuthProvider = builder.getApiKeyAuthProvider();
         this.awsCredentialsProvider = builder.getAWSCredentialsProvider();
         this.oidcAuthProvider = builder.getOidcAuthProvider();
         this.cognitoUserPoolsAuthProvider = builder.getCognitoUserPoolsAuthProvider();
+        this.customAuthProvider = builder.getCustomAuthProvider();
     }
 
     /**
@@ -75,6 +78,14 @@ public final class ApiAuthProviders {
     }
 
     /**
+     * Gets the custom auth provider.
+     * @return an implementation of {@link CustomAuthProvider}
+     */
+    public CustomAuthProvider getCustomAuthProvider() {
+        return this.customAuthProvider;
+    }
+
+    /**
      * Statically gets the builder for conveniently
      * configuring an immutable instance of {@link ApiAuthProviders}.
      * @return the builder object for {@link ApiAuthProviders}
@@ -101,6 +112,7 @@ public final class ApiAuthProviders {
         private AWSCredentialsProvider awsCredentialsProvider;
         private CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
         private OidcAuthProvider oidcAuthProvider;
+        private CustomAuthProvider customAuthProvider;
 
         /**
          * Assigns an API key Auth provider.
@@ -143,6 +155,16 @@ public final class ApiAuthProviders {
         }
 
         /**
+         * Assigns a custom auth provider.
+         * @param provider an instance of {@link CustomAuthProvider}
+         * @return this builder object for chaining
+         */
+        public ApiAuthProviders.Builder customAuthProvider(@NonNull CustomAuthProvider provider) {
+            ApiAuthProviders.Builder.this.customAuthProvider = Objects.requireNonNull(provider);
+            return ApiAuthProviders.Builder.this;
+        }
+
+        /**
          * Creates an immutable instance of {@link ApiAuthProviders}
          * configured to this builder instance.
          * @return The configured {@link ApiAuthProviders} instance
@@ -165,6 +187,10 @@ public final class ApiAuthProviders {
 
         OidcAuthProvider getOidcAuthProvider() {
             return ApiAuthProviders.Builder.this.oidcAuthProvider;
+        }
+
+        CustomAuthProvider getCustomAuthProvider() {
+            return ApiAuthProviders.Builder.this.customAuthProvider;
         }
     }
 }

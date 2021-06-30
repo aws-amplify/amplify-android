@@ -57,6 +57,11 @@ public enum AuthorizationType {
     AMAZON_COGNITO_USER_POOLS,
 
     /**
+     * Control access by implementing your own API authorization logic within an AWS Lambda function.
+     */
+    AWS_LAMBDA,
+
+    /**
      * No authorization.
      */
     NONE;
@@ -107,6 +112,8 @@ public enum AuthorizationType {
                 return AWS_IAM;
             case API_KEY:
                 return API_KEY;
+            case CUSTOM:
+                return AWS_LAMBDA;
             default:
                 throw new IllegalArgumentException("No such authorization type: " + authRuleProvider.name());
         }

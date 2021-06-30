@@ -75,28 +75,33 @@ public enum AuthStrategy {
     }
 
     /**
-     * Represents the the value of the provider field of the @auth directive.
+     * Represents the value of the provider field of the @auth directive.
      */
     public enum Provider {
         /**
-         * The userPools provider of the @auth rule directive.
+         * The custom provider of the @auth rule directive.
          */
-        USER_POOLS("userPools", 1),
+        CUSTOM("custom", 1),
 
         /**
          * The userPools provider of the @auth rule directive.
          */
-        OIDC("oidc", 2),
+        USER_POOLS("userPools", 2),
 
         /**
-         * The userPools provider of the @auth rule directive.
+         * The OIDC provider of the @auth rule directive.
          */
-        IAM("iam", 3),
+        OIDC("oidc", 3),
 
         /**
-         * The userPools provider of the @auth rule directive.
+         * The IAM provider of the @auth rule directive.
          */
-        API_KEY("apiKey", 4);
+        IAM("iam", 4),
+
+        /**
+         * The apiKey provider of the @auth rule directive.
+         */
+        API_KEY("apiKey", 5);
 
         private final String authDirectiveProviderName;
         private final int priority;
