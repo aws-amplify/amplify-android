@@ -32,22 +32,8 @@ import java.util.Objects;
  * A test utility to create instances of {@link SynchronousStorageAdapter}, and cleanup
  * the system when done using those instances.
  */
-public final class TestStorageAdapter {
+final class TestStorageAdapter {
     private TestStorageAdapter() {}
-
-    /**
-     * Create an instance of the SQLiteStorageAdapter using a specific database name.
-     * For testing purposes only.
-     * @param schemaRegistry The schema registry for the adapter.
-     * @param modelProvider The model provider with the desired models.
-     * @param databaseName The name of the database file.
-     * @return An instance of SQLiteStorageAdapter backed by the database file name specified.
-     */
-    public static SQLiteStorageAdapter create(ModelSchemaRegistry schemaRegistry,
-                                              ModelProvider modelProvider,
-                                              String databaseName) {
-        return SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider, databaseName);
-    }
 
     /**
      * Creates an instance of the {@link SynchronousStorageAdapter}, which has been initialized
@@ -103,6 +89,6 @@ public final class TestStorageAdapter {
 
     private static void deleteDatabase() {
         ApplicationProvider.getApplicationContext()
-            .deleteDatabase(SQLiteStorageAdapter.DEFAULT_DATABASE_NAME);
+            .deleteDatabase(SQLiteStorageAdapter.DATABASE_NAME);
     }
 }
