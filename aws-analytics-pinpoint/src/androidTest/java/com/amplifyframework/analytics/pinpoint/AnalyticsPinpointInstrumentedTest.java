@@ -312,7 +312,6 @@ public class AnalyticsPinpointInstrumentedTest {
 
         EndpointProfile endpointProfile = targetingClient.currentEndpoint();
         assertCommonEndpointProfileProperties(endpointProfile);
-        assertNull(endpointProfile.getUser().getUserAttributes());
 
         assertEquals("User attribute value", endpointProfile.getUser()
                 .getUserAttributes()

@@ -36,12 +36,7 @@ public final class AWSPinpointUserProfile extends UserProfile {
      * @param builder An instance of the builder with the desired properties set.
      */
     protected AWSPinpointUserProfile(@NonNull Builder builder) {
-        super(UserProfile.builder()
-                .name(builder.name)
-                .email(builder.email)
-                .plan(builder.plan)
-                .location(builder.location)
-                .customProperties(builder.customProperties));
+        super(builder);
         this.userAttributes = builder.userAttributes;
     }
 
@@ -91,73 +86,8 @@ public final class AWSPinpointUserProfile extends UserProfile {
     /**
      * Builder for the {@link AWSPinpointUserProfile} class.
      */
-    public static final class Builder extends UserProfile.Builder {
-        private String name;
-        private String email;
-        private String plan;
-        private Location location;
-        private AnalyticsProperties customProperties;
+    public static final class Builder extends UserProfile.Builder<Builder, AWSPinpointUserProfile> {
         private AnalyticsProperties userAttributes;
-
-        /**
-         * Configures the name to be used in the next-built UserProfile.
-         * @param name User's name
-         * @return Current builder instance, for method chaining
-         */
-        @NonNull
-        public Builder name(@NonNull final String name) {
-            Objects.requireNonNull(name);
-            this.name = name;
-            return this;
-        }
-
-        /**
-         * Configures the email to be used in the next-built UserProfile.
-         * @param email User's email
-         * @return Current builder instance, for method chaining
-         */
-        @NonNull
-        public Builder email(@NonNull final String email) {
-            Objects.requireNonNull(email);
-            this.email = email;
-            return this;
-        }
-
-        /**
-         * Configures the plan to be used in the next-built UserProfile.
-         * @param plan User's plan
-         * @return Current builder instance, for method chaining
-         */
-        @NonNull
-        public Builder plan(@NonNull final String plan) {
-            Objects.requireNonNull(plan);
-            this.plan = plan;
-            return this;
-        }
-
-        /**
-         * Configures the location to be used in the next-built UserProfile.
-         * @param location User's location
-         * @return Current builder instance, for method chaining
-         */
-        @NonNull
-        public Builder location(@NonNull final Location location) {
-            Objects.requireNonNull(location);
-            this.location = location;
-            return this;
-        }
-
-        /**
-         * Configures any additional, custom properties to be used in the next-built UserProfile.
-         * @param properties Additional properties bound to the next-built user
-         * @return Current builder instance, for method chaining
-         */
-        @NonNull
-        public Builder customProperties(@NonNull final AnalyticsProperties properties) {
-            Objects.requireNonNull(properties);
-            this.customProperties = properties;
-            return this;
-        }
 
         /**
          * Sets the user's attributes of the builder instance.

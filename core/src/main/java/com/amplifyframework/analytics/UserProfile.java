@@ -36,7 +36,7 @@ public class UserProfile {
      * be invoked by any classes inheriting from this one.
      * @param builder An instance of the builder with the desired properties set.
      */
-    protected UserProfile(@NonNull Builder builder) {
+    protected UserProfile(@NonNull Builder<?, ?> builder) {
         this.name = builder.name;
         this.email = builder.email;
         this.plan = builder.plan;
@@ -94,8 +94,8 @@ public class UserProfile {
      * @return An {@link UserProfile.Builder} instance
      */
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public static Builder<?, ?> builder() {
+        return new Builder<>();
     }
 
     /**
@@ -164,8 +164,11 @@ public class UserProfile {
 
     /**
      * Builder for creating a UserProfile object.
+     * @param <B> An class that extends this Builder.
+     * @param <O> The output type returned by the build method.
      */
-    public static class Builder {
+    @SuppressWarnings({"unchecked", "WeakerAccess"})
+    public static class Builder<B extends Builder<?, ?>, O extends UserProfile> {
         private String name;
         private String email;
         private String plan;
@@ -178,10 +181,10 @@ public class UserProfile {
          * @return Current builder instance, for method chaining
          */
         @NonNull
-        public Builder name(@NonNull final String name) {
+        public B name(@NonNull final String name) {
             Objects.requireNonNull(name);
             this.name = name;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -190,10 +193,10 @@ public class UserProfile {
          * @return Current builder instance, for method chaining
          */
         @NonNull
-        public Builder email(@NonNull final String email) {
+        public B email(@NonNull final String email) {
             Objects.requireNonNull(email);
             this.email = email;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -202,10 +205,10 @@ public class UserProfile {
          * @return Current builder instance, for method chaining
          */
         @NonNull
-        public Builder plan(@NonNull final String plan) {
+        public B plan(@NonNull final String plan) {
             Objects.requireNonNull(plan);
             this.plan = plan;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -214,10 +217,10 @@ public class UserProfile {
          * @return Current builder instance, for method chaining
          */
         @NonNull
-        public Builder location(@NonNull final Location location) {
+        public B location(@NonNull final Location location) {
             Objects.requireNonNull(location);
             this.location = location;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -226,10 +229,10 @@ public class UserProfile {
          * @return Current builder instance, for method chaining
          */
         @NonNull
-        public Builder customProperties(@NonNull final AnalyticsProperties properties) {
+        public B customProperties(@NonNull final AnalyticsProperties properties) {
             Objects.requireNonNull(properties);
             this.customProperties = properties;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -237,8 +240,8 @@ public class UserProfile {
          * @return An {@link UserProfile}
          */
         @NonNull
-        public UserProfile build() {
-            return new UserProfile(this);
+        public O build() {
+            return (O) new UserProfile(this);
         }
     }
 
