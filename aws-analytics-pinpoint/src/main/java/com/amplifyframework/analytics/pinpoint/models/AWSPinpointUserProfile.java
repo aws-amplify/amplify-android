@@ -66,12 +66,6 @@ public final class AWSPinpointUserProfile extends UserProfile {
     @Override
     public boolean equals(@Nullable Object object) {
         boolean isEquals = super.equals(object);
-//        if (this == object) {
-//            return true;
-//        }
-//        if (object == null || !(object instanceof AWSPinpointUserProfile)) {
-//            return false;
-//        }
         AWSPinpointUserProfile that = (AWSPinpointUserProfile) object;
         return isEquals && ObjectsCompat.equals(userAttributes, that.userAttributes);
     }
