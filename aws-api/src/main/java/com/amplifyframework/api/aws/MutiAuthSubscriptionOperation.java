@@ -165,7 +165,7 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
         for (GraphQLResponse.Error error : response.getErrors()) {
             if (!Empty.check(error.getExtensions())) {
                 AppSyncExtensions extensions = new AppSyncExtensions(error.getExtensions());
-                return AppSyncExtensions.AppSyncErrorType.UNAUTHORIZED.equals(extensions.getErrorType());
+                return extensions.isAuthorizationError();
             }
         }
         return false;

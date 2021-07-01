@@ -29,7 +29,9 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.auth.AuthorizationTypeIterator;
+import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.Empty;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -116,7 +118,7 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<
             } catch (ApiException apiException) {
                 LOG.warn("Failed to make a successful request with " + authType, apiException);
                 // Only queue up a retry if it's an auth-related exception.
-                if (apiException instanceof ApiAuthException) {
+                if (apiException instanceof ApiAuthException && authTypes.hasNext()) {
                     executorService.submit(this::dispatchRequest);
                 } else {
                     onFailure.accept(apiException);
@@ -139,6 +141,16 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<
         if (ongoingCall != null) {
             ongoingCall.cancel();
         }
+    }
+
+    private boolean hasAuthRelatedErrors(GraphQLResponse<R> response) {
+        for (GraphQLResponse.Error error : response.getErrors()) {
+            if (!Empty.check(error.getExtensions())) {
+                AppSyncExtensions extensions = new AppSyncExtensions(error.getExtensions());
+                return extensions.isAuthorizationError();
+            }
+        }
+        return false;
     }
 
     static <R> Builder<R> builder() {
@@ -165,17 +177,8 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<
 
             try {
                 GraphQLResponse<R> graphQLResponse = wrapResponse(jsonResponse);
-                if (graphQLResponse.hasErrors()) {
-                    for (GraphQLResponse.Error error : graphQLResponse.getErrors()) {
-                        if (error.getExtensions() != null &&
-                            UNAUTHORIZED_EXCEPTION.equals(error.getExtensions().get("errorType"))) {
-                            executorService.submit(MultiAuthAppSyncGraphQLOperation.this::dispatchRequest);
-                            return;
-                        }
-                    }
-                    onFailure.accept(new ApiException("The server response contains errors:" +
-                                                                    graphQLResponse.getErrors().toString(),
-                                                                AmplifyException.TODO_RECOVERY_SUGGESTION));
+                if (graphQLResponse.hasErrors() && hasAuthRelatedErrors(graphQLResponse) && authTypes.hasNext()) {
+                    executorService.submit(MultiAuthAppSyncGraphQLOperation.this::dispatchRequest);
                 } else {
                     onResponse.accept(graphQLResponse);
                 }

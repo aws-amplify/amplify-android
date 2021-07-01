@@ -130,6 +130,15 @@ public final class AppSyncExtensions {
     }
 
     /**
+     * Checks whether the current extension data indicates an authorization related error.
+     * @return True if it is authorization related, false otherwise.
+     */
+    public boolean isAuthorizationError() {
+        return AppSyncExtensions.AppSyncErrorType.UNAUTHORIZED.equals(this.getErrorType()) ||
+               AppSyncExtensions.AppSyncErrorType.UNAUTHORIZED_EXCEPTION.equals(this.getErrorType());
+    }
+
+    /**
      * An enumeration of the various error types that we expect
      * to see in the value of {@link AppSyncExtensions#getErrorType()}.
      * @see <a href="https://docs.aws.amazon.com/appsync/latest/devguide/conflict-detection-and-sync.html#errors">
@@ -150,6 +159,11 @@ public final class AppSyncExtensions {
          * deprecated/removed in the future.
          */
         OPERATION_DISABLED("OperationDisabled"),
+
+        /**
+         * An Unauthorized error will occur if the provided credentials are not authorized for the requested operation.
+         */
+        UNAUTHORIZED_EXCEPTION("UnauthorizedException"),
 
         /**
          * An Unauthorized error will occur if the provided credentials are not authorized for the requested operation.
