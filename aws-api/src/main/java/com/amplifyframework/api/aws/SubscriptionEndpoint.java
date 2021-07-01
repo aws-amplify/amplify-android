@@ -427,11 +427,8 @@ final class SubscriptionEndpoint {
                     );
                     return;
                 }
-                // Otherwise, just dispatch as an ApiException
-                dispatchError(new ApiException(
-                    "Error in subscription response: " + response.getErrors(),
-                    AmplifyException.TODO_RECOVERY_SUGGESTION)
-                );
+                // Otherwise, just dispatch it as a response so callers can deal with the error.
+                onNextItem.accept(response);
             } else {
                 onNextItem.accept(response);
             }
