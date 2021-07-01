@@ -28,7 +28,9 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.auth.AuthorizationTypeIterator;
+import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.Empty;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -117,16 +119,12 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                     onSubscriptionStart.accept(subscriptionId);
                 },
                 response -> {
-                    if (response.hasErrors()) {
+                    if (response.hasErrors() && hasAuthRelatedErrors(response)) {
                         // If there are auth-related errors, dispatch an ApiAuthException
-                        if (hasAuthRelatedErrors(response)) {
-                            executorService.submit(this::dispatchRequest);
-                            return;
-                        }
+                        executorService.submit(this::dispatchRequest);
+                    } else {
                         // Otherwise, we just want to dispatch it as a next item and
                         // let callers deal with the errors.
-                        onNextItem.accept(response);
-                    } else {
                         onNextItem.accept(response);
                     }
                 },
@@ -166,9 +164,9 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
 
     private boolean hasAuthRelatedErrors(GraphQLResponse<T> response) {
         for (GraphQLResponse.Error error : response.getErrors()) {
-            if (error.getExtensions() != null &&
-                UNAUTHORIZED_EXCEPTION.equals(error.getExtensions().get("errorType"))) {
-                return true;
+            if (!Empty.check(error.getExtensions())) {
+                AppSyncExtensions extensions = new AppSyncExtensions(error.getExtensions());
+                return AppSyncExtensions.AppSyncErrorType.UNAUTHORIZED.equals(extensions.getErrorType());
             }
         }
         return false;
