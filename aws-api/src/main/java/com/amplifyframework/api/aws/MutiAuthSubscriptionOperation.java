@@ -28,7 +28,9 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.auth.AuthorizationTypeIterator;
+import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.Empty;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -37,7 +39,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
-    private static final String UNAUTHORIZED_EXCEPTION = "UnauthorizedException";
 
     private final SubscriptionEndpoint subscriptionEndpoint;
     private final ExecutorService executorService;
@@ -116,10 +117,19 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                     MutiAuthSubscriptionOperation.this.subscriptionId = subscriptionId;
                     onSubscriptionStart.accept(subscriptionId);
                 },
-                onNextItem,
+                response -> {
+                    if (response.hasErrors() && hasAuthRelatedErrors(response) && authTypes.hasNext()) {
+                        // If there are auth-related errors, dispatch an ApiAuthException
+                        executorService.submit(this::dispatchRequest);
+                    } else {
+                        // Otherwise, we just want to dispatch it as a next item and
+                        // let callers deal with the errors.
+                        onNextItem.accept(response);
+                    }
+                },
                 apiException -> {
                     LOG.warn("A subscription error occurred.", apiException);
-                    if (apiException instanceof ApiAuthException) {
+                    if (apiException instanceof ApiAuthException && authTypes.hasNext()) {
                         executorService.submit(this::dispatchRequest);
                     } else {
                         emitErrorAndCancelSubscription(apiException);
@@ -149,6 +159,16 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
         } else {
             LOG.debug("Nothing to cancel. Subscription not yet created, or already cancelled.");
         }
+    }
+
+    private boolean hasAuthRelatedErrors(GraphQLResponse<T> response) {
+        for (GraphQLResponse.Error error : response.getErrors()) {
+            if (!Empty.check(error.getExtensions())) {
+                AppSyncExtensions extensions = new AppSyncExtensions(error.getExtensions());
+                return extensions.isUnauthorizedErrorType();
+            }
+        }
+        return false;
     }
 
     private void emitErrorAndCancelSubscription(ApiException apiException) {
