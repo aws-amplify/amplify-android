@@ -39,7 +39,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
-    private static final String UNAUTHORIZED_EXCEPTION = "UnauthorizedException";
 
     private final SubscriptionEndpoint subscriptionEndpoint;
     private final ExecutorService executorService;
@@ -119,7 +118,7 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                     onSubscriptionStart.accept(subscriptionId);
                 },
                 response -> {
-                    if (response.hasErrors() && hasAuthRelatedErrors(response)) {
+                    if (response.hasErrors() && hasAuthRelatedErrors(response) && authTypes.hasNext()) {
                         // If there are auth-related errors, dispatch an ApiAuthException
                         executorService.submit(this::dispatchRequest);
                     } else {
@@ -130,7 +129,7 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                 },
                 apiException -> {
                     LOG.warn("A subscription error occurred.", apiException);
-                    if (apiException instanceof ApiAuthException) {
+                    if (apiException instanceof ApiAuthException && authTypes.hasNext()) {
                         executorService.submit(this::dispatchRequest);
                     } else {
                         emitErrorAndCancelSubscription(apiException);
