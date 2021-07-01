@@ -24,21 +24,24 @@ import java.util.Objects;
 /**
  * Represents user specific data such as name, email, plan, location etc.
  */
-public final class UserProfile {
+public class UserProfile {
     private final String name;
     private final String email;
     private final String plan;
     private final Location location;
     private final AnalyticsProperties customProperties;
-    private final AnalyticsProperties userAttributes;
 
-    private UserProfile(@NonNull Builder builder) {
+    /**
+     * Defines the only constructor for this class that should
+     * be invoked by any classes inheriting from this one.
+     * @param builder An instance of the builder with the desired properties set.
+     */
+    protected UserProfile(@NonNull Builder builder) {
         this.name = builder.name;
         this.email = builder.email;
         this.plan = builder.plan;
         this.location = builder.location;
         this.customProperties = builder.customProperties;
-        this.userAttributes = builder.userAttributes;
     }
 
     /**
@@ -87,15 +90,6 @@ public final class UserProfile {
     }
 
     /**
-     * Gets all the available user attributes.
-     * @return The user's attributes.
-     */
-    @Nullable
-    public AnalyticsProperties getUserAttributes() {
-        return userAttributes;
-    }
-
-    /**
      * Begins construction of an {@link UserProfile} using a builder pattern.
      * @return An {@link UserProfile.Builder} instance
      */
@@ -104,6 +98,12 @@ public final class UserProfile {
         return new Builder();
     }
 
+    /**
+     * When extending this class, be sure to override this method to
+     * include any other relevant fields.
+     * @param object The object to compare this instance to.
+     * @return True if they are equal, false otherwise.
+     */
     @Override
     public boolean equals(@Nullable Object object) {
         if (this == object) {
@@ -130,6 +130,11 @@ public final class UserProfile {
         return ObjectsCompat.equals(customProperties, that.customProperties);
     }
 
+    /**
+     * When extending this class, be sure to override this method and
+     * include any relevant fields as part of the result.
+     * @return The calculated hash code for the instance.
+     */
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
@@ -140,6 +145,11 @@ public final class UserProfile {
         return result;
     }
 
+    /**
+     * When extending this class, be sure to override this method to
+     * include any other relevant fields.
+     * @return A string representation of the instance.
+     */
     @NonNull
     @Override
     public String toString() {
@@ -155,13 +165,12 @@ public final class UserProfile {
     /**
      * Builder for creating a UserProfile object.
      */
-    public static final class Builder {
+    public static class Builder {
         private String name;
         private String email;
         private String plan;
         private Location location;
         private AnalyticsProperties customProperties;
-        private AnalyticsProperties userAttributes;
 
         /**
          * Configures the name to be used in the next-built UserProfile.
@@ -220,18 +229,6 @@ public final class UserProfile {
         public Builder customProperties(@NonNull final AnalyticsProperties properties) {
             Objects.requireNonNull(properties);
             this.customProperties = properties;
-            return this;
-        }
-
-        /**
-         * Sets the user's attributes of the builder instance.
-         * @param userAttributes The collection of attributes.
-         * @return Current builder instance, for method chaining.
-         */
-        @NonNull
-        public Builder userAttributes(@NonNull final AnalyticsProperties userAttributes) {
-            Objects.requireNonNull(userAttributes);
-            this.userAttributes = userAttributes;
             return this;
         }
 

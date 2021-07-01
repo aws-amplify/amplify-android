@@ -32,6 +32,7 @@ import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.AnalyticsPropertyBehavior;
 import com.amplifyframework.analytics.AnalyticsStringProperty;
 import com.amplifyframework.analytics.UserProfile;
+import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile;
 import com.amplifyframework.core.Amplify;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -124,8 +125,11 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         // Assign userId to the endpoint.
         EndpointProfileUser user = new EndpointProfileUser();
         user.setUserId(userId);
-        if (userProfile.getUserAttributes() != null) {
-            addUserAttributes(user, userProfile.getUserAttributes());
+        if (userProfile instanceof AWSPinpointUserProfile) {
+            AWSPinpointUserProfile pinpointUserProfile = (AWSPinpointUserProfile) userProfile;
+            if (pinpointUserProfile.getUserAttributes() != null) {
+                addUserAttributes(user, pinpointUserProfile.getUserAttributes());
+            }
         }
         endpointProfile.setUser(user);
         // Add user-specific data to the endpoint
