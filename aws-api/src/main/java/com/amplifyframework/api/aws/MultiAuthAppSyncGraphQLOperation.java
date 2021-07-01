@@ -147,7 +147,7 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<
         for (GraphQLResponse.Error error : response.getErrors()) {
             if (!Empty.check(error.getExtensions())) {
                 AppSyncExtensions extensions = new AppSyncExtensions(error.getExtensions());
-                return extensions.isAuthorizationError();
+                return extensions.isUnauthorizedErrorType();
             }
         }
         return false;

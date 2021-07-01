@@ -133,7 +133,7 @@ public final class AppSyncExtensions {
      * Checks whether the current extension data indicates an authorization related error.
      * @return True if it is authorization related, false otherwise.
      */
-    public boolean isAuthorizationError() {
+    public boolean isUnauthorizedErrorType() {
         return AppSyncExtensions.AppSyncErrorType.UNAUTHORIZED.equals(this.getErrorType()) ||
                AppSyncExtensions.AppSyncErrorType.UNAUTHORIZED_EXCEPTION.equals(this.getErrorType());
     }
