@@ -116,7 +116,20 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                     MutiAuthSubscriptionOperation.this.subscriptionId = subscriptionId;
                     onSubscriptionStart.accept(subscriptionId);
                 },
-                onNextItem,
+                response -> {
+                    if (response.hasErrors()) {
+                        // If there are auth-related errors, dispatch an ApiAuthException
+                        if (hasAuthRelatedErrors(response)) {
+                            executorService.submit(this::dispatchRequest);
+                            return;
+                        }
+                        // Otherwise, we just want to dispatch it as a next item and
+                        // let callers deal with the errors.
+                        onNextItem.accept(response);
+                    } else {
+                        onNextItem.accept(response);
+                    }
+                },
                 apiException -> {
                     LOG.warn("A subscription error occurred.", apiException);
                     if (apiException instanceof ApiAuthException) {
@@ -149,6 +162,16 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
         } else {
             LOG.debug("Nothing to cancel. Subscription not yet created, or already cancelled.");
         }
+    }
+
+    private boolean hasAuthRelatedErrors(GraphQLResponse<T> response) {
+        for (GraphQLResponse.Error error : response.getErrors()) {
+            if (error.getExtensions() != null &&
+                UNAUTHORIZED_EXCEPTION.equals(error.getExtensions().get("errorType"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void emitErrorAndCancelSubscription(ApiException apiException) {
