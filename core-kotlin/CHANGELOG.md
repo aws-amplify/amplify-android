@@ -1,3 +1,11 @@
+## [Release 0.4.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.4.1)
+
+### Bug Fixes
+- increase timeout for subscriptions to be established on slow networks (#1389)
+- **api:** move error handling to multi-auth operation (#1399)
+
+[See all changes between 0.4.0 and 0.4.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.4.0...release-kotlin_v0.4.1)
+
 ## [Release 0.4.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.4.0)
 
 ### Features
