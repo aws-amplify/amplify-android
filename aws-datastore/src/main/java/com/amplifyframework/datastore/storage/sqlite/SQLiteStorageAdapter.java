@@ -815,7 +815,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     /**
-     * recursively creates nested SerializedModels from raw data
+     * recursively creates nested SerializedModels from raw data.
      */
     private SerializedModel createSerializedModel(ModelSchema modelSchema, Map<String, Object> data) {
         final Map<String, Object> serializedData = new HashMap<>();
@@ -826,9 +826,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     ModelAssociation association = modelSchema.getAssociations().get(entry.getKey());
                     if (association != null) {
                         String associatedType = association.getAssociatedType();
-                        final ModelSchema nestedModelSchema = modelSchemaRegistry.getModelSchemaForModelClass(associatedType);
+                        final ModelSchema nestedModelSchema = modelSchemaRegistry.getModelSchemaForModelClass(
+                                associatedType
+                        );
                         @SuppressWarnings("unchecked")
-                        SerializedModel model = createSerializedModel(nestedModelSchema, (Map<String, Object>) entry.getValue());
+                        SerializedModel model = createSerializedModel(
+                                nestedModelSchema, (Map<String, Object>) entry.getValue()
+                        );
                         serializedData.put(entry.getKey(), model);
                     }
                 } else {
