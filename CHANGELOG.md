@@ -1,3 +1,11 @@
+## [Release 1.20.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.20.1)
+
+### Bug Fixes
+- increase timeout for subscriptions to be established on slow networks (#1389)
+- **api:** move error handling to multi-auth operation (#1399)
+
+[See all changes between 1.20.0 and 1.20.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.20.0...release_v1.20.1)
+
 ## [Release 1.20.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.20.0)
 
 ### Features

@@ -410,32 +410,11 @@ final class SubscriptionEndpoint {
         }
 
         void dispatchNextMessage(String message) {
-            GraphQLResponse<T> response;
             try {
-                response = responseFactory.buildResponse(request, message);
+                onNextItem.accept(responseFactory.buildResponse(request, message));
             } catch (ApiException exception) {
                 dispatchError(exception);
-                return;
             }
-            // If the message received has errors,
-            if (response.hasErrors()) {
-                // If there are auth-related errors, dispatch an ApiAuthException
-                if (hasAuthRelatedErrors(response)) {
-                    dispatchError(new ApiAuthException(
-                        "Authorization error in subscription response: " + response.getErrors(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION)
-                    );
-                    return;
-                }
-                // Otherwise, just dispatch as an ApiException
-                dispatchError(new ApiException(
-                    "Error in subscription response: " + response.getErrors(),
-                    AmplifyException.TODO_RECOVERY_SUGGESTION)
-                );
-            } else {
-                onNextItem.accept(response);
-            }
-
         }
 
         void dispatchError(ApiException error) {
@@ -444,16 +423,6 @@ final class SubscriptionEndpoint {
 
         void dispatchCompleted() {
             onSubscriptionComplete.call();
-        }
-
-        private boolean hasAuthRelatedErrors(GraphQLResponse<T> response) {
-            for (GraphQLResponse.Error error : response.getErrors()) {
-                if (error.getExtensions() != null &&
-                    UNAUTHORIZED_EXCEPTION.equals(error.getExtensions().get("errorType"))) {
-                    return true;
-                }
-            }
-            return false;
         }
 
         @Override
