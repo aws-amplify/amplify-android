@@ -28,6 +28,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -416,7 +417,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void query(
             @NonNull String modelName,
@@ -447,26 +447,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 if (cursor.moveToFirst()) {
                     do {
-                        final Map<String, Object> serializedData = new HashMap<>();
-                        for (Map.Entry<String, Object> entry : converter.buildMapForModel(cursor).entrySet()) {
-                            ModelField field = modelSchema.getFields().get(entry.getKey());
-                            if (field == null || entry.getValue() == null) {
-                                // Skip it
-                            } else if (field.isModel()) {
-                                String id = (String) ((Map<String, Object>) entry.getValue()).get("id");
-                                serializedData.put(entry.getKey(), SerializedModel.builder()
-                                    .serializedData(Collections.singletonMap("id", id))
-                                    .modelSchema(null)
-                                    .build()
-                                );
-                            } else {
-                                serializedData.put(entry.getKey(), entry.getValue());
-                            }
-                        }
-                        SerializedModel model = SerializedModel.builder()
-                            .serializedData(serializedData)
-                            .modelSchema(modelSchema)
-                            .build();
+                        final Map<String, Object> data = converter.buildMapForModel(cursor);
+                        final SerializedModel model = createSerializedModel(modelSchema, data);
                         models.add(model);
                     } while (cursor.moveToNext());
                 }
@@ -830,5 +812,37 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             PersistentModelVersion persistentModelVersion = new PersistentModelVersion(modelsProvider.version());
             return PersistentModelVersion.saveToLocalStorage(this, persistentModelVersion);
         }).ignoreElement();
+    }
+
+    /**
+     * recursively creates nested SerializedModels from raw data.
+     */
+    private SerializedModel createSerializedModel(ModelSchema modelSchema, Map<String, Object> data) {
+        final Map<String, Object> serializedData = new HashMap<>();
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            ModelField field = modelSchema.getFields().get(entry.getKey());
+            if (field != null && entry.getValue() != null) {
+                if (field.isModel()) {
+                    ModelAssociation association = modelSchema.getAssociations().get(entry.getKey());
+                    if (association != null) {
+                        String associatedType = association.getAssociatedType();
+                        final ModelSchema nestedModelSchema = modelSchemaRegistry.getModelSchemaForModelClass(
+                                associatedType
+                        );
+                        @SuppressWarnings("unchecked")
+                        SerializedModel model = createSerializedModel(
+                                nestedModelSchema, (Map<String, Object>) entry.getValue()
+                        );
+                        serializedData.put(entry.getKey(), model);
+                    }
+                } else {
+                    serializedData.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        return SerializedModel.builder()
+                .serializedData(serializedData)
+                .modelSchema(modelSchema)
+                .build();
     }
 }
