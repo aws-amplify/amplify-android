@@ -1,3 +1,13 @@
+## [Release 0.5.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.5.0)
+
+### Features
+- **datastore:** Return nested data for belongsTo associations in datastore (#1390)
+
+### Bug Fixes
+- **analytics:** allow user attributes in identifyUser (#1306)
+
+[See all changes between 0.4.1 and 0.5.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.4.1...release-kotlin_v0.5.0)
+
 ## [Release 0.4.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.4.1)
 
 ### Bug Fixes
