@@ -1,3 +1,13 @@
+## [Release 1.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.21.0)
+
+### Features
+- **datastore:** Return nested data for belongsTo associations in datastore (#1390)
+
+### Bug Fixes
+- **analytics:** allow user attributes in identifyUser (#1306)
+
+[See all changes between 1.20.1 and 1.21.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.20.1...release_v1.21.0)
+
 ## [Release 1.20.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.20.1)
 
 ### Bug Fixes
