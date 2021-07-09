@@ -31,19 +31,23 @@ import java.util.Objects;
  * Cognito extension of sign up options to add the platform specific fields.
  */
 public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
+    private final Map<String, String> clientMetadata;
     private final Map<String, String> validationData;
 
     /**
      * Advanced options for signing in.
      * @param userAttributes Additional user attributes which should be associated with this user on registration
      * @param validationData A map of custom key/values to be sent as part of the sign up process
+     * @param clientMetadata Additional custom attributes to be sent to the service such as information about the client
      */
     protected AWSCognitoAuthSignUpOptions(
             List<AuthUserAttribute> userAttributes,
-            Map<String, String> validationData
+            Map<String, String> validationData,
+            Map<String, String> clientMetadata
     ) {
         super(userAttributes);
         this.validationData = validationData;
+        this.clientMetadata = clientMetadata;
     }
 
     /**
@@ -53,6 +57,15 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
     @NonNull
     public Map<String, String> getValidationData() {
         return validationData;
+    }
+
+    /**
+     * Get additional custom attributes to be sent to the service such as information about the client.
+     * @return a map of additional custom attributes to be sent to the service such as information about the client
+     */
+    @NonNull
+    public Map<String, String> getClientMetadata() {
+        return clientMetadata;
     }
 
     /**
@@ -68,7 +81,8 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
     public int hashCode() {
         return ObjectsCompat.hash(
                 getUserAttributes(),
-                getValidationData()
+                getValidationData(),
+                getClientMetadata()
         );
     }
 
@@ -81,7 +95,8 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
         } else {
             AWSCognitoAuthSignUpOptions authSignUpOptions = (AWSCognitoAuthSignUpOptions) obj;
             return ObjectsCompat.equals(getUserAttributes(), authSignUpOptions.getUserAttributes()) &&
-                    ObjectsCompat.equals(getValidationData(), authSignUpOptions.getValidationData());
+                    ObjectsCompat.equals(getValidationData(), authSignUpOptions.getValidationData()) &&
+                    ObjectsCompat.equals(getClientMetadata(), authSignUpOptions.getClientMetadata());
         }
     }
 
@@ -90,6 +105,7 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
         return "AWSCognitoAuthSignUpOptions{" +
                 "userAttributes=" + getUserAttributes() +
                 ", validationData=" + getValidationData() +
+                ", clientMetadata=" + getClientMetadata() +
                 '}';
     }
 
@@ -98,6 +114,7 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
      */
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private Map<String, String> validationData;
+        private Map<String, String> clientMetadata;
 
         /**
          * Constructs the builder.
@@ -105,6 +122,7 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
         public CognitoBuilder() {
             super();
             this.validationData = new HashMap<>();
+            this.clientMetadata = new HashMap<>();
         }
 
         /**
@@ -130,6 +148,20 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
         }
 
         /**
+         * A map of additional custom attributes to be sent to the service such as information about the client.
+         * @param clientMetadata A map of additional custom attributes to be sent to the service such as information
+         * about the client.
+         * @return the instance of the builder.
+         */
+        @NonNull
+        public CognitoBuilder clientMetadata(@NonNull Map<String, String> clientMetadata) {
+            Objects.requireNonNull(clientMetadata);
+            this.clientMetadata.clear();
+            this.clientMetadata.putAll(clientMetadata);
+            return getThis();
+        }
+
+        /**
          * Build the object.
          * @return a new instance of AWSCognitoAuthSignUpOptions.
          */
@@ -137,7 +169,8 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
         public AWSCognitoAuthSignUpOptions build() {
             return new AWSCognitoAuthSignUpOptions(
                     Immutable.of(super.getUserAttributes()),
-                    Immutable.of(validationData));
+                    Immutable.of(validationData),
+                    Immutable.of(clientMetadata));
         }
     }
 }

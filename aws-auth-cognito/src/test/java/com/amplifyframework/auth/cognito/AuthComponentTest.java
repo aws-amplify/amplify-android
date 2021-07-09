@@ -196,15 +196,16 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            Callback<SignUpResult> callback = invocation.getArgument(4);
+            Callback<SignUpResult> callback = invocation.getArgument(5);
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-            .signUp(any(), any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
+            .signUp(any(), any(), any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
 
         AWSCognitoAuthSignUpOptions options = AWSCognitoAuthSignUpOptions.builder()
                 .userAttribute(AuthUserAttributeKey.email(), ATTRIBUTE_VAL)
                 .validationData(METADATA)
+                .clientMetadata(METADATA)
                 .build();
 
         AuthSignUpResult result = synchronousAuth.signUp(
@@ -219,6 +220,7 @@ public final class AuthComponentTest {
             eq(USERNAME),
             eq(PASSWORD),
             eq(expectedAttributeMap),
+            eq(METADATA),
             eq(METADATA),
             Mockito.<Callback<SignUpResult>>any()
         );
