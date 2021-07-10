@@ -19,4 +19,4 @@ jobs:
         # PRs wont go stale
         days-before-pr-stale: -1
         # Issues and PRs with any of these labels are checked.
-        any-of-labels: "Clarification Needed, Closing Soon"
+        any-of-labels: "pending-response, closing soon"
