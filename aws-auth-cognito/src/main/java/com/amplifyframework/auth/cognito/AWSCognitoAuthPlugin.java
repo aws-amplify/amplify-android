@@ -272,6 +272,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     ) {
         Map<String, String> userAttributes = new HashMap<>();
         Map<String, String> validationData = new HashMap<>();
+        Map<String, String> clientMetadata = new HashMap<>();
 
         if (options.getUserAttributes() != null) {
             for (AuthUserAttribute attribute : options.getUserAttributes()) {
@@ -281,6 +282,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
         if (options instanceof AWSCognitoAuthSignUpOptions) {
             validationData = ((AWSCognitoAuthSignUpOptions) options).getValidationData();
+            clientMetadata = ((AWSCognitoAuthSignUpOptions) options).getClientMetadata();
         }
 
         awsMobileClient.signUp(
@@ -288,6 +290,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             password,
             userAttributes,
             validationData,
+            clientMetadata,
             new Callback<SignUpResult>() {
                 @Override
                 public void onResult(SignUpResult result) {
