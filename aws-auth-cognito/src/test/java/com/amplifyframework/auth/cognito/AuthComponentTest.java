@@ -135,8 +135,8 @@ public final class AuthComponentTest {
             "O8KyMzoWePPXetwjBk7HB-RX9k-kltuHGrdMMEXMCHlWkSZJ7VwQksLOA2RMfQs-0i0w";
     // User sub value here should match the one encoded in the access token above
     private static final String USER_SUB = "69bc252b-dd07-41c0-b1db-a46066b8ef51";
-    private static final Map<String, String> VALIDATIONDATA = Collections.singletonMap("validationKey", "validationKeyVal");
-    private static final Map<String, String> CLIENTMETADATA = Collections.singletonMap("clientMetdataKey", "clientMetadataVal");
+    private static final Map<String, String> VALIDATIONDATA = Collections.singletonMap("validationK", "validationV");
+    private static final Map<String, String> CLIENTMETADATA = Collections.singletonMap("metadataK", "metadataV");
     private AWSMobileClient mobileClient;
     private AuthCategory authCategory;
     private SynchronousAuth synchronousAuth;
