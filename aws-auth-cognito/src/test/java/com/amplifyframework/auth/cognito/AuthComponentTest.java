@@ -135,7 +135,8 @@ public final class AuthComponentTest {
             "O8KyMzoWePPXetwjBk7HB-RX9k-kltuHGrdMMEXMCHlWkSZJ7VwQksLOA2RMfQs-0i0w";
     // User sub value here should match the one encoded in the access token above
     private static final String USER_SUB = "69bc252b-dd07-41c0-b1db-a46066b8ef51";
-    private static final Map<String, String> METADATA = Collections.singletonMap("aCustomKey", "aCustomVal");
+    private static final Map<String, String> VALIDATIONDATA = Collections.singletonMap("validationK", "validationV");
+    private static final Map<String, String> CLIENTMETADATA = Collections.singletonMap("metadataK", "metadataV");
     private AWSMobileClient mobileClient;
     private AuthCategory authCategory;
     private SynchronousAuth synchronousAuth;
@@ -196,15 +197,16 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            Callback<SignUpResult> callback = invocation.getArgument(4);
+            Callback<SignUpResult> callback = invocation.getArgument(5);
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-            .signUp(any(), any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
+            .signUp(any(), any(), any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
 
         AWSCognitoAuthSignUpOptions options = AWSCognitoAuthSignUpOptions.builder()
                 .userAttribute(AuthUserAttributeKey.email(), ATTRIBUTE_VAL)
-                .validationData(METADATA)
+                .validationData(VALIDATIONDATA)
+                .clientMetadata(CLIENTMETADATA)
                 .build();
 
         AuthSignUpResult result = synchronousAuth.signUp(
@@ -219,7 +221,8 @@ public final class AuthComponentTest {
             eq(USERNAME),
             eq(PASSWORD),
             eq(expectedAttributeMap),
-            eq(METADATA),
+            eq(VALIDATIONDATA),
+            eq(CLIENTMETADATA),
             Mockito.<Callback<SignUpResult>>any()
         );
     }
@@ -358,7 +361,7 @@ public final class AuthComponentTest {
         AuthSignInResult result = synchronousAuth.signIn(
                 USERNAME,
                 PASSWORD,
-                AWSCognitoAuthSignInOptions.builder().metadata(METADATA).build()
+                AWSCognitoAuthSignInOptions.builder().metadata(CLIENTMETADATA).build()
         );
 
         validateSignInResult(
@@ -367,7 +370,7 @@ public final class AuthComponentTest {
                 AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
         );
 
-        verify(mobileClient).signIn(eq(USERNAME), eq(PASSWORD), eq(METADATA), (Callback<SignInResult>) any());
+        verify(mobileClient).signIn(eq(USERNAME), eq(PASSWORD), eq(CLIENTMETADATA), (Callback<SignInResult>) any());
     }
 
     /**
