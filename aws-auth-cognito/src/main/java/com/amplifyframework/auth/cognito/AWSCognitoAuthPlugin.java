@@ -117,6 +117,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     private static final long SECONDS_BEFORE_TIMEOUT = 10;
     private static final String COGNITO_USER_ID_ATTRIBUTE = "sub";
     private static final String MOBILE_CLIENT_TOKEN_KEY = "token";
+    private static final String EMPTY_STRING = "";
     private String userId;
     private AWSMobileClient awsMobileClient;
     private AuthChannelEventName lastEvent;
@@ -407,6 +408,15 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull final Consumer<AuthException> onException
     ) {
         signIn(username, password, AuthSignInOptions.defaults(), onSuccess, onException);
+    }
+
+    @Override
+    public void signIn(
+            @Nullable String username,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        signIn(username, EMPTY_STRING, AuthSignInOptions.defaults(), onSuccess, onException);
     }
 
     @Override

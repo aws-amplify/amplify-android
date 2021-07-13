@@ -130,6 +130,17 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
+     * Basic authentication to the app with a username for password-less custom auth.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void signIn(
+            @Nullable String username,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
      * @param confirmationCode The code received as part of the multi-factor authentication process
      * @param options Advanced options such as a map of auth information for custom auth
