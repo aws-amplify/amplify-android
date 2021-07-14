@@ -45,8 +45,6 @@ import java.util.Map;
  */
 public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthCategoryBehavior {
 
-    private static final String EMPTY_STRING = "";
-
     @NonNull
     @Override
     public CategoryType getCategoryType() {
@@ -121,7 +119,7 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().signIn(username, EMPTY_STRING, onSuccess, onError);
+        getSelectedPlugin().signIn(username, onSuccess, onError);
     }
 
     @Override
