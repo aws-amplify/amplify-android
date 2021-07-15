@@ -27,7 +27,7 @@ class RetryHandlerTest : TestCase() {
 
         val subject = RetryHandler()
         val emitter = mockk<SingleEmitter<PaginatedResult<ModelWithMetadata<BlogOwner>>>>(relaxed = true)
-        every { emitter.setDisposable(any()) }
+        every { emitter.setDisposable(any()) } answers {}
 
         //act
         subject.retry(
