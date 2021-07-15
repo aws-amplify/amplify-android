@@ -26,7 +26,7 @@ jobs:
       run: |
         cd scripts
         gem install bundler
-        bundle install
+        bundle install --full-index
     - name: Configure git options
       run: |
         cd scripts
