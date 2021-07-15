@@ -15,7 +15,7 @@ class OnErrorConsumer<T: Model>( val emitter: SingleEmitter<PaginatedResult<Mode
                                  val appSync: AppSync,
                                  val request: GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>,
         private val onResponse: Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>>,
-        private val retryHandler: RetryHandler): Consumer<DataStoreException> {
+        private val retryHandler: RequestRetry): Consumer<DataStoreException> {
 
 
     override fun accept(result: DataStoreException) {
@@ -24,7 +24,7 @@ class OnErrorConsumer<T: Model>( val emitter: SingleEmitter<PaginatedResult<Mode
                result
             )
         } else {
-            retryHandler.retry(emitter,appSync,request, onResponse, this)
+            retryHandler.retry(RetryHandler(emitter, appSync, request, onResponse, this))
         }
     }
 }

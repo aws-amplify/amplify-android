@@ -120,7 +120,7 @@ public final class Orchestrator {
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .queryPredicateProvider(queryPredicateProvider)
-            .retryHandler(new RetryHandler())
+            .retryHandler(new RequestRetry())
             .build();
         this.subscriptionProcessor = SubscriptionProcessor.builder()
                 .appSync(appSync)
@@ -306,7 +306,7 @@ public final class Orchestrator {
                 // are then used to filter data received from AppSync.
                 queryPredicateProvider.resolvePredicates();
 
-                subscriptionProcessor.startSubscriptions();
+                //subscriptionProcessor.startSubscriptions();
                 publishNetworkStatusEvent(true);
 
                 long startTime = System.currentTimeMillis();

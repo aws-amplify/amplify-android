@@ -73,7 +73,7 @@ final class SyncProcessor {
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
     private final String[] modelNames;
     private final QueryPredicateProvider queryPredicateProvider;
-    private final RetryHandler retryHandler;
+    private final RequestRetry requestRetry;
 
     private SyncProcessor(Builder builder) {
         this.modelProvider = builder.modelProvider;
@@ -86,7 +86,7 @@ final class SyncProcessor {
         this.modelNames =
                 ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
                         .toArray(new String[0]);
-        this.retryHandler = builder.retryHandler;
+        this.requestRetry = builder.requestRetry;
     }
 
     /**
@@ -270,7 +270,7 @@ final class SyncProcessor {
                                                                     appSync,
                                                                     request,
                                                                     successConsumer,
-                                                                    retryHandler);
+                    requestRetry);
             Cancelable cancelable = appSync.sync(request, successConsumer, errorConsumer);
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         });
@@ -290,7 +290,7 @@ final class SyncProcessor {
         private Merger merger;
         private DataStoreConfigurationProvider dataStoreConfigurationProvider;
         private QueryPredicateProvider queryPredicateProvider;
-        private RetryHandler retryHandler;
+        private RequestRetry requestRetry;
 
         @NonNull
         @Override
@@ -350,8 +350,8 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BuildStep retryHandler(RetryHandler retryHandler) {
-            this.retryHandler = retryHandler;
+        public BuildStep retryHandler(RequestRetry requestRetry) {
+            this.requestRetry = requestRetry;
             return Builder.this;
         }
     }
@@ -394,7 +394,7 @@ final class SyncProcessor {
 
     interface RetryHandlerStep {
         @NonNull
-        BuildStep retryHandler(RetryHandler retryHandler);
+        BuildStep retryHandler(RequestRetry requestRetry);
     }
 
     interface BuildStep {

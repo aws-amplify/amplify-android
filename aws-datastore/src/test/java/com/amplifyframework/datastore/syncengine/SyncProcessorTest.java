@@ -101,7 +101,7 @@ public final class SyncProcessorTest {
     private SyncProcessor syncProcessor;
     private int errorHandlerCallCount;
     private int modelCount;
-    RetryHandler retryHandler;
+    RequestRetry requestRetry;
 
 
     /**
@@ -118,7 +118,7 @@ public final class SyncProcessorTest {
 
         this.appSync = mock(AppSync.class);
         this.errorHandlerCallCount = 0;
-        this.retryHandler = mock(RetryHandler.class);
+        this.requestRetry = mock(RequestRetry.class);
 
         initSyncProcessor(10_000);
     }
@@ -156,7 +156,7 @@ public final class SyncProcessorTest {
                 .merger(merger)
                 .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
                 .queryPredicateProvider(queryPredicateProvider)
-                .retryHandler(retryHandler)
+                .retryHandler(requestRetry)
                 .build();
     }
 
@@ -581,7 +581,7 @@ public final class SyncProcessorTest {
         syncProcessor.hydrate()
                 .test(false)
                 .assertNotComplete();
-        verify(retryHandler, times(1)).retry(any(), any(), any(), any(), any());
+        verify(requestRetry, times(1)).retry(any());
 
     }
 

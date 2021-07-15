@@ -25,17 +25,16 @@ class RetryHandlerTest : TestCase() {
             mockk()
         }
 
-        val subject = RetryHandler()
+        val subject = RequestRetry()
         val emitter = mockk<SingleEmitter<PaginatedResult<ModelWithMetadata<BlogOwner>>>>(relaxed = true)
         every { emitter.setDisposable(any()) } answers {}
 
         //act
-        subject.retry(
-            emitter,
+        subject.retry(RetryHandler(emitter,
             mockAppSync,
             mockk(),
             mockk(),
-            mockk())
+            mockk()))
 
         //assert
         assertTrue(countDownLatch.await(3, TimeUnit.SECONDS))
