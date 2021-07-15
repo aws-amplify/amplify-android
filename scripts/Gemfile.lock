@@ -58,7 +58,7 @@ GEM
     fastimage (2.2.3)
     fastlane (2.180.1)
       CFPropertyList (>= 2.3, < 4.0.0)
-      addressable (>= 2.8, < 3.0.0)
+      addressable (2.8.0)
       artifactory (~> 3.0)
       aws-sdk-s3 (~> 1.0)
       babosa (>= 1.0.3, < 2.0.0)
@@ -97,7 +97,7 @@ GEM
     fastlane-plugin-semantic_release (1.13.1)
     gh_inspector (1.1.3)
     google-api-client (0.38.0)
-      addressable (~> 2.8, >= 2.5.1)
+      addressable (2.8.0)
       googleauth (~> 0.9)
       httpclient (>= 2.8.1, < 3.0)
       mini_mime (~> 1.0)
@@ -105,7 +105,7 @@ GEM
       retriable (>= 2.0, < 4.0)
       signet (~> 0.12)
     google-apis-core (0.3.0)
-      addressable (~> 2.8, >= 2.5.1)
+      addressable (2.8.0)
       googleauth (~> 0.14)
       httpclient (>= 2.8.1, < 3.0)
       mini_mime (~> 1.0)
@@ -125,7 +125,7 @@ GEM
       faraday (>= 0.17.3, < 2.0)
     google-cloud-errors (1.1.0)
     google-cloud-storage (1.31.0)
-      addressable (~> 2.8)
+      addressable (2.8.0)
       digest-crc (~> 0.4)
       google-apis-iamcredentials_v1 (~> 0.1)
       google-apis-storage_v1 (~> 0.1)
@@ -168,7 +168,7 @@ GEM
     rubyzip (2.3.0)
     security (0.1.3)
     signet (0.15.0)
-      addressable (~> 2.8)
+      addressable (2.8.0)
       faraday (>= 0.17.3, < 2.0)
       jwt (>= 1.5, < 3.0)
       multi_json (~> 1.10)
@@ -205,7 +205,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  addressable (>= 2.8.0)
+  addressable (2.8.0)
   fastlane
   fastlane-plugin-release_actions!
   fastlane-plugin-semantic_release
