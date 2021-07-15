@@ -3,10 +3,6 @@
 ### Features
 - **aws-auth-cognito:** Adds clientMetadata to AWSCognitoAuthSignUpOptions (#1407)
 
-### Miscellaneous
-- Update stale.yml (#1404)
-- chore:fix dependabot alert for addressable gem (#1410)
-
 [See all changes between 1.21.0 and 1.22.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.21.0...release_v1.22.0)
 
 ## [Release 1.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.21.0)
