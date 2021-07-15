@@ -294,45 +294,33 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull Consumer<GraphQLResponse<R>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete) {
-        final ClientDetails clientDetails = apiDetails.get(apiName);
-        if (clientDetails == null) {
-            onSubscriptionFailure.accept(new ApiException(
-                    "No client information for API named " + apiName,
-                    "Check your amplify configuration to make sure there " +
-                            "is a correctly configured section for " + apiName
-            ));
-            return null;
-        }
-
-        final GraphQLRequest<R> authDecoratedRequest;
-
-        // Decorate the request according to the auth rule parameters.
         try {
-            AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
-
-            if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
-                ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
-                authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
-            }
-
-            authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
-        } catch (ApiException exception) {
-            onSubscriptionFailure.accept(exception);
+            GraphQLOperation<R> operation = buildSubscriptionOperation(apiName,
+                                                                       graphQLRequest,
+                                                                       onSubscriptionEstablished,
+                                                                       onNextResponse,
+                                                                       onSubscriptionFailure,
+                                                                       onSubscriptionComplete);
+            operation.start();
+            return operation;
+        } catch (ApiException apiException) {
+            onSubscriptionFailure.accept(apiException);
             return null;
         }
+    }
 
-        SubscriptionOperation<R> operation = SubscriptionOperation.<R>builder()
-            .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
-            .graphQlRequest(authDecoratedRequest)
-            .responseFactory(gqlResponseFactory)
-            .executorService(executorService)
-            .onSubscriptionStart(onSubscriptionEstablished)
-            .onNextItem(onNextResponse)
-            .onSubscriptionError(onSubscriptionFailure)
-            .onSubscriptionComplete(onSubscriptionComplete)
-            .build();
-        operation.start();
-        return operation;
+    private <R> AuthModeStrategyType getAuthModeStrategyType(GraphQLRequest<R> graphQLRequest) {
+        // If it's an AppSyncGraphQLRequest AND
+        // No authorizationType is set on the request AND
+        // authModeStrategyType is set on the request.
+        if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
+            ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() == null &&
+            ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType() != null &&
+            ((AppSyncGraphQLRequest<?>) graphQLRequest).getModelSchema().hasModelLevelRules()) {
+            return ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthModeStrategyType();
+        }
+        // Assume default strategy with default auth type from config.
+        return AuthModeStrategyType.DEFAULT;
     }
 
     @Nullable
@@ -585,7 +573,64 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return apiClients.iterator().next();
     }
 
-    private <R> AppSyncGraphQLOperation<R> buildAppSyncGraphQLOperation(
+    private <R> GraphQLOperation<R> buildSubscriptionOperation(
+        @NonNull String apiName,
+        @NonNull GraphQLRequest<R> graphQLRequest,
+        @NonNull Consumer<String> onSubscriptionEstablished,
+        @NonNull Consumer<GraphQLResponse<R>> onNextResponse,
+        @NonNull Consumer<ApiException> onSubscriptionFailure,
+        @NonNull Action onSubscriptionComplete) throws ApiException {
+
+        final ClientDetails clientDetails = apiDetails.get(apiName);
+        if (clientDetails == null) {
+            throw new ApiException(
+                "No client information for API named " + apiName,
+                "Check your amplify configuration to make sure there " +
+                    "is a correctly configured section for " + apiName
+            );
+        }
+        AuthModeStrategyType authModeStrategyType = getAuthModeStrategyType(graphQLRequest);
+        if (AuthModeStrategyType.MULTIAUTH.equals(authModeStrategyType)) {
+            // If it gets here, we know that the request is an AppSyncGraphQLRequest because
+            // getAuthModeStrategyType checks for that, so we can safely cast the graphQLRequest.
+            return MutiAuthSubscriptionOperation.<R>builder()
+                                                .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
+                                                .graphQlRequest((AppSyncGraphQLRequest<R>) graphQLRequest)
+                                                .responseFactory(gqlResponseFactory)
+                                                .executorService(executorService)
+                                                .onSubscriptionStart(onSubscriptionEstablished)
+                                                .onNextItem(onNextResponse)
+                                                .onSubscriptionError(onSubscriptionFailure)
+                                                .onSubscriptionComplete(onSubscriptionComplete)
+                                                .requestDecorator(requestDecorator)
+                                                .build();
+        }
+        // Not a multiauth request.
+        AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
+
+        if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
+            ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
+            authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
+        }
+        // Since it's not multiauth, we can try to decorate the request with the owner if necessary.
+        // This allows us to keep the logic in SubscriptionOperation (non-multiauth) pretty much untouched, rather
+        // than passing in the requestDecorator and having to handle that in there. We can always refactor this.
+        GraphQLRequest<R> authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
+        return SubscriptionOperation.<R>builder()
+            .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
+            .graphQlRequest(authDecoratedRequest)
+            .responseFactory(gqlResponseFactory)
+            .executorService(executorService)
+            .onSubscriptionStart(onSubscriptionEstablished)
+            .onNextItem(onNextResponse)
+            .onSubscriptionError(onSubscriptionFailure)
+            .onSubscriptionComplete(onSubscriptionComplete)
+            .authorizationType(authType)
+            .build();
+
+    }
+
+    private <R> GraphQLOperation<R> buildAppSyncGraphQLOperation(
             @NonNull String apiName,
             @NonNull GraphQLRequest<R> graphQLRequest,
             @NonNull Consumer<GraphQLResponse<R>> onResponse,
@@ -600,7 +645,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             );
         }
 
-        return AppSyncGraphQLOperation.<R>builder()
+        AuthModeStrategyType authModeStrategyType = getAuthModeStrategyType(graphQLRequest);
+        if (AuthModeStrategyType.MULTIAUTH.equals(authModeStrategyType)) {
+            return MultiAuthAppSyncGraphQLOperation.<R>builder()
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
                 .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
@@ -608,7 +655,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .responseFactory(gqlResponseFactory)
                 .onResponse(onResponse)
                 .onFailure(onFailure)
+                .executorService(executorService)
                 .build();
+        }
+        // Not multiauth, so just return the default operation.
+        return AppSyncGraphQLOperation.<R>builder()
+            .endpoint(clientDetails.getApiConfiguration().getEndpoint())
+            .client(clientDetails.getOkHttpClient())
+            .request(graphQLRequest)
+            .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
+            .responseFactory(gqlResponseFactory)
+            .onResponse(onResponse)
+            .onFailure(onFailure)
+            .build();
     }
 
     /**

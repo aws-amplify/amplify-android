@@ -1,3 +1,59 @@
+## [Release 0.5.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.5.0)
+
+### Features
+- **datastore:** Return nested data for belongsTo associations in datastore (#1390)
+
+### Bug Fixes
+- **analytics:** allow user attributes in identifyUser (#1306)
+
+[See all changes between 0.4.1 and 0.5.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.4.1...release-kotlin_v0.5.0)
+
+## [Release 0.4.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.4.1)
+
+### Bug Fixes
+- increase timeout for subscriptions to be established on slow networks (#1389)
+- **api:** move error handling to multi-auth operation (#1399)
+
+[See all changes between 0.4.0 and 0.4.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.4.0...release-kotlin_v0.4.1)
+
+## [Release 0.4.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.4.0)
+
+### Features
+- **datastore:** adding multiauth support (#1347)
+
+### Bug Fixes
+- **datastore:** Merge mutations when create is followed by update (#1384)
+- **datastore:** explicitly include id field for update mutations, to support types with custom primary keys (#1385)
+
+### Miscellaneous
+- Update SDK version to 2.26.0 (#1386)
+
+[See all changes between 0.3.0 and 0.4.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.3.0...release-kotlin_v0.4.0)
+
+## [Release 0.3.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.3.0)
+
+### Features
+- add supporting types for multi-auth (#1346)
+
+### Bug Fixes
+- **auth:** throw correct auth exception for code mismatch (#1370)
+- **datastore:** fix subscription timeout period not increasing (#1376)
+- **datastore:** Add support for SerializedModel to predicate evaluation (#1375)
+- **datastore:** merge incoming mutation with existing update mutation (#1379)
+
+### Miscellaneous
+- chore(api):tweaks to the api init process (#1309)
+- Update stale.yml (#1380)
+
+[See all changes between 0.2.0 and 0.3.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.2.0...release-kotlin_v0.3.0)
+
+## [Release 0.2.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.2.0)
+
+### Features
+- **aws-auth-cognito:** Allows userattributes in confirmSignIn (#1343)
+
+[See all changes between 0.1.9 and 0.2.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.1.9...release-kotlin_v0.2.0)
+
 ## [Release 0.1.9](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.1.9)
 
 ### Bug Fixes

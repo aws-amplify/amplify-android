@@ -13,13 +13,9 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.appsync;
+package com.amplifyframework.core.model;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelAssociation;
-import com.amplifyframework.core.model.ModelField;
-import com.amplifyframework.core.model.ModelSchema;
 
 import java.lang.reflect.Field;
 import java.util.Collections;

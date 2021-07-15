@@ -21,9 +21,11 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.Immutable;
@@ -48,6 +50,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     private final Map<String, Object> variables;
     private final Map<String, String> variableTypes;
     private final AuthorizationType authorizationType;
+    private final AuthModeStrategyType authModeStrategyType;
 
     /**
      * Constructor for AppSyncGraphQLRequest.
@@ -60,6 +63,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         this.variables = Immutable.of(builder.variables);
         this.variableTypes = Immutable.of(builder.variableTypes);
         this.authorizationType = builder.authorizationType;
+        this.authModeStrategyType = builder.authModeStrategyType;
     }
 
     /**
@@ -89,6 +93,35 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      */
     public AuthorizationType getAuthorizationType() {
         return authorizationType;
+    }
+
+    /**
+     * Returns the {@link AuthModeStrategyType} for this request.
+     * @return the {@link AuthModeStrategyType} for this request.
+     */
+    public AuthModeStrategyType getAuthModeStrategyType() {
+        return authModeStrategyType;
+    }
+
+    /**
+     * Returns the {@link ModelOperation} for this request. This is used to during
+     * auth rule evaluation.
+     * @return the {@link ModelOperation} for this request.
+     * @throws IllegalArgumentException if unable to map the request's {@link #getOperation()} to one of
+     *          the enum values in {@link ModelOperation}
+     */
+    public ModelOperation getAuthRuleOperation() {
+        switch (this.getOperation().getOperationType()) {
+            case QUERY:
+            case SUBSCRIPTION:
+                return ModelOperation.READ;
+            case MUTATION:
+                MutationType mutationType = (MutationType) this.getOperation();
+                return ModelOperation.valueOf(mutationType.name());
+            default:
+                throw new IllegalArgumentException("Invalid graphql operation type:"
+                                                       + this.getOperation().getOperationType());
+        }
     }
 
     /**
@@ -209,6 +242,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      * Builder for a AppSyncGraphQLRequest.
      */
     public static final class Builder {
+        private AuthModeStrategyType authModeStrategyType;
         private Class<? extends Model> modelClass;
         private ModelSchema modelSchema;
         private Operation operation;
@@ -232,6 +266,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             this.variables = new HashMap<>(request.variables);
             this.variableTypes = new HashMap<>(request.variableTypes);
             this.authorizationType = request.authorizationType;
+            this.authModeStrategyType = request.authModeStrategyType;
         }
 
         /**
@@ -285,12 +320,23 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
 
         /**
-         * Sets the authorization type for the request.
+         * Sets the authorization type for the request. If this field is set,
+         * {@link Builder#authModeStrategyType} will be ignored.
          * @param authorizationType the desired authorization type.
          * @return this builder instance.
          */
         public Builder authorizationType(@NonNull AuthorizationType authorizationType) {
             this.authorizationType = Objects.requireNonNull(authorizationType);
+            return Builder.this;
+        }
+
+        /**
+         * Sets the authorization type for the request.
+         * @param strategyType the desired request authorization strategy type.
+         * @return this builder instance.
+         */
+        public Builder requestAuthorizationStrategyType(@NonNull AuthModeStrategyType strategyType) {
+            this.authModeStrategyType = Objects.requireNonNull(strategyType);
             return Builder.this;
         }
 
@@ -343,6 +389,11 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
                         .requestOptions(Objects.requireNonNull(this.requestOptions))
                         .build();
             }
+
+            if (authModeStrategyType == null || authorizationType != null) {
+                authModeStrategyType = AuthModeStrategyType.DEFAULT;
+            }
+
             return new AppSyncGraphQLRequest<>(this);
         }
     }

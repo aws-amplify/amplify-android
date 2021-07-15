@@ -23,6 +23,7 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
@@ -32,12 +33,12 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
-import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -82,6 +83,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // overrides provided via the userProvidedConfiguration
     private DataStoreConfiguration pluginConfiguration;
 
+    private final AuthModeStrategyType authModeStrategy;
+
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
@@ -89,6 +92,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @Nullable DataStoreConfiguration userProvidedConfiguration) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
+        this.authModeStrategy = AuthModeStrategyType.DEFAULT;
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
@@ -108,10 +112,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         ModelProvider modelProvider = builder.modelProvider == null ?
             ModelProviderLocator.locate() :
             builder.modelProvider;
-
+        this.authModeStrategy = builder.authModeStrategy == null ?
+            AuthModeStrategyType.DEFAULT :
+            builder.authModeStrategy;
         ApiCategory api = builder.apiCategory == null ? Amplify.API : builder.apiCategory;
         this.userProvidedConfiguration = builder.dataStoreConfiguration;
-        this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
+        this.sqliteStorageAdapter = builder.storageAdapter == null ?
+            SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider) :
+            builder.storageAdapter;
         this.categoryInitializationsPending = new CountDownLatch(1);
 
         // Used to interrogate plugins, to understand if sync should be automatically turned on
@@ -119,7 +127,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             modelProvider,
             modelSchemaRegistry,
             sqliteStorageAdapter,
-            AppSyncClient.via(api),
+            AppSyncClient.via(api, this.authModeStrategy),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
         );
@@ -581,7 +589,22 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        onObservationFailure.accept(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
+        start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+            itemChange -> {
+                try {
+                    if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName()) &&
+                            selectionCriteria.evaluate(itemChange)) {
+                        @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
+                        StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
+                        onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
+                    }
+                } catch (DataStoreException dataStoreException) {
+                    onObservationFailure.accept(dataStoreException);
+                }
+            },
+            onObservationFailure,
+            onObservationCompleted
+        )), onObservationFailure);
     }
 
     /**
@@ -601,6 +624,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         private ModelProvider modelProvider;
         private ModelSchemaRegistry modelSchemaRegistry;
         private ApiCategory apiCategory;
+        private AuthModeStrategyType authModeStrategy;
+        private LocalStorageAdapter storageAdapter;
 
         private Builder() {}
 
@@ -635,9 +660,36 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             return this;
         }
 
+        /**
+         * Package-private method to allow for injection of an API category for testing.
+         * @param apiCategory An instance that implements ApiCategory.
+         * @return Current builder instance, for fluent construction of plugin.
+         */
         @VisibleForTesting
         Builder apiCategory(ApiCategory apiCategory) {
             this.apiCategory = apiCategory;
+            return this;
+        }
+
+        /**
+         * Package-private method to allow for injection of a storage adapter for testing purposes.
+         * @param storageAdapter An instance that implements LocalStorageAdapter.
+         * @return Current builder instance, for fluent construction of plugin.
+         */
+        @VisibleForTesting
+        Builder storageAdapter(LocalStorageAdapter storageAdapter) {
+            this.storageAdapter = storageAdapter;
+            return this;
+        }
+
+        /**
+         * Sets the authorization mode strategy which will be used by DataStore sync engine
+         * when interacting with the API plugin.
+         * @param authModeStrategy One of the options from the {@link AuthModeStrategyType} enum.
+         * @return An implementation of the {@link ModelProvider} interface.
+         */
+        public Builder authModeStrategy(AuthModeStrategyType authModeStrategy) {
+            this.authModeStrategy = authModeStrategy;
             return this;
         }
 

@@ -20,7 +20,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.datastore.appsync.SerializedModel;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
@@ -165,8 +165,8 @@ public final class HybridOfflineInstrumentationTest {
         serializedBlogData.put("id", blog.getId());
         serializedBlogData.put("name", blog.getName());
         serializedBlogData.put("owner", SerializedModel.builder()
-            .serializedData(Collections.singletonMap("id", blogOwner.getId()))
-            .modelSchema(null)
+            .serializedData(serializedBlogOwnerData)
+            .modelSchema(blogOwnerSchema)
             .build()
         );
         assertEquals(

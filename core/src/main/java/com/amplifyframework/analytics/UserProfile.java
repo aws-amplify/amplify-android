@@ -24,14 +24,19 @@ import java.util.Objects;
 /**
  * Represents user specific data such as name, email, plan, location etc.
  */
-public final class UserProfile {
+public class UserProfile {
     private final String name;
     private final String email;
     private final String plan;
     private final Location location;
     private final AnalyticsProperties customProperties;
 
-    private UserProfile(@NonNull Builder builder) {
+    /**
+     * Defines the only constructor for this class that should
+     * be invoked by any classes inheriting from this one.
+     * @param builder An instance of the builder with the desired properties set.
+     */
+    protected UserProfile(@NonNull Builder<?, ?> builder) {
         this.name = builder.name;
         this.email = builder.email;
         this.plan = builder.plan;
@@ -89,10 +94,16 @@ public final class UserProfile {
      * @return An {@link UserProfile.Builder} instance
      */
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public static Builder<?, ?> builder() {
+        return new Builder<>();
     }
 
+    /**
+     * When extending this class, be sure to override this method to
+     * include any other relevant fields.
+     * @param object The object to compare this instance to.
+     * @return True if they are equal, false otherwise.
+     */
     @Override
     public boolean equals(@Nullable Object object) {
         if (this == object) {
@@ -119,6 +130,11 @@ public final class UserProfile {
         return ObjectsCompat.equals(customProperties, that.customProperties);
     }
 
+    /**
+     * When extending this class, be sure to override this method and
+     * include any relevant fields as part of the result.
+     * @return The calculated hash code for the instance.
+     */
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
@@ -129,6 +145,11 @@ public final class UserProfile {
         return result;
     }
 
+    /**
+     * When extending this class, be sure to override this method to
+     * include any other relevant fields.
+     * @return A string representation of the instance.
+     */
     @NonNull
     @Override
     public String toString() {
@@ -143,8 +164,11 @@ public final class UserProfile {
 
     /**
      * Builder for creating a UserProfile object.
+     * @param <B> An class that extends this Builder.
+     * @param <O> The output type returned by the build method.
      */
-    public static final class Builder {
+    @SuppressWarnings({"unchecked", "WeakerAccess"})
+    public static class Builder<B extends Builder<?, ?>, O extends UserProfile> {
         private String name;
         private String email;
         private String plan;
@@ -157,10 +181,10 @@ public final class UserProfile {
          * @return Current builder instance, for method chaining
          */
         @NonNull
-        public Builder name(@NonNull final String name) {
+        public B name(@NonNull final String name) {
             Objects.requireNonNull(name);
             this.name = name;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -169,10 +193,10 @@ public final class UserProfile {
          * @return Current builder instance, for method chaining
          */
         @NonNull
-        public Builder email(@NonNull final String email) {
+        public B email(@NonNull final String email) {
             Objects.requireNonNull(email);
             this.email = email;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -181,10 +205,10 @@ public final class UserProfile {
          * @return Current builder instance, for method chaining
          */
         @NonNull
-        public Builder plan(@NonNull final String plan) {
+        public B plan(@NonNull final String plan) {
             Objects.requireNonNull(plan);
             this.plan = plan;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -193,10 +217,10 @@ public final class UserProfile {
          * @return Current builder instance, for method chaining
          */
         @NonNull
-        public Builder location(@NonNull final Location location) {
+        public B location(@NonNull final Location location) {
             Objects.requireNonNull(location);
             this.location = location;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -205,10 +229,10 @@ public final class UserProfile {
          * @return Current builder instance, for method chaining
          */
         @NonNull
-        public Builder customProperties(@NonNull final AnalyticsProperties properties) {
+        public B customProperties(@NonNull final AnalyticsProperties properties) {
             Objects.requireNonNull(properties);
             this.customProperties = properties;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -216,8 +240,8 @@ public final class UserProfile {
          * @return An {@link UserProfile}
          */
         @NonNull
-        public UserProfile build() {
-            return new UserProfile(this);
+        public O build() {
+            return (O) new UserProfile(this);
         }
     }
 

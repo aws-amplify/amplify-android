@@ -13,22 +13,20 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.appsync;
+package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelField;
-import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A container for model data, when passed from hybrid platforms.
@@ -81,13 +79,39 @@ public final class SerializedModel implements Model {
         Map<String, Object> originalMap = ModelConverter.toMap(original, modelSchema);
         Map<String, Object> patchMap = new HashMap<>();
         for (String key : updatedMap.keySet()) {
-            List<String> primaryIndexFields = modelSchema.getPrimaryIndexFields();
+            Set<String> primaryIndexFields = new HashSet<>();
+
+            // This can be removed once we fully support custom primary keys.  For now, it is required though, since
+            // SerializedModel requires the `id` field.
+            primaryIndexFields.add(PrimaryKey.fieldName());
+
+            primaryIndexFields.addAll(modelSchema.getPrimaryIndexFields());
             if (primaryIndexFields.contains(key) || !ObjectsCompat.equals(originalMap.get(key), updatedMap.get(key))) {
                 patchMap.put(key, updatedMap.get(key));
             }
         }
         return SerializedModel.builder()
                 .serializedData(patchMap)
+                .modelSchema(modelSchema)
+                .build();
+    }
+
+    /**
+     * Merge the serialized data from existing to incoming model.
+     * @param incoming the incoming Model to which serialized data fields will be added.
+     * @param existing the original Model to compare against.
+     * @param modelSchema ModelSchema for the Models between compared.
+     * @return a SerializedModel, containing the values from the incoming Model and existing Model.
+     */
+    public static SerializedModel merge(SerializedModel incoming, SerializedModel existing, ModelSchema modelSchema) {
+        Map<String, Object> mergedSerializedData = new HashMap<>(incoming.serializedData);
+        for (String key : existing.getSerializedData().keySet()) {
+            if (!mergedSerializedData.containsKey(key)) {
+                mergedSerializedData.put(key, existing.getSerializedData().get(key));
+            }
+        }
+        return SerializedModel.builder()
+                .serializedData(mergedSerializedData)
                 .modelSchema(modelSchema)
                 .build();
     }
