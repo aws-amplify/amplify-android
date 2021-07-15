@@ -121,8 +121,13 @@ public enum AuthStrategy {
         }
 
         /**
-         * Returns an integer that represents the rank of a given
-         * provider among its peers. (USER_POOLS=1, OIDC=2, IAM=3, API_KEY=4)
+         * Returns an integer that represents the rank of a given provider among its peers.  They are ordered from
+         * "most specific" to "least specific".
+         *   1: CUSTOM
+         *   2: USER_POOLS
+         *   3: OIDC
+         *   4: IAM
+         *   5: API_KEY
          * @return The priority value of the strategy.
          */
         public int getPriority() {

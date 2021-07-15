@@ -155,7 +155,7 @@ public final class ApiRequestDecoratorFactory {
                 try {
                     customToken = apiAuthProviders.getCustomAuthProvider().getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new ApiAuthException("Failed to retrieve auth token from OIDC provider.",
+                    throw new ApiAuthException("Failed to retrieve auth token from custom auth provider.",
                             exception,
                             "Check the application logs for details.");
                 }
@@ -168,7 +168,7 @@ public final class ApiRequestDecoratorFactory {
                 } else {
                     throw new ApiAuthException("Attempting to use API_KEY authorization without " +
                                                 "an API key provider or an API key in the config file",
-                                            "Verify that an API key is in the config file or an " +
+                                                "Verify that an API key is in the config file or an " +
                                                 "ApiKeyAuthProvider is setup during the API " +
                                                 "plugin initialization.");
                 }
