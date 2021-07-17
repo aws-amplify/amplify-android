@@ -75,7 +75,8 @@ public final class RestRequestFactory {
         }
 
         try {
-            return new URL(URLDecoder.decode(builder.build().url().toString(), "UTF-8"));
+            String encodedUrl = builder.build().url().toString();
+            return new URL(URLDecoder.decode(encodePluses(encodedUrl), "UTF-8"));
         } catch (UnsupportedEncodingException error) {
             throw new MalformedURLException(error.getMessage());
         }
@@ -151,6 +152,13 @@ public final class RestRequestFactory {
     // begin with either character. Strip them before appending.
     private static String stripLeadingSlashes(final String path) {
         return path.replaceAll("^[\\\\/]+", "");
+    }
+
+    // URLDecoder converts "+" in path segment into " ".
+    // Convert it to encoded version "%2B" so that decoded
+    // result is actually "+".
+    private static String encodePluses(final String encodedUrl) {
+        return encodedUrl.replaceAll("[+]", "%2B");
     }
 
     /**

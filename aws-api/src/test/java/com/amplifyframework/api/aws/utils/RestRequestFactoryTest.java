@@ -103,8 +103,37 @@ public final class RestRequestFactoryTest {
                 "/path",
                 Collections.singletonMap("phone_number", "+1234567890"));
         assertEquals("The url generated should match",
-                new URL("http://amplify-android.com/beta/path?phone_number=+1234567890"),
-                url);
+                "http://amplify-android.com/beta/path?phone_number=+1234567890",
+                url.toString());
+    }
+
+    /**
+     * Test creating a valid URL with path containing special chars.
+     * @throws MalformedURLException Throws if the URL is invalid.
+     */
+    @Test
+    public void createValidURLWithPathEncoded() throws MalformedURLException {
+        String email = "first+last@email.com";
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
+                "/users/" + email,
+                Collections.emptyMap());
+        assertEquals("The url generated should match",
+                "http://amplify-android.com/users/first+last@email.com",
+                url.toString());
+    }
+
+    /**
+     * Test creating a valid URL containing special chars.
+     * @throws MalformedURLException Throws if the URL is invalid.
+     */
+    @Test
+    public void createValidURLWithSpecialCharacters() throws MalformedURLException {
+        URL url = RestRequestFactory.createURL("http://cool+domain.com/+@$%^&*",
+                "/+@$%^&*",
+                Collections.singletonMap("+@#$%^&*", "+@#$%^&*"));
+        assertEquals("The url generated should match",
+                "http://cool+domain.com/+@$%^&*/+@$%^&*?+@#$%^&*=+@#$%^&*",
+                url.toString());
     }
 
     /**
