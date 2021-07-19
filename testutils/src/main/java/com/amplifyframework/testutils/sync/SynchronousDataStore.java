@@ -18,6 +18,8 @@ package com.amplifyframework.testutils.sync;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
@@ -64,6 +66,29 @@ public final class SynchronousDataStore {
     public <T extends Model> void save(@NonNull T item) throws DataStoreException {
         awaitDataStoreItemChange((onResult, onError) ->
             asyncDelegate.save(item, onResult, onError));
+    }
+
+    /**
+     * Saves an item into the DataStore with predicate.
+     * @param item Item to save
+     * @param <T> The type of item being saved
+     * @param predicate the predicate filter for save
+     * @throws DataStoreException On failure saving item into DataStore
+     */
+    public <T extends Model> void save(@NonNull T item, @NonNull QueryPredicate predicate) throws DataStoreException {
+        awaitDataStoreItemChange((onResult, onError) ->
+                asyncDelegate.save(item, predicate, onResult, onError));
+    }
+    
+    /**
+     * Delete an item into the DataStore.
+     * @param item Item to delete
+     * @param <T> The type of item being saved
+     * @throws DataStoreException On failure saving item into DataStore
+     */
+    public <T extends Model> void delete(@NonNull T item) throws DataStoreException {
+        awaitDataStoreItemChange((onResult, onError) ->
+                asyncDelegate.delete(item, QueryPredicates.all(), onResult, onError));
     }
 
     /**
