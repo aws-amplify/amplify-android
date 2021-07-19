@@ -18,9 +18,9 @@ package com.amplifyframework.api.aws.auth;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 
 /**
- * Request decorator that adds a JWT token to the provided request.
+ * Request decorator that adds a token to the provided request.
  */
-public class JWTTokenRequestDecorator implements RequestDecorator {
+public class TokenRequestDecorator implements RequestDecorator {
     private static final String AUTHORIZATION = "authorization";
     private final TokenSupplier tokenSupplier;
 
@@ -28,7 +28,7 @@ public class JWTTokenRequestDecorator implements RequestDecorator {
      * Constructor that accepts a supplier function which will be used to retrieve the JWT token at runtime.
      * @param tokenSupplier Supplier function that returns the JWT token.
      */
-    public JWTTokenRequestDecorator(TokenSupplier tokenSupplier) {
+    public TokenRequestDecorator(TokenSupplier tokenSupplier) {
         this.tokenSupplier = tokenSupplier;
     }
 
@@ -46,6 +46,7 @@ public class JWTTokenRequestDecorator implements RequestDecorator {
      * Defines a simple interface through which this decorator can retrieve the
      * JWT token to be added to the request.
      */
+    @FunctionalInterface
     public interface TokenSupplier {
         /**
          * Implementations of this method should return a JWT token ready to be added as an

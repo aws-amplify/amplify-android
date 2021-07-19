@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,8 +15,17 @@
 
 package com.amplifyframework.api.aws.sigv4;
 
+import com.amplifyframework.api.ApiException;
+
 /**
- * Interface to provide an authentication token to the caller to be used for OpenID Connect authorization.
+ * Interface to provide an authentication token to the caller.
  */
 @FunctionalInterface
-public interface OidcAuthProvider extends AuthProvider { }
+public interface AuthProvider {
+    /**
+     * Vends the latest valid authentication token from a custom token vendor.
+     * @return the latest auth token
+     * @throws ApiException if retrieving token fails
+     */
+    String getLatestAuthToken() throws ApiException;
+}
