@@ -94,8 +94,8 @@ interface Auth {
      */
     @Throws(AuthException::class)
     suspend fun resendSignUpCode(
-            username: String,
-            options: AuthResendSignUpCodeOptions = AuthResendSignUpCodeOptions.defaults()
+        username: String,
+        options: AuthResendSignUpCodeOptions = AuthResendSignUpCodeOptions.defaults()
     ): AuthSignUpResult
 
     /**

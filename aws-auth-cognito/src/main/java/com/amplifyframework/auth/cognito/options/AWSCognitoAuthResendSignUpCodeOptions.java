@@ -1,6 +1,3 @@
-
-
-
 /*
  * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -27,7 +24,6 @@ import com.amplifyframework.util.Immutable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
 
 /**
  * Cognito extension of resend sign up code options to add the platform specific fields.
@@ -77,7 +73,8 @@ public final class AWSCognitoAuthResendSignUpCodeOptions extends AuthResendSignU
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            AWSCognitoAuthResendSignUpCodeOptions authResendSignUpCodeOptions = (AWSCognitoAuthResendSignUpCodeOptions) obj;
+            AWSCognitoAuthResendSignUpCodeOptions authResendSignUpCodeOptions =
+                    (AWSCognitoAuthResendSignUpCodeOptions) obj;
             return ObjectsCompat.equals(getMetadata(), authResendSignUpCodeOptions.getMetadata());
         }
     }
