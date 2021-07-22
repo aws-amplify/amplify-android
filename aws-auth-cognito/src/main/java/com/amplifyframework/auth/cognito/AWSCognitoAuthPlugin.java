@@ -33,8 +33,10 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResetPasswordOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
@@ -42,8 +44,10 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOption
 import com.amplifyframework.auth.cognito.util.AuthProviderConverter;
 import com.amplifyframework.auth.cognito.util.CognitoAuthExceptionConverter;
 import com.amplifyframework.auth.cognito.util.SignInStateConverter;
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -653,10 +657,17 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public void resetPassword(
             @NonNull String username,
+            @NonNull AuthResetPasswordOptions options,
             @NonNull Consumer<AuthResetPasswordResult> onSuccess,
             @NonNull Consumer<AuthException> onException
     ) {
-        awsMobileClient.forgotPassword(username, new Callback<ForgotPasswordResult>() {
+        final Map<String, String> clientMetadata = new HashMap<>();
+
+        if (options instanceof AWSCognitoAuthResetPasswordOptions) {
+            AWSCognitoAuthResetPasswordOptions cognitoOptions = (AWSCognitoAuthResetPasswordOptions) options;
+            clientMetadata.putAll(cognitoOptions.getMetadata());
+        }
+        awsMobileClient.forgotPassword(username, clientMetadata, new Callback<ForgotPasswordResult>() {
             @Override
             public void onResult(ForgotPasswordResult result) {
                 if (result.getState().equals(ForgotPasswordState.CONFIRMATION_CODE)) {
@@ -685,15 +696,33 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     @Override
+    public void resetPassword(
+            @NonNull String username,
+            @NonNull Consumer<AuthResetPasswordResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        resetPassword(username, AuthResetPasswordOptions.defaults(), onSuccess, onException);
+    }
+
+    @Override
     public void confirmResetPassword(
             @NonNull String newPassword,
             @NonNull String confirmationCode,
+            @NonNull AuthConfirmResetPasswordOptions options,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onException
     ) {
+        final Map<String, String> clientMetadata = new HashMap<>();
+
+        if (options instanceof AWSCognitoAuthConfirmResetPasswordOptions) {
+            AWSCognitoAuthConfirmResetPasswordOptions cognitoOptions =
+                    (AWSCognitoAuthConfirmResetPasswordOptions) options;
+            clientMetadata.putAll(cognitoOptions.getMetadata());
+        }
         awsMobileClient.confirmForgotPassword(
             newPassword,
             confirmationCode,
+            clientMetadata,
             new Callback<ForgotPasswordResult>() {
                 @Override
                 public void onResult(ForgotPasswordResult result) {
@@ -714,6 +743,22 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                             error, "Confirm reset password failed."));
                 }
             }
+        );
+    }
+
+    @Override
+    public void confirmResetPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        confirmResetPassword(
+                newPassword,
+                confirmationCode,
+                AuthConfirmResetPasswordOptions.defaults(),
+                onSuccess,
+                onException
         );
     }
 
