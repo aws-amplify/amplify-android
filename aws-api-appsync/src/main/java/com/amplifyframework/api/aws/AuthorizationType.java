@@ -112,7 +112,7 @@ public enum AuthorizationType {
                 return AWS_IAM;
             case API_KEY:
                 return API_KEY;
-            case CUSTOM:
+            case FUNCTION:
                 return AWS_LAMBDA;
             default:
                 throw new IllegalArgumentException("No such authorization type: " + authRuleProvider.name());

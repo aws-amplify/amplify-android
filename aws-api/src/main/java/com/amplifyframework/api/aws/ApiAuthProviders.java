@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
-import com.amplifyframework.api.aws.sigv4.CustomAuthProvider;
+import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -35,14 +35,14 @@ public final class ApiAuthProviders {
     private final AWSCredentialsProvider awsCredentialsProvider;
     private final CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
     private final OidcAuthProvider oidcAuthProvider;
-    private final CustomAuthProvider customAuthProvider;
+    private final FunctionAuthProvider functionAuthProvider;
 
     private ApiAuthProviders(Builder builder) {
         this.apiKeyAuthProvider = builder.getApiKeyAuthProvider();
         this.awsCredentialsProvider = builder.getAWSCredentialsProvider();
         this.oidcAuthProvider = builder.getOidcAuthProvider();
         this.cognitoUserPoolsAuthProvider = builder.getCognitoUserPoolsAuthProvider();
-        this.customAuthProvider = builder.getCustomAuthProvider();
+        this.functionAuthProvider = builder.getFunctionAuthProvider();
     }
 
     /**
@@ -79,10 +79,10 @@ public final class ApiAuthProviders {
 
     /**
      * Gets the custom auth provider.
-     * @return an implementation of {@link CustomAuthProvider}
+     * @return an implementation of {@link FunctionAuthProvider}
      */
-    public CustomAuthProvider getCustomAuthProvider() {
-        return this.customAuthProvider;
+    public FunctionAuthProvider getFunctionAuthProvider() {
+        return this.functionAuthProvider;
     }
 
     /**
@@ -112,7 +112,7 @@ public final class ApiAuthProviders {
         private AWSCredentialsProvider awsCredentialsProvider;
         private CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
         private OidcAuthProvider oidcAuthProvider;
-        private CustomAuthProvider customAuthProvider;
+        private FunctionAuthProvider functionAuthProvider;
 
         /**
          * Assigns an API key Auth provider.
@@ -155,12 +155,12 @@ public final class ApiAuthProviders {
         }
 
         /**
-         * Assigns a custom auth provider.
-         * @param provider an instance of {@link CustomAuthProvider}
+         * Assigns a serverless function (e.g. AWS Lambda) auth provider.
+         * @param provider an instance of {@link FunctionAuthProvider}
          * @return this builder object for chaining
          */
-        public ApiAuthProviders.Builder customAuthProvider(@NonNull CustomAuthProvider provider) {
-            ApiAuthProviders.Builder.this.customAuthProvider = Objects.requireNonNull(provider);
+        public ApiAuthProviders.Builder functionAuthProvider(@NonNull FunctionAuthProvider provider) {
+            ApiAuthProviders.Builder.this.functionAuthProvider = Objects.requireNonNull(provider);
             return ApiAuthProviders.Builder.this;
         }
 
@@ -189,8 +189,8 @@ public final class ApiAuthProviders {
             return ApiAuthProviders.Builder.this.oidcAuthProvider;
         }
 
-        CustomAuthProvider getCustomAuthProvider() {
-            return ApiAuthProviders.Builder.this.customAuthProvider;
+        FunctionAuthProvider getFunctionAuthProvider() {
+            return ApiAuthProviders.Builder.this.functionAuthProvider;
         }
     }
 }

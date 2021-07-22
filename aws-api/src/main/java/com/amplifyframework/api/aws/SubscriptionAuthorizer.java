@@ -23,6 +23,7 @@ import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -105,6 +106,19 @@ final class SubscriptionAuthorizer {
                     };
                 }
                 return forOidc(oidcProvider);
+            case AWS_LAMBDA:
+                FunctionAuthProvider functionAuthProvider = authProviders.getFunctionAuthProvider();
+                if (functionAuthProvider == null) {
+                    functionAuthProvider = () -> {
+                        throw new ApiAuthException(
+                                "FunctionAuthProvider interface is not implemented.",
+                                "Please implement FunctionAuthProvider interface to return " +
+                                        "appropriate token from the appropriate service."
+                        );
+                    };
+                }
+                return forAwsLambda(functionAuthProvider);
+
             case NONE:
             default:
                 return new JSONObject();
@@ -149,6 +163,20 @@ final class SubscriptionAuthorizer {
             // This error should never be thrown
             throw new ApiException(
                     "Error constructing the authorization json for Open ID Connect.",
+                    jsonException, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+            );
+        }
+    }
+
+    private JSONObject forAwsLambda(FunctionAuthProvider functionAuthProvider) throws ApiException {
+        try {
+            return new JSONObject()
+                    .put("host", getHost())
+                    .put("Authorization", functionAuthProvider.getLatestAuthToken());
+        } catch (JSONException jsonException) {
+            // This error should never be thrown
+            throw new ApiException(
+                    "Error constructing the authorization json for the AWS_LAMBDA auth type.",
                     jsonException, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
         }

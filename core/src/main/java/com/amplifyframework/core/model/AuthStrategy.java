@@ -79,9 +79,9 @@ public enum AuthStrategy {
      */
     public enum Provider {
         /**
-         * The custom provider of the @auth rule directive.
+         * The function provider of the @auth rule directive.
          */
-        CUSTOM("custom", 1),
+        FUNCTION("function", 1),
 
         /**
          * The userPools provider of the @auth rule directive.
@@ -123,7 +123,7 @@ public enum AuthStrategy {
         /**
          * Returns an integer that represents the rank of a given provider among its peers.  They are ordered from
          * "most specific" to "least specific".
-         *   1: CUSTOM
+         *   1: FUNCTION
          *   2: USER_POOLS
          *   3: OIDC
          *   4: IAM

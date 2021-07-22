@@ -19,6 +19,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.EndpointType;
+import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
 
 import org.junit.Test;
 
@@ -192,7 +193,7 @@ public final class ApiRequestDecoratorFactoryTest {
 
     /**
      * Test to confirm that passing any custom implementation of
-     * {@link com.amplifyframework.api.aws.sigv4.CustomAuthProvider}
+     * {@link FunctionAuthProvider}
      * prevents crashes while intercepting requests.
      * @throws ApiException From API configuration
      */
@@ -201,7 +202,7 @@ public final class ApiRequestDecoratorFactoryTest {
         final String customToken = "CUSTOM_TOKEN";
 
         ApiAuthProviders providers = ApiAuthProviders.builder()
-                .customAuthProvider(() -> customToken)
+                .functionAuthProvider(() -> customToken)
                 .build();
         ApiRequestDecoratorFactory factory = new ApiRequestDecoratorFactory(
             providers,

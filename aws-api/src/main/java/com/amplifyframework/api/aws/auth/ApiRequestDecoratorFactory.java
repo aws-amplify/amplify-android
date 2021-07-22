@@ -146,20 +146,20 @@ public final class ApiRequestDecoratorFactory {
                 }
                 return new TokenRequestDecorator(() -> oidcToken);
             case AWS_LAMBDA:
-                if (apiAuthProviders.getCustomAuthProvider() == null) {
+                if (apiAuthProviders.getFunctionAuthProvider() == null) {
                     throw new ApiAuthException("Attempting to use AWS_LAMBDA authorization " +
                             "without a provider implemented.",
-                            "Configure a CustomAuthProvider when initializing the API plugin.");
+                            "Configure a FunctionAuthProvider when initializing the API plugin.");
                 }
-                final String customToken;
+                final String functionToken;
                 try {
-                    customToken = apiAuthProviders.getCustomAuthProvider().getLatestAuthToken();
+                    functionToken = apiAuthProviders.getFunctionAuthProvider().getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new ApiAuthException("Failed to retrieve auth token from custom auth provider.",
+                    throw new ApiAuthException("Failed to retrieve auth token from function auth provider.",
                             exception,
                             "Check the application logs for details.");
                 }
-                return new TokenRequestDecorator(() -> customToken);
+                return new TokenRequestDecorator(() -> functionToken);
             case API_KEY:
                 if (apiAuthProviders.getApiKeyAuthProvider() != null) {
                     return new ApiKeyRequestDecorator(apiAuthProviders.getApiKeyAuthProvider());

@@ -19,4 +19,4 @@ package com.amplifyframework.api.aws.sigv4;
  * Interface to provide an authentication token to the caller to be used in an AWS Lambda function.
  */
 @FunctionalInterface
-public interface CustomAuthProvider extends AuthProvider { }
+public interface FunctionAuthProvider extends AuthProvider { }
