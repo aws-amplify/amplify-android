@@ -37,7 +37,10 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class SubscriptionAuthorizerTest {
-    private String authenticationSecret;
+    private String apiKey;
+    private String cognitoUserPoolsToken;
+    private String oidcToken;
+    private String functionToken;
     private ApiAuthProviders apiAuthProviders;
 
     /**
@@ -46,18 +49,22 @@ public final class SubscriptionAuthorizerTest {
      */
     @Before
     public void setup() {
-        authenticationSecret = RandomString.string();
+        apiKey = RandomString.string();
+        cognitoUserPoolsToken = RandomString.string();
+        oidcToken = RandomString.string();
+        functionToken = RandomString.string();
         apiAuthProviders = ApiAuthProviders.builder()
-                .apiKeyAuthProvider(() -> authenticationSecret) // fake API key
+                .apiKeyAuthProvider(() -> apiKey)
                 .awsCredentialsProvider(new FakeCredentialsProvider(
                         RandomString.string(),
                         RandomString.string()
                 ))
                 .cognitoUserPoolsAuthProvider(new FakeCognitoAuthProvider(
-                        authenticationSecret, // fake token
+                        cognitoUserPoolsToken,
                         RandomString.string()
                 ))
-                .oidcAuthProvider(() -> authenticationSecret) // fake token
+                .oidcAuthProvider(() -> oidcToken)
+                .functionAuthProvider(() -> functionToken)
                 .build();
     }
 
@@ -76,7 +83,7 @@ public final class SubscriptionAuthorizerTest {
                 .build();
         SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
         JSONObject header = authorizer.createHeadersForConnection(AuthorizationType.API_KEY);
-        assertEquals(authenticationSecret, header.getString("x-api-key"));
+        assertEquals(apiKey, header.getString("x-api-key"));
     }
 
     /**
@@ -94,7 +101,7 @@ public final class SubscriptionAuthorizerTest {
                 .build();
         SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
         JSONObject header = authorizer.createHeadersForConnection(AuthorizationType.AMAZON_COGNITO_USER_POOLS);
-        assertEquals(authenticationSecret, header.getString("Authorization"));
+        assertEquals(cognitoUserPoolsToken, header.getString("Authorization"));
     }
 
     /**
@@ -112,7 +119,25 @@ public final class SubscriptionAuthorizerTest {
                 .build();
         SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
         JSONObject header = authorizer.createHeadersForConnection(AuthorizationType.OPENID_CONNECT);
-        assertEquals(authenticationSecret, header.getString("Authorization"));
+        assertEquals(oidcToken, header.getString("Authorization"));
+    }
+
+    /**
+     * Test that header generated for AWS Lambda auth contains
+     * "Authorization" header with the token vended by third-party.
+     * @throws ApiException if failure to construct headers
+     * @throws JSONException if desired header is not present
+     */
+    @Test
+    public void testHeaderForAwsLambda() throws ApiException, JSONException {
+        ApiConfiguration config = ApiConfiguration.builder()
+                .endpoint(RandomString.string())
+                .region(RandomString.string())
+                .authorizationType(AuthorizationType.AWS_LAMBDA)
+                .build();
+        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
+        JSONObject header = authorizer.createHeadersForConnection(AuthorizationType.AWS_LAMBDA);
+        assertEquals(functionToken, header.getString("Authorization"));
     }
 
     private static final class FakeCredentialsProvider implements AWSCredentialsProvider {

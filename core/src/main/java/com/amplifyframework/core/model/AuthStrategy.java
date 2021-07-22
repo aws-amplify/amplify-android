@@ -75,28 +75,33 @@ public enum AuthStrategy {
     }
 
     /**
-     * Represents the the value of the provider field of the @auth directive.
+     * Represents the value of the provider field of the @auth directive.
      */
     public enum Provider {
         /**
-         * The userPools provider of the @auth rule directive.
+         * The function provider of the @auth rule directive.
          */
-        USER_POOLS("userPools", 1),
+        FUNCTION("function", 1),
 
         /**
          * The userPools provider of the @auth rule directive.
          */
-        OIDC("oidc", 2),
+        USER_POOLS("userPools", 2),
 
         /**
-         * The userPools provider of the @auth rule directive.
+         * The OIDC provider of the @auth rule directive.
          */
-        IAM("iam", 3),
+        OIDC("oidc", 3),
 
         /**
-         * The userPools provider of the @auth rule directive.
+         * The IAM provider of the @auth rule directive.
          */
-        API_KEY("apiKey", 4);
+        IAM("iam", 4),
+
+        /**
+         * The apiKey provider of the @auth rule directive.
+         */
+        API_KEY("apiKey", 5);
 
         private final String authDirectiveProviderName;
         private final int priority;
@@ -116,8 +121,13 @@ public enum AuthStrategy {
         }
 
         /**
-         * Returns an integer that represents the rank of a given
-         * provider among its peers. (USER_POOLS=1, OIDC=2, IAM=3, API_KEY=4)
+         * Returns an integer that represents the rank of a given provider among its peers.  They are ordered from
+         * "most specific" to "least specific".
+         *   1: FUNCTION
+         *   2: USER_POOLS
+         *   3: OIDC
+         *   4: IAM
+         *   5: API_KEY
          * @return The priority value of the strategy.
          */
         public int getPriority() {
