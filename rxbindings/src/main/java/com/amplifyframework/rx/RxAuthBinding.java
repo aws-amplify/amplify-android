@@ -86,7 +86,7 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     @Override
     public Single<AuthSignUpResult> resendSignUpCode(
             @NonNull String username, @NonNull AuthResendSignUpCodeOptions options) {
-        return toSingle((onResult, onError) -> delegate.resendSignUpCode(username, onResult, onError));
+        return toSingle((onResult, onError) -> delegate.resendSignUpCode(username, options, onResult, onError));
     }
 
     @Override
