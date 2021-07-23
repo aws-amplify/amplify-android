@@ -19,8 +19,11 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.util.Immutable;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
@@ -31,7 +34,6 @@ import java.util.Objects;
 public class DataStoreException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
-    private ErrorType type = ErrorType.RECOVERABLE_ERROR;
     /**
      * Creates a new exception with a message, root cause, and recovery suggestion.
      * @param message An error message describing why this exception was thrown
@@ -46,30 +48,6 @@ public class DataStoreException extends AmplifyException {
         super(message, throwable, recoverySuggestion);
     }
 
-    public DataStoreException(
-            @NonNull final String message,
-            final Throwable throwable,
-            @NonNull final String recoverySuggestion,
-            ErrorType type
-    ) {
-        super(message, throwable, recoverySuggestion);
-        this.type = type;
-    }
-
-    /**
-     * Constructs a new exception using a provided message and an associated error.
-     * @param message Explains the reason for the exception
-     * @param recoverySuggestion Text suggesting a way to recover from the error being described
-     * @param type ErrorType suggesting if its a recoverable error
-     */
-    public DataStoreException(
-            @NonNull final String message,
-            @NonNull final String recoverySuggestion,
-            ErrorType type
-    ) {
-        super(message, recoverySuggestion);
-        this.type = type;
-    }
 
     /**
      * Constructs a new exception using a provided message and an associated error.
@@ -81,12 +59,8 @@ public class DataStoreException extends AmplifyException {
             @NonNull final String recoverySuggestion
     ) {
         super(message, recoverySuggestion);
-        this.type = ErrorType.RECOVERABLE_ERROR;
     }
 
-    public ErrorType getType() {
-        return type;
-    }
 
     /**
      * Exception thrown by DataStore category plugins used to represent a GraphQLResponse containing errors.
@@ -102,8 +76,7 @@ public class DataStoreException extends AmplifyException {
          * @param errors List of errors from GraphQLResponse
          */
         public GraphQLResponseException(String message, @NonNull List<GraphQLResponse.Error> errors) {
-            super(message, "See attached list of GraphQLResponse.Error objects.",
-                    ErrorType.IRRECOVERABLE_ERROR);
+            super(message, "See attached list of GraphQLResponse.Error objects.");
             this.errors = Objects.requireNonNull(errors);
         }
 
@@ -143,6 +116,13 @@ public class DataStoreException extends AmplifyException {
                     ", errors=" + errors +
                     ", recoverySuggestion=" + getRecoverySuggestion() +
                     '}';
+        }
+    }
+
+    public static class IrRecoverableException extends DataStoreException {
+        private static final long serialVersionUID = 1L;
+        public IrRecoverableException(@NonNull @NotNull String message, @NotNull String recoverySuggestion) {
+            super(message, recoverySuggestion);
         }
     }
 }

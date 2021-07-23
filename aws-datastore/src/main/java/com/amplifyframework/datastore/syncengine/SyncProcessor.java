@@ -223,7 +223,7 @@ final class SyncProcessor {
                 BehaviorProcessor.createDefault(
                         appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate));
 
-        return processor.concatMap(request -> syncPage(request).toFlowable())
+        return processor.concatMap(request -> syncPageWithRetry(request).toFlowable())
                 .doOnNext(paginatedResult -> {
                     if (paginatedResult.hasNextResult()) {
                         processor.onNext(paginatedResult.getRequestForNextResult());
@@ -265,15 +265,29 @@ final class SyncProcessor {
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
         return Single.create(emitter -> {
-            OnSuccessConsumer<T> successConsumer = new OnSuccessConsumer<T>(emitter);
-            OnErrorConsumer<T> errorConsumer = new OnErrorConsumer<T>(emitter,
-                                                                    appSync,
-                                                                    request,
-                                                                    successConsumer,
-                    requestRetry);
-            Cancelable cancelable = appSync.sync(request, successConsumer, errorConsumer);
+            Cancelable cancelable = appSync.sync(request, result -> {
+                if (result.hasErrors()) {
+                    emitter.onError(new DataStoreException(
+                            String.format("A model sync failed: %s", result.getErrors()),
+                            "Check your schema."
+                    ));
+                } else if (!result.hasData()) {
+                    emitter.onError(new DataStoreException.IrRecoverableException(
+                            "Empty response from AppSync.", "Report to AWS team."
+                    ));
+                } else {
+                    emitter.onSuccess(result.getData());
+                }
+            }, emitter::onError);
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         });
+    }
+    private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPageWithRetry(
+            GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
+        List<Class<? extends Throwable>> skipException = new ArrayList<Class<? extends Throwable>>();
+        skipException.add(DataStoreException.GraphQLResponseException.class);
+        skipException.add(DataStoreException.IrRecoverableException.class);
+        return requestRetry.retry(syncPage(request), skipException);
     }
 
 

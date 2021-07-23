@@ -121,11 +121,8 @@ public final class AppSyncClient implements AppSync {
         final Consumer<ApiException> failureConsumer =
             failure -> {
             if(failure instanceof ApiException.ApiIrrecoverableException){
-                onFailure.accept(new DataStoreException(
-                        "Failure performing sync query to AppSync.",
-                        failure, AmplifyException.TODO_RECOVERY_SUGGESTION,
-                        ErrorType.IRRECOVERABLE_ERROR
-                ));
+                onFailure.accept(new DataStoreException.IrRecoverableException(
+                        "Failure performing sync query to AppSync.", AmplifyException.TODO_RECOVERY_SUGGESTION));
             } else {
                 onFailure.accept(new DataStoreException(
                         "Failure performing sync query to AppSync.",

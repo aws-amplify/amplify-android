@@ -1,33 +1,42 @@
 package com.amplifyframework.datastore.syncengine
 
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.model.Model
-import java.util.*
-import java.util.concurrent.TimeUnit
+import com.amplifyframework.AmplifyException
 
-class RequestRetry {
+import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.core.SingleEmitter
+import java.util.concurrent.TimeUnit
+import kotlin.math.pow
+
+
+class RequestRetry(private val maxExponent: Int = 8,
+                    private val jitterFactor: Int = 100,
+                    private val maxAttempts: Int = 3) {
 
     private var numberOfAttempts = 0
-    private val maxExponent = 8
-    private val jitterFactor = 100
-    private val LOG = Amplify.Logging.forNamespace("amplify:aws-datastore")
 
-    fun <T : Model> retry(retryCallback: RetryCallbackInterface<T>) {
-        numberOfAttempts++
-        val jitteredDelay = jitteredDelay()
-        Timer().schedule(object : TimerTask() {
-            override fun run() {
-                LOG.verbose("Retrying attempt number:$numberOfAttempts jittered delay:$jitteredDelay")
-                retryCallback.execute()
-                cancel()
-            }
-        }, jitteredDelay)
-    }
+
+        fun <T> retry(single: Single<T>, skipExceptions: List<Class<out Throwable>?>): Single<T> {
+            return Single.create { emitter -> call(single, emitter, 0, skipExceptions) }
+        }
+
+        private fun <T> call(single: Single<T>, emitter: SingleEmitter<T>, delayInSeconds: Long, skipExceptions: List<Class<out Throwable>?> ) {
+           single.delaySubscription(delayInSeconds, TimeUnit.SECONDS)
+                .subscribe({
+                            t: T -> emitter.onSuccess(t)
+                }) { error ->
+                    numberOfAttempts++
+                    if (numberOfAttempts > maxAttempts || (error.javaClass in skipExceptions)) {
+                        emitter.onError(error)
+                    } else {
+                        call(single, emitter, jitteredDelay(),skipExceptions )
+                    }
+                }
+        }
 
 
     fun jitteredDelay(): Long {
         val waitTimeSeconds: Long = java.lang.Double.valueOf(
-            Math.pow(2.0, (numberOfAttempts % maxExponent).toDouble())
+            2.0.pow((numberOfAttempts % maxExponent).toDouble())
                     + jitterFactor * Math.random()
         ).toLong()
         return TimeUnit.MILLISECONDS.toMillis(waitTimeSeconds)

@@ -19,6 +19,7 @@ import android.util.Range;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
@@ -69,6 +70,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.BLOGGER_ISLA;
@@ -83,6 +85,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link SyncProcessor}.
@@ -118,7 +121,7 @@ public final class SyncProcessorTest {
 
         this.appSync = mock(AppSync.class);
         this.errorHandlerCallCount = 0;
-        this.requestRetry = mock(RequestRetry.class);
+        this.requestRetry = new RequestRetry();
 
         initSyncProcessor(10_000);
     }
@@ -552,7 +555,7 @@ public final class SyncProcessorTest {
     public void userProvidedErrorCallbackInvokedOnFailure() throws DataStoreException {
         // Arrange: mock failure when invoking hydrate on the mock object.
         AppSyncMocking.sync(appSync)
-            .mockFailure(new DataStoreException("Something timed out during sync.", "Nothing to do.", ErrorType.IRRECOVERABLE_ERROR));
+            .mockFailure(new DataStoreException.GraphQLResponseException("Something timed out during sync.", new ArrayList<GraphQLResponse.Error>()));
 
         // Act: call hydrate.
         assertTrue(
@@ -572,16 +575,20 @@ public final class SyncProcessorTest {
      * @throws DataStoreException On failure to build GraphQLRequest for sync query.
      */
     @Test
-    public void RetriedOnAppSyncFailure() throws DataStoreException {
+    public void RetriedOnAppSyncFailure() throws AmplifyException {
         // Arrange: mock failure when invoking hydrate on the mock object.
+        requestRetry = mock(RequestRetry.class);
+        when(requestRetry.retry(any(), any())).thenReturn(Single.error(new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>","")));
+
+        initSyncProcessor(10_000);
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
-        // Act: call hydrate.
 
+        // Act: call hydrate.
         syncProcessor.hydrate()
                 .test(false)
                 .assertNotComplete();
-        verify(requestRetry, times(1)).retry(any());
+        verify(requestRetry, times(1)).retry(any(), any());
 
     }
 
