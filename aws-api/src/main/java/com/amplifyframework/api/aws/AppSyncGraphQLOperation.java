@@ -142,7 +142,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                     return;
                 }
             }
-            if(response.code() >= 400) {
+            if(response.code() >= 400 && response.code() <= 499) {
                 onFailure.accept(new ApiException.ApiIrrecoverableException("OkHttp client request failed.", "Irrecoverable error"));
             }
 
