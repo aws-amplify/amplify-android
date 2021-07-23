@@ -23,6 +23,8 @@ import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthorizationType;
+import com.amplifyframework.api.aws.EndpointType;
+import com.amplifyframework.api.aws.sigv4.ApiGatewayIamSigner;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
@@ -30,6 +32,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
+import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
 
@@ -43,6 +46,9 @@ import okhttp3.Request;
 public final class ApiRequestDecoratorFactory {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
+    private static final String APP_SYNC_SERVICE_NAME = "appsync";
+    private static final String API_GATEWAY_SERVICE_NAME = "apigateway";
+
     private static final RequestDecorator NO_OP_REQUEST_DECORATOR = new RequestDecorator() {
         @Override
         public Request decorate(Request request) {
@@ -54,33 +60,25 @@ public final class ApiRequestDecoratorFactory {
     private final String region;
     private final AuthorizationType defaultAuthorizationType;
     private final String apiKey;
+    private final EndpointType endpointType;
 
     /**
      * Constructor that accepts the API auth providers to be used with their respective request decorator.
      * @param apiAuthProviders An instance with fully configured auth providers for use when signing requests.
      * @param defaultAuthorizationType The authorization type to use as default.
      * @param region The AWS region where the API is deployed.
-     */
-    public ApiRequestDecoratorFactory(@NonNull ApiAuthProviders apiAuthProviders,
-                                      @NonNull AuthorizationType defaultAuthorizationType,
-                                      @NonNull String region) {
-        this(apiAuthProviders, defaultAuthorizationType, region, null);
-    }
-
-    /**
-     * Constructor that accepts the API auth providers to be used with their respective request decorator.
-     * @param apiAuthProviders An instance with fully configured auth providers for use when signing requests.
-     * @param defaultAuthorizationType The authorization type to use as default.
-     * @param region The AWS region where the API is deployed.
+     * @param endpointType type of endpoint, either GraphQL or REST.
      * @param apiKey The API key to use for APIs with API_KEY authentication type.
      */
     public ApiRequestDecoratorFactory(@NonNull ApiAuthProviders apiAuthProviders,
                                       @NonNull AuthorizationType defaultAuthorizationType,
                                       @NonNull String region,
+                                      @NonNull EndpointType endpointType,
                                       @Nullable String apiKey) {
         this.apiAuthProviders = Objects.requireNonNull(apiAuthProviders);
         this.defaultAuthorizationType = Objects.requireNonNull(defaultAuthorizationType);
         this.region = Objects.requireNonNull(region);
+        this.endpointType = Objects.requireNonNull(endpointType);
         this.apiKey = apiKey;
     }
 
@@ -130,7 +128,7 @@ public final class ApiRequestDecoratorFactory {
                                                             exception,
                                                             "Check the application logs for details.");
                 }
-                return new JWTTokenRequestDecorator(() -> token);
+                return new TokenRequestDecorator(() -> token);
             case OPENID_CONNECT:
                 if (apiAuthProviders.getOidcAuthProvider() == null) {
                     throw new ApiAuthException("Attempting to use OPENID_CONNECT authorization " +
@@ -146,7 +144,22 @@ public final class ApiRequestDecoratorFactory {
                                                exception,
                                                "Check the application logs for details.");
                 }
-                return new JWTTokenRequestDecorator(() -> oidcToken);
+                return new TokenRequestDecorator(() -> oidcToken);
+            case AWS_LAMBDA:
+                if (apiAuthProviders.getFunctionAuthProvider() == null) {
+                    throw new ApiAuthException("Attempting to use AWS_LAMBDA authorization " +
+                            "without a provider implemented.",
+                            "Configure a FunctionAuthProvider when initializing the API plugin.");
+                }
+                final String functionToken;
+                try {
+                    functionToken = apiAuthProviders.getFunctionAuthProvider().getLatestAuthToken();
+                } catch (ApiException exception) {
+                    throw new ApiAuthException("Failed to retrieve auth token from function auth provider.",
+                            exception,
+                            "Check the application logs for details.");
+                }
+                return new TokenRequestDecorator(() -> functionToken);
             case API_KEY:
                 if (apiAuthProviders.getApiKeyAuthProvider() != null) {
                     return new ApiKeyRequestDecorator(apiAuthProviders.getApiKeyAuthProvider());
@@ -154,17 +167,27 @@ public final class ApiRequestDecoratorFactory {
                     return new ApiKeyRequestDecorator(() -> apiKey);
                 } else {
                     throw new ApiAuthException("Attempting to use API_KEY authorization without " +
-                                                                "an API key provider or an API key in the config file",
-                                                            "Verify that an API key is in the config file or an " +
-                                                                "ApiKeyAuthProvider is setup during the API " +
-                                                                "plugin initialization.");
+                                                "an API key provider or an API key in the config file",
+                                                "Verify that an API key is in the config file or an " +
+                                                "ApiKeyAuthProvider is setup during the API " +
+                                                "plugin initialization.");
                 }
             case AWS_IAM:
                 AWSCredentialsProvider credentialsProvider = apiAuthProviders.getAWSCredentialsProvider() != null
                         ? apiAuthProviders.getAWSCredentialsProvider()
                         : getDefaultCredentialsProvider();
-                AppSyncV4Signer appSyncV4Signer = new AppSyncV4Signer(region);
-                return new IamRequestDecorator(appSyncV4Signer, credentialsProvider);
+
+                final AWS4Signer signer;
+                final String serviceName;
+                if (endpointType == EndpointType.GRAPHQL) {
+                    signer = new AppSyncV4Signer(region);
+                    serviceName = APP_SYNC_SERVICE_NAME;
+                } else {
+                    signer = new ApiGatewayIamSigner(region);
+                    serviceName = API_GATEWAY_SERVICE_NAME;
+                }
+
+                return new IamRequestDecorator(signer, credentialsProvider, serviceName);
             case NONE:
             default:
                 return NO_OP_REQUEST_DECORATOR;
