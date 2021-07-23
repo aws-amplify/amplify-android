@@ -30,7 +30,6 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.ErrorType;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
@@ -104,7 +103,7 @@ public final class SyncProcessorTest {
     private SyncProcessor syncProcessor;
     private int errorHandlerCallCount;
     private int modelCount;
-    RequestRetry requestRetry;
+    RetryHandler requestRetry;
 
 
     /**
@@ -121,7 +120,7 @@ public final class SyncProcessorTest {
 
         this.appSync = mock(AppSync.class);
         this.errorHandlerCallCount = 0;
-        this.requestRetry = new RequestRetry();
+        this.requestRetry = new RetryHandler();
 
         initSyncProcessor(10_000);
     }
@@ -577,7 +576,7 @@ public final class SyncProcessorTest {
     @Test
     public void RetriedOnAppSyncFailure() throws AmplifyException {
         // Arrange: mock failure when invoking hydrate on the mock object.
-        requestRetry = mock(RequestRetry.class);
+        requestRetry = mock(RetryHandler.class);
         when(requestRetry.retry(any(), any())).thenReturn(Single.error(new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>","")));
 
         initSyncProcessor(10_000);

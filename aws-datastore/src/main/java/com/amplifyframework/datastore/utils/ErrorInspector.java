@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.utils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -47,5 +48,31 @@ public final class ErrorInspector {
             // e.g. StackOverflowError, NoClassDefFoundError, etc.
             return false;
         }
+    }
+
+    /**
+     * Returns true if an error object was caused by a specific throwable type.
+     * @param error Error object to perform the check on.
+     * @param causeTypeList Class type of the error to look for in stacktrace.
+     * @return true if an error object contains given cause.
+     */
+    public static boolean contains(
+            @Nullable Throwable error,
+            @NonNull List<Class<? extends Throwable>> causeTypeList) {
+        Objects.requireNonNull(causeTypeList);
+        if (error == null) {
+            return false;
+        }
+        try {
+            for(Class<? extends Throwable> causeType : causeTypeList){
+                if (contains(error, causeType)){
+                    return true;
+                } }
+        } catch (Throwable unexpected) {
+            // May encounter unexpected error during recursive search.
+            // e.g. StackOverflowError, NoClassDefFoundError, etc.
+            return false;
+        }
+        return false;
     }
 }
