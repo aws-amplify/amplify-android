@@ -27,8 +27,8 @@ class RetryHandler(
         skipExceptions: List<Class<out Throwable>?>
     ) {
         single.delaySubscription(delayInSeconds, TimeUnit.SECONDS)
-            .subscribe({ t: T ->
-                emitter.onSuccess(t)
+            .subscribe({
+                emitter.onSuccess(it)
             }) { error ->
                 numberOfAttempts++
                 if (numberOfAttempts > maxAttempts || ErrorInspector.contains(error, skipExceptions)) {
