@@ -22,7 +22,7 @@ class RequestRetry(private val maxExponent: Int = 8,
         private fun <T> call(single: Single<T>, emitter: SingleEmitter<T>, delayInSeconds: Long, skipExceptions: List<Class<out Throwable>?> ) {
            single.delaySubscription(delayInSeconds, TimeUnit.SECONDS)
                 .subscribe({
-                            t: T -> emitter.onSuccess(t)
+                            emitter.onSuccess(it)
                 }) { error ->
                     numberOfAttempts++
                     if (numberOfAttempts > maxAttempts || (error.javaClass in skipExceptions)) {
