@@ -13,39 +13,38 @@ class RetryHandler(
     private val maxAttempts: Int = 3
 ) {
 
-    private var numberOfAttempts = 0
+    //private var numberOfAttempts = 0
 
 
     fun <T> retry(single: Single<T>, skipExceptions: List<Class<out Throwable>?>): Single<T> {
-        return Single.create { emitter -> call(single, emitter, 0, skipExceptions) }
+        return Single.create { emitter -> call(single, emitter, 0, maxAttempts, skipExceptions) }
     }
 
     private fun <T> call(
         single: Single<T>,
         emitter: SingleEmitter<T>,
         delayInSeconds: Long,
+        attemptsLeft: Int,
         skipExceptions: List<Class<out Throwable>?>
     ) {
         single.delaySubscription(delayInSeconds, TimeUnit.SECONDS)
             .subscribe({
                 emitter.onSuccess(it)
             }) { error ->
-                numberOfAttempts++
-                if (numberOfAttempts > maxAttempts || ErrorInspector.contains(error, skipExceptions)) {
+                if (attemptsLeft != 0 || ErrorInspector.contains(error, skipExceptions)) {
                     emitter.onError(error)
                 } else {
-                    call(single, emitter, jitteredDelay(), skipExceptions)
+                    call(single, emitter, jitteredDelayMilli(attemptsLeft), attemptsLeft -1, skipExceptions)
                 }
             }
     }
 
 
-    fun jitteredDelay(): Long {
+    fun jitteredDelayMilli(attemptsLeft: Int): Long {
         val waitTimeSeconds: Long =
-            2.0.pow((numberOfAttempts % maxExponent)).toLong()
+            2.0.pow(((maxAttempts - attemptsLeft) % maxExponent)).toLong()
         +jitterFactor * Math.random()
-
-        return TimeUnit.MILLISECONDS.toMillis(waitTimeSeconds)
+        return TimeUnit.SECONDS.toMillis(waitTimeSeconds)
     }
 
 }

@@ -84,7 +84,8 @@ ext {
                 espresso: 'androidx.test.espresso:espresso-core:3.3.0',
                 orchestrator: 'androidx.test:orchestrator:1.3.0',
                 navigation: "androidx.navigation:navigation-testing:$navigationVersion",
-                fragment: "androidx.fragment:fragment-testing:$fragmentVersion"
+                fragment: "androidx.fragment:fragment-testing:$fragmentVersion",
+                mockito: "org.mockito:mockito-core:3.8.0"
             ]
         ],
         aws: [
@@ -178,10 +179,6 @@ private void configureAndroidLibrary(Project project) {
         // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
         packagingOptions {
             exclude 'META-INF/DEPENDENCIES'
-        }
-
-        kotlinOptions {
-            jvmTarget = JavaVersion.VERSION_1_8.toString()
         }
 
     }

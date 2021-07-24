@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Amplify;
@@ -286,7 +287,7 @@ final class SyncProcessor {
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
         List<Class<? extends Throwable>> skipException = new ArrayList<Class<? extends Throwable>>();
         skipException.add(DataStoreException.GraphQLResponseException.class);
-        skipException.add(DataStoreException.IrRecoverableException.class);
+        skipException.add(ApiException.NonRetryableException.class);
         return requestRetry.retry(syncPage(request), skipException);
     }
 

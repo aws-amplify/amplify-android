@@ -53,9 +53,9 @@ public class ApiException extends AmplifyException {
         super(message, recoverySuggestion);
     }
 
-    public static final class ApiIrrecoverableException extends ApiException {
+    public static final class NonRetryableException extends ApiException {
         private static final long serialVersionUID = 1L;
-        public ApiIrrecoverableException(@NonNull @NotNull String message, @NotNull String recoverySuggestion) {
+        public NonRetryableException(@NonNull @NotNull String message, @NotNull String recoverySuggestion) {
             super(message, recoverySuggestion);
         }
     }
