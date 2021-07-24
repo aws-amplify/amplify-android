@@ -1,3 +1,14 @@
+## [Release 1.23.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.23.0)
+
+### Features
+- add support for AWS_LAMBDA auth type (#1412)
+
+### Miscellaneous
+- Delete stale.yml (#1421)
+- Updated DataStore delete test based on expected delete behavior (#1423)
+
+[See all changes between 1.22.0 and 1.23.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.22.0...release_v1.23.0)
+
 ## [Release 1.22.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.22.0)
 
 ### Features
