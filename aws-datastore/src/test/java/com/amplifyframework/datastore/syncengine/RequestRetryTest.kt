@@ -13,7 +13,7 @@ class RequestRetryTest : TestCase() {
     fun testRetry() {
         //arrange
         val subject = RetryHandler()
-        val expectedValue = "PaginatedResult<ModelWithMetadata<BlogOwner>>"
+        val expectedValue = "Test value"
         val mockSingle = Single.create<String> {emitter-> emitter.onSuccess(expectedValue)   }
 
         //act and assert
@@ -35,7 +35,7 @@ class RequestRetryTest : TestCase() {
         //act and assert
         subject.retry(mockSingle, listOf(DataStoreException.GraphQLResponseException::class.java))
             .test()
-            .awaitDone(1000,TimeUnit.SECONDS)
+            .awaitDone(10,TimeUnit.SECONDS)
             .assertError(expectedException)
             .isDisposed
     }

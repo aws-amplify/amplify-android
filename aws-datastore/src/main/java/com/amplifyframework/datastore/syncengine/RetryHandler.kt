@@ -34,17 +34,18 @@ class RetryHandler(
                 if (attemptsLeft == 0 || ErrorInspector.contains(error, skipExceptions)) {
                     emitter.onError(error)
                 } else {
-                    call(single, emitter, jitteredDelayMilli(attemptsLeft), attemptsLeft -1, skipExceptions)
+                    call(single, emitter, jitteredDelaySec
+                        (attemptsLeft), attemptsLeft -1, skipExceptions)
                 }
             }
     }
 
 
-    fun jitteredDelayMilli(attemptsLeft: Int): Long {
+    fun jitteredDelaySec(attemptsLeft: Int): Long {
         val waitTimeSeconds: Long =
             2.0.pow(((maxAttempts - attemptsLeft) % maxExponent)).toLong()
         +jitterFactor * Math.random()
-        return TimeUnit.SECONDS.toMillis(waitTimeSeconds)
+        return waitTimeSeconds
     }
 
 }
