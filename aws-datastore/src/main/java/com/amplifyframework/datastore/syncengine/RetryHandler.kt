@@ -31,7 +31,7 @@ class RetryHandler(
             .subscribe({
                 emitter.onSuccess(it)
             }) { error ->
-                if (attemptsLeft != 0 || ErrorInspector.contains(error, skipExceptions)) {
+                if (attemptsLeft == 0 || ErrorInspector.contains(error, skipExceptions)) {
                     emitter.onError(error)
                 } else {
                     call(single, emitter, jitteredDelayMilli(attemptsLeft), attemptsLeft -1, skipExceptions)
