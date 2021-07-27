@@ -283,9 +283,10 @@ final class SyncProcessor {
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         });
     }
+
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPageWithRetry(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
-        List<Class<? extends Throwable>> skipException = new ArrayList<Class<? extends Throwable>>();
+        List<Class<? extends Throwable>> skipException = new ArrayList<>();
         skipException.add(DataStoreException.GraphQLResponseException.class);
         skipException.add(ApiException.NonRetryableException.class);
         return requestRetry.retry(syncPage(request), skipException);
