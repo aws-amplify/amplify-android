@@ -13,9 +13,6 @@ class RetryHandler(
     private val maxAttempts: Int = 3
 ) {
 
-    //private var numberOfAttempts = 0
-
-
     fun <T> retry(single: Single<T>, skipExceptions: List<Class<out Throwable>?>): Single<T> {
         return Single.create { emitter -> call(single, emitter, 0, maxAttempts, skipExceptions) }
     }
