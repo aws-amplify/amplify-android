@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Single
 import junit.framework.TestCase
 import org.junit.Test
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 class RequestRetryTest : TestCase() {
 
@@ -45,14 +46,32 @@ class RequestRetryTest : TestCase() {
         //arrange
         val subject = RetryHandler(jitterFactor = 0, maxAttempts = 1)
         val expectedException = DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>","")
-        val mockSingle = Single.error<String>( expectedException)
+        val count = AtomicInteger(0)
 
+        val mockSingle = Single.error<String> {
+            count.incrementAndGet()
+            expectedException
+        }
         //act and assert
         subject.retry(mockSingle, listOf())
             .test()
             .awaitDone(10,TimeUnit.SECONDS)
             .assertError(expectedException)
             .isDisposed
+
+        assertEquals(2,count.get())
     }
+
+
+    @Test
+    fun testJitteredDelaySec() {
+        //arrange
+        val subject = RetryHandler(jitterFactor = 0, maxAttempts = 1)
+        //act
+        val delay = subject.jitteredDelaySec(2)
+        //assert
+        assertEquals(4,delay)
+    }
+
 
 }

@@ -42,8 +42,9 @@ class RetryHandler(
 
 
     fun jitteredDelaySec(attemptsLeft: Int): Long {
+        val numAttempt = maxAttempts - (maxAttempts - attemptsLeft)
         val waitTimeSeconds: Long =
-            2.0.pow(((maxAttempts - attemptsLeft) % maxExponent)).toLong()
+            2.0.pow(((numAttempt) % maxExponent)).toLong()
         +jitterFactor * Math.random()
         return waitTimeSeconds
     }
