@@ -1,3 +1,15 @@
+## [Release 0.7.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.7.0)
+
+### Features
+- add support for AWS_LAMBDA auth type (#1412)
+
+### Miscellaneous
+- Delete stale.yml (#1421)
+- Updated DataStore delete test based on expected delete behavior (#1423)
+- feat(api) add CUSTOM case to AuthStrategy (#1428)
+
+[See all changes between 0.6.0 and 0.7.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.6.0...release-kotlin_v0.7.0)
+
 ## [Release 0.6.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.6.0)
 
 ### Features
