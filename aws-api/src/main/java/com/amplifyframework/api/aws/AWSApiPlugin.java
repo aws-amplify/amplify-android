@@ -25,6 +25,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
+import com.amplifyframework.api.aws.auth.RequestDecorator;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
@@ -144,26 +145,35 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 configurator.applyConfiguration(okHttpClientBuilder);
             }
 
+            final ApiRequestDecoratorFactory requestDecoratorFactory = new ApiRequestDecoratorFactory(authProvider,
+                    apiConfiguration.getAuthorizationType(),
+                    apiConfiguration.getRegion(),
+                    apiConfiguration.getEndpointType(),
+                    apiConfiguration.getApiKey());
+
             ClientDetails clientDetails = null;
             if (EndpointType.REST.equals(endpointType)) {
-                final InterceptorFactory interceptorFactory =
-                    new AppSyncSigV4SignerInterceptorFactory(authProvider);
                 if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
-                    okHttpClientBuilder.addInterceptor(interceptorFactory.create(apiConfiguration));
+                    AuthorizationType authorizationType = apiConfiguration.getAuthorizationType();
+                    RequestDecorator decorator = requestDecoratorFactory.forAuthType(authorizationType);
+                    okHttpClientBuilder.addInterceptor(chain -> {
+                        try {
+                            return chain.proceed(decorator.decorate(chain.request()));
+                        } catch (ApiException.ApiAuthException apiAuthException) {
+                            throw new IOException("Failed to decorate request for authorization.", apiAuthException);
+                        }
+                    });
                 }
-                clientDetails = new ClientDetails(apiConfiguration, okHttpClientBuilder.build(), null, null);
+                clientDetails = new ClientDetails(apiConfiguration,
+                                                  okHttpClientBuilder.build(),
+                                                  null,
+                                                  requestDecoratorFactory);
                 restApis.add(apiName);
             } else if (EndpointType.GRAPHQL.equals(endpointType)) {
                 final SubscriptionAuthorizer subscriptionAuthorizer =
                     new SubscriptionAuthorizer(apiConfiguration, authProvider);
                 final SubscriptionEndpoint subscriptionEndpoint =
                     new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
-                final ApiRequestDecoratorFactory requestDecoratorFactory =
-                    new ApiRequestDecoratorFactory(authProvider,
-                                                   apiConfiguration.getAuthorizationType(),
-                                                   apiConfiguration.getRegion(),
-                                                   apiConfiguration.getApiKey());
-
                 clientDetails = new ClientDetails(apiConfiguration,
                                                   okHttpClientBuilder.build(),
                                                   subscriptionEndpoint,
