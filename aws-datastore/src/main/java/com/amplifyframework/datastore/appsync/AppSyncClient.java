@@ -119,7 +119,7 @@ public final class AppSyncClient implements AppSync {
         };
         final Consumer<ApiException> failureConsumer =
             failure -> {
-            onFailure.accept(new DataStoreException(
+                onFailure.accept(new DataStoreException(
                         "Failure performing sync query to AppSync.",
                         failure, AmplifyException.TODO_RECOVERY_SUGGESTION));
             };
