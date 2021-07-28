@@ -22,7 +22,7 @@ import java.net.URI;
 /**
  * Handles signing of APIGateway request using sigv4 signing.
  */
-final class ApiGatewayIamSigner extends AWS4Signer {
+public final class ApiGatewayIamSigner extends AWS4Signer {
 
     private static final String SERVICE_NAME_SCOPE = "execute-api";
 
@@ -30,7 +30,7 @@ final class ApiGatewayIamSigner extends AWS4Signer {
      * Constructs a {@link ApiGatewayIamSigner}.
      * @param region Region where the api gateway is defined.
      */
-    ApiGatewayIamSigner(String region) {
+    public ApiGatewayIamSigner(String region) {
         super(true);
         setRegionName(region);
     }

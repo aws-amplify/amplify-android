@@ -22,6 +22,7 @@ import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 
 import com.amazonaws.DefaultRequest;
+import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.http.HttpMethodName;
 import com.amazonaws.util.IOUtils;
@@ -43,18 +44,20 @@ import okio.Buffer;
 public class IamRequestDecorator implements RequestDecorator {
     private static final String CONTENT_TYPE = "application/json";
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(CONTENT_TYPE);
-    private static final String APP_SYNC_SERVICE_NAME = "appsync";
     private final AWSCredentialsProvider credentialsProvider;
-    private final AppSyncV4Signer v4Signer;
+    private final AWS4Signer v4Signer;
+    private final String serviceName;
 
     /**
      * Constructor that takes in the necessary dependencies used to sign the requests.
      * @param v4Signer An instance of the {@link AppSyncV4Signer}.
      * @param credentialsProvider The AWS credentials provider to use when retrieving AWS credentials.
+     * @param serviceName the name of the AWS service for which the request is being decorated.
      */
-    public IamRequestDecorator(AppSyncV4Signer v4Signer, AWSCredentialsProvider credentialsProvider) {
+    public IamRequestDecorator(AWS4Signer v4Signer, AWSCredentialsProvider credentialsProvider, String serviceName) {
         this.v4Signer = v4Signer;
         this.credentialsProvider = credentialsProvider;
+        this.serviceName = serviceName;
     }
 
     /**
@@ -65,7 +68,8 @@ public class IamRequestDecorator implements RequestDecorator {
      */
     public final okhttp3.Request decorate(okhttp3.Request req) throws ApiAuthException {
         //Clone the request into a new DefaultRequest object and populate it with credentials
-        final DefaultRequest<?> dr = new DefaultRequest<>(APP_SYNC_SERVICE_NAME);
+        final DefaultRequest<?> dr = new DefaultRequest<>(serviceName);
+
         //set the endpoint
         dr.setEndpoint(req.url().uri());
         //copy all the headers

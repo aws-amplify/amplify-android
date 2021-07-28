@@ -261,7 +261,7 @@ public final class AppSyncClientInstrumentationTest {
 
     /**
      * Deletes an instance of a model.
-     * @param model The the model instance to delete
+     * @param model The model instance to delete
      * @param schema The schema of model being deleted
      * @param version The version of the model being deleted as understood by client
      * @param <T> Type of model being deleted
