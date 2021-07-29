@@ -187,6 +187,21 @@ public final class SQLPredicate {
                         .append("?");
             case EQUAL:
             case NOT_EQUAL:
+                Object operatorValue = getOperatorValue(op);
+                if (operatorValue != null) {
+                    addBinding(operatorValue);
+                    return builder.append(column)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.fromQueryOperator(op.type()))
+                        .append(SqlKeyword.DELIMITER)
+                        .append("?");
+                } else {
+                    SqlKeyword sqlNullCheck =
+                            op.type() == QueryOperator.Type.EQUAL ? SqlKeyword.IS_NULL : SqlKeyword.IS_NOT_NULL;
+                    return builder.append(column)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(sqlNullCheck.toString());
+                }
             case LESS_THAN:
             case GREATER_THAN:
             case LESS_OR_EQUAL:
