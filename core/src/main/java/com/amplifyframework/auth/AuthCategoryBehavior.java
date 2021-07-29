@@ -22,9 +22,12 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -320,6 +323,20 @@ public interface AuthCategoryBehavior {
     /**
      * Update a single user attribute.
      * @param attribute Attribute to be updated
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull AuthUpdateUserAttributeOptions options,
+            @NonNull Consumer<AuthUpdateAttributeResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Update a single user attribute.
+     * @param attribute Attribute to be updated
      * @param onSuccess Success callback
      * @param onError Error callback
      */
@@ -331,12 +348,41 @@ public interface AuthCategoryBehavior {
     /**
      * Update multiple user attributes.
      * @param attributes Attributes to be updated
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull AuthUpdateUserAttributesOptions options,
+            @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Update multiple user attributes.
+     * @param attributes Attributes to be updated
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void updateUserAttributes(
             @NonNull List<AuthUserAttribute> attributes,
             @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * If the user's confirmation code expires or they just missed it, this method
+     * can be used to send them a new one.
+     * @param attributeKey Key of attribute that user wants to operate on
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull AuthResendUserAttributeConfirmationCodeOptions options,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError
     );
 

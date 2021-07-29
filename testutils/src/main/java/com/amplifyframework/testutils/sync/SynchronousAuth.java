@@ -29,9 +29,12 @@ import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -370,6 +373,22 @@ public final class SynchronousAuth {
     /**
      * Update user attribute synchronously.
      * @param attribute The user attribute to be updated
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return result object
+     * @throws AuthException exception
+     */
+    public AuthUpdateAttributeResult updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull AuthUpdateUserAttributeOptions options
+    ) throws AuthException {
+        return Await.<AuthUpdateAttributeResult, AuthException>result((onResult, onError) -> {
+            asyncDelegate.updateUserAttribute(attribute, options, onResult, onError);
+        });
+    }
+
+    /**
+     * Update user attribute synchronously.
+     * @param attribute The user attribute to be updated
      * @return result object
      * @throws AuthException exception
      */
@@ -377,6 +396,23 @@ public final class SynchronousAuth {
         return Await.<AuthUpdateAttributeResult, AuthException>result((onResult, onError) -> {
             asyncDelegate.updateUserAttribute(attribute, onResult, onError);
         });
+    }
+
+    /**
+     * Update user attributes synchronously.
+     * @param attributes The user attributes to be updated
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return result object
+     * @throws AuthException exception
+     */
+    public Map<AuthUserAttributeKey, AuthUpdateAttributeResult> updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull AuthUpdateUserAttributesOptions options
+    ) throws AuthException {
+        return Await.<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>, AuthException>result((
+            (onResult, onError) -> {
+                asyncDelegate.updateUserAttributes(attributes, options, onResult, onError);
+            }));
     }
 
     /**
@@ -391,6 +427,22 @@ public final class SynchronousAuth {
             (onResult, onError) -> {
                 asyncDelegate.updateUserAttributes(attributes, onResult, onError);
             }));
+    }
+
+    /**
+     * Resend user attribute confirmation code to verify user attribute synchronously.
+     * @param attributeKey The user attribute key
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return result object
+     * @throws AuthException exception
+     */
+    public AuthCodeDeliveryDetails resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull AuthResendUserAttributeConfirmationCodeOptions options
+    ) throws AuthException {
+        return Await.<AuthCodeDeliveryDetails, AuthException>result((onResult, onError) -> {
+            asyncDelegate.resendUserAttributeConfirmationCode(attributeKey, options, onResult, onError);
+        });
     }
 
     /**

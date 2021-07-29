@@ -31,9 +31,12 @@ import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSessionResult;
@@ -651,11 +654,14 @@ public final class AuthComponentTest {
                 new UserCodeDeliveryDetails(DESTINATION, DELIVERY_MEDIUM, ATTRIBUTE_NAME));
 
         doAnswer(invocation -> {
-            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(1);
+            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(2);
             callback.onResult(userCodeDeliveryDetailsList);
             return null;
-        }).when(mobileClient)
-                .updateUserAttributes(any(), Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
+        }).when(mobileClient).updateUserAttributes(
+                any(),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
 
         AuthUpdateAttributeResult result = synchronousAuth.updateUserAttribute(attribute);
 
@@ -665,8 +671,58 @@ public final class AuthComponentTest {
                 result.getNextStep().getUpdateAttributeStep()
         );
         validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
-        verify(mobileClient).updateUserAttributes(eq(attributeMap),
-                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
+        verify(mobileClient).updateUserAttributes(
+                eq(attributeMap),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
+    }
+
+    /**
+     * Tests that updateUserAttribute method of the Auth wrapper of AWSMobileClient (AMC) calls
+     * AMC.updateUserAttributes with the user attribute and options it received.
+     * Also ensures that in the onResult case, the success callback receives a valid AuthUpdateAttributeResult and in
+     * the onError case, the error call back receives an AuthException with the root cause attached.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void updateUserAttributeWithOptions() throws AuthException {
+        AuthUserAttribute attribute = new AuthUserAttribute(AuthUserAttributeKey.custom(ATTRIBUTE_KEY), ATTRIBUTE_VAL);
+        Map<String, String> attributeMap =
+                Collections.singletonMap(attribute.getKey().getKeyString(), attribute.getValue());
+        List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(
+                new UserCodeDeliveryDetails(DESTINATION, DELIVERY_MEDIUM, ATTRIBUTE_NAME));
+
+        AWSCognitoAuthUpdateUserAttributeOptions.CognitoBuilder options =
+                AWSCognitoAuthUpdateUserAttributeOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthUpdateUserAttributeOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(2);
+            callback.onResult(userCodeDeliveryDetailsList);
+            return null;
+        }).when(mobileClient).updateUserAttributes(
+                any(),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
+
+        AuthUpdateAttributeResult result = synchronousAuth.updateUserAttribute(attribute, builtOptions);
+
+        assertTrue(result.isUpdated());
+        assertEquals(
+                AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                result.getNextStep().getUpdateAttributeStep()
+        );
+        validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
+        verify(mobileClient).updateUserAttributes(
+                eq(attributeMap),
+                eq(metadata),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
     }
 
     /**
@@ -698,11 +754,14 @@ public final class AuthComponentTest {
                 ));
 
         doAnswer(invocation -> {
-            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(1);
+            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(2);
             callback.onResult(userCodeDeliveryDetailsList);
             return null;
-        }).when(mobileClient)
-                .updateUserAttributes(any(), Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
+        }).when(mobileClient).updateUserAttributes(
+                any(),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
 
         Map<AuthUserAttributeKey, AuthUpdateAttributeResult> result =
                 synchronousAuth.updateUserAttributes(attributes);
@@ -719,7 +778,76 @@ public final class AuthComponentTest {
         );
         validateCodeDeliveryDetails(result.get(attributeKey).getNextStep().getCodeDeliveryDetails());
         verify(mobileClient).updateUserAttributes(
-                eq(attributesMap), Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
+                eq(attributesMap),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
+    }
+
+    /**
+     * Tests that updateUserAttributes method of the Auth wrapper of AWSMobileClient (AMC) Calls
+     * AMC.updateUserAttributes with the user attributes and options it received.
+     * Also ensures that in the onResult case, the success callback receives a valid Map which maps
+     * AuthUserAttributeKey into AuthUpdateAttributeResult, and in the onError case, the error call
+     * back receives an AuthException with the root cause attached.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void updateUserAttributesWithOptions() throws AuthException {
+        List<AuthUserAttribute> attributes = new ArrayList<>();
+        AuthUserAttributeKey attributeKey = AuthUserAttributeKey.custom(ATTRIBUTE_KEY);
+        AuthUserAttributeKey attributeKeyWithoutCode = AuthUserAttributeKey.custom(ATTRIBUTE_KEY_WITHOUT_CODE_DELIVERY);
+        attributes.add(new AuthUserAttribute(attributeKey, ATTRIBUTE_VAL));
+        attributes.add(new AuthUserAttribute(attributeKeyWithoutCode, ATTRIBUTE_VAL_WITHOUT_CODE_DELIVERY));
+
+        Map<String, String> attributesMap = new HashMap<>();
+        for (AuthUserAttribute attribute : attributes) {
+            attributesMap.put(attribute.getKey().getKeyString(), attribute.getValue());
+        }
+
+        List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(
+                new UserCodeDeliveryDetails(
+                        DESTINATION,
+                        DELIVERY_MEDIUM,
+                        ATTRIBUTE_NAME
+                ));
+
+        AWSCognitoAuthUpdateUserAttributesOptions.CognitoBuilder options =
+                AWSCognitoAuthUpdateUserAttributesOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthUpdateUserAttributesOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(2);
+            callback.onResult(userCodeDeliveryDetailsList);
+            return null;
+        }).when(mobileClient).updateUserAttributes(
+                any(),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
+
+        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> result =
+                synchronousAuth.updateUserAttributes(attributes, builtOptions);
+
+        assertTrue(result.get(attributeKey).isUpdated());
+        assertTrue(result.get(attributeKeyWithoutCode).isUpdated());
+        assertEquals(
+                AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                result.get(attributeKey).getNextStep().getUpdateAttributeStep()
+        );
+        assertEquals(
+                AuthUpdateAttributeStep.DONE,
+                result.get(attributeKeyWithoutCode).getNextStep().getUpdateAttributeStep()
+        );
+        validateCodeDeliveryDetails(result.get(attributeKey).getNextStep().getCodeDeliveryDetails());
+        verify(mobileClient).updateUserAttributes(
+                eq(attributesMap),
+                eq(metadata),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
     }
 
     /**
@@ -737,16 +865,65 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            Callback<UserCodeDeliveryDetails> callback = invocation.getArgument(1);
+            Callback<UserCodeDeliveryDetails> callback = invocation.getArgument(2);
             callback.onResult(userCodeDeliveryDetails);
             return null;
-        }).when(mobileClient)
-                .verifyUserAttribute(any(), Mockito.<Callback<UserCodeDeliveryDetails>>any());
+        }).when(mobileClient).verifyUserAttribute(
+                any(),
+                any(),
+                Mockito.<Callback<UserCodeDeliveryDetails>>any()
+        );
 
         AuthCodeDeliveryDetails result = synchronousAuth.resendUserAttributeConfirmationCode(attributeKey);
         validateCodeDeliveryDetails(result);
-        verify(mobileClient).verifyUserAttribute(eq(attributeKey.getKeyString()),
-                Mockito.<Callback<UserCodeDeliveryDetails>>any());
+        verify(mobileClient).verifyUserAttribute(
+                eq(attributeKey.getKeyString()),
+                any(),
+                Mockito.<Callback<UserCodeDeliveryDetails>>any()
+        );
+    }
+
+    /**
+     * Tests the resendUserAttributeConfirmationCode method of the Auth wrapper of AWSMobileClient (AMC) Calls
+     * AMC.verifyUserAttribute with the user attribute key to be verified and options it received.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void resendUserAttributeConfirmationCodeWithOptions() throws AuthException {
+        AuthUserAttributeKey attributeKey = AuthUserAttributeKey.custom(ATTRIBUTE_KEY);
+        UserCodeDeliveryDetails userCodeDeliveryDetails = new UserCodeDeliveryDetails(
+                DESTINATION,
+                DELIVERY_MEDIUM,
+                ATTRIBUTE_NAME
+        );
+
+        AWSCognitoAuthResendUserAttributeConfirmationCodeOptions.CognitoBuilder options =
+                AWSCognitoAuthResendUserAttributeConfirmationCodeOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthResendUserAttributeConfirmationCodeOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<UserCodeDeliveryDetails> callback = invocation.getArgument(2);
+            callback.onResult(userCodeDeliveryDetails);
+            return null;
+        }).when(mobileClient).verifyUserAttribute(
+                any(),
+                any(),
+                Mockito.<Callback<UserCodeDeliveryDetails>>any()
+        );
+
+        AuthCodeDeliveryDetails result = synchronousAuth.resendUserAttributeConfirmationCode(
+                attributeKey,
+                builtOptions
+        );
+        validateCodeDeliveryDetails(result);
+        verify(mobileClient).verifyUserAttribute(
+                eq(attributeKey.getKeyString()),
+                eq(metadata),
+                Mockito.<Callback<UserCodeDeliveryDetails>>any()
+        );
     }
 
     /**

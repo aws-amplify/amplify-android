@@ -22,9 +22,12 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -258,6 +261,16 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     @Override
     public void updateUserAttribute(
             @NonNull AuthUserAttribute attribute,
+            @NonNull AuthUpdateUserAttributeOptions options,
+            @NonNull Consumer<AuthUpdateAttributeResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().updateUserAttribute(attribute, options, onSuccess, onError);
+    }
+
+    @Override
+    public void updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
             @NonNull Consumer<AuthUpdateAttributeResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
@@ -267,10 +280,30 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     @Override
     public void updateUserAttributes(
             @NonNull List<AuthUserAttribute> attributes,
+            @NonNull AuthUpdateUserAttributesOptions options,
+            @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().updateUserAttributes(attributes, options, onSuccess, onError);
+    }
+
+    @Override
+    public void updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
             @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().updateUserAttributes(attributes, onSuccess, onError);
+    }
+
+    @Override
+    public void resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull AuthResendUserAttributeConfirmationCodeOptions options,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().resendUserAttributeConfirmationCode(attributeKey, options, onSuccess, onError);
     }
 
     @Override
