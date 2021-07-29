@@ -265,15 +265,12 @@ public final class Orchestrator {
     private void startObservingStorageChanges() throws DataStoreException {
         LOG.info("Starting to observe local storage changes.");
         try {
-            boolean subscribed = mutationOutbox.load()
+            mutationOutbox.load()
                 .andThen(Completable.create(emitter -> {
                     storageObserver.startObservingStorageChanges(emitter::onComplete);
                     LOG.info("Setting currentState to LOCAL_ONLY");
                     currentState.set(State.LOCAL_ONLY);
-                })).blockingAwait(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            if (!subscribed) {
-                throw new TimeoutException("Timed out while preparing local-only mode.");
-            }
+                })).blockingAwait();
         } catch (Throwable throwable) {
             throw new DataStoreException("Timed out while starting to observe storage changes.",
                 throwable,
