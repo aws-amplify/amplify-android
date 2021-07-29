@@ -202,6 +202,13 @@ public final class AuthRuleRequestDecoratorTest {
             GraphQLRequest<Group> modifiedRequest = decorator.decorate(originalRequest, mode);
             assertNull(getOwnerField(modifiedRequest));
         }
+
+        // Custom auth with function provider does not add owner field.
+        for (SubscriptionType subscriptionType : SubscriptionType.values()) {
+            GraphQLRequest<CustomFunction> originalRequest = createRequest(CustomFunction.class, subscriptionType);
+            GraphQLRequest<CustomFunction> modifiedRequest = decorator.decorate(originalRequest, mode);
+            assertNull(getOwnerField(modifiedRequest));
+        }
     }
 
     /**
@@ -349,6 +356,9 @@ public final class AuthRuleRequestDecoratorTest {
 
     @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.PRIVATE) })
     private abstract static class Private implements Model {}
+
+    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.CUSTOM, provider = "function") })
+    private abstract static class CustomFunction implements Model {}
 
     @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
     private abstract static class Owner implements Model {}
