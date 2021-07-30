@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -45,12 +46,14 @@ import okhttp3.ResponseBody;
  * An operation to enqueue a GraphQL request to OkHttp client,
  * with the goal of obtaining a list of responses. For example,
  * this is used for a LIST query vs. a GET query or most mutations.
+ *
  * @param <R> Casted type of GraphQL result data
  */
 public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
-
+    private static final int startOfClientErrorCode = 400;
+    private static final int endOfClientErrorCode = 499;
     private final String endpoint;
     private final OkHttpClient client;
     private final Consumer<GraphQLResponse<R>> onResponse;
@@ -61,12 +64,13 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
     /**
      * Constructs a new AppSyncGraphQLOperation.
-     * @param endpoint API endpoint being hit
-     * @param client OkHttp client being used to hit the endpoint
-     * @param request GraphQL request being enacted
+     *
+     * @param endpoint        API endpoint being hit
+     * @param client          OkHttp client being used to hit the endpoint
+     * @param request         GraphQL request being enacted
      * @param responseFactory an implementation of GsonGraphQLResponseFactory
-     * @param onResponse Invoked when response is attained from endpoint
-     * @param onFailure Invoked upon failure to obtain response from endpoint
+     * @param onResponse      Invoked when response is attained from endpoint
+     * @param onFailure       Invoked upon failure to obtain response from endpoint
      */
     private AppSyncGraphQLOperation(
             @NonNull String endpoint,
@@ -95,11 +99,11 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             LOG.debug("Request: " + getRequest().getContent());
             RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
             Request okHttpRequest = new Request.Builder()
-                .url(endpoint)
-                .addHeader("accept", CONTENT_TYPE)
-                .addHeader("content-type", CONTENT_TYPE)
-                .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
-                .build();
+                    .url(endpoint)
+                    .addHeader("accept", CONTENT_TYPE)
+                    .addHeader("content-type", CONTENT_TYPE)
+                    .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
+                    .build();
             ongoingCall = client.newCall(requestDecorator.decorate(okHttpRequest));
 
             ongoingCall.enqueue(new OkHttpCallback());
@@ -110,8 +114,8 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             }
 
             onFailure.accept(new ApiException(
-                "OkHttp client failed to make a successful request.",
-                error, AmplifyException.TODO_RECOVERY_SUGGESTION
+                    "OkHttp client failed to make a successful request.",
+                    error, AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
         }
     }
@@ -136,14 +140,12 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                     jsonResponse = responseBody.string();
                 } catch (IOException exception) {
                     onFailure.accept(new ApiException(
-                        "Could not retrieve the response body from the returned JSON",
-                        exception, AmplifyException.TODO_RECOVERY_SUGGESTION
+                            "Could not retrieve the response body from the returned JSON",
+                            exception, AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
                     return;
                 }
             }
-            int startOfClientErrorCode = 400;
-            int endOfClientErrorCode = 499;
             if (response.code() >= startOfClientErrorCode && response.code() <= endOfClientErrorCode) {
                 onFailure.accept(new ApiException
                         .NonRetryableException
@@ -161,7 +163,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         @Override
         public void onFailure(@NonNull Call call, @NonNull IOException exception) {
             onFailure.accept(new ApiException(
-                "OkHttp client request failed.", exception, "See attached exception for more details."
+                    "OkHttp client request failed.", exception, "See attached exception for more details."
             ));
         }
     }
@@ -213,13 +215,13 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         @SuppressLint("SyntheticAccessor")
         AppSyncGraphQLOperation<R> build() {
             return new AppSyncGraphQLOperation<>(
-                Objects.requireNonNull(endpoint),
-                Objects.requireNonNull(client),
-                Objects.requireNonNull(request),
-                Objects.requireNonNull(apiRequestDecoratorFactory),
-                Objects.requireNonNull(responseFactory),
-                Objects.requireNonNull(onResponse),
-                Objects.requireNonNull(onFailure)
+                    Objects.requireNonNull(endpoint),
+                    Objects.requireNonNull(client),
+                    Objects.requireNonNull(request),
+                    Objects.requireNonNull(apiRequestDecoratorFactory),
+                    Objects.requireNonNull(responseFactory),
+                    Objects.requireNonNull(onResponse),
+                    Objects.requireNonNull(onFailure)
             );
         }
 
