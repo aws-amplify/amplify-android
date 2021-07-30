@@ -103,7 +103,7 @@ public final class SyncProcessorTest {
     private SyncProcessor syncProcessor;
     private int errorHandlerCallCount;
     private int modelCount;
-    RetryHandler requestRetry;
+    private RetryHandler requestRetry;
 
 
     /**
@@ -554,7 +554,9 @@ public final class SyncProcessorTest {
     public void userProvidedErrorCallbackInvokedOnFailure() throws DataStoreException {
         // Arrange: mock failure when invoking hydrate on the mock object.
         AppSyncMocking.sync(appSync)
-            .mockFailure(new DataStoreException.GraphQLResponseException("Something timed out during sync.", new ArrayList<GraphQLResponse.Error>()));
+            .mockFailure(new DataStoreException
+                    .GraphQLResponseException("Something timed out during sync.",
+                    new ArrayList<GraphQLResponse.Error>()));
 
         // Act: call hydrate.
         assertTrue(
@@ -571,13 +573,14 @@ public final class SyncProcessorTest {
     /**
      * Verify that retry is called on appsync failure.
      *
-     * @throws DataStoreException On failure to build GraphQLRequest for sync query.
+     * @throws AmplifyException On failure to build GraphQLRequest for sync query.
      */
     @Test
-    public void RetriedOnAppSyncFailure() throws AmplifyException {
+    public void retriedOnAppSyncFailure() throws AmplifyException {
         // Arrange: mock failure when invoking hydrate on the mock object.
         requestRetry = mock(RetryHandler.class);
-        when(requestRetry.retry(any(), any())).thenReturn(Single.error(new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>","")));
+        when(requestRetry.retry(any(), any())).thenReturn(Single.error(
+                new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "")));
 
         initSyncProcessor(10_000);
         AppSyncMocking.sync(appSync)

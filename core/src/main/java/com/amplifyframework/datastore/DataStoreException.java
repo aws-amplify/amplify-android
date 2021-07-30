@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.util.Immutable;
 
@@ -34,20 +33,19 @@ import java.util.Objects;
 public class DataStoreException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
+
     /**
      * Creates a new exception with a message, root cause, and recovery suggestion.
      * @param message An error message describing why this exception was thrown
      * @param throwable The underlying cause of this exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public DataStoreException(
-            @NonNull final String message,
+    public DataStoreException(@NonNull final String message,
             final Throwable throwable,
-            @NonNull final String recoverySuggestion
-    ) {
+            @NonNull final String recoverySuggestion) {
+
         super(message, throwable, recoverySuggestion);
     }
-
 
     /**
      * Constructs a new exception using a provided message and an associated error.
@@ -60,7 +58,6 @@ public class DataStoreException extends AmplifyException {
     ) {
         super(message, recoverySuggestion);
     }
-
 
     /**
      * Exception thrown by DataStore category plugins used to represent a GraphQLResponse containing errors.
@@ -119,9 +116,19 @@ public class DataStoreException extends AmplifyException {
         }
     }
 
+    /**
+     * IrRecoverable exception.
+     */
     public static class IrRecoverableException extends DataStoreException {
         private static final long serialVersionUID = 1L;
+
+        /**
+         * Constructor for irrecoverable exception.
+         * @param message message for the exception.
+         * @param recoverySuggestion recovery suggestion.
+         */
         public IrRecoverableException(@NonNull @NotNull String message, @NotNull String recoverySuggestion) {
+
             super(message, recoverySuggestion);
         }
     }

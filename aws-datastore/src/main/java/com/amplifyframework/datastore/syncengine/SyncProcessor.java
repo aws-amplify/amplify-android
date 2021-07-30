@@ -85,8 +85,8 @@ final class SyncProcessor {
         this.dataStoreConfigurationProvider = builder.dataStoreConfigurationProvider;
         this.queryPredicateProvider = builder.queryPredicateProvider;
         this.modelNames =
-                ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
-                        .toArray(new String[0]);
+            ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
+                .toArray(new String[0]);
         this.requestRetry = builder.requestRetry;
     }
 
@@ -232,7 +232,6 @@ final class SyncProcessor {
                         processor.onComplete();
                     }
                 })
-
                 // If it's a SerializedModel, add the ModelSchema, since it isn't added during deserialization.
                 .map(paginatedResult -> Flowable.fromIterable(paginatedResult)
                         .map(modelWithMetadata -> hydrateSchemaIfNeeded(modelWithMetadata, schema))
@@ -261,7 +260,7 @@ final class SyncProcessor {
      * Fetches one page for a sync.
      * @param request GraphQLRequest object for the sync, obtained from {@link AppSync#buildSyncRequest}, or from
      *                response.getData().getRequestForNextResult() for subsequent requests.
-     * @param <T>     The type of model to sync.
+     * @param <T> The type of model to sync.
      */
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
@@ -345,7 +344,7 @@ final class SyncProcessor {
         @NonNull
         @Override
         public QueryPredicateProviderStep dataStoreConfigurationProvider(
-                DataStoreConfigurationProvider dataStoreConfigurationProvider) {
+            DataStoreConfigurationProvider dataStoreConfigurationProvider) {
             this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
             return Builder.this;
         }

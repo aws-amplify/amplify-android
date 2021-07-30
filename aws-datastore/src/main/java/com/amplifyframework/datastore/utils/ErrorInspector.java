@@ -64,10 +64,11 @@ public final class ErrorInspector {
             return false;
         }
         try {
-            for(Class<? extends Throwable> causeType : causeTypeList){
-                if (contains(error, causeType)){
+            for (Class<? extends Throwable> causeType : causeTypeList) {
+                if (contains(error, causeType)) {
                     return true;
-                } }
+                }
+            }
         } catch (Throwable unexpected) {
             // May encounter unexpected error during recursive search.
             // e.g. StackOverflowError, NoClassDefFoundError, etc.
