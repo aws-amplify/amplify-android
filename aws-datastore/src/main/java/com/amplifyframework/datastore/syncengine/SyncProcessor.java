@@ -292,7 +292,6 @@ final class SyncProcessor {
         return requestRetry.retry(syncPage(request), skipException);
     }
 
-
     /**
      * Builds instances of {@link SyncProcessor}s.
      */
