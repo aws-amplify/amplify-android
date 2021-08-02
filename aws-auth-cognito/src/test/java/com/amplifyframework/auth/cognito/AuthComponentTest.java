@@ -29,9 +29,11 @@ import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResetPasswordOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
@@ -612,11 +614,11 @@ public final class AuthComponentTest {
         ));
 
         doAnswer(invocation -> {
-            Callback<ForgotPasswordResult> callback = invocation.getArgument(1);
+            Callback<ForgotPasswordResult> callback = invocation.getArgument(2);
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-            .forgotPassword(any(), Mockito.<Callback<ForgotPasswordResult>>any());
+            .forgotPassword(any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
 
         AuthResetPasswordResult result = synchronousAuth.resetPassword(USERNAME);
         assertFalse(result.isPasswordReset());
@@ -625,7 +627,46 @@ public final class AuthComponentTest {
                 result.getNextStep().getResetPasswordStep()
         );
         validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
-        verify(mobileClient).forgotPassword(eq(USERNAME), Mockito.<Callback<ForgotPasswordResult>>any());
+        verify(mobileClient).forgotPassword(eq(USERNAME), any(), Mockito.<Callback<ForgotPasswordResult>>any());
+    }
+
+    /**
+     * Tests that the resetPassword method of the Auth wrapper of AWSMobileClient (AMC) calls AMC.forgotPassword with
+     * the username and options it received.
+     * Also ensures that in the onResult case, the success callback receives a valid AuthResetPasswordResult and in
+     * the onError case, the error call back receives an AuthException with the root cause attached.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void resetPasswordWithOptions() throws AuthException {
+        ForgotPasswordResult amcResult = new ForgotPasswordResult(ForgotPasswordState.CONFIRMATION_CODE);
+        amcResult.setParameters(new UserCodeDeliveryDetails(
+                DESTINATION,
+                DELIVERY_MEDIUM,
+                ATTRIBUTE_NAME
+        ));
+
+        AWSCognitoAuthResetPasswordOptions.CognitoBuilder options = AWSCognitoAuthResetPasswordOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthResetPasswordOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<ForgotPasswordResult> callback = invocation.getArgument(2);
+            callback.onResult(amcResult);
+            return null;
+        }).when(mobileClient)
+                .forgotPassword(any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
+
+        AuthResetPasswordResult result = synchronousAuth.resetPassword(USERNAME, builtOptions);
+        assertFalse(result.isPasswordReset());
+        assertEquals(
+                AuthResetPasswordStep.CONFIRM_RESET_PASSWORD_WITH_CODE,
+                result.getNextStep().getResetPasswordStep()
+        );
+        validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
+        verify(mobileClient).forgotPassword(eq(USERNAME), eq(metadata), Mockito.<Callback<ForgotPasswordResult>>any());
     }
 
     /**
@@ -640,14 +681,43 @@ public final class AuthComponentTest {
         ForgotPasswordResult amcResult = new ForgotPasswordResult(ForgotPasswordState.DONE);
 
         doAnswer(invocation -> {
-            Callback<ForgotPasswordResult> callback = invocation.getArgument(2);
+            Callback<ForgotPasswordResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-            .confirmForgotPassword(any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
+            .confirmForgotPassword(any(), any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
 
         synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE);
-        verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), any());
+        verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), any(), any());
+    }
+
+    /**
+     * Tests that the confirmResetPassword method of the Auth wrapper of AWSMobileClient (AMC) calls
+     * AMC.confirmForgotPassword with the new password and confirmation code it received.
+     * Also ensures that in the onResult case, the success callback is triggered and in the onError case,
+     * the error call back receives an AuthException with the root cause attached.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void confirmResetPasswordWithOptions() throws AuthException {
+        ForgotPasswordResult amcResult = new ForgotPasswordResult(ForgotPasswordState.DONE);
+
+        AWSCognitoAuthConfirmResetPasswordOptions.CognitoBuilder options =
+                AWSCognitoAuthConfirmResetPasswordOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthConfirmResetPasswordOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<ForgotPasswordResult> callback = invocation.getArgument(3);
+            callback.onResult(amcResult);
+            return null;
+        }).when(mobileClient)
+                .confirmForgotPassword(any(), any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
+
+        synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE, builtOptions);
+        verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), eq(metadata), any());
     }
 
     /**
