@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -85,6 +86,20 @@ public interface AuthCategoryBehavior {
     void confirmSignUp(
             @NonNull String username,
             @NonNull String confirmationCode,
+            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * If the user's code expires or they just missed it, this method can
+     * be used to send them a new one.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void resendSignUpCode(
+            @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 

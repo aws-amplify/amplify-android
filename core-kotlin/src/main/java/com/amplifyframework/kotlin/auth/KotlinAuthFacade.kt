@@ -27,6 +27,7 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
@@ -73,10 +74,14 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun resendSignUpCode(username: String): AuthSignUpResult {
+    override suspend fun resendSignUpCode(
+        username: String,
+        options: AuthResendSignUpCodeOptions
+    ): AuthSignUpResult {
         return suspendCoroutine { continuation ->
             delegate.resendSignUpCode(
                 username,
+                options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
