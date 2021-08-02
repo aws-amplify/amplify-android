@@ -134,9 +134,9 @@ class KotlinAuthFacadeTest {
         val username = "tony"
         val signUpResult = mockk<AuthSignUpResult>()
         every {
-            delegate.resendSignUpCode(eq(username), any(), any())
+            delegate.resendSignUpCode(eq(username), any(), any(), any())
         } answers {
-            val indexOfResultConsumer = 1
+            val indexOfResultConsumer = 2
             val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSignUpResult>
             onResult.accept(signUpResult)
         }
@@ -152,9 +152,9 @@ class KotlinAuthFacadeTest {
         val username = "tony"
         val error = AuthException("uh", "oh")
         every {
-            delegate.resendSignUpCode(eq(username), any(), any())
+            delegate.resendSignUpCode(eq(username), any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 2
+            val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -482,9 +482,10 @@ class KotlinAuthFacadeTest {
         val username = "TonyDaniels66"
         val passwordResetResult = mockk<AuthResetPasswordResult>()
         every {
-            delegate.resetPassword(eq(username), any(), any())
+            delegate.resetPassword(eq(username), any(), any(), any())
         } answers {
-            val onResultArg = it.invocation.args[/* index of result consumer = */ 1]
+            val indexOfResultConsumer = 2
+            val onResultArg = it.invocation.args[indexOfResultConsumer]
             val onResult = onResultArg as Consumer<AuthResetPasswordResult>
             onResult.accept(passwordResetResult)
         }
@@ -499,9 +500,9 @@ class KotlinAuthFacadeTest {
         val username = "TonyDaniels6989"
         val error = AuthException("uh", "oh")
         every {
-            delegate.resetPassword(eq(username), any(), any())
+            delegate.resetPassword(eq(username), any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 2
+            val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -516,15 +517,27 @@ class KotlinAuthFacadeTest {
         val newPassword = "VerySecurePassword=VSPBaby"
         val confirmationCode = "LegitConfirmation"
         every {
-            delegate.confirmResetPassword(eq(newPassword), eq(confirmationCode), any(), any())
+            delegate.confirmResetPassword(
+                eq(newPassword),
+                eq(confirmationCode),
+                any(),
+                any(),
+                any()
+            )
         } answers {
-            val indexOfCompletionAction = 2
+            val indexOfCompletionAction = 3
             val onComplete = it.invocation.args[indexOfCompletionAction] as Action
             onComplete.call()
         }
         auth.confirmResetPassword(newPassword, confirmationCode)
         verify {
-            delegate.confirmResetPassword(eq(newPassword), eq(confirmationCode), any(), any())
+            delegate.confirmResetPassword(
+                eq(newPassword),
+                eq(confirmationCode),
+                any(),
+                any(),
+                any()
+            )
         }
     }
 
@@ -537,9 +550,15 @@ class KotlinAuthFacadeTest {
         val confirmationCode = "ConfirmationCode4u"
         val error = AuthException("uh", "oh")
         every {
-            delegate.confirmResetPassword(eq(newPassword), eq(confirmationCode), any(), any())
+            delegate.confirmResetPassword(
+                eq(newPassword),
+                eq(confirmationCode),
+                any(),
+                any(),
+                any()
+            )
         } answers {
-            val indexOfErrorConsumer = 3
+            val indexOfErrorConsumer = 4
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }

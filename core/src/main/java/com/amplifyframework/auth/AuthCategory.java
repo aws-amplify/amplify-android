@@ -20,9 +20,12 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
+import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -84,6 +87,16 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().confirmSignUp(username, confirmationCode, onSuccess, onError);
+    }
+
+    @Override
+    public void resendSignUpCode(
+            @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options,
+            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().resendSignUpCode(username, options, onSuccess, onError);
     }
 
     @Override
@@ -224,10 +237,31 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     @Override
     public void resetPassword(
             @NonNull String username,
+            @NonNull AuthResetPasswordOptions options,
+            @NonNull Consumer<AuthResetPasswordResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().resetPassword(username, options, onSuccess, onError);
+    }
+
+    @Override
+    public void resetPassword(
+            @NonNull String username,
             @NonNull Consumer<AuthResetPasswordResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().resetPassword(username, onSuccess, onError);
+    }
+
+    @Override
+    public void confirmResetPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmResetPasswordOptions options,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().confirmResetPassword(newPassword, confirmationCode, options, onSuccess, onError);
     }
 
     @Override

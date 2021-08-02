@@ -20,9 +20,12 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
+import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -88,6 +91,20 @@ public interface AuthCategoryBehavior {
     void confirmSignUp(
             @NonNull String username,
             @NonNull String confirmationCode,
+            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * If the user's code expires or they just missed it, this method can
+     * be used to send them a new one.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void resendSignUpCode(
+            @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
@@ -275,12 +292,40 @@ public interface AuthCategoryBehavior {
     /**
      * Trigger password recovery for the given username.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void resetPassword(
+            @NonNull String username,
+            @NonNull AuthResetPasswordOptions options,
+            @NonNull Consumer<AuthResetPasswordResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Trigger password recovery for the given username.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void resetPassword(
             @NonNull String username,
             @NonNull Consumer<AuthResetPasswordResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param newPassword The user's desired new password
+     * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void confirmResetPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmResetPasswordOptions options,
+            @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
 
     /**

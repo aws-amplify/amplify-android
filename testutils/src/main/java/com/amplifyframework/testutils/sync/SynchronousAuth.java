@@ -27,9 +27,12 @@ import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
+import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -142,7 +145,24 @@ public final class SynchronousAuth {
     }
 
     /**
-     * Resend signup code synchronously.
+     * Resend sign up code synchronously.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthSignUpResult resendSignUpCode(
+            @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options
+    ) throws AuthException {
+        return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.resendSignUpCode(username, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Resend sign up code synchronously.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @return result object
      * @throws AuthException exception
@@ -261,6 +281,23 @@ public final class SynchronousAuth {
     /**
      * Reset password synchronously.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthResetPasswordResult resetPassword(
+            @NonNull String username,
+            @NonNull AuthResetPasswordOptions options
+    ) throws AuthException {
+        return Await.<AuthResetPasswordResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.resetPassword(username, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Reset password synchronously.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @return result object
      * @throws AuthException exception
      */
@@ -270,6 +307,29 @@ public final class SynchronousAuth {
     ) throws AuthException {
         return Await.<AuthResetPasswordResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.resetPassword(username, onResult, onError)
+        );
+    }
+
+    /**
+     * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param newPassword The user's desired new password
+     * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @throws AuthException exception
+     */
+    public void confirmResetPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmResetPasswordOptions options
+    ) throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.confirmResetPassword(
+                    newPassword,
+                    confirmationCode,
+                    options,
+                    () -> onResult.accept(VoidResult.instance()),
+                    onError
+                )
         );
     }
 
