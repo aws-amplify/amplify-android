@@ -25,9 +25,11 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
+import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
@@ -197,21 +199,30 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun resetPassword(username: String): AuthResetPasswordResult {
+    override suspend fun resetPassword(
+        username: String,
+        options: AuthResetPasswordOptions
+    ): AuthResetPasswordResult {
         return suspendCoroutine { continuation ->
             delegate.resetPassword(
                 username,
+                options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
         }
     }
 
-    override suspend fun confirmResetPassword(newPassword: String, confirmationCode: String) {
+    override suspend fun confirmResetPassword(
+        newPassword: String,
+        confirmationCode: String,
+        options: AuthConfirmResetPasswordOptions
+    ) {
         return suspendCoroutine { continuation ->
             delegate.confirmResetPassword(
                 newPassword,
                 confirmationCode,
+                options,
                 { continuation.resume(Unit) },
                 { continuation.resumeWithException(it) }
             )

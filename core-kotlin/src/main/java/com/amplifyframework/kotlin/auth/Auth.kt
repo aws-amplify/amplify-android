@@ -25,9 +25,11 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
+import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
@@ -208,18 +210,29 @@ interface Auth {
     /**
      * Trigger password recovery for the given username.
      * @param username A login identifier e.g. `tony44`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return A password resest result
      */
     @Throws(AuthException::class)
-    suspend fun resetPassword(username: String): AuthResetPasswordResult
+    suspend fun resetPassword(
+        username: String,
+        options: AuthResetPasswordOptions = AuthResetPasswordOptions.defaults()
+    ): AuthResetPasswordResult
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      */
     @Throws(AuthException::class)
-    suspend fun confirmResetPassword(newPassword: String, confirmationCode: String)
+    suspend fun confirmResetPassword(
+        newPassword: String,
+        confirmationCode: String,
+        options: AuthConfirmResetPasswordOptions = AuthConfirmResetPasswordOptions.defaults()
+    )
 
     /**
      * Update the password of an existing user - must be signed in to perform this action.

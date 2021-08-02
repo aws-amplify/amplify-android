@@ -30,9 +30,11 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
+import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -178,8 +180,26 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
+    public Single<AuthResetPasswordResult> resetPassword(
+            @NonNull String username,
+            @NonNull AuthResetPasswordOptions options
+    ) {
+        return toSingle((onResult, onError) -> delegate.resetPassword(username, options, onResult, onError));
+    }
+
+    @Override
     public Single<AuthResetPasswordResult> resetPassword(@NonNull String username) {
         return toSingle((onResult, onError) -> delegate.resetPassword(username, onResult, onError));
+    }
+
+    @Override
+    public Completable confirmResetPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmResetPasswordOptions options
+    ) {
+        return toCompletable((onComplete, onError) ->
+            delegate.confirmResetPassword(newPassword, confirmationCode, options, onComplete, onError));
     }
 
     @Override
