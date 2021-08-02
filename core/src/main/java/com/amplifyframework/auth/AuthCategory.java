@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
@@ -83,6 +84,16 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().confirmSignUp(username, confirmationCode, onSuccess, onError);
+    }
+
+    @Override
+    public void resendSignUpCode(
+            @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options,
+            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().resendSignUpCode(username, options, onSuccess, onError);
     }
 
     @Override

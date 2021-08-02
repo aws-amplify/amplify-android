@@ -28,6 +28,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
@@ -88,11 +89,16 @@ interface Auth {
      * be used to send them a new one.
      * @param username A login identifier e.g. `tony44`; or an email/phone number,
      *                 depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return A sign-up result; if the code is requested, typically the result will
      *         include a next step requiring confirmation of the re-sent code.
      */
     @Throws(AuthException::class)
-    suspend fun resendSignUpCode(username: String): AuthSignUpResult
+    suspend fun resendSignUpCode(
+        username: String,
+        options: AuthResendSignUpCodeOptions = AuthResendSignUpCodeOptions.defaults()
+    ): AuthSignUpResult
 
     /**
      * Basic authentication to the app with a username and password or, if custom auth is setup,

@@ -30,6 +30,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
@@ -141,7 +142,24 @@ public final class SynchronousAuth {
     }
 
     /**
-     * Resend signup code synchronously.
+     * Resend sign up code synchronously.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthSignUpResult resendSignUpCode(
+            @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options
+    ) throws AuthException {
+        return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.resendSignUpCode(username, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Resend sign up code synchronously.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @return result object
      * @throws AuthException exception

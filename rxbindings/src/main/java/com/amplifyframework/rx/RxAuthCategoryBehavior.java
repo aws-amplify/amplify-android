@@ -32,6 +32,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
@@ -93,6 +94,19 @@ public interface RxAuthCategoryBehavior {
      *         or an {@link AuthException} on failure
      */
     Single<AuthSignUpResult> confirmSignUp(@NonNull String username, @NonNull String confirmationCode);
+
+    /**
+     * If the user's code expires or they just missed it, this method can
+     * be used to send them a new one.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits an {@link AuthSignUpResult} on successful confirmation,
+     *         or an {@link AuthException} on failure
+     */
+    Single<AuthSignUpResult> resendSignUpCode(
+            @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options
+    );
 
     /**
      * If the user's code expires or they just missed it, this method can
