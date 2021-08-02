@@ -35,6 +35,7 @@ import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
@@ -44,6 +45,7 @@ import com.amplifyframework.auth.cognito.util.CognitoAuthExceptionConverter;
 import com.amplifyframework.auth.cognito.util.SignInStateConverter;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -350,10 +352,17 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public void resendSignUpCode(
             @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onException
     ) {
-        awsMobileClient.resendSignUp(username, new Callback<SignUpResult>() {
+        final Map<String, String> clientMetadata = new HashMap<>();
+
+        if (options instanceof AWSCognitoAuthResendSignUpCodeOptions) {
+            AWSCognitoAuthResendSignUpCodeOptions cognitoOptions = (AWSCognitoAuthResendSignUpCodeOptions) options;
+            clientMetadata.putAll(cognitoOptions.getMetadata());
+        }
+        awsMobileClient.resendSignUp(username, clientMetadata, new Callback<SignUpResult>() {
             @Override
             public void onResult(SignUpResult result) {
                 onSuccess.accept(convertSignUpResult(result, username));
@@ -367,6 +376,15 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 );
             }
         });
+    }
+
+    @Override
+    public void resendSignUpCode(
+            @NonNull String username,
+            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), onSuccess, onException);
     }
 
     @Override
