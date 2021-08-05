@@ -26,7 +26,7 @@ import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
@@ -72,7 +72,7 @@ public final class SubscriptionProcessorTest {
     private AppSync appSync;
     private Merger merger;
     private SubscriptionProcessor subscriptionProcessor;
-    private ModelSchemaRegistry modelSchemaRegistry;
+    private SchemaRegistry schemaRegistry;
 
     /**
      * Sets up an {@link SubscriptionProcessor} and associated test dependencies.
@@ -81,8 +81,8 @@ public final class SubscriptionProcessorTest {
     @Before
     public void setup() throws DataStoreException {
         ModelProvider modelProvider = AmplifyModelProvider.getInstance();
-        modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.register(modelProvider.modelSchemas());
+        schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(modelProvider.modelSchemas());
         this.modelSchemas = sortedModels(modelProvider);
         this.appSync = mock(AppSync.class);
         this.merger = mock(Merger.class);
@@ -102,7 +102,7 @@ public final class SubscriptionProcessorTest {
 
     private List<ModelSchema> sortedModels(ModelProvider modelProvider) {
         TopologicalOrdering topologicalOrdering =
-            TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
+            TopologicalOrdering.forRegisteredModels(schemaRegistry, modelProvider);
         List<ModelSchema> modelSchemas = new ArrayList<>(modelProvider.modelSchemas().values());
         Collections.sort(modelSchemas, topologicalOrdering::compare);
         return modelSchemas;
@@ -193,7 +193,7 @@ public final class SubscriptionProcessorTest {
         ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(model, modelMetadata);
         GraphQLResponse<ModelWithMetadata<BlogOwner>> response = new GraphQLResponse<>(modelWithMetadata, null);
         arrangeDataEmittingSubscription(appSync,
-                modelSchemaRegistry.getModelSchemaForModelInstance(model),
+                schemaRegistry.getModelSchemaForModelInstance(model),
                 SubscriptionType.ON_CREATE,
                 response);
 

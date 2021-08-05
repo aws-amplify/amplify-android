@@ -22,7 +22,7 @@ import androidx.core.util.Supplier;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
@@ -73,7 +73,7 @@ public final class Orchestrator {
      * The Orchestrator will synchronize data between the {@link AppSync}
      * and the {@link LocalStorageAdapter}.
      * @param modelProvider A provider of the models to be synchronized
-     * @param modelSchemaRegistry A registry of model schema
+     * @param schemaRegistry A registry of model schema and customType schema
      * @param localStorageAdapter
      *        used to durably store offline changes until they can be written to the network
      * @param appSync An AppSync Endpoint
@@ -87,12 +87,12 @@ public final class Orchestrator {
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
-            @NonNull final ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull final SchemaRegistry schemaRegistry,
             @NonNull final LocalStorageAdapter localStorageAdapter,
             @NonNull final AppSync appSync,
             @NonNull final DataStoreConfigurationProvider dataStoreConfigurationProvider,
             @NonNull final Supplier<State> targetState) {
-        Objects.requireNonNull(modelSchemaRegistry);
+        Objects.requireNonNull(schemaRegistry);
         Objects.requireNonNull(modelProvider);
         Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
@@ -107,14 +107,14 @@ public final class Orchestrator {
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
             .versionRepository(versionRepository)
-            .modelSchemaRegistry(modelSchemaRegistry)
+            .schemaRegistry(schemaRegistry)
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)
             .build();
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
-            .modelSchemaRegistry(modelSchemaRegistry)
+            .schemaRegistry(schemaRegistry)
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)

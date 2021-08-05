@@ -20,7 +20,7 @@ import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
@@ -100,13 +100,13 @@ public final class OrchestratorTest {
 
         localStorageAdapter = InMemoryStorageAdapter.create();
         ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.clear();
-        modelSchemaRegistry.register(modelProvider.models());
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.clear();
+        schemaRegistry.register(modelProvider.models());
 
         orchestrator =
             new Orchestrator(modelProvider,
-                modelSchemaRegistry,
+                schemaRegistry,
                 localStorageAdapter,
                 appSync,
                 DataStoreConfiguration::defaults,

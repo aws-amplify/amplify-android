@@ -32,7 +32,7 @@ import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
@@ -87,16 +87,16 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
-            @NonNull ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull SchemaRegistry schemaRegistry,
             @NonNull ApiCategory api,
             @Nullable DataStoreConfiguration userProvidedConfiguration) {
-        this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
+        this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
         this.authModeStrategy = AuthModeStrategyType.DEFAULT;
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
-            modelSchemaRegistry,
+            schemaRegistry,
             sqliteStorageAdapter,
             AppSyncClient.via(api),
             () -> pluginConfiguration,
@@ -106,9 +106,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     private AWSDataStorePlugin(@NonNull Builder builder) throws DataStoreException {
-        ModelSchemaRegistry modelSchemaRegistry = builder.modelSchemaRegistry == null ?
-            ModelSchemaRegistry.instance() :
-            builder.modelSchemaRegistry;
+        SchemaRegistry schemaRegistry = builder.schemaRegistry == null ?
+            SchemaRegistry.instance() :
+            builder.schemaRegistry;
         ModelProvider modelProvider = builder.modelProvider == null ?
             ModelProviderLocator.locate() :
             builder.modelProvider;
@@ -118,14 +118,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         ApiCategory api = builder.apiCategory == null ? Amplify.API : builder.apiCategory;
         this.userProvidedConfiguration = builder.dataStoreConfiguration;
         this.sqliteStorageAdapter = builder.storageAdapter == null ?
-            SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider) :
+            SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider) :
             builder.storageAdapter;
         this.categoryInitializationsPending = new CountDownLatch(1);
 
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
-            modelSchemaRegistry,
+            schemaRegistry,
             sqliteStorageAdapter,
             AppSyncClient.via(api, this.authModeStrategy),
             () -> pluginConfiguration,
@@ -170,7 +170,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     public AWSDataStorePlugin(@NonNull DataStoreConfiguration userProvidedConfiguration) throws DataStoreException {
         this(
             ModelProviderLocator.locate(),
-            ModelSchemaRegistry.instance(),
+            SchemaRegistry.instance(),
             Amplify.API,
             Objects.requireNonNull(userProvidedConfiguration)
         );
@@ -203,7 +203,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                        @Nullable DataStoreConfiguration dataStoreConfiguration) {
         this(
             Objects.requireNonNull(modelProvider),
-            ModelSchemaRegistry.instance(),
+            SchemaRegistry.instance(),
             Objects.requireNonNull(api),
             dataStoreConfiguration
         );
@@ -622,7 +622,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     public static final class Builder {
         private DataStoreConfiguration dataStoreConfiguration;
         private ModelProvider modelProvider;
-        private ModelSchemaRegistry modelSchemaRegistry;
+        private SchemaRegistry schemaRegistry;
         private ApiCategory apiCategory;
         private AuthModeStrategyType authModeStrategy;
         private LocalStorageAdapter storageAdapter;
@@ -652,11 +652,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
         /**
          * Sets the model schema registry of the builder.
-         * @param modelSchemaRegistry An instance of {@link ModelSchemaRegistry}.
+         * @param schemaRegistry An instance of {@link SchemaRegistry}.
          * @return An implementation of the {@link ModelProvider} interface.
          */
-        public Builder modelSchemaRegistry(ModelSchemaRegistry modelSchemaRegistry) {
-            this.modelSchemaRegistry = modelSchemaRegistry;
+        public Builder schemaRegistry(SchemaRegistry schemaRegistry) {
+            this.schemaRegistry = schemaRegistry;
             return this;
         }
 

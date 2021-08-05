@@ -28,7 +28,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.util.Empty;
@@ -365,7 +365,7 @@ public final class SelectionSet {
                 if (association != null) {
                     if (depth >= 1) {
                         String associatedModelName = association.getAssociatedType();
-                        ModelSchema associateModelSchema = ModelSchemaRegistry.instance()
+                        ModelSchema associateModelSchema = SchemaRegistry.instance()
                                 .getModelSchemaForModelClass(associatedModelName);
                         Set<SelectionSet> fields;
                         if (entry.getValue().isArray()) { // If modelField is an Array

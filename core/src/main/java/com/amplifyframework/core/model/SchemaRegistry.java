@@ -27,11 +27,11 @@ import java.util.Set;
 /**
  * A utility that creates ModelSchema from Model classes.
  */
-public final class ModelSchemaRegistry {
+public final class SchemaRegistry {
     // Model ClassName => ModelSchema map
     private final Map<String, ModelSchema> modelSchemaMap;
 
-    private ModelSchemaRegistry() {
+    private SchemaRegistry() {
         modelSchemaMap = new HashMap<>();
     }
 
@@ -109,8 +109,8 @@ public final class ModelSchemaRegistry {
      * @return A new instance
      */
     @NonNull
-    public static synchronized ModelSchemaRegistry instance() {
-        return new ModelSchemaRegistry();
+    public static synchronized SchemaRegistry instance() {
+        return new SchemaRegistry();
     }
 
     /**
