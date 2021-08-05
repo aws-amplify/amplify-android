@@ -1,0 +1,200 @@
+/*
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package com.amplifyframework.core.model;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
+
+import com.amplifyframework.util.Immutable;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+/**
+ * A container for custom type data, when passed from hybrid platforms.
+ * Needs to be paired with an {@link CustomTypeSchema} to understand the structure.
+ */
+public final class SerializedCustomType {
+    private final Map<String, Object> serializedData;
+    private final CustomTypeSchema customTypeSchema;
+
+    private SerializedCustomType(Map<String, Object> serializedData, CustomTypeSchema customTypeSchema) {
+        this.serializedData = serializedData;
+        this.customTypeSchema = customTypeSchema;
+    }
+
+    /**
+     * Return a builder of {@link SerializedCustomType}.
+     *
+     * @return A serialized model builder
+     */
+    @NonNull
+    public static SerializedCustomType.BuilderSteps.SerializedDataStep builder() {
+        return new SerializedCustomType.Builder();
+    }
+
+    /**
+     * Gets the serialized data.
+     *
+     * @return Serialized data
+     */
+    @NonNull
+    public Map<String, Object> getSerializedData() {
+        return serializedData;
+    }
+
+    /**
+     * Gets the CustomType schema.
+     *
+     * @return CustomType schema
+     */
+    @Nullable
+    public CustomTypeSchema getCustomTypeSchema() {
+        return customTypeSchema;
+    }
+
+    /**
+     * Gets the serialized value of a given field in the CustomType.
+     *
+     * @param modelField Schema definition of a field in the CustomType
+     * @return The value of the field in the serialized data
+     */
+    @Nullable
+    public Object getValue(ModelField modelField) {
+        return serializedData.get(modelField.getName());
+    }
+
+    /**
+     * Gets the name of the CustomType as known in the hybrid platform, e.g. "S3Object".
+     *
+     * @return Name of the CustomType in the hybrid platform.
+     */
+    @Nullable
+    public String getCustomTypeName() {
+        return customTypeSchema == null ? null : customTypeSchema.getName();
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "SerializedCustomType{" +
+                "serializedData=" + serializedData +
+                ", customTypeName=" + getCustomTypeSchema() +
+                '}';
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        SerializedCustomType that = (SerializedCustomType) thatObject;
+        return ObjectsCompat.equals(this.serializedData, that.serializedData) &&
+                ObjectsCompat.equals(this.customTypeSchema, that.customTypeSchema);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(serializedData, customTypeSchema);
+    }
+
+    /**
+     * Steps to build a {@link SerializedCustomType}.
+     */
+    public interface BuilderSteps {
+        /**
+         * Step to configure the serialized data.
+         */
+        interface SerializedDataStep {
+            /**
+             * Configures the serialized data.
+             *
+             * @param serializedData Serialized form of a CustomType
+             * @return The next builder step
+             */
+            @NonNull
+            SerializedCustomType.BuilderSteps.CustomTypeSchemaStep serializedData(
+                    @NonNull Map<String, Object> serializedData);
+        }
+
+        /**
+         * Step to configure the CustomType schema.
+         */
+        interface CustomTypeSchemaStep {
+            /**
+             * Configures the CustomType schema.
+             *
+             * @param customTypeSchema CustomType schema describing layout of the serialized data
+             * @return The next builder step
+             */
+            @NonNull
+            SerializedCustomType.BuilderSteps.BuildStep customTypeSchema(@Nullable CustomTypeSchema customTypeSchema);
+        }
+
+        /**
+         * Step to build the serialized CustomType.
+         */
+        interface BuildStep {
+            /**
+             * Builds a SerializedCustomType.
+             *
+             * @return A SerializedCustomType
+             */
+            @NonNull
+            SerializedCustomType build();
+        }
+    }
+
+    private static final class Builder implements
+            SerializedCustomType.BuilderSteps.SerializedDataStep,
+            SerializedCustomType.BuilderSteps.CustomTypeSchemaStep,
+            SerializedCustomType.BuilderSteps.BuildStep {
+        private final Map<String, Object> serializedData;
+        private CustomTypeSchema customTypeSchema;
+
+        private Builder() {
+            this.serializedData = new HashMap<>();
+        }
+
+        @NonNull
+        @Override
+        public SerializedCustomType.BuilderSteps.CustomTypeSchemaStep serializedData(
+                @NonNull Map<String, Object> serializedData) {
+            this.serializedData.putAll(Objects.requireNonNull(serializedData));
+            return SerializedCustomType.Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public SerializedCustomType.BuilderSteps.BuildStep customTypeSchema(
+                @Nullable CustomTypeSchema customTypeSchema) {
+            this.customTypeSchema = customTypeSchema;
+            return SerializedCustomType.Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public SerializedCustomType build() {
+            return new SerializedCustomType(Immutable.of(serializedData), customTypeSchema);
+        }
+    }
+}

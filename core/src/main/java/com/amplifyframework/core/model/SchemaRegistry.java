@@ -30,9 +30,12 @@ import java.util.Set;
 public final class SchemaRegistry {
     // Model ClassName => ModelSchema map
     private final Map<String, ModelSchema> modelSchemaMap;
+    // CustomType name => CustomTypeSchema map
+    private final Map<String, CustomTypeSchema> customTypeSchemaMap;
 
     private SchemaRegistry() {
         modelSchemaMap = new HashMap<>();
+        customTypeSchemaMap = new HashMap<>();
     }
 
     /**
@@ -57,6 +60,19 @@ public final class SchemaRegistry {
     }
 
     /**
+     * Register the modelSchemas and customTypeSchemas provided.
+     * This method is consumed with Flutter use cases.
+     * @param modelSchemas the map that contains mapping of ModelName to ModelSchema.
+     * @param customTypeSchemas the map that contains mapping of CustomTypeName to CustomTypeSchema.
+     */
+    public synchronized void register(
+            @NonNull Map<String, ModelSchema> modelSchemas,
+            @NonNull Map<String, CustomTypeSchema> customTypeSchemas) {
+        modelSchemaMap.putAll(modelSchemas);
+        customTypeSchemaMap.putAll(customTypeSchemas);
+    }
+
+    /**
      * Registers the modelSchema for the given modelName.
      * @param modelName name of the model
      * @param modelSchema schema of the model to be registered.
@@ -73,6 +89,16 @@ public final class SchemaRegistry {
      */
     public synchronized ModelSchema getModelSchemaForModelClass(@NonNull String classSimpleName) {
         return modelSchemaMap.get(classSimpleName);
+    }
+
+    /**
+     * Retrieve the CustomTypeSchema object for the given custom type name.
+     * @param customTypeName name of the custom type retrieved through field target type
+     *                       {@link CustomTypeField#getTargetType()}
+     * @return the ModelSchema object for the given Model class (non-model type).
+     */
+    public synchronized CustomTypeSchema getCustomTypeSchemaForCustomTypeClass(@NonNull String customTypeName) {
+        return customTypeSchemaMap.get(customTypeName);
     }
 
     /**
@@ -118,5 +144,6 @@ public final class SchemaRegistry {
      */
     public void clear() {
         this.modelSchemaMap.clear();
+        this.customTypeSchemaMap.clear();
     }
 }
