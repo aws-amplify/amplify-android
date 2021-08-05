@@ -320,6 +320,16 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
 
         /**
+         * Sets the selectionSet and returns this builder.
+         * @param selectionSet the subset of model for this request to operate on.
+         * @return this builder instance.
+         */
+        public Builder selectionSet(@NonNull SelectionSet selectionSet) {
+            this.selectionSet = Objects.requireNonNull(selectionSet);
+            return Builder.this;
+        }
+
+        /**
          * Sets the authorization type for the request. If this field is set,
          * {@link Builder#authModeStrategyType} will be ignored.
          * @param authorizationType the desired authorization type.
