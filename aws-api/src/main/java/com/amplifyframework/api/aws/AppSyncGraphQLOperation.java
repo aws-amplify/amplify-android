@@ -86,8 +86,8 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
     @Override
     public void start() {
-        // No-op if start() is called post-execution
-        if (ongoingCall != null && ongoingCall.isExecuted()) {
+        // No-op if start() is called post-execution or canceled
+        if (ongoingCall != null && (ongoingCall.isExecuted() || ongoingCall.isCanceled())) {
             return;
         }
 
@@ -153,9 +153,11 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
         @Override
         public void onFailure(@NonNull Call call, @NonNull IOException exception) {
-            onFailure.accept(new ApiException(
-                "OkHttp client request failed.", exception, "See attached exception for more details."
-            ));
+            if (!call.isCanceled()) {
+                onFailure.accept(new ApiException(
+                        "OkHttp client request failed.", exception, "See attached exception for more details."
+                ));
+            }
         }
     }
 
