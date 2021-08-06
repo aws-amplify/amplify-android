@@ -64,6 +64,8 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -82,6 +84,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -592,6 +595,31 @@ public final class SyncProcessorTest {
                 .assertNotComplete();
         verify(requestRetry, times(1)).retry(any(), any());
 
+    }
+
+    /**
+     * Verify that retry is called on appsync failure and when dispose in called midway no exception is thrown.
+     *
+     * @throws AmplifyException On failure to build GraphQLRequest for sync query.
+     */
+    @Test
+    public void retryHandlesHydrateSubscriptionDispose() throws AmplifyException {
+        // Arrange: mock failure when invoking hydrate
+        requestRetry = spy(RetryHandler.class);
+        initSyncProcessor(10_000);
+        AppSyncMocking.sync(appSync)
+                .mockFailure(new DataStoreException("Something timed out during sync.", ""));
+
+        // Act: call hydrate.
+        TestObserver<Void> testObserver = syncProcessor.hydrate()
+                .test(false);
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                testObserver.dispose();
+            }
+        }, 10000);
+        verify(requestRetry, times(1)).retry(any(), any());
     }
 
     /**
