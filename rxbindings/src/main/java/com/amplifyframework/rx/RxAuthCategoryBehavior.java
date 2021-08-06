@@ -33,10 +33,13 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -323,10 +326,34 @@ public interface RxAuthCategoryBehavior {
     /**
      * Update a user attribute of a user who is signed in.
      * @param attribute The user attribute to be updated
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits {@link AuthUpdateAttributeResult} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthUpdateAttributeResult> updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull AuthUpdateUserAttributeOptions options
+    );
+
+    /**
+     * Update a user attribute of a user who is signed in.
+     * @param attribute The user attribute to be updated
      * @return An Rx {@link Single} which emits {@link AuthUpdateAttributeResult} on success,
      *         {@link AuthException} on failure
      */
     Single<AuthUpdateAttributeResult> updateUserAttribute(@NonNull AuthUserAttribute attribute);
+
+    /**
+     * Update a list of user attributes of a user who is signed in.
+     * @param attributes A list of user attributes to be updated
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits a map which maps {@link AuthUserAttributeKey} into
+     *         {@link AuthUpdateAttributeResult} on success, {@link AuthException} on failure
+     */
+    Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull AuthUpdateUserAttributesOptions options
+    );
 
     /**
      * Update a list of user attributes of a user who is signed in.
@@ -336,6 +363,18 @@ public interface RxAuthCategoryBehavior {
      */
     Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(
             @NonNull List<AuthUserAttribute> attributes);
+
+    /**
+     * Resend user attribute confirmation code to verify user attribute.
+     * @param attributeKey The attribute key to be confirmed.
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits {@link AuthCodeDeliveryDetails} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthCodeDeliveryDetails> resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull AuthResendUserAttributeConfirmationCodeOptions options
+    );
 
     /**
      * Resend user attribute confirmation code to verify user attribute.
