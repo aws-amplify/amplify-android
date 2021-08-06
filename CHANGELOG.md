@@ -1,3 +1,15 @@
+## [Release 1.24.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.24.0)
+
+### Features
+- **auth:** add options to resendSignUpCode (#1422)
+- **auth:** add options to resetPassword and confirmResetPassword (#1426)
+
+### Bug Fixes
+- **api:** expose selectionSet in request builder (#1440)
+- check for canceled call to fix RxJava crash (#1441)
+
+[See all changes between 1.23.0 and 1.24.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.23.0...release_v1.24.0)
+
 ## [Release 1.23.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.23.0)
 
 ### Features
