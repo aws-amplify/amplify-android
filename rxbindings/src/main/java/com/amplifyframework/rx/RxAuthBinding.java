@@ -34,10 +34,13 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -220,14 +223,39 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
+    public Single<AuthUpdateAttributeResult> updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull AuthUpdateUserAttributeOptions options
+    ) {
+        return toSingle((onResult, onError) -> delegate.updateUserAttribute(attribute, options, onResult, onError));
+    }
+
+    @Override
     public Single<AuthUpdateAttributeResult> updateUserAttribute(@NonNull AuthUserAttribute attribute) {
         return toSingle((onResult, onError) -> delegate.updateUserAttribute(attribute, onResult, onError));
     }
 
     @Override
     public Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull AuthUpdateUserAttributesOptions options
+    ) {
+        return toSingle((onResult, onError) -> delegate.updateUserAttributes(attributes, options, onResult, onError));
+    }
+
+    @Override
+    public Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(
             @NonNull List<AuthUserAttribute> attributes) {
         return toSingle((onResult, onError) -> delegate.updateUserAttributes(attributes, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthCodeDeliveryDetails> resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull AuthResendUserAttributeConfirmationCodeOptions options
+    ) {
+        return toSingle((onResult, onError) ->
+                delegate.resendUserAttributeConfirmationCode(attributeKey, options, onResult, onError));
     }
 
     @Override
