@@ -134,9 +134,9 @@ class KotlinAuthFacadeTest {
         val username = "tony"
         val signUpResult = mockk<AuthSignUpResult>()
         every {
-            delegate.resendSignUpCode(eq(username), any(), any())
+            delegate.resendSignUpCode(eq(username), any(), any(), any())
         } answers {
-            val indexOfResultConsumer = 1
+            val indexOfResultConsumer = 2
             val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSignUpResult>
             onResult.accept(signUpResult)
         }
@@ -152,9 +152,9 @@ class KotlinAuthFacadeTest {
         val username = "tony"
         val error = AuthException("uh", "oh")
         every {
-            delegate.resendSignUpCode(eq(username), any(), any())
+            delegate.resendSignUpCode(eq(username), any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 2
+            val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -482,9 +482,10 @@ class KotlinAuthFacadeTest {
         val username = "TonyDaniels66"
         val passwordResetResult = mockk<AuthResetPasswordResult>()
         every {
-            delegate.resetPassword(eq(username), any(), any())
+            delegate.resetPassword(eq(username), any(), any(), any())
         } answers {
-            val onResultArg = it.invocation.args[/* index of result consumer = */ 1]
+            val indexOfResultConsumer = 2
+            val onResultArg = it.invocation.args[indexOfResultConsumer]
             val onResult = onResultArg as Consumer<AuthResetPasswordResult>
             onResult.accept(passwordResetResult)
         }
@@ -499,9 +500,9 @@ class KotlinAuthFacadeTest {
         val username = "TonyDaniels6989"
         val error = AuthException("uh", "oh")
         every {
-            delegate.resetPassword(eq(username), any(), any())
+            delegate.resetPassword(eq(username), any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 2
+            val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -516,15 +517,27 @@ class KotlinAuthFacadeTest {
         val newPassword = "VerySecurePassword=VSPBaby"
         val confirmationCode = "LegitConfirmation"
         every {
-            delegate.confirmResetPassword(eq(newPassword), eq(confirmationCode), any(), any())
+            delegate.confirmResetPassword(
+                eq(newPassword),
+                eq(confirmationCode),
+                any(),
+                any(),
+                any()
+            )
         } answers {
-            val indexOfCompletionAction = 2
+            val indexOfCompletionAction = 3
             val onComplete = it.invocation.args[indexOfCompletionAction] as Action
             onComplete.call()
         }
         auth.confirmResetPassword(newPassword, confirmationCode)
         verify {
-            delegate.confirmResetPassword(eq(newPassword), eq(confirmationCode), any(), any())
+            delegate.confirmResetPassword(
+                eq(newPassword),
+                eq(confirmationCode),
+                any(),
+                any(),
+                any()
+            )
         }
     }
 
@@ -537,9 +550,15 @@ class KotlinAuthFacadeTest {
         val confirmationCode = "ConfirmationCode4u"
         val error = AuthException("uh", "oh")
         every {
-            delegate.confirmResetPassword(eq(newPassword), eq(confirmationCode), any(), any())
+            delegate.confirmResetPassword(
+                eq(newPassword),
+                eq(confirmationCode),
+                any(),
+                any(),
+                any()
+            )
         } answers {
-            val indexOfErrorConsumer = 3
+            val indexOfErrorConsumer = 4
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -611,9 +630,10 @@ class KotlinAuthFacadeTest {
         val attribute = AuthUserAttribute(AuthUserAttributeKey.nickname(), "T-bird")
         val updateAttributeResult = mockk<AuthUpdateAttributeResult>()
         every {
-            delegate.updateUserAttribute(attribute, any(), any())
+            delegate.updateUserAttribute(attribute, any(), any(), any())
         } answers {
-            val onResultArg = it.invocation.args[/* index of result consumer = */ 1]
+            val indexOfResultConsumer = 2
+            val onResultArg = it.invocation.args[indexOfResultConsumer]
             val onResult = onResultArg as Consumer<AuthUpdateAttributeResult>
             onResult.accept(updateAttributeResult)
         }
@@ -631,9 +651,9 @@ class KotlinAuthFacadeTest {
         )
         val error = AuthException("uh", "oh")
         every {
-            delegate.updateUserAttribute(eq(attribute), any(), any())
+            delegate.updateUserAttribute(eq(attribute), any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 2
+            val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -655,9 +675,9 @@ class KotlinAuthFacadeTest {
             AuthUserAttributeKey.givenName() to mockk()
         )
         every {
-            delegate.updateUserAttributes(genderAffirmation, any(), any())
+            delegate.updateUserAttributes(genderAffirmation, any(), any(), any())
         } answers {
-            val indexOfResultConsumer = 1
+            val indexOfResultConsumer = 2
             val onResult = it.invocation.args[indexOfResultConsumer]
                 as Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>
             onResult.accept(affirmed)
@@ -677,9 +697,9 @@ class KotlinAuthFacadeTest {
         val attributes = listOf(tonyEmail)
         val error = AuthException("uh", "oh")
         every {
-            delegate.updateUserAttributes(eq(attributes), any(), any())
+            delegate.updateUserAttributes(eq(attributes), any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 2
+            val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -695,9 +715,10 @@ class KotlinAuthFacadeTest {
         val attributeKey = AuthUserAttributeKey.email()
         val authCodeDeliveryDetails = AuthCodeDeliveryDetails("+1-206-555-2020", SMS)
         every {
-            delegate.resendUserAttributeConfirmationCode(eq(attributeKey), any(), any())
+            delegate.resendUserAttributeConfirmationCode(eq(attributeKey), any(), any(), any())
         } answers {
-            val onResultArg = it.invocation.args[/* index of result consumer = */ 1]
+            val indexOfResultConsumer = 2
+            val onResultArg = it.invocation.args[indexOfResultConsumer]
             val onResult = onResultArg as Consumer<AuthCodeDeliveryDetails>
             onResult.accept(authCodeDeliveryDetails)
         }
@@ -716,9 +737,9 @@ class KotlinAuthFacadeTest {
         val attributeKey = AuthUserAttributeKey.email()
         val error = AuthException("uh", "oh")
         every {
-            delegate.resendUserAttributeConfirmationCode(eq(attributeKey), any(), any())
+            delegate.resendUserAttributeConfirmationCode(eq(attributeKey), any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 2
+            val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }

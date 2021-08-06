@@ -25,11 +25,17 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
+import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -86,11 +92,16 @@ interface Auth {
      * be used to send them a new one.
      * @param username A login identifier e.g. `tony44`; or an email/phone number,
      *                 depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return A sign-up result; if the code is requested, typically the result will
      *         include a next step requiring confirmation of the re-sent code.
      */
     @Throws(AuthException::class)
-    suspend fun resendSignUpCode(username: String): AuthSignUpResult
+    suspend fun resendSignUpCode(
+        username: String,
+        options: AuthResendSignUpCodeOptions = AuthResendSignUpCodeOptions.defaults()
+    ): AuthSignUpResult
 
     /**
      * Basic authentication to the app with a username and password or, if custom auth is setup,
@@ -202,18 +213,29 @@ interface Auth {
     /**
      * Trigger password recovery for the given username.
      * @param username A login identifier e.g. `tony44`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return A password resest result
      */
     @Throws(AuthException::class)
-    suspend fun resetPassword(username: String): AuthResetPasswordResult
+    suspend fun resetPassword(
+        username: String,
+        options: AuthResetPasswordOptions = AuthResetPasswordOptions.defaults()
+    ): AuthResetPasswordResult
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      */
     @Throws(AuthException::class)
-    suspend fun confirmResetPassword(newPassword: String, confirmationCode: String)
+    suspend fun confirmResetPassword(
+        newPassword: String,
+        confirmationCode: String,
+        options: AuthConfirmResetPasswordOptions = AuthConfirmResetPasswordOptions.defaults()
+    )
 
     /**
      * Update the password of an existing user - must be signed in to perform this action.
@@ -233,29 +255,43 @@ interface Auth {
     /**
      * Update a single user attribute.
      * @param attribute Attribute to be updated
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return The result of updating the provided attribute
      */
     @Throws(AuthException::class)
-    suspend fun updateUserAttribute(attribute: AuthUserAttribute): AuthUpdateAttributeResult
+    suspend fun updateUserAttribute(
+        attribute: AuthUserAttribute,
+        options: AuthUpdateUserAttributeOptions = AuthUpdateUserAttributeOptions.defaults()
+    ): AuthUpdateAttributeResult
 
     /**
      * Update multiple user attributes.
      * @param attributes Attributes to be updated
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return The result of updating the provided attribute
      */
     @Throws(AuthException::class)
-    suspend fun updateUserAttributes(attributes: List<AuthUserAttribute>):
-        Map<AuthUserAttributeKey, AuthUpdateAttributeResult>
+    suspend fun updateUserAttributes(
+        attributes: List<AuthUserAttribute>,
+        options: AuthUpdateUserAttributesOptions = AuthUpdateUserAttributesOptions.defaults()
+    ): Map<AuthUserAttributeKey, AuthUpdateAttributeResult>
 
     /**
      * If the user's confirmation code expires or they just missed it, this method
      * can be used to send them a new one.
      * @param attributeKey Key of attribute that user wants to operate on
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return Details about the delivery of an authentication code
      */
     @Throws(AuthException::class)
-    suspend fun resendUserAttributeConfirmationCode(attributeKey: AuthUserAttributeKey):
-        AuthCodeDeliveryDetails
+    suspend fun resendUserAttributeConfirmationCode(
+        attributeKey: AuthUserAttributeKey,
+        options: AuthResendUserAttributeConfirmationCodeOptions =
+            AuthResendUserAttributeConfirmationCodeOptions.defaults()
+    ): AuthCodeDeliveryDetails
 
     /**
      * Use attribute key and confirmation code to confirm user attribute.
