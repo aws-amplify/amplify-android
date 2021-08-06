@@ -29,10 +29,13 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -252,29 +255,43 @@ interface Auth {
     /**
      * Update a single user attribute.
      * @param attribute Attribute to be updated
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return The result of updating the provided attribute
      */
     @Throws(AuthException::class)
-    suspend fun updateUserAttribute(attribute: AuthUserAttribute): AuthUpdateAttributeResult
+    suspend fun updateUserAttribute(
+        attribute: AuthUserAttribute,
+        options: AuthUpdateUserAttributeOptions = AuthUpdateUserAttributeOptions.defaults()
+    ): AuthUpdateAttributeResult
 
     /**
      * Update multiple user attributes.
      * @param attributes Attributes to be updated
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return The result of updating the provided attribute
      */
     @Throws(AuthException::class)
-    suspend fun updateUserAttributes(attributes: List<AuthUserAttribute>):
-        Map<AuthUserAttributeKey, AuthUpdateAttributeResult>
+    suspend fun updateUserAttributes(
+        attributes: List<AuthUserAttribute>,
+        options: AuthUpdateUserAttributesOptions = AuthUpdateUserAttributesOptions.defaults()
+    ): Map<AuthUserAttributeKey, AuthUpdateAttributeResult>
 
     /**
      * If the user's confirmation code expires or they just missed it, this method
      * can be used to send them a new one.
      * @param attributeKey Key of attribute that user wants to operate on
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
      * @return Details about the delivery of an authentication code
      */
     @Throws(AuthException::class)
-    suspend fun resendUserAttributeConfirmationCode(attributeKey: AuthUserAttributeKey):
-        AuthCodeDeliveryDetails
+    suspend fun resendUserAttributeConfirmationCode(
+        attributeKey: AuthUserAttributeKey,
+        options: AuthResendUserAttributeConfirmationCodeOptions =
+            AuthResendUserAttributeConfirmationCodeOptions.defaults()
+    ): AuthCodeDeliveryDetails
 
     /**
      * Use attribute key and confirmation code to confirm user attribute.
