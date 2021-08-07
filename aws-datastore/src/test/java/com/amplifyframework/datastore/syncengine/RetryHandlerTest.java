@@ -76,7 +76,7 @@ public class RetryHandlerTest {
     @Test
     public void testRetryOnRecoverableError() {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1);
+        RetryHandler subject = new RetryHandler(8, 0, 1, 1);
         DataStoreException expectedException =
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "");
         AtomicInteger count = new AtomicInteger(0);
@@ -100,11 +100,24 @@ public class RetryHandlerTest {
     @Test
     public void testJitteredDelaySec() {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1);
+        RetryHandler subject = new RetryHandler(8, 0, 1, 5);
         //act
         long delay = subject.jitteredDelaySec(2);
         //assert
         assertEquals(4, delay);
+    }
+
+    /**
+     * test jittered delay method return no more than the max delay time.
+     */
+    @Test
+    public void testJitteredDelaySecReturnsNoMoreThanMaxValue() {
+        //arrange
+        RetryHandler subject = new RetryHandler(8, 0, 1, 1);
+        //act
+        long delay = subject.jitteredDelaySec(2);
+        //assert
+        assertEquals(1, delay);
     }
 
 }

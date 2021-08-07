@@ -30,23 +30,28 @@ public class RetryHandler {
     private final int maxExponentValue = 8;
     private final int jitterFactorValue = 100;
     private final int maxAttemptsValue = 3;
+    private final int maxDelaySValue = 5 * 60;
     private final int maxExponent;
     private final int jitterFactor;
     private final int maxAttempts;
+    private final int maxDelayS;
 
     /**
      * Constructor to inject constants for unit testing.
      * @param maxExponent maxExponent backoff can go to.
      * @param jitterFactor jitterFactor for backoff.
      * @param maxAttempts max attempt for retrying.
+     * @param maxDelayS max delay for retrying.
      */
     public RetryHandler(int maxExponent,
                         int jitterFactor,
-                        int maxAttempts) {
+                        int maxAttempts,
+                        int maxDelayS) {
 
         this.maxExponent = maxExponent;
         this.jitterFactor = jitterFactor;
         this.maxAttempts = maxAttempts;
+        this.maxDelayS = maxDelayS;
     }
 
     /**
@@ -56,6 +61,7 @@ public class RetryHandler {
         maxExponent = maxExponentValue;
         jitterFactor = jitterFactorValue;
         maxAttempts = maxAttemptsValue;
+        maxDelayS = maxDelaySValue;
     }
 
     /**
@@ -67,7 +73,6 @@ public class RetryHandler {
      */
     public <T> Single<T> retry(Single<T> single, List<Class<? extends Throwable>> skipExceptions) {
         return Single.create(emitter -> call(single, emitter, 0L, maxAttempts, skipExceptions));
-
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -97,8 +102,8 @@ public class RetryHandler {
     long jitteredDelaySec(int attemptsLeft) {
         int numAttempt = maxAttempts - (maxAttempts - attemptsLeft);
         double waitTimeSeconds =
-                Math.pow(2, ((numAttempt) % maxExponent))
-                        + jitterFactor * Math.random();
+                Math.min(maxDelayS, Math.pow(2, ((numAttempt) % maxExponent))
+                        + jitterFactor * Math.random());
         return (long) waitTimeSeconds;
     }
 }
