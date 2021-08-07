@@ -29,11 +29,17 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
+import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -91,6 +97,19 @@ public interface RxAuthCategoryBehavior {
      *         or an {@link AuthException} on failure
      */
     Single<AuthSignUpResult> confirmSignUp(@NonNull String username, @NonNull String confirmationCode);
+
+    /**
+     * If the user's code expires or they just missed it, this method can
+     * be used to send them a new one.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits an {@link AuthSignUpResult} on successful confirmation,
+     *         or an {@link AuthException} on failure
+     */
+    Single<AuthSignUpResult> resendSignUpCode(
+            @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options
+    );
 
     /**
      * If the user's code expires or they just missed it, this method can
@@ -247,10 +266,36 @@ public interface RxAuthCategoryBehavior {
     /**
      * Trigger password recovery for the given username.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits {@link AuthResetPasswordResult} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthResetPasswordResult> resetPassword(
+            @NonNull String username,
+            @NonNull AuthResetPasswordOptions options
+    );
+
+    /**
+     * Trigger password recovery for the given username.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @return An Rx {@link Single} which emits {@link AuthResetPasswordResult} on success,
      *         {@link AuthException} on failure
      */
     Single<AuthResetPasswordResult> resetPassword(@NonNull String username);
+
+    /**
+     * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param newPassword The user's desired new password
+     * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Completable} which completes successfully if password reset is confirmed,
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable confirmResetPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmResetPasswordOptions options
+    );
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
@@ -281,10 +326,34 @@ public interface RxAuthCategoryBehavior {
     /**
      * Update a user attribute of a user who is signed in.
      * @param attribute The user attribute to be updated
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits {@link AuthUpdateAttributeResult} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthUpdateAttributeResult> updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull AuthUpdateUserAttributeOptions options
+    );
+
+    /**
+     * Update a user attribute of a user who is signed in.
+     * @param attribute The user attribute to be updated
      * @return An Rx {@link Single} which emits {@link AuthUpdateAttributeResult} on success,
      *         {@link AuthException} on failure
      */
     Single<AuthUpdateAttributeResult> updateUserAttribute(@NonNull AuthUserAttribute attribute);
+
+    /**
+     * Update a list of user attributes of a user who is signed in.
+     * @param attributes A list of user attributes to be updated
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits a map which maps {@link AuthUserAttributeKey} into
+     *         {@link AuthUpdateAttributeResult} on success, {@link AuthException} on failure
+     */
+    Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull AuthUpdateUserAttributesOptions options
+    );
 
     /**
      * Update a list of user attributes of a user who is signed in.
@@ -294,6 +363,18 @@ public interface RxAuthCategoryBehavior {
      */
     Single<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> updateUserAttributes(
             @NonNull List<AuthUserAttribute> attributes);
+
+    /**
+     * Resend user attribute confirmation code to verify user attribute.
+     * @param attributeKey The attribute key to be confirmed.
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits {@link AuthCodeDeliveryDetails} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthCodeDeliveryDetails> resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull AuthResendUserAttributeConfirmationCodeOptions options
+    );
 
     /**
      * Resend user attribute confirmation code to verify user attribute.
