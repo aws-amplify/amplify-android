@@ -13,22 +13,13 @@
  * permissions and limitations under the License.
  */
 
-include ':core'
+package com.amplifyframework.geo;
 
-// Plugin Modules
-include ':aws-analytics-pinpoint'
-include ':aws-api'
-include ':aws-auth-cognito'
-include ':aws-datastore'
-include ':aws-predictions'
-include ':aws-predictions-tensorflow'
-include ':aws-storage-s3'
+/**
+ * Defines an interface for obtaining geo-spacial data to be
+ * used in geocoding, routing, and geofencing.
+ * TODO: Add description for Geo.
+ */
+public interface GeoCategoryBehavior {
 
-// Test Utilities and assets
-include ':testutils'
-include ':testmodels'
-
-// Bindings and accessory modules
-include ':core-kotlin'
-include ':rxbindings'
-include ':aws-api-appsync'
+}
