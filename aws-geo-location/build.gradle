@@ -21,5 +21,8 @@ apply from: rootProject.file("configuration/publishing.gradle")
 dependencies {
     implementation project(':core')
     implementation dependency.aws.location
+
+    testImplementation project(':testutils')
+    testImplementation dependency.junit
 }
 

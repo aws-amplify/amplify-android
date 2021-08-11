@@ -22,7 +22,7 @@ import org.json.JSONObject
  * Configuration options for specifying available map resources.
  */
 data class MapsConfiguration internal constructor(
-    val items: List<MapStyle>,
+    val items: Collection<MapStyle>,
     val default: MapStyle
 ) {
     companion object {
@@ -49,16 +49,17 @@ data class MapsConfiguration internal constructor(
     data class Builder internal constructor(
         private val configJson: JSONObject? = null
     ) {
-        private var items: List<MapStyle> = emptyList()
+        private var items: Collection<MapStyle> = emptySet()
         private var default: MapStyle? = null
 
         init {
             configJson?.run {
                 val mapItems = getJSONObject(Config.ITEMS.key)
                 mapItems.let {
-                    val maps = ArrayList<MapStyle>()
+                    val maps = HashSet<MapStyle>()
                     for (mapName in it.keys()) {
-                        val style = it.getString(mapName)
+                        val style = it.getJSONObject(mapName)
+                            .getString(Config.STYLE.key)
                         maps.add(MapStyle(mapName, style))
                     }
                     items = maps
@@ -71,20 +72,25 @@ data class MapsConfiguration internal constructor(
             }
         }
 
-        fun items(items: List<MapStyle>) = apply { this.items = items }
+        fun items(items: Collection<MapStyle>) = apply { this.items = items }
         fun default(default: MapStyle) = apply { this.default = default }
         fun build() = MapsConfiguration(items, default ?: items.first())
     }
 
     private enum class Config(val key: String) {
         /**
-         * Contains a list of maps and their corresponding style.
+         * Contains a collection of maps and their corresponding style.
          */
         ITEMS("items"),
 
         /**
          * Contains name of the default map.
          */
-        DEFAULT("default")
+        DEFAULT("default"),
+
+        /**
+         * Contains style name for a given map.
+         */
+        STYLE("style")
     }
 }
