@@ -17,12 +17,15 @@ package com.amplifyframework.geo.location.configuration
 
 import com.amplifyframework.geo.models.MapStyle
 import org.json.JSONObject
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 /**
  * Tests that [MapsConfiguration] configuration behaves as expected.
  */
+@RunWith(RobolectricTestRunner::class)
 class MapsConfigurationTest {
     /**
      * Tests that [MapsConfiguration] object can be built from a JSON.

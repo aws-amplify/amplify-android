@@ -24,5 +24,6 @@ dependencies {
 
     testImplementation project(':testutils')
     testImplementation dependency.junit
+    testImplementation dependency.robolectric
 }
 

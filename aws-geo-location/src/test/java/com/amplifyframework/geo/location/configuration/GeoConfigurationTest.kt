@@ -16,12 +16,15 @@
 package com.amplifyframework.geo.location.configuration
 
 import org.json.JSONObject
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 /**
  * Tests that [GeoConfiguration] configuration behaves as expected.
  */
+@RunWith(RobolectricTestRunner::class)
 class GeoConfigurationTest {
     /**
      * Tests that [GeoConfiguration] object can be built from a JSON.
