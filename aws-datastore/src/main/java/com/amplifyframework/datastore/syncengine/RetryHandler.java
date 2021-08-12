@@ -15,7 +15,9 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.datastore.utils.ErrorInspector;
+import com.amplifyframework.logging.Logger;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -27,10 +29,11 @@ import io.reactivex.rxjava3.core.SingleEmitter;
  * Class for retrying call on failure on a single.
  */
 public class RetryHandler {
-    private final int maxExponentValue = 8;
-    private final int jitterFactorValue = 100;
-    private final int maxAttemptsValue = 3;
-    private final int maxDelaySValue = 5 * 60;
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final int MAX_EXPONENT_VALUE = 8;
+    private static final int JITTER_FACTOR_VALUE = 100;
+    private static final int MAX_ATTEMPTS_VALUE = 3;
+    private static final int MAX_DELAY_S_VALUE = 5 * 60;
     private final int maxExponent;
     private final int jitterFactor;
     private final int maxAttempts;
@@ -58,10 +61,10 @@ public class RetryHandler {
      * Parameter less constructor.
      */
     public RetryHandler() {
-        maxExponent = maxExponentValue;
-        jitterFactor = jitterFactorValue;
-        maxAttempts = maxAttemptsValue;
-        maxDelayS = maxDelaySValue;
+        maxExponent = MAX_EXPONENT_VALUE;
+        jitterFactor = JITTER_FACTOR_VALUE;
+        maxAttempts = MAX_ATTEMPTS_VALUE;
+        maxDelayS = MAX_DELAY_S_VALUE;
     }
 
     /**
@@ -84,11 +87,16 @@ public class RetryHandler {
             List<Class<? extends Throwable>> skipExceptions) {
         single.delaySubscription(delayInSeconds, TimeUnit.SECONDS)
                 .subscribe(emitter::onSuccess, error -> {
-                    if (attemptsLeft == 0 || ErrorInspector.contains(error, skipExceptions)) {
-                        emitter.onError(error);
+                    if (!emitter.isDisposed()) {
+                        LOG.verbose("Retry attempts left " + attemptsLeft + ". exception type:" + error.getClass());
+                        if (attemptsLeft == 0 || ErrorInspector.contains(error, skipExceptions)) {
+                            emitter.onError(error);
+                        } else {
+                            call(single, emitter, jitteredDelaySec(attemptsLeft),
+                                    attemptsLeft - 1, skipExceptions);
+                        }
                     } else {
-                        call(single, emitter, jitteredDelaySec(attemptsLeft),
-                                attemptsLeft - 1, skipExceptions);
+                        LOG.verbose("The subscribing channel is disposed.");
                     }
                 });
     }
@@ -104,6 +112,7 @@ public class RetryHandler {
         double waitTimeSeconds =
                 Math.min(maxDelayS, Math.pow(2, ((numAttempt) % maxExponent))
                         + jitterFactor * Math.random());
+        LOG.debug("Wait time is " + waitTimeSeconds + " seconds before retrying");
         return (long) waitTimeSeconds;
     }
 }
