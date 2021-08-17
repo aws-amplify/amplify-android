@@ -78,9 +78,8 @@ public enum CategoryType {
     STORAGE("storage"),
 
     /**
-     * Geo is an interface that provides geo-spacial data to be used for
-     * geocoding, routing, and geofencing.
-     * TODO: Add description for Geo
+     * Geo category provides an interface for maps and other location-aware
+     * capabilities such as location search, routing and asset tracking.
      */
     GEO("geo");
 
