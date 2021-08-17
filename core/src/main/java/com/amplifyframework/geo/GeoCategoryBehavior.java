@@ -13,23 +13,12 @@
  * permissions and limitations under the License.
  */
 
-include ':core'
+package com.amplifyframework.geo;
 
-// Plugin Modules
-include ':aws-analytics-pinpoint'
-include ':aws-api'
-include ':aws-auth-cognito'
-include ':aws-datastore'
-include ':aws-geo-location'
-include ':aws-predictions'
-include ':aws-predictions-tensorflow'
-include ':aws-storage-s3'
+/**
+ * Geo category provides an interface for maps and other location-aware
+ * capabilities such as location search, routing and asset tracking.
+ */
+public interface GeoCategoryBehavior {
 
-// Test Utilities and assets
-include ':testutils'
-include ':testmodels'
-
-// Bindings and accessory modules
-include ':core-kotlin'
-include ':rxbindings'
-include ':aws-api-appsync'
+}
