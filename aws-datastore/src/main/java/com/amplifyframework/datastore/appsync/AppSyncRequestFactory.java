@@ -31,6 +31,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
 import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
@@ -437,7 +438,7 @@ final class AppSyncRequestFactory {
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else {
-            throw new IllegalStateException("Associated data is not Model or Mapg.");
+            throw new IllegalStateException("Associated data is not Model or Map.");
         }
     }
 
@@ -446,6 +447,10 @@ final class AppSyncRequestFactory {
         if (instance instanceof SerializedModel) {
             SerializedModel serializedModel = (SerializedModel) instance;
             Map<String, Object> serializedData = serializedModel.getSerializedData();
+            ModelField field = schema.getFields().get(fieldName);
+            if (field != null && field.isCustomType()) {
+                return extractCustomTypeFieldValue(serializedData.get(fieldName));
+            }
             return serializedData.get(fieldName);
         }
         try {
@@ -458,5 +463,35 @@ final class AppSyncRequestFactory {
                 exception,
                 "Check if this model schema is a correct representation of the fields in the provided Object");
         }
+    }
+
+    private static Object extractCustomTypeFieldValue(Object customTypeData) {
+        // Flutter use case:
+        // If a field is a CustomType, it's value is either a SerializedCustomType
+        // or a List of SerializedCustomType
+        if (customTypeData instanceof SerializedCustomType) {
+            final Map<String, Object> result = new HashMap<>();
+            for (Map.Entry<String, Object> entry :
+                    ((SerializedCustomType) customTypeData).getSerializedData().entrySet()) {
+                if (entry.getValue() instanceof SerializedCustomType) {
+                    result.put(entry.getKey(), extractCustomTypeFieldValue((entry.getValue())));
+                } else {
+                    result.put(entry.getKey(), entry.getValue());
+                }
+            }
+            return result;
+        }
+
+        ArrayList<Object> result = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        ArrayList<Object> customTypeList = (ArrayList<Object>) customTypeData;
+        for (Object item : customTypeList) {
+            if (item instanceof SerializedCustomType) {
+                result.add(extractCustomTypeFieldValue(item));
+            } else {
+                result.add(item);
+            }
+        }
+        return result;
     }
 }

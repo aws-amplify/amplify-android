@@ -27,12 +27,15 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.model.CustomTypeField;
+import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
@@ -835,6 +838,29 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         );
                         serializedData.put(entry.getKey(), model);
                     }
+                } else if (field.isCustomType()) {
+                    if (field.isArray()) {
+                        ArrayList<SerializedCustomType> listOfCustomType = new ArrayList<>();
+                        final CustomTypeSchema nestedCustomTypeSchema =
+                                schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
+                        @SuppressWarnings("unchecked")
+                        List<Map<String, Object>> listItems = (List<Map<String, Object>>) entry.getValue();
+                        for (Map<String, Object> listItem : listItems) {
+                            SerializedCustomType customType = createSerializedCustomType(
+                                nestedCustomTypeSchema, listItem
+                            );
+                            listOfCustomType.add(customType);
+                        }
+                        serializedData.put(entry.getKey(), listOfCustomType);
+                    } else {
+                        final CustomTypeSchema nestedCustomTypeSchema =
+                                schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
+                        @SuppressWarnings("unchecked")
+                        SerializedCustomType customType = createSerializedCustomType(
+                                nestedCustomTypeSchema, (Map<String, Object>) entry.getValue()
+                        );
+                        serializedData.put(entry.getKey(), customType);
+                    }
                 } else {
                     serializedData.put(entry.getKey(), entry.getValue());
                 }
@@ -843,6 +869,35 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return SerializedModel.builder()
                 .serializedData(serializedData)
                 .modelSchema(modelSchema)
+                .build();
+    }
+
+    private SerializedCustomType createSerializedCustomType(
+            CustomTypeSchema customTypeSchema, Map<String, Object> data) {
+        final Map<String, Object> serializedData = new HashMap<>();
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            CustomTypeField field = customTypeSchema.getFields().get(entry.getKey());
+
+            if (field == null) {
+                continue;
+            }
+
+            if (field.isCustomType()) {
+                final CustomTypeSchema nestedCustomTypeSchema =
+                        schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
+                @SuppressWarnings("unchecked")
+                Map<String, Object> nestedData = (Map<String, Object>) entry.getValue();
+                serializedData.put(entry.getKey(),
+                        createSerializedCustomType(nestedCustomTypeSchema, nestedData)
+                );
+            } else {
+                serializedData.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return SerializedCustomType.builder()
+                .serializedData(serializedData)
+                .customTypeSchema(customTypeSchema)
                 .build();
     }
 }

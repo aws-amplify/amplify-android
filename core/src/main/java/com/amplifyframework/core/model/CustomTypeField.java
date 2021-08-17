@@ -45,6 +45,9 @@ public final class CustomTypeField {
     // True if the field is an enumeration type.
     private final boolean isEnum;
 
+    // True if the field is a CustomType
+    private final boolean isCustomType;
+
     /**
      * Construct the CustomTypeField object from the builder.
      */
@@ -55,6 +58,7 @@ public final class CustomTypeField {
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
+        this.isCustomType = builder.isCustomType;
     }
 
     /**
@@ -118,6 +122,15 @@ public final class CustomTypeField {
         return isEnum;
     }
 
+    /**
+     * Returns true if the field's target type is CustomType.
+     *
+     * @return True if the field's target type is CustomType.
+     */
+    public boolean isCustomType() {
+        return isCustomType;
+    }
+
     @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
@@ -138,6 +151,9 @@ public final class CustomTypeField {
         if (isEnum != that.isEnum) {
             return false;
         }
+        if (isCustomType != that.isCustomType) {
+            return false;
+        }
         if (!ObjectsCompat.equals(name, that.name)) {
             return false;
         }
@@ -155,6 +171,7 @@ public final class CustomTypeField {
         result = 31 * result + (isRequired ? 1 : 0);
         result = 31 * result + (isArray ? 1 : 0);
         result = 31 * result + (isEnum ? 1 : 0);
+        result = 31 * result + (isCustomType ? 1 : 0);
         return result;
     }
 
@@ -167,6 +184,7 @@ public final class CustomTypeField {
                 ", isRequired=" + isRequired +
                 ", isArray=" + isArray +
                 ", isEnum=" + isEnum +
+                ", isCustomType=" + isCustomType +
                 '}';
     }
 
@@ -193,6 +211,9 @@ public final class CustomTypeField {
 
         // True if the field's target type is Enum.
         private boolean isEnum = false;
+
+        // True if the field's target type is CustomType.
+        private boolean isCustomType = false;
 
         /**
          * Set the name of the field.
@@ -261,6 +282,16 @@ public final class CustomTypeField {
          */
         public CustomTypeFieldBuilder isEnum(boolean isEnum) {
             this.isEnum = isEnum;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's target type is an Enum.
+         * @param isCustomType flag indicating if the field is an enum targetType
+         * @return the builder object
+         */
+        public CustomTypeFieldBuilder isCustomType(boolean isCustomType) {
+            this.isCustomType = isCustomType;
             return this;
         }
 

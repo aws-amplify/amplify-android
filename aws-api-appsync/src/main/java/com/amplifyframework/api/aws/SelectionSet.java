@@ -24,6 +24,8 @@ import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.CustomTypeField;
+import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
@@ -247,7 +249,7 @@ public final class SelectionSet {
          * @param clazz Class from which to build selection set
          * @param depth Number of children deep to explore
          * @return Selection Set
-         * @throws AmplifyException On faiulre to build selection set
+         * @throws AmplifyException On failure to build selection set
          */
         @SuppressWarnings("unchecked") // Cast to Class<Model>
         private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth)
@@ -359,14 +361,17 @@ public final class SelectionSet {
                 result.add(new SelectionSet("id"));
                 return result;
             }
+
+            SchemaRegistry modelSchemas = SchemaRegistry.instance();
+
             for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
                 String fieldName = entry.getKey();
                 ModelAssociation association = modelSchema.getAssociations().get(fieldName);
                 if (association != null) {
                     if (depth >= 1) {
                         String associatedModelName = association.getAssociatedType();
-                        ModelSchema associateModelSchema = SchemaRegistry.instance()
-                                .getModelSchemaForModelClass(associatedModelName);
+                        ModelSchema associateModelSchema =
+                                modelSchemas.getModelSchemaForModelClass(associatedModelName);
                         Set<SelectionSet> fields;
                         if (entry.getValue().isArray()) { // If modelField is an Array
                             fields = wrapPagination(getModelFields(associateModelSchema, depth - 1));
@@ -375,6 +380,11 @@ public final class SelectionSet {
                         }
                         result.add(new SelectionSet(fieldName, fields));
                     }
+                } else if (entry.getValue().isCustomType()) {
+                    CustomTypeSchema fieldCustomTypeSchema =
+                            modelSchemas.getCustomTypeSchemaForCustomTypeClass(entry.getValue().getTargetType());
+                    Set<SelectionSet> fields = getCustomTypeFields(fieldCustomTypeSchema);
+                    result.add(new SelectionSet(fieldName, fields));
                 } else {
                     result.add(new SelectionSet(fieldName));
                 }
@@ -388,6 +398,25 @@ public final class SelectionSet {
             for (String fieldName : requestOptions.modelMetaFields()) {
                 result.add(new SelectionSet(fieldName));
             }
+            return result;
+        }
+
+        private Set<SelectionSet> getCustomTypeFields(@NonNull CustomTypeSchema customTypeSchema) {
+            SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+            Set<SelectionSet> result = new HashSet<>();
+
+            for (Map.Entry<String, CustomTypeField> entry : customTypeSchema.getFields().entrySet()) {
+                String fieldName = entry.getKey();
+                if (entry.getValue().isCustomType()) {
+                    CustomTypeSchema fieldCustomTypeSchema =
+                            schemaRegistry.getCustomTypeSchemaForCustomTypeClass(entry.getValue().getTargetType());
+                    Set<SelectionSet> fields = getCustomTypeFields(fieldCustomTypeSchema);
+                    result.add(new SelectionSet(fieldName, fields));
+                } else {
+                    result.add(new SelectionSet(fieldName));
+                }
+            }
+
             return result;
         }
     }

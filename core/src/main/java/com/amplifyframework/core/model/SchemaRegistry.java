@@ -28,6 +28,7 @@ import java.util.Set;
  * A utility that creates ModelSchema from Model classes.
  */
 public final class SchemaRegistry {
+    private static SchemaRegistry instance;
     // Model ClassName => ModelSchema map
     private final Map<String, ModelSchema> modelSchemaMap;
     // CustomType name => CustomTypeSchema map
@@ -82,6 +83,15 @@ public final class SchemaRegistry {
     }
 
     /**
+     * Registers the customTypeSchema for the given customTypeName.
+     * @param customTypeName name of the model
+     * @param customTypeSchema schema of the model to be registered.
+     */
+    public synchronized void register(@NonNull String customTypeName, @NonNull CustomTypeSchema customTypeSchema) {
+        customTypeSchemaMap.put(customTypeName, customTypeSchema);
+    }
+
+    /**
      * Retrieve the ModelSchema object for the given Model class.
      * @param classSimpleName name of the Model class retrieved through
      *                        {@link Class#getSimpleName()} method.
@@ -131,12 +141,25 @@ public final class SchemaRegistry {
     }
 
     /**
+     * Retrieve the map of Model CustomTypeName => CustomTypeSchema.
+     * @return an immutable map of Model CustomTypeName => CustomTypeSchema
+     */
+    @NonNull
+    public Map<String, CustomTypeSchema> getCustomTypeSchemaMap() {
+        return Immutable.of(customTypeSchemaMap);
+    }
+
+    /**
      * Creates a new instance.
      * @return A new instance
      */
     @NonNull
     public static synchronized SchemaRegistry instance() {
-        return new SchemaRegistry();
+        if (SchemaRegistry.instance == null) {
+            SchemaRegistry.instance = new SchemaRegistry();
+        }
+
+        return SchemaRegistry.instance;
     }
 
     /**
