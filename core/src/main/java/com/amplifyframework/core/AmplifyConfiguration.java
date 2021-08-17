@@ -28,6 +28,7 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.category.EmptyCategoryConfiguration;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
+import com.amplifyframework.geo.GeoCategoryConfiguration;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;
 import com.amplifyframework.predictions.PredictionsCategoryConfiguration;
@@ -154,6 +155,7 @@ public final class AmplifyConfiguration {
                 new ApiCategoryConfiguration(),
                 new AuthCategoryConfiguration(),
                 new DataStoreCategoryConfiguration(),
+                new GeoCategoryConfiguration(),
                 new HubCategoryConfiguration(),
                 new LoggingCategoryConfiguration(),
                 new PredictionsCategoryConfiguration(),
