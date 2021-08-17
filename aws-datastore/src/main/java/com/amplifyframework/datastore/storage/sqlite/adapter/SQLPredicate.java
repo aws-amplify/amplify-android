@@ -131,6 +131,7 @@ public final class SQLPredicate {
         );
     }
 
+    @SuppressWarnings("fallthrough")
     // Utility method to recursively parse a given predicate operation.
     private StringBuilder parsePredicateOperation(QueryPredicateOperation<?> operation) throws DataStoreException {
         final StringBuilder builder = new StringBuilder();
@@ -187,6 +188,14 @@ public final class SQLPredicate {
                         .append("?");
             case EQUAL:
             case NOT_EQUAL:
+                Object operatorValue = getOperatorValue(op);
+                if (operatorValue == null) {
+                    SqlKeyword sqlNullCheck =
+                            op.type() == QueryOperator.Type.EQUAL ? SqlKeyword.IS_NULL : SqlKeyword.IS_NOT_NULL;
+                    return builder.append(column)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(sqlNullCheck.toString());
+                }
             case LESS_THAN:
             case GREATER_THAN:
             case LESS_OR_EQUAL:
