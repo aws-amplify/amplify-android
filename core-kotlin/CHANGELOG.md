@@ -1,3 +1,27 @@
+## [Release 0.8.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.8.0)
+
+### Features
+- **auth:** add options to resendSignUpCode (#1422)
+- **auth:** add options to resetPassword and confirmResetPassword (#1426)
+
+### Bug Fixes
+- **api:** expose selectionSet in request builder (#1440)
+- check for canceled call to fix RxJava crash (#1441)
+
+[See all changes between 0.7.0 and 0.8.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.7.0...release-kotlin_v0.8.0)
+
+## [Release 0.7.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.7.0)
+
+### Features
+- add support for AWS_LAMBDA auth type (#1412)
+
+### Miscellaneous
+- Delete stale.yml (#1421)
+- Updated DataStore delete test based on expected delete behavior (#1423)
+- feat(api) add CUSTOM case to AuthStrategy (#1428)
+
+[See all changes between 0.6.0 and 0.7.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.6.0...release-kotlin_v0.7.0)
+
 ## [Release 0.6.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.6.0)
 
 ### Features

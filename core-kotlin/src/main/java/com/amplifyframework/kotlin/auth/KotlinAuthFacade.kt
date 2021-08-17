@@ -25,11 +25,17 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
+import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -73,10 +79,14 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun resendSignUpCode(username: String): AuthSignUpResult {
+    override suspend fun resendSignUpCode(
+        username: String,
+        options: AuthResendSignUpCodeOptions
+    ): AuthSignUpResult {
         return suspendCoroutine { continuation ->
             delegate.resendSignUpCode(
                 username,
+                options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
@@ -192,21 +202,30 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun resetPassword(username: String): AuthResetPasswordResult {
+    override suspend fun resetPassword(
+        username: String,
+        options: AuthResetPasswordOptions
+    ): AuthResetPasswordResult {
         return suspendCoroutine { continuation ->
             delegate.resetPassword(
                 username,
+                options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
         }
     }
 
-    override suspend fun confirmResetPassword(newPassword: String, confirmationCode: String) {
+    override suspend fun confirmResetPassword(
+        newPassword: String,
+        confirmationCode: String,
+        options: AuthConfirmResetPasswordOptions
+    ) {
         return suspendCoroutine { continuation ->
             delegate.confirmResetPassword(
                 newPassword,
                 confirmationCode,
+                options,
                 { continuation.resume(Unit) },
                 { continuation.resumeWithException(it) }
             )
@@ -234,34 +253,41 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     }
 
     override suspend fun updateUserAttribute(
-        attribute: AuthUserAttribute
+        attribute: AuthUserAttribute,
+        options: AuthUpdateUserAttributeOptions
     ): AuthUpdateAttributeResult {
         return suspendCoroutine { continuation ->
             delegate.updateUserAttribute(
                 attribute,
+                options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
         }
     }
 
-    override suspend fun updateUserAttributes(attributes: List<AuthUserAttribute>):
-        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> {
-            return suspendCoroutine { continuation ->
-                delegate.updateUserAttributes(
-                    attributes,
-                    { continuation.resume(it) },
-                    { continuation.resumeWithException(it) }
-                )
-            }
+    override suspend fun updateUserAttributes(
+        attributes: List<AuthUserAttribute>,
+        options: AuthUpdateUserAttributesOptions
+    ): Map<AuthUserAttributeKey, AuthUpdateAttributeResult> {
+        return suspendCoroutine { continuation ->
+            delegate.updateUserAttributes(
+                attributes,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
         }
+    }
 
     override suspend fun resendUserAttributeConfirmationCode(
-        attributeKey: AuthUserAttributeKey
+        attributeKey: AuthUserAttributeKey,
+        options: AuthResendUserAttributeConfirmationCodeOptions
     ): AuthCodeDeliveryDetails {
         return suspendCoroutine { continuation ->
             delegate.resendUserAttributeConfirmationCode(
                 attributeKey,
+                options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
