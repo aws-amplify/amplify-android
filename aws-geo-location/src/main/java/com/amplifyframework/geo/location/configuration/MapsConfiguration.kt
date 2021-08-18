@@ -30,6 +30,7 @@ data class MapsConfiguration internal constructor(
          * Returns a builder object for maps configuration.
          * @return fresh configuration builder instance.
          */
+        @JvmStatic
         fun builder(): Builder {
             return Builder()
         }

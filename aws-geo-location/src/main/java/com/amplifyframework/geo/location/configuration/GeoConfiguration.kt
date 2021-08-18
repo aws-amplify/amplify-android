@@ -32,6 +32,7 @@ data class GeoConfiguration internal constructor(
          * Returns a builder object for plugin configuration.
          * @return fresh configuration builder instance.
          */
+        @JvmStatic
         fun builder(): Builder {
             return Builder()
         }
