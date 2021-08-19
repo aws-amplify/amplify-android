@@ -13,23 +13,17 @@
  * permissions and limitations under the License.
  */
 
-include ':core'
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply from: rootProject.file("configuration/checkstyle.gradle")
+apply from: rootProject.file("configuration/publishing.gradle")
 
-// Plugin Modules
-include ':aws-analytics-pinpoint'
-include ':aws-api'
-include ':aws-auth-cognito'
-include ':aws-datastore'
-include ':aws-geo-location'
-include ':aws-predictions'
-include ':aws-predictions-tensorflow'
-include ':aws-storage-s3'
+dependencies {
+    implementation project(':core')
+    implementation dependency.aws.location
 
-// Test Utilities and assets
-include ':testutils'
-include ':testmodels'
+    testImplementation project(':testutils')
+    testImplementation dependency.junit
+    testImplementation dependency.robolectric
+}
 
-// Bindings and accessory modules
-include ':core-kotlin'
-include ':rxbindings'
-include ':aws-api-appsync'
