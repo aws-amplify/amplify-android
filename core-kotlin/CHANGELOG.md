@@ -1,3 +1,10 @@
+## [Release 0.8.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.8.1)
+
+### Bug Fixes
+- handle null values for predicates (#1435)
+
+[See all changes between 0.8.0 and 0.8.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.8.0...release-kotlin_v0.8.1)
+
 ## [Release 0.8.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.8.0)
 
 ### Features
