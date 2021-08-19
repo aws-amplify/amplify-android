@@ -25,9 +25,8 @@ import com.amplifyframework.geo.models.MapStyle;
 import java.util.Collection;
 
 /**
- * Geo category provides an interface for obtaining geo-spacial data to be
- * used in geocoding, routing, and geofencing.
- * TODO: Add description for Geo.
+ * Geo category provides an interface for maps and other location-aware
+ * capabilities such as location search, routing and asset tracking.
  */
 public final class GeoCategory
         extends Category<GeoCategoryPlugin<?>>

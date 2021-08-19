@@ -16,6 +16,7 @@
 package com.amplifyframework.geo.location
 
 import android.content.Context
+
 import com.amazonaws.services.geo.AmazonLocationClient
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Consumer
@@ -23,6 +24,7 @@ import com.amplifyframework.geo.GeoCategoryPlugin
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
 import com.amplifyframework.geo.models.MapStyle
+
 import org.json.JSONObject
 
 /**
