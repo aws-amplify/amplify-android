@@ -17,8 +17,12 @@ package com.amplifyframework.geo;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.geo.models.MapStyle;
+
+import java.util.Collection;
 
 /**
  * Geo category provides an interface for maps and other location-aware
@@ -35,5 +39,27 @@ public final class GeoCategory
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.GEO;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getAvailableMaps(
+            @NonNull Consumer<Collection<MapStyle>> onResult,
+            @NonNull Consumer<GeoException> onError
+    ) {
+        getSelectedPlugin().getAvailableMaps(onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getDefaultMap(
+            @NonNull Consumer<MapStyle> onResult,
+            @NonNull Consumer<GeoException> onError
+    ) {
+        getSelectedPlugin().getDefaultMap(onResult, onError);
     }
 }

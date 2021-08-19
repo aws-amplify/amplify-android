@@ -15,10 +15,37 @@
 
 package com.amplifyframework.geo;
 
+import androidx.annotation.NonNull;
+
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.geo.models.MapStyle;
+
+import java.util.Collection;
+
 /**
  * Geo category provides an interface for maps and other location-aware
  * capabilities such as location search, routing and asset tracking.
  */
 public interface GeoCategoryBehavior {
+    /**
+     * Gets a collection of maps and their corresponding styles.
+     *
+     * @param onResult Called upon successfully fetching a collection of maps.
+     * @param onError  Called upon failure to fetch a collection of maps.
+     */
+    void getAvailableMaps(
+            @NonNull Consumer<Collection<MapStyle>> onResult,
+            @NonNull Consumer<GeoException> onError
+    );
 
+    /**
+     * Gets the default map and style from available maps.
+     *
+     * @param onResult Called upon successfully fetching default map.
+     * @param onError  Called upon failure to fetch default map.
+     */
+    void getDefaultMap(
+            @NonNull Consumer<MapStyle> onResult,
+            @NonNull Consumer<GeoException> onError
+    );
 }

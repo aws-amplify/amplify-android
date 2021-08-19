@@ -12,14 +12,19 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.amplifyframework.geo.location
 
 import android.content.Context
+
 import com.amazonaws.services.geo.AmazonLocationClient
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.core.Consumer
 import com.amplifyframework.geo.GeoCategoryPlugin
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
+import com.amplifyframework.geo.models.MapStyle
+
 import org.json.JSONObject
 
 /**
@@ -54,5 +59,27 @@ class AWSLocationGeoPlugin(
 
     override fun getVersion(): String {
         return BuildConfig.VERSION_NAME
+    }
+
+    override fun getAvailableMaps(
+        onResult: Consumer<Collection<MapStyle>>,
+        onError: Consumer<GeoException>
+    ) {
+        try {
+            onResult.accept(pluginConfiguration.maps!!.items)
+        } catch (error: Exception) {
+            onError.accept(Errors.mapsError(error))
+        }
+    }
+
+    override fun getDefaultMap(
+        onResult: Consumer<MapStyle>,
+        onError: Consumer<GeoException>
+    ) {
+        try {
+            onResult.accept(pluginConfiguration.maps!!.default)
+        } catch (error: Exception) {
+            onError.accept(Errors.mapsError(error))
+        }
     }
 }
