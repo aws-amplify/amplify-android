@@ -88,6 +88,7 @@ ext {
             ]
         ],
         aws: [
+            core: "com.amazonaws:aws-android-sdk-core:$awsSdkVersion",
             s3: "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion",
             comprehend: "com.amazonaws:aws-android-sdk-comprehend:$awsSdkVersion",
             authcore: "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion",
@@ -108,6 +109,7 @@ ext {
         oauth2: 'com.google.auth:google-auth-library-oauth2-http:0.26.0',
         okhttp: 'com.squareup.okhttp3:okhttp:4.9.1',
         gson: 'com.google.code.gson:gson:2.8.6',
+        maplibre: 'org.maplibre.gl:android-sdk:9.5.0',
         rxandroid: 'io.reactivex.rxjava3:rxandroid:3.0.0',
         rxjava: 'io.reactivex.rxjava3:rxjava:3.0.6',
         tensorflow: 'org.tensorflow:tensorflow-lite:2.0.0',
