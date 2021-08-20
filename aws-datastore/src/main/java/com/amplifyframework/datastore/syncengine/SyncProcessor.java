@@ -75,6 +75,7 @@ final class SyncProcessor {
     private final String[] modelNames;
     private final QueryPredicateProvider queryPredicateProvider;
     private final RetryHandler requestRetry;
+    private final boolean isSyncRetryEnabled;
 
     private SyncProcessor(Builder builder) {
         this.modelProvider = builder.modelProvider;
@@ -88,6 +89,7 @@ final class SyncProcessor {
             ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
                 .toArray(new String[0]);
         this.requestRetry = builder.requestRetry;
+        this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
     }
 
     /**
@@ -224,7 +226,10 @@ final class SyncProcessor {
                 BehaviorProcessor.createDefault(
                         appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate));
 
-        return processor.concatMap(request -> syncPageWithRetry(request).toFlowable())
+        return processor.concatMap(request -> {
+            if(isSyncRetryEnabled) return syncPageWithRetry(request).toFlowable();
+            else return syncPage(request).toFlowable();
+        })
                 .doOnNext(paginatedResult -> {
                     if (paginatedResult.hasNextResult()) {
                         processor.onNext(paginatedResult.getRequestForNextResult());
@@ -296,7 +301,7 @@ final class SyncProcessor {
      */
     public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep,
             SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep,
-            QueryPredicateProviderStep, RetryHandlerStep, BuildStep {
+            QueryPredicateProviderStep, RetryHandlerStep, SyncRetryStep, BuildStep {
         private ModelProvider modelProvider;
         private ModelSchemaRegistry modelSchemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
@@ -305,6 +310,7 @@ final class SyncProcessor {
         private DataStoreConfigurationProvider dataStoreConfigurationProvider;
         private QueryPredicateProvider queryPredicateProvider;
         private RetryHandler requestRetry;
+        private boolean isSyncRetryEnabled;
 
         @NonNull
         @Override
@@ -358,13 +364,20 @@ final class SyncProcessor {
 
         @NonNull
         @Override
+        public BuildStep isSyncRetryEnabled(boolean isSyncRetryEnabled) {
+            this.isSyncRetryEnabled = isSyncRetryEnabled;
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
         public SyncProcessor build() {
             return new SyncProcessor(this);
         }
 
         @NonNull
         @Override
-        public BuildStep retryHandler(RetryHandler requestRetry) {
+        public SyncRetryStep retryHandler(RetryHandler requestRetry) {
             this.requestRetry = requestRetry;
             return Builder.this;
         }
@@ -408,7 +421,12 @@ final class SyncProcessor {
 
     interface RetryHandlerStep {
         @NonNull
-        BuildStep retryHandler(RetryHandler requestRetry);
+        SyncRetryStep retryHandler(RetryHandler requestRetry);
+    }
+
+    interface SyncRetryStep {
+        @NonNull
+        BuildStep isSyncRetryEnabled(boolean isSyncRetryEnabled);
     }
 
     interface BuildStep {

@@ -43,11 +43,16 @@ public final class DataStoreConfiguration {
     static final int DEFAULT_SYNC_MAX_RECORDS = 10_000;
     @VisibleForTesting 
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
+    @VisibleForTesting
+    static final boolean DEFAULT_DO_SYNC_RETRY = false;
+
+
 
     private final DataStoreErrorHandler errorHandler;
     private final DataStoreConflictHandler conflictHandler;
     private final Integer syncMaxRecords;
     private final Integer syncPageSize;
+    private final boolean doSyncRetry;
     private final Map<String, DataStoreSyncExpression> syncExpressions;
     private final Long syncIntervalInMinutes;
 
@@ -58,6 +63,7 @@ public final class DataStoreConfiguration {
         this.syncPageSize = builder.syncPageSize;
         this.syncIntervalInMinutes = builder.syncIntervalInMinutes;
         this.syncExpressions = builder.syncExpressions;
+        this.doSyncRetry = builder.doSyncRetry;
     }
 
     /**
@@ -111,6 +117,7 @@ public final class DataStoreConfiguration {
             .syncInterval(DEFAULT_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .syncPageSize(DEFAULT_SYNC_PAGE_SIZE)
             .syncMaxRecords(DEFAULT_SYNC_MAX_RECORDS)
+                .doSyncRetry(DEFAULT_DO_SYNC_RETRY)
             .build();
     }
 
@@ -172,6 +179,15 @@ public final class DataStoreConfiguration {
     @IntRange(from = 0)
     public Integer getSyncPageSize() {
         return this.syncPageSize;
+    }
+
+    /**
+     * Gets the boolean for enabling retry on sync failure
+     * a sync operation.
+     * @return Desired size of a page of results from an AppSync sync response
+     */
+    public boolean getDoSyncRetry() {
+        return this.doSyncRetry;
     }
 
     /**
@@ -247,6 +263,7 @@ public final class DataStoreConfiguration {
         private Long syncIntervalInMinutes;
         private Integer syncMaxRecords;
         private Integer syncPageSize;
+        private boolean doSyncRetry;
         private Map<String, DataStoreSyncExpression> syncExpressions;
         private boolean ensureDefaults;
         private JSONObject pluginJson;
@@ -310,6 +327,17 @@ public final class DataStoreConfiguration {
         @NonNull
         public Builder syncMaxRecords(@IntRange(from = 0) Integer syncMaxRecords) {
             this.syncMaxRecords = syncMaxRecords;
+            return Builder.this;
+        }
+
+        /**
+         * Sets the retry enabled on datastore sync.
+         * @param doSyncRetry Is retry enabled on datastore sync
+         * @return Current builder instance
+         */
+        @NonNull
+        public Builder doSyncRetry(boolean doSyncRetry) {
+            this.doSyncRetry = doSyncRetry;
             return Builder.this;
         }
 
@@ -410,6 +438,7 @@ public final class DataStoreConfiguration {
             syncMaxRecords = getValueOrDefault(userProvidedConfiguration.getSyncMaxRecords(), syncMaxRecords);
             syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
             syncExpressions = userProvidedConfiguration.getSyncExpressions();
+            doSyncRetry = getValueOrDefault(userProvidedConfiguration.getDoSyncRetry(), doSyncRetry);
         }
 
         private static <T> T getValueOrDefault(T value, T defaultValue) {
