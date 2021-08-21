@@ -705,8 +705,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
          * @param isSyncRetryEnabled is sync retry enabled.
          * @return An implementation of the {@link ModelProvider} interface.
          */
-        @VisibleForTesting
-        Builder isSyncRetryEnabled(Boolean isSyncRetryEnabled) {
+        public Builder isSyncRetryEnabled(Boolean isSyncRetryEnabled) {
             this.isSyncRetryEnabled = isSyncRetryEnabled;
             return this;
         }
