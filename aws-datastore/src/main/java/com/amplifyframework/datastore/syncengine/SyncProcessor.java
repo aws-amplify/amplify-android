@@ -227,8 +227,11 @@ final class SyncProcessor {
                         appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate));
 
         return processor.concatMap(request -> {
-            if(isSyncRetryEnabled) return syncPageWithRetry(request).toFlowable();
-            else return syncPage(request).toFlowable();
+            if (isSyncRetryEnabled) {
+                return syncPageWithRetry(request).toFlowable();
+            } else {
+                return syncPage(request).toFlowable();
+            }
         })
                 .doOnNext(paginatedResult -> {
                     if (paginatedResult.hasNextResult()) {

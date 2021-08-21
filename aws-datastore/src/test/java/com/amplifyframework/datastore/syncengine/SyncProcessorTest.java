@@ -107,7 +107,7 @@ public final class SyncProcessorTest {
     private int errorHandlerCallCount;
     private int modelCount;
     private RetryHandler requestRetry;
-    private  boolean isSyncRetryEnabled = true;
+    private boolean isSyncRetryEnabled = true;
 
 
     /**

@@ -46,8 +46,6 @@ public final class DataStoreConfiguration {
     @VisibleForTesting
     static final boolean DEFAULT_DO_SYNC_RETRY = false;
 
-
-
     private final DataStoreErrorHandler errorHandler;
     private final DataStoreConflictHandler conflictHandler;
     private final Integer syncMaxRecords;
