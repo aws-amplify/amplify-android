@@ -18,7 +18,9 @@ package com.amplifyframework.datastore.storage;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
@@ -26,6 +28,7 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.VoidResult;
 
@@ -34,6 +37,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
@@ -204,6 +208,35 @@ public final class SynchronousStorageAdapter {
             resultSet.add(resultIterator.next());
         }
         return resultSet;
+    }
+
+    /**
+     * Query the storage adapter for models of a given class, and considering some additional criteria
+     * that each model must meet.
+     * @param modelClass Class of models being queried
+     * @param options Query options with predicate and pagination info
+     * @param <T> Type of model being queried
+     * @return The list of models which are of the requested class and meet the requested criteria
+     * @throws DataStoreException On any failure to query the storage adapter
+     */
+    public <T extends Model> void observeQuery(@NonNull Class<T> modelClass,
+                                                                    @NonNull QueryOptions options,
+                                                                    @NonNull Consumer<Cancelable> onObservationStarted,
+                                                                    @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+                                                                    @NonNull Consumer<DataStoreException> onObservationError,
+                                                                    @NonNull Action onObservationComplete)
+            throws DataStoreException {
+
+//        DataStoreQuerySnapshot<T> result = Await.result(
+//                operationTimeoutMs,
+//                new Await.ResultErrorEmitter<DataStoreQuerySnapshot<T>, DataStoreException>() {
+//                    @Override
+//                    public void emitTo(@NonNull Consumer<DataStoreQuerySnapshot<T>> onResult, @NonNull Consumer<DataStoreException> onError) {
+//                        asyncDelegate.observeQuery(modelClass, options, observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+//                    }
+//                }
+//        );
+        asyncDelegate.observeQuery(modelClass, options, onObservationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
     }
 
     /**

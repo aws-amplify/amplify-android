@@ -40,6 +40,7 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -132,6 +133,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Need to keep a reference to the app context so we can
     // re-initialize the adapter after deleting the file in the clear() method
     private Context context;
+
+    private SqlQueryProcessor sqlQueryProcessor;
 
     /**
      * Construct the SQLiteStorageAdapter object.
@@ -288,6 +291,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 ));
             }
         });
+
+        sqlQueryProcessor = new SqlQueryProcessor(sqlCommandProcessor,
+                sqlCommandFactory,
+                modelSchemaRegistry);
     }
 
     /**
@@ -382,35 +389,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
         threadPool.submit(() -> {
-            final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
-            try (Cursor cursor = sqlCommandProcessor.rawQuery(sqlCommandFactory.queryFor(modelSchema, options))) {
-                LOG.debug("Querying item for: " + itemClass.getSimpleName());
-                final List<T> models = new ArrayList<>();
-                final SQLiteModelFieldTypeConverter converter =
-                    new SQLiteModelFieldTypeConverter(modelSchema, modelSchemaRegistry, gson);
-
-                if (cursor == null) {
-                    onError.accept(new DataStoreException(
-                        "Error in getting a cursor to the table for class: " + itemClass.getSimpleName(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                }
-
-                if (cursor.moveToFirst()) {
-                    do {
-                        Map<String, Object> map = converter.buildMapForModel(cursor);
-                        String jsonString = gson.toJson(map);
-                        models.add(gson.fromJson(jsonString, itemClass));
-                    } while (cursor.moveToNext());
-                }
-
-                onSuccess.accept(models.iterator());
-            } catch (Exception exception) {
-                onError.accept(new DataStoreException(
-                    "Error in querying the model.", exception,
-                    "See attached exception for details."
-                ));
-            }
+            List<T> models = sqlQueryProcessor.queryOfflineData(itemClass, options, onError);
+            onSuccess.accept(models.iterator());
         });
     }
 
@@ -644,6 +624,56 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             },
             onObservationComplete::call
         );
+        return disposable::dispose;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public <T extends Model> Cancelable observeQuery(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Cancelable> onObservationStarted,
+            // why do we do on datastorequerySnapshot instead of StorageItemChange like observe
+            @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+            @NonNull Consumer<DataStoreException> onObservationError,
+            @NonNull Action onObservationComplete) {
+        Objects.requireNonNull(onObservationStarted);
+        Objects.requireNonNull(onObservationError);
+        Objects.requireNonNull(onObservationComplete);
+        Consumer<List<T>> onSuccess = value -> {
+            DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<T>(value, false, null );
+            onQuerySnapshot.accept(dataStoreQuerySnapshot);
+        };
+
+        Consumer<StorageItemChange<? extends Model>> onItemChanged = value -> {
+            DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<T>(null, false, null );
+            onQuerySnapshot.accept(dataStoreQuerySnapshot);
+        };
+        threadPool.submit(() -> {
+            List<T> models = sqlQueryProcessor.queryOfflineData(itemClass, options, onObservationError);
+            onSuccess.accept(models);
+        });
+
+        Disposable disposable = itemChangeSubject.subscribe(
+                onItemChanged::accept,
+                failure -> {
+                    if (failure instanceof DataStoreException) {
+                        onObservationError.accept((DataStoreException) failure);
+                        return;
+                    }
+                    onObservationError.accept(new DataStoreException(
+                            "Failed to observe items in storage adapter.",
+                            failure,
+                            "Inspect the failure details."
+                    ));
+                },
+                onObservationComplete::call
+        );
+        onObservationStarted.accept(disposable::dispose);
         return disposable::dispose;
     }
 

@@ -32,3 +32,5 @@ include ':testmodels'
 include ':core-kotlin'
 include ':rxbindings'
 include ':aws-api-appsync'
+include ':sample-onCall'
+project(":sample-onCall").projectDir=new File(rootDir, "../OnCall/app")

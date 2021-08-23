@@ -178,6 +178,22 @@ public interface DataStoreCategoryBehavior {
     );
 
     /**
+     * Query and Observe all changes to any/all item(s) in the DataStore.
+     * @param onObservationStarted Called when observation begins
+     * @param onDataStoreItemChange  Called 0..n times, once for each and every change that
+     *                               occurs to any/all item(s) in the DataStore.
+     * @param onObservationFailure   Called if observation of the DataStore terminates
+     *                               with a non-recoverable failure
+     * @param onObservationCompleted Called when observation completes gracefully
+     */
+    void observeQuery(
+            @NonNull Consumer<Cancelable> onObservationStarted,
+            @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted
+    );
+
+    /**
      * Observe changes to a certain type of item(s) in the DataStore.
      * @param itemClass The class of the item(s) to observe
      * @param <T> The type of the item(s) to observe

@@ -148,6 +148,11 @@ public final class DataStoreCategory
             onObservationStarted, onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
 
+    @Override
+    public void observeQuery(@NonNull Consumer<Cancelable> onObservationStarted, @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange, @NonNull Consumer<DataStoreException> onObservationFailure, @NonNull Action onObservationCompleted) {
+
+    }
+
     /**
      * {@inheritDoc}
      */

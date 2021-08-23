@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 
 import java.util.Iterator;
 import java.util.List;
@@ -168,6 +169,26 @@ public interface LocalStorageAdapter {
             @NonNull Consumer<DataStoreException> onObservationError,
             @NonNull Action onObservationComplete
     );
+
+    /**
+     * Query and observe all changes to that occur to any/all objects in the storage.
+     * @param onQuerySnapshot
+     *        Receives a {@link StorageItemChange} notification every time
+     *        any object managed by the storage adapter is changed in any way.
+     * @param onObservationError
+     *        Invoked if the observation terminates do an unrecoverable error
+     * @param onObservationComplete
+     *        Invoked it the observation terminates gracefully, perhaps due to cancellation
+     * @return A Cancelable with which this observation may be terminated
+     */
+    @NonNull
+    <T extends Model> Cancelable observeQuery(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Cancelable> onObservationStarted,
+            @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+            @NonNull Consumer<DataStoreException> onObservationError,
+            @NonNull Action onObservationComplete);
 
     /**
      * Terminate use of the local storage.

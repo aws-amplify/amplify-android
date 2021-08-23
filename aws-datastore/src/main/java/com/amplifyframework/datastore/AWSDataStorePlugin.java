@@ -496,6 +496,26 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     @Override
+    public void observeQuery(
+            @NonNull Consumer<Cancelable> onObservationStarted,
+            @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+
+        start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
+                itemChange -> {
+                    try {
+                        onDataStoreItemChange.accept(ItemChangeMapper.map(itemChange));
+                    } catch (DataStoreException dataStoreException) {
+                        onObservationFailure.accept(dataStoreException);
+                    }
+                },
+                onObservationFailure,
+                onObservationCompleted
+        )), onObservationFailure);
+    }
+
+    @Override
     public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
             @NonNull Consumer<Cancelable> onObservationStarted,

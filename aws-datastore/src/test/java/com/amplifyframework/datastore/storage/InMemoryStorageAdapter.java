@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -253,6 +254,12 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             onSubscriptionComplete::call
         );
         return disposable::dispose;
+    }
+
+    @NonNull
+    @Override
+    public <T extends Model> Cancelable observeQuery(@NonNull Class<T> itemClass, @NonNull QueryOptions options, @NonNull Consumer<Cancelable> onObservationStarted, @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot, @NonNull Consumer<DataStoreException> onObservationError, @NonNull Action onObservationComplete) {
+        return null;
     }
 
     @Override
