@@ -1,0 +1,36 @@
+{"query": "mutation UpdatePerson($input: UpdatePersonInput!) {
+  updatePerson(input: $input) {
+    _deleted
+    _lastChangedAt
+    _version
+    bio {
+      email
+      phone {
+        area
+        country
+        number
+      }
+    }
+    id
+    mailingAddresses {
+      city
+      line1
+      line2
+      postalCode
+      state
+    }
+    name
+  }
+}
+",
+"variables": {
+  "input": {
+    "bio": {
+      "phone": { "area": "415", "country": "+1", "number": "6666666" },
+      "email": "test@testing.com"
+    },
+    "id": "123456",
+    "_version": 1
+  }
+}
+}

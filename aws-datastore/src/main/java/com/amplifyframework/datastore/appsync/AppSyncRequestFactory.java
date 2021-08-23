@@ -449,7 +449,7 @@ final class AppSyncRequestFactory {
             Map<String, Object> serializedData = serializedModel.getSerializedData();
             ModelField field = schema.getFields().get(fieldName);
             if (field != null && field.isCustomType()) {
-                return extractCustomTypeFieldValue(serializedData.get(fieldName));
+                return extractCustomTypeFieldValue(fieldName, serializedData.get(fieldName));
             }
             return serializedData.get(fieldName);
         }
@@ -465,7 +465,7 @@ final class AppSyncRequestFactory {
         }
     }
 
-    private static Object extractCustomTypeFieldValue(Object customTypeData) {
+    private static Object extractCustomTypeFieldValue(String fieldName, Object customTypeData) throws AmplifyException {
         // Flutter use case:
         // If a field is a CustomType, it's value is either a SerializedCustomType
         // or a List of SerializedCustomType
@@ -474,7 +474,7 @@ final class AppSyncRequestFactory {
             for (Map.Entry<String, Object> entry :
                     ((SerializedCustomType) customTypeData).getSerializedData().entrySet()) {
                 if (entry.getValue() instanceof SerializedCustomType) {
-                    result.put(entry.getKey(), extractCustomTypeFieldValue((entry.getValue())));
+                    result.put(entry.getKey(), extractCustomTypeFieldValue(entry.getKey(), entry.getValue()));
                 } else {
                     result.put(entry.getKey(), entry.getValue());
                 }
@@ -482,16 +482,23 @@ final class AppSyncRequestFactory {
             return result;
         }
 
-        ArrayList<Object> result = new ArrayList<>();
-        @SuppressWarnings("unchecked")
-        ArrayList<Object> customTypeList = (ArrayList<Object>) customTypeData;
-        for (Object item : customTypeList) {
-            if (item instanceof SerializedCustomType) {
-                result.add(extractCustomTypeFieldValue(item));
-            } else {
-                result.add(item);
+        if (customTypeData instanceof List) {
+            ArrayList<Object> result = new ArrayList<>();
+            @SuppressWarnings("unchecked")
+            ArrayList<Object> customTypeList = (ArrayList<Object>) customTypeData;
+            for (Object item : customTypeList) {
+                if (item instanceof SerializedCustomType) {
+                    result.add(extractCustomTypeFieldValue(fieldName, item));
+                } else {
+                    result.add(item);
+                }
             }
+            return result;
         }
-        return result;
+
+        throw new AmplifyException(
+                "An invalid CustomType field was provided. " + fieldName + " must be an instance of " +
+                        "SerializedCustomType or a List of instances of SerializedCustomType",
+                "Check if this model schema is a correct representation of the fields in the provided Object");
     }
 }
