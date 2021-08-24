@@ -135,7 +135,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             AppSyncClient.via(api, this.authModeStrategy),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API,
-                isSyncRetryEnabled
+            isSyncRetryEnabled
         );
     }
 
