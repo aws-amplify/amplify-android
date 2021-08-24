@@ -270,6 +270,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 this.sqlCommandProcessor = new SQLCommandProcessor(databaseConnectionHandle);
 
+                sqlQueryProcessor = new SqlQueryProcessor(sqlCommandProcessor,
+                        sqlCommandFactory,
+                        modelSchemaRegistry);
+
                 /*
                  * Detect if the version of the models stored in SQLite is different
                  * from the version passed in through {@link ModelProvider#version()}.
@@ -291,10 +295,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 ));
             }
         });
-
-        sqlQueryProcessor = new SqlQueryProcessor(sqlCommandProcessor,
-                sqlCommandFactory,
-                modelSchemaRegistry);
     }
 
     /**
