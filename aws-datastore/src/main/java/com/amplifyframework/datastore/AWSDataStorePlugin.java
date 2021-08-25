@@ -95,7 +95,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
         this.authModeStrategy = AuthModeStrategyType.DEFAULT;
-        this.isSyncRetryEnabled = false;
+        this.userProvidedConfiguration = userProvidedConfiguration;
+        this.isSyncRetryEnabled = userProvidedConfiguration != null && userProvidedConfiguration.getDoSyncRetry();
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
@@ -106,7 +107,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API,
                 isSyncRetryEnabled
         );
-        this.userProvidedConfiguration = userProvidedConfiguration;
+
     }
 
     private AWSDataStorePlugin(@NonNull Builder builder) throws DataStoreException {
