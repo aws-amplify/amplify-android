@@ -29,6 +29,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreQuerySnapshot;
+import com.amplifyframework.datastore.storage.sqlite.ObserveQueryManager;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.VoidResult;
 
@@ -224,19 +225,9 @@ public final class SynchronousStorageAdapter {
                                                                     @NonNull Consumer<Cancelable> onObservationStarted,
                                                                     @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                                                                     @NonNull Consumer<DataStoreException> onObservationError,
-                                                                    @NonNull Action onObservationComplete)
-            throws DataStoreException {
-
-//        DataStoreQuerySnapshot<T> result = Await.result(
-//                operationTimeoutMs,
-//                new Await.ResultErrorEmitter<DataStoreQuerySnapshot<T>, DataStoreException>() {
-//                    @Override
-//                    public void emitTo(@NonNull Consumer<DataStoreQuerySnapshot<T>> onResult, @NonNull Consumer<DataStoreException> onError) {
-//                        asyncDelegate.observeQuery(modelClass, options, observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
-//                    }
-//                }
-//        );
-        asyncDelegate.observeQuery(modelClass, options, onObservationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                                                                  @NonNull Action onObservationComplete) {
+        //TODO PM:  inject it
+        new ObserveQueryManager(asyncDelegate).observeQuery(modelClass, options, onObservationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
     }
 
     /**
