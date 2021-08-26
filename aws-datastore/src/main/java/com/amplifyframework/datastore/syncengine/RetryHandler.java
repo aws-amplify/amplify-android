@@ -29,6 +29,7 @@ import io.reactivex.rxjava3.core.SingleEmitter;
  * Class for retrying call on failure on a single.
  */
 public class RetryHandler {
+
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final int MAX_EXPONENT_VALUE = 8;
     private static final int JITTER_FACTOR_VALUE = 100;
