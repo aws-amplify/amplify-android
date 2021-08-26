@@ -50,7 +50,8 @@ import okhttp3.ResponseBody;
 public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
-
+    private static final int START_OF_CLIENT_ERROR_CODE = 400;
+    private static final int END_OF_CLIENT_ERROR_CODE = 499;
     private final String endpoint;
     private final OkHttpClient client;
     private final Consumer<GraphQLResponse<R>> onResponse;
@@ -141,6 +142,11 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                     ));
                     return;
                 }
+            }
+            if (response.code() >= START_OF_CLIENT_ERROR_CODE && response.code() <= END_OF_CLIENT_ERROR_CODE) {
+                onFailure.accept(new ApiException
+                        .NonRetryableException("OkHttp client request failed.", "Irrecoverable error")
+                );
             }
 
             try {
