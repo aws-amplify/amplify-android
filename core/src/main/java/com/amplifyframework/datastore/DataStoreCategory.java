@@ -149,8 +149,14 @@ public final class DataStoreCategory
     }
 
     @Override
-    public void observeQuery(@NonNull Consumer<Cancelable> onObservationStarted, @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange, @NonNull Consumer<DataStoreException> onObservationFailure, @NonNull Action onObservationCompleted) {
-
+    public <T extends Model> void observeQuery(@NonNull Class<T> itemClass,
+                             @NonNull QueryOptions options,
+                             @NonNull Consumer<Cancelable> onObservationStarted,
+                             @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+                             @NonNull Consumer<DataStoreException> onObservationError,
+                             @NonNull Action onObservationComplete) {
+        getSelectedPlugin().observeQuery(itemClass, options, onObservationStarted,
+                onQuerySnapshot, onObservationError, onObservationComplete);;
     }
 
     /**

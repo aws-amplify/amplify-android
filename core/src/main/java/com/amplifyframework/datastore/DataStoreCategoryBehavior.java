@@ -161,15 +161,16 @@ public interface DataStoreCategoryBehavior {
             @NonNull Consumer<DataStoreException> onQueryFailure
     );
 
-    /**
-     * Observe all changes to any/all item(s) in the DataStore.
-     * @param onObservationStarted Called when observation begins
-     * @param onDataStoreItemChange  Called 0..n times, once for each and every change that
-     *                               occurs to any/all item(s) in the DataStore.
-     * @param onObservationFailure   Called if observation of the DataStore terminates
-     *                               with a non-recoverable failure
-     * @param onObservationCompleted Called when observation completes gracefully
-     */
+
+        /**
+         * Observe all changes to any/all item(s) in the DataStore.
+         * @param onObservationStarted Called when observation begins
+         * @param onDataStoreItemChange  Called 0..n times, once for each and every change that
+         *                               occurs to any/all item(s) in the DataStore.
+         * @param onObservationFailure   Called if observation of the DataStore terminates
+         *                               with a non-recoverable failure
+         * @param onObservationCompleted Called when observation completes gracefully
+         */
     void observe(
             @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
@@ -180,18 +181,19 @@ public interface DataStoreCategoryBehavior {
     /**
      * Query and Observe all changes to any/all item(s) in the DataStore.
      * @param onObservationStarted Called when observation begins
-     * @param onDataStoreItemChange  Called 0..n times, once for each and every change that
+     * @param onQuerySnapshot  Called 0..n times, once for each and every change that
      *                               occurs to any/all item(s) in the DataStore.
-     * @param onObservationFailure   Called if observation of the DataStore terminates
+     * @param onObservationError   Called if observation of the DataStore terminates
      *                               with a non-recoverable failure
-     * @param onObservationCompleted Called when observation completes gracefully
+     * @param onObservationComplete Called when observation completes gracefully
      */
-    void observeQuery(
+    <T extends Model> void observeQuery(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryOptions options,
             @NonNull Consumer<Cancelable> onObservationStarted,
-            @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
-            @NonNull Consumer<DataStoreException> onObservationFailure,
-            @NonNull Action onObservationCompleted
-    );
+            @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+            @NonNull Consumer<DataStoreException> onObservationError,
+            @NonNull Action onObservationComplete) ;
 
     /**
      * Observe changes to a certain type of item(s) in the DataStore.

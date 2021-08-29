@@ -43,6 +43,7 @@ import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.sqlite.ObserveQueryManager;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
@@ -496,23 +497,18 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     @Override
-    public void observeQuery(
+    public <T extends Model> void observeQuery(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryOptions options,
             @NonNull Consumer<Cancelable> onObservationStarted,
-            @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
-            @NonNull Consumer<DataStoreException> onObservationFailure,
-            @NonNull Action onObservationCompleted) {
-
-        start(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
-                itemChange -> {
-                    try {
-                        onDataStoreItemChange.accept(ItemChangeMapper.map(itemChange));
-                    } catch (DataStoreException dataStoreException) {
-                        onObservationFailure.accept(dataStoreException);
-                    }
-                },
-                onObservationFailure,
-                onObservationCompleted
-        )), onObservationFailure);
+            @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+            @NonNull Consumer<DataStoreException> onObservationError,
+            @NonNull Action onObservationComplete) {
+        Objects.requireNonNull(onObservationStarted);
+        Objects.requireNonNull(onObservationError);
+        Objects.requireNonNull(onObservationComplete);
+        // TODOPM: dependency injection
+        new ObserveQueryManager(sqliteStorageAdapter).observeQuery(itemClass, options, onObservationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
     }
 
     @Override
