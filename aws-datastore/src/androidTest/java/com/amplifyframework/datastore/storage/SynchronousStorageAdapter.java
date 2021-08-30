@@ -226,8 +226,7 @@ public final class SynchronousStorageAdapter {
                                                                     @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                                                                     @NonNull Consumer<DataStoreException> onObservationError,
                                                                   @NonNull Action onObservationComplete) {
-        //TODO PM:  inject it
-        new ObserveQueryManager(asyncDelegate).observeQuery(modelClass, options, onObservationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+        asyncDelegate.observeQuery(modelClass, options, onObservationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
     }
 
     /**

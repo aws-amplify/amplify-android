@@ -507,8 +507,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         Objects.requireNonNull(onObservationStarted);
         Objects.requireNonNull(onObservationError);
         Objects.requireNonNull(onObservationComplete);
-        // TODOPM: dependency injection
-        new ObserveQueryManager(sqliteStorageAdapter).observeQuery(itemClass, options, onObservationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+        start(() -> sqliteStorageAdapter.observeQuery(itemClass,
+                                            options,
+                                            onObservationStarted,
+                                            onQuerySnapshot,
+                                            onObservationError,
+                                            onObservationComplete), onObservationError);
     }
 
     @Override

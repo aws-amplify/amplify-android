@@ -633,48 +633,24 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      */
     @NonNull
     @Override
-    public <T extends Model> Cancelable observeQuery(
+    public <T extends Model> void observeQuery(
             @NonNull Class<T> itemClass,
             @NonNull QueryOptions options,
             @NonNull Consumer<Cancelable> onObservationStarted,
-            // why do we do on datastorequerySnapshot instead of StorageItemChange like observe
             @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
             @NonNull Consumer<DataStoreException> onObservationError,
             @NonNull Action onObservationComplete) {
         Objects.requireNonNull(onObservationStarted);
         Objects.requireNonNull(onObservationError);
         Objects.requireNonNull(onObservationComplete);
-        Consumer<List<T>> onSuccess = value -> {
-            DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<T>(value, false, null );
-            onQuerySnapshot.accept(dataStoreQuerySnapshot);
-        };
-
-        Consumer<StorageItemChange<? extends Model>> onItemChanged = value -> {
-            DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<T>(null, false, null );
-            onQuerySnapshot.accept(dataStoreQuerySnapshot);
-        };
-        threadPool.submit(() -> {
-            List<T> models = sqlQueryProcessor.queryOfflineData(itemClass, options, onObservationError);
-            onSuccess.accept(models);
-        });
-
-        Disposable disposable = itemChangeSubject.subscribe(
-                onItemChanged::accept,
-                failure -> {
-                    if (failure instanceof DataStoreException) {
-                        onObservationError.accept((DataStoreException) failure);
-                        return;
-                    }
-                    onObservationError.accept(new DataStoreException(
-                            "Failed to observe items in storage adapter.",
-                            failure,
-                            "Inspect the failure details."
-                    ));
-                },
-                onObservationComplete::call
-        );
-        onObservationStarted.accept(disposable::dispose);
-        return disposable::dispose;
+        // TODOPM: dependency injection
+        new ObserveQueryManager(itemChangeSubject, sqlQueryProcessor, threadPool)
+                .observeQuery(itemClass,
+                        options,
+                        onObservationStarted,
+                        onQuerySnapshot,
+                        onObservationError,
+                        onObservationComplete);
     }
 
     /**

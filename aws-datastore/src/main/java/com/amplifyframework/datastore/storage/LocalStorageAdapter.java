@@ -179,10 +179,9 @@ public interface LocalStorageAdapter {
      *        Invoked if the observation terminates do an unrecoverable error
      * @param onObservationComplete
      *        Invoked it the observation terminates gracefully, perhaps due to cancellation
-     * @return A Cancelable with which this observation may be terminated
      */
     @NonNull
-    <T extends Model> Cancelable observeQuery(
+    <T extends Model> void observeQuery(
             @NonNull Class<T> itemClass,
             @NonNull QueryOptions options,
             @NonNull Consumer<Cancelable> onObservationStarted,

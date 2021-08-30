@@ -258,8 +258,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
     @NonNull
     @Override
-    public <T extends Model> Cancelable observeQuery(@NonNull Class<T> itemClass, @NonNull QueryOptions options, @NonNull Consumer<Cancelable> onObservationStarted, @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot, @NonNull Consumer<DataStoreException> onObservationError, @NonNull Action onObservationComplete) {
-        return null;
+    public <T extends Model> void observeQuery(@NonNull Class<T> itemClass, @NonNull QueryOptions options, @NonNull Consumer<Cancelable> onObservationStarted, @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot, @NonNull Consumer<DataStoreException> onObservationError, @NonNull Action onObservationComplete) {
+    //TODOPM: to be implemented for tests.
     }
 
     @Override
