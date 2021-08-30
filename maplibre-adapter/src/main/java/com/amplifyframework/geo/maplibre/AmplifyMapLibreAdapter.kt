@@ -32,7 +32,7 @@ import okhttp3.OkHttpClient
  * Entry point to initialize MapLibre instance and configure it to be
  * authorized to make requests directly to Amazon Location Service.
  */
-object MapLibreAdapter {
+object AmplifyMapLibreAdapter {
     private const val COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     private const val GEO_SERVICE_NAME = "geo"
 
@@ -45,13 +45,15 @@ object MapLibreAdapter {
      * @return the single instance of Mapbox
      */
     fun getInstance(context: Context): Mapbox {
-        val instance = Mapbox.getInstance(context, null, WellKnownTileServer.Mapbox)
-        val interceptor = AWS4SigningInterceptor(credentialsProvider(), GEO_SERVICE_NAME)
-        val client = OkHttpClient.Builder()
-            .addInterceptor(interceptor)
-            .build()
-        HttpRequestUtil.setOkHttpClient(client)
-        return instance
+        return synchronized(this) {
+            val instance = Mapbox.getInstance(context, null, WellKnownTileServer.Mapbox)
+            val interceptor = AWS4SigningInterceptor(credentialsProvider(), GEO_SERVICE_NAME)
+            val client = OkHttpClient.Builder()
+                .addInterceptor(interceptor)
+                .build()
+            HttpRequestUtil.setOkHttpClient(client)
+            instance
+        }
     }
 
     private fun credentialsProvider(): AWSCredentialsProvider {

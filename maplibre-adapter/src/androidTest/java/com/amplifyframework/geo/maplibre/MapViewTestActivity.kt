@@ -29,7 +29,7 @@ class MapViewTestActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        MapLibreAdapter.getInstance(applicationContext)
+        AmplifyMapLibreAdapter.getInstance(applicationContext)
         mapView = MapView(applicationContext)
         setContentView(mapView)
     }

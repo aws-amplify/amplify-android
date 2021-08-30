@@ -35,7 +35,7 @@ class MapViewTestActivityTest {
      */
     @Before
     fun setUpAuth() {
-        MapLibreAdapter.auth = TestCategory.forPlugin(AWSCognitoAuthPlugin()) as AuthCategory
+        AmplifyMapLibreAdapter.auth = TestCategory.forPlugin(AWSCognitoAuthPlugin()) as AuthCategory
     }
 
     /**
