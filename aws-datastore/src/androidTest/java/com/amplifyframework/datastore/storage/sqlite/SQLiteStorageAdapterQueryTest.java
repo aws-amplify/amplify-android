@@ -97,6 +97,28 @@ public final class SQLiteStorageAdapterQueryTest {
     }
 
     /**
+     * Test predicates that check for null/not null values.
+     * @throws DataStoreException not expected.
+     */
+    @Test
+    public void queryBasedOnNullPredicateFields() throws DataStoreException {
+        final BlogOwner blogOwner = BlogOwner.builder()
+                .name("Alan Turing")
+                .build();
+        adapter.save(blogOwner);
+
+        List<BlogOwner> blogOwners = adapter.query(
+                BlogOwner.class,
+                Where.matches(BlogOwner.WEA.eq(null)));
+        assertTrue(blogOwners.contains(blogOwner));
+
+        blogOwners = adapter.query(
+                BlogOwner.class,
+                Where.matches(BlogOwner.NAME.eq(null)));
+        assertTrue(blogOwners.isEmpty());
+    }
+
+    /**
      * Test querying the saved item in the SQLite database.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
