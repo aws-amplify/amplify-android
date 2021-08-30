@@ -94,6 +94,7 @@ public final class SubscriptionProcessorTest {
         this.subscriptionProcessor = SubscriptionProcessor.builder()
                 .appSync(appSync)
                 .modelProvider(modelProvider)
+                .schemaRegistry(schemaRegistry)
                 .merger(merger)
                 .queryPredicateProvider(queryPredicateProvider)
                 .onFailure(throwable -> { })

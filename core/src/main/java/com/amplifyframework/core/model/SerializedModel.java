@@ -22,8 +22,10 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -46,9 +48,10 @@ public final class SerializedModel implements Model {
 
     /**
      * Creates a SerializedModel from a generated Java Model object.
-     * @param model Model object
+     *
+     * @param model       Model object
      * @param modelSchema schema for the Model object
-     * @param <T> type of the Model object.
+     * @param <T>         type of the Model object.
      * @return SerializedModel equivalent of the Model object.
      * @throws AmplifyException ModelConverter.toMap
      */
@@ -62,12 +65,13 @@ public final class SerializedModel implements Model {
     /**
      * Computes the difference between two Models, comparing equality of each field value for each Model, and returns
      * the difference as a SerializedModel.
-     * @param updated the updated Model, whose values will be used to build the resulting SerializedModel.
-     * @param original the original Model to compare against.
+     *
+     * @param updated     the updated Model, whose values will be used to build the resulting SerializedModel.
+     * @param original    the original Model to compare against.
      * @param modelSchema ModelSchema for the Models between compared.
-     * @param <T> type of the Models being compared.
+     * @param <T>         type of the Models being compared.
      * @return a SerializedModel, containing only the values from the updated Model that are different from the
-     *         corresponding values in original.
+     * corresponding values in original.
      * @throws AmplifyException ModelConverter.toMap
      */
     public static <T extends Model> SerializedModel difference(T updated, T original, ModelSchema modelSchema)
@@ -98,8 +102,9 @@ public final class SerializedModel implements Model {
 
     /**
      * Merge the serialized data from existing to incoming model.
-     * @param incoming the incoming Model to which serialized data fields will be added.
-     * @param existing the original Model to compare against.
+     *
+     * @param incoming    the incoming Model to which serialized data fields will be added.
+     * @param existing    the original Model to compare against.
      * @param modelSchema ModelSchema for the Models between compared.
      * @return a SerializedModel, containing the values from the incoming Model and existing Model.
      */
@@ -114,6 +119,80 @@ public final class SerializedModel implements Model {
                 .serializedData(mergedSerializedData)
                 .modelSchema(modelSchema)
                 .build();
+    }
+
+    /**
+     * Return a Map to use as the serializedData field of {@link SerializedModel}.
+     *
+     * @param serializedData flat Map presents serializedData's values
+     * @param modelName ModelSchema name
+     * @param schemaRegistry SchemaRegistry instance
+     * @return A a Map to use as the serializedData
+     */
+    public static Map<String, Object> parseSerializedData(Map<String, Object> serializedData, String modelName,
+                                                   SchemaRegistry schemaRegistry) {
+        Map<String, Object> result = new HashMap<>();
+        ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(modelName);
+
+        for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
+            String key = entry.getKey();
+            ModelField field = entry.getValue();
+            if (!serializedData.containsKey(key)) {
+                continue;
+            }
+
+            Object fieldValue = serializedData.get(key);
+
+            if (fieldValue == null) {
+                result.put(key, null);
+                continue;
+            }
+
+            if (field.isModel()) {
+                ModelSchema fieldModelSchema = schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
+                @SuppressWarnings("unchecked")
+                Map<String, Object> fieldData = (Map<String, Object>) serializedData.get(key);
+                if (fieldData != null) {
+                    result.put(key, SerializedModel.builder()
+                            .serializedData(fieldData)
+                            .modelSchema(fieldModelSchema)
+                            .build());
+                }
+            } else if (field.isCustomType()) {
+                if (field.isArray()) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> fieldListData = (List<Map<String, Object>>) fieldValue;
+                    if (fieldListData != null && !fieldListData.isEmpty()) {
+                        List<SerializedCustomType> fieldList = new ArrayList<>();
+                        for (Map<String, Object> item : fieldListData) {
+                            Map<String, Object> customTypeSerializedData =
+                                    SerializedCustomType.parseSerializedData(
+                                            item, field.getTargetType(), schemaRegistry);
+                            fieldList.add(SerializedCustomType.builder()
+                                    .serializedData(customTypeSerializedData)
+                                    .customTypeSchema(
+                                            schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType()))
+                                    .build());
+                        }
+                        result.put(key, fieldList);
+                    }
+                } else {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> fieldData = (Map<String, Object>) fieldValue;
+                    Map<String, Object> customTypeSerializedData =
+                            SerializedCustomType.parseSerializedData(fieldData, field.getTargetType(), schemaRegistry);
+                    result.put(key, SerializedCustomType.builder()
+                            .serializedData(customTypeSerializedData)
+                            .customTypeSchema(
+                                    schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType()))
+                            .build());
+                }
+            } else {
+                result.put(key, fieldValue);
+            }
+        }
+
+        return result;
     }
 
     /**

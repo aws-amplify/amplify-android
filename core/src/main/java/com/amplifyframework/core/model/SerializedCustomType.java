@@ -21,7 +21,9 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -46,6 +48,72 @@ public final class SerializedCustomType {
     @NonNull
     public static SerializedCustomType.BuilderSteps.SerializedDataStep builder() {
         return new SerializedCustomType.Builder();
+    }
+
+    /**
+     * Return a Map to use as the serializedData field of {@link SerializedCustomType}.
+     *
+     * @param serializedData flat Map presents serializedData's values
+     * @param customTypeName CustomTypeSchema name
+     * @param schemaRegistry SchemaRegistry instance
+     * @return A a Map to use as the serializedData
+     */
+    public static Map<String, Object> parseSerializedData(Map<String, Object> serializedData,
+                                                          String customTypeName, SchemaRegistry schemaRegistry) {
+        Map<String, Object> result = new HashMap<>();
+        CustomTypeSchema customTypeSchema = schemaRegistry.getCustomTypeSchemaForCustomTypeClass(customTypeName);
+
+        for (Map.Entry<String, CustomTypeField> entry : customTypeSchema.getFields().entrySet()) {
+            String key = entry.getKey();
+            CustomTypeField field = entry.getValue();
+
+            if (!serializedData.containsKey(key)) {
+                continue;
+            }
+
+            Object fieldValue = serializedData.get(key);
+
+            if (fieldValue == null) {
+                result.put(key, null);
+                continue;
+            }
+
+            if (field.isCustomType()) {
+                CustomTypeSchema fieldCustomTypeSchema =
+                        schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
+                if (field.isArray()) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> fieldListData = (List<Map<String, Object>>) fieldValue;
+                    if (fieldListData != null && !fieldListData.isEmpty()) {
+                        List<SerializedCustomType> fieldList = new ArrayList<>();
+                        for (Map<String, Object> item : fieldListData) {
+                            Map<String, Object> customTypeSerializedData =
+                                    parseSerializedData(item, field.getTargetType(), schemaRegistry);
+                            fieldList.add(SerializedCustomType.builder()
+                                    .serializedData(customTypeSerializedData)
+                                    .customTypeSchema(
+                                            schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType()))
+                                    .build());
+                        }
+                        result.put(key, fieldList);
+                    }
+                } else {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> fieldData = (Map<String, Object>) fieldValue;
+                    Map<String, Object> customTypeSerializedData =
+                            parseSerializedData(fieldData, field.getTargetType(), schemaRegistry);
+                    result.put(key, SerializedCustomType.builder()
+                            .serializedData(customTypeSerializedData)
+                            .customTypeSchema(
+                                    schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType()))
+                            .build());
+                }
+            } else {
+                result.put(key, fieldValue);
+            }
+        }
+
+        return result;
     }
 
     /**

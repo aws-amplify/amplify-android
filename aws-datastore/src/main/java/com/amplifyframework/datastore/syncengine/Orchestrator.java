@@ -124,6 +124,7 @@ public final class Orchestrator {
         this.subscriptionProcessor = SubscriptionProcessor.builder()
                 .appSync(appSync)
                 .modelProvider(modelProvider)
+                .schemaRegistry(schemaRegistry)
                 .merger(merger)
                 .queryPredicateProvider(queryPredicateProvider)
                 .onFailure(this::onApiSyncFailure)

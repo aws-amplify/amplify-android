@@ -244,7 +244,11 @@ final class SyncProcessor {
         if (original.getModel() instanceof SerializedModel) {
             SerializedModel originalModel = (SerializedModel) original.getModel();
             SerializedModel newModel = SerializedModel.builder()
-                    .serializedData(originalModel.getSerializedData())
+                    .serializedData(SerializedModel.parseSerializedData(
+                            originalModel.getSerializedData(),
+                            schema.getName(),
+                            schemaRegistry
+                    ))
                     .modelSchema(schema)
                     .build();
             return new ModelWithMetadata<>((T) newModel, original.getSyncMetadata());

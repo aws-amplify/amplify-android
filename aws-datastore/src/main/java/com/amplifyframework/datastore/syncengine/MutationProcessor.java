@@ -187,7 +187,11 @@ final class MutationProcessor {
     ) {
         final SerializedModel originalModel = (SerializedModel) modelWithMetadata.getModel();
         final SerializedModel newModel = SerializedModel.builder()
-            .serializedData(originalModel.getSerializedData())
+            .serializedData(SerializedModel.parseSerializedData(
+                    originalModel.getSerializedData(),
+                    modelSchema.getName(),
+                    schemaRegistry
+            ))
             .modelSchema(modelSchema)
             .build();
         return new ModelWithMetadata<>(newModel, modelWithMetadata.getSyncMetadata());
