@@ -21,6 +21,10 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.geo.models.MapStyle;
+import com.amplifyframework.geo.models.MapStyleDescriptor;
+import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
@@ -61,5 +65,28 @@ public final class GeoCategory
             @NonNull Consumer<GeoException> onError
     ) {
         getSelectedPlugin().getDefaultMap(onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getMapStyleDescriptor(
+            @NonNull Consumer<MapStyleDescriptor> onResult,
+            @NonNull Consumer<GeoException> onError
+    ) {
+        getSelectedPlugin().getMapStyleDescriptor(onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getMapStyleDescriptor(
+            @NonNull GetMapStyleDescriptorOptions options,
+            @NonNull Consumer<MapStyleDescriptor> onResult,
+            @NonNull Consumer<GeoException> onError
+    ) {
+        getSelectedPlugin().getMapStyleDescriptor(options, onResult, onError);
     }
 }

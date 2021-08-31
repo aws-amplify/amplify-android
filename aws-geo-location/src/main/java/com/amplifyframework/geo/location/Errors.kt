@@ -23,6 +23,9 @@ import java.lang.NullPointerException
  */
 internal object Errors {
     fun mapsError(exception: Exception): GeoException {
+        if (exception is GeoException) {
+            return exception
+        }
         val message = when (exception) {
             is UninitializedPropertyAccessException -> "AWSLocationGeoPlugin is not configured."
             is NullPointerException -> "Plugin configuration is missing \"maps\" configuration."

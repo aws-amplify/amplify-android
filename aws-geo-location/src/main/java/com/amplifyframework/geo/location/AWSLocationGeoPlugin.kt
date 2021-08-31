@@ -29,6 +29,8 @@ import com.amplifyframework.geo.location.configuration.GeoConfiguration
 import com.amplifyframework.geo.location.service.AmazonLocationService
 import com.amplifyframework.geo.location.service.GeoService
 import com.amplifyframework.geo.models.MapStyle
+import com.amplifyframework.geo.models.MapStyleDescriptor
+import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 
 import org.json.JSONObject
 
@@ -46,6 +48,10 @@ class AWSLocationGeoPlugin(
 
     private lateinit var configuration: GeoConfiguration
     private lateinit var geoService: GeoService<AmazonLocationClient>
+
+    private val defaultMapName: String by lazy {
+        configuration.maps!!.default.mapName
+    }
 
     override fun getPluginKey(): String {
         return GEO_PLUGIN_KEY
@@ -87,6 +93,28 @@ class AWSLocationGeoPlugin(
     ) {
         try {
             onResult.accept(configuration.maps!!.default)
+        } catch (error: Exception) {
+            onError.accept(Errors.mapsError(error))
+        }
+    }
+
+    override fun getMapStyleDescriptor(
+        onResult: Consumer<MapStyleDescriptor>,
+        onError: Consumer<GeoException>
+    ) {
+        val options = GetMapStyleDescriptorOptions.builder().build()
+        getMapStyleDescriptor(options, onResult, onError)
+    }
+
+    override fun getMapStyleDescriptor(
+        options: GetMapStyleDescriptorOptions,
+        onResult: Consumer<MapStyleDescriptor>,
+        onError: Consumer<GeoException>
+    ) {
+        try {
+            val mapName = options.mapName ?: defaultMapName
+            val json = geoService.getStyleJson(mapName)
+            onResult.accept(MapStyleDescriptor(json))
         } catch (error: Exception) {
             onError.accept(Errors.mapsError(error))
         }

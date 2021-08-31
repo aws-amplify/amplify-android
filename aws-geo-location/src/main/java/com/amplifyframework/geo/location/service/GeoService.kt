@@ -15,8 +15,6 @@
 
 package com.amplifyframework.geo.location.service
 
-import com.amplifyframework.geo.models.MapStyle
-
 /**
  * Backend provider for Geo Amazon Location Geo plugin.
  */
@@ -29,7 +27,7 @@ interface GeoService<T> {
     /**
      * Gets map's style JSON in string format.
      *
-     * @param map map style
+     * @param mapName map name
      */
-    fun getStyleJson(map: MapStyle): String
+    fun getStyleJson(mapName: String): String
 }
