@@ -44,6 +44,11 @@ public enum HubChannel {
     DATASTORE(CategoryType.DATASTORE),
 
     /**
+     * Hub messages relating to Amplify Geo.
+     */
+    GEO(CategoryType.GEO),
+
+    /**
      * Hub messages relating to Amplify Hub.
      */
     HUB(CategoryType.HUB),
