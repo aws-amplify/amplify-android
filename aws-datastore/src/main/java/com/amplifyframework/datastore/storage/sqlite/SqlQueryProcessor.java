@@ -11,7 +11,10 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
 import com.google.gson.Gson;
@@ -67,5 +70,16 @@ class SqlQueryProcessor {
             ));
         }
         return models;
+    }
+
+    boolean modelExists(Model model, QueryPredicate predicate) throws DataStoreException {
+        final String modelName = model.getModelName();
+        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final SQLiteTable table = SQLiteTable.fromSchema(schema);
+        final String tableName = table.getName();
+        final String primaryKeyName = table.getPrimaryKey().getName();
+        final QueryPredicate matchId = QueryField.field(tableName, primaryKeyName).eq(model.getId());
+        final QueryPredicate condition = predicate.and(matchId);
+        return sqlCommandProcessor.executeExists(sqlCommandFactory.existsFor(schema, condition));
     }
 }

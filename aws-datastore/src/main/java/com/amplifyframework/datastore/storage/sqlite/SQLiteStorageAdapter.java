@@ -319,12 +319,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final StorageItemChange.Type writeType;
                 SerializedModel patchItem = null;
 
-                if (modelExists(item, QueryPredicates.all())) {
+                if (sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
                     // if data exists already, then UPDATE the row
                     writeType = StorageItemChange.Type.UPDATE;
 
                     // Check if existing data meets the condition, only if a condition other than all() was provided.
-                    if (!QueryPredicates.all().equals(predicate) && !modelExists(item, predicate)) {
+                    if (!QueryPredicates.all().equals(predicate) && !sqlQueryProcessor.modelExists(item, predicate)) {
                         throw new DataStoreException(
                             "Save failed because condition did not match existing model instance.",
                             "The save will continue to fail until the model instance is updated."
@@ -464,7 +464,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
 
                 // Check if data being deleted exists; "Succeed" deletion in that case.
-                if (!modelExists(item, QueryPredicates.all())) {
+                if (!sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
                     LOG.verbose(modelName + " model with id = " + item.getId() + " does not exist.");
                     // Pass back item change instance without publishing it.
                     onSuccess.accept(StorageItemChange.<T>builder()
@@ -479,7 +479,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 }
 
                 // Check if existing data meets the condition, only if a condition other than all() was provided.
-                if (!QueryPredicates.all().equals(predicate) && !modelExists(item, predicate)) {
+                if (!QueryPredicates.all().equals(predicate) && !sqlQueryProcessor.modelExists(item, predicate)) {
                     throw new DataStoreException(
                         "Deletion failed because condition did not match existing model instance.",
                         "The deletion will continue to fail until the model instance is updated."
@@ -644,7 +644,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onObservationError);
         Objects.requireNonNull(onObservationComplete);
         // TODOPM: dependency injection
-        new ObserveQueryManager(itemChangeSubject, sqlQueryProcessor, threadPool)
+        new ObserveQueryManager<T>(itemChangeSubject, sqlQueryProcessor, threadPool)
                 .observeQuery(itemClass,
                         options,
                         onObservationStarted,
@@ -759,17 +759,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     "Valid storage changes are CREATE, UPDATE, and DELETE."
                 );
         }
-    }
-
-    private boolean modelExists(Model model, QueryPredicate predicate) throws DataStoreException {
-        final String modelName = model.getModelName();
-        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
-        final SQLiteTable table = SQLiteTable.fromSchema(schema);
-        final String tableName = table.getName();
-        final String primaryKeyName = table.getPrimaryKey().getName();
-        final QueryPredicate matchId = QueryField.field(tableName, primaryKeyName).eq(model.getId());
-        final QueryPredicate condition = predicate.and(matchId);
-        return sqlCommandProcessor.executeExists(sqlCommandFactory.existsFor(schema, condition));
     }
 
     /**
