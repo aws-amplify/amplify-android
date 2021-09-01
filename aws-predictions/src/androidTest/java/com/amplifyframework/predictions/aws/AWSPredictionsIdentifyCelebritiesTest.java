@@ -19,7 +19,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 
 import com.amplifyframework.predictions.PredictionsCategory;
-import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.test.R;
 import com.amplifyframework.predictions.models.IdentifyActionType;
 import com.amplifyframework.predictions.result.IdentifyCelebritiesResult;
@@ -45,7 +44,6 @@ import static org.junit.Assert.assertTrue;
 public final class AWSPredictionsIdentifyCelebritiesTest {
 
     private static final IdentifyActionType TYPE = IdentifyActionType.DETECT_CELEBRITIES;
-    private static final int MINIMUM_IMAGE_PIXELS = 80;
 
     private SynchronousPredictions predictions;
 
@@ -64,19 +62,6 @@ public final class AWSPredictionsIdentifyCelebritiesTest {
         PredictionsCategory asyncDelegate =
                 TestPredictionsCategory.create(context, R.raw.amplifyconfiguration);
         predictions = SynchronousPredictions.delegatingTo(asyncDelegate);
-    }
-
-    /**
-     * Assert that identify fails for invalid image.
-     * An image with less than 80x80 size limit will throw
-     * validation error from the service.
-     * @throws Exception if prediction fails
-     */
-    @Test(expected = PredictionsException.class)
-    public void testIdentifyFailsForSmallImage() throws Exception {
-        Bitmap image = Bitmap.createBitmap(MINIMUM_IMAGE_PIXELS - 1,
-                MINIMUM_IMAGE_PIXELS - 1, Bitmap.Config.ARGB_8888);
-        predictions.identify(TYPE, image);
     }
 
     /**
