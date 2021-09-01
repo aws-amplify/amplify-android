@@ -50,6 +50,16 @@ public class GetMapStyleDescriptorOptions {
     }
 
     /**
+     * Returns a new options instance with default values.
+     *
+     * @return a default options instance.
+     */
+    @NonNull
+    public static GetMapStyleDescriptorOptions defaults() {
+        return builder().build();
+    }
+
+    /**
      * Builder class for conveniently constructing options instance.
      */
     public static class Builder {

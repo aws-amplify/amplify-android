@@ -25,5 +25,12 @@ dependencies {
     testImplementation project(':testutils')
     testImplementation dependency.junit
     testImplementation dependency.robolectric
+
+    androidTestImplementation project(':testutils')
+    androidTestImplementation project(':aws-auth-cognito')
+    androidTestImplementation dependency.androidx.annotation
+    androidTestImplementation dependency.androidx.test.core
+    androidTestImplementation dependency.androidx.test.runner
+    androidTestImplementation dependency.androidx.test.junit
 }
 

@@ -102,7 +102,7 @@ class AWSLocationGeoPlugin(
         onResult: Consumer<MapStyleDescriptor>,
         onError: Consumer<GeoException>
     ) {
-        val options = GetMapStyleDescriptorOptions.builder().build()
+        val options = GetMapStyleDescriptorOptions.defaults()
         getMapStyleDescriptor(options, onResult, onError)
     }
 
