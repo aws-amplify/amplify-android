@@ -84,7 +84,7 @@ public final class SerializedCustomType {
                 if (field.isArray()) {
                     @SuppressWarnings("unchecked")
                     List<Map<String, Object>> fieldListData = (List<Map<String, Object>>) fieldValue;
-                    if (fieldListData != null && !fieldListData.isEmpty()) {
+                    if (!fieldListData.isEmpty()) {
                         List<SerializedCustomType> fieldList = new ArrayList<>();
                         for (Map<String, Object> item : fieldListData) {
                             Map<String, Object> customTypeSerializedData =

@@ -134,7 +134,7 @@ public final class SerializedCustomTypeAdapterTest {
 
         Map<String, Object> personalSerializedData = new HashMap<>();
         personalSerializedData.put("name", "Tester Testing");
-        personalSerializedData.put("mailingAddress", addresses);
+        personalSerializedData.put("mailingAddresses", addresses);
         personalSerializedData.put("contact", contact);
         personalSerializedData.put("arrayList", stringList);
 

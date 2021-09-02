@@ -614,7 +614,7 @@ public final class AppSyncRequestFactoryTest {
                 .targetType("String")
                 .build();
         CustomTypeField addressStateField = CustomTypeField.builder()
-                .name("city")
+                .name("state")
                 .isRequired(true)
                 .targetType("String")
                 .build();
