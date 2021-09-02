@@ -2,6 +2,7 @@
 
 ### Miscellaneous
 - fix(predictions):remove invalid test (#1476)
+- chore: SDK version bump
 
 [See all changes between 1.25.0 and 1.25.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.25.0...release_v1.25.1)
 
