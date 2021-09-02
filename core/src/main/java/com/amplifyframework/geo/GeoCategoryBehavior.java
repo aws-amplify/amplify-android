@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.geo.models.MapStyle;
+import com.amplifyframework.geo.models.MapStyleDescriptor;
+import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
 
 import java.util.Collection;
 
@@ -46,6 +48,30 @@ public interface GeoCategoryBehavior {
      */
     void getDefaultMap(
             @NonNull Consumer<MapStyle> onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Uses default options to get map style descriptor JSON.
+     *
+     * @param onResult Called upon successfully fetching map style descriptor.
+     * @param onError  Called upon failure to fetch map style descriptor.
+     */
+    void getMapStyleDescriptor(
+            @NonNull Consumer<MapStyleDescriptor> onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Uses given options to get map style descriptor JSON.
+     *
+     * @param options  Options to specify for this operation.
+     * @param onResult Called upon successfully fetching map style descriptor.
+     * @param onError  Called upon failure to fetch map style descriptor.
+     */
+    void getMapStyleDescriptor(
+            @NonNull GetMapStyleDescriptorOptions options,
+            @NonNull Consumer<MapStyleDescriptor> onResult,
             @NonNull Consumer<GeoException> onError
     );
 }
