@@ -1,3 +1,11 @@
+## [Release 0.9.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.9.1)
+
+### Miscellaneous
+- fix(predictions):remove invalid test (#1476)
+- chore: SDK version bump
+
+[See all changes between 0.9.0 and 0.9.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.9.0...release-kotlin_v0.9.1)
+
 ## [Release 0.9.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.9.0)
 
 ### Features
