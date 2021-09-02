@@ -13,10 +13,11 @@ import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -32,7 +33,7 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
     private final List<DataStoreItemChange<T>> changedItemList = new ArrayList<DataStoreItemChange<T>>();
     private final List<T> completeItemList = new ArrayList<T>();
 
-    private long startTime;
+    private Timer timer;
     private int MAX_RECORDS = 1000;
     private int MAX_TIME_SEC = 2;
 
@@ -74,7 +75,6 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
         onObservationStarted.accept(this);
 
         Consumer<Object> onItemChanged = value -> {
-            setStartTimeWhenNeeded();
             @SuppressWarnings("unchecked")   StorageItemChange<T> itemChanged = (StorageItemChange<T>) value;
             completeItemList.add(itemChanged.item());
             collect(itemChanged, onQuerySnapshot);
@@ -82,8 +82,7 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
         threadPool.submit(() -> {
             List<T> models =  sqlQueryProcessor.queryOfflineData(itemClass, options, onObservationError);
             completeItemList.addAll(models);
-            DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<T>(completeItemList, false, changedItemList );
-            getListConsumer(onQuerySnapshot).accept(dataStoreQuerySnapshot);
+            callOnQuerySnapshot(onQuerySnapshot);
         });
 
         disposable = itemChangeSubject
@@ -117,20 +116,33 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
     private void collect(StorageItemChange<T> changedItem, @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot) {
         try {
             changedItemList.add( ItemChangeMapper.map(changedItem));
-            if (changedItemList.size()>= MAX_RECORDS || (Instant.now().getEpochSecond()- startTime) >= MAX_TIME_SEC){
-                DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<T>(completeItemList, false, changedItemList );
-                getListConsumer(onQuerySnapshot).accept(dataStoreQuerySnapshot);
+            setTimerIfNeeded(onQuerySnapshot);
+
+            if (changedItemList.size()>= MAX_RECORDS){
+                callOnQuerySnapshot(onQuerySnapshot);
                 changedItemList.clear();
-                startTime = 0;
+                timer.cancel();
+                timer = null;
             }
         } catch (DataStoreException e) {
             e.printStackTrace();
         }
     }
 
-    private void setStartTimeWhenNeeded(){
-        if (startTime == 0){
-            startTime = Instant.now().getEpochSecond();
+    private void callOnQuerySnapshot(@NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot) {
+        DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<T>(completeItemList, false, changedItemList);
+        getListConsumer(onQuerySnapshot).accept(dataStoreQuerySnapshot);
+    }
+
+    private void setTimerIfNeeded(@NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot) {
+        if (timer == null){
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    callOnQuerySnapshot(onQuerySnapshot);
+                }
+            }, MAX_TIME_SEC);
         }
     }
 

@@ -55,13 +55,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
-import io.reactivex.rxjava3.core.Observable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Test the query functionality of {@link SQLiteStorageAdapter} operations.
@@ -590,6 +587,61 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             adapter.query(Post.class, Where.matches(field("Post", "rating").gt(3))),
             adapter.query(Post.class, Where.matches(field("rating").gt(3)))
         );
+    }
+
+
+    /**
+     * Test querying the saved item in the SQLite database with observeQuery.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void querySavedDataWithMultipleItemsThenItemSaves() throws DataStoreException, InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch changeLatch = new CountDownLatch(1);
+        Consumer<Cancelable> observationStarted = value -> {};
+        Consumer<DataStoreException> onObservationError = value-> {};
+        Action onObservationComplete= () -> {};
+        final List<BlogOwner> savedModels = new ArrayList<>();
+        final int numModels = 10;
+        AtomicInteger count = new AtomicInteger(0);
+        for (int counter = 0; counter < numModels; counter++) {
+            final BlogOwner blogOwner = BlogOwner.builder()
+                    .name("namePrefix:" + counter)
+                    .build();
+            adapter.save(blogOwner);
+            savedModels.add(blogOwner);
+        }
+
+        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value->{
+            if (count.get() == 0){
+                for (BlogOwner blogOwner: savedModels) {
+                    assertTrue(value.getItems().contains(blogOwner));
+                }
+                latch.countDown();
+            }else{
+                assertEquals(1,value.getItemChanges().size());
+                changeLatch.countDown();
+            }
+           count.incrementAndGet();
+        };
+        adapter.observeQuery(
+                BlogOwner.class,
+                Where.matchesAll(), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+
+        assertTrue(latch.await(1, TimeUnit.SECONDS));
+
+        for (int counter = 11; counter < 13; counter++) {
+            try {
+                final BlogOwner blogOwner = BlogOwner.builder()
+                        .name("namePrefix:" + counter)
+                        .build();
+                savedModels.add(blogOwner);
+                adapter.save(blogOwner);
+            } catch (DataStoreException e) {
+                e.printStackTrace();
+            }
+        }
+       assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
     }
 
     private void createBlogOwnerRecords(final int count) throws DataStoreException {
