@@ -12,6 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.amplifyframework.geo.options;
 
 import androidx.annotation.NonNull;
@@ -22,7 +23,7 @@ import java.util.Objects;
 /**
  * Stores options to use when fetching map style descriptor data.
  */
-public class GetMapStyleDescriptorOptions {
+public final class GetMapStyleDescriptorOptions {
     private final String mapName;
 
     private GetMapStyleDescriptorOptions(Builder builder) {
@@ -62,7 +63,7 @@ public class GetMapStyleDescriptorOptions {
     /**
      * Builder class for conveniently constructing options instance.
      */
-    public static class Builder {
+    public static final class Builder {
         private String mapName;
 
         private Builder() {}

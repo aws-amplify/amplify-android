@@ -42,6 +42,26 @@ import com.amplifyframework.storage.StorageCategory;
 public final class TestCategory {
     private TestCategory() {}
 
+    /**
+     * Creates a test category to be used for testing. A category containing given
+     * plugin will be used to register and configure the plugin. The category
+     * instance will have the same Amplify category-type as registered plugin,
+     * and it should be cast appropriately before usage.
+     *
+     * <pre>
+     *     AuthCategory auth = (AuthCategory) TestCategory.forPlugin(plugin);
+     * </pre>
+     *
+     * Resulting category object should not be used in production.
+     *
+     * @param plugin Plugin to register in the category. The resulting category
+     *               will share the category type with this plugin.
+     * @param <P> Type of plugin being registered.
+     * @return An Amplify category object with the given plugin registered and
+     *         configured. The category will be of same type as registered plugin
+     *         and it should be cast to correct type before usage.
+     * @throws AmplifyException if category fails to configure given plugin.
+     */
     public static <P extends Plugin<?>> Category<?> forPlugin(P plugin) throws AmplifyException {
         CategoryType categoryType = plugin.getCategoryType();
         Category<Plugin<?>> category = (Category<Plugin<?>>) fromCategoryType(categoryType);

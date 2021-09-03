@@ -34,6 +34,7 @@ public final class MapStyleDescriptor {
     public MapStyleDescriptor(@NonNull String json) {
         this.json = Objects.requireNonNull(json);
     }
+
     /**
      * Returns the style descriptor.
      *

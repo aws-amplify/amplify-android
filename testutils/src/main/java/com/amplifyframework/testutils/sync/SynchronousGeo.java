@@ -88,6 +88,7 @@ public final class SynchronousGeo {
     /**
      * Fetches the list of available map styles from configuration.
      *
+     * @param options options to specify name of the map.
      * @return a collection of map styles
      * @throws GeoException if maps are not configured.
      */

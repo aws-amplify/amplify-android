@@ -24,8 +24,6 @@ import com.amplifyframework.geo.models.MapStyle;
 import com.amplifyframework.geo.models.MapStyleDescriptor;
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Collection;
 
 /**
