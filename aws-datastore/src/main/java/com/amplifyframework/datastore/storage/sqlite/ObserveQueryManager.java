@@ -7,6 +7,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.datastore.DataStoreQuerySnapshot;
@@ -14,7 +15,10 @@ import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -31,7 +35,7 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
     private Disposable disposable;
     private boolean isCanceled = false;
     private final List<DataStoreItemChange<T>> changedItemList = new ArrayList<DataStoreItemChange<T>>();
-    private final List<T> completeItemList = new ArrayList<T>();
+    private final Map<String, T> completeItemMap = new HashMap<>();
 
     private Timer timer;
     private int MAX_RECORDS = 1000;
@@ -76,12 +80,14 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
 
         Consumer<Object> onItemChanged = value -> {
             @SuppressWarnings("unchecked")   StorageItemChange<T> itemChanged = (StorageItemChange<T>) value;
-            completeItemList.add(itemChanged.item());
+            updateCompleteItemList( itemChanged );
             collect(itemChanged, onQuerySnapshot);
         };
         threadPool.submit(() -> {
             List<T> models =  sqlQueryProcessor.queryOfflineData(itemClass, options, onObservationError);
-            completeItemList.addAll(models);
+            for ( T model : models ) {
+                completeItemMap.put(model.getId(), model);
+            }
             callOnQuerySnapshot(onQuerySnapshot);
         });
 
@@ -130,8 +136,17 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
     }
 
     private void callOnQuerySnapshot(@NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot) {
-        DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<T>(completeItemList, false, changedItemList);
+        DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<T>(new ArrayList<T>(completeItemMap.values()), false, changedItemList);
         getListConsumer(onQuerySnapshot).accept(dataStoreQuerySnapshot);
+    }
+
+    private void updateCompleteItemList(StorageItemChange<T> itemChanged){
+        T item = itemChanged.item();
+        if (itemChanged.type() == StorageItemChange.Type.DELETE){
+            completeItemMap.remove(item);
+        }else {
+            completeItemMap.put(item.getId(), item);
+        }
     }
 
     private void setTimerIfNeeded(@NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot) {
