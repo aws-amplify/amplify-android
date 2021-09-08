@@ -1,12 +1,10 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import static io.reactivex.rxjava3.subjects.PublishSubject.create;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
@@ -17,6 +15,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -41,7 +40,7 @@ public class ObserveQueryManagerTest {
 
 
     @Test
-    public void observeQueryReturnsOfflineData() throws InterruptedException {
+    public void observeQueryReturnsOfflineData() throws InterruptedException, DataStoreException {
         CountDownLatch latch = new CountDownLatch(1);
         final BlogOwner blogOwner = BlogOwner.builder()
                 .name("Alan Turing")
@@ -61,12 +60,18 @@ public class ObserveQueryManagerTest {
         Subject<StorageItemChange<? extends Model>> subject =  PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-                ObserveQueryManager<BlogOwner> observeQueryManager = new ObserveQueryManager<BlogOwner>(subject, mockSqlQueryProcessor,threadPool);
+                ObserveQueryManager<BlogOwner> observeQueryManager =
+                        new ObserveQueryManager<BlogOwner>(subject,
+                                mockSqlQueryProcessor,
+                                threadPool,
+                                mock(SyncStatus.class),
+                                DataStoreConfiguration.defaults());
 
 
         observeQueryManager.observeQuery(
                 BlogOwner.class,
-                Where.matchesAll(), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                Where.matchesAll(), observationStarted, onQuerySnapshot, onObservationError,
+                onObservationComplete);
         Assert.assertTrue(latch.await(1, TimeUnit.SECONDS));
 
     }
@@ -84,12 +89,17 @@ public class ObserveQueryManagerTest {
         int maxRecords = 2;
         datastoreResultList.add(blogOwner);
         Consumer<Cancelable> observationStarted = value -> {};
+        SyncStatus mockSyncStatus = mock(SyncStatus.class);
+        when(mockSyncStatus.get(any(), any())).thenReturn(false);
         Subject<StorageItemChange<? extends Model>> subject =  PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value->{
             if ( count.get() == 0){
                 Assert.assertTrue(value.getItems().contains(blogOwner));
                 latch.countDown();
-            } else {
+            } else if ( count.get() == 1){
+                Assert.assertEquals(value.getItemChanges().size(), 2);
+            }
+            else {
                 Assert.assertEquals(value.getItemChanges().size(), 2);
                 changeLatch.countDown();
             }
@@ -103,7 +113,7 @@ public class ObserveQueryManagerTest {
 
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-        ObserveQueryManager<BlogOwner> observeQueryManager = new ObserveQueryManager<BlogOwner>(subject, mockSqlQueryProcessor,threadPool, maxRecords, maxRecords);
+        ObserveQueryManager<BlogOwner> observeQueryManager = new ObserveQueryManager<BlogOwner>(subject, mockSqlQueryProcessor,threadPool, mockSyncStatus, maxRecords, maxRecords);
 
 
         observeQueryManager.observeQuery(

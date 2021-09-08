@@ -39,6 +39,7 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
@@ -136,6 +137,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     private SqlQueryProcessor sqlQueryProcessor;
 
+    private DataStoreConfiguration dataStoreConfiguration;
+    private SyncStatus syncStatus;
+
     /**
      * Construct the SQLiteStorageAdapter object.
      * @param modelSchemaRegistry A registry of schema for all models used by the system
@@ -206,7 +210,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public synchronized void initialize(
             @NonNull Context context,
             @NonNull Consumer<List<ModelSchema>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError) {
+            @NonNull Consumer<DataStoreException> onError,
+            @NonNull DataStoreConfiguration dataStoreConfiguration) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
@@ -215,6 +220,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         this.threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * THREAD_POOL_SIZE_MULTIPLIER);
         this.context = context;
+        this.dataStoreConfiguration = dataStoreConfiguration;
         threadPool.submit(() -> {
             try {
                 /*
@@ -273,6 +279,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 sqlQueryProcessor = new SqlQueryProcessor(sqlCommandProcessor,
                         sqlCommandFactory,
                         modelSchemaRegistry);
+                syncStatus = new SyncStatus(sqlQueryProcessor, dataStoreConfiguration);
 
                 /*
                  * Detect if the version of the models stored in SQLite is different
@@ -643,8 +650,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onObservationStarted);
         Objects.requireNonNull(onObservationError);
         Objects.requireNonNull(onObservationComplete);
-        // TODOPM: dependency injection
-        new ObserveQueryManager<T>(itemChangeSubject, sqlQueryProcessor, threadPool)
+        new ObserveQueryManager<T>(itemChangeSubject, sqlQueryProcessor,
+                threadPool,
+                syncStatus,
+                dataStoreConfiguration)
                 .observeQuery(itemClass,
                         options,
                         onObservationStarted,
@@ -713,7 +722,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             exception -> onError.accept(new DataStoreException(
                 "Error occurred while trying to re-initialize the storage adapter",
                 String.valueOf(exception.getMessage())
-            ))
+            )),
+                dataStoreConfiguration
         );
     }
 

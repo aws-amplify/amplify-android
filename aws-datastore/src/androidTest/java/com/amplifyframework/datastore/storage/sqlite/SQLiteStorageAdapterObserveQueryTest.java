@@ -22,22 +22,19 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.Page;
-import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.datastore.StrictMode;
-import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
@@ -65,7 +62,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class SQLiteStorageAdapterObserveQueryTest {
     private SynchronousStorageAdapter adapter;
-    SQLiteStorageAdapter sqLiteStorageAdapter;
 
     /**
      * Enables Android Strict Mode, to help catch common errors while using
@@ -91,9 +87,12 @@ public final class SQLiteStorageAdapterObserveQueryTest {
         } catch (AmplifyException modelSchemaLoadingFailure) {
             throw new RuntimeException(modelSchemaLoadingFailure);
         }
-        sqLiteStorageAdapter =
-                SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
+        try {
+            adapter.initialize(ApplicationProvider.getApplicationContext());
+        } catch (DataStoreException exception) {
+            exception.printStackTrace();
+        }
     }
 
     /**
@@ -254,6 +253,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
     @Test
     public void querySavedDataWithNumericalPredicates() throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch changeLatch = new CountDownLatch(1);
         final List<Post> savedModels = new ArrayList<>();
         final int numModels = 10;
 
@@ -282,12 +282,25 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 );
 
         Consumer<Cancelable> observationStarted = value -> {};
+        AtomicInteger count = new AtomicInteger(0);
         Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value->{
-            assertTrue(value.getItems().contains(savedModels.get(1)));
-            assertTrue(value.getItems().contains(savedModels.get(4)));
-            assertTrue(value.getItems().contains(savedModels.get(5)));
-            assertTrue(value.getItems().contains(savedModels.get(6)));
-            latch.countDown();
+            if ( count.get() == 0){
+                assertTrue(value.getItems().contains(savedModels.get(1)));
+                assertTrue(value.getItems().contains(savedModels.get(4)));
+                assertTrue(value.getItems().contains(savedModels.get(5)));
+                assertTrue(value.getItems().contains(savedModels.get(6)));
+                latch.countDown();
+            } else if( count.get() == 1){
+                assertEquals(5, value.getItems().size());
+                assertEquals(1, value.getItemChanges().size());
+                assertTrue(value.getItems().contains(savedModels.get(1)));
+                assertTrue(value.getItems().contains(savedModels.get(4)));
+                assertTrue(value.getItems().contains(savedModels.get(5)));
+                assertTrue(value.getItems().contains(savedModels.get(6)));
+                assertTrue(value.getItems().contains(savedModels.get(11)));
+                changeLatch.countDown();
+            }
+            count.incrementAndGet();
         };
         Consumer<DataStoreException> onObservationError = value-> {};
         Action onObservationComplete= () -> {};
@@ -295,7 +308,20 @@ public final class SQLiteStorageAdapterObserveQueryTest {
         adapter.observeQuery(
                 Post.class,
                 Where.matches(predicate), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+
         assertTrue(latch.await(1, TimeUnit.SECONDS));
+
+        for (int counter = 0; counter < 2; counter++) {
+            final Post post = Post.builder()
+                    .title("titlePrefix:" + counter + "change")
+                    .status(PostStatus.INACTIVE)
+                    .rating(counter)
+                    .blog(blog)
+                    .build();
+            adapter.save(post);
+            savedModels.add(post);
+        }
+        assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
     }
 
     /**
@@ -628,7 +654,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 BlogOwner.class,
                 Where.matchesAll(), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
 
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
+        assertTrue(latch.await(2, TimeUnit.SECONDS));
 
         for (int counter = 11; counter < 13; counter++) {
             try {
@@ -641,7 +667,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 e.printStackTrace();
             }
         }
-       assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
+       assertTrue(changeLatch.await(7, TimeUnit.SECONDS));
     }
 
     private void createBlogOwnerRecords(final int count) throws DataStoreException {

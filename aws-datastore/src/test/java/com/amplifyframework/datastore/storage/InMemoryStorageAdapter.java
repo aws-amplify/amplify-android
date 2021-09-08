@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 
@@ -63,8 +64,9 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public void initialize(
             @NonNull Context context,
             @NonNull Consumer<List<ModelSchema>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError
-    ) {}
+            @NonNull Consumer<DataStoreException> onError,
+            @NonNull DataStoreConfiguration dataStoreConfiguration
+            ) {}
 
     @Override
     public <T extends Model> void save(

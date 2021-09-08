@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 
@@ -59,11 +60,13 @@ public interface LocalStorageAdapter {
      * @param context An Android Context
      * @param onSuccess A callback to be invoked upon completion of the initialization
      * @param onError A callback to be invoked upon initialization error
+     * @param dataStoreConfiguration Datastore configuration
      */
     void initialize(
             @NonNull Context context,
             @NonNull Consumer<List<ModelSchema>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError
+            @NonNull Consumer<DataStoreException> onError,
+            @NonNull DataStoreConfiguration dataStoreConfiguration
     );
 
     /**

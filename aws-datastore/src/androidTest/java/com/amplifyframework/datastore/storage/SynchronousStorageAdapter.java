@@ -16,6 +16,8 @@
 package com.amplifyframework.datastore.storage;
 
 import android.content.Context;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Action;
@@ -27,9 +29,9 @@ import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreQuerySnapshot;
-import com.amplifyframework.datastore.storage.sqlite.ObserveQueryManager;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.VoidResult;
 
@@ -96,10 +98,22 @@ public final class SynchronousStorageAdapter {
      */
     @SuppressWarnings("UnusedReturnValue")
     public List<ModelSchema> initialize(@NonNull Context context) throws DataStoreException {
+        Log.d("initialize", "inside initialize");
         return Await.result(
             operationTimeoutMs,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                asyncDelegate.initialize(context, onResult, onError)
+            {
+                try {
+                    asyncDelegate.initialize(context, onResult, onError,
+                            DataStoreConfiguration.builder()
+                                    .syncInterval(2L,TimeUnit.MINUTES)
+                                    .observeQueryMaxRecords(2)
+                                    .observeQueryMaxTime(0)
+                                    .build());
+                } catch (DataStoreException exception) {
+                    exception.printStackTrace();
+                }
+            }
         );
     }
 

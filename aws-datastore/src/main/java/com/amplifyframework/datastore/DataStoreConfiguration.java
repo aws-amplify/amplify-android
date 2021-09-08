@@ -45,6 +45,8 @@ public final class DataStoreConfiguration {
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
     @VisibleForTesting
     static final boolean DEFAULT_DO_SYNC_RETRY = false;
+    static final int MAX_RECORDS = 1000;
+    static final long MAX_TIME_SEC = 2;
 
     private final DataStoreErrorHandler errorHandler;
     private final DataStoreConflictHandler conflictHandler;
@@ -53,6 +55,8 @@ public final class DataStoreConfiguration {
     private final boolean doSyncRetry;
     private final Map<String, DataStoreSyncExpression> syncExpressions;
     private final Long syncIntervalInMinutes;
+    private final Long maxTimeLapseForObserveQuery;
+    private final Integer observeQueryMaxRecords;
 
     private DataStoreConfiguration(Builder builder) {
         this.errorHandler = builder.errorHandler;
@@ -62,6 +66,8 @@ public final class DataStoreConfiguration {
         this.syncIntervalInMinutes = builder.syncIntervalInMinutes;
         this.syncExpressions = builder.syncExpressions;
         this.doSyncRetry = builder.doSyncRetry;
+        this.maxTimeLapseForObserveQuery = builder.maxTimeLapseForObserveQuery;
+        this.observeQueryMaxRecords = builder.observeQueryMaxRecords;
     }
 
     /**
@@ -116,6 +122,8 @@ public final class DataStoreConfiguration {
             .syncPageSize(DEFAULT_SYNC_PAGE_SIZE)
             .syncMaxRecords(DEFAULT_SYNC_MAX_RECORDS)
                 .doSyncRetry(DEFAULT_DO_SYNC_RETRY)
+                .observeQueryMaxTime(MAX_TIME_SEC)
+                .observeQueryMaxRecords(MAX_RECORDS)
             .build();
     }
 
@@ -184,7 +192,7 @@ public final class DataStoreConfiguration {
      * a sync operation.
      * @return Desired size of a page of results from an AppSync sync response
      */
-    public boolean getDoSyncRetry() {
+    public Boolean getDoSyncRetry() {
         return this.doSyncRetry;
     }
 
@@ -225,6 +233,15 @@ public final class DataStoreConfiguration {
         if (!ObjectsCompat.equals(getSyncExpressions(), that.getSyncExpressions())) {
             return false;
         }
+        if (!ObjectsCompat.equals(getDoSyncRetry(), that.getDoSyncRetry())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getMaxTimeLapseForObserveQuery(), that.getMaxTimeLapseForObserveQuery())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getObserveQueryMaxRecords(), that.getObserveQueryMaxRecords())) {
+            return false;
+        }
         return true;
     }
 
@@ -236,6 +253,9 @@ public final class DataStoreConfiguration {
         result = 31 * result + (getSyncPageSize() != null ? getSyncPageSize().hashCode() : 0);
         result = 31 * result + (getSyncIntervalInMinutes() != null ? getSyncIntervalInMinutes().hashCode() : 0);
         result = 31 * result + (getSyncExpressions() != null ? getSyncExpressions().hashCode() : 0);
+        result = 31 * result + getDoSyncRetry().hashCode();
+        result = 31 * result + (getObserveQueryMaxRecords() != null ? getObserveQueryMaxRecords().hashCode() : 0);
+        result = 31 * result + (getMaxTimeLapseForObserveQuery() != null ? getMaxTimeLapseForObserveQuery().hashCode() : 0);
         return result;
     }
 
@@ -248,7 +268,18 @@ public final class DataStoreConfiguration {
             ", syncPageSize=" + syncPageSize +
             ", syncIntervalInMinutes=" + syncIntervalInMinutes +
             ", syncExpressions=" + syncExpressions +
+                ", doSyncRetry=" + doSyncRetry +
+                ", maxTimeRelapseForObserveQuery=" + maxTimeLapseForObserveQuery +
+                ", observeQueryMaxRecords=" + observeQueryMaxRecords +
             '}';
+    }
+
+    public Long getMaxTimeLapseForObserveQuery() {
+        return maxTimeLapseForObserveQuery;
+    }
+
+    public Integer getObserveQueryMaxRecords() {
+        return observeQueryMaxRecords;
     }
 
     /**
@@ -266,6 +297,8 @@ public final class DataStoreConfiguration {
         private boolean ensureDefaults;
         private JSONObject pluginJson;
         private DataStoreConfiguration userProvidedConfiguration;
+        private Integer observeQueryMaxRecords;
+        private long maxTimeLapseForObserveQuery;
 
         private Builder() {
             this.errorHandler = DefaultDataStoreErrorHandler.instance();
@@ -314,6 +347,28 @@ public final class DataStoreConfiguration {
         @NonNull
         public Builder syncInterval(@IntRange(from = 0) long duration, TimeUnit timeUnit) {
             this.syncIntervalInMinutes = timeUnit.toMinutes(duration);
+            return Builder.this;
+        }
+
+        /**
+         * Sets the maximum time lapsed between changes , from the observe query, to process from a item change operation.
+         * @param maxTimeRelapseForObserveQuery Max number of records client will consumer from server at one time
+         * @return Current builder instance
+         */
+        @NonNull
+        public Builder observeQueryMaxTime(long maxTimeRelapseForObserveQuery) {
+            this.maxTimeLapseForObserveQuery = maxTimeRelapseForObserveQuery;
+            return Builder.this;
+        }
+
+        /**
+         * Sets the maximum number of records, from the observe query, to process from a item change operation.
+         * @param observeQueryMaxRecords Max number of records client will consumer from server at one time
+         * @return Current builder instance
+         */
+        @NonNull
+        public Builder observeQueryMaxRecords(@IntRange(from = 0) Integer observeQueryMaxRecords) {
+            this.observeQueryMaxRecords = observeQueryMaxRecords;
             return Builder.this;
         }
 
@@ -463,6 +518,8 @@ public final class DataStoreConfiguration {
                 syncIntervalInMinutes = getValueOrDefault(syncIntervalInMinutes, DEFAULT_SYNC_INTERVAL_MINUTES);
                 syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
+                observeQueryMaxRecords = getValueOrDefault(observeQueryMaxRecords, MAX_RECORDS);
+                maxTimeLapseForObserveQuery = getValueOrDefault(maxTimeLapseForObserveQuery, MAX_TIME_SEC);
             }
             return new DataStoreConfiguration(this);
         }

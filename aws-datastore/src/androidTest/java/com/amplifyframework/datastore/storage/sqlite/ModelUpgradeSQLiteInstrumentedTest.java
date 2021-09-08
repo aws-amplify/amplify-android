@@ -22,6 +22,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
@@ -100,7 +101,16 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         List<ModelSchema> firstResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                sqliteStorageAdapter.initialize(context, onResult, onError)
+            {
+                try {
+                    sqliteStorageAdapter.initialize(context, onResult, onError,
+                            DataStoreConfiguration.builder()
+                                    .syncInterval(2L,TimeUnit.MINUTES)
+                                    .build());
+                } catch (DataStoreException exception) {
+                    exception.printStackTrace();
+                }
+            }
         );
         // Assert if initialize succeeds.
         assertFalse(Empty.check(firstResults));
@@ -130,7 +140,16 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         List<ModelSchema> secondResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                sqliteStorageAdapter.initialize(context, onResult, onError)
+            {
+                try {
+                    sqliteStorageAdapter.initialize(context, onResult, onError,
+                            DataStoreConfiguration.builder()
+                            .syncInterval(2L,TimeUnit.MINUTES)
+                            .build());
+                } catch (DataStoreException exception) {
+                    exception.printStackTrace();
+                }
+            }
         );
         assertFalse(Empty.check(secondResults));
 

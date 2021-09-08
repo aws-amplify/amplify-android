@@ -277,7 +277,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @WorkerThread
     private Completable initializeStorageAdapter(Context context) {
         return Completable.defer(() -> Completable.create(emitter ->
-            sqliteStorageAdapter.initialize(context, schemaList -> emitter.onComplete(), emitter::onError)
+            sqliteStorageAdapter.initialize(context, schemaList -> emitter.onComplete(),
+                    emitter::onError, pluginConfiguration)
         ));
     }
 
