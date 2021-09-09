@@ -21,7 +21,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
@@ -52,7 +52,7 @@ import static org.junit.Assert.assertTrue;
 public final class MutationPersistenceInstrumentationTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
-    private ModelSchemaRegistry modelSchemaRegistry;
+    private SchemaRegistry schemaRegistry;
     private PendingMutation.Converter converter;
     private SynchronousStorageAdapter storage;
 
@@ -74,12 +74,12 @@ public final class MutationPersistenceInstrumentationTest {
         getApplicationContext().deleteDatabase(DATABASE_NAME);
 
         ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(BlogOwner.class);
-        modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.clear();
-        modelSchemaRegistry.register(modelProvider.models());
+        schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.clear();
+        schemaRegistry.register(modelProvider.models());
 
         LocalStorageAdapter localStorageAdapter =
-            SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
+            SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider);
         this.storage = SynchronousStorageAdapter.delegatingTo(localStorageAdapter);
         List<ModelSchema> initializationResults = storage.initialize(getApplicationContext());
 
@@ -116,7 +116,7 @@ public final class MutationPersistenceInstrumentationTest {
             .name("Tony Daniels")
             .build();
 
-        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         PendingMutation<BlogOwner> originalTonyCreation =
             PendingMutation.creation(tonyDaniels, schema);
 
@@ -158,7 +158,7 @@ public final class MutationPersistenceInstrumentationTest {
         BlogOwner juan = BlogOwner.builder()
             .name("Juan Gonzales")
             .build();
-        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         PendingMutation<BlogOwner> change = PendingMutation.creation(juan, schema);
         PendingMutation.PersistentRecord thingWeSaved = converter.toRecord(change);
 
@@ -200,7 +200,7 @@ public final class MutationPersistenceInstrumentationTest {
         BlogOwner joeLastNameMisspelled = BlogOwner.builder()
             .name("Joe Sweeneyy")
             .build();
-        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         PendingMutation<BlogOwner> createJoeWrongLastName =
             PendingMutation.creation(joeLastNameMisspelled, schema);
 
@@ -247,7 +247,7 @@ public final class MutationPersistenceInstrumentationTest {
         BlogOwner beatrice = BlogOwner.builder()
             .name("Beatrice Stone")
             .build();
-        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         PendingMutation<BlogOwner> createBeatrice = PendingMutation.creation(beatrice, schema);
         PendingMutation.PersistentRecord createBeatriceRecord = converter.toRecord(createBeatrice);
         storage.save(createBeatriceRecord);

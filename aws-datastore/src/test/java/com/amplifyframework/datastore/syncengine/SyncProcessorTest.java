@@ -24,7 +24,7 @@ import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
@@ -130,9 +130,9 @@ public final class SyncProcessorTest {
     }
 
     private void initSyncProcessor(int syncMaxRecords) throws AmplifyException {
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.clear();
-        modelSchemaRegistry.register(modelProvider.models());
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.clear();
+        schemaRegistry.register(modelProvider.models());
 
         InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
         this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
@@ -155,16 +155,16 @@ public final class SyncProcessorTest {
         queryPredicateProvider.resolvePredicates();
 
         this.syncProcessor = SyncProcessor.builder()
-                .modelProvider(modelProvider)
-                .modelSchemaRegistry(modelSchemaRegistry)
-                .syncTimeRegistry(syncTimeRegistry)
-                .appSync(appSync)
-                .merger(merger)
-                .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
-                .queryPredicateProvider(queryPredicateProvider)
-                .retryHandler(requestRetry)
-                .isSyncRetryEnabled(isSyncRetryEnabled)
-                .build();
+            .modelProvider(modelProvider)
+            .schemaRegistry(schemaRegistry)
+            .syncTimeRegistry(syncTimeRegistry)
+            .appSync(appSync)
+            .merger(merger)
+            .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
+            .queryPredicateProvider(queryPredicateProvider)
+            .retryHandler(requestRetry)
+            .isSyncRetryEnabled(isSyncRetryEnabled)
+            .build();
     }
 
     /**
