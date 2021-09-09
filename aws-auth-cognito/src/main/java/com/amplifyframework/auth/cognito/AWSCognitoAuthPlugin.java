@@ -101,7 +101,7 @@ import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.cognitoauth.AuthClient;
 import com.amazonaws.mobileconnectors.cognitoauth.exceptions.AuthNavigationException;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
-import com.amazonaws.services.cognitoidentity.model.NotAuthorizedException;
+import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
