@@ -24,7 +24,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
@@ -50,7 +50,7 @@ import java.util.Set;
 final class SQLiteModelTree {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private final ModelSchemaRegistry registry;
+    private final SchemaRegistry registry;
     private final SQLiteDatabase database;
     private final Gson gson;
 
@@ -59,7 +59,7 @@ final class SQLiteModelTree {
      * @param registry model registry to search schema from
      * @param database SQLite database connection handle
      */
-    SQLiteModelTree(ModelSchemaRegistry registry,
+    SQLiteModelTree(SchemaRegistry registry,
                     SQLiteDatabase database) {
         this.registry = registry;
         this.database = database;

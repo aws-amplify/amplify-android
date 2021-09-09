@@ -27,12 +27,15 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.model.CustomTypeField;
+import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
@@ -94,9 +97,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // and models that are used internally for DataStore to track metadata
     private final ModelProvider modelsProvider;
 
-    // ModelSchemaRegistry instance that gives the ModelSchema and Model objects
+    // SchemaRegistry instance that gives the ModelSchema, CustomTypeSchema (Flutter) and Model objects
     // based on Model class name lookup mechanism.
-    private final ModelSchemaRegistry modelSchemaRegistry;
+    private final SchemaRegistry schemaRegistry;
 
     // ThreadPool for SQLite operations.
     private ExecutorService threadPool;
@@ -135,23 +138,23 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     /**
      * Construct the SQLiteStorageAdapter object.
-     * @param modelSchemaRegistry A registry of schema for all models used by the system
+     * @param schemaRegistry A registry of schema for all models and custom types used by the system
      * @param userModelsProvider Provides the models that will be usable by the DataStore
      * @param systemModelsProvider Provides the models that are used by the DataStore system internally
      */
     private SQLiteStorageAdapter(
-            ModelSchemaRegistry modelSchemaRegistry,
+            SchemaRegistry schemaRegistry,
             ModelProvider userModelsProvider,
             ModelProvider systemModelsProvider) {
-        this(modelSchemaRegistry, userModelsProvider, systemModelsProvider, DEFAULT_DATABASE_NAME);
+        this(schemaRegistry, userModelsProvider, systemModelsProvider, DEFAULT_DATABASE_NAME);
     }
 
     private SQLiteStorageAdapter(
-        ModelSchemaRegistry modelSchemaRegistry,
+        SchemaRegistry schemaRegistry,
         ModelProvider userModelsProvider,
         ModelProvider systemModelsProvider,
         String databaseName) {
-        this.modelSchemaRegistry = modelSchemaRegistry;
+        this.schemaRegistry = schemaRegistry;
         this.modelsProvider = CompoundModelProvider.of(systemModelsProvider, userModelsProvider);
         this.gson = GsonFactory.instance();
         this.itemChangeSubject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
@@ -161,16 +164,16 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     /**
      * Gets a SQLiteStorageAdapter that can be initialized to use the provided models.
-     * @param modelSchemaRegistry Registry of schema for all models in the system
+     * @param schemaRegistry Registry of schema for all models and custom types in the system
      * @param userModelsProvider A provider of models that will be represented in SQL
      * @return A SQLiteStorageAdapter that will host the provided models in SQL tables
      */
     @NonNull
     public static SQLiteStorageAdapter forModels(
-            @NonNull ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull SchemaRegistry schemaRegistry,
             @NonNull ModelProvider userModelsProvider) {
         return new SQLiteStorageAdapter(
-            modelSchemaRegistry,
+            schemaRegistry,
             Objects.requireNonNull(userModelsProvider),
             SystemModelsProviderFactory.create()
         );
@@ -178,18 +181,18 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     /**
      * Gets a SQLiteStorageAdapter that can be initialized to use the provided models.
-     * @param modelSchemaRegistry Registry of schema for all models in the system
+     * @param schemaRegistry Registry of schema for all models and custom types in the system
      * @param userModelsProvider A provider of models that will be represented in SQL
      * @param databaseName Name of the SQLite database.
      * @return A SQLiteStorageAdapter that will host the provided models in SQL tables
      */
     @NonNull
     static SQLiteStorageAdapter forModels(
-        @NonNull ModelSchemaRegistry modelSchemaRegistry,
+        @NonNull SchemaRegistry schemaRegistry,
         @NonNull ModelProvider userModelsProvider,
         @NonNull String databaseName) {
         return new SQLiteStorageAdapter(
-            modelSchemaRegistry,
+            schemaRegistry,
             Objects.requireNonNull(userModelsProvider),
             SystemModelsProviderFactory.create(),
             databaseName
@@ -217,20 +220,20 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 /*
                  * Start with a fresh registry.
                  */
-                modelSchemaRegistry.clear();
+                schemaRegistry.clear();
                 /*
                  * Create {@link ModelSchema} objects for the corresponding {@link Model}.
                  * Any exception raised during this when inspecting the Model classes
                  * through reflection will be notified via the `onError` callback.
                  */
-                modelSchemaRegistry.register(modelsProvider.modelSchemas());
+                schemaRegistry.register(modelsProvider.modelSchemas(), modelsProvider.customTypeSchemas());
 
                 /*
                  * Create the CREATE TABLE and CREATE INDEX commands for each of the
                  * Models. Instantiate {@link SQLiteStorageHelper} to execute those
                  * create commands.
                  */
-                this.sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry, gson);
+                this.sqlCommandFactory = new SQLiteCommandFactory(schemaRegistry, gson);
                 CreateSqlCommands createSqlCommands = getCreateCommands(modelsProvider.modelNames());
                 sqliteStorageHelper = SQLiteStorageHelper.getInstance(
                         context,
@@ -258,7 +261,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Create helper instance that can traverse through model relations.
                  */
                 this.sqliteModelTree = new SQLiteModelTree(
-                    modelSchemaRegistry,
+                    schemaRegistry,
                     databaseConnectionHandle
                 );
 
@@ -274,7 +277,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 toBeDisposed.add(updateModels().subscribe(
                     () -> onSuccess.accept(
-                        Immutable.of(new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values()))
+                        Immutable.of(new ArrayList<>(schemaRegistry.getModelSchemaMap().values()))
                     ),
                     throwable -> onError.accept(new DataStoreException(
                         "Error in initializing the SQLiteStorageAdapter",
@@ -307,7 +310,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onError);
         threadPool.submit(() -> {
             try {
-                final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(item.getModelName());
+                final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(item.getModelName());
 
                 final StorageItemChange.Type writeType;
                 SerializedModel patchItem = null;
@@ -382,12 +385,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
         threadPool.submit(() -> {
-            final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
+            final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
             try (Cursor cursor = sqlCommandProcessor.rawQuery(sqlCommandFactory.queryFor(modelSchema, options))) {
                 LOG.debug("Querying item for: " + itemClass.getSimpleName());
                 final List<T> models = new ArrayList<>();
                 final SQLiteModelFieldTypeConverter converter =
-                    new SQLiteModelFieldTypeConverter(modelSchema, modelSchemaRegistry, gson);
+                    new SQLiteModelFieldTypeConverter(modelSchema, schemaRegistry, gson);
 
                 if (cursor == null) {
                     onError.accept(new DataStoreException(
@@ -429,13 +432,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onError);
 
         threadPool.submit(() -> {
-            final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+            final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(modelName);
             try (Cursor cursor = sqlCommandProcessor.rawQuery(sqlCommandFactory.queryFor(modelSchema, options))) {
                 LOG.debug("Querying item for: " + modelName);
 
                 final List<Model> models = new ArrayList<>();
                 final SQLiteModelFieldTypeConverter converter =
-                    new SQLiteModelFieldTypeConverter(modelSchema, modelSchemaRegistry, gson);
+                    new SQLiteModelFieldTypeConverter(modelSchema, schemaRegistry, gson);
 
                 if (cursor == null) {
                     onError.accept(new DataStoreException(
@@ -481,7 +484,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         threadPool.submit(() -> {
             try {
                 final String modelName = item.getModelName();
-                final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+                final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(modelName);
 
                 // Check if data being deleted exists; "Succeed" deletion in that case.
                 if (!modelExists(item, QueryPredicates.all())) {
@@ -514,7 +517,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 // publish cascaded deletions
                 for (Model cascadedModel : cascadedModels) {
-                    ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(cascadedModel.getModelName());
+                    ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(cascadedModel.getModelName());
                     itemChangeSubject.onNext(StorageItemChange.builder()
                         .item(cascadedModel)
                         .patchItem(SerializedModel.create(cascadedModel, schema))
@@ -566,7 +569,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onError);
 
         threadPool.submit(() -> {
-            final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(itemClass);
+            final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(itemClass);
             QueryOptions options = Where.matches(predicate);
             try (Cursor cursor = sqlCommandProcessor.rawQuery(sqlCommandFactory.queryFor(modelSchema, options))) {
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
@@ -594,7 +597,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 // publish every deletion
                 for (Model model : modelsToDelete) {
-                    ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(model.getModelName());
+                    ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(model.getModelName());
                     itemChangeSubject.onNext(StorageItemChange.builder()
                             .item(model)
                             .patchItem(SerializedModel.create(model, schema))
@@ -716,7 +719,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final Set<SqlCommand> createIndexCommands = new HashSet<>();
         for (String modelName : modelNames) {
             final ModelSchema modelSchema =
-                modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+                schemaRegistry.getModelSchemaForModelClass(modelName);
             createTableCommands.add(sqlCommandFactory.createTableFor(modelSchema));
             createIndexCommands.addAll(sqlCommandFactory.createIndexesFor(modelSchema));
         }
@@ -728,7 +731,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             StorageItemChange.Type writeType
     ) throws DataStoreException {
         final String modelName = item.getModelName();
-        final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
 
         // Generate SQL command for given action
@@ -757,7 +760,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     private boolean modelExists(Model model, QueryPredicate predicate) throws DataStoreException {
         final String modelName = model.getModelName();
-        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable table = SQLiteTable.fromSchema(schema);
         final String tableName = table.getName();
         final String primaryKeyName = table.getPrimaryKey().getName();
@@ -774,7 +777,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      */
     private Model query(Model model) {
         final String modelName = model.getModelName();
-        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable table = SQLiteTable.fromSchema(schema);
         final String primaryKeyName = table.getPrimaryKey().getName();
         final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName).eq(model.getId());
@@ -826,7 +829,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     ModelAssociation association = modelSchema.getAssociations().get(entry.getKey());
                     if (association != null) {
                         String associatedType = association.getAssociatedType();
-                        final ModelSchema nestedModelSchema = modelSchemaRegistry.getModelSchemaForModelClass(
+                        final ModelSchema nestedModelSchema = schemaRegistry.getModelSchemaForModelClass(
                                 associatedType
                         );
                         @SuppressWarnings("unchecked")
@@ -834,6 +837,29 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 nestedModelSchema, (Map<String, Object>) entry.getValue()
                         );
                         serializedData.put(entry.getKey(), model);
+                    }
+                } else if (field.isCustomType()) {
+                    if (field.isArray()) {
+                        ArrayList<SerializedCustomType> listOfCustomType = new ArrayList<>();
+                        final CustomTypeSchema nestedCustomTypeSchema =
+                                schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
+                        @SuppressWarnings("unchecked")
+                        List<Map<String, Object>> listItems = (List<Map<String, Object>>) entry.getValue();
+                        for (Map<String, Object> listItem : listItems) {
+                            SerializedCustomType customType = createSerializedCustomType(
+                                nestedCustomTypeSchema, listItem
+                            );
+                            listOfCustomType.add(customType);
+                        }
+                        serializedData.put(entry.getKey(), listOfCustomType);
+                    } else {
+                        final CustomTypeSchema nestedCustomTypeSchema =
+                                schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
+                        @SuppressWarnings("unchecked")
+                        SerializedCustomType customType = createSerializedCustomType(
+                                nestedCustomTypeSchema, (Map<String, Object>) entry.getValue()
+                        );
+                        serializedData.put(entry.getKey(), customType);
                     }
                 } else {
                     serializedData.put(entry.getKey(), entry.getValue());
@@ -843,6 +869,35 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return SerializedModel.builder()
                 .serializedData(serializedData)
                 .modelSchema(modelSchema)
+                .build();
+    }
+
+    private SerializedCustomType createSerializedCustomType(
+            CustomTypeSchema customTypeSchema, Map<String, Object> data) {
+        final Map<String, Object> serializedData = new HashMap<>();
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            CustomTypeField field = customTypeSchema.getFields().get(entry.getKey());
+
+            if (field == null) {
+                continue;
+            }
+
+            if (field.isCustomType()) {
+                final CustomTypeSchema nestedCustomTypeSchema =
+                        schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
+                @SuppressWarnings("unchecked")
+                Map<String, Object> nestedData = (Map<String, Object>) entry.getValue();
+                serializedData.put(entry.getKey(),
+                        createSerializedCustomType(nestedCustomTypeSchema, nestedData)
+                );
+            } else {
+                serializedData.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return SerializedCustomType.builder()
+                .serializedData(serializedData)
+                .customTypeSchema(customTypeSchema)
                 .build();
     }
 }

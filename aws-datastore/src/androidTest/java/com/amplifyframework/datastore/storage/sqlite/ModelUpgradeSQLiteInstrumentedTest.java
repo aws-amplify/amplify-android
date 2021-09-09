@@ -21,7 +21,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
@@ -93,10 +93,10 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     @Test
     public void modelVersionStoredCorrectlyBeforeAndAfterUpgrade() throws AmplifyException {
         // Initialize StorageAdapter with models
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.clear();
-        modelSchemaRegistry.register(modelProvider.models());
-        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.clear();
+        schemaRegistry.register(modelProvider.models());
+        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider);
         List<ModelSchema> firstResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
@@ -124,7 +124,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         sqliteStorageAdapter = null;
 
         sqliteStorageAdapter =
-            SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProviderThatUpgradesVersion);
+            SQLiteStorageAdapter.forModels(schemaRegistry, modelProviderThatUpgradesVersion);
 
         // Now, initialize storage adapter with the new models
         List<ModelSchema> secondResults = Await.result(
