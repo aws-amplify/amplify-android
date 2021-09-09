@@ -1053,7 +1053,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
     @Override
     public AuthUser getCurrentUser() {
-        if (userId != null) {
+        if (userId != null && awsMobileClient.getUsername() != null) {
             return new AuthUser(userId, awsMobileClient.getUsername());
         } else {
             return null;
