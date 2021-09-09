@@ -20,7 +20,7 @@ import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
@@ -68,7 +68,7 @@ import static org.mockito.Mockito.when;
 public final class MutationProcessorTest {
     private static final long TIMEOUT_SECONDS = 5;
 
-    private ModelSchemaRegistry modelSchemaRegistry;
+    private SchemaRegistry schemaRegistry;
     private SynchronousStorageAdapter synchronousStorageAdapter;
     private MutationOutbox mutationOutbox;
     private AppSync appSync;
@@ -78,7 +78,7 @@ public final class MutationProcessorTest {
     /**
      * A {@link MutationProcessor} is being tested. To do so, we arrange mutations into
      * an {@link MutationOutbox}. Fake responses are returned from a mock {@link AppSync}.
-     * @throws AmplifyException When loading ModelSchemaRegistry
+     * @throws AmplifyException When loading SchemaRegistry
      */
     @Before
     public void setup() throws AmplifyException {
@@ -91,12 +91,12 @@ public final class MutationProcessorTest {
         this.appSync = mock(AppSync.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
         ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
-        modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.register(Collections.singleton(BlogOwner.class));
+        schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(Collections.singleton(BlogOwner.class));
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
             .versionRepository(versionRepository)
-            .modelSchemaRegistry(modelSchemaRegistry)
+            .schemaRegistry(schemaRegistry)
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)
@@ -111,7 +111,7 @@ public final class MutationProcessorTest {
         BlogOwner raphael = BlogOwner.builder()
                 .name("Raphael Kim")
                 .build();
-        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         PendingMutation<BlogOwner> createRaphael = PendingMutation.creation(raphael, schema);
 
         // Mock up a response from AppSync and enqueue a mutation.
@@ -154,7 +154,7 @@ public final class MutationProcessorTest {
             HubAccumulator.create(HubChannel.DATASTORE, isProcessed(tony), 1)
                 .start();
 
-        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         PendingMutation<BlogOwner> createTony = PendingMutation.creation(tony, schema);
         assertTrue(mutationOutbox.enqueue(createTony)
             .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS));
@@ -197,7 +197,7 @@ public final class MutationProcessorTest {
             .build();
         ModelMetadata metadata =
             new ModelMetadata(model.getId(), false, 1, Temporal.Timestamp.now());
-        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(schema.getName(), 1_000L);
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata);
 
@@ -248,7 +248,7 @@ public final class MutationProcessorTest {
                 .build();
         ModelMetadata metadata =
                 new ModelMetadata(model.getId(), false, 1, Temporal.Timestamp.now());
-        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         synchronousStorageAdapter.save(model, metadata);
 
         // Enqueue an update in the mutation outbox
@@ -278,7 +278,7 @@ public final class MutationProcessorTest {
      */
     @Test
     public void canDrainMutationOutboxOnPublicationError() throws DataStoreException {
-        ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
 
         // We will attempt to "sync" 10 models.
         final int maxAttempts = 10;

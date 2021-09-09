@@ -19,9 +19,12 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.CustomTypeField;
+import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
@@ -147,5 +150,121 @@ public class SelectionSetTest {
                 .requestOptions(new DefaultGraphQLRequestOptions())
                 .build();
         assertEquals(Resources.readAsString("selection-set-ownerauth.txt"), selectionSet.toString() + "\n");
+    }
+
+    /**
+     * Test generating SelectionSet for ModelSchema that nests CustomTypeSchema.
+     * @throws AmplifyException if a ModelSchema can't be derived from OwnerAuth.class
+     */
+    @Test
+    public void nestedSerializedModelAndSerializedCustomType() throws AmplifyException {
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+
+        CustomTypeField phoneCountryField = CustomTypeField.builder()
+                .targetType("String")
+                .isRequired(true)
+                .build();
+        CustomTypeField phoneAreaField = CustomTypeField.builder()
+                .targetType("String")
+                .isRequired(true)
+                .build();
+        CustomTypeField phoneNumber = CustomTypeField.builder()
+                .targetType("String")
+                .isRequired(true)
+                .build();
+
+        Map<String, CustomTypeField> phoneFields = new HashMap<>();
+        phoneFields.put("country", phoneCountryField);
+        phoneFields.put("area", phoneAreaField);
+        phoneFields.put("number", phoneNumber);
+
+        CustomTypeSchema phoneSchema = CustomTypeSchema.builder()
+                .fields(phoneFields)
+                .name("Phone")
+                .pluralName("Phones")
+                .build();
+
+        CustomTypeField addressCityField = CustomTypeField.builder()
+                .targetType("String")
+                .isRequired(true)
+                .build();
+        CustomTypeField addressPhoneNumberField = CustomTypeField.builder()
+                .targetType("Phone")
+                .isCustomType(true)
+                .build();
+        CustomTypeField addressLine1Field = CustomTypeField.builder()
+                .targetType("String")
+                .isRequired(true)
+                .build();
+        CustomTypeField addressLine2Field = CustomTypeField.builder()
+                .targetType("String")
+                .build();
+        CustomTypeField addressStateField = CustomTypeField.builder()
+                .targetType("String")
+                .isRequired(true)
+                .build();
+        CustomTypeField addressPostalCodeField = CustomTypeField.builder()
+                .targetType("String")
+                .isRequired(true)
+                .build();
+        Map<String, CustomTypeField> addressFields = new HashMap<>();
+        addressFields.put("city", addressCityField);
+        addressFields.put("phoneNumber", addressPhoneNumberField);
+        addressFields.put("line1", addressLine1Field);
+        addressFields.put("line2", addressLine2Field);
+        addressFields.put("state", addressStateField);
+        addressFields.put("postalCode", addressPostalCodeField);
+        CustomTypeSchema addressSchema = CustomTypeSchema.builder()
+                .fields(addressFields)
+                .name("Address")
+                .pluralName("Addresses")
+                .build();
+
+        ModelField personAddressField = ModelField.builder()
+                .name("address")
+                .isCustomType(true)
+                .targetType("Address")
+                .isRequired(true)
+                .build();
+        ModelField personNameField = ModelField.builder()
+                .name("name")
+                .targetType("String")
+                .isRequired(true)
+                .build();
+        ModelField personPhonesField = ModelField.builder()
+                .name("phoneNumbers")
+                .targetType("Phone")
+                .isCustomType(true)
+                .isArray(true)
+                .build();
+
+        Map<String, ModelField> personFields = new HashMap<>();
+        personFields.put("address", personAddressField);
+        personFields.put("name", personNameField);
+        personFields.put("phones", personPhonesField);
+
+        ModelSchema personSchema = ModelSchema.builder()
+                .fields(personFields)
+                .name("Person")
+                .pluralName("People")
+                .modelClass(SerializedModel.class)
+                .build();
+
+        // Register custom type schema for usage in SelectionSet
+        schemaRegistry.register("Address", addressSchema);
+        schemaRegistry.register("Phone", phoneSchema);
+
+        // Register model schema for usage in SelectionSet
+        schemaRegistry.register("Person", personSchema);
+
+        SelectionSet selectionSet = SelectionSet.builder()
+                .modelClass(SerializedModel.class)
+                .modelSchema(personSchema)
+                .operation(QueryType.GET)
+                .requestOptions(new DefaultGraphQLRequestOptions())
+                .build();
+        String result = selectionSet.toString();
+        assertEquals(Resources.readAsString("selection-set-nested-serialized-model-serialized-custom-type.txt"),
+                result + "\n");
     }
 }
