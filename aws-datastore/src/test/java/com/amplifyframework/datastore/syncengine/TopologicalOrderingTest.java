@@ -18,7 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -44,7 +44,7 @@ public final class TopologicalOrderingTest {
         final SimpleModelProvider provider =
             SimpleModelProvider.withRandomVersion(Comment.class, Blog.class, BlogOwner.class, Post.class);
 
-        final ModelSchemaRegistry registry = ModelSchemaRegistry.instance();
+        final SchemaRegistry registry = SchemaRegistry.instance();
         registry.clear();
         registry.register(provider.models());
 
@@ -66,14 +66,14 @@ public final class TopologicalOrderingTest {
     }
 
     /**
-     * Find a {@link ModelSchema} in an {@link ModelSchemaRegistry}, looking up by the
+     * Find a {@link ModelSchema} in an {@link SchemaRegistry}, looking up by the
      * model's {@link Class}.
      * @param registry Model schema registry
      * @param modelClass Class of model
      * @param <T> Type of model
      * @return The ModelSchema for the requested class
      */
-    private <T extends Model> ModelSchema findSchema(ModelSchemaRegistry registry, Class<T> modelClass) {
+    private <T extends Model> ModelSchema findSchema(SchemaRegistry registry, Class<T> modelClass) {
         return registry.getModelSchemaForModelClass(modelClass.getSimpleName());
     }
 }

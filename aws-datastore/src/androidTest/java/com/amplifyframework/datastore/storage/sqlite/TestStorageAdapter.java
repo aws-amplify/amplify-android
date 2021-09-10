@@ -22,7 +22,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 
@@ -43,7 +43,7 @@ public final class TestStorageAdapter {
      * @param databaseName The name of the database file.
      * @return An instance of SQLiteStorageAdapter backed by the database file name specified.
      */
-    public static SQLiteStorageAdapter create(ModelSchemaRegistry schemaRegistry,
+    public static SQLiteStorageAdapter create(SchemaRegistry schemaRegistry,
                                               ModelProvider modelProvider,
                                               String databaseName) {
         return SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider, databaseName);
@@ -58,15 +58,15 @@ public final class TestStorageAdapter {
      * @return An initialized instance of the {@link SynchronousStorageAdapter}
      */
     static SynchronousStorageAdapter create(ModelProvider modelProvider) {
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.clear();
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.clear();
         try {
-            modelSchemaRegistry.register(modelProvider.models());
+            schemaRegistry.register(modelProvider.models());
         } catch (AmplifyException modelSchemaLoadingFailure) {
             throw new RuntimeException(modelSchemaLoadingFailure);
         }
         SQLiteStorageAdapter sqLiteStorageAdapter =
-            SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
+            SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider);
 
         SynchronousStorageAdapter synchronousStorageAdapter =
             SynchronousStorageAdapter.delegatingTo(sqLiteStorageAdapter);
