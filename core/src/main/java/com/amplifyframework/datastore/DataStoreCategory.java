@@ -148,6 +148,9 @@ public final class DataStoreCategory
             onObservationStarted, onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T extends Model> void observeQuery(@NonNull Class<T> itemClass,
                              @NonNull QueryOptions options,

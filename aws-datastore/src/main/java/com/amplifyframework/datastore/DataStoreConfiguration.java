@@ -255,7 +255,7 @@ public final class DataStoreConfiguration {
         result = 31 * result + (getSyncExpressions() != null ? getSyncExpressions().hashCode() : 0);
         result = 31 * result + getDoSyncRetry().hashCode();
         result = 31 * result + (getObserveQueryMaxRecords() != null ? getObserveQueryMaxRecords().hashCode() : 0);
-        result = 31 * result + (getMaxTimeLapseForObserveQuery() != null ? getMaxTimeLapseForObserveQuery().hashCode() : 0);
+        result = 31 * result + getMaxTimeLapseForObserveQuery().hashCode();
         return result;
     }
 
@@ -492,6 +492,9 @@ public final class DataStoreConfiguration {
             syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
             syncExpressions = userProvidedConfiguration.getSyncExpressions();
             doSyncRetry = getValueOrDefault(userProvidedConfiguration.getDoSyncRetry(), doSyncRetry);
+            observeQueryMaxRecords = getValueOrDefault(userProvidedConfiguration.getObserveQueryMaxRecords(), observeQueryMaxRecords);
+            maxTimeLapseForObserveQuery = userProvidedConfiguration.getMaxTimeLapseForObserveQuery()
+                    == 0? maxTimeLapseForObserveQuery : userProvidedConfiguration.getMaxTimeLapseForObserveQuery();
         }
 
         private static <T> T getValueOrDefault(T value, T defaultValue) {
@@ -519,7 +522,8 @@ public final class DataStoreConfiguration {
                 syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
                 observeQueryMaxRecords = getValueOrDefault(observeQueryMaxRecords, MAX_RECORDS);
-                maxTimeLapseForObserveQuery = getValueOrDefault(maxTimeLapseForObserveQuery, MAX_TIME_SEC);
+                maxTimeLapseForObserveQuery = maxTimeLapseForObserveQuery == 0? MAX_TIME_SEC :
+                        maxTimeLapseForObserveQuery;
             }
             return new DataStoreConfiguration(this);
         }

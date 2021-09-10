@@ -1,5 +1,7 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Action;
@@ -44,7 +46,7 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
 
 
     //TODOPM: sort complete list and set sync statusF
-    //TODOPM: Test race condition between obderve and query.
+    //TODOPM: Test race condition between observe and query.
     public ObserveQueryManager(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
                                @NonNull SqlQueryProcessor sqlQueryProcessor,
                                @NonNull ExecutorService threadPool,
@@ -123,6 +125,10 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
     @Override
     public void cancel() {
         isCanceled =  true;
+        timer.purge();
+        timer = null;
+        completeItemMap.clear();
+        changedItemList.clear();
         if (disposable != null){
            disposable.dispose();
         }
@@ -153,7 +159,7 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
                                      Consumer<DataStoreException> onObservationError) {
         try {
             DataStoreQuerySnapshot<T> dataStoreQuerySnapshot =
-                    new DataStoreQuerySnapshot<T>(new ArrayList<T>(completeItemMap.values()),
+                    new DataStoreQuerySnapshot<>(new ArrayList<>(completeItemMap.values()),
                             syncStatus.get(itemClass.getName(), onObservationError),
                             changedItemList);
             getListConsumer(onQuerySnapshot).accept(dataStoreQuerySnapshot);
@@ -179,6 +185,8 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
+                    timer.cancel();
+                    timer = null;
                     callOnQuerySnapshot(onQuerySnapshot, itemClass, onObservationError);
                 }
             }, TimeUnit.SECONDS.toMillis(MAX_TIME_SEC));
