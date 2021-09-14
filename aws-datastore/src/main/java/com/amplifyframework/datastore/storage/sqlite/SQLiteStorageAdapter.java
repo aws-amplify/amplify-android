@@ -653,6 +653,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         new ObserveQueryManager<T>(itemChangeSubject, sqlQueryProcessor,
                 threadPool,
                 syncStatus,
+                new ModelSorter<T>(),
                 dataStoreConfiguration)
                 .observeQuery(itemClass,
                         options,

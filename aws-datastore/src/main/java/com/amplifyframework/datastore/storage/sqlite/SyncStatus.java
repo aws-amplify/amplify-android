@@ -25,11 +25,11 @@ public class SyncStatus {
     public boolean get(@NonNull String modelClassName, @NonNull Consumer<DataStoreException> onObservationError) throws DataStoreException {
         LastSyncMetadata lastSyncMetadata = getLastSyncMetaData(modelClassName, onObservationError);
         boolean syncStatus;
-        if (lastSyncMetadata.getLastSyncType().equals("Base") || lastSyncMetadata.getLastSyncTime()==null){
+        if (lastSyncMetadata.getLastSyncTime()==null){
             syncStatus = false;
         } else {
             syncStatus = (Time.now() - lastSyncMetadata.getLastSyncTime())
-                    < (dataStoreConfiguration.getSyncIntervalInMinutes() * 60000);
+                    < (dataStoreConfiguration.getSyncIntervalInMinutes() * 1000);
         }
         return syncStatus;
     }
