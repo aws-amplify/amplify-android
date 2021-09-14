@@ -102,6 +102,7 @@ public final class MutationPersistenceInstrumentationTest {
     public void terminateLocalStorageAdapter() throws DataStoreException {
         storage.terminate();
         getApplicationContext().deleteDatabase(DATABASE_NAME);
+        schemaRegistry.clear();
     }
 
     /**
