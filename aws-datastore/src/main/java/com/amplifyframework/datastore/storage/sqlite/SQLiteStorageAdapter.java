@@ -840,17 +840,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     }
                 } else if (field.isCustomType()) {
                     if (field.isArray()) {
-                        ArrayList<SerializedCustomType> listOfCustomType = new ArrayList<>();
-                        final CustomTypeSchema nestedCustomTypeSchema =
-                                schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
                         @SuppressWarnings("unchecked")
                         List<Map<String, Object>> listItems = (List<Map<String, Object>>) entry.getValue();
-                        for (Map<String, Object> listItem : listItems) {
-                            SerializedCustomType customType = createSerializedCustomType(
-                                nestedCustomTypeSchema, listItem
-                            );
-                            listOfCustomType.add(customType);
-                        }
+                        List<SerializedCustomType> listOfCustomType =
+                                getValueOfListCustomTypeField(field.getTargetType(), listItems);
                         serializedData.put(entry.getKey(), listOfCustomType);
                     } else {
                         final CustomTypeSchema nestedCustomTypeSchema =
@@ -883,13 +876,21 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             }
 
             if (field.isCustomType()) {
-                final CustomTypeSchema nestedCustomTypeSchema =
-                        schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
-                @SuppressWarnings("unchecked")
-                Map<String, Object> nestedData = (Map<String, Object>) entry.getValue();
-                serializedData.put(entry.getKey(),
-                        createSerializedCustomType(nestedCustomTypeSchema, nestedData)
-                );
+                if (field.isArray()) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> listItems = (List<Map<String, Object>>) entry.getValue();
+                    List<SerializedCustomType> listOfCustomType =
+                            getValueOfListCustomTypeField(field.getTargetType(), listItems);
+                    serializedData.put(entry.getKey(), listOfCustomType);
+                } else {
+                    final CustomTypeSchema nestedCustomTypeSchema =
+                            schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> nestedData = (Map<String, Object>) entry.getValue();
+                    serializedData.put(entry.getKey(),
+                            createSerializedCustomType(nestedCustomTypeSchema, nestedData)
+                    );
+                }
             } else {
                 serializedData.put(entry.getKey(), entry.getValue());
             }
@@ -899,5 +900,26 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 .serializedData(serializedData)
                 .customTypeSchema(customTypeSchema)
                 .build();
+    }
+
+    private List<SerializedCustomType> getValueOfListCustomTypeField(
+            String fieldTargetType, List<Map<String, Object>> listItems) {
+        // if the filed is options and has null value instead of an array
+        if (listItems == null) {
+            return null;
+        }
+
+        final CustomTypeSchema nestedCustomTypeSchema =
+                schemaRegistry.getCustomTypeSchemaForCustomTypeClass(fieldTargetType);
+        List<SerializedCustomType> listOfCustomType = new ArrayList<>();
+
+        for (Map<String, Object> listItem : listItems) {
+            SerializedCustomType customType = createSerializedCustomType(
+                    nestedCustomTypeSchema, listItem
+            );
+            listOfCustomType.add(customType);
+        }
+
+        return listOfCustomType;
     }
 }
