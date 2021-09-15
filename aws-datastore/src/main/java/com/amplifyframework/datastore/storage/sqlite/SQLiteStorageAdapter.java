@@ -904,7 +904,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     private List<SerializedCustomType> getValueOfListCustomTypeField(
             String fieldTargetType, List<Map<String, Object>> listItems) {
-        // if the filed is options and has null value instead of an array
+        // if the filed is optional and has null value instead of an array
         if (listItems == null) {
             return null;
         }
