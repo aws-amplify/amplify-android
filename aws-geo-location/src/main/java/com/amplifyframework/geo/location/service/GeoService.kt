@@ -29,5 +29,5 @@ interface GeoService<T> {
      *
      * @param mapName map name
      */
-    fun getStyleJson(mapName: String): String
+    suspend fun getStyleJson(mapName: String): String
 }
