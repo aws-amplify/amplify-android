@@ -238,6 +238,21 @@ interface Auth {
     )
 
     /**
+     * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `tony44`; or an email/phone number, depending on configuration
+     * @param newPassword The user's desired new password
+     * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
+     */
+    @Throws(AuthException::class)
+    suspend fun confirmResetPassword(
+        username: String,
+        newPassword: String,
+        confirmationCode: String
+    )
+
+    /**
      * Update the password of an existing user - must be signed in to perform this action.
      * @param oldPassword The user's existing password
      * @param newPassword The new password desired on the user account

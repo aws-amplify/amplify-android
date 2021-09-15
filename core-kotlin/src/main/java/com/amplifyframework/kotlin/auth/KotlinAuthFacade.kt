@@ -232,6 +232,22 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
+    override suspend fun confirmResetPassword(
+        username: String,
+        newPassword: String,
+        confirmationCode: String
+    ) {
+        return suspendCoroutine { continuation ->
+            delegate.confirmResetPassword(
+                username,
+                newPassword,
+                confirmationCode,
+                { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
     override suspend fun updatePassword(oldPassword: String, newPassword: String) {
         return suspendCoroutine { continuation ->
             delegate.updatePassword(

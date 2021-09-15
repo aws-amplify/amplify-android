@@ -339,12 +339,36 @@ public final class SynchronousAuth {
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @throws AuthException exception
      */
+    @Deprecated
     public void confirmResetPassword(
             @NonNull String newPassword,
             @NonNull String confirmationCode
     ) throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.confirmResetPassword(
+                    newPassword,
+                    confirmationCode,
+                    () -> onResult.accept(VoidResult.instance()),
+                    onError
+                )
+        );
+    }
+
+    /**
+     * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param newPassword The user's desired new password
+     * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @throws AuthException exception
+     */
+    public void confirmResetPassword(
+            @NonNull String username,
+            @NonNull String newPassword,
+            @NonNull String confirmationCode
+    ) throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.confirmResetPassword(
+                    username,
                     newPassword,
                     confirmationCode,
                     () -> onResult.accept(VoidResult.instance()),

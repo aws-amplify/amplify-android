@@ -307,6 +307,16 @@ public interface RxAuthCategoryBehavior {
     Completable confirmResetPassword(@NonNull String newPassword, @NonNull String confirmationCode);
 
     /**
+     * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param newPassword The user's desired new password
+     * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @return An Rx {@link Completable} which completes successfully if password reset is confirmed,
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable confirmResetPassword(@NonNull String username, @NonNull String newPassword, @NonNull String confirmationCode);
+
+    /**
      * Update the password of an existing user - must be signed in to perform this action.
      * @param oldPassword The user's existing password
      * @param newPassword The new password desired on the user account

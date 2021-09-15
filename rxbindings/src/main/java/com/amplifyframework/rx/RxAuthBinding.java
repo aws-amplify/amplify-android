@@ -206,9 +206,16 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
+    @Deprecated
     public Completable confirmResetPassword(@NonNull String newPassword, @NonNull String confirmationCode) {
         return toCompletable((onComplete, onError) ->
             delegate.confirmResetPassword(newPassword, confirmationCode, onComplete, onError));
+    }
+
+    @Override
+    public Completable confirmResetPassword(@NonNull String username, @NonNull String newPassword, @NonNull String confirmationCode) {
+        return toCompletable((onComplete, onError) ->
+                delegate.confirmResetPassword(username, newPassword, confirmationCode, onComplete, onError));
     }
 
     @Override

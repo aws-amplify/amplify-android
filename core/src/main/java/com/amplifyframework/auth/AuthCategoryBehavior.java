@@ -335,7 +335,23 @@ public interface AuthCategoryBehavior {
      * @param onSuccess Success callback
      * @param onError Error callback
      */
+    @Deprecated
     void confirmResetPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param newPassword The user's desired new password
+     * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull Action onSuccess,
