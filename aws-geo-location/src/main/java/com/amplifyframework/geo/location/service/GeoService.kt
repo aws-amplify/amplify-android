@@ -18,7 +18,7 @@ package com.amplifyframework.geo.location.service
 /**
  * Backend provider for Geo Amazon Location Geo plugin.
  */
-interface GeoService<T> {
+internal interface GeoService<T> {
     /**
      * Backend provider for Geo data.
      */

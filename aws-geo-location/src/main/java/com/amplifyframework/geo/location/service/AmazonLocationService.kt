@@ -20,9 +20,8 @@ import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.regions.Region
 import com.amazonaws.services.geo.AmazonLocationClient
 import com.amazonaws.services.geo.model.GetMapStyleDescriptorRequest
-import com.amplifyframework.AmplifyException
-import com.amplifyframework.geo.GeoException
 import com.amplifyframework.util.UserAgent
+
 import java.nio.ByteBuffer
 
 /**
@@ -31,7 +30,7 @@ import java.nio.ByteBuffer
  * @param credentialsProvider AWS credentials provider for authorizing API calls
  * @param region AWS region for the Amazon Location Service
  */
-class AmazonLocationService(
+internal class AmazonLocationService(
     credentialsProvider: AWSCredentialsProvider,
     region: String
 ) : GeoService<AmazonLocationClient> {
@@ -48,13 +47,7 @@ class AmazonLocationService(
         val request = GetMapStyleDescriptorRequest()
             .withMapName(mapName)
         val response = provider.getMapStyleDescriptor(request)
-        return try {
-            readFromBuffer(response.blob)
-        } catch (error: Exception) {
-            throw GeoException("Failed to read style descriptor blob.", error,
-                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-            )
-        }
+        return readFromBuffer(response.blob)
     }
 
     private fun readFromBuffer(buffer: ByteBuffer): String {
