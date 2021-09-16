@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.util.GsonObjectConverter;
 
@@ -84,9 +85,11 @@ public final class SerializedModelAdapter
         for (Map.Entry<String, JsonElement> item : serializedDataObject.entrySet()) {
             ModelField field = modelSchema.getFields().get(item.getKey());
             if (field != null && field.isModel()) {
+                SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+                ModelSchema nestedModelSchema = schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
                 serializedData.put(field.getName(), SerializedModel.builder()
                     .serializedData(Collections.singletonMap("id", item.getValue().getAsString()))
-                    .modelSchema(null)
+                    .modelSchema(nestedModelSchema)
                     .build());
             }
         }
