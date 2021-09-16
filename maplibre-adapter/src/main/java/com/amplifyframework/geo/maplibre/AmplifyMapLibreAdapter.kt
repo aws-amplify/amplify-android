@@ -88,6 +88,7 @@ object AmplifyMapLibreAdapter {
                 .build()
         }
 
+        // Network request must be on a worker thread
         geo.getMapStyleDescriptor(
             options,
             {

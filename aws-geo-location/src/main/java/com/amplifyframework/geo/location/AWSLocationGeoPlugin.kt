@@ -32,8 +32,8 @@ import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 
-import kotlinx.coroutines.*
 import org.json.JSONObject
+import java.util.concurrent.Executors
 
 /**
  * A plugin for the Geo category to interact with Amazon Location Service.
@@ -50,7 +50,7 @@ class AWSLocationGeoPlugin(
     private lateinit var configuration: GeoConfiguration
     private lateinit var geoService: GeoService<AmazonLocationClient>
 
-    private val pluginScope = CoroutineScope(Job() + Dispatchers.Default)
+    private val executor = Executors.newCachedThreadPool()
     private val defaultMapName: String by lazy {
         configuration.maps!!.default.mapName
     }
@@ -113,19 +113,38 @@ class AWSLocationGeoPlugin(
         onResult: Consumer<MapStyleDescriptor>,
         onError: Consumer<GeoException>
     ) {
-        pluginScope.launch {
-            try {
+        execute(
+            {
                 val mapName = options.mapName ?: defaultMapName
-                val json = geoService.getStyleJson(mapName)
-                onResult.accept(MapStyleDescriptor(json))
-            } catch (error: Exception) {
-                onError.accept(Errors.mapsError(error))
-            }
-        }
+                val styleJson = geoService.getStyleJson(mapName)
+                MapStyleDescriptor(styleJson)
+            },
+            Errors::mapsError,
+            onResult,
+            onError
+        )
     }
 
     private fun credentialsProvider(): AWSCredentialsProvider {
         val authPlugin = authProvider.getPlugin(AUTH_PLUGIN_KEY)
         return authPlugin.escapeHatch as AWSCredentialsProvider
+    }
+
+    // Helper method that launches given task on a new worker thread.
+    private fun <T : Any> execute(
+        runnableTask: () -> T,
+        errorTransformer: (Throwable) -> GeoException,
+        onResult: Consumer<T>,
+        onError: Consumer<GeoException>
+    ) {
+        executor.execute {
+            try {
+                val result = runnableTask.invoke()
+                onResult.accept(result)
+            } catch (error: Throwable) {
+                val geoException = errorTransformer.invoke(error)
+                onError.accept(geoException)
+            }
+        }
     }
 }

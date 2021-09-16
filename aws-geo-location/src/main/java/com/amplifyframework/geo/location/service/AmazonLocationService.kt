@@ -22,7 +22,6 @@ import com.amazonaws.services.geo.AmazonLocationClient
 import com.amazonaws.services.geo.model.GetMapStyleDescriptorRequest
 import com.amplifyframework.util.UserAgent
 
-import kotlinx.coroutines.*
 import java.nio.ByteBuffer
 
 /**
@@ -31,7 +30,7 @@ import java.nio.ByteBuffer
  * @param credentialsProvider AWS credentials provider for authorizing API calls
  * @param region AWS region for the Amazon Location Service
  */
-class AmazonLocationService(
+internal class AmazonLocationService(
     credentialsProvider: AWSCredentialsProvider,
     region: String
 ) : GeoService<AmazonLocationClient> {
@@ -44,13 +43,11 @@ class AmazonLocationService(
         provider.setRegion(Region.getRegion(region))
     }
 
-    override suspend fun getStyleJson(mapName: String): String {
-        return withContext(Dispatchers.IO) {
-            val request = GetMapStyleDescriptorRequest()
-                .withMapName(mapName)
-            val response = provider.getMapStyleDescriptor(request)
-            readFromBuffer(response.blob)
-        }
+    override fun getStyleJson(mapName: String): String {
+        val request = GetMapStyleDescriptorRequest()
+            .withMapName(mapName)
+        val response = provider.getMapStyleDescriptor(request)
+        return readFromBuffer(response.blob)
     }
 
     private fun readFromBuffer(buffer: ByteBuffer): String {
