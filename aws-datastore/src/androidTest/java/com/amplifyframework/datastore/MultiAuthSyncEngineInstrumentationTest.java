@@ -38,6 +38,8 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.core.model.query.Where;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.TestStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
@@ -742,8 +744,8 @@ public final class MultiAuthSyncEngineInstrumentationTest {
         MultiAuthTestModelProvider modelProvider =
             MultiAuthTestModelProvider.getInstance(Collections.singletonList(modelType));
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-
-        modelSchemaRegistry.register(modelType.getSimpleName(), ModelSchema.fromModelClass(modelType));
+        ModelSchema modelSchema = ModelSchema.fromModelClass(modelType);
+        modelSchemaRegistry.register(modelType.getSimpleName(), modelSchema);
 
         StrictMode.enable();
         Context context = getApplicationContext();
@@ -812,6 +814,12 @@ public final class MultiAuthSyncEngineInstrumentationTest {
                                                                           "DataStore error handler received an error.",
                                                                           exception);
                                                                 })
+                .syncExpression(modelSchema.getName(), new DataStoreSyncExpression() {
+                    @Override
+                    public QueryPredicate resolvePredicate() {
+                        return Where.id("FAKE_ID").getQueryPredicate();
+                    }
+                })
                                                                 .build();
         CategoryConfiguration dataStoreCategoryConfiguration =
             AmplifyConfiguration.fromConfigFile(context, configResourceId)
