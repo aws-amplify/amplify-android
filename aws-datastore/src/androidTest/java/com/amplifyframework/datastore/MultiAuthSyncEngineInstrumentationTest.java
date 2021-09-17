@@ -744,8 +744,8 @@ public final class MultiAuthSyncEngineInstrumentationTest {
         MultiAuthTestModelProvider modelProvider =
             MultiAuthTestModelProvider.getInstance(Collections.singletonList(modelType));
         SchemaRegistry schemaRegistry = SchemaRegistry.instance();
-
-        schemaRegistry.register(modelType.getSimpleName(), ModelSchema.fromModelClass(modelType));
+        ModelSchema modelSchema = ModelSchema.fromModelClass(modelType);
+        schemaRegistry.register(modelType.getSimpleName(), modelSchema);
 
         StrictMode.enable();
         Context context = getApplicationContext();
