@@ -105,7 +105,9 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
         });
 
         disposable = itemChangeSubject
-                .filter(x -> x.item().getClass().isAssignableFrom(itemClass) && sqlQueryProcessor.modelExists(x.item(), options.getQueryPredicate()))
+                .filter( x -> x.item().getClass().isAssignableFrom(itemClass) &&
+                        sqlQueryProcessor.modelExists(x.item(), options.getQueryPredicate()) &&
+                        x.initiator() == StorageItemChange.Initiator.SYNC_ENGINE)
                 .subscribe(
                         onItemChanged::accept,
                         failure -> {
@@ -168,6 +170,7 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
                             syncStatus.get(itemClass.getSimpleName(), onObservationError),
                             changedItemList);
             getListConsumer(onQuerySnapshot).accept(dataStoreQuerySnapshot);
+            changedItemList.clear();
         } catch (DataStoreException exception) {
             onObservationError.accept(exception);
         }
