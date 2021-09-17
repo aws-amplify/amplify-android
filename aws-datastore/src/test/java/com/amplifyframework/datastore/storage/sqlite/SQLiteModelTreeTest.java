@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.ModelField;
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(RobolectricTestRunner.class)
 public final class SQLiteModelTreeTest {
     private SQLiteModelTree modelTree;
-    private ModelSchemaRegistry registry;
+    private SchemaRegistry registry;
     private SQLiteDatabase database;
 
     /**
@@ -55,7 +55,7 @@ public final class SQLiteModelTreeTest {
     @Before
     public void setUp() throws AmplifyException {
         SQLiteDatabase.OpenParams openParams = new SQLiteDatabase.OpenParams.Builder().build();
-        registry = ModelSchemaRegistry.instance();
+        registry = SchemaRegistry.instance();
         database = SQLiteDatabase.createInMemory(openParams);
         modelTree = new SQLiteModelTree(registry, database);
 

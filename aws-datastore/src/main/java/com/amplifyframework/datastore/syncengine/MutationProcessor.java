@@ -22,7 +22,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
@@ -53,7 +53,7 @@ final class MutationProcessor {
 
     private final Merger merger;
     private final VersionRepository versionRepository;
-    private final ModelSchemaRegistry modelSchemaRegistry;
+    private final SchemaRegistry schemaRegistry;
     private final MutationOutbox mutationOutbox;
     private final AppSync appSync;
     private final ConflictResolver conflictResolver;
@@ -62,7 +62,7 @@ final class MutationProcessor {
     private MutationProcessor(Builder builder) {
         this.merger = Objects.requireNonNull(builder.merger);
         this.versionRepository = Objects.requireNonNull(builder.versionRepository);
-        this.modelSchemaRegistry = Objects.requireNonNull(builder.modelSchemaRegistry);
+        this.schemaRegistry = Objects.requireNonNull(builder.schemaRegistry);
         this.mutationOutbox = Objects.requireNonNull(builder.mutationOutbox);
         this.appSync = Objects.requireNonNull(builder.appSync);
         this.conflictResolver = Objects.requireNonNull(builder.conflictResolver);
@@ -187,7 +187,11 @@ final class MutationProcessor {
     ) {
         final SerializedModel originalModel = (SerializedModel) modelWithMetadata.getModel();
         final SerializedModel newModel = SerializedModel.builder()
-            .serializedData(originalModel.getSerializedData())
+            .serializedData(SerializedModel.parseSerializedData(
+                    originalModel.getSerializedData(),
+                    modelSchema.getName(),
+                    schemaRegistry
+            ))
             .modelSchema(modelSchema)
             .build();
         return new ModelWithMetadata<>(newModel, modelWithMetadata.getSyncMetadata());
@@ -267,7 +271,7 @@ final class MutationProcessor {
     private <T extends Model> Single<ModelWithMetadata<T>> update(PendingMutation<T> mutation) {
         final T updatedItem = mutation.getMutatedItem();
         final ModelSchema updatedItemSchema =
-            this.modelSchemaRegistry.getModelSchemaForModelClass(updatedItem.getModelName());
+            this.schemaRegistry.getModelSchemaForModelClass(updatedItem.getModelName());
         return versionRepository.findModelVersion(updatedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
                 appSync.update(model, updatedItemSchema, version, mutation.getPredicate(), onSuccess, onError)
@@ -279,7 +283,7 @@ final class MutationProcessor {
     private <T extends Model> Single<ModelWithMetadata<T>> create(PendingMutation<T> mutation) {
         final T createdItem = mutation.getMutatedItem();
         final ModelSchema createdItemSchema =
-            this.modelSchemaRegistry.getModelSchemaForModelClass(createdItem.getModelName());
+            this.schemaRegistry.getModelSchemaForModelClass(createdItem.getModelName());
         return publishWithStrategy(mutation, (model, onSuccess, onError) ->
             appSync.create(model, createdItemSchema, onSuccess, onError));
     }
@@ -288,7 +292,7 @@ final class MutationProcessor {
     private <T extends Model> Single<ModelWithMetadata<T>> delete(PendingMutation<T> mutation) {
         final T deletedItem = mutation.getMutatedItem();
         final ModelSchema deletedItemSchema =
-            this.modelSchemaRegistry.getModelSchemaForModelClass(deletedItem.getModelName());
+            this.schemaRegistry.getModelSchemaForModelClass(deletedItem.getModelName());
         return versionRepository.findModelVersion(deletedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
                 appSync.delete(
@@ -383,7 +387,7 @@ final class MutationProcessor {
             BuilderSteps.BuildStep {
         private Merger merger;
         private VersionRepository versionRepository;
-        private ModelSchemaRegistry modelSchemaRegistry;
+        private SchemaRegistry schemaRegistry;
         private MutationOutbox mutationOutbox;
         private AppSync appSync;
         private ConflictResolver conflictResolver;
@@ -404,8 +408,8 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.MutationOutboxStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
-            Builder.this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
+        public BuilderSteps.MutationOutboxStep schemaRegistry(@NonNull SchemaRegistry schemaRegistry) {
+            Builder.this.schemaRegistry = Objects.requireNonNull(schemaRegistry);
             return Builder.this;
         }
 
@@ -450,7 +454,7 @@ final class MutationProcessor {
 
         interface ModelSchemaRegistryStep {
             @NonNull
-            MutationOutboxStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry);
+            MutationOutboxStep schemaRegistry(@NonNull SchemaRegistry schemaRegistry);
         }
 
         interface MutationOutboxStep {
