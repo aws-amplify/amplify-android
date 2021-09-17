@@ -1,3 +1,14 @@
+## [Release 0.10.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.10.0)
+
+### Features
+- **datastore:** Add non-model type support for amplify-flutter (#1459)
+
+### Bug Fixes
+- **auth:** check for correct exception type when signing out globally (#1473)
+- **auth:** null-check username when getting current user (#1490)
+
+[See all changes between 0.9.1 and 0.10.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.9.1...release-kotlin_v0.10.0)
+
 ## [Release 0.9.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.9.1)
 
 ### Miscellaneous
