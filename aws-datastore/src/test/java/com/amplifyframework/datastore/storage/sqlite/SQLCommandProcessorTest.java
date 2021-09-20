@@ -21,7 +21,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
@@ -52,7 +52,7 @@ public class SQLCommandProcessorTest {
     private SQLCommandFactory sqlCommandFactory;
     private SQLCommandProcessor sqlCommandProcessor;
     private SQLiteDatabase sqliteDatabase;
-    private ModelSchemaRegistry modelSchemaRegistry;
+    private SchemaRegistry schemaRegistry;
     private Gson gson;
 
     /**
@@ -62,15 +62,15 @@ public class SQLCommandProcessorTest {
     @Before
     public void setup() throws AmplifyException {
         ModelProvider modelProvider = AmplifyModelProvider.getInstance();
-        modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.register(modelProvider.models());
-        sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry, GsonFactory.instance());
-        sqliteDatabase = createDatabase(modelProvider, modelSchemaRegistry);
+        schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(modelProvider.models());
+        sqlCommandFactory = new SQLiteCommandFactory(schemaRegistry, GsonFactory.instance());
+        sqliteDatabase = createDatabase(modelProvider, schemaRegistry);
         sqlCommandProcessor = new SQLCommandProcessor(sqliteDatabase);
         gson = GsonFactory.instance();
     }
 
-    private SQLiteDatabase createDatabase(ModelProvider modelProvider, ModelSchemaRegistry registry) {
+    private SQLiteDatabase createDatabase(ModelProvider modelProvider, SchemaRegistry registry) {
         SQLiteDatabase.OpenParams openParams = new SQLiteDatabase.OpenParams.Builder().build();
         SQLiteDatabase db = SQLiteDatabase.createInMemory(openParams);
         db.beginTransaction();
@@ -94,7 +94,7 @@ public class SQLCommandProcessorTest {
      */
     @After
     public void clear() {
-        modelSchemaRegistry.clear();
+        schemaRegistry.clear();
         sqliteDatabase.close();
     }
 
@@ -118,7 +118,7 @@ public class SQLCommandProcessorTest {
         List<BlogOwner> results = new ArrayList<>();
 
         SQLiteModelFieldTypeConverter converter = new SQLiteModelFieldTypeConverter(blogOwnerSchema,
-                modelSchemaRegistry,
+                schemaRegistry,
                 GsonFactory.instance());
 
         if (cursor.moveToFirst()) {

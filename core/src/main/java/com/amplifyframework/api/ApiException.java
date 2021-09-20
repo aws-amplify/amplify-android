@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Exception thrown by API category plugins.
  */
@@ -50,6 +52,23 @@ public class ApiException extends AmplifyException {
             @NonNull final String recoverySuggestion
     ) {
         super(message, recoverySuggestion);
+    }
+
+    /**
+     * This type of exception should not be retried.
+     */
+    public static final class NonRetryableException extends ApiException {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * Constructor for NonRetryable Exception.
+         * @param message message for exception.
+         * @param recoverySuggestion recovery suggestions.
+         */
+        public NonRetryableException(@NonNull @NotNull String message, @NotNull String recoverySuggestion) {
+
+            super(message, recoverySuggestion);
+        }
     }
 
     /**

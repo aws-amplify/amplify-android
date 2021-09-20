@@ -180,7 +180,17 @@ public enum SqlKeyword {
     /**
      * SQL keyword meaning to sort in descending order, for use with ORDER_BY.
      */
-    DESC("DESC");
+    DESC("DESC"),
+
+    /**
+     * SQL keyword for check whether a field is null.
+     */
+    IS_NULL("IS NULL"),
+
+    /**
+     * SQL keyword for check whether a field is not null.
+     */
+    IS_NOT_NULL("IS NOT NULL");
 
     private static final Map<QueryOperator.Type, SqlKeyword> QUERY_OPERATOR_TO_SQL = new HashMap<>();
     private static final Map<QueryPredicateGroup.Type, SqlKeyword> QUERY_PREDICATE_GROUP_TO_SQL = new HashMap<>();

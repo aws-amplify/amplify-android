@@ -22,7 +22,7 @@ import androidx.core.util.Supplier;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
@@ -73,7 +73,7 @@ public final class Orchestrator {
      * The Orchestrator will synchronize data between the {@link AppSync}
      * and the {@link LocalStorageAdapter}.
      * @param modelProvider A provider of the models to be synchronized
-     * @param modelSchemaRegistry A registry of model schema
+     * @param schemaRegistry A registry of model schema and customType schema
      * @param localStorageAdapter
      *        used to durably store offline changes until they can be written to the network
      * @param appSync An AppSync Endpoint
@@ -84,15 +84,17 @@ public final class Orchestrator {
      *        The reference to the variable returned by the provider only get set after the plugin's
      *        {@link AWSDataStorePlugin#configure(JSONObject, Context)} is invoked by Amplify.
      * @param targetState The desired state of operation - online, or offline
+     * @param isSyncRetryEnabled enable or disable the SyncProcessor retry
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
-            @NonNull final ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull final SchemaRegistry schemaRegistry,
             @NonNull final LocalStorageAdapter localStorageAdapter,
             @NonNull final AppSync appSync,
             @NonNull final DataStoreConfigurationProvider dataStoreConfigurationProvider,
-            @NonNull final Supplier<State> targetState) {
-        Objects.requireNonNull(modelSchemaRegistry);
+            @NonNull final Supplier<State> targetState,
+            final boolean isSyncRetryEnabled) {
+        Objects.requireNonNull(schemaRegistry);
         Objects.requireNonNull(modelProvider);
         Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
@@ -107,23 +109,26 @@ public final class Orchestrator {
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
             .versionRepository(versionRepository)
-            .modelSchemaRegistry(modelSchemaRegistry)
+            .schemaRegistry(schemaRegistry)
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)
             .build();
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
-            .modelSchemaRegistry(modelSchemaRegistry)
+            .schemaRegistry(schemaRegistry)
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .queryPredicateProvider(queryPredicateProvider)
+            .retryHandler(new RetryHandler())
+                .isSyncRetryEnabled(isSyncRetryEnabled)
             .build();
         this.subscriptionProcessor = SubscriptionProcessor.builder()
                 .appSync(appSync)
                 .modelProvider(modelProvider)
+                .schemaRegistry(schemaRegistry)
                 .merger(merger)
                 .queryPredicateProvider(queryPredicateProvider)
                 .onFailure(this::onApiSyncFailure)
@@ -264,15 +269,12 @@ public final class Orchestrator {
     private void startObservingStorageChanges() throws DataStoreException {
         LOG.info("Starting to observe local storage changes.");
         try {
-            boolean subscribed = mutationOutbox.load()
+            mutationOutbox.load()
                 .andThen(Completable.create(emitter -> {
                     storageObserver.startObservingStorageChanges(emitter::onComplete);
                     LOG.info("Setting currentState to LOCAL_ONLY");
                     currentState.set(State.LOCAL_ONLY);
-                })).blockingAwait(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            if (!subscribed) {
-                throw new TimeoutException("Timed out while preparing local-only mode.");
-            }
+                })).blockingAwait();
         } catch (Throwable throwable) {
             throw new DataStoreException("Timed out while starting to observe storage changes.",
                 throwable,
@@ -292,7 +294,6 @@ public final class Orchestrator {
 
     /**
      * Start syncing models to and from a remote API.
-     * @return A Completable that succeeds when API sync is enabled.
      */
     private void startApiSync() {
         LOG.info("Setting currentState to SYNC_VIA_API");

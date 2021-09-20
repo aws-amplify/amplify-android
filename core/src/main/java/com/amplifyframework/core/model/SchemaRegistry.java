@@ -27,12 +27,16 @@ import java.util.Set;
 /**
  * A utility that creates ModelSchema from Model classes.
  */
-public final class ModelSchemaRegistry {
+public final class SchemaRegistry {
+    private static SchemaRegistry instance;
     // Model ClassName => ModelSchema map
     private final Map<String, ModelSchema> modelSchemaMap;
+    // CustomType name => CustomTypeSchema map
+    private final Map<String, CustomTypeSchema> customTypeSchemaMap;
 
-    private ModelSchemaRegistry() {
+    private SchemaRegistry() {
         modelSchemaMap = new HashMap<>();
+        customTypeSchemaMap = new HashMap<>();
     }
 
     /**
@@ -57,12 +61,34 @@ public final class ModelSchemaRegistry {
     }
 
     /**
+     * Register the modelSchemas and customTypeSchemas provided.
+     * This method is consumed with Flutter use cases.
+     * @param modelSchemas the map that contains mapping of ModelName to ModelSchema.
+     * @param customTypeSchemas the map that contains mapping of CustomTypeName to CustomTypeSchema.
+     */
+    public synchronized void register(
+            @NonNull Map<String, ModelSchema> modelSchemas,
+            @NonNull Map<String, CustomTypeSchema> customTypeSchemas) {
+        modelSchemaMap.putAll(modelSchemas);
+        customTypeSchemaMap.putAll(customTypeSchemas);
+    }
+
+    /**
      * Registers the modelSchema for the given modelName.
      * @param modelName name of the model
      * @param modelSchema schema of the model to be registered.
      */
     public synchronized void register(@NonNull String modelName, @NonNull ModelSchema modelSchema) {
         modelSchemaMap.put(modelName, modelSchema);
+    }
+
+    /**
+     * Registers the customTypeSchema for the given customTypeName.
+     * @param customTypeName name of the model
+     * @param customTypeSchema schema of the model to be registered.
+     */
+    public synchronized void register(@NonNull String customTypeName, @NonNull CustomTypeSchema customTypeSchema) {
+        customTypeSchemaMap.put(customTypeName, customTypeSchema);
     }
 
     /**
@@ -73,6 +99,16 @@ public final class ModelSchemaRegistry {
      */
     public synchronized ModelSchema getModelSchemaForModelClass(@NonNull String classSimpleName) {
         return modelSchemaMap.get(classSimpleName);
+    }
+
+    /**
+     * Retrieve the CustomTypeSchema object for the given custom type name.
+     * @param customTypeName name of the custom type retrieved through field target type
+     *                       {@link CustomTypeField#getTargetType()}
+     * @return the ModelSchema object for the given Model class (non-model type).
+     */
+    public synchronized CustomTypeSchema getCustomTypeSchemaForCustomTypeClass(@NonNull String customTypeName) {
+        return customTypeSchemaMap.get(customTypeName);
     }
 
     /**
@@ -105,12 +141,25 @@ public final class ModelSchemaRegistry {
     }
 
     /**
+     * Retrieve the map of Model CustomTypeName => CustomTypeSchema.
+     * @return an immutable map of Model CustomTypeName => CustomTypeSchema
+     */
+    @NonNull
+    public Map<String, CustomTypeSchema> getCustomTypeSchemaMap() {
+        return Immutable.of(customTypeSchemaMap);
+    }
+
+    /**
      * Creates a new instance.
      * @return A new instance
      */
     @NonNull
-    public static synchronized ModelSchemaRegistry instance() {
-        return new ModelSchemaRegistry();
+    public static synchronized SchemaRegistry instance() {
+        if (SchemaRegistry.instance == null) {
+            SchemaRegistry.instance = new SchemaRegistry();
+        }
+
+        return SchemaRegistry.instance;
     }
 
     /**
@@ -118,5 +167,6 @@ public final class ModelSchemaRegistry {
      */
     public void clear() {
         this.modelSchemaMap.clear();
+        this.customTypeSchemaMap.clear();
     }
 }

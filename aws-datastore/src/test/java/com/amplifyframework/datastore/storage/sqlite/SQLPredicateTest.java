@@ -103,6 +103,28 @@ public class SQLPredicateTest {
         validateSQLExpressionForNotContains(sqlPredicate, "tags");
     }
 
+    /**
+     * Test IS NOT NULL expression.
+     * @throws DataStoreException Not thrown.
+     */
+    @Test
+    public void testNotNull() throws DataStoreException {
+        SQLPredicate sqlPredicate = new SQLPredicate(Where.matches(Blog.NAME.ne(null)).getQueryPredicate());
+        System.out.println(sqlPredicate.toString());
+        assertEquals("name IS NOT NULL", sqlPredicate.toString());
+    }
+
+    /**
+     * Test IS NULL expression.
+     * @throws DataStoreException Not thrown.
+     */
+    @Test
+    public void testIsNull() throws DataStoreException {
+        SQLPredicate sqlPredicate = new SQLPredicate(Where.matches(Blog.NAME.eq(null)).getQueryPredicate());
+        System.out.println(sqlPredicate.toString());
+        assertEquals("name IS NULL", sqlPredicate.toString());
+    }
+
     private void validateSQLExpressionForContains(SQLPredicate sqlPredicate, String fieldName) {
         assertEquals(1, sqlPredicate.getBindings().size());
         assertEquals("something", sqlPredicate.getBindings().get(0));

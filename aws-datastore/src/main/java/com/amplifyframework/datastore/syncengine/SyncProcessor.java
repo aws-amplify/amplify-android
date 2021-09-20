@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Amplify;
@@ -25,7 +26,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.AmplifyDisposables;
@@ -66,17 +67,19 @@ final class SyncProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final ModelProvider modelProvider;
-    private final ModelSchemaRegistry modelSchemaRegistry;
+    private final SchemaRegistry schemaRegistry;
     private final SyncTimeRegistry syncTimeRegistry;
     private final AppSync appSync;
     private final Merger merger;
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
     private final String[] modelNames;
     private final QueryPredicateProvider queryPredicateProvider;
+    private final RetryHandler requestRetry;
+    private final boolean isSyncRetryEnabled;
 
     private SyncProcessor(Builder builder) {
         this.modelProvider = builder.modelProvider;
-        this.modelSchemaRegistry = builder.modelSchemaRegistry;
+        this.schemaRegistry = builder.schemaRegistry;
         this.syncTimeRegistry = builder.syncTimeRegistry;
         this.appSync = builder.appSync;
         this.merger = builder.merger;
@@ -85,6 +88,8 @@ final class SyncProcessor {
         this.modelNames =
             ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
                 .toArray(new String[0]);
+        this.requestRetry = builder.requestRetry;
+        this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
     }
 
     /**
@@ -107,7 +112,7 @@ final class SyncProcessor {
         // And sort them all, according to their model's topological order,
         // So that when we save them, the references will exist.
         TopologicalOrdering ordering =
-            TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
+            TopologicalOrdering.forRegisteredModels(schemaRegistry, modelProvider);
         Collections.sort(modelSchemas, ordering::compare);
         for (ModelSchema schema : modelSchemas) {
             hydrationTasks.add(createHydrationTask(schema));
@@ -221,7 +226,13 @@ final class SyncProcessor {
                 BehaviorProcessor.createDefault(
                         appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate));
 
-        return processor.concatMap(request -> syncPage(request).toFlowable())
+        return processor.concatMap(request -> {
+            if (isSyncRetryEnabled) {
+                return syncPageWithRetry(request).toFlowable();
+            } else {
+                return syncPage(request).toFlowable();
+            }
+        })
                 .doOnNext(paginatedResult -> {
                     if (paginatedResult.hasNextResult()) {
                         processor.onNext(paginatedResult.getRequestForNextResult());
@@ -244,7 +255,11 @@ final class SyncProcessor {
         if (original.getModel() instanceof SerializedModel) {
             SerializedModel originalModel = (SerializedModel) original.getModel();
             SerializedModel newModel = SerializedModel.builder()
-                    .serializedData(originalModel.getSerializedData())
+                    .serializedData(SerializedModel.parseSerializedData(
+                            originalModel.getSerializedData(),
+                            schema.getName(),
+                            schemaRegistry
+                    ))
                     .modelSchema(schema)
                     .build();
             return new ModelWithMetadata<>((T) newModel, original.getSyncMetadata());
@@ -269,7 +284,7 @@ final class SyncProcessor {
                             "Check your schema."
                     ));
                 } else if (!result.hasData()) {
-                    emitter.onError(new DataStoreException(
+                    emitter.onError(new DataStoreException.IrRecoverableException(
                             "Empty response from AppSync.", "Report to AWS team."
                     ));
                 } else {
@@ -280,31 +295,41 @@ final class SyncProcessor {
         });
     }
 
+    private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPageWithRetry(
+            GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
+        List<Class<? extends Throwable>> skipException = new ArrayList<>();
+        skipException.add(DataStoreException.GraphQLResponseException.class);
+        skipException.add(ApiException.NonRetryableException.class);
+        return requestRetry.retry(syncPage(request), skipException);
+    }
+
     /**
      * Builds instances of {@link SyncProcessor}s.
      */
-    public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep,
+    public static final class Builder implements ModelProviderStep, SchemaRegistryStep,
             SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep,
-            QueryPredicateProviderStep, BuildStep {
+            QueryPredicateProviderStep, RetryHandlerStep, SyncRetryStep, BuildStep {
         private ModelProvider modelProvider;
-        private ModelSchemaRegistry modelSchemaRegistry;
+        private SchemaRegistry schemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
         private AppSync appSync;
         private Merger merger;
         private DataStoreConfigurationProvider dataStoreConfigurationProvider;
         private QueryPredicateProvider queryPredicateProvider;
+        private RetryHandler requestRetry;
+        private boolean isSyncRetryEnabled;
 
         @NonNull
         @Override
-        public ModelSchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider) {
+        public SchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider) {
             this.modelProvider = Objects.requireNonNull(modelProvider);
             return Builder.this;
         }
 
         @NonNull
         @Override
-        public SyncTimeRegistryStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
-            this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
+        public SyncTimeRegistryStep schemaRegistry(@NonNull SchemaRegistry schemaRegistry) {
+            this.schemaRegistry = Objects.requireNonNull(schemaRegistry);
             return Builder.this;
         }
 
@@ -339,8 +364,15 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
+        public RetryHandlerStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider) {
             this.queryPredicateProvider = Objects.requireNonNull(queryPredicateProvider);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuildStep isSyncRetryEnabled(boolean isSyncRetryEnabled) {
+            this.isSyncRetryEnabled = isSyncRetryEnabled;
             return Builder.this;
         }
 
@@ -349,16 +381,23 @@ final class SyncProcessor {
         public SyncProcessor build() {
             return new SyncProcessor(this);
         }
+
+        @NonNull
+        @Override
+        public SyncRetryStep retryHandler(RetryHandler requestRetry) {
+            this.requestRetry = requestRetry;
+            return Builder.this;
+        }
     }
 
     interface ModelProviderStep {
         @NonNull
-        ModelSchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider);
+        SchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider);
     }
 
-    interface ModelSchemaRegistryStep {
+    interface SchemaRegistryStep {
         @NonNull
-        SyncTimeRegistryStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry);
+        SyncTimeRegistryStep schemaRegistry(@NonNull SchemaRegistry schemaRegistry);
     }
 
     interface SyncTimeRegistryStep {
@@ -384,7 +423,17 @@ final class SyncProcessor {
 
     interface QueryPredicateProviderStep {
         @NonNull
-        BuildStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
+        RetryHandlerStep queryPredicateProvider(QueryPredicateProvider queryPredicateProvider);
+    }
+
+    interface RetryHandlerStep {
+        @NonNull
+        SyncRetryStep retryHandler(RetryHandler requestRetry);
+    }
+
+    interface SyncRetryStep {
+        @NonNull
+        BuildStep isSyncRetryEnabled(boolean isSyncRetryEnabled);
     }
 
     interface BuildStep {
