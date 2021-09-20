@@ -53,6 +53,7 @@ object AmplifyMapLibreAdapter {
      * @param context Android context which holds or is an application context
      * @return the single instance of Mapbox
      */
+    @JvmStatic
     fun getInstance(context: Context): AmplifyMapLibreAdapter {
         return synchronized(this) {
             Mapbox.getInstance(context, null, WellKnownTileServer.Mapbox)
@@ -77,6 +78,7 @@ object AmplifyMapLibreAdapter {
      * @param style Amplify map style to use
      * @param callback Callback to trigger upon successfully loading map style
      */
+    @JvmStatic
     @JvmOverloads
     fun setStyle(map: MapboxMap, style: MapStyle? = null, callback: Style.OnStyleLoaded) {
         val options = if (style == null) {
