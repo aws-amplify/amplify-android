@@ -810,17 +810,11 @@ public final class MultiAuthSyncEngineInstrumentationTest {
 
         // Setup DataStore
         DataStoreConfiguration dsConfig = DataStoreConfiguration.builder()
-                                                .errorHandler(exception -> {
-                                                    Log.e(tag,
-                                                          "DataStore error handler received an error.",
-                                                          exception);
-                                                })
-                                                .syncExpression(modelSchema.getName(), new DataStoreSyncExpression() {
-                                                    @Override
-                                                    public QueryPredicate resolvePredicate() {
-                                                        return Where.id("FAKE_ID").getQueryPredicate();
-                                                    }
-                                                })
+                                                .errorHandler(exception -> Log.e(tag,
+                                                        "DataStore error handler received an error.",
+                                                        exception))
+                                                .syncExpression(modelSchema.getName(),
+                                                                () -> Where.id("FAKE_ID").getQueryPredicate())
                                                 .build();
         CategoryConfiguration dataStoreCategoryConfiguration =
             AmplifyConfiguration.fromConfigFile(context, configResourceId)
