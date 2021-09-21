@@ -28,6 +28,7 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.devmenu.DeveloperMenu;
+import com.amplifyframework.geo.GeoCategory;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
@@ -72,6 +73,7 @@ public final class Amplify {
     @SuppressWarnings("checkstyle:all") public static final AuthCategory Auth = new AuthCategory();
     @SuppressWarnings("checkstyle:all") public static final LoggingCategory Logging = new LoggingCategory();
     @SuppressWarnings("checkstyle:all") public static final StorageCategory Storage = new StorageCategory();
+    @SuppressWarnings("checkstyle:all") public static final GeoCategory Geo = new GeoCategory();
     @SuppressWarnings("checkstyle:all") public static final HubCategory Hub = new HubCategory();
     @SuppressWarnings("checkstyle:all") public static final DataStoreCategory DataStore = new DataStoreCategory();
     @SuppressWarnings("checkstyle:all") public static final PredictionsCategory Predictions = new PredictionsCategory();
@@ -95,11 +97,12 @@ public final class Amplify {
     // We are relying on the ordering of this data-structure, for configuration.
     private static LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> buildCategoriesMap() {
         final LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> categories = new LinkedHashMap<>();
-        categories.put(CategoryType.AUTH, Auth); // This must be before ANALYTICS, API, STORAGE, & PREDICTIONS
+        categories.put(CategoryType.AUTH, Auth); // This must be before ANALYTICS, API, STORAGE, GEO, & PREDICTIONS
         categories.put(CategoryType.ANALYTICS, Analytics);
         categories.put(CategoryType.API, API);
         categories.put(CategoryType.LOGGING, Logging);
         categories.put(CategoryType.STORAGE, Storage);
+        categories.put(CategoryType.GEO, Geo);
         categories.put(CategoryType.HUB, Hub);
         categories.put(CategoryType.DATASTORE, DataStore);
         categories.put(CategoryType.PREDICTIONS, Predictions);
