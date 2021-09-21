@@ -13,24 +13,21 @@
  * permissions and limitations under the License.
  */
 
-include ':core'
+package com.amplifyframework.geo.location.service
 
-// Plugin Modules
-include ':aws-analytics-pinpoint'
-include ':aws-api'
-include ':aws-auth-cognito'
-include ':aws-datastore'
-include ':aws-geo-location'
-include ':aws-predictions'
-include ':aws-predictions-tensorflow'
-include ':aws-storage-s3'
+/**
+ * Backend provider for Geo Amazon Location Geo plugin.
+ */
+internal interface GeoService<T> {
+    /**
+     * Backend provider for Geo data.
+     */
+    val provider: T
 
-// Test Utilities and assets
-include ':testutils'
-include ':testmodels'
-
-// Bindings and accessory modules
-include ':core-kotlin'
-include ':rxbindings'
-include ':aws-api-appsync'
-include ':maplibre-adapter'
+    /**
+     * Gets map's style JSON in string format.
+     *
+     * @param mapName map name
+     */
+    fun getStyleJson(mapName: String): String
+}
