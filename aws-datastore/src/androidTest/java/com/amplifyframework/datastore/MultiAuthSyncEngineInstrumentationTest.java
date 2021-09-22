@@ -39,7 +39,6 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.Where;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.TestStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
@@ -744,6 +743,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
         MultiAuthTestModelProvider modelProvider =
             MultiAuthTestModelProvider.getInstance(Collections.singletonList(modelType));
         SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+
         ModelSchema modelSchema = ModelSchema.fromModelClass(modelType);
         schemaRegistry.register(modelType.getSimpleName(), modelSchema);
 
@@ -809,18 +809,12 @@ public final class MultiAuthSyncEngineInstrumentationTest {
 
         // Setup DataStore
         DataStoreConfiguration dsConfig = DataStoreConfiguration.builder()
-                                                                .errorHandler(exception -> {
-                                                                    Log.e(tag,
-                                                                          "DataStore error handler received an error.",
-                                                                          exception);
-                                                                })
-                .syncExpression(modelSchema.getName(), new DataStoreSyncExpression() {
-                    @Override
-                    public QueryPredicate resolvePredicate() {
-                        return Where.id("FAKE_ID").getQueryPredicate();
-                    }
-                })
-                                                                .build();
+                                                .errorHandler(exception -> Log.e(tag,
+                                                    "DataStore error handler received an error.",
+                                                    exception))
+                                                .syncExpression(modelSchema.getName(),
+                                                    () -> Where.id("FAKE_ID").getQueryPredicate())
+                                                .build();
         CategoryConfiguration dataStoreCategoryConfiguration =
             AmplifyConfiguration.fromConfigFile(context, configResourceId)
                                 .forCategoryType(CategoryType.DATASTORE);
