@@ -23,6 +23,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
@@ -153,7 +154,7 @@ public final class DataStoreCategory
      */
     @Override
     public <T extends Model> void observeQuery(@NonNull Class<T> itemClass,
-                             @NonNull QueryOptions options,
+                             @NonNull ObserveQueryOptions options,
                              @NonNull Consumer<Cancelable> onObservationStarted,
                              @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                              @NonNull Consumer<DataStoreException> onObservationError,
@@ -173,7 +174,10 @@ public final class DataStoreCategory
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
         getSelectedPlugin().observe(itemClass,
-            onObservationStarted, onDataStoreItemChange, onObservationFailure, onObservationCompleted);
+                onObservationStarted,
+                onDataStoreItemChange,
+                onObservationFailure,
+                onObservationCompleted);
     }
 
     /**

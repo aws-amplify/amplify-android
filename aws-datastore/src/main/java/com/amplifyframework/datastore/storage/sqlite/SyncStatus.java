@@ -22,15 +22,19 @@ public class SyncStatus {
         this.dataStoreConfiguration = dataStoreConfiguration;
     }
 
-    public boolean get(@NonNull String modelClassName, @NonNull Consumer<DataStoreException> onObservationError) throws DataStoreException {
-        LastSyncMetadata lastSyncMetadata = getLastSyncMetaData(modelClassName, onObservationError);
-        boolean syncStatus;
-        if (lastSyncMetadata.getLastSyncTime()==null){
-            syncStatus = false;
-        } else {
-            syncStatus = (Time.now() - lastSyncMetadata.getLastSyncTime())
-                    < (dataStoreConfiguration.getSyncIntervalInMinutes() * 1000);
+    public boolean get(@NonNull String modelClassName, @NonNull Consumer<DataStoreException> onObservationError) {
+        LastSyncMetadata lastSyncMetadata;
+        boolean syncStatus = false;
+        try {
+            lastSyncMetadata = getLastSyncMetaData(modelClassName, onObservationError);
+            if (lastSyncMetadata.getLastSyncTime() != null){
+                syncStatus = (Time.now() - lastSyncMetadata.getLastSyncTime())
+                        < (dataStoreConfiguration.getSyncIntervalInMinutes() * 60 * 1000);
+            }
+        } catch (DataStoreException exception) {
+            onObservationError.accept(exception);
         }
+
         return syncStatus;
     }
 

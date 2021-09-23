@@ -24,6 +24,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreConfiguration;
@@ -182,11 +183,11 @@ public interface LocalStorageAdapter {
      *        Invoked if the observation terminates do an unrecoverable error
      * @param onObservationComplete
      *        Invoked it the observation terminates gracefully, perhaps due to cancellation
+     *@param <T> The type of item being observed
      */
-    @NonNull
     <T extends Model> void observeQuery(
             @NonNull Class<T> itemClass,
-            @NonNull QueryOptions options,
+            @NonNull ObserveQueryOptions options,
             @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
             @NonNull Consumer<DataStoreException> onObservationError,

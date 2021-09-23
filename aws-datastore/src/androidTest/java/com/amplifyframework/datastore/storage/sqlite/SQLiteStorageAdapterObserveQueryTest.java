@@ -29,7 +29,7 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.core.model.query.Page;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
@@ -105,32 +105,38 @@ public final class SQLiteStorageAdapterObserveQueryTest {
 
     /**
      * Test querying the saved item in the SQLite database with observeQuery.
-     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     *
+     * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
+     * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void querySavedDataWithSingleItem() throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         final BlogOwner blogOwner = BlogOwner.builder()
-            .name("Alan Turing")
-            .build();
+                .name("Alan Turing")
+                .build();
         adapter.save(blogOwner);
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value->{
+        Consumer<Cancelable> observationStarted = value -> {
+        };
+        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
             assertTrue(value.getItems().contains(blogOwner));
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
+        Consumer<DataStoreException> onObservationError = value -> {
+        };
+        Action onObservationComplete = () -> {
+        };
 
-       adapter.observeQuery(
+        adapter.observeQuery(
                 BlogOwner.class,
-                Where.matchesAll(), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(null, null), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
         assertTrue(latch.await(1, TimeUnit.SECONDS));
     }
 
     /**
      * Test querying the saved item in the SQLite database with observeQuery.
-     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
+     * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void querySavedDataWithMultipleItems() throws DataStoreException, InterruptedException {
@@ -139,116 +145,129 @@ public final class SQLiteStorageAdapterObserveQueryTest {
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
             final BlogOwner blogOwner = BlogOwner.builder()
-                .name("namePrefix:" + counter)
-                .build();
+                    .name("namePrefix:" + counter)
+                    .build();
             adapter.save(blogOwner);
             savedModels.add(blogOwner);
         }
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value->{
-            for (BlogOwner blogOwner: savedModels) {
+        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
+            for (BlogOwner blogOwner : savedModels) {
                 assertTrue(value.getItems().contains(blogOwner));
             }
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
+        Consumer<DataStoreException> onObservationError = value -> { };
+        Action onObservationComplete = () -> { };
 
         adapter.observeQuery(
                 BlogOwner.class,
-                Where.matchesAll(), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(null, null),
+                observationStarted, onQuerySnapshot, onObservationError,
+                onObservationComplete);
         assertTrue(latch.await(1, TimeUnit.SECONDS));
     }
 
     /**
      * Test that querying the saved item with a foreign key with observeQuery
      * also populates that instance variable with object.
-     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
+     * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void querySavedDataWithForeignKey() throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         final BlogOwner blogOwner = BlogOwner.builder()
-            .name("Alan Turing")
-            .build();
+                .name("Alan Turing")
+                .build();
 
         final Blog blog = Blog.builder()
-            .name("Alan's Software Blog")
-            .owner(blogOwner)
-            .build();
+                .name("Alan's Software Blog")
+                .owner(blogOwner)
+                .build();
 
         adapter.save(blogOwner);
         adapter.save(blog);
 
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreQuerySnapshot<Blog>> onQuerySnapshot = value->{
+        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<DataStoreQuerySnapshot<Blog>> onQuerySnapshot = value -> {
             assertTrue(value.getItems().contains(blog));
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
+        Consumer<DataStoreException> onObservationError = value -> { };
+        Action onObservationComplete = () -> {
+        };
 
         adapter.observeQuery(
                 Blog.class,
-                Where.matchesAll(), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(null, null),
+                observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
         assertTrue(latch.await(1, TimeUnit.SECONDS));
     }
 
     /**
      * Test that querying the saved item with a foreign key
      * also populates that instance variable with object.
-     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
+     * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void querySavedDataWithMultiLevelJoins() throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         final BlogOwner blogOwner = BlogOwner.builder()
-            .name("Alan Turing")
-            .build();
+                .name("Alan Turing")
+                .build();
 
         final Blog blog = Blog.builder()
-            .name("Alan's Software Blog")
-            .owner(blogOwner)
-            .build();
+                .name("Alan's Software Blog")
+                .owner(blogOwner)
+                .build();
 
         final Post post = Post.builder()
-            .title("Alan's first post")
-            .status(PostStatus.ACTIVE)
-            .rating(2)
-            .blog(blog)
-            .build();
+                .title("Alan's first post")
+                .status(PostStatus.ACTIVE)
+                .rating(2)
+                .blog(blog)
+                .build();
 
         final Comment comment = Comment.builder()
-            .content("Alan's first comment")
-            .post(post)
-            .build();
+                .content("Alan's first comment")
+                .post(post)
+                .build();
 
         adapter.save(blogOwner);
         adapter.save(blog);
         adapter.save(post);
         adapter.save(comment);
 
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreQuerySnapshot<Comment>> onQuerySnapshot = value->{
+        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<DataStoreQuerySnapshot<Comment>> onQuerySnapshot = value -> {
             assertTrue(value.getItems().contains(comment));
             assertEquals(value.getItems().get(0).getPost(), post);
             assertEquals(value.getItems().get(0).getPost().getBlog(), blog);
             assertEquals(value.getItems().get(0).getPost().getBlog().getOwner(), blogOwner);
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
+        Consumer<DataStoreException> onObservationError = value -> { };
+        Action onObservationComplete = () -> { };
 
         adapter.observeQuery(
                 Comment.class,
-                Where.matchesAll(), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(null, null),
+                observationStarted, onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
         assertTrue(latch.await(1, TimeUnit.SECONDS));
     }
 
     /**
      * Test querying the saved item in the SQLite database with
      * predicate conditions.
-     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
+     * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void querySavedDataWithNumericalPredicates() throws DataStoreException, InterruptedException {
@@ -264,35 +283,34 @@ public final class SQLiteStorageAdapterObserveQueryTest {
 
         for (int counter = 0; counter < numModels; counter++) {
             final Post post = Post.builder()
-                .title("titlePrefix:" + counter)
-                .status(PostStatus.INACTIVE)
-                .rating(counter)
-                .blog(blog)
-                .build();
+                    .title("titlePrefix:" + counter)
+                    .status(PostStatus.INACTIVE)
+                    .rating(counter)
+                    .blog(blog)
+                    .build();
             adapter.save(post);
             savedModels.add(post);
         }
 
         // 1, 4, 5, 6
         QueryPredicate predicate = Post.RATING.ge(4)
-                .and(Post.RATING.lt(7))
-                .or(
-                    Post.RATING.eq(1)
-                    .and(Post.RATING.ne(7))
-                );
+            .and(Post.RATING.lt(7))
+            .or(
+                Post.RATING.eq(1)
+                        .and(Post.RATING.ne(7))
+            );
 
-        Consumer<Cancelable> observationStarted = value -> {};
+        Consumer<Cancelable> observationStarted = value -> { };
         AtomicInteger count = new AtomicInteger(0);
-        Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value->{
-            if ( count.get() == 0){
+        Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value -> {
+            if (count.get() == 0) {
                 assertTrue(value.getItems().contains(savedModels.get(1)));
                 assertTrue(value.getItems().contains(savedModels.get(4)));
                 assertTrue(value.getItems().contains(savedModels.get(5)));
                 assertTrue(value.getItems().contains(savedModels.get(6)));
                 latch.countDown();
-            } else if( count.get() == 1){
+            } else if (count.get() == 1) {
                 assertEquals(5, value.getItems().size());
-                assertEquals(1, value.getItemChanges().size());
                 assertTrue(value.getItems().contains(savedModels.get(1)));
                 assertTrue(value.getItems().contains(savedModels.get(4)));
                 assertTrue(value.getItems().contains(savedModels.get(5)));
@@ -300,14 +318,17 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 assertTrue(value.getItems().contains(savedModels.get(11)));
                 changeLatch.countDown();
             }
-            count.incrementAndGet();
-        };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
+            count.incrementAndGet(); };
+        Consumer<DataStoreException> onObservationError = value -> { };
+        Action onObservationComplete = () -> { };
 
         adapter.observeQuery(
                 Post.class,
-                Where.matches(predicate), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(predicate, null),
+                observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
 
         assertTrue(latch.await(1, TimeUnit.SECONDS));
 
@@ -327,12 +348,13 @@ public final class SQLiteStorageAdapterObserveQueryTest {
     /**
      * Test querying the saved item in the SQLite database with
      * predicate conditions.
-     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
+     * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void querySavedDataWithStringPredicates() throws DataStoreException, InterruptedException {
         final List<Post> savedModels = new ArrayList<>();
-        
+
         BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
         adapter.save(blogOwner);
         Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
@@ -341,32 +363,31 @@ public final class SQLiteStorageAdapterObserveQueryTest {
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
             final Post post = Post.builder()
-                .title(counter + "-title")
-                .status(PostStatus.INACTIVE)
-                .rating(counter)
-                .blog(blog)
-                .build();
+                    .title(counter + "-title")
+                    .status(PostStatus.INACTIVE)
+                    .rating(counter)
+                    .blog(blog)
+                    .build();
             adapter.save(post);
             savedModels.add(post);
         }
         CountDownLatch latch = new CountDownLatch(1);
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value->{
+        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value -> {
             assertTrue(value.getItems().contains(savedModels.get(4)));
             assertTrue(value.getItems().contains(savedModels.get(7)));
             assertFalse(value.getItems().contains(savedModels.get(9)));
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
+        Consumer<DataStoreException> onObservationError = value -> { };
+        Action onObservationComplete = () -> { };
 
         adapter.observeQuery(
                 Post.class,
-                Where.matches(
-                        Post.TITLE.beginsWith("4")
+                new ObserveQueryOptions(Post.TITLE.beginsWith("4")
                                 .or(Post.TITLE.beginsWith("7"))
                                 .or(Post.TITLE.beginsWith("9"))
-                                .and(not(Post.TITLE.gt(8)))
+                                .and(not(Post.TITLE.gt(8))), null
                 ), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
         assertTrue(latch.await(1, TimeUnit.SECONDS));
     }
@@ -374,142 +395,81 @@ public final class SQLiteStorageAdapterObserveQueryTest {
     /**
      * Test querying with predicate condition on connected model.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void querySavedDataWithPredicatesOnForeignKey() throws DataStoreException, InterruptedException {
         final BlogOwner blogOwner = BlogOwner.builder()
-            .name("Jane Doe")
-            .build();
+                .name("Jane Doe")
+                .build();
         adapter.save(blogOwner);
 
         final Blog blog = Blog.builder()
-            .name("Jane's Commercial Real Estate Blog")
-            .owner(blogOwner)
-            .build();
+                .name("Jane's Commercial Real Estate Blog")
+                .owner(blogOwner)
+                .build();
         adapter.save(blog);
         CountDownLatch latch = new CountDownLatch(1);
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreQuerySnapshot<Blog>> onQuerySnapshot = value->{
+        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<DataStoreQuerySnapshot<Blog>> onQuerySnapshot = value -> {
             assertTrue(value.getItems().contains(blog));
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
+        Consumer<DataStoreException> onObservationError = value -> { };
+        Action onObservationComplete = () -> { };
 
         adapter.observeQuery(
                 Blog.class,
-                Where.matches(BlogOwner.NAME.eq("Jane Doe")), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(BlogOwner.NAME.eq("Jane Doe"), null),
+                observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
         assertTrue(latch.await(1, TimeUnit.SECONDS));
     }
 
     /**
      * Test query with SQL injection.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void queryWithMaliciousPredicates() throws DataStoreException, InterruptedException {
         final BlogOwner jane = BlogOwner.builder()
-            .name("Jane Doe")
-            .build();
+                .name("Jane Doe")
+                .build();
         adapter.save(jane);
 
         QueryPredicate predicate = BlogOwner.NAME.eq("Jane; DROP TABLE Person; --");
 
         CountDownLatch latch = new CountDownLatch(2);
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreQuerySnapshot<BlogOwner>> onMaliciousQuerySnapshot = resultOfMaliciousQuery->{
-            assertTrue(resultOfMaliciousQuery.getItems().isEmpty());
-            latch.countDown();
-        };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
+        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<DataStoreQuerySnapshot<BlogOwner>> onMaliciousQuerySnapshot =
+                resultOfMaliciousQuery -> {
+                    assertTrue(resultOfMaliciousQuery.getItems().isEmpty());
+                    latch.countDown();
+                };
+        Consumer<DataStoreException> onObservationError = value -> { };
+        Action onObservationComplete = () -> { };
         adapter.observeQuery(
                 BlogOwner.class,
-                Where.matches(predicate), observationStarted, onMaliciousQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(predicate, null),
+                observationStarted,
+                onMaliciousQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
 
-        Consumer<DataStoreQuerySnapshot<BlogOwner>> onAfterMaliciousQuery = resultAfterMaliciousQuery->{
+        Consumer<DataStoreQuerySnapshot<BlogOwner>> onAfterMaliciousQuery = resultAfterMaliciousQuery -> {
             assertTrue(resultAfterMaliciousQuery.getItems().contains(jane));
             latch.countDown();
         };
         adapter.observeQuery(
                 BlogOwner.class,
-                Where.matchesAll(), observationStarted, onAfterMaliciousQuery, onObservationError, onObservationComplete);
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
-    }
-
-    /**
-     * When there are 20 items available, and the user queries with a page size of 10,
-     * the user should be given two pages of 10 items each.
-     * @throws DataStoreException On arranging records, or from the query action itself
-     */
-    @Test
-    public void queryWithPaginationWithCustomValues() throws DataStoreException, InterruptedException {
-        final int pageSize = 10;
-        createBlogOwnerRecords(pageSize * 2);
-
-        CountDownLatch latch = new CountDownLatch(1);
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value->{
-            assertNotNull(value.getItems());
-            assertEquals(pageSize, value.getItems().size());
-            latch.countDown();
-        };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
-
-        adapter.observeQuery(
-                BlogOwner.class,
-                Where.paginated(Page.startingAt(0).withLimit(pageSize)), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
-    }
-
-    /**
-     * When there are 102 items, and the user requests just the {@link Page#firstPage()},
-     * with a page size of 100, that first page should come back with 100 items.
-     * @throws DataStoreException On arranging records, or from the query action itself
-     */
-    @Test
-    public void queryWithPaginationWithFirstPage() throws DataStoreException, InterruptedException {
-        final int pageSize = 100;
-        createBlogOwnerRecords(pageSize + 2);
-        CountDownLatch latch = new CountDownLatch(1);
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value->{
-            assertNotNull(value.getItems());
-            assertEquals(pageSize, value.getItems().size());
-            latch.countDown();
-        };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
-
-        adapter.observeQuery(
-                BlogOwner.class,
-                Where.paginated(Page.firstPage()), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
-    }
-
-    /**
-     * When the user requests only the {@link Page#firstResult()}, they should get back
-     * a single page that contains one value. (This, assuming that there is at least one
-     * value that could be returned.)
-     * @throws DataStoreException On failure to arrange items into store, or
-     *                            from the query action itself
-     */
-    @Test
-    public void queryWithPaginationWithFirstResult() throws DataStoreException, InterruptedException {
-        createBlogOwnerRecords(2);
-        CountDownLatch latch = new CountDownLatch(1);
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value->{
-            assertNotNull(value.getItems());
-            assertEquals(1, value.getItems().size());
-            latch.countDown();
-        };
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
-        adapter.observeQuery(
-                BlogOwner.class,
-                Where.paginated(Page.firstResult()), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(null, null),
+                observationStarted,
+                onAfterMaliciousQuery,
+                onObservationError,
+                onObservationComplete);
         assertTrue(latch.await(1, TimeUnit.SECONDS));
     }
 
@@ -606,27 +566,28 @@ public final class SQLiteStorageAdapterObserveQueryTest {
 
         // Assert that using QueryField without model name yields same results if there is no column ambiguity
         assertEquals(
-            adapter.query(Post.class, Where.matches(field("Post", "title").contains("4"))),
-            adapter.query(Post.class, Where.matches(field("title").contains("4")))
+                adapter.query(Post.class, Where.matches(field("Post", "title").contains("4"))),
+                adapter.query(Post.class, Where.matches(field("title").contains("4")))
         );
         assertEquals(
-            adapter.query(Post.class, Where.matches(field("Post", "rating").gt(3))),
-            adapter.query(Post.class, Where.matches(field("rating").gt(3)))
+                adapter.query(Post.class, Where.matches(field("Post", "rating").gt(3))),
+                adapter.query(Post.class, Where.matches(field("rating").gt(3)))
         );
     }
 
 
     /**
      * Test querying the saved item in the SQLite database with observeQuery.
-     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
+     * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void querySavedDataWithMultipleItemsThenItemSaves() throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
-        Consumer<Cancelable> observationStarted = value -> {};
-        Consumer<DataStoreException> onObservationError = value-> {};
-        Action onObservationComplete= () -> {};
+        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<DataStoreException> onObservationError = value -> { };
+        Action onObservationComplete = () -> { };
         final List<BlogOwner> savedModels = new ArrayList<>();
         final int numModels = 10;
         AtomicInteger count = new AtomicInteger(0);
@@ -638,21 +599,25 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             savedModels.add(blogOwner);
         }
 
-        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value->{
-            if (count.get() == 0){
-                for (BlogOwner blogOwner: savedModels) {
+        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
+            if (count.get() == 0) {
+                for (BlogOwner blogOwner : savedModels) {
                     assertTrue(value.getItems().contains(blogOwner));
                 }
                 latch.countDown();
-            }else{
-                assertEquals(1,value.getItemChanges().size());
+            } else {
+                assertEquals(11, value.getItems().size());
                 changeLatch.countDown();
             }
-           count.incrementAndGet();
+            count.incrementAndGet();
         };
         adapter.observeQuery(
                 BlogOwner.class,
-                Where.matchesAll(), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(null, null),
+                observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
 
         assertTrue(latch.await(2, TimeUnit.SECONDS));
 
@@ -667,15 +632,6 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 e.printStackTrace();
             }
         }
-       assertTrue(changeLatch.await(7, TimeUnit.SECONDS));
-    }
-
-    private void createBlogOwnerRecords(final int count) throws DataStoreException {
-        for (int i = 0; i < count * 2; i++) {
-            final BlogOwner blogOwner = BlogOwner.builder()
-                    .name("John Doe " + i)
-                    .build();
-            adapter.save(blogOwner);
-        }
+        assertTrue(changeLatch.await(7, TimeUnit.SECONDS));
     }
 }

@@ -34,6 +34,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -43,7 +44,6 @@ import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.datastore.storage.sqlite.ObserveQueryManager;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
@@ -507,7 +507,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public <T extends Model> void observeQuery(
             @NonNull Class<T> itemClass,
-            @NonNull QueryOptions options,
+            @NonNull ObserveQueryOptions options,
             @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
             @NonNull Consumer<DataStoreException> onObservationError,

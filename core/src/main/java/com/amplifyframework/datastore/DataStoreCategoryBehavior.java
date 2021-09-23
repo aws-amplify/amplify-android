@@ -22,6 +22,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
@@ -180,16 +181,18 @@ public interface DataStoreCategoryBehavior {
 
     /**
      * Query and Observe all changes to any/all item(s) in the DataStore.
+     * @param itemClass class which is being observed
+     * @param options query predicate and sort order
      * @param onObservationStarted Called when observation begins
-     * @param onQuerySnapshot  Called 0..n times, once for each and every change that
-     *                               occurs to any/all item(s) in the DataStore.
+     * @param onQuerySnapshot  Called 0..n times, once for local data then batched changes that
+     *                               occurs to item(s) in the DataStore based on predicates and item class.
      * @param onObservationError   Called if observation of the DataStore terminates
      *                               with a non-recoverable failure
      * @param onObservationComplete Called when observation completes gracefully
      */
     <T extends Model> void observeQuery(
             @NonNull Class<T> itemClass,
-            @NonNull QueryOptions options,
+            @NonNull ObserveQueryOptions options,
             @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
             @NonNull Consumer<DataStoreException> onObservationError,

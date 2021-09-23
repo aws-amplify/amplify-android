@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.storage;
 
 import android.content.Context;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Action;
@@ -25,6 +24,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -40,7 +40,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
@@ -101,12 +100,13 @@ public final class SynchronousStorageAdapter {
         Log.d("initialize", "inside initialize");
         return Await.result(
             operationTimeoutMs,
-            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-            {
+            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) -> {
                 try {
-                    asyncDelegate.initialize(context, onResult, onError,
+                    asyncDelegate.initialize(context,
+                            onResult,
+                            onError,
                             DataStoreConfiguration.builder()
-                                    .syncInterval(2L,TimeUnit.MINUTES)
+                                    .syncInterval(2L, TimeUnit.MINUTES)
                                     .observeQueryMaxRecords(2)
                                     .observeQueryMaxTime(0)
                                     .build());
@@ -231,16 +231,23 @@ public final class SynchronousStorageAdapter {
      * @param modelClass Class of models being queried
      * @param options Query options with predicate and pagination info
      * @param <T> Type of model being queried
-     * @return The list of models which are of the requested class and meet the requested criteria
-     * @throws DataStoreException On any failure to query the storage adapter
+     * @param onObservationStarted callback for canceling the subscription
+     * @param onQuerySnapshot callback for DataStoreQuerySnapshot
+     * @param onObservationError callback for DataStoreException
+     * @param onObservationComplete callback for onObservationComplete
      */
     public <T extends Model> void observeQuery(@NonNull Class<T> modelClass,
-                                                                    @NonNull QueryOptions options,
-                                                                    @NonNull Consumer<Cancelable> onObservationStarted,
-                                                                    @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
-                                                                    @NonNull Consumer<DataStoreException> onObservationError,
-                                                                  @NonNull Action onObservationComplete) {
-        asyncDelegate.observeQuery(modelClass, options, onObservationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                                               @NonNull ObserveQueryOptions options,
+                                               @NonNull Consumer<Cancelable> onObservationStarted,
+                                               @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+                                               @NonNull Consumer<DataStoreException> onObservationError,
+                                               @NonNull Action onObservationComplete) {
+        asyncDelegate.observeQuery(modelClass,
+                options,
+                onObservationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
     }
 
     /**

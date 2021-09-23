@@ -1,3 +1,18 @@
+/*
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
@@ -6,7 +21,8 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
@@ -15,7 +31,6 @@ import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -81,7 +96,7 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
      */
     public void observeQuery(
             @NonNull Class<T> itemClass,
-            @NonNull QueryOptions options,
+            @NonNull ObserveQueryOptions options,
             @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
             @NonNull Consumer<DataStoreException> onObservationError,
@@ -97,32 +112,33 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
             collect(itemChanged, onQuerySnapshot, itemClass, options, onObservationError);
         };
         threadPool.submit(() -> {
-            List<T> models = sqlQueryProcessor.queryOfflineData(itemClass, options, onObservationError);
+            List<T> models = sqlQueryProcessor.queryOfflineData(itemClass,
+                    Where.matchesAndSorts(options.getQueryPredicate(),
+                                          options.getSortBy()), onObservationError);
             for (T model : models) {
                 completeItemMap.put(model.getId(), model);
             }
-            callOnQuerySnapshot(onQuerySnapshot, itemClass,options, onObservationError);
+            callOnQuerySnapshot(onQuerySnapshot, itemClass, options, onObservationError);
         });
 
         disposable = itemChangeSubject
-                .filter( x -> x.item().getClass().isAssignableFrom(itemClass) &&
-                        sqlQueryProcessor.modelExists(x.item(), options.getQueryPredicate()) &&
-                        x.initiator() == StorageItemChange.Initiator.SYNC_ENGINE)
-                .subscribe(
-                        onItemChanged::accept,
-                        failure -> {
-                            if (failure instanceof DataStoreException) {
-                                onObservationError.accept((DataStoreException) failure);
-                                return;
-                            }
-                            onObservationError.accept(new DataStoreException(
-                                    "Failed to observe items in storage adapter.",
-                                    failure,
-                                    "Inspect the failure details."
-                            ));
-                        },
-                        onObservationComplete::call
-                );
+            .filter(x -> x.item().getClass().isAssignableFrom(itemClass) &&
+                    sqlQueryProcessor.modelExists(x.item(), options.getQueryPredicate()))
+            .subscribe(
+                onItemChanged::accept,
+                failure -> {
+                    if (failure instanceof DataStoreException) {
+                        onObservationError.accept((DataStoreException) failure);
+                        return;
+                    }
+                    onObservationError.accept(new DataStoreException(
+                            "Failed to observe items in storage adapter.",
+                            failure,
+                            "Inspect the failure details."
+                    ));
+                },
+                onObservationComplete::call
+            );
     }
 
     @Override
@@ -141,7 +157,7 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
     private void collect(StorageItemChange<T> changedItem,
                          @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                          Class<T> itemClass,
-                         QueryOptions options,
+                         ObserveQueryOptions options,
                          Consumer<DataStoreException> onObservationError) {
         try {
             changedItemList.add(ItemChangeMapper.map(changedItem));
@@ -150,7 +166,7 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
             if (changedItemList.size() >= MAX_RECORDS) {
                 callOnQuerySnapshot(onQuerySnapshot, itemClass, options, onObservationError);
                 changedItemList.clear();
-                timer.cancel();
+                timer.purge();
                 timer = null;
             }
         } catch (DataStoreException e) {
@@ -158,27 +174,23 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
         }
     }
 
-    private void callOnQuerySnapshot(@NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+    private void callOnQuerySnapshot(Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                                      Class<T> itemClass,
-                                     QueryOptions options,
+                                     ObserveQueryOptions options,
                                      Consumer<DataStoreException> onObservationError) {
-        try {
-            List<T> completeList = new ArrayList<T>(completeItemMap.values());
-            sortIfNeeded(options, completeList, itemClass);
-            DataStoreQuerySnapshot<T> dataStoreQuerySnapshot =
-                    new DataStoreQuerySnapshot<>(completeList,
-                            syncStatus.get(itemClass.getSimpleName(), onObservationError),
-                            changedItemList);
-            getListConsumer(onQuerySnapshot).accept(dataStoreQuerySnapshot);
-            changedItemList.clear();
-        } catch (DataStoreException exception) {
-            onObservationError.accept(exception);
-        }
+        List<T> completeList = new ArrayList<T>(completeItemMap.values());
+        sortIfNeeded(options, completeList, itemClass);
+        DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<>(completeList,
+                        syncStatus.get(itemClass.getSimpleName(), onObservationError));
+        getListConsumer(onQuerySnapshot).accept(dataStoreQuerySnapshot);
+        changedItemList.clear();
     }
 
-    private void sortIfNeeded(QueryOptions options, List<T> completeList, Class<T> itemClass) {
+    private void sortIfNeeded(ObserveQueryOptions options,
+                              List<T> completeList,
+                              Class<T> itemClass) {
         // && changedItemList.size() > 0 check is an optimization to not sort the results coming back from datastore which are already sorted
-        if(options !=null && options.getSortBy() != null && options.getSortBy().size() > 0 && changedItemList.size() > 0){
+        if (options != null && options.getSortBy() != null && options.getSortBy().size() > 0 && changedItemList.size() > 0) {
             modelSorter.sort(options, completeList, itemClass);
         }
     }
@@ -194,16 +206,16 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
 
     private void setTimerIfNeeded(Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                                   Class<T> itemClass,
-                                  QueryOptions options,
+                                  ObserveQueryOptions options,
                                   Consumer<DataStoreException> onObservationError) {
         if (timer == null) {
             timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    timer.cancel();
-                    timer = null;
                     callOnQuerySnapshot(onQuerySnapshot, itemClass, options, onObservationError);
+                    timer.purge();
+                    timer = null;
                 }
             }, TimeUnit.SECONDS.toMillis(MAX_TIME_SEC));
         }

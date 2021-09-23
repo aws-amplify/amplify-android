@@ -274,6 +274,12 @@ public final class DataStoreConfiguration {
             '}';
     }
 
+    /**
+     * Gets the Time lapse for observe query snapshot, expressed in minutes. This method serves the same purpose
+     * as {@link #getMaxTimeLapseForObserveQuery()} -- except, for convenience, returns the value in
+     * minutes, not milliseconds.
+     * @return The max delay interval, expressed in minutes
+     */
     public Long getMaxTimeLapseForObserveQuery() {
         return maxTimeLapseForObserveQuery;
     }
