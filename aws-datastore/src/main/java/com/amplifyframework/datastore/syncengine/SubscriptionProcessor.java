@@ -98,7 +98,10 @@ final class SubscriptionProcessor {
         // then 20 seconds are added to the timer per additional model count.
         this.adjustedTimeoutSeconds = Math.max(
             NETWORK_OP_TIMEOUT_SECONDS,
-            TIMEOUT_SECONDS_PER_MODEL * modelProvider.modelSchemas().size()
+            TIMEOUT_SECONDS_PER_MODEL * Math.max(
+                    modelProvider.models().size(),
+                    modelProvider.modelSchemas().size()
+            )
         );
     }
 
