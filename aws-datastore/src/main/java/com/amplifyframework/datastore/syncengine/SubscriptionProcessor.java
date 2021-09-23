@@ -94,12 +94,14 @@ final class SubscriptionProcessor {
 
         this.ongoingOperationsDisposable = new CompositeDisposable();
 
-        // Operation times out after the greater of 60 seconds or 20 seconds per model.
-        // Previously this was the greater of 10 seconds or 2 seconds per model, but customers
-        // reported timeouts on 3G connections.
+        // Operation times out after 60 seconds. If there are more than 5 models,
+        // then 20 seconds are added to the timer per additional model count.
         this.adjustedTimeoutSeconds = Math.max(
             NETWORK_OP_TIMEOUT_SECONDS,
-            TIMEOUT_SECONDS_PER_MODEL * modelProvider.modelSchemas().size()
+            TIMEOUT_SECONDS_PER_MODEL * Math.max(
+                    modelProvider.models().size(),
+                    modelProvider.modelSchemas().size()
+            )
         );
     }
 
