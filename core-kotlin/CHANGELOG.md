@@ -1,3 +1,13 @@
+## [Release 0.11.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.11.0)
+
+### Features
+- **geo:** Added support for Geo category (#1502)
+
+### Bug Fixes
+- **datastore:** ensure attaching nested model schema to SerializedModel (#1495)
+
+[See all changes between 0.10.0 and 0.11.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.10.0...release-kotlin_v0.11.0)
+
 ## [Release 0.10.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.10.0)
 
 ### Features
