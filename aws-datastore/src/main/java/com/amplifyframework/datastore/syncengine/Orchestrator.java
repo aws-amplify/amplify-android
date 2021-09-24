@@ -138,11 +138,14 @@ public final class Orchestrator {
         this.targetState = targetState;
         this.disposables = new CompositeDisposable();
 
-        // Operation times out after 10 seconds. If there are more than 5 models,
-        // then 2 seconds are added to the timer per additional model count.
+        // Operation times out after 60 seconds. If there are more than 5 models,
+        // then 20 seconds are added to the timer per additional model count.
         this.adjustedTimeoutSeconds = Math.max(
-            NETWORK_OP_TIMEOUT_SECONDS,
-            TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
+                NETWORK_OP_TIMEOUT_SECONDS,
+                TIMEOUT_SECONDS_PER_MODEL * Math.max(
+                        modelProvider.models().size(),
+                        modelProvider.modelSchemas().size()
+                )
         );
         this.startStopSemaphore = new Semaphore(1);
 
