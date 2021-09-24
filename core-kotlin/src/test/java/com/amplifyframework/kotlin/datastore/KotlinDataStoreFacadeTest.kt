@@ -19,6 +19,7 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.async.Cancelable
 import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.amplifyframework.core.model.query.QueryOptions
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.datastore.DataStoreCategoryBehavior
@@ -27,6 +28,7 @@ import com.amplifyframework.datastore.DataStoreItemChange
 import com.amplifyframework.datastore.DataStoreItemChange.Initiator.LOCAL
 import com.amplifyframework.datastore.DataStoreItemChange.Type.CREATE
 import com.amplifyframework.datastore.DataStoreItemChange.Type.DELETE
+import com.amplifyframework.datastore.DataStoreQuerySnapshot
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import io.mockk.every
 import io.mockk.mockk
@@ -337,6 +339,62 @@ class KotlinDataStoreFacadeTest {
      */
     @Test(expected = DataStoreException::class)
     fun observeByClassFails(): Unit = runBlocking {
+        val error = DataStoreException("uh", "oh")
+        val clazz = BlogOwner::class.java
+        every {
+            delegate.observe(eq(clazz), any<QueryPredicate>(), any(), any(), any(), any())
+        } answers {
+            val indexOfOnError = 4 // 5 is last arg, Action onComplete
+            val onError = it.invocation.args[indexOfOnError] as Consumer<DataStoreException>
+            onError.accept(error)
+        }
+        dataStore.observe(BlogOwner::class, BlogOwner.NAME.contains("Susan"))
+            .first() // sufficient to call through and cause error
+    }
+
+    /**
+     * Test observeQuery() delegate which accepts class and predicate.
+     * When it emits changes, they should propagate to the Kotlin facade's Flow.
+     */
+    @Test
+    fun observeQuerySucceeds(): Unit = runBlocking {
+        val cancelable = mockk<Cancelable>()
+        val itemCreated = DataStoreQuerySnapshot(listOf(   BlogOwner.builder()
+            .name("Susan S. Sweeney")
+            .build()), true)
+        every {
+            delegate.observeQuery(
+                eq(BlogOwner::class.java),
+                any<ObserveQueryOptions>(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            val onStartArg = it.invocation.args[/* index of on start = */ 2]
+            val onNextArg = it.invocation.args[/* index of on next = */ 3]
+            val onStart = onStartArg as Consumer<Cancelable>
+            val onNext = onNextArg as Consumer<DataStoreQuerySnapshot<out Model>>
+            onStart.accept(cancelable)
+            onNext.accept(itemCreated)
+        }
+        every { cancelable.cancel() } answers {}
+
+        val actualValue = dataStore.observeQuery(BlogOwner::class, ObserveQueryOptions(BlogOwner.NAME.contains("Susan"), null))
+            .take(1) // Modify the flow so it will complete automatically after 1
+            .first() // Then take the 1 item, thus completing the flow
+        assertEquals(itemCreated, actualValue)
+
+        verify { cancelable.cancel() } // AS a result of completing, cancel() is invoked.
+    }
+
+    /**
+     * Tests the observeQuery() delegate which accepts class and predicate.
+     * When it raises an error, that error should bubble up through the Kotlin API's Flow.
+     */
+    @Test(expected = DataStoreException::class)
+    fun observeQueryFails(): Unit = runBlocking {
         val error = DataStoreException("uh", "oh")
         val clazz = BlogOwner::class.java
         every {
