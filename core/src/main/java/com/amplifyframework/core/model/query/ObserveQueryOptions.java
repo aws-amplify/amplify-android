@@ -37,15 +37,18 @@ public final class ObserveQueryOptions {
     /**
      * This class should be created using the factory methods such as {@link Where#matchesAll()}
      * and {@link Where#matches(QueryPredicate)}.
+     * @param queryPredicate query predicate.
+     * @param sortBy sort by.
      */
-    public ObserveQueryOptions(
-            @Nullable QueryPredicate queryPredicate,
-            @Nullable List<QuerySortBy> sortBy
-    ) {
+    public ObserveQueryOptions(@Nullable QueryPredicate queryPredicate,
+                                @Nullable List<QuerySortBy> sortBy) {
         this.queryPredicate = queryPredicate == null ? QueryPredicates.all() : queryPredicate;
         this.sortBy = sortBy;
     }
 
+    /***
+     * Observe query options.
+     */
     public ObserveQueryOptions() {
         this(null, null);
     }

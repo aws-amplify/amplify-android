@@ -43,7 +43,10 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.Subject;
 
-
+/***
+ * Manages observe query operations.
+ * @param <T> type of Model.
+ */
 public class ObserveQueryManager<T extends Model> implements Cancelable {
     private final Subject<StorageItemChange<? extends Model>> itemChangeSubject;
     private final SqlQueryProcessor sqlQueryProcessor;
@@ -55,11 +58,19 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
     private final Map<String, T> completeItemMap = new ConcurrentHashMap<>();
 
     private Timer timer;
-    private final int MAX_RECORDS;
-    private final long MAX_TIME_SEC;
+    private final int maxRecords;
+    private final long maxTimeSec;
     private final ModelSorter<T> modelSorter;
 
-    //TODOPM: Test race condition between observe and query.
+    /**
+     * Class to manage observeQuery operations.
+     * @param itemChangeSubject change subject.
+     * @param sqlQueryProcessor sql querry processor.
+     * @param threadPool thread pool.
+     * @param syncStatus sync status.
+     * @param modelSorter model sorter.
+     * @param dataStoreConfiguration datastore configuration.
+     */
     public ObserveQueryManager(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
                                @NonNull SqlQueryProcessor sqlQueryProcessor,
                                @NonNull ExecutorService threadPool,
@@ -70,11 +81,21 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
         this.sqlQueryProcessor = sqlQueryProcessor;
         this.threadPool = threadPool;
         this.syncStatus = syncStatus;
-        this.MAX_RECORDS = dataStoreConfiguration.getObserveQueryMaxRecords();
-        this.MAX_TIME_SEC = dataStoreConfiguration.getMaxTimeLapseForObserveQuery();
+        this.maxRecords = dataStoreConfiguration.getObserveQueryMaxRecords();
+        this.maxTimeSec = dataStoreConfiguration.getMaxTimeLapseForObserveQuery();
         this.modelSorter = modelSorter;
     }
 
+    /***
+     *Constructor for ObserveQueryManager.
+     * @param itemChangeSubject change subject.
+     * @param sqlQueryProcessor sql querry processor.
+     * @param threadPool thread pool.
+     * @param syncStatus sync status.
+     * @param modelSorter model sorter.
+     * @param maxRecords max records for batch.
+     * @param maxSecs max time lapse for batch.
+     */
     public ObserveQueryManager(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
                                @NonNull SqlQueryProcessor sqlQueryProcessor,
                                @NonNull ExecutorService threadPool,
@@ -87,12 +108,18 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
         this.threadPool = threadPool;
         this.syncStatus = syncStatus;
         this.modelSorter = modelSorter;
-        this.MAX_RECORDS = maxRecords;
-        this.MAX_TIME_SEC = maxSecs;
+        this.maxRecords = maxRecords;
+        this.maxTimeSec = maxSecs;
     }
 
     /**
-     * {@inheritDoc}
+     * observes changes and returns datastore items.
+     * @param itemClass item to be observed.
+     * @param options options for query.
+     * @param onObservationStarted invoked on observation start provides a cancellable.
+     * @param onQuerySnapshot invoked when query snapshot is returned.
+     * @param onObservationError invoked on observation error.
+     * @param onObservationComplete invoked when subscription is complete.
      */
     public void observeQuery(
             @NonNull Class<T> itemClass,
@@ -141,6 +168,9 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
             );
     }
 
+    /***
+     * Cancel observe query operation and subscription.
+     */
     @Override
     public void cancel() {
         isCanceled = true;
@@ -153,7 +183,6 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
         }
     }
 
-
     private void collect(StorageItemChange<T> changedItem,
                          @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                          Class<T> itemClass,
@@ -163,14 +192,14 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
             changedItemList.add(ItemChangeMapper.map(changedItem));
             setTimerIfNeeded(onQuerySnapshot, itemClass, options, onObservationError);
 
-            if (changedItemList.size() >= MAX_RECORDS) {
+            if (changedItemList.size() >= maxRecords) {
                 callOnQuerySnapshot(onQuerySnapshot, itemClass, options, onObservationError);
                 changedItemList.clear();
                 timer.purge();
                 timer = null;
             }
-        } catch (DataStoreException e) {
-            e.printStackTrace();
+        } catch (DataStoreException exception) {
+            onObservationError.accept(exception);
         }
     }
 
@@ -189,8 +218,10 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
     private void sortIfNeeded(ObserveQueryOptions options,
                               List<T> completeList,
                               Class<T> itemClass) {
-        // && changedItemList.size() > 0 check is an optimization to not sort the results coming back from datastore which are already sorted
-        if (options != null && options.getSortBy() != null && options.getSortBy().size() > 0 && changedItemList.size() > 0) {
+        // && changedItemList.size() > 0 check is an optimization to not sort the
+        // results coming back from datastore which are already sorted
+        if (options != null && options.getSortBy() != null && options.getSortBy().size() > 0
+                && changedItemList.size() > 0) {
             modelSorter.sort(options, completeList, itemClass);
         }
     }
@@ -217,14 +248,16 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
                     timer.purge();
                     timer = null;
                 }
-            }, TimeUnit.SECONDS.toMillis(MAX_TIME_SEC));
+            }, TimeUnit.SECONDS.toMillis(maxTimeSec));
         }
     }
 
     @NonNull
     private Consumer<DataStoreQuerySnapshot<T>> getListConsumer(Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot) {
         return value -> {
-            if (isCanceled) return;
+            if (isCanceled) {
+                return;
+            }
             onQuerySnapshot.accept(value);
         };
     }

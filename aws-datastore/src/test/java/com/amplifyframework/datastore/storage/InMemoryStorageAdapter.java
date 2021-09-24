@@ -62,12 +62,12 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     }
 
     @Override
-    public void initialize(
-            @NonNull Context context,
-            @NonNull Consumer<List<ModelSchema>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError,
-            @NonNull DataStoreConfiguration dataStoreConfiguration
-            ) {}
+    public void initialize(@NonNull Context context,
+                            @NonNull Consumer<List<ModelSchema>> onSuccess,
+                            @NonNull Consumer<DataStoreException> onError,
+                            @NonNull DataStoreConfiguration dataStoreConfiguration) {
+
+    }
 
     @Override
     public <T extends Model> void save(

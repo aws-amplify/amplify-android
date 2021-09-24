@@ -189,6 +189,7 @@ public interface DataStoreCategoryBehavior {
      * @param onObservationError   Called if observation of the DataStore terminates
      *                               with a non-recoverable failure
      * @param onObservationComplete Called when observation completes gracefully
+     * @param <T> type of Model.
      */
     <T extends Model> void observeQuery(
             @NonNull Class<T> itemClass,
@@ -196,7 +197,7 @@ public interface DataStoreCategoryBehavior {
             @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
             @NonNull Consumer<DataStoreException> onObservationError,
-            @NonNull Action onObservationComplete) ;
+            @NonNull Action onObservationComplete);
 
     /**
      * Observe changes to a certain type of item(s) in the DataStore.

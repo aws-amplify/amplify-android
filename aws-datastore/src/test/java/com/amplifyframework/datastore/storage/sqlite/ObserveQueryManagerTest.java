@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -13,13 +12,8 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.datastore.storage.sqlite;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+package com.amplifyframework.datastore.storage.sqlite;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
@@ -57,8 +51,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.reactivex.rxjava3.subjects.Subject;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 public class ObserveQueryManagerTest {
 
+    /***
+     * Tests for observeQueryManager.
+     * @throws InterruptedException InterruptedException
+     * @throws DataStoreException DataStoreException
+     */
     @Test
     public void observeQueryReturnsOfflineData() throws InterruptedException, DataStoreException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -76,7 +81,8 @@ public class ObserveQueryManagerTest {
         Action onObservationComplete = () -> { };
         SqlQueryProcessor mockSqlQueryProcessor = mock(SqlQueryProcessor.class);
         when(mockSqlQueryProcessor.queryOfflineData(eq(BlogOwner.class), any(), any())).thenReturn(resultList);
-        Subject<StorageItemChange<? extends Model>> subject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
+        Subject<StorageItemChange<? extends Model>> subject =
+                PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
         ObserveQueryManager<BlogOwner> observeQueryManager =
@@ -96,6 +102,11 @@ public class ObserveQueryManagerTest {
         Assert.assertTrue(latch.await(1, TimeUnit.SECONDS));
     }
 
+    /***
+     * observe Query Returns Records Based On Max Records.
+     * @throws InterruptedException InterruptedException
+     * @throws DataStoreException DataStoreException
+     */
     @Test
     public void observeQueryReturnsRecordsBasedOnMaxRecords() throws InterruptedException, DataStoreException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -110,7 +121,8 @@ public class ObserveQueryManagerTest {
         Consumer<Cancelable> observationStarted = value -> { };
         SyncStatus mockSyncStatus = mock(SyncStatus.class);
         when(mockSyncStatus.get(any(), any())).thenReturn(false);
-        Subject<StorageItemChange<? extends Model>> subject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
+        Subject<StorageItemChange<? extends Model>> subject =
+                PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
             if (count.get() == 0) {
                 Assert.assertTrue(value.getItems().contains(blogOwner));
@@ -140,7 +152,6 @@ public class ObserveQueryManagerTest {
                 maxRecords,
                 maxRecords);
 
-
         observeQueryManager.observeQuery(
                 BlogOwner.class,
                 new ObserveQueryOptions(null, null),
@@ -158,20 +169,27 @@ public class ObserveQueryManagerTest {
                         .changeId(UUID.randomUUID().toString())
                         .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
                         .item(itemChange)
-                        .patchItem(SerializedModel.create(itemChange, ModelSchema.fromModelClass(BlogOwner.class)))
+                        .patchItem(SerializedModel.create(itemChange,
+                                ModelSchema.fromModelClass(BlogOwner.class)))
                         .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
                         .predicate(QueryPredicates.all())
                         .type(StorageItemChange.Type.UPDATE)
                         .build());
-            } catch (AmplifyException e) {
-                e.printStackTrace();
+            } catch (AmplifyException exception) {
+                exception.printStackTrace();
             }
         }
         Assert.assertTrue(changeLatch.await(1, TimeUnit.SECONDS));
     }
 
+    /***
+     * observe Query Returns batched Records Based On MaxTime.
+     * @throws InterruptedException InterruptedException
+     * @throws DataStoreException DataStoreException
+     */
     @Test
-    public void observeQueryReturnsRecordsBasedOnMaxTime() throws InterruptedException, DataStoreException {
+    public void observeQueryReturnsRecordsBasedOnMaxTime() throws InterruptedException,
+            DataStoreException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
         AtomicInteger count = new AtomicInteger();
@@ -184,7 +202,8 @@ public class ObserveQueryManagerTest {
         Consumer<Cancelable> observationStarted = value -> { };
         SyncStatus mockSyncStatus = mock(SyncStatus.class);
         when(mockSyncStatus.get(any(), any())).thenReturn(false);
-        Subject<StorageItemChange<? extends Model>> subject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
+        Subject<StorageItemChange<? extends Model>> subject =
+                PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
             if (count.get() == 0) {
                 Assert.assertTrue(value.getItems().contains(blogOwner));
@@ -198,18 +217,24 @@ public class ObserveQueryManagerTest {
         Consumer<DataStoreException> onObservationError = value -> { };
         Action onObservationComplete = () -> { };
         SqlQueryProcessor mockSqlQueryProcessor = mock(SqlQueryProcessor.class);
-        when(mockSqlQueryProcessor.queryOfflineData(eq(BlogOwner.class), any(), any())).thenReturn(datastoreResultList);
+        when(mockSqlQueryProcessor.queryOfflineData(eq(BlogOwner.class), any(), any()))
+                .thenReturn(datastoreResultList);
         when(mockSqlQueryProcessor.modelExists(any(), any())).thenReturn(true);
-
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-        ObserveQueryManager<BlogOwner> observeQueryManager = new ObserveQueryManager<>
-                (subject, mockSqlQueryProcessor, threadPool, mockSyncStatus, new ModelSorter<>(), maxRecords, 1);
-
+        ObserveQueryManager<BlogOwner> observeQueryManager = new ObserveQueryManager<>(subject,
+                                                                            mockSqlQueryProcessor,
+                                                                            threadPool,
+                                                                            mockSyncStatus,
+                                                                            new ModelSorter<>(),
+                                                                            maxRecords, 1);
 
         observeQueryManager.observeQuery(
                 BlogOwner.class,
-                new ObserveQueryOptions(), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(), observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
         Assert.assertTrue(latch.await(1, TimeUnit.SECONDS));
         for (int i = 0; i < 5; i++) {
             BlogOwner itemChange = BlogOwner.builder()
@@ -221,21 +246,27 @@ public class ObserveQueryManagerTest {
                         .changeId(UUID.randomUUID().toString())
                         .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
                         .item(itemChange)
-                        .patchItem(SerializedModel.create(itemChange, ModelSchema.fromModelClass(BlogOwner.class)))
+                        .patchItem(SerializedModel.create(itemChange,
+                                ModelSchema.fromModelClass(BlogOwner.class)))
                         .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
                         .predicate(QueryPredicates.all())
                         .type(StorageItemChange.Type.UPDATE)
                         .build());
-            } catch (AmplifyException e) {
-                e.printStackTrace();
+            } catch (AmplifyException exception) {
+                exception.printStackTrace();
             }
         }
         Assert.assertTrue(changeLatch.await(3, TimeUnit.SECONDS));
     }
 
-
+    /***
+     * observe Query Returns Sorted List Of Total Items.
+     * @throws InterruptedException InterruptedException
+     * @throws DataStoreException DataStoreException
+     */
     @Test
-    public void observeQueryReturnsSortedListOfTotalItems() throws InterruptedException, DataStoreException {
+    public void observeQueryReturnsSortedListOfTotalItems() throws InterruptedException,
+            DataStoreException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
         AtomicInteger count = new AtomicInteger();
@@ -254,7 +285,8 @@ public class ObserveQueryManagerTest {
         Consumer<Cancelable> observationStarted = value -> { };
         SyncStatus mockSyncStatus = mock(SyncStatus.class);
         when(mockSyncStatus.get(any(), any())).thenReturn(false);
-        Subject<StorageItemChange<? extends Model>> subject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
+        Subject<StorageItemChange<? extends Model>> subject =
+                PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
             if (count.get() == 0) {
                 Assert.assertTrue(value.getItems().contains(owners.get(0)));
@@ -280,12 +312,11 @@ public class ObserveQueryManagerTest {
 
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-        ObserveQueryManager<BlogOwner> observeQueryManager = new ObserveQueryManager<>
-                (subject,
-                 mockSqlQueryProcessor,
-                 threadPool,
-                 mockSyncStatus,
-                 new ModelSorter<>(), maxRecords, 1);
+        ObserveQueryManager<BlogOwner> observeQueryManager = new ObserveQueryManager<>(subject,
+                                                         mockSqlQueryProcessor,
+                                                         threadPool,
+                                                         mockSyncStatus,
+                                                         new ModelSorter<>(), maxRecords, 1);
 
         List<QuerySortBy> sortBy = new ArrayList<>();
         sortBy.add(BlogOwner.NAME.descending());
@@ -309,18 +340,24 @@ public class ObserveQueryManagerTest {
                         .changeId(UUID.randomUUID().toString())
                         .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
                         .item(itemChange)
-                        .patchItem(SerializedModel.create(itemChange, ModelSchema.fromModelClass(BlogOwner.class)))
+                        .patchItem(SerializedModel.create(itemChange,
+                                ModelSchema.fromModelClass(BlogOwner.class)))
                         .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
                         .predicate(QueryPredicates.all())
                         .type(StorageItemChange.Type.CREATE)
                         .build());
-            } catch (AmplifyException e) {
-                e.printStackTrace();
+            } catch (AmplifyException exception) {
+                exception.printStackTrace();
             }
         }
         Assert.assertTrue(changeLatch.await(3, TimeUnit.SECONDS));
     }
 
+    /***
+     * ObserveQuery returns sorted list of total items with int.
+     * @throws InterruptedException interrupted exception.
+     * @throws DataStoreException data store exception.
+     */
     @Test
     public void observeQueryReturnsSortedListOfTotalItemsWithInt() throws InterruptedException,
             DataStoreException {
@@ -344,7 +381,7 @@ public class ObserveQueryManagerTest {
         Subject<StorageItemChange<? extends Model>> subject =
                 PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value -> {
-            if ( count.get() == 0 ) {
+            if (count.get() == 0) {
                 Assert.assertTrue(value.getItems().contains(posts.get(0)));
                 latch.countDown();
             } else if (count.get() == 1) {
@@ -352,7 +389,8 @@ public class ObserveQueryManagerTest {
                 Collections.sort(sorted, Comparator.comparing(Post::getRating));
                 assertEquals(sorted, value.getItems());
                 Assert.assertEquals(11, value.getItems().size());
-                changeLatch.countDown(); }
+                changeLatch.countDown();
+            }
             count.getAndIncrement();
         };
         Consumer<DataStoreException> onObservationError = value -> { };
@@ -363,13 +401,12 @@ public class ObserveQueryManagerTest {
 
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-        ObserveQueryManager<Post> observeQueryManager = new ObserveQueryManager<>
-                (subject,
-                        mockSqlQueryProcessor,
-                        threadPool,
-                        mockSyncStatus,
-                        new ModelSorter<>(),
-                        maxRecords, 1);
+        ObserveQueryManager<Post> observeQueryManager = new ObserveQueryManager<>(subject,
+            mockSqlQueryProcessor,
+            threadPool,
+            mockSyncStatus,
+            new ModelSorter<>(),
+            maxRecords, 1);
 
         List<QuerySortBy> sortBy = new ArrayList<>();
         sortBy.add(Post.RATING.ascending());
@@ -393,13 +430,14 @@ public class ObserveQueryManagerTest {
                         .changeId(UUID.randomUUID().toString())
                         .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
                         .item(itemChange)
-                        .patchItem(SerializedModel.create(itemChange, ModelSchema.fromModelClass(Post.class)))
+                        .patchItem(SerializedModel.create(itemChange,
+                                ModelSchema.fromModelClass(Post.class)))
                         .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
                         .predicate(QueryPredicates.all())
                         .type(StorageItemChange.Type.CREATE)
                         .build());
-            } catch (AmplifyException e) {
-                e.printStackTrace();
+            } catch (AmplifyException exception) {
+                exception.printStackTrace();
             }
         }
         Assert.assertTrue(changeLatch.await(3, TimeUnit.SECONDS));

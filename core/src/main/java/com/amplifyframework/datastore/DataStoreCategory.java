@@ -159,8 +159,12 @@ public final class DataStoreCategory
                              @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                              @NonNull Consumer<DataStoreException> onObservationError,
                              @NonNull Action onObservationComplete) {
-        getSelectedPlugin().observeQuery(itemClass, options, onObservationStarted,
-                onQuerySnapshot, onObservationError, onObservationComplete);;
+        getSelectedPlugin().observeQuery(itemClass,
+                                        options,
+                                        onObservationStarted,
+                                        onQuerySnapshot,
+                                        onObservationError,
+                                        onObservationComplete);
     }
 
     /**

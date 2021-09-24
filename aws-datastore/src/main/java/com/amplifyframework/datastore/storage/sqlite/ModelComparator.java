@@ -12,6 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.Nullable;
@@ -28,12 +29,22 @@ import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Date;
 
-public class ModelComparator<T extends Model> implements Comparator<T> {
+/***
+ * Model comparator.
+ * @param <T> type of Model.
+ */
+public final class ModelComparator<T extends Model> implements Comparator<T> {
 
+    private static final int NUM_LETTERS_FOR_GET = 3;
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final QuerySortBy sortBy;
     private final Class<T> itemClass;
 
+    /***
+     * Coampares type T which extends models.
+     * @param sortBy sort by.
+     * @param itemClass item class.
+     */
     public ModelComparator(QuerySortBy sortBy, Class<T> itemClass) {
         this.sortBy = sortBy;
         this.itemClass = itemClass;
@@ -42,9 +53,9 @@ public class ModelComparator<T extends Model> implements Comparator<T> {
     private static Object getValue(Method method, Model model) {
         try {
             return method.invoke(model);
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException exception) {
             LOG.debug("Could not invoke method during sorting because of access level" + method.getName());
-        } catch (InvocationTargetException e) {
+        } catch (InvocationTargetException exception) {
             LOG.debug("Could not invoke method during sorting " + method.getName());
         }
         return null;
@@ -159,8 +170,8 @@ public class ModelComparator<T extends Model> implements Comparator<T> {
             if (field.getName().equals(sortBy.getField())) {
                 method = getMethod(itemClass, field);
             }
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
+        } catch (NoSuchFieldException exception) {
+            LOG.debug("Could not find the method " + sortBy.getField());
         }
         return method;
     }
@@ -168,7 +179,8 @@ public class ModelComparator<T extends Model> implements Comparator<T> {
     @Nullable
     private Method getMethod(Class<?> className, Field field) {
         for (Method method : className.getMethods()) {
-            if ((method.getName().startsWith("get")) && (method.getName().length() == (field.getName().length() + 3))) {
+            if ((method.getName().startsWith("get")) && (method.getName().length() ==
+                    (field.getName().length() + NUM_LETTERS_FOR_GET))) {
                 if (method.getName().toLowerCase().endsWith(field.getName().toLowerCase())) {
                     return method;
                 }

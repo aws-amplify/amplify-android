@@ -12,6 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.amplifyframework.datastore.storage.sqlite;
 
 import com.amplifyframework.core.model.Model;
@@ -23,11 +24,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Class for sorting objects of type model.
+ * @param <T> type of Model.
+ */
 public class ModelSorter<T extends Model> {
 
     /**
+     * Sorts type T which extends model.
+     * @param options query options.
      * @param  completeList list of items to be sorted.
-     * @param  itemClass the class of type to be sorted
+     * @param  itemClass the class of type to be sorted.
      */
     public void sort(ObserveQueryOptions options, List<T> completeList, Class<T> itemClass) {
         if (options != null && options.getSortBy() != null && options.getSortBy().size() > 0) {

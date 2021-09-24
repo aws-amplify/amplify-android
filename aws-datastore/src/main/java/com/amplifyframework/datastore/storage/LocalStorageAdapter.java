@@ -176,14 +176,17 @@ public interface LocalStorageAdapter {
 
     /**
      * Query and observe all changes to that occur to any/all objects in the storage.
+     * @param itemClass class of the item being observed.
+     * @param options query options.
+     * @param onObservationStarted invoked on observation start.
      * @param onQuerySnapshot
      *        Receives a {@link StorageItemChange} notification every time
      *        any object managed by the storage adapter is changed in any way.
      * @param onObservationError
-     *        Invoked if the observation terminates do an unrecoverable error
+     *        Invoked if the observation terminates do an unrecoverable error.
      * @param onObservationComplete
-     *        Invoked it the observation terminates gracefully, perhaps due to cancellation
-     *@param <T> The type of item being observed
+     *        Invoked it the observation terminates gracefully, perhaps due to cancellation.
+     *@param <T> The type of item being observed.
      */
     <T extends Model> void observeQuery(
             @NonNull Class<T> itemClass,

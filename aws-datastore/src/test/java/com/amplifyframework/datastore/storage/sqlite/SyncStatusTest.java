@@ -15,15 +15,9 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
-
 import com.amplifyframework.datastore.syncengine.LastSyncMetadata;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.util.Time;
@@ -33,18 +27,26 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/***
+ * Tests for Sync Status class.
+ */
 public class SyncStatusTest {
 
+    /***
+     * Get returns sync status.
+     */
     @Test
-    public void SyncStatusGetReturnSyncedStatus() throws DataStoreException {
+    public void syncStatusGetReturnSyncedStatus() {
         final LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(BlogOwner.class.getName(), Time.now());
         List<LastSyncMetadata> resultList = new ArrayList<>();
         resultList.add(lastSyncMetadata);
-
-        Consumer<DataStoreException> onObservationError = value-> {};
+        Consumer<DataStoreException> onObservationError = value -> { };
 
         SqlQueryProcessor mockSqlQueryProcessor = mock(SqlQueryProcessor.class);
         when(mockSqlQueryProcessor.queryOfflineData(eq(LastSyncMetadata.class), any(), any())).thenReturn(resultList);
@@ -56,13 +58,15 @@ public class SyncStatusTest {
         Assert.assertTrue(result);
     }
 
+    /***
+     * Get returns false for sync status.
+     */
     @Test
-    public void SyncStatusGetReturnNotSyncedStatus() throws DataStoreException {
+    public void syncStatusGetReturnNotSyncedStatus() {
         final LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(BlogOwner.class.getName(), Time.now());
         List<LastSyncMetadata> resultList = new ArrayList<>();
         resultList.add(lastSyncMetadata);
-
-        Consumer<DataStoreException> onObservationError = value-> {};
+        Consumer<DataStoreException> onObservationError = value -> { };
 
         SqlQueryProcessor mockSqlQueryProcessor = mock(SqlQueryProcessor.class);
         when(mockSqlQueryProcessor.queryOfflineData(eq(LastSyncMetadata.class), any(), any())).thenReturn(resultList);

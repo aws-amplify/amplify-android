@@ -15,13 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import static com.amplifyframework.core.model.query.predicate.QueryField.field;
-import static com.amplifyframework.core.model.query.predicate.QueryPredicate.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
@@ -56,6 +49,12 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.amplifyframework.core.model.query.predicate.QueryField.field;
+import static com.amplifyframework.core.model.query.predicate.QueryPredicate.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test the query functionality of {@link SQLiteStorageAdapter} operations.
@@ -129,7 +128,12 @@ public final class SQLiteStorageAdapterObserveQueryTest {
 
         adapter.observeQuery(
                 BlogOwner.class,
-                new ObserveQueryOptions(null, null), observationStarted, onQuerySnapshot, onObservationError, onObservationComplete);
+                new ObserveQueryOptions(null,
+                        null),
+                observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
         assertTrue(latch.await(1, TimeUnit.SECONDS));
     }
 
@@ -441,14 +445,13 @@ public final class SQLiteStorageAdapterObserveQueryTest {
         adapter.save(jane);
 
         QueryPredicate predicate = BlogOwner.NAME.eq("Jane; DROP TABLE Person; --");
-
         CountDownLatch latch = new CountDownLatch(2);
         Consumer<Cancelable> observationStarted = value -> { };
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onMaliciousQuerySnapshot =
-                resultOfMaliciousQuery -> {
-                    assertTrue(resultOfMaliciousQuery.getItems().isEmpty());
-                    latch.countDown();
-                };
+            resultOfMaliciousQuery -> {
+                assertTrue(resultOfMaliciousQuery.getItems().isEmpty());
+                latch.countDown();
+            };
         Consumer<DataStoreException> onObservationError = value -> { };
         Action onObservationComplete = () -> { };
         adapter.observeQuery(
@@ -628,8 +631,8 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                         .build();
                 savedModels.add(blogOwner);
                 adapter.save(blogOwner);
-            } catch (DataStoreException e) {
-                e.printStackTrace();
+            } catch (DataStoreException exception) {
+                exception.printStackTrace();
             }
         }
         assertTrue(changeLatch.await(7, TimeUnit.SECONDS));

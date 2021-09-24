@@ -53,6 +53,7 @@ public final class LastSyncMetadata implements Model {
      * model has been base sync'd, and that the last sync occurred at the given time.
      * @param modelClassName Name of model
      * @param lastSyncTime Last time it was synced
+     * @param <T> t type of Model.
      * @return {@link LastSyncMetadata} for the model class
      */
     public static <T extends Model> LastSyncMetadata baseSyncedAt(@NonNull String modelClassName,
