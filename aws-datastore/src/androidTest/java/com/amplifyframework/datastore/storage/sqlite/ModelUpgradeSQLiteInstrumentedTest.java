@@ -37,6 +37,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -52,6 +53,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     private SQLiteStorageAdapter sqliteStorageAdapter;
     private AmplifyCliGeneratedModelProvider modelProvider;
     private RandomVersionModelProvider modelProviderThatUpgradesVersion;
+    private SchemaRegistry schemaRegistry;
 
     private Context context;
 
@@ -65,14 +67,20 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
 
     /**
      * Setup the required information for SQLiteStorageHelper construction.
+     *
+     * @throws AmplifyException may throw {@link AmplifyException} from {@link SchemaRegistry#register(Set)}
      */
     @Before
-    public void setUp() {
+    public void setUp() throws AmplifyException {
         context = ApplicationProvider.getApplicationContext();
         context.deleteDatabase(DATABASE_NAME);
 
         modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
         modelProviderThatUpgradesVersion = RandomVersionModelProvider.singletonInstance();
+
+        schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.clear();
+        schemaRegistry.register(modelProvider.models());
     }
 
     /**
@@ -83,6 +91,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     public void tearDown() throws DataStoreException {
         sqliteStorageAdapter.terminate();
         context.deleteDatabase(DATABASE_NAME);
+        schemaRegistry.clear();
     }
 
     /**
@@ -93,9 +102,6 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     @Test
     public void modelVersionStoredCorrectlyBeforeAndAfterUpgrade() throws AmplifyException {
         // Initialize StorageAdapter with models
-        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
-        schemaRegistry.clear();
-        schemaRegistry.register(modelProvider.models());
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider);
         List<ModelSchema> firstResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,

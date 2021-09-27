@@ -38,9 +38,11 @@ public final class ModelConverter {
      * @throws AmplifyException if schema doesn't match instance
      */
     public static <T extends Model> Map<String, Object> toMap(T instance, ModelSchema schema) throws AmplifyException {
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
         final Map<String, Object> result = new HashMap<>();
         for (ModelField modelField : schema.getFields().values()) {
             String fieldName = modelField.getName();
+            String targetType = modelField.getTargetType();
             final ModelAssociation association = schema.getAssociations().get(fieldName);
             if (association == null) {
                 if (instance instanceof SerializedModel
@@ -50,6 +52,7 @@ public final class ModelConverter {
                 }
                 result.put(fieldName, extractFieldValue(modelField.getName(), instance, schema));
             } else if (association.isOwner()) {
+                ModelSchema nestedSchema = schemaRegistry.getModelSchemaForModelClass(targetType);
                 Object associateId = extractAssociateId(modelField, instance, schema);
                 if (associateId == null) {
                     // Skip fields that are not set, so that they are not set to null in the request.
@@ -57,7 +60,7 @@ public final class ModelConverter {
                 }
                 result.put(fieldName, SerializedModel.builder()
                     .serializedData(Collections.singletonMap("id", associateId))
-                    .modelSchema(null)
+                    .modelSchema(nestedSchema)
                     .build());
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
