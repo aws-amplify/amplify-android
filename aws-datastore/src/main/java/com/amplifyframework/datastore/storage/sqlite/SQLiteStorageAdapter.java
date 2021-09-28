@@ -875,7 +875,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 continue;
             }
 
-            if (field.isCustomType()) {
+            if (field.isCustomType() && entry.getValue() != null) {
                 if (field.isArray()) {
                     @SuppressWarnings("unchecked")
                     List<Map<String, Object>> listItems = (List<Map<String, Object>>) entry.getValue();
