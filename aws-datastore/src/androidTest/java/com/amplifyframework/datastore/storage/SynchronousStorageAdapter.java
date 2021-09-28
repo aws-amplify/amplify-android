@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore.storage;
 
 import android.content.Context;
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Action;
@@ -97,7 +96,6 @@ public final class SynchronousStorageAdapter {
      */
     @SuppressWarnings("UnusedReturnValue")
     public List<ModelSchema> initialize(@NonNull Context context) throws DataStoreException {
-        Log.d("initialize", "inside initialize");
         return Await.result(
             operationTimeoutMs,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) -> {
@@ -111,7 +109,7 @@ public final class SynchronousStorageAdapter {
                                     .observeQueryMaxTime(0)
                                     .build());
                 } catch (DataStoreException exception) {
-                    exception.printStackTrace();
+                    onError.accept(exception);
                 }
             }
         );

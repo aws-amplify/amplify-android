@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
@@ -30,9 +29,9 @@ import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -190,24 +189,24 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
      * Get if observe query subscription is cancelled.
      * @return boolean.
      */
-    public boolean getIsCancelled(){
+    boolean getIsCancelled() {
         return isCanceled;
     }
 
     /***
      * Get map of total items in observe query subscription.
-     * @return boolean.
+     * @return Map.
      */
-    public Map<String, T> getCompleteMap(){
-        return completeItemMap;
+    Map<String, T> getCompleteMap() {
+        return Immutable.of(completeItemMap);
     }
 
     /***
      * Get list of changed items in observe query subscription.
-     * @return List<DataStoreItemChange<T>>.
+     * @return List
      */
-    public List<DataStoreItemChange<T>> getChangeList(){
-        return changedItemList;
+    List<DataStoreItemChange<T>> getChangeList() {
+        return Immutable.of(changedItemList);
     }
 
     private void collect(StorageItemChange<T> changedItem,
@@ -236,7 +235,7 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
                                       Class<T> itemClass,
                                       ObserveQueryOptions options,
                                       Consumer<DataStoreException> onObservationError) {
-        List<T> completeList = new ArrayList<T>(completeItemMap.values());
+        List<T> completeList = new ArrayList<>(completeItemMap.values());
         sortIfNeeded(options, completeList, itemClass);
         callOnQuerySnapshot(onQuerySnapshot, itemClass, onObservationError, completeList);
     }

@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.util.Immutable;
 
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class DataStoreQuerySnapshot<T extends Model> {
      * @return List of items.
      */
     public List<T> getItems() {
-        return items;
+        return Immutable.of(items);
     }
 
     /***
