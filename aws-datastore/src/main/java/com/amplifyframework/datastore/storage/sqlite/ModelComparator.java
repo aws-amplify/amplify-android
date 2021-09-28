@@ -54,9 +54,9 @@ public final class ModelComparator<T extends Model> implements Comparator<T> {
         try {
             return method.invoke(model);
         } catch (IllegalAccessException exception) {
-            LOG.debug("Could not invoke method during sorting because of access level" + method.getName());
+            LOG.warn("Could not invoke method during sorting because of access level" + method.getName());
         } catch (InvocationTargetException exception) {
-            LOG.debug("Could not invoke method during sorting " + method.getName());
+            LOG.warn("Could not invoke method during sorting " + method.getName());
         }
         return null;
     }
@@ -171,7 +171,7 @@ public final class ModelComparator<T extends Model> implements Comparator<T> {
                 method = getMethod(itemClass, field);
             }
         } catch (NoSuchFieldException exception) {
-            LOG.debug("Could not find the method " + sortBy.getField());
+            LOG.warn("Could not find the method " + sortBy.getField());
         }
         return method;
     }

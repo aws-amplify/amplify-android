@@ -31,8 +31,8 @@ import java.util.Objects;
  * options (e.g. predicates and sorting) and allows consumers to build queries in a fluent way.
  */
 public final class ObserveQueryOptions {
-    private QueryPredicate queryPredicate;
-    private List<QuerySortBy> sortBy;
+    private final QueryPredicate queryPredicate;
+    private final List<QuerySortBy> sortBy;
 
     /**
      * This class should be created using the factory methods such as {@link Where#matchesAll()}

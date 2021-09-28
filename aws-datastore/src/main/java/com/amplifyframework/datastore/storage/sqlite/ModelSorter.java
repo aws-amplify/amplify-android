@@ -46,7 +46,7 @@ public class ModelSorter<T extends Model> {
     private Comparator<T> getComparator(List<QuerySortBy> sortByList, Class<T> itemClass) {
         QuerySortBy sortBy = sortByList.get(0);
 
-        Comparator<T> comparator = new ModelComparator<T>(sortByList.get(0), itemClass);
+        Comparator<T> comparator = new ModelComparator<T>(sortBy, itemClass);
         QuerySortOrder sortOrder = sortBy.getSortOrder();
         if (sortOrder == QuerySortOrder.DESCENDING) {
             comparator = comparator.reversed();

@@ -442,4 +442,50 @@ public class ObserveQueryManagerTest {
         }
         Assert.assertTrue(changeLatch.await(3, TimeUnit.SECONDS));
     }
+
+    /***
+     * testing cancel on observe query.
+     * @throws DataStoreException DataStoreException
+     * @throws InterruptedException InterruptedException
+     */
+    @Test
+    public void observeQueryCancelsTheOperationOnCancel() throws DataStoreException, InterruptedException {
+        final BlogOwner blogOwner = BlogOwner.builder()
+                .name("Alan Turing")
+                .build();
+        List<BlogOwner> resultList = new ArrayList<>();
+        resultList.add(blogOwner);
+        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> { };
+        Consumer<DataStoreException> onObservationError = value -> { };
+        Action onObservationComplete = () -> { };
+        SqlQueryProcessor mockSqlQueryProcessor = mock(SqlQueryProcessor.class);
+        when(mockSqlQueryProcessor.queryOfflineData(eq(BlogOwner.class), any(), any())).thenReturn(resultList);
+        Subject<StorageItemChange<? extends Model>> subject =
+                PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
+        ExecutorService threadPool = Executors.newFixedThreadPool(
+                Runtime.getRuntime().availableProcessors() * 5);
+        ObserveQueryManager<BlogOwner> observeQueryManager =
+                new ObserveQueryManager<>(subject,
+                        mockSqlQueryProcessor,
+                        threadPool,
+                        mock(SyncStatus.class),
+                        new ModelSorter<>(),
+                        DataStoreConfiguration.defaults());
+        Consumer<Cancelable> observationStarted = value -> {
+            value.cancel();
+            Assert.assertTrue(observeQueryManager.getIsCancelled());
+            assertEquals(0, observeQueryManager.getCompleteMap().size());
+            assertEquals(0, observeQueryManager.getChangeList().size());
+            subject.test()
+                    .assertNoErrors().
+                    isDisposed();
+        };
+        observeQueryManager.observeQuery(
+                BlogOwner.class,
+                new ObserveQueryOptions(null, null),
+                observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
+    }
 }
