@@ -16,6 +16,8 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.commentsblog.PostStatus;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -48,25 +50,25 @@ public class ModelComparatorTest {
 
     @Test
     public void comparatorComparesIntValuesAsLessThan(){
-//        ModelComparator<Post> subject = new ModelComparator<>(Post..descending(),Post.class);
-//        int result = subject.compare(Post.builder().("Jessica").build(),
-//                BlogOwner.builder().name("Monica").build());
-//        Assert.assertEquals(-1, result/Math.abs(result));
+        ModelComparator<Post> subject = new ModelComparator<>(Post.RATING.descending(),Post.class);
+        int result = subject.compare(Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(2).build(),
+                Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(3).build());
+        Assert.assertEquals(-1, result/Math.abs(result));
     }
 
     @Test
     public void comparatorComparesIntValuesAsGreaterThan(){
-        ModelComparator<BlogOwner> subject = new ModelComparator<>(BlogOwner.NAME.descending(),BlogOwner.class);
-        int result = subject.compare(BlogOwner.builder().name("Monica").build(),
-                BlogOwner.builder().name("Jessica").build());
+        ModelComparator<Post> subject = new ModelComparator<>(Post.RATING.descending(),Post.class);
+        int result = subject.compare(Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(3).build(),
+                Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(2).build());
         Assert.assertEquals(1, result/Math.abs(result));
     }
 
     @Test
     public void comparatorComparesIntValuesAsEquals(){
-        ModelComparator<BlogOwner> subject = new ModelComparator<>(BlogOwner.NAME.descending(),BlogOwner.class);
-        int result = subject.compare(BlogOwner.builder().name("Monica").build(),
-                BlogOwner.builder().name("Monica").build());
+        ModelComparator<Post> subject = new ModelComparator<>(Post.RATING.descending(),Post.class);
+        int result = subject.compare(Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(3).build(),
+                Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(3).build());
         Assert.assertEquals(0, result);
     }
 
