@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
@@ -107,7 +108,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
                                     .syncInterval(2L, TimeUnit.MINUTES)
                                     .build());
                 } catch (DataStoreException exception) {
-                    exception.printStackTrace();
+                    Amplify.Logging.forNamespace("amplify:aws-datastore").warn(exception.toString());
                 }
             }
         );
@@ -145,7 +146,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
                             .syncInterval(2L, TimeUnit.MINUTES)
                             .build());
                 } catch (DataStoreException exception) {
-                    exception.printStackTrace();
+                    Amplify.Logging.forNamespace("amplify:aws-datastore").warn(exception.toString());
                 }
             }
         );

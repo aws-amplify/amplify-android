@@ -57,10 +57,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ObserveQueryManagerTest {
+public class ObserveQueryExecuterTest {
 
     /***
-     * Tests for observeQueryManager.
+     * Tests for ObserveQueryExecuter.
      * @throws InterruptedException InterruptedException
      * @throws DataStoreException DataStoreException
      */
@@ -85,14 +85,14 @@ public class ObserveQueryManagerTest {
                 PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-        ObserveQueryManager<BlogOwner> observeQueryManager =
-                new ObserveQueryManager<>(subject,
+        ObserveQueryExecuter<BlogOwner> observeQueryExecuter =
+                new ObserveQueryExecuter<>(subject,
                         mockSqlQueryProcessor,
                         threadPool,
                         mock(SyncStatus.class),
                         new ModelSorter<>(),
                         DataStoreConfiguration.defaults());
-        observeQueryManager.observeQuery(
+        observeQueryExecuter.observeQuery(
                 BlogOwner.class,
                 new ObserveQueryOptions(null, null),
                 observationStarted,
@@ -144,7 +144,7 @@ public class ObserveQueryManagerTest {
 
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-        ObserveQueryManager<BlogOwner> observeQueryManager = new ObserveQueryManager<>(subject,
+        ObserveQueryExecuter<BlogOwner> observeQueryExecuter = new ObserveQueryExecuter<>(subject,
                 mockSqlQueryProcessor,
                 threadPool,
                 mockSyncStatus,
@@ -152,7 +152,7 @@ public class ObserveQueryManagerTest {
                 maxRecords,
                 maxRecords);
 
-        observeQueryManager.observeQuery(
+        observeQueryExecuter.observeQuery(
                 BlogOwner.class,
                 new ObserveQueryOptions(null, null),
                 observationStarted,
@@ -222,14 +222,14 @@ public class ObserveQueryManagerTest {
         when(mockSqlQueryProcessor.modelExists(any(), any())).thenReturn(true);
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-        ObserveQueryManager<BlogOwner> observeQueryManager = new ObserveQueryManager<>(subject,
+        ObserveQueryExecuter<BlogOwner> observeQueryExecuter = new ObserveQueryExecuter<>(subject,
                                                                             mockSqlQueryProcessor,
                                                                             threadPool,
                                                                             mockSyncStatus,
                                                                             new ModelSorter<>(),
                                                                             maxRecords, 1);
 
-        observeQueryManager.observeQuery(
+        observeQueryExecuter.observeQuery(
                 BlogOwner.class,
                 new ObserveQueryOptions(), observationStarted,
                 onQuerySnapshot,
@@ -312,7 +312,7 @@ public class ObserveQueryManagerTest {
 
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-        ObserveQueryManager<BlogOwner> observeQueryManager = new ObserveQueryManager<>(subject,
+        ObserveQueryExecuter<BlogOwner> observeQueryExecuter = new ObserveQueryExecuter<>(subject,
                                                          mockSqlQueryProcessor,
                                                          threadPool,
                                                          mockSyncStatus,
@@ -321,7 +321,7 @@ public class ObserveQueryManagerTest {
         List<QuerySortBy> sortBy = new ArrayList<>();
         sortBy.add(BlogOwner.NAME.descending());
         sortBy.add(BlogOwner.WEA.ascending());
-        observeQueryManager.observeQuery(
+        observeQueryExecuter.observeQuery(
                 BlogOwner.class,
                 new ObserveQueryOptions(null, sortBy),
                 observationStarted,
@@ -401,7 +401,7 @@ public class ObserveQueryManagerTest {
 
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-        ObserveQueryManager<Post> observeQueryManager = new ObserveQueryManager<>(subject,
+        ObserveQueryExecuter<Post> observeQueryExecuter = new ObserveQueryExecuter<>(subject,
             mockSqlQueryProcessor,
             threadPool,
             mockSyncStatus,
@@ -410,7 +410,7 @@ public class ObserveQueryManagerTest {
 
         List<QuerySortBy> sortBy = new ArrayList<>();
         sortBy.add(Post.RATING.ascending());
-        observeQueryManager.observeQuery(
+        observeQueryExecuter.observeQuery(
                 Post.class,
                 new ObserveQueryOptions(null, sortBy),
                 observationStarted,
@@ -464,8 +464,8 @@ public class ObserveQueryManagerTest {
                 PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         ExecutorService threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * 5);
-        ObserveQueryManager<BlogOwner> observeQueryManager =
-                new ObserveQueryManager<>(subject,
+        ObserveQueryExecuter<BlogOwner> observeQueryExecuter =
+                new ObserveQueryExecuter<>(subject,
                         mockSqlQueryProcessor,
                         threadPool,
                         mock(SyncStatus.class),
@@ -473,14 +473,14 @@ public class ObserveQueryManagerTest {
                         DataStoreConfiguration.defaults());
         Consumer<Cancelable> observationStarted = value -> {
             value.cancel();
-            Assert.assertTrue(observeQueryManager.getIsCancelled());
-            assertEquals(0, observeQueryManager.getCompleteMap().size());
-            assertEquals(0, observeQueryManager.getChangeList().size());
+            Assert.assertTrue(observeQueryExecuter.getIsCancelled());
+            assertEquals(0, observeQueryExecuter.getCompleteMap().size());
+            assertEquals(0, observeQueryExecuter.getChangeList().size());
             subject.test()
                     .assertNoErrors().
                     isDisposed();
         };
-        observeQueryManager.observeQuery(
+        observeQueryExecuter.observeQuery(
                 BlogOwner.class,
                 new ObserveQueryOptions(null, null),
                 observationStarted,

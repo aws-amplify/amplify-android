@@ -33,13 +33,13 @@ public class ModelSorter<T extends Model> {
     /**
      * Sorts type T which extends model.
      * @param options query options.
-     * @param  completeList list of items to be sorted.
+     * @param  list list of items to be sorted.
      * @param  itemClass the class of type to be sorted.
      */
-    public void sort(ObserveQueryOptions options, List<T> completeList, Class<T> itemClass) {
+    public void sort(ObserveQueryOptions options, List<T> list, Class<T> itemClass) {
         if (options != null && options.getSortBy() != null && options.getSortBy().size() > 0) {
             Comparator<T> comparator = getComparator(options.getSortBy(), itemClass);
-            Collections.sort(completeList, comparator);
+            Collections.sort(list, comparator);
         }
     }
 

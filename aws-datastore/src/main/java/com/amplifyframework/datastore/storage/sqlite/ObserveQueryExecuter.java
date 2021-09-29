@@ -45,10 +45,10 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.Subject;
 
 /***
- * Manages observe query operations.
+ * Executes observe query operations.
  * @param <T> type of Model.
  */
-public class ObserveQueryManager<T extends Model> implements Cancelable {
+public class ObserveQueryExecuter<T extends Model> implements Cancelable {
     private final Subject<StorageItemChange<? extends Model>> itemChangeSubject;
     private final SqlQueryProcessor sqlQueryProcessor;
     private final ExecutorService threadPool;
@@ -71,12 +71,12 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
      * @param modelSorter model sorter.
      * @param dataStoreConfiguration datastore configuration.
      */
-    public ObserveQueryManager(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
-                               @NonNull SqlQueryProcessor sqlQueryProcessor,
-                               @NonNull ExecutorService threadPool,
-                               @NonNull SyncStatus syncStatus,
-                               @NonNull ModelSorter<T> modelSorter,
-                               @NonNull DataStoreConfiguration dataStoreConfiguration) {
+    public ObserveQueryExecuter(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
+                                @NonNull SqlQueryProcessor sqlQueryProcessor,
+                                @NonNull ExecutorService threadPool,
+                                @NonNull SyncStatus syncStatus,
+                                @NonNull ModelSorter<T> modelSorter,
+                                @NonNull DataStoreConfiguration dataStoreConfiguration) {
         this.itemChangeSubject = itemChangeSubject;
         this.sqlQueryProcessor = sqlQueryProcessor;
         this.threadPool = threadPool;
@@ -96,13 +96,13 @@ public class ObserveQueryManager<T extends Model> implements Cancelable {
      * @param maxRecords max records for batch.
      * @param maxSecs max time lapse for batch.
      */
-    public ObserveQueryManager(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
-                               @NonNull SqlQueryProcessor sqlQueryProcessor,
-                               @NonNull ExecutorService threadPool,
-                               @NonNull SyncStatus syncStatus,
-                               @NonNull ModelSorter<T> modelSorter,
-                               int maxRecords,
-                               int maxSecs) {
+    public ObserveQueryExecuter(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
+                                @NonNull SqlQueryProcessor sqlQueryProcessor,
+                                @NonNull ExecutorService threadPool,
+                                @NonNull SyncStatus syncStatus,
+                                @NonNull ModelSorter<T> modelSorter,
+                                int maxRecords,
+                                int maxSecs) {
         this.itemChangeSubject = itemChangeSubject;
         this.sqlQueryProcessor = sqlQueryProcessor;
         this.threadPool = threadPool;

@@ -650,7 +650,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onObservationStarted);
         Objects.requireNonNull(onObservationError);
         Objects.requireNonNull(onObservationComplete);
-        new ObserveQueryManager<T>(itemChangeSubject, sqlQueryProcessor,
+        new ObserveQueryExecuter<T>(itemChangeSubject, sqlQueryProcessor,
                 threadPool,
                 syncStatus,
                 new ModelSorter<T>(),
