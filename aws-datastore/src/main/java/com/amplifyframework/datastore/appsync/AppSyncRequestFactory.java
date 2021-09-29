@@ -448,10 +448,11 @@ final class AppSyncRequestFactory {
             SerializedModel serializedModel = (SerializedModel) instance;
             Map<String, Object> serializedData = serializedModel.getSerializedData();
             ModelField field = schema.getFields().get(fieldName);
-            if (field != null && field.isCustomType()) {
+            Object fieldValue = serializedData.get(fieldName);
+            if (fieldValue != null && field != null && field.isCustomType()) {
                 return extractCustomTypeFieldValue(fieldName, serializedData.get(fieldName));
             }
-            return serializedData.get(fieldName);
+            return fieldValue;
         }
         try {
             Field privateField = instance.getClass().getDeclaredField(fieldName);
