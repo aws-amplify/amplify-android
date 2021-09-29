@@ -117,7 +117,7 @@ class KotlinDataStoreFacadeTest {
         } answers {
             val indexOfResultConsumer = 2
             val onResult = it.invocation.args[indexOfResultConsumer]
-                as Consumer<DataStoreItemChange<BlogOwner>>
+                    as Consumer<DataStoreItemChange<BlogOwner>>
             onResult.accept(
                 DataStoreItemChange.builder<BlogOwner>()
                     .initiator(LOCAL)
@@ -359,9 +359,13 @@ class KotlinDataStoreFacadeTest {
     @Test
     fun observeQuerySucceeds(): Unit = runBlocking {
         val cancelable = mockk<Cancelable>()
-        val itemCreated = DataStoreQuerySnapshot(listOf(   BlogOwner.builder()
-            .name("Susan S. Sweeney")
-            .build()), true)
+        val itemCreated = DataStoreQuerySnapshot(
+            listOf(
+                BlogOwner.builder()
+                    .name("Susan S. Sweeney")
+                    .build()
+            ), true
+        )
         every {
             delegate.observeQuery(
                 eq(BlogOwner::class.java),
@@ -381,7 +385,10 @@ class KotlinDataStoreFacadeTest {
         }
         every { cancelable.cancel() } answers {}
 
-        val actualValue = dataStore.observeQuery(BlogOwner::class, ObserveQueryOptions(BlogOwner.NAME.contains("Susan"), null))
+        val actualValue = dataStore.observeQuery(
+            BlogOwner::class,
+            ObserveQueryOptions(BlogOwner.NAME.contains("Susan"), null)
+        )
             .take(1) // Modify the flow so it will complete automatically after 1
             .first() // Then take the 1 item, thus completing the flow
         assertEquals(itemCreated, actualValue)
