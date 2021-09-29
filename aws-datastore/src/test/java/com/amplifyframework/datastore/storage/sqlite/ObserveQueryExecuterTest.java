@@ -179,7 +179,7 @@ public class ObserveQueryExecuterTest {
                 exception.printStackTrace();
             }
         }
-        Assert.assertTrue(changeLatch.await(1, TimeUnit.SECONDS));
+        Assert.assertTrue(changeLatch.await(3, TimeUnit.SECONDS));
     }
 
     /***
@@ -446,10 +446,9 @@ public class ObserveQueryExecuterTest {
     /***
      * testing cancel on observe query.
      * @throws DataStoreException DataStoreException
-     * @throws InterruptedException InterruptedException
      */
     @Test
-    public void observeQueryCancelsTheOperationOnCancel() throws DataStoreException, InterruptedException {
+    public void observeQueryCancelsTheOperationOnCancel() throws DataStoreException {
         final BlogOwner blogOwner = BlogOwner.builder()
                 .name("Alan Turing")
                 .build();
