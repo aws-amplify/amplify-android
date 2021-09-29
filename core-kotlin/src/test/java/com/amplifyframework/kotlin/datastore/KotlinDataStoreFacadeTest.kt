@@ -117,7 +117,7 @@ class KotlinDataStoreFacadeTest {
         } answers {
             val indexOfResultConsumer = 2
             val onResult = it.invocation.args[indexOfResultConsumer]
-                    as Consumer<DataStoreItemChange<BlogOwner>>
+                as Consumer<DataStoreItemChange<BlogOwner>>
             onResult.accept(
                 DataStoreItemChange.builder<BlogOwner>()
                     .initiator(LOCAL)
@@ -364,7 +364,8 @@ class KotlinDataStoreFacadeTest {
                 BlogOwner.builder()
                     .name("Susan S. Sweeney")
                     .build()
-            ), true
+            ),
+            true
         )
         every {
             delegate.observeQuery(
