@@ -22,8 +22,8 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.PrimaryKey;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.QueryPaginationInput;
 import com.amplifyframework.core.model.query.QuerySortBy;
@@ -57,16 +57,16 @@ import java.util.Set;
 final class SQLiteCommandFactory implements SQLCommandFactory {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private final ModelSchemaRegistry modelSchemaRegistry;
+    private final SchemaRegistry schemaRegistry;
     private final Gson gson;
 
     /**
      * Default constructor.
      */
     SQLiteCommandFactory(
-            @NonNull ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull SchemaRegistry schemaRegistry,
             @NonNull Gson gson) {
-        this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
+        this.schemaRegistry = Objects.requireNonNull(schemaRegistry);
         this.gson = Objects.requireNonNull(gson);
     }
 
@@ -393,10 +393,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     // extract model field values to save in database
     private List<Object> extractFieldValues(@NonNull Model model) throws DataStoreException {
         final String modelName = model.getModelName();
-        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable table = SQLiteTable.fromSchema(schema);
         final SQLiteModelFieldTypeConverter converter =
-                new SQLiteModelFieldTypeConverter(schema, modelSchemaRegistry, gson);
+                new SQLiteModelFieldTypeConverter(schema, schemaRegistry, gson);
         final Map<String, ModelField> modelFields = schema.getFields();
         final List<Object> bindings = new ArrayList<>();
         for (SQLiteColumn column : table.getSortedColumns()) {
@@ -419,7 +419,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         while (foreignKeyIterator.hasNext()) {
             final SQLiteColumn foreignKey = foreignKeyIterator.next();
             final String ownedTableName = foreignKey.getOwnedType();
-            final ModelSchema ownedSchema = modelSchemaRegistry.getModelSchemaForModelClass(ownedTableName);
+            final ModelSchema ownedSchema = schemaRegistry.getModelSchemaForModelClass(ownedTableName);
             final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
 
             columns.addAll(ownedTable.getSortedColumns());

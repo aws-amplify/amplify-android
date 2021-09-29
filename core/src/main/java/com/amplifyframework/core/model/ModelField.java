@@ -54,6 +54,9 @@ public final class ModelField {
     // True if the field is an instance of model.
     private final boolean isModel;
 
+    // True if the field is an instance of CustomType
+    private final boolean isCustomType;
+
     // An array of rules for owner based authorization
     private final List<AuthRule> authRules;
 
@@ -69,6 +72,7 @@ public final class ModelField {
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
         this.isModel = builder.isModel;
+        this.isCustomType = builder.isCustomType;
         this.authRules = builder.authRules;
     }
 
@@ -151,6 +155,15 @@ public final class ModelField {
     }
 
     /**
+     * Returns true if the field's target type is CustomType.
+     *
+     * @return True if the field's target type is CustomType.
+     */
+    public boolean isCustomType() {
+        return isCustomType;
+    }
+
+    /**
      * Specifies an array of rules for owner based authorization.
      *
      * @return list of {@link AuthRule}s
@@ -185,6 +198,9 @@ public final class ModelField {
         if (isModel != that.isModel) {
             return false;
         }
+        if (isCustomType != that.isCustomType) {
+            return false;
+        }
         if (!ObjectsCompat.equals(name, that.name)) {
             return false;
         }
@@ -204,6 +220,7 @@ public final class ModelField {
         result = 31 * result + (isArray ? 1 : 0);
         result = 31 * result + (isEnum ? 1 : 0);
         result = 31 * result + (isModel ? 1 : 0);
+        result = 31 * result + (isCustomType ? 1 : 0);
         return result;
     }
 
@@ -218,6 +235,7 @@ public final class ModelField {
             ", isArray=" + isArray +
             ", isEnum=" + isEnum +
             ", isModel=" + isModel +
+            ", isCustomType=" + isCustomType +
             '}';
     }
 
@@ -250,6 +268,9 @@ public final class ModelField {
 
         // True if the field's target type is Model.
         private boolean isModel = false;
+
+        // True if the field's target type is CustomType.
+        private boolean isCustomType = false;
 
         // A list of rules for owner based authorization
         private List<AuthRule> authRules = new ArrayList<>();
@@ -341,6 +362,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder isModel(boolean isModel) {
             this.isModel = isModel;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's target type is a Model.
+         * @param isCustomType flag indicating if the field is a model
+         * @return the builder object
+         */
+        public ModelFieldBuilder isCustomType(boolean isCustomType) {
+            this.isCustomType = isCustomType;
             return this;
         }
 

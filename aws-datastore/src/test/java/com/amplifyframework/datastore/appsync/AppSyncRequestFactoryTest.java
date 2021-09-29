@@ -23,8 +23,13 @@ import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.CustomTypeField;
+import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.ModelConfig;
@@ -52,6 +57,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -425,6 +431,140 @@ public final class AppSyncRequestFactoryTest {
                 modelSchema, blogOwner, 1, QueryPredicates.all(), DEFAULT_STRATEGY).getContent(), true);
     }
 
+    /**
+     * Validates creation of a serialized model nests serialized custom types.
+     *
+     * @throws JSONException from JSONAssert.assertEquals JSON parsing error
+     * @throws AmplifyException from ModelSchema.fromModelClass to convert model to schema
+     */
+    @Test
+    public void validateMutationOnCreationSerializedModelNestsSerializedCustomType()
+            throws JSONException, AmplifyException {
+        buildSerializedModelNestsSerializedCustomTypeSchemas();
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+
+        Map<String, Object> phoneSerializedData = new HashMap<>();
+        phoneSerializedData.put("country", "+1");
+        phoneSerializedData.put("area", "415");
+        phoneSerializedData.put("number", "6666666");
+        SerializedCustomType phone = SerializedCustomType.builder()
+                .serializedData(phoneSerializedData)
+                .customTypeSchema(schemaRegistry.getCustomTypeSchemaMap().get("Phone"))
+                .build();
+
+        Map<String, Object> bioSerializedData = new HashMap<>();
+        bioSerializedData.put("email", "test@testing.com");
+        bioSerializedData.put("phone", phone);
+        SerializedCustomType bio = SerializedCustomType.builder()
+                .serializedData(bioSerializedData)
+                .customTypeSchema(schemaRegistry.getCustomTypeSchemaMap().get("Bio"))
+                .build();
+
+        Map<String, Object> addressSerializedData1 = new HashMap<>();
+        addressSerializedData1.put("line1", "222 Somewhere far");
+        addressSerializedData1.put("line2", "apt 3");
+        addressSerializedData1.put("city", "SFO");
+        addressSerializedData1.put("state", "CA");
+        addressSerializedData1.put("postalCode", "94105");
+        SerializedCustomType address1 = SerializedCustomType.builder()
+                .serializedData(addressSerializedData1)
+                .customTypeSchema(schemaRegistry.getCustomTypeSchemaMap().get("Address"))
+                .build();
+
+        Map<String, Object> addressSerializedData2 = new HashMap<>();
+        addressSerializedData2.put("line1", "333 Somewhere close");
+        addressSerializedData2.put("line2", null);
+        addressSerializedData2.put("city", "SEA");
+        addressSerializedData2.put("state", "WA");
+        addressSerializedData2.put("postalCode", "00000");
+        SerializedCustomType address2 = SerializedCustomType.builder()
+                .serializedData(addressSerializedData2)
+                .customTypeSchema(schemaRegistry.getCustomTypeSchemaMap().get("Address"))
+                .build();
+
+        ArrayList<SerializedCustomType> addressesList = new ArrayList<>();
+        addressesList.add(address1);
+        addressesList.add(address2);
+
+        Map<String, Object> personSerializedData = new HashMap<>();
+        personSerializedData.put("id", "123456");
+        personSerializedData.put("name", "Tester Testing");
+        personSerializedData.put("bio", bio);
+        personSerializedData.put("mailingAddresses", addressesList);
+
+        SerializedModel person = SerializedModel.builder()
+                .serializedData(personSerializedData)
+                .modelSchema(schemaRegistry.getModelSchemaForModelClass("Person"))
+                .build();
+
+        String actual = AppSyncRequestFactory.buildCreationRequest(
+                schemaRegistry.getModelSchemaForModelClass("Person"), person, DEFAULT_STRATEGY)
+                .getContent();
+
+        JSONAssert.assertEquals(
+                Resources.readAsString("create-nested-serialized-model-custom-type.txt"),
+                actual,
+                true
+        );
+
+        clearSerializedModelNestsSerializedCustomTypeSchemas();
+    }
+
+    /**
+     * Validates creation of a serialized model nests serialized custom types.
+     *
+     * @throws JSONException from JSONAssert.assertEquals JSON parsing error
+     * @throws AmplifyException from ModelSchema.fromModelClass to convert model to schema
+     */
+    @Test
+    public void validateMutationOnUpdateSerializedModelNestsSerializedCustomTypeWithOnlyChangedFields()
+            throws JSONException, AmplifyException {
+        buildSerializedModelNestsSerializedCustomTypeSchemas();
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+
+        Map<String, Object> phoneSerializedData = new HashMap<>();
+        phoneSerializedData.put("country", "+1");
+        phoneSerializedData.put("area", "415");
+        phoneSerializedData.put("number", "6666666");
+        SerializedCustomType phone = SerializedCustomType.builder()
+                .serializedData(phoneSerializedData)
+                .customTypeSchema(schemaRegistry.getCustomTypeSchemaMap().get("Phone"))
+                .build();
+
+        Map<String, Object> bioSerializedData = new HashMap<>();
+        bioSerializedData.put("email", "test@testing.com");
+        bioSerializedData.put("phone", phone);
+        SerializedCustomType bio = SerializedCustomType.builder()
+                .serializedData(bioSerializedData)
+                .customTypeSchema(schemaRegistry.getCustomTypeSchemaMap().get("Bio"))
+                .build();
+
+        Map<String, Object> personSerializedData = new HashMap<>();
+        personSerializedData.put("id", "123456");
+        personSerializedData.put("bio", bio);
+
+        SerializedModel person = SerializedModel.builder()
+                .serializedData(personSerializedData)
+                .modelSchema(schemaRegistry.getModelSchemaForModelClass("Person"))
+                .build();
+
+        String actual = AppSyncRequestFactory.buildUpdateRequest(
+                schemaRegistry.getModelSchemaForModelClass("Person"),
+                person,
+                1,
+                QueryPredicates.all(),
+                DEFAULT_STRATEGY
+        ).getContent();
+
+        JSONAssert.assertEquals(
+                Resources.readAsString("update-nested-serialized-model-custom-type.txt"),
+                actual,
+                true
+        );
+
+        clearSerializedModelNestsSerializedCustomTypeSchemas();
+    }
+
     private Parent buildTestParentModel() {
         Address address = Address.builder()
                 .street("555 Five Fiver")
@@ -455,6 +595,134 @@ public final class AppSyncRequestFactoryTest {
                 .build();
     }
 
+    private void buildSerializedModelNestsSerializedCustomTypeSchemas() {
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+
+        CustomTypeField addressLine1Field = CustomTypeField.builder()
+                .name("line1")
+                .isRequired(true)
+                .targetType("String")
+                .build();
+        CustomTypeField addressLine2Field = CustomTypeField.builder()
+                .name("line2")
+                .isRequired(false)
+                .targetType("String")
+                .build();
+        CustomTypeField addressCityField = CustomTypeField.builder()
+                .name("city")
+                .isRequired(true)
+                .targetType("String")
+                .build();
+        CustomTypeField addressStateField = CustomTypeField.builder()
+                .name("state")
+                .isRequired(true)
+                .targetType("String")
+                .build();
+        CustomTypeField addressPostalCodeField = CustomTypeField.builder()
+                .name("postalCode")
+                .isRequired(true)
+                .targetType("String")
+                .build();
+
+        Map<String, CustomTypeField> addressFields = new HashMap<>();
+        addressFields.put("line1", addressLine1Field);
+        addressFields.put("line2", addressLine2Field);
+        addressFields.put("city", addressCityField);
+        addressFields.put("state", addressStateField);
+        addressFields.put("postalCode", addressPostalCodeField);
+        CustomTypeSchema addressSchema = CustomTypeSchema.builder()
+                .name("Address")
+                .pluralName("Addresses")
+                .fields(addressFields)
+                .build();
+
+        CustomTypeField phoneCountryField = CustomTypeField.builder()
+                .name("country")
+                .isRequired(true)
+                .targetType("String")
+                .build();
+        CustomTypeField phoneAreaField = CustomTypeField.builder()
+                .name("area")
+                .isRequired(true)
+                .targetType("String")
+                .build();
+        CustomTypeField phoneNumberField = CustomTypeField.builder()
+                .name("number")
+                .isRequired(true)
+                .targetType("String")
+                .build();
+        Map<String, CustomTypeField> phoneFields = new HashMap<>();
+        phoneFields.put("country", phoneCountryField);
+        phoneFields.put("area", phoneAreaField);
+        phoneFields.put("number", phoneNumberField);
+        CustomTypeSchema phoneSchema = CustomTypeSchema.builder()
+                .name("Phone")
+                .pluralName("Phones")
+                .fields(phoneFields)
+                .build();
+
+        CustomTypeField bioEmailField = CustomTypeField.builder()
+                .name("email")
+                .isRequired(false)
+                .targetType("String")
+                .build();
+        CustomTypeField bioPhoneField = CustomTypeField.builder()
+                .name("phone")
+                .isCustomType(true)
+                .targetType("Phone")
+                .build();
+        Map<String, CustomTypeField> bioFields = new HashMap<>();
+        bioFields.put("email", bioEmailField);
+        bioFields.put("phone", bioPhoneField);
+        CustomTypeSchema bioSchema = CustomTypeSchema.builder()
+                .name("Bio")
+                .fields(bioFields)
+                .build();
+
+        ModelField personBioField = ModelField.builder()
+                .name("bio")
+                .targetType("Bio")
+                .isCustomType(true)
+                .isRequired(true)
+                .build();
+        ModelField personNameField = ModelField.builder()
+                .name("name")
+                .targetType("String")
+                .isRequired(true)
+                .build();
+        ModelField personMailingAddressesField = ModelField.builder()
+                .name("mailingAddresses")
+                .targetType("Address")
+                .isCustomType(true)
+                .isArray(true)
+                .build();
+        ModelField personIdField = ModelField.builder()
+                .name("id")
+                .targetType("String")
+                .isRequired(true)
+                .build();
+        Map<String, ModelField> personFields = new HashMap<>();
+        personFields.put("bio", personBioField);
+        personFields.put("name", personNameField);
+        personFields.put("mailingAddresses", personMailingAddressesField);
+        personFields.put("id", personIdField);
+        ModelSchema personSchema = ModelSchema.builder()
+                .name("Person")
+                .pluralName("People")
+                .fields(personFields)
+                .modelClass(SerializedModel.class)
+                .build();
+
+        schemaRegistry.register("Address", addressSchema);
+        schemaRegistry.register("Phone", phoneSchema);
+        schemaRegistry.register("Bio", bioSchema);
+        schemaRegistry.register("Person", personSchema);
+    }
+
+    private void clearSerializedModelNestsSerializedCustomTypeSchemas() {
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.clear();
+    }
 
     /**
      * Verify that the owner field is removed if the value is null.

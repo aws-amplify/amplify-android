@@ -24,7 +24,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.types.JavaFieldType;
@@ -52,17 +52,17 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
     private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final ModelSchema parentSchema;
-    private final ModelSchemaRegistry modelSchemaRegistry;
+    private final SchemaRegistry schemaRegistry;
     private final Gson gson;
     private final Map<String, SQLiteColumn> columns;
 
     SQLiteModelFieldTypeConverter(
             @NonNull ModelSchema parentSchema,
-            @NonNull ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull SchemaRegistry schemaRegistry,
             @NonNull Gson gson
     ) {
         this.parentSchema = Objects.requireNonNull(parentSchema);
-        this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
+        this.schemaRegistry = Objects.requireNonNull(schemaRegistry);
         this.gson = Objects.requireNonNull(gson);
         this.columns = SQLiteTable.fromSchema(parentSchema).getColumns();
     }
@@ -205,9 +205,9 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         // At the time of implementation, cursor should have been joined with these
         // columns IF AND ONLY IF the model is a foreign key to the inner model.
         ModelSchema innerModelSchema =
-            modelSchemaRegistry.getModelSchemaForModelClass(field.getTargetType());
+            schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
         SQLiteModelFieldTypeConverter nestedModelConverter =
-            new SQLiteModelFieldTypeConverter(innerModelSchema, modelSchemaRegistry, gson);
+            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson);
         return nestedModelConverter.buildMapForModel(cursor);
     }
 

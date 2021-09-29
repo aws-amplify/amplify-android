@@ -22,7 +22,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
@@ -39,6 +39,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -54,6 +55,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     private SQLiteStorageAdapter sqliteStorageAdapter;
     private AmplifyCliGeneratedModelProvider modelProvider;
     private RandomVersionModelProvider modelProviderThatUpgradesVersion;
+    private SchemaRegistry schemaRegistry;
 
     private Context context;
 
@@ -67,14 +69,20 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
 
     /**
      * Setup the required information for SQLiteStorageHelper construction.
+     *
+     * @throws AmplifyException may throw {@link AmplifyException} from {@link SchemaRegistry#register(Set)}
      */
     @Before
-    public void setUp() {
+    public void setUp() throws AmplifyException {
         context = ApplicationProvider.getApplicationContext();
         context.deleteDatabase(DATABASE_NAME);
 
         modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
         modelProviderThatUpgradesVersion = RandomVersionModelProvider.singletonInstance();
+
+        schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.clear();
+        schemaRegistry.register(modelProvider.models());
     }
 
     /**
@@ -85,6 +93,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     public void tearDown() throws DataStoreException {
         sqliteStorageAdapter.terminate();
         context.deleteDatabase(DATABASE_NAME);
+        schemaRegistry.clear();
     }
 
     /**
@@ -95,10 +104,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     @Test
     public void modelVersionStoredCorrectlyBeforeAndAfterUpgrade() throws AmplifyException {
         // Initialize StorageAdapter with models
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        modelSchemaRegistry.clear();
-        modelSchemaRegistry.register(modelProvider.models());
-        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
+        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider);
         List<ModelSchema> firstResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) -> {
@@ -134,7 +140,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         sqliteStorageAdapter = null;
 
         sqliteStorageAdapter =
-            SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProviderThatUpgradesVersion);
+            SQLiteStorageAdapter.forModels(schemaRegistry, modelProviderThatUpgradesVersion);
 
         // Now, initialize storage adapter with the new models
         List<ModelSchema> secondResults = Await.result(

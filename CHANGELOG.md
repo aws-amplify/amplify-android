@@ -1,3 +1,32 @@
+## [Release 1.27.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.27.0)
+
+### Features
+- **geo:** Added support for Geo category (#1502)
+
+### Bug Fixes
+- **datastore:** ensure attaching nested model schema to SerializedModel (#1495)
+
+[See all changes between 1.26.0 and 1.27.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.26.0...release_v1.27.0)
+
+## [Release 1.26.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.26.0)
+
+### Features
+- **datastore:** Add non-model type support for amplify-flutter (#1459)
+
+### Bug Fixes
+- **auth:** check for correct exception type when signing out globally (#1473)
+- **auth:** null-check username when getting current user (#1490)
+
+[See all changes between 1.25.1 and 1.26.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.25.1...release_v1.26.0)
+
+## [Release 1.25.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.25.1)
+
+### Miscellaneous
+- fix(predictions):remove invalid test (#1476)
+- chore: SDK version bump
+
+[See all changes between 1.25.0 and 1.25.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.25.0...release_v1.25.1)
+
 ## [Release 1.25.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.25.0)
 
 ### Features

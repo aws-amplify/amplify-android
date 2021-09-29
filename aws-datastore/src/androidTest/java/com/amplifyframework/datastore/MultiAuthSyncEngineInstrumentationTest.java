@@ -36,8 +36,9 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.TestStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
@@ -741,9 +742,10 @@ public final class MultiAuthSyncEngineInstrumentationTest {
 
         MultiAuthTestModelProvider modelProvider =
             MultiAuthTestModelProvider.getInstance(Collections.singletonList(modelType));
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
 
-        modelSchemaRegistry.register(modelType.getSimpleName(), ModelSchema.fromModelClass(modelType));
+        ModelSchema modelSchema = ModelSchema.fromModelClass(modelType);
+        schemaRegistry.register(modelType.getSimpleName(), modelSchema);
 
         StrictMode.enable();
         Context context = getApplicationContext();
@@ -807,25 +809,25 @@ public final class MultiAuthSyncEngineInstrumentationTest {
 
         // Setup DataStore
         DataStoreConfiguration dsConfig = DataStoreConfiguration.builder()
-                                                                .errorHandler(exception -> {
-                                                                    Log.e(tag,
-                                                                          "DataStore error handler received an error.",
-                                                                          exception);
-                                                                })
-                                                                .build();
+                                                .errorHandler(exception -> Log.e(tag,
+                                                    "DataStore error handler received an error.",
+                                                    exception))
+                                                .syncExpression(modelSchema.getName(),
+                                                    () -> Where.id("FAKE_ID").getQueryPredicate())
+                                                .build();
         CategoryConfiguration dataStoreCategoryConfiguration =
             AmplifyConfiguration.fromConfigFile(context, configResourceId)
                                 .forCategoryType(CategoryType.DATASTORE);
 
         String databaseName = "IntegTest" + modelType.getSimpleName() + ".db";
         SQLiteStorageAdapter sqLiteStorageAdapter = TestStorageAdapter
-            .create(modelSchemaRegistry, modelProvider, databaseName);
+            .create(schemaRegistry, modelProvider, databaseName);
         AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
                                                                   .storageAdapter(sqLiteStorageAdapter)
                                                                   .modelProvider(modelProvider)
                                                                   .apiCategory(apiCategory)
                                                                   .authModeStrategy(AuthModeStrategyType.MULTIAUTH)
-                                                                  .modelSchemaRegistry(modelSchemaRegistry)
+                                                                  .schemaRegistry(schemaRegistry)
                                                                   .dataStoreConfiguration(dsConfig)
                                                                   .build();
         DataStoreCategory dataStoreCategory = new DataStoreCategory();

@@ -1,3 +1,32 @@
+## [Release 0.11.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.11.0)
+
+### Features
+- **geo:** Added support for Geo category (#1502)
+
+### Bug Fixes
+- **datastore:** ensure attaching nested model schema to SerializedModel (#1495)
+
+[See all changes between 0.10.0 and 0.11.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.10.0...release-kotlin_v0.11.0)
+
+## [Release 0.10.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.10.0)
+
+### Features
+- **datastore:** Add non-model type support for amplify-flutter (#1459)
+
+### Bug Fixes
+- **auth:** check for correct exception type when signing out globally (#1473)
+- **auth:** null-check username when getting current user (#1490)
+
+[See all changes between 0.9.1 and 0.10.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.9.1...release-kotlin_v0.10.0)
+
+## [Release 0.9.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.9.1)
+
+### Miscellaneous
+- fix(predictions):remove invalid test (#1476)
+- chore: SDK version bump
+
+[See all changes between 0.9.0 and 0.9.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.9.0...release-kotlin_v0.9.1)
+
 ## [Release 0.9.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.9.0)
 
 ### Features

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -18,8 +18,9 @@ include ':core'
 // Plugin Modules
 include ':aws-analytics-pinpoint'
 include ':aws-api'
-include ':aws-datastore'
 include ':aws-auth-cognito'
+include ':aws-datastore'
+include ':aws-geo-location'
 include ':aws-predictions'
 include ':aws-predictions-tensorflow'
 include ':aws-storage-s3'
@@ -32,4 +33,4 @@ include ':testmodels'
 include ':core-kotlin'
 include ':rxbindings'
 include ':aws-api-appsync'
-
+include ':maplibre-adapter'

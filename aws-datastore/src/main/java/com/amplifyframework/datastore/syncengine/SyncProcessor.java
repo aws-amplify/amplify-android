@@ -26,7 +26,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.AmplifyDisposables;
@@ -67,7 +67,7 @@ final class SyncProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final ModelProvider modelProvider;
-    private final ModelSchemaRegistry modelSchemaRegistry;
+    private final SchemaRegistry schemaRegistry;
     private final SyncTimeRegistry syncTimeRegistry;
     private final AppSync appSync;
     private final Merger merger;
@@ -79,7 +79,7 @@ final class SyncProcessor {
 
     private SyncProcessor(Builder builder) {
         this.modelProvider = builder.modelProvider;
-        this.modelSchemaRegistry = builder.modelSchemaRegistry;
+        this.schemaRegistry = builder.schemaRegistry;
         this.syncTimeRegistry = builder.syncTimeRegistry;
         this.appSync = builder.appSync;
         this.merger = builder.merger;
@@ -112,7 +112,7 @@ final class SyncProcessor {
         // And sort them all, according to their model's topological order,
         // So that when we save them, the references will exist.
         TopologicalOrdering ordering =
-            TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
+            TopologicalOrdering.forRegisteredModels(schemaRegistry, modelProvider);
         Collections.sort(modelSchemas, ordering::compare);
         for (ModelSchema schema : modelSchemas) {
             hydrationTasks.add(createHydrationTask(schema));
@@ -162,11 +162,11 @@ final class SyncProcessor {
                 ));
             })
             .doOnError(failureToSync -> {
-                LOG.warn("Initial cloud sync failed.", failureToSync);
+                LOG.warn("Initial cloud sync failed for " + schema.getName() + ".", failureToSync);
                 DataStoreErrorHandler dataStoreErrorHandler =
                     dataStoreConfigurationProvider.getConfiguration().getErrorHandler();
                 dataStoreErrorHandler.accept(new DataStoreException(
-                    "Initial cloud sync failed.", failureToSync,
+                    "Initial cloud sync failed for " + schema.getName() + ".", failureToSync,
                     "Check your internet connection."
                 ));
             })
@@ -255,7 +255,11 @@ final class SyncProcessor {
         if (original.getModel() instanceof SerializedModel) {
             SerializedModel originalModel = (SerializedModel) original.getModel();
             SerializedModel newModel = SerializedModel.builder()
-                    .serializedData(originalModel.getSerializedData())
+                    .serializedData(SerializedModel.parseSerializedData(
+                            originalModel.getSerializedData(),
+                            schema.getName(),
+                            schemaRegistry
+                    ))
                     .modelSchema(schema)
                     .build();
             return new ModelWithMetadata<>((T) newModel, original.getSyncMetadata());
@@ -302,11 +306,11 @@ final class SyncProcessor {
     /**
      * Builds instances of {@link SyncProcessor}s.
      */
-    public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep,
+    public static final class Builder implements ModelProviderStep, SchemaRegistryStep,
             SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep,
             QueryPredicateProviderStep, RetryHandlerStep, SyncRetryStep, BuildStep {
         private ModelProvider modelProvider;
-        private ModelSchemaRegistry modelSchemaRegistry;
+        private SchemaRegistry schemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
         private AppSync appSync;
         private Merger merger;
@@ -317,15 +321,15 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public ModelSchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider) {
+        public SchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider) {
             this.modelProvider = Objects.requireNonNull(modelProvider);
             return Builder.this;
         }
 
         @NonNull
         @Override
-        public SyncTimeRegistryStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
-            this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
+        public SyncTimeRegistryStep schemaRegistry(@NonNull SchemaRegistry schemaRegistry) {
+            this.schemaRegistry = Objects.requireNonNull(schemaRegistry);
             return Builder.this;
         }
 
@@ -388,12 +392,12 @@ final class SyncProcessor {
 
     interface ModelProviderStep {
         @NonNull
-        ModelSchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider);
+        SchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider);
     }
 
-    interface ModelSchemaRegistryStep {
+    interface SchemaRegistryStep {
         @NonNull
-        SyncTimeRegistryStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry);
+        SyncTimeRegistryStep schemaRegistry(@NonNull SchemaRegistry schemaRegistry);
     }
 
     interface SyncTimeRegistryStep {
