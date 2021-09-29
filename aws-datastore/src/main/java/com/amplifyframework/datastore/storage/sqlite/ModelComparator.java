@@ -28,6 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Locale;
 
 /***
  * Model comparator.
@@ -181,7 +182,7 @@ public final class ModelComparator<T extends Model> implements Comparator<T> {
         for (Method method : className.getMethods()) {
             if ((method.getName().startsWith("get")) && (method.getName().length() ==
                     (field.getName().length() + NUM_LETTERS_FOR_GET))) {
-                if (method.getName().toLowerCase().endsWith(field.getName().toLowerCase())) {
+                if (method.getName().toLowerCase(Locale.ROOT).endsWith(field.getName().toLowerCase(Locale.ROOT))) {
                     return method;
                 }
             }
