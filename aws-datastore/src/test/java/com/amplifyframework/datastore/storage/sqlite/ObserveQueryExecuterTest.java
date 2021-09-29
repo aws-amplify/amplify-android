@@ -106,9 +106,10 @@ public class ObserveQueryExecuterTest {
      * observe Query Returns Records Based On Max Records.
      * @throws InterruptedException InterruptedException
      * @throws DataStoreException DataStoreException
+     * @throws AmplifyException AmplifyException
      */
     @Test
-    public void observeQueryReturnsRecordsBasedOnMaxRecords() throws InterruptedException, DataStoreException {
+    public void observeQueryReturnsRecordsBasedOnMaxRecords() throws InterruptedException, AmplifyException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
         AtomicInteger count = new AtomicInteger();
@@ -164,22 +165,18 @@ public class ObserveQueryExecuterTest {
             BlogOwner itemChange = BlogOwner.builder()
                     .name("Alan Turing" + i)
                     .build();
-            try {
-                subject.onNext(StorageItemChange.<BlogOwner>builder()
-                        .changeId(UUID.randomUUID().toString())
-                        .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
-                        .item(itemChange)
-                        .patchItem(SerializedModel.create(itemChange,
-                                ModelSchema.fromModelClass(BlogOwner.class)))
-                        .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
-                        .predicate(QueryPredicates.all())
-                        .type(StorageItemChange.Type.UPDATE)
-                        .build());
-            } catch (AmplifyException exception) {
-                exception.printStackTrace();
-            }
+            subject.onNext(StorageItemChange.<BlogOwner>builder()
+                .changeId(UUID.randomUUID().toString())
+                .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
+                .item(itemChange)
+                .patchItem(SerializedModel.create(itemChange,
+                        ModelSchema.fromModelClass(BlogOwner.class)))
+                .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                .predicate(QueryPredicates.all())
+                .type(StorageItemChange.Type.UPDATE)
+                .build());
         }
-        Assert.assertTrue(changeLatch.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
     }
 
     /***
