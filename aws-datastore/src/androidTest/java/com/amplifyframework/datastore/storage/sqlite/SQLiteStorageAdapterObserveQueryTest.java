@@ -21,7 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -78,7 +78,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
     public void setup() {
         TestStorageAdapter.cleanup();
         AmplifyModelProvider modelProvider = AmplifyModelProvider.getInstance();
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        SchemaRegistry modelSchemaRegistry = SchemaRegistry.instance();
         modelSchemaRegistry.clear();
         try {
             modelSchemaRegistry.register(modelProvider.models());

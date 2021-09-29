@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -41,14 +41,14 @@ import java.util.Map;
 class SqlQueryProcessor {
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private final ModelSchemaRegistry modelSchemaRegistry;
+    private final SchemaRegistry modelSchemaRegistry;
     private final SQLCommandFactory sqlCommandFactory;
     private final SQLCommandProcessor sqlCommandProcessor;
     private final Gson gson;
 
     SqlQueryProcessor(SQLCommandProcessor sqlCommandProcessor,
                       SQLCommandFactory sqlCommandFactory,
-                      ModelSchemaRegistry modelSchemaRegistry) {
+                      SchemaRegistry modelSchemaRegistry) {
         this.sqlCommandProcessor = sqlCommandProcessor;
         this.sqlCommandFactory = sqlCommandFactory;
         this.modelSchemaRegistry = modelSchemaRegistry;
