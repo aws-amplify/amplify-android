@@ -176,7 +176,7 @@ public class ObserveQueryExecuterTest {
                 .type(StorageItemChange.Type.UPDATE)
                 .build());
         }
-        Assert.assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
+        Assert.assertTrue(changeLatch.await(7, TimeUnit.SECONDS));
     }
 
     /***
