@@ -194,7 +194,7 @@ public final class AppSyncRequestFactoryTest {
         final GraphQLRequest<Iterable<Post>> request =
                 AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.none());
         JSONAssert.assertEquals(Resources.readAsString("base-sync-request-with-predicate-match-none.txt"),
-                request.getContent(),true);
+                request.getContent(), true);
     }
 
     /**
@@ -302,11 +302,11 @@ public final class AppSyncRequestFactoryTest {
 
         assertEquals(
             Collections.singletonMap("and", Arrays.asList(
-                    Collections.singletonMap("name", Collections.singletonMap("beginsWith", "A day in the life of a...")),
-                    Collections.singletonMap("blogOwnerId", Collections.singletonMap("eq", "DUMMY_OWNER_ID"))
+                Collections.singletonMap("name", Collections.singletonMap("beginsWith", "A day in the life of a...")),
+                Collections.singletonMap("blogOwnerId", Collections.singletonMap("eq", "DUMMY_OWNER_ID"))
             )),
             AppSyncRequestFactory.parsePredicate(
-                    Blog.NAME.beginsWith("A day in the life of a...").and(Blog.OWNER.eq("DUMMY_OWNER_ID"))
+                Blog.NAME.beginsWith("A day in the life of a...").and(Blog.OWNER.eq("DUMMY_OWNER_ID"))
             )
         );
 
