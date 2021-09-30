@@ -1,3 +1,19 @@
+## [Release 0.12.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.0)
+
+### Features
+- **datastore:** Add support for parsing match none predicate in AppSync request builder (#1515)
+
+### Bug Fixes
+- **datastore:** timeout period not increasing for flutter (#1505)
+- **datastore:** Ensure not to parse SerializedCustomType if value is null (#1513)
+
+### Miscellaneous
+- Fix for issue with foreign keys on schema upgrade delete (#1501)
+- better announce which schema is failing to sync (#1479)
+- Observe query (#1470)
+
+[See all changes between 0.11.0 and 0.12.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.11.0...release-kotlin_v0.12.0)
+
 ## [Release 0.11.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.11.0)
 
 ### Features
