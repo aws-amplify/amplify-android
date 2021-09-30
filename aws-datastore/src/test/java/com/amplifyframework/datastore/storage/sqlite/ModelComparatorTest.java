@@ -25,12 +25,13 @@ import org.junit.Test;
 public class ModelComparatorTest {
 
     /***
-     * Test Comparater compares strings and returns less than.
+     * Test Comparator compares strings and returns less than.
      */
     @Test
     public void comparatorComparesStringValuesAsLessThan() {
         ModelComparator<BlogOwner> subject = new ModelComparator<>(BlogOwner.NAME.ascending(),
-                BlogOwner.class);
+            BlogOwner.class,
+            value -> { });
         int result = subject.compare(BlogOwner.builder().name("Jessica").build(),
                 BlogOwner.builder().name("Monica").build());
         Assert.assertEquals(-1, result / Math.abs(result));
@@ -42,7 +43,8 @@ public class ModelComparatorTest {
     @Test
     public void comparatorComparesStringValuesAsGreaterThan() {
         ModelComparator<BlogOwner> subject = new ModelComparator<>(BlogOwner.NAME.descending(),
-                BlogOwner.class);
+            BlogOwner.class,
+            value -> { });
         int result = subject.compare(BlogOwner.builder().name("Monica").build(),
                 BlogOwner.builder().name("Jessica").build());
         Assert.assertEquals(1, result / Math.abs(result));
@@ -54,7 +56,8 @@ public class ModelComparatorTest {
     @Test
     public void comparatorComparesStringValuesAsEquals() {
         ModelComparator<BlogOwner> subject = new ModelComparator<>(BlogOwner.NAME.descending(),
-                BlogOwner.class);
+            BlogOwner.class,
+            value -> { });
         int result = subject.compare(BlogOwner.builder().name("Monica").build(),
                 BlogOwner.builder().name("Monica").build());
         Assert.assertEquals(0, result);
@@ -66,7 +69,8 @@ public class ModelComparatorTest {
     @Test
     public void comparatorComparesIntValuesAsLessThan() {
         ModelComparator<Post> subject = new ModelComparator<>(Post.RATING.descending(),
-                Post.class);
+            Post.class,
+            value -> { });
         int result = subject.compare(Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(2).build(),
                 Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(3).build());
         Assert.assertEquals(-1, result / Math.abs(result));
@@ -78,7 +82,8 @@ public class ModelComparatorTest {
     @Test
     public void comparatorComparesIntValuesAsGreaterThan() {
         ModelComparator<Post> subject = new ModelComparator<>(Post.RATING.descending(),
-                Post.class);
+            Post.class,
+            value -> { });
         int result = subject.compare(Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(3).build(),
                 Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(2).build());
         Assert.assertEquals(1, result / Math.abs(result));
@@ -90,7 +95,8 @@ public class ModelComparatorTest {
     @Test
     public void comparatorComparesIntValuesAsEquals() {
         ModelComparator<Post> subject = new ModelComparator<>(Post.RATING.descending(),
-                Post.class);
+            Post.class,
+            value -> { });
         int result = subject.compare(Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(3).build(),
                 Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(3).build());
         Assert.assertEquals(0, result);

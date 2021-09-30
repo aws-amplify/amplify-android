@@ -51,7 +51,10 @@ public class ModelSorterTest {
         sortBy.add(BlogOwner.NAME.descending());
         sortBy.add(BlogOwner.WEA.ascending());
         ModelSorter<BlogOwner> subject = new ModelSorter<>();
-        subject.sort(new ObserveQueryOptions(null, sortBy), owners, BlogOwner.class);
+        subject.sort(new ObserveQueryOptions(null, sortBy),
+            owners,
+            BlogOwner.class,
+            value -> { });
         List<BlogOwner> sorted = new ArrayList<>(owners);
         Collections.sort(sorted, Comparator
                 .comparing(BlogOwner::getName)
