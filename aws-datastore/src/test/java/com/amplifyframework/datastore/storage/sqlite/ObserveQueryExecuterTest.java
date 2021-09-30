@@ -254,7 +254,7 @@ public class ObserveQueryExecuterTest {
                 exception.printStackTrace();
             }
         }
-        Assert.assertTrue(changeLatch.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
     }
 
     /***
@@ -348,7 +348,7 @@ public class ObserveQueryExecuterTest {
                 exception.printStackTrace();
             }
         }
-        Assert.assertTrue(changeLatch.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
     }
 
     /***
@@ -438,7 +438,7 @@ public class ObserveQueryExecuterTest {
                 exception.printStackTrace();
             }
         }
-        Assert.assertTrue(changeLatch.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
     }
 
     /***
