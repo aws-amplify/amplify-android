@@ -18,10 +18,12 @@ package com.amplifyframework.rx;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.DataStoreItemChange;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
@@ -188,6 +190,19 @@ public interface RxDataStoreCategoryBehavior {
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate selectionCriteria
     );
+
+    /***
+     * Observe query returns the items from local datastore when you subscribe, then returns
+     * mutations happening in the datastore.
+     * @param itemClass class of the item being observed.
+     * @param options ObserveQueryOptions.
+     * @param <T> Type which extends Model.
+     * @return An observable stream of {@link DataStoreQuerySnapshot}s, emitted for items that are
+     * of the requested class, and that match the provided selection criteria
+     */
+    @NonNull
+    <T extends Model> Observable<DataStoreQuerySnapshot<T>>
+            observeQuery(@NonNull Class<T> itemClass, ObserveQueryOptions options);
 
     /**
      * Starts the DataStore.  This only needs to be called if you wish to start eagerly.  If you don't call it,

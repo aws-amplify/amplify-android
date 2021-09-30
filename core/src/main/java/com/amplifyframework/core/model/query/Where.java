@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -80,5 +81,15 @@ public final class Where {
      */
     public static QueryOptions sorted(@NonNull final QuerySortBy... sortBy) {
         return new QueryOptions(null, null, Arrays.asList(Objects.requireNonNull(sortBy)));
+    }
+
+    /**
+     * Factory method that builds the options with the given {@link QueryPredicate and @link QuerySortBy} arguments.
+     * @param queryPredicate the query conditions.
+     * @param sortBy a varargs list of QuerySortBy options, in the order in which they are to be applied.
+     * @return options with the given sortBy fields.
+     */
+    public static QueryOptions matchesAndSorts(final QueryPredicate queryPredicate, final List<QuerySortBy> sortBy) {
+        return new QueryOptions(queryPredicate, null, sortBy);
     }
 }

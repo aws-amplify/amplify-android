@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -18,14 +18,19 @@ package com.amplifyframework.datastore.storage;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.VoidResult;
 
@@ -93,8 +98,20 @@ public final class SynchronousStorageAdapter {
     public List<ModelSchema> initialize(@NonNull Context context) throws DataStoreException {
         return Await.result(
             operationTimeoutMs,
-            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                asyncDelegate.initialize(context, onResult, onError)
+            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) -> {
+                try {
+                    asyncDelegate.initialize(context,
+                            onResult,
+                            onError,
+                            DataStoreConfiguration.builder()
+                                    .syncInterval(2L, TimeUnit.MINUTES)
+                                    .observeQueryMaxRecords(2)
+                                    .observeQueryMaxTime(0)
+                                    .build());
+                } catch (DataStoreException exception) {
+                    onError.accept(exception);
+                }
+            }
         );
     }
 
@@ -204,6 +221,31 @@ public final class SynchronousStorageAdapter {
             resultSet.add(resultIterator.next());
         }
         return resultSet;
+    }
+
+    /**
+     * Query the storage adapter for models of a given class, and considering some additional criteria
+     * that each model must meet.
+     * @param modelClass Class of models being queried
+     * @param options Query options with predicate and pagination info
+     * @param <T> Type of model being queried
+     * @param onObservationStarted callback for canceling the subscription
+     * @param onQuerySnapshot callback for DataStoreQuerySnapshot
+     * @param onObservationError callback for DataStoreException
+     * @param onObservationComplete callback for onObservationComplete
+     */
+    public <T extends Model> void observeQuery(@NonNull Class<T> modelClass,
+                                               @NonNull ObserveQueryOptions options,
+                                               @NonNull Consumer<Cancelable> onObservationStarted,
+                                               @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+                                               @NonNull Consumer<DataStoreException> onObservationError,
+                                               @NonNull Action onObservationComplete) {
+        asyncDelegate.observeQuery(modelClass,
+                options,
+                onObservationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
     }
 
     /**
