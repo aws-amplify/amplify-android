@@ -111,7 +111,7 @@ public class ObserveQueryExecuterTest {
     @Test
     public void observeQueryReturnsRecordsBasedOnMaxRecords() throws InterruptedException, AmplifyException {
         CountDownLatch latch = new CountDownLatch(1);
-        CountDownLatch changeLatch = new CountDownLatch(1);
+        CountDownLatch changeLatch = new CountDownLatch(2);
         AtomicInteger count = new AtomicInteger();
         BlogOwner blogOwner = BlogOwner.builder()
                 .name("Alan Turing")
@@ -130,6 +130,7 @@ public class ObserveQueryExecuterTest {
                 latch.countDown();
             } else if (count.get() == 1) {
                 Assert.assertEquals(3, value.getItems().size());
+                changeLatch.countDown();
             } else {
                 Assert.assertEquals(5, value.getItems().size());
                 changeLatch.countDown();
