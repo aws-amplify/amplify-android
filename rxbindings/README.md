@@ -24,7 +24,7 @@ library. In your module's `build.gradle`:
 ```gradle
 dependencies {
     // Add this line.
-    implementation 'com.amplifyframework:rxbindings:1.27.0'
+    implementation 'com.amplifyframework:rxbindings:1.28.0'
 }
 ```
 
