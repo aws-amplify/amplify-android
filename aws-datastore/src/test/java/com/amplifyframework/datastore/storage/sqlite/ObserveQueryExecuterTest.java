@@ -354,11 +354,11 @@ public class ObserveQueryExecuterTest {
     /***
      * ObserveQuery returns sorted list of total items with int.
      * @throws InterruptedException interrupted exception.
-     * @throws DataStoreException data store exception.
+     * @throws AmplifyException data store exception.
      */
     @Test
     public void observeQueryReturnsSortedListOfTotalItemsWithInt() throws InterruptedException,
-            DataStoreException {
+            AmplifyException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
         AtomicInteger count = new AtomicInteger();
@@ -404,7 +404,7 @@ public class ObserveQueryExecuterTest {
             threadPool,
             mockSyncStatus,
             new ModelSorter<>(),
-            maxRecords, 1);
+            maxRecords, 2);
 
         List<QuerySortBy> sortBy = new ArrayList<>();
         sortBy.add(Post.RATING.ascending());
@@ -415,7 +415,7 @@ public class ObserveQueryExecuterTest {
                 onQuerySnapshot,
                 onObservationError,
                 onObservationComplete);
-        Assert.assertTrue(latch.await(1, TimeUnit.SECONDS));
+        Assert.assertTrue(latch.await(2, TimeUnit.SECONDS));
         for (int i = 5; i < 11; i++) {
             Post itemChange = Post.builder()
                     .title(i + "-title")
@@ -423,20 +423,16 @@ public class ObserveQueryExecuterTest {
                     .rating(i)
                     .build();
             posts.add(itemChange);
-            try {
-                subject.onNext(StorageItemChange.<Post>builder()
-                        .changeId(UUID.randomUUID().toString())
-                        .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
-                        .item(itemChange)
-                        .patchItem(SerializedModel.create(itemChange,
-                                ModelSchema.fromModelClass(Post.class)))
-                        .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
-                        .predicate(QueryPredicates.all())
-                        .type(StorageItemChange.Type.CREATE)
-                        .build());
-            } catch (AmplifyException exception) {
-                exception.printStackTrace();
-            }
+            subject.onNext(StorageItemChange.<Post>builder()
+                .changeId(UUID.randomUUID().toString())
+                .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
+                .item(itemChange)
+                .patchItem(SerializedModel.create(itemChange,
+                        ModelSchema.fromModelClass(Post.class)))
+                .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                .predicate(QueryPredicates.all())
+                .type(StorageItemChange.Type.CREATE)
+                .build());
         }
         Assert.assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
     }
