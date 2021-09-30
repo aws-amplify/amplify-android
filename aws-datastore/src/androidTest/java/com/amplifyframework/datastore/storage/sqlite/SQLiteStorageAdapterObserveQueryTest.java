@@ -566,7 +566,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
         // Expect: Create BlogOwners and their respective blogs
         List<String> names = Arrays.asList("Joe", "Bob", "Dan", "Jane");
         List<Blog> blogs = new ArrayList<>();
-        CountDownLatch latch = new CountDownLatch(2);
+        CountDownLatch latch = new CountDownLatch(1);
         for (String name : names) {
             BlogOwner owner = BlogOwner.builder()
                     .name(name)
@@ -599,7 +599,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 onObservationError,
                 onObservationComplete);
         //assert
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
+        assertTrue(latch.await(2, TimeUnit.SECONDS));
     }
 
     /**
