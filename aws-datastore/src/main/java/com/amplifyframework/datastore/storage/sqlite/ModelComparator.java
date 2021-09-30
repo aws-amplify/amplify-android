@@ -18,9 +18,11 @@ package com.amplifyframework.datastore.storage.sqlite;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.logging.Logger;
 
 import java.lang.reflect.Field;
@@ -29,6 +31,7 @@ import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 /***
  * Model comparator.
@@ -40,24 +43,36 @@ public final class ModelComparator<T extends Model> implements Comparator<T> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final QuerySortBy sortBy;
     private final Class<T> itemClass;
+    private final Consumer<DataStoreException> onObservationError;
 
     /***
-     * Coampares type T which extends models.
+     * Compares type T which extends models.
      * @param sortBy sort by.
      * @param itemClass item class.
+     * @param onObservationError invoked on observation error.
      */
-    public ModelComparator(QuerySortBy sortBy, Class<T> itemClass) {
+    public ModelComparator(QuerySortBy sortBy,
+                           Class<T> itemClass,
+                           Consumer<DataStoreException> onObservationError) {
         this.sortBy = sortBy;
         this.itemClass = itemClass;
+        this.onObservationError = onObservationError;
     }
 
-    private static Object getValue(Method method, Model model) {
+    private Object getValue(Method method, Model model) {
         try {
             return method.invoke(model);
         } catch (IllegalAccessException exception) {
-            LOG.warn("Could not invoke method during sorting because of access level" + method.getName());
+            String message = "Could not invoke method during sorting because of access level"
+                    + method.getName();
+            LOG.warn(message);
+            onObservationError.accept(new DataStoreException("ObserveQuery",
+                    message + Objects.requireNonNull(exception.getMessage())));
         } catch (InvocationTargetException exception) {
-            LOG.warn("Could not invoke method during sorting " + method.getName());
+            String message = "Could not invoke method during sorting " + method.getName();
+            LOG.warn(message);
+            onObservationError.accept(new DataStoreException("ObserveQuery",
+                    message + Objects.requireNonNull(exception.getMessage())));
         }
         return null;
     }

@@ -21,6 +21,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QuerySortBy;
@@ -460,6 +461,50 @@ public class ObserveQueryExecuterTest {
         ObserveQueryExecuter<BlogOwner> observeQueryExecuter =
                 new ObserveQueryExecuter<>(subject,
                         mockSqlQueryProcessor,
+                        threadPool,
+                        mock(SyncStatus.class),
+                        new ModelSorter<>(),
+                        DataStoreConfiguration.defaults());
+        Consumer<Cancelable> observationStarted = value -> {
+            value.cancel();
+            Assert.assertTrue(observeQueryExecuter.getIsCancelled());
+            assertEquals(0, observeQueryExecuter.getCompleteMap().size());
+            assertEquals(0, observeQueryExecuter.getChangeList().size());
+            subject.test()
+                    .assertNoErrors().
+                    isDisposed();
+        };
+        observeQueryExecuter.observeQuery(
+                BlogOwner.class,
+                new ObserveQueryOptions(null, null),
+                observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
+    }
+
+    /***
+     * testing cancel on observe query.
+     * @throws DataStoreException DataStoreException
+     */
+    @Test
+    public void observeQueryCancelsTheOperationOnQueryError() throws DataStoreException {
+        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> { };
+        Consumer<DataStoreException> onObservationError = value -> { };
+        Action onObservationComplete = () -> { };
+        SQLCommandProcessor sqlCommandProcessor = mock(SQLCommandProcessor.class);
+        when(sqlCommandProcessor.rawQuery(any())).thenThrow(new DataStoreException("test", "test"));
+
+        SqlQueryProcessor sqlQueryProcessor = new SqlQueryProcessor(sqlCommandProcessor,
+                mock(SQLiteCommandFactory.class),
+                mock(SchemaRegistry.class));
+        Subject<StorageItemChange<? extends Model>> subject =
+                PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
+        ExecutorService threadPool = Executors.newFixedThreadPool(
+                Runtime.getRuntime().availableProcessors() * 5);
+        ObserveQueryExecuter<BlogOwner> observeQueryExecuter =
+                new ObserveQueryExecuter<>(subject,
+                        sqlQueryProcessor,
                         threadPool,
                         mock(SyncStatus.class),
                         new ModelSorter<>(),

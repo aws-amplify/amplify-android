@@ -139,13 +139,7 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
             collect(itemChanged, onQuerySnapshot, itemClass, options, onObservationError);
         };
         threadPool.submit(() -> {
-            List<T> models = sqlQueryProcessor.queryOfflineData(itemClass,
-                    Where.matchesAndSorts(options.getQueryPredicate(),
-                                          options.getSortBy()), onObservationError);
-            callOnQuerySnapshot(onQuerySnapshot, itemClass, onObservationError, models);
-            for (T model : models) {
-                completeItemMap.put(model.getId(), model);
-            }
+            queryLocalData(itemClass, options, onQuerySnapshot, onObservationError);
         });
 
         disposable = itemChangeSubject
@@ -166,6 +160,23 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
                 },
                 onObservationComplete::call
             );
+    }
+
+    private void queryLocalData(@NonNull Class<T> itemClass,
+                                @NonNull ObserveQueryOptions options,
+                                @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+                                @NonNull Consumer<DataStoreException> onObservationError) {
+        List<T> models = sqlQueryProcessor.queryOfflineData(itemClass,
+                Where.matchesAndSorts(options.getQueryPredicate(),
+                                      options.getSortBy()), onObservationError);
+        Consumer<DataStoreException> onQueryError = value -> {
+            cancel();
+            onObservationError.accept(value);
+        };
+        callOnQuerySnapshot(onQuerySnapshot, itemClass, onQueryError, models);
+        for (T model : models) {
+            completeItemMap.put(model.getId(), model);
+        }
     }
 
     /***
@@ -236,7 +247,7 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
                                       ObserveQueryOptions options,
                                       Consumer<DataStoreException> onObservationError) {
         List<T> completeList = new ArrayList<>(completeItemMap.values());
-        sortIfNeeded(options, completeList, itemClass);
+        sortIfNeeded(options, completeList, itemClass, onObservationError);
         callOnQuerySnapshot(onQuerySnapshot, itemClass, onObservationError, completeList);
     }
 
@@ -252,9 +263,10 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
 
     private void sortIfNeeded(ObserveQueryOptions options,
                               List<T> completeList,
-                              Class<T> itemClass) {
+                              Class<T> itemClass,
+                              Consumer<DataStoreException> onObservationError) {
         if (options != null && options.getSortBy() != null && options.getSortBy().size() > 0) {
-            modelSorter.sort(options, completeList, itemClass);
+            modelSorter.sort(options, completeList, itemClass, onObservationError);
         }
     }
 

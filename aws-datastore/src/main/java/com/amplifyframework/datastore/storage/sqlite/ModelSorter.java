@@ -15,10 +15,12 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.query.QuerySortOrder;
+import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,18 +37,24 @@ public class ModelSorter<T extends Model> {
      * @param options query options.
      * @param  list list of items to be sorted.
      * @param  itemClass the class of type to be sorted.
-     */
-    public void sort(ObserveQueryOptions options, List<T> list, Class<T> itemClass) {
+     * @param onObservationError invoked on observation error.
+     * */
+    public void sort(ObserveQueryOptions options,
+                     List<T> list,
+                     Class<T> itemClass,
+                     Consumer<DataStoreException> onObservationError) {
         if (options != null && options.getSortBy() != null && options.getSortBy().size() > 0) {
-            Comparator<T> comparator = getComparator(options.getSortBy(), itemClass);
+            Comparator<T> comparator = getComparator(options.getSortBy(), itemClass, onObservationError);
             Collections.sort(list, comparator);
         }
     }
 
-    private Comparator<T> getComparator(List<QuerySortBy> sortByList, Class<T> itemClass) {
+    private Comparator<T> getComparator(List<QuerySortBy> sortByList,
+                                        Class<T> itemClass,
+                                        Consumer<DataStoreException> onObservationError) {
         QuerySortBy sortBy = sortByList.get(0);
 
-        Comparator<T> comparator = new ModelComparator<T>(sortBy, itemClass);
+        Comparator<T> comparator = new ModelComparator<T>(sortBy, itemClass, onObservationError);
         QuerySortOrder sortOrder = sortBy.getSortOrder();
         if (sortOrder == QuerySortOrder.DESCENDING) {
             comparator = comparator.reversed();
@@ -54,7 +62,8 @@ public class ModelSorter<T extends Model> {
 
         for (int i = 1; i < sortByList.size(); i++) {
             QuerySortBy nextSortBy = sortByList.get(i);
-            Comparator<T> nextComparator = comparator.thenComparing(new ModelComparator<T>(nextSortBy, itemClass));
+            Comparator<T> nextComparator = comparator.thenComparing(new ModelComparator<T>(nextSortBy,
+                    itemClass, onObservationError));
             if (nextSortBy.getSortOrder() == QuerySortOrder.DESCENDING) {
                 nextComparator.reversed();
             }
