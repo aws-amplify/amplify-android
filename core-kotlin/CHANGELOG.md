@@ -1,3 +1,7 @@
+## [Release 0.12.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.0)
+
+[See all changes between 0.11.0 and 0.12.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.11.0...release-kotlin_v0.12.0)
+
 ## [Release 0.11.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.11.0)
 
 ### Features
