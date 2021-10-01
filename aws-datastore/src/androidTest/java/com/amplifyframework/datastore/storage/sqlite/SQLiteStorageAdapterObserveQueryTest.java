@@ -608,7 +608,6 @@ public final class SQLiteStorageAdapterObserveQueryTest {
      * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
      * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
-    //@Ignore("Failing in build")
     @Test
     public void querySavedDataWithMultipleItemsThenItemSaves() throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -647,7 +646,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 onObservationError,
                 onObservationComplete);
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
+        assertTrue(latch.await(3, TimeUnit.SECONDS));
         for (int counter = 11; counter < 13; counter++) {
             final BlogOwner blogOwner = BlogOwner.builder()
                     .name("namePrefix:" + counter)
@@ -655,6 +654,6 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             savedModels.add(blogOwner);
             adapter.save(blogOwner);
         }
-        assertTrue(changeLatch.await(7, TimeUnit.SECONDS));
+        assertTrue(changeLatch.await(9, TimeUnit.SECONDS));
     }
 }
