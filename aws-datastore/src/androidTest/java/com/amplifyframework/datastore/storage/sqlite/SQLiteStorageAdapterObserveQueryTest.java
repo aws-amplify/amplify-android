@@ -350,7 +350,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 onObservationError,
                 onObservationComplete);
 
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
+        assertTrue(latch.await(5, TimeUnit.SECONDS));
 
         for (int counter = 0; counter < 2; counter++) {
             final Post post = Post.builder()
@@ -362,7 +362,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             adapter.save(post);
             savedModels.add(post);
         }
-        assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(changeLatch.await(15, TimeUnit.SECONDS));
     }
 
     /**
