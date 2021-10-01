@@ -48,7 +48,7 @@ import io.reactivex.rxjava3.subjects.Subject;
  * Executes observe query operations.
  * @param <T> type of Model.
  */
-public class ObserveQueryExecuter<T extends Model> implements Cancelable {
+public class ObserveQueryExecutor<T extends Model> implements Cancelable {
     private final Subject<StorageItemChange<? extends Model>> itemChangeSubject;
     private final SqlQueryProcessor sqlQueryProcessor;
     private final ExecutorService threadPool;
@@ -60,6 +60,7 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
     private final long maxTimeSec;
     private final ModelSorter<T> modelSorter;
     private boolean isCanceled = false;
+    private boolean isSynced = false;
     private final Map<String, T> completeItemMap = new ConcurrentHashMap<>();
 
     /**
@@ -71,7 +72,7 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
      * @param modelSorter model sorter.
      * @param dataStoreConfiguration datastore configuration.
      */
-    public ObserveQueryExecuter(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
+    public ObserveQueryExecutor(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
                                 @NonNull SqlQueryProcessor sqlQueryProcessor,
                                 @NonNull ExecutorService threadPool,
                                 @NonNull SyncStatus syncStatus,
@@ -96,7 +97,7 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
      * @param maxRecords max records for batch.
      * @param maxSecs max time lapse for batch.
      */
-    public ObserveQueryExecuter(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
+    public ObserveQueryExecutor(@NonNull Subject<StorageItemChange<? extends Model>> itemChangeSubject,
                                 @NonNull SqlQueryProcessor sqlQueryProcessor,
                                 @NonNull ExecutorService threadPool,
                                 @NonNull SyncStatus syncStatus,
@@ -138,15 +139,7 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
             updateCompleteItemMap(itemChanged);
             collect(itemChanged, onQuerySnapshot, itemClass, options, onObservationError);
         };
-        threadPool.submit(() -> {
-            List<T> models = sqlQueryProcessor.queryOfflineData(itemClass,
-                    Where.matchesAndSorts(options.getQueryPredicate(),
-                                          options.getSortBy()), onObservationError);
-            callOnQuerySnapshot(onQuerySnapshot, itemClass, onObservationError, models);
-            for (T model : models) {
-                completeItemMap.put(model.getId(), model);
-            }
-        });
+        threadPool.submit(() -> queryLocalData(itemClass, options, onQuerySnapshot, onObservationError));
 
         disposable = itemChangeSubject
             .filter(x -> x.item().getClass().isAssignableFrom(itemClass) &&
@@ -168,21 +161,42 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
             );
     }
 
+    private void queryLocalData(@NonNull Class<T> itemClass,
+                                @NonNull ObserveQueryOptions options,
+                                @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+                                @NonNull Consumer<DataStoreException> onObservationError) {
+        List<T> models = sqlQueryProcessor.queryOfflineData(itemClass,
+                Where.matchesAndSorts(options.getQueryPredicate(),
+                                      options.getSortBy()), onObservationError);
+        Consumer<DataStoreException> onQueryError = value -> {
+            cancel();
+            onObservationError.accept(value);
+        };
+        callOnQuerySnapshot(onQuerySnapshot, itemClass, onQueryError, models);
+        for (T model : models) {
+            completeItemMap.put(model.getId(), model);
+        }
+    }
+
     /***
      * Cancel observe query operation and subscription.
      */
     @Override
     public void cancel() {
         isCanceled = true;
-        if (timer != null) {
-            timer.purge();
-        }
-        timer = null;
+        resetTimer();
         completeItemMap.clear();
         changedItemList.clear();
         if (disposable != null) {
             disposable.dispose();
         }
+    }
+
+    private void resetTimer() {
+        if (timer != null) {
+            timer.purge();
+        }
+        timer = null;
     }
 
     /***
@@ -218,13 +232,10 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
             changedItemList.add(ItemChangeMapper.map(changedItem));
             setTimerIfNeeded(onQuerySnapshot, itemClass, options, onObservationError);
 
-            if (changedItemList.size() >= maxRecords) {
+            if (changedItemList.size() >= maxRecords || isSynced) {
+                resetTimer();
                 processQuerySnapshot(onQuerySnapshot, itemClass, options, onObservationError);
                 changedItemList.clear();
-                if (timer != null) {
-                    timer.purge();
-                }
-                timer = null;
             }
         } catch (DataStoreException exception) {
             onObservationError.accept(exception);
@@ -236,7 +247,7 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
                                       ObserveQueryOptions options,
                                       Consumer<DataStoreException> onObservationError) {
         List<T> completeList = new ArrayList<>(completeItemMap.values());
-        sortIfNeeded(options, completeList, itemClass);
+        sortIfNeeded(options, completeList, itemClass, onObservationError);
         callOnQuerySnapshot(onQuerySnapshot, itemClass, onObservationError, completeList);
     }
 
@@ -244,17 +255,19 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
                                      Class<T> itemClass,
                                      Consumer<DataStoreException> onObservationError,
                                      List<T> completeList) {
+        isSynced = syncStatus.get(itemClass.getSimpleName(), onObservationError);
         DataStoreQuerySnapshot<T> dataStoreQuerySnapshot = new DataStoreQuerySnapshot<>(completeList,
-                        syncStatus.get(itemClass.getSimpleName(), onObservationError));
+                isSynced);
         getListConsumer(onQuerySnapshot).accept(dataStoreQuerySnapshot);
         changedItemList.clear();
     }
 
     private void sortIfNeeded(ObserveQueryOptions options,
                               List<T> completeList,
-                              Class<T> itemClass) {
+                              Class<T> itemClass,
+                              Consumer<DataStoreException> onObservationError) {
         if (options != null && options.getSortBy() != null && options.getSortBy().size() > 0) {
-            modelSorter.sort(options, completeList, itemClass);
+            modelSorter.sort(options, completeList, itemClass, onObservationError);
         }
     }
 
@@ -277,8 +290,7 @@ public class ObserveQueryExecuter<T extends Model> implements Cancelable {
                 @Override
                 public void run() {
                     processQuerySnapshot(onQuerySnapshot, itemClass, options, onObservationError);
-                    timer.purge();
-                    timer = null;
+                    resetTimer();
                 }
             }, TimeUnit.SECONDS.toMillis(maxTimeSec));
         }
