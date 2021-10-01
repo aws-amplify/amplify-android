@@ -350,7 +350,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 onObservationError,
                 onObservationComplete);
 
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
+        assertTrue(latch.await(5, TimeUnit.SECONDS));
 
         for (int counter = 0; counter < 2; counter++) {
             final Post post = Post.builder()
@@ -362,7 +362,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             adapter.save(post);
             savedModels.add(post);
         }
-        assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(changeLatch.await(15, TimeUnit.SECONDS));
     }
 
     /**
@@ -648,7 +648,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 onObservationError,
                 onObservationComplete);
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
+        assertTrue(latch.await(3, TimeUnit.SECONDS));
         for (int counter = 11; counter < 13; counter++) {
             final BlogOwner blogOwner = BlogOwner.builder()
                     .name("namePrefix:" + counter)
@@ -656,6 +656,6 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             savedModels.add(blogOwner);
             adapter.save(blogOwner);
         }
-        assertTrue(changeLatch.await(7, TimeUnit.SECONDS));
+        assertTrue(changeLatch.await(9, TimeUnit.SECONDS));
     }
 }
