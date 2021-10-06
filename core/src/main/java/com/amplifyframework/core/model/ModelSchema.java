@@ -50,7 +50,14 @@ public final class ModelSchema {
 
     // The plural version of the name of the model.
     // Useful for generating GraphQL list query names.
+    /**
+     * @Deprecated Use of pluralName is deprecated, use syncPluralName instead.
+     */
     private final String pluralName;
+
+    private final String syncPluralName;
+
+    private final String listPluralName;
 
     // Denotes whether this model has owner based authorization which changes the parameters for subscriptions
     // e.g. @auth(rules: [{allow: owner}]) on the model in the GraphQL Schema
@@ -74,6 +81,8 @@ public final class ModelSchema {
     private ModelSchema(Builder builder) {
         this.name = builder.name;
         this.pluralName = builder.pluralName;
+        this.listPluralName = builder.listPluralName;
+        this.syncPluralName = builder.syncPluralName;
         this.authRules = builder.authRules;
         this.fields = builder.fields;
         this.associations = builder.associations;
@@ -113,6 +122,14 @@ public final class ModelSchema {
                     ? modelConfig.pluralName()
                     : null;
 
+            final String listPluralName = modelConfig != null && !modelConfig.listPluralName().isEmpty()
+                    ? modelConfig.listPluralName()
+                    : null;
+
+            final String syncPluralName = modelConfig != null && !modelConfig.syncPluralName().isEmpty()
+                    ? modelConfig.syncPluralName()
+                    : null;
+
             if (modelConfig != null) {
                 for (com.amplifyframework.core.model.annotations.AuthRule ruleAnnotation : modelConfig.authRules()) {
                     authRules.add(new AuthRule(ruleAnnotation));
@@ -146,6 +163,8 @@ public final class ModelSchema {
             return ModelSchema.builder()
                     .name(modelName)
                     .pluralName(modelPluralName)
+                    .listPluralName(listPluralName)
+                    .syncPluralName(syncPluralName)
                     .authRules(authRules)
                     .fields(fields)
                     .associations(associations)
@@ -245,6 +264,7 @@ public final class ModelSchema {
     }
 
     /**
+     * @Deprecated instead use getListPluralName() or getSyncPluralName()
      * Returns the plural name of the Model in the target.
      * Null if not explicitly annotated in ModelConfig.
      *
@@ -254,6 +274,30 @@ public final class ModelSchema {
     @Nullable
     public String getPluralName() {
         return pluralName;
+    }
+
+    /**
+     * Returns the plural name for list query of the Model in the target.
+     * Null if not explicitly annotated in ModelConfig.
+     *
+     * @return the plural name of the Model for list query in the target
+     *         if explicitly provided.
+     */
+    @Nullable
+    public String getListPluralName() {
+        return listPluralName;
+    }
+
+    /**
+     * Returns the plural name for sync query of the Model in the target.
+     * Null if not explicitly annotated in ModelConfig.
+     *
+     * @return the plural name of the Model for sync query in the target
+     *         if explicitly provided.
+     */
+    @Nullable
+    public String getSyncPluralName() {
+        return syncPluralName;
     }
 
     /**
@@ -341,6 +385,8 @@ public final class ModelSchema {
             ModelSchema that = (ModelSchema) obj;
             return ObjectsCompat.equals(getName(), that.getName()) &&
                 ObjectsCompat.equals(getPluralName(), that.getPluralName()) &&
+                ObjectsCompat.equals(getListPluralName(), that.getListPluralName()) &&
+                ObjectsCompat.equals(getSyncPluralName(), that.getSyncPluralName()) &&
                 ObjectsCompat.equals(getAuthRules(), that.getAuthRules()) &&
                 ObjectsCompat.equals(getFields(), that.getFields()) &&
                 ObjectsCompat.equals(getAssociations(), that.getAssociations()) &&
@@ -354,6 +400,8 @@ public final class ModelSchema {
         return ObjectsCompat.hash(
                 getName(),
                 getPluralName(),
+                getListPluralName(),
+                getSyncPluralName(),
                 getAuthRules(),
                 getFields(),
                 getAssociations(),
@@ -367,6 +415,8 @@ public final class ModelSchema {
         return "ModelSchema{" +
             "name='" + name + '\'' +
             ", pluralName='" + pluralName + '\'' +
+            ", listPluralName='" + listPluralName + '\'' +
+            ", syncPluralName='" + syncPluralName + '\'' +
             ", authRules=" + authRules +
             ", fields=" + fields +
             ", associations=" + associations +
@@ -386,6 +436,8 @@ public final class ModelSchema {
         private Class<? extends Model> modelClass;
         private String name;
         private String pluralName;
+        private String listPluralName;
+        private String syncPluralName;
         private final List<AuthRule> authRules;
 
         Builder() {
@@ -415,6 +467,30 @@ public final class ModelSchema {
         @NonNull
         public Builder pluralName(@Nullable String pluralName) {
             this.pluralName = pluralName;
+            return this;
+        }
+
+        /**
+         * The plural version of the name of the Model for list query.
+         * If null, a default plural version name will be generated.
+         * @param listPluralName the plural version of model name for list query.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder listPluralName(@Nullable String listPluralName) {
+            this.listPluralName = listPluralName;
+            return this;
+        }
+
+        /**
+         * The plural version of the name of the Model for sync query.
+         * If null, a default plural version name will be generated.
+         * @param syncPluralName the plural version of model name for sync sync.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder syncPluralName(@Nullable String syncPluralName) {
+            this.syncPluralName = syncPluralName;
             return this;
         }
 
