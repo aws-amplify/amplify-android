@@ -53,9 +53,10 @@ public final class LastSyncMetadata implements Model {
      * model has been base sync'd, and that the last sync occurred at the given time.
      * @param modelClassName Name of model
      * @param lastSyncTime Last time it was synced
+     * @param <T> t type of Model.
      * @return {@link LastSyncMetadata} for the model class
      */
-    static <T extends Model> LastSyncMetadata baseSyncedAt(@NonNull String modelClassName,
+    public static <T extends Model> LastSyncMetadata baseSyncedAt(@NonNull String modelClassName,
                                                            @Nullable long lastSyncTime) {
         Objects.requireNonNull(modelClassName);
         return create(modelClassName, lastSyncTime, SyncType.BASE);
@@ -81,7 +82,7 @@ public final class LastSyncMetadata implements Model {
      * @param <T> Type of model
      * @return {@link LastSyncMetadata}
      */
-    static <T extends Model> LastSyncMetadata neverSynced(@NonNull String modelClassName) {
+    public static <T extends Model> LastSyncMetadata neverSynced(@NonNull String modelClassName) {
         Objects.requireNonNull(modelClassName);
         return create(modelClassName, null, SyncType.BASE);
     }
@@ -121,7 +122,7 @@ public final class LastSyncMetadata implements Model {
      * was sync'd.
      * @return Last sync time for model
      */
-    Long getLastSyncTime() {
+    public Long getLastSyncTime() {
         return this.lastSyncTime;
     }
 

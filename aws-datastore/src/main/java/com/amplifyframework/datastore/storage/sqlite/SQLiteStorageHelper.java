@@ -195,6 +195,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
     private void dropAllTables(@NonNull SQLiteDatabase sqliteDatabase) {
         Objects.requireNonNull(sqliteDatabase);
         final String queryString = "SELECT name FROM sqlite_master WHERE type='table'";
+        sqliteDatabase.execSQL("PRAGMA foreign_keys = OFF;");
         try (Cursor cursor = sqliteDatabase.rawQuery(queryString, null)) {
             Objects.requireNonNull(cursor);
 
@@ -217,6 +218,8 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
             sqliteDatabase.execSQL("PRAGMA foreign_keys = ON;");
             sqliteDatabase.setTransactionSuccessful();
             sqliteDatabase.endTransaction();
+        } finally {
+            sqliteDatabase.execSQL("PRAGMA foreign_keys = ON;");
         }
     }
 }

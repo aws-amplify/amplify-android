@@ -20,9 +20,13 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.geo.models.Coordinates;
 import com.amplifyframework.geo.models.MapStyle;
 import com.amplifyframework.geo.models.MapStyleDescriptor;
+import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions;
+import com.amplifyframework.geo.options.GeoSearchByTextOptions;
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
+import com.amplifyframework.geo.result.GeoSearchResult;
 
 import java.util.Collection;
 
@@ -86,5 +90,55 @@ public final class GeoCategory
             @NonNull Consumer<GeoException> onError
     ) {
         getSelectedPlugin().getMapStyleDescriptor(options, onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void searchByText(
+            @NonNull String query,
+            @NonNull Consumer<GeoSearchResult> onResult,
+            @NonNull Consumer<GeoException> onError
+    ) {
+        getSelectedPlugin().searchByText(query, onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void searchByText(
+            @NonNull String query,
+            @NonNull GeoSearchByTextOptions options,
+            @NonNull Consumer<GeoSearchResult> onResult,
+            @NonNull Consumer<GeoException> onError
+    ) {
+        getSelectedPlugin().searchByText(query, options, onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void searchByCoordinates(
+            @NonNull Coordinates position,
+            @NonNull Consumer<GeoSearchResult> onResult,
+            @NonNull Consumer<GeoException> onError
+    ) {
+        getSelectedPlugin().searchByCoordinates(position, onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void searchByCoordinates(
+            @NonNull Coordinates position,
+            @NonNull GeoSearchByCoordinatesOptions options,
+            @NonNull Consumer<GeoSearchResult> onResult,
+            @NonNull Consumer<GeoException> onError
+    ) {
+        getSelectedPlugin().searchByCoordinates(position, options, onResult, onError);
     }
 }

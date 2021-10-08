@@ -28,9 +28,13 @@ import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
 import com.amplifyframework.geo.location.service.AmazonLocationService
 import com.amplifyframework.geo.location.service.GeoService
+import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
+import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
+import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
+import com.amplifyframework.geo.result.GeoSearchResult
 
 import org.json.JSONObject
 import java.util.concurrent.Executors
@@ -123,6 +127,40 @@ class AWSLocationGeoPlugin(
             onResult,
             onError
         )
+    }
+
+    override fun searchByText(
+        query: String,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun searchByText(
+        query: String,
+        options: GeoSearchByTextOptions,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun searchByCoordinates(
+        position: Coordinates,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun searchByCoordinates(
+        position: Coordinates,
+        options: GeoSearchByCoordinatesOptions,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        TODO("Not yet implemented")
     }
 
     private fun credentialsProvider(): AWSCredentialsProvider {
