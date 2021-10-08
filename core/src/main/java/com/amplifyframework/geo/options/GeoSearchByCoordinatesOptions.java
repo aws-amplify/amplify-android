@@ -75,8 +75,10 @@ public final class GeoSearchByCoordinatesOptions {
      * Builder class for conveniently constructing {@link GeoSearchByCoordinatesOptions} instance.
      */
     public static final class Builder {
+        private static final int DEFAULT_MAX_RESULTS_LIMIT = 50;
+
         private String searchIndex;
-        private int maxResults = 50;
+        private int maxResults = DEFAULT_MAX_RESULTS_LIMIT;
 
         /**
          * Sets the search index and returns itself.

@@ -28,8 +28,6 @@ import com.amplifyframework.geo.options.GeoSearchByTextOptions;
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
 import com.amplifyframework.geo.result.GeoSearchResult;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Collection;
 
 /**

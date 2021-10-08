@@ -23,7 +23,7 @@ import androidx.core.util.ObjectsCompat;
  * This class should be extended to represent a location with more details.
  */
 public class Place {
-    protected final Geometry geometry;
+    private final Geometry geometry;
 
     /**
      * Constructs a new place instance with location geometry.
@@ -44,6 +44,9 @@ public class Place {
         return geometry;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return "Place{" +
@@ -51,6 +54,9 @@ public class Place {
                 '}';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -63,6 +69,9 @@ public class Place {
         return ObjectsCompat.equals(geometry, place.geometry);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(geometry);
