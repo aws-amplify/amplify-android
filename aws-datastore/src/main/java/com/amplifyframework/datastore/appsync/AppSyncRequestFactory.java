@@ -136,7 +136,7 @@ final class AppSyncRequestFactory {
             if (!QueryPredicates.all().equals(predicate)) {
                 String filterType = "Model" + Casing.capitalizeFirst(modelSchema.getName()) + "FilterInput";
                 QueryPredicate syncPredicate = predicate;
-                if (syncPredicate instanceof QueryPredicateOperation) {
+                if (!(syncPredicate instanceof QueryPredicateGroup)) {
                     // When a filter is provided, wrap it with a predicate group of type AND.  By doing this, it enables
                     // AppSync to optimize the request by performing a DynamoDB query instead of a scan.  If the
                     // provided syncPredicate is already a QueryPredicateGroup, this is not needed.  If the provided
@@ -221,6 +221,13 @@ final class AppSyncRequestFactory {
     }
 
     static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
+        if (QueryPredicates.all().equals(queryPredicate)) {
+            return Collections.singletonMap("id", Collections.singletonMap("ne", null));
+        }
+        if (QueryPredicates.none().equals(queryPredicate)) {
+            // id cannot be null, so match none
+            return Collections.singletonMap("id", Collections.singletonMap("eq", null));
+        }
         if (queryPredicate instanceof QueryPredicateOperation) {
             QueryPredicateOperation<?> qpo = (QueryPredicateOperation<?>) queryPredicate;
             QueryOperator<?> op = qpo.operator();
@@ -448,10 +455,11 @@ final class AppSyncRequestFactory {
             SerializedModel serializedModel = (SerializedModel) instance;
             Map<String, Object> serializedData = serializedModel.getSerializedData();
             ModelField field = schema.getFields().get(fieldName);
-            if (field != null && field.isCustomType()) {
+            Object fieldValue = serializedData.get(fieldName);
+            if (fieldValue != null && field != null && field.isCustomType()) {
                 return extractCustomTypeFieldValue(fieldName, serializedData.get(fieldName));
             }
-            return serializedData.get(fieldName);
+            return fieldValue;
         }
         try {
             Field privateField = instance.getClass().getDeclaredField(fieldName);
