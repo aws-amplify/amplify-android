@@ -18,6 +18,7 @@ apply plugin: "checkstyle"
 task checkstyle(type: Checkstyle) {
     description = "Check Java style with Checkstyle"
     configFile = rootProject.file("configuration/checkstyle-rules.xml")
+    configDirectory = rootProject.file("configuration")
     source = javaSources()
     classpath = files()
     ignoreFailures = false
