@@ -58,6 +58,9 @@ class AWSLocationGeoPlugin(
     private val defaultMapName: String by lazy {
         configuration.maps!!.default.mapName
     }
+    private val defaultSearchIndexName: String by lazy {
+        configuration.searchIndices!!.default
+    }
 
     override fun getPluginKey(): String {
         return GEO_PLUGIN_KEY
@@ -134,7 +137,8 @@ class AWSLocationGeoPlugin(
         onResult: Consumer<GeoSearchResult>,
         onError: Consumer<GeoException>
     ) {
-        TODO("Not yet implemented")
+        val options = GeoSearchByTextOptions.defaults()
+        searchByText(query, options, onResult, onError)
     }
 
     override fun searchByText(
@@ -143,7 +147,21 @@ class AWSLocationGeoPlugin(
         onResult: Consumer<GeoSearchResult>,
         onError: Consumer<GeoException>
     ) {
-        TODO("Not yet implemented")
+        execute(
+            {
+                val places = geoService.geocode(
+                    options.searchIndex ?: defaultSearchIndexName,
+                    query,
+                    options.maxResults,
+                    options.searchArea,
+                    options.countries
+                )
+                GeoSearchResult.withPlaces(places)
+            },
+            Errors::searchError,
+            onResult,
+            onError
+        )
     }
 
     override fun searchByCoordinates(
@@ -151,7 +169,8 @@ class AWSLocationGeoPlugin(
         onResult: Consumer<GeoSearchResult>,
         onError: Consumer<GeoException>
     ) {
-        TODO("Not yet implemented")
+        val options = GeoSearchByCoordinatesOptions.defaults()
+        searchByCoordinates(position, options, onResult, onError)
     }
 
     override fun searchByCoordinates(
@@ -160,7 +179,19 @@ class AWSLocationGeoPlugin(
         onResult: Consumer<GeoSearchResult>,
         onError: Consumer<GeoException>
     ) {
-        TODO("Not yet implemented")
+        execute(
+            {
+                val places = geoService.reverseGeocode(
+                    options.searchIndex ?: defaultSearchIndexName,
+                    position,
+                    options.maxResults
+                )
+                GeoSearchResult.withPlaces(places)
+            },
+            Errors::searchError,
+            onResult,
+            onError
+        )
     }
 
     private fun credentialsProvider(): AWSCredentialsProvider {
