@@ -23,7 +23,8 @@ import org.json.JSONObject
  */
 data class GeoConfiguration internal constructor(
     val region: String,
-    val maps: MapsConfiguration?
+    val maps: MapsConfiguration?,
+    val searchIndices: SearchIndicesConfiguration?
 ) {
     companion object {
         private const val DEFAULT_REGION = "us-east-1"
@@ -54,6 +55,7 @@ data class GeoConfiguration internal constructor(
     ) {
         private var region: String = DEFAULT_REGION
         private var maps: MapsConfiguration? = null
+        private var searchIndices: SearchIndicesConfiguration? = null
 
         init {
             configJson?.run {
@@ -65,12 +67,17 @@ data class GeoConfiguration internal constructor(
                 optJSONObject(Config.MAPS.key)?.let {
                     maps = MapsConfiguration.fromJson(it).build()
                 }
+
+                optJSONObject(Config.SEARCH_INDICES.key)?.let {
+                    searchIndices = SearchIndicesConfiguration.fromJson(it).build()
+                }
             }
         }
 
         fun region(region: String) = apply { this.region = region }
         fun maps(maps: MapsConfiguration) = apply { this.maps = maps }
-        fun build() = GeoConfiguration(region, maps)
+        fun searchIndices(searchIndices: SearchIndicesConfiguration) = apply { this.searchIndices = searchIndices }
+        fun build() = GeoConfiguration(region, maps, searchIndices)
     }
 
     private enum class Config(val key: String) {
@@ -78,6 +85,11 @@ data class GeoConfiguration internal constructor(
          * Contains configuration for Maps APIs.
          */
         MAPS("maps"),
+
+        /**
+         * Contains configuration for Search APIs.
+         */
+        SEARCH_INDICES("searchIndices"),
 
         /**
          * Amazon Location Service endpoint region.
