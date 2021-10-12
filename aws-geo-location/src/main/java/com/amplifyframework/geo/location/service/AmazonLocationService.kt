@@ -24,6 +24,7 @@ import com.amazonaws.services.geo.model.SearchPlaceIndexForPositionRequest
 import com.amazonaws.services.geo.model.SearchPlaceIndexForTextRequest
 import com.amplifyframework.geo.location.models.AmazonLocationPlace
 import com.amplifyframework.geo.models.Coordinates
+import com.amplifyframework.geo.models.CountryCode
 import com.amplifyframework.geo.models.Place
 import com.amplifyframework.geo.models.SearchArea
 import com.amplifyframework.util.UserAgent
@@ -56,16 +57,18 @@ internal class AmazonLocationService(
         return readFromBuffer(response.blob)
     }
 
-    override fun geocode(index: String,
-                         query: String,
-                         limit: Int,
-                         area: SearchArea?,
-                         countries: List<String>): List<Place> {
+    override fun geocode(
+        index: String,
+        query: String,
+        limit: Int,
+        area: SearchArea?,
+        countries: List<CountryCode>
+    ): List<Place> {
         val request = SearchPlaceIndexForTextRequest()
             .withIndexName(index)
             .withText(query)
             .withMaxResults(limit)
-            .withFilterCountries(countries)
+            .withFilterCountries(countries.map { it.name })
         if (area?.biasPosition != null) {
             val position = listOf(
                 area.biasPosition!!.longitude,

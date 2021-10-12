@@ -16,6 +16,7 @@
 package com.amplifyframework.geo.location.service
 
 import com.amplifyframework.geo.models.Coordinates
+import com.amplifyframework.geo.models.CountryCode
 import com.amplifyframework.geo.models.Place
 import com.amplifyframework.geo.models.SearchArea
 
@@ -42,7 +43,7 @@ internal interface GeoService<T> {
                 query: String,
                 limit: Int,
                 area: SearchArea? = null,
-                countries: List<String> = emptyList()): List<Place>
+                countries: List<CountryCode> = emptyList()): List<Place>
 
     /**
      * Searches index for the location details given a set of coordinates.

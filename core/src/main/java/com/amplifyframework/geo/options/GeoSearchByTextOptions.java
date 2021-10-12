@@ -18,6 +18,7 @@ package com.amplifyframework.geo.options;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.geo.models.CountryCode;
 import com.amplifyframework.geo.models.SearchArea;
 import com.amplifyframework.util.Immutable;
 
@@ -32,7 +33,7 @@ public final class GeoSearchByTextOptions {
     private final String searchIndex;
     private final int maxResults;
     private final SearchArea searchArea;
-    private final List<String> countries;
+    private final List<CountryCode> countries;
 
     private GeoSearchByTextOptions(Builder builder) {
         this.searchIndex = builder.searchIndex;
@@ -76,7 +77,7 @@ public final class GeoSearchByTextOptions {
      * @return the list of countries.
      */
     @NonNull
-    public List<String> getCountries() {
+    public List<CountryCode> getCountries() {
         return Immutable.of(countries);
     }
 
@@ -109,7 +110,7 @@ public final class GeoSearchByTextOptions {
         private String searchIndex;
         private int maxResults = DEFAULT_MAX_RESULTS_LIMIT;
         private SearchArea searchArea;
-        private List<String> countries = new ArrayList<>();
+        private List<CountryCode> countries = new ArrayList<>();
 
         /**
          * Sets the search index and returns itself.
@@ -154,7 +155,7 @@ public final class GeoSearchByTextOptions {
          * @return this builder instance.
          */
         @NonNull
-        public Builder countries(@NonNull List<String> countries) {
+        public Builder countries(@NonNull List<CountryCode> countries) {
             this.countries = Objects.requireNonNull(countries);
             return this;
         }
