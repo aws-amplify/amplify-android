@@ -66,7 +66,6 @@
             android:text="@string/copy_issue_text"
             android:textAllCaps="false"
             android:textSize="15sp"
-            android:layout_marginRight="10dp"
             android:layout_marginEnd="10dp"
             style="?android:attr/buttonBarButtonStyle" />
 

@@ -14,9 +14,8 @@
  */
 package com.amplifyframework.storage.s3.operation
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver
-import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.s3.CognitoAuthProvider
@@ -25,11 +24,13 @@ import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
-import java.io.File
-import java.io.InputStream
+import com.amplifyframework.storage.s3.transfer.TransferObserver
+import com.google.common.util.concurrent.MoreExecutors
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
+import java.io.File
+import java.io.InputStream
 
 class AWSS3StorageUploadInputStreamOperationTest {
 
@@ -55,8 +56,7 @@ class AWSS3StorageUploadInputStreamOperationTest {
                 Mockito.any(),
                 Mockito.any()
             )
-        )
-            .thenReturn(Mockito.mock(TransferObserver::class.java))
+        ).thenReturn(Mockito.mock(TransferObserver::class.java))
         val request = AWSS3StorageUploadRequest<InputStream>(
             key,
             tempInputStream,
@@ -68,6 +68,7 @@ class AWSS3StorageUploadInputStreamOperationTest {
         )
         inputStreamOperation = AWSS3StorageUploadInputStreamOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration {},
@@ -108,6 +109,7 @@ class AWSS3StorageUploadInputStreamOperationTest {
         )
         inputStreamOperation = AWSS3StorageUploadInputStreamOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration {
@@ -146,8 +148,7 @@ class AWSS3StorageUploadInputStreamOperationTest {
                 Mockito.any(),
                 Mockito.any()
             )
-        )
-            .thenReturn(Mockito.mock(TransferObserver::class.java))
+        ).thenReturn(Mockito.mock(TransferObserver::class.java))
         val request = AWSS3StorageUploadRequest<InputStream>(
             key,
             tempInputStream,
@@ -159,6 +160,7 @@ class AWSS3StorageUploadInputStreamOperationTest {
         )
         inputStreamOperation = AWSS3StorageUploadInputStreamOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration {

@@ -23,10 +23,11 @@ import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest
 import com.amplifyframework.storage.s3.service.StorageService
-import java.io.File
+import com.google.common.util.concurrent.MoreExecutors
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
+import java.io.File
 
 class AWSS3StorageDownloadFileOperationTest {
 
@@ -54,6 +55,7 @@ class AWSS3StorageDownloadFileOperationTest {
         Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
         awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration {},
@@ -79,6 +81,7 @@ class AWSS3StorageDownloadFileOperationTest {
         Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
         awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration {
@@ -115,6 +118,7 @@ class AWSS3StorageDownloadFileOperationTest {
         Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
         awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration {

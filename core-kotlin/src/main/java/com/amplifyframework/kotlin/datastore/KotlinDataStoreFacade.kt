@@ -204,7 +204,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         internal val completions: MutableSharedFlow<Unit> = MutableSharedFlow(1)
     ) {
         @Suppress("UNCHECKED_CAST")
-        @FlowPreview
+        @OptIn(FlowPreview::class)
         internal suspend fun waitForStart(): Flow<T> {
             // Observation either begins with signal from onError or onStart (with Cancelable token).
             val cancelable = flowOf(starts, failures)

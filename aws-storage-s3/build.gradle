@@ -22,12 +22,15 @@ apply plugin: 'org.jlleitschuh.gradle.ktlint'
 dependencies {
     implementation project(path: ':core')
     implementation dependency.androidx.appcompat
-    implementation dependency.aws.s3
+    implementation dependency.aws.s3Kotlin
     implementation dependency.aws.mobileclient
+    implementation dependency.androidx.workmanager
+    implementation dependency.kotlin.futures
 
     testImplementation project(path: ':testutils')
     testImplementation dependency.junit
     testImplementation dependency.mockito
+    testImplementation dependency.mockitoinline
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
 
@@ -35,6 +38,7 @@ dependencies {
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
+    androidTestImplementation dependency.androidx.test.workmanager
 }
 
 ktlint {
