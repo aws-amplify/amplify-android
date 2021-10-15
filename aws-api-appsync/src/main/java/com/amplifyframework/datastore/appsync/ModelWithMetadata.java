@@ -37,7 +37,12 @@ public final class ModelWithMetadata<M extends Model> {
      */
     public ModelWithMetadata(@NonNull M model, @NonNull ModelMetadata syncMetadata) {
         this.model = Objects.requireNonNull(model);
-        this.syncMetadata = Objects.requireNonNull(syncMetadata);
+        Objects.requireNonNull(syncMetadata);
+
+        this.syncMetadata = new ModelMetadata(model.getModelName() + "|" + model.getId(),
+                syncMetadata.isDeleted(),
+                syncMetadata.getVersion(),
+                syncMetadata.getLastChangedAt());
     }
 
     /**
