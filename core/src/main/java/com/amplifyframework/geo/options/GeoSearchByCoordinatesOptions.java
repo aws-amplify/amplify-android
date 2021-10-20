@@ -16,30 +16,20 @@
 package com.amplifyframework.geo.options;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import java.util.Objects;
 
 /**
  * Stores options to use when reverse-geocoding given coordinates.
  */
-public final class GeoSearchByCoordinatesOptions {
-    private final String searchIndex;
+public class GeoSearchByCoordinatesOptions {
     private final int maxResults;
 
-    private GeoSearchByCoordinatesOptions(Builder builder) {
-        this.searchIndex = builder.searchIndex;
-        this.maxResults = builder.maxResults;
-    }
-
     /**
-     * Returns the search index.
+     * Constructs a search by coordinates options using the provided builder.
      *
-     * @return the search index.
+     * @param builder the builder instance with the options parameters set.
      */
-    @Nullable
-    public String getSearchIndex() {
-        return searchIndex;
+    protected GeoSearchByCoordinatesOptions(Builder builder) {
+        this.maxResults = builder.maxResults;
     }
 
     /**
@@ -74,23 +64,10 @@ public final class GeoSearchByCoordinatesOptions {
     /**
      * Builder class for conveniently constructing {@link GeoSearchByCoordinatesOptions} instance.
      */
-    public static final class Builder {
+    public static class Builder {
         private static final int DEFAULT_MAX_RESULTS_LIMIT = 50;
 
-        private String searchIndex;
         private int maxResults = DEFAULT_MAX_RESULTS_LIMIT;
-
-        /**
-         * Sets the search index and returns itself.
-         *
-         * @param searchIndex the search index to use for this search.
-         * @return this builder instance.
-         */
-        @NonNull
-        public Builder searchIndex(@NonNull String searchIndex) {
-            this.searchIndex = Objects.requireNonNull(searchIndex);
-            return this;
-        }
 
         /**
          * Sets the max results limit and returns itself.

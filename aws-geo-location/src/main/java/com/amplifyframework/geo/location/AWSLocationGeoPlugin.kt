@@ -26,6 +26,8 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.geo.GeoCategoryPlugin
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
+import com.amplifyframework.geo.location.options.AmazonLocationSearchByCoordinatesOptions
+import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptions
 import com.amplifyframework.geo.location.service.AmazonLocationService
 import com.amplifyframework.geo.location.service.GeoService
 import com.amplifyframework.geo.models.Coordinates
@@ -149,8 +151,11 @@ class AWSLocationGeoPlugin(
     ) {
         execute(
             {
+                val searchIndex = if (options is AmazonLocationSearchByTextOptions) {
+                    options.searchIndex ?: defaultSearchIndexName
+                } else defaultSearchIndexName
                 val places = geoService.geocode(
-                    options.searchIndex ?: defaultSearchIndexName,
+                    searchIndex,
                     query,
                     options.maxResults,
                     options.searchArea,
@@ -181,8 +186,11 @@ class AWSLocationGeoPlugin(
     ) {
         execute(
             {
+                val searchIndex = if (options is AmazonLocationSearchByCoordinatesOptions) {
+                    options.searchIndex ?: defaultSearchIndexName
+                } else defaultSearchIndexName
                 val places = geoService.reverseGeocode(
-                    options.searchIndex ?: defaultSearchIndexName,
+                    searchIndex,
                     position,
                     options.maxResults
                 )
