@@ -26,6 +26,11 @@ import java.util.Objects;
 public final class GetMapStyleDescriptorOptions {
     private final String mapName;
 
+    /**
+     * Constructs a map style fetch options using the provided builder.
+     *
+     * @param builder the builder instance with the options parameters set.
+     */
     private GetMapStyleDescriptorOptions(Builder builder) {
         this.mapName = builder.mapName;
     }

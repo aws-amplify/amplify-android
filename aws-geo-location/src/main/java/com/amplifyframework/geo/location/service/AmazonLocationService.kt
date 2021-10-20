@@ -20,6 +20,13 @@ import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.regions.Region
 import com.amazonaws.services.geo.AmazonLocationClient
 import com.amazonaws.services.geo.model.GetMapStyleDescriptorRequest
+import com.amazonaws.services.geo.model.SearchPlaceIndexForPositionRequest
+import com.amazonaws.services.geo.model.SearchPlaceIndexForTextRequest
+import com.amplifyframework.geo.location.models.AmazonLocationPlace
+import com.amplifyframework.geo.models.Coordinates
+import com.amplifyframework.geo.models.CountryCode
+import com.amplifyframework.geo.models.Place
+import com.amplifyframework.geo.models.SearchArea
 import com.amplifyframework.util.UserAgent
 
 import java.nio.ByteBuffer
@@ -48,6 +55,48 @@ internal class AmazonLocationService(
             .withMapName(mapName)
         val response = provider.getMapStyleDescriptor(request)
         return readFromBuffer(response.blob)
+    }
+
+    override fun geocode(
+        index: String,
+        query: String,
+        limit: Int,
+        area: SearchArea?,
+        countries: List<CountryCode>
+    ): List<Place> {
+        val request = SearchPlaceIndexForTextRequest()
+            .withIndexName(index)
+            .withText(query)
+            .withMaxResults(limit)
+            .withFilterCountries(countries.map { it.name })
+        if (area?.biasPosition != null) {
+            val position = listOf(
+                area.biasPosition!!.longitude,
+                area.biasPosition!!.latitude
+            )
+            request.setBiasPosition(position)
+        } else if (area?.boundingBox != null) {
+            val boundary = listOf(
+                area.boundingBox!!.longitudeSW,
+                area.boundingBox!!.latitudeSW,
+                area.boundingBox!!.longitudeNE,
+                area.boundingBox!!.latitudeNE
+            )
+            request.setFilterBBox(boundary)
+        }
+        val response = provider.searchPlaceIndexForText(request)
+        return response.results.map { AmazonLocationPlace(it.place) }
+    }
+
+    override fun reverseGeocode(index: String,
+                                position: Coordinates,
+                                limit: Int): List<Place> {
+        val request = SearchPlaceIndexForPositionRequest()
+            .withIndexName(index)
+            .withPosition(listOf(position.longitude, position.latitude))
+            .withMaxResults(limit)
+        val response = provider.searchPlaceIndexForPosition(request)
+        return response.results.map { AmazonLocationPlace(it.place) }
     }
 
     private fun readFromBuffer(buffer: ByteBuffer): String {

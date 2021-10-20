@@ -18,6 +18,7 @@ package com.amplifyframework.geo.options;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.geo.models.CountryCode;
 import com.amplifyframework.geo.models.SearchArea;
 import com.amplifyframework.util.Immutable;
 
@@ -28,27 +29,20 @@ import java.util.Objects;
 /**
  * Stores options to use when searching search index by text query.
  */
-public final class GeoSearchByTextOptions {
-    private final String searchIndex;
+public class GeoSearchByTextOptions {
     private final int maxResults;
     private final SearchArea searchArea;
-    private final List<String> countries;
+    private final List<CountryCode> countries;
 
-    private GeoSearchByTextOptions(Builder builder) {
-        this.searchIndex = builder.searchIndex;
+    /**
+     * Constructs a search by text options using the provided builder.
+     *
+     * @param builder the builder instance with the options parameters set.
+     */
+    protected GeoSearchByTextOptions(Builder builder) {
         this.maxResults = builder.maxResults;
         this.searchArea = builder.searchArea;
         this.countries = builder.countries;
-    }
-
-    /**
-     * Returns the search index.
-     *
-     * @return the search index.
-     */
-    @Nullable
-    public String getSearchIndex() {
-        return searchIndex;
     }
 
     /**
@@ -76,7 +70,7 @@ public final class GeoSearchByTextOptions {
      * @return the list of countries.
      */
     @NonNull
-    public List<String> getCountries() {
+    public List<CountryCode> getCountries() {
         return Immutable.of(countries);
     }
 
@@ -103,25 +97,12 @@ public final class GeoSearchByTextOptions {
     /**
      * Builder class for conveniently constructing {@link GeoSearchByTextOptions} instance.
      */
-    public static final class Builder {
+    public static class Builder {
         private static final int DEFAULT_MAX_RESULTS_LIMIT = 50;
 
-        private String searchIndex;
         private int maxResults = DEFAULT_MAX_RESULTS_LIMIT;
         private SearchArea searchArea;
-        private List<String> countries = new ArrayList<>();
-
-        /**
-         * Sets the search index and returns itself.
-         *
-         * @param searchIndex the search index to use for this search.
-         * @return this builder instance.
-         */
-        @NonNull
-        public Builder searchIndex(@NonNull String searchIndex) {
-            this.searchIndex = Objects.requireNonNull(searchIndex);
-            return this;
-        }
+        private List<CountryCode> countries = new ArrayList<>();
 
         /**
          * Sets the max results limit and returns itself.
@@ -154,7 +135,7 @@ public final class GeoSearchByTextOptions {
          * @return this builder instance.
          */
         @NonNull
-        public Builder countries(@NonNull List<String> countries) {
+        public Builder countries(@NonNull List<CountryCode> countries) {
             this.countries = Objects.requireNonNull(countries);
             return this;
         }
