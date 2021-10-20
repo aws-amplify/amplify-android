@@ -43,7 +43,6 @@ public final class ModelMetadata implements Model {
     /**
      * Constructor for this metadata model.
      * @param id The ID of the object this is holding the metadata for (also this object's own ID)
-     * @param itemModelName The name of the model.
      * @param deleted Whether this object was deleted since the last sync time specified
      * @param version What version this object was last seen at
      * @param lastChangedAt When was this object last changed
