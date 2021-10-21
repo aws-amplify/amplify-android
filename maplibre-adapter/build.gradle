@@ -34,3 +34,7 @@ dependencies {
     androidTestImplementation dependency.androidx.test.runner
 }
 
+afterEvaluate {
+    it.android.kotlinOptions.jvmTarget = '1.8'
+}
+
