@@ -27,7 +27,7 @@ import com.amplifyframework.util.Wrap;
 import java.util.Set;
 
 /**
- * Add itemModelName to ModelMetadata and migrate the existing data.
+ * Add model name to ModelMetadata key.
  */
 public final class AddModelNameToModelMetadataKey implements ModelMigration {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");

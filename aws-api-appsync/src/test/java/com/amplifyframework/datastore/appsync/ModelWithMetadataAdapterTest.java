@@ -69,7 +69,6 @@ public final class ModelWithMetadataAdapterTest {
         String expected = new JSONObject()
             .put("id", model.getId())
             .put("name", model.getName())
-            .put("itemModelName", model.getModelName())
             .put("_lastChangedAt", metadata.getLastChangedAt().getSecondsSinceEpoch())
             .put("_deleted", metadata.isDeleted())
             .put("_version", metadata.getVersion())
