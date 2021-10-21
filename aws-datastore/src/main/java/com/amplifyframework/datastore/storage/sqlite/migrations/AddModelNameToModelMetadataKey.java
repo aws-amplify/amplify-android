@@ -47,20 +47,22 @@ public final class AddModelNameToModelMetadataKey implements ModelMigration {
     @Override
     public void apply() {
         if (!needsMigration()) {
-            LOG.debug("ModelMetadata data does not need migrated.");
+            LOG.debug("No ModelMetadata migration needed.");
             return;
         }
         try (Cursor duplicateIds = duplicateIds(modelProvider.modelNames())) {
+            database.beginTransaction();
             if (duplicateIds.moveToNext()) {
-                // Drop and re-create ModelMetadata with the new column and composite key
+                // Truncate the data in ModelMetadata and LastSyncMetadata
                 LOG.debug("There are duplicate IDs. Clearing ModelMetadata to force base sync.");
-                database.execSQL("DROP TABLE ModelMetadata;", new String[]{});
-                database.execSQL(createModelMetadataTable("ModelMetadata"), new String[]{});
+                database.execSQL("DELETE FROM ModelMetadata;", new String[]{});
+                database.execSQL("DELETE FROM LastSyncMetadata;", new String[]{});
             } else {
                 LOG.debug("No duplicate IDs found. Modifying and backfilling ModelMetadata.");
                 // Create a copy of the the ModelMetadata table with the new itemModelName column.
                 database.execSQL("DROP TABLE IF EXISTS ModelMetadataCopy;",
                                                  new String[]{});
+                // Create a copy of the ModelMetadata table
                 database.execSQL(createModelMetadataTable("ModelMetadataCopy"), new String[]{});
                 // Backfill data into copy table
                 database.execSQL(backfillModelMetadataQuery(), new String[]{});
@@ -69,6 +71,11 @@ public final class AddModelNameToModelMetadataKey implements ModelMigration {
                 database.execSQL(
                         "ALTER TABLE ModelMetadataCopy RENAME TO ModelMetadata;", new String[]{});
 
+            }
+            database.setTransactionSuccessful();
+        } finally {
+            if (database.inTransaction()) {
+                database.endTransaction();
             }
         }
     }
