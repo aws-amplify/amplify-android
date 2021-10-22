@@ -1,3 +1,10 @@
+## [Release 0.12.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.2)
+
+### Miscellaneous
+- fix(datastore):predicate handling for observe (#1537)
+
+[See all changes between 0.12.1 and 0.12.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.12.1...release-kotlin_v0.12.2)
+
 ## [Release 0.12.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.1)
 
 ### Miscellaneous
