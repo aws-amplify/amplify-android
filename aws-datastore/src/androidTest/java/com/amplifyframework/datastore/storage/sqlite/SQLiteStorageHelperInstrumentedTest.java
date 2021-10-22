@@ -63,6 +63,10 @@ public class SQLiteStorageHelperInstrumentedTest {
         deleteDatabase();
 
         createTableCommands = new HashSet<>();
+
+    }
+
+    private void createSimpleTables() {
         createTableCommands.add(
                 new SqlCommand("Person",
                         "CREATE TABLE IF NOT EXISTS Person (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
@@ -75,6 +79,32 @@ public class SQLiteStorageHelperInstrumentedTest {
                 1,
                 new CreateSqlCommands(createTableCommands, Collections.emptySet()));
         sqLiteDatabase = sqLiteStorageHelper.getWritableDatabase();
+
+    }
+
+    private void createTablesWithForeignKeys() {
+        createTableCommands.add(
+                new SqlCommand("supplier_groups",
+                        "CREATE TABLE IF NOT EXISTS supplier_groups (\n" +
+                                "\tgroup_id integer PRIMARY KEY,\n" +
+                                "\tgroup_name text NOT NULL\n" +
+                                ");"));
+        createTableCommands.add(
+                new SqlCommand("suppliers", "CREATE TABLE IF NOT EXISTS suppliers (\n" +
+                        "\tsupplier_id integer PRIMARY KEY,\n" +
+                        "\tsupplier_name text NOT NULL,\n" +
+                        "\tgroup_id      INTEGER NOT NULL,\n" +
+                        "\tFOREIGN KEY (group_id)\n" +
+                        "\tREFERENCES supplier_groups (group_id)\n" +
+                        ");"));
+
+        sqLiteStorageHelper = SQLiteStorageHelper.getInstance(
+                ApplicationProvider.getApplicationContext(),
+                "AmplifyDatastore.db",
+                1,
+                new CreateSqlCommands(createTableCommands, Collections.emptySet()));
+        sqLiteDatabase = sqLiteStorageHelper.getWritableDatabase();
+
     }
 
     /**
@@ -96,6 +126,7 @@ public class SQLiteStorageHelperInstrumentedTest {
      */
     @Test
     public void getInstanceIsNotNull() {
+        createSimpleTables();
         assertNotNull(sqLiteStorageHelper);
     }
 
@@ -104,6 +135,7 @@ public class SQLiteStorageHelperInstrumentedTest {
      */
     @Test
     public void isDatabaseOpen() {
+        createSimpleTables();
         assertTrue(sqLiteDatabase.isOpen());
     }
 
@@ -113,9 +145,31 @@ public class SQLiteStorageHelperInstrumentedTest {
      */
     @Test
     public void onCreateCreatesTables() {
+        createSimpleTables();
         // Getting an instance to the writable database
         // invokes onCreate on the SQLiteStorageHelper.
         final List<String> tableNamesFromDatabase = getTableNames(sqLiteDatabase);
+        LOG.debug(tableNamesFromDatabase.toString());
+        for (SqlCommand sqlCommand : createTableCommands) {
+            assertTrue(
+                    sqlCommand.tableName() + " was not in the list: " + tableNamesFromDatabase,
+                    tableNamesFromDatabase.contains(sqlCommand.tableName())
+            );
+        }
+    }
+
+    /**
+     * Assert that {@link SQLiteStorageHelper#update(SQLiteDatabase, String, String)}
+     * drops tables with foreign keys in desired order.
+     */
+    @Test
+    public void onDropsAndRecreatesTablesWithForeignKeyInDesiredOrderOnupdate() {
+        createTablesWithForeignKeys();
+        // Getting an instance to the writable database
+        // invokes onCreate on the SQLiteStorageHelper.
+        final List<String> tableNamesFromDatabase = getTableNames(sqLiteDatabase);
+        LOG.debug(tableNamesFromDatabase.toString());
+        sqLiteStorageHelper.update(sqLiteDatabase, "1", "2");
         LOG.debug(tableNamesFromDatabase.toString());
         for (SqlCommand sqlCommand : createTableCommands) {
             assertTrue(

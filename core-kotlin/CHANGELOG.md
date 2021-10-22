@@ -1,3 +1,22 @@
+## [Release 0.12.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.2)
+
+### Miscellaneous
+- fix(datastore):predicate handling for observe (#1537)
+
+[See all changes between 0.12.1 and 0.12.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.12.1...release-kotlin_v0.12.2)
+
+## [Release 0.12.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.1)
+
+### Miscellaneous
+- Observe query updates (#1520)
+- Update AWS SDK ver to 2.33.0 (#1526)
+
+[See all changes between 0.12.0 and 0.12.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.12.0...release-kotlin_v0.12.1)
+
+## [Release 0.12.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.0)
+
+[See all changes between 0.11.0 and 0.12.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.11.0...release-kotlin_v0.12.0)
+
 ## [Release 0.11.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.11.0)
 
 ### Features

@@ -24,9 +24,12 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 
 import java.util.Iterator;
 import java.util.List;
@@ -58,11 +61,13 @@ public interface LocalStorageAdapter {
      * @param context An Android Context
      * @param onSuccess A callback to be invoked upon completion of the initialization
      * @param onError A callback to be invoked upon initialization error
+     * @param dataStoreConfiguration Datastore configuration
      */
     void initialize(
             @NonNull Context context,
             @NonNull Consumer<List<ModelSchema>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError
+            @NonNull Consumer<DataStoreException> onError,
+            @NonNull DataStoreConfiguration dataStoreConfiguration
     );
 
     /**
@@ -168,6 +173,28 @@ public interface LocalStorageAdapter {
             @NonNull Consumer<DataStoreException> onObservationError,
             @NonNull Action onObservationComplete
     );
+
+    /**
+     * Query and observe all changes to that occur to any/all objects in the storage.
+     * @param itemClass class of the item being observed.
+     * @param options query options.
+     * @param onObservationStarted invoked on observation start.
+     * @param onQuerySnapshot
+     *        Receives a {@link StorageItemChange} notification every time
+     *        any object managed by the storage adapter is changed in any way.
+     * @param onObservationError
+     *        Invoked if the observation terminates do an unrecoverable error.
+     * @param onObservationComplete
+     *        Invoked it the observation terminates gracefully, perhaps due to cancellation.
+     *@param <T> The type of item being observed.
+     */
+    <T extends Model> void observeQuery(
+            @NonNull Class<T> itemClass,
+            @NonNull ObserveQueryOptions options,
+            @NonNull Consumer<Cancelable> onObservationStarted,
+            @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+            @NonNull Consumer<DataStoreException> onObservationError,
+            @NonNull Action onObservationComplete);
 
     /**
      * Terminate use of the local storage.

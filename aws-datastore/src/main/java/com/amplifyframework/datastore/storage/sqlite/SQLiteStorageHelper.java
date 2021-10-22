@@ -19,7 +19,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
@@ -81,9 +80,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
     @Override
     public void onConfigure(SQLiteDatabase sqliteDatabase) {
         super.onConfigure(sqliteDatabase);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            sqliteDatabase.setForeignKeyConstraintsEnabled(true);
-        }
+        sqliteDatabase.setForeignKeyConstraintsEnabled(true);
     }
 
     /**
@@ -198,6 +195,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
     private void dropAllTables(@NonNull SQLiteDatabase sqliteDatabase) {
         Objects.requireNonNull(sqliteDatabase);
         final String queryString = "SELECT name FROM sqlite_master WHERE type='table'";
+        sqliteDatabase.execSQL("PRAGMA foreign_keys = OFF;");
         try (Cursor cursor = sqliteDatabase.rawQuery(queryString, null)) {
             Objects.requireNonNull(cursor);
 
@@ -206,8 +204,8 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
             while (cursor.moveToNext()) {
                 tablesToDrop.add(cursor.getString(0));
             }
-
             sqliteDatabase.beginTransaction();
+            sqliteDatabase.execSQL("PRAGMA foreign_keys = OFF;");
             for (String table : tablesToDrop) {
                 // Android SQLite creates system tables to store metadata
                 // and all the system tables have the prefix SQLITE_SYSTEM_TABLE_PREFIX.
@@ -217,8 +215,11 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
                 sqliteDatabase.execSQL("DROP TABLE IF EXISTS " + Wrap.inBackticks(table));
                 LOG.debug("Dropped table: " + table);
             }
+            sqliteDatabase.execSQL("PRAGMA foreign_keys = ON;");
             sqliteDatabase.setTransactionSuccessful();
             sqliteDatabase.endTransaction();
+        } finally {
+            sqliteDatabase.execSQL("PRAGMA foreign_keys = ON;");
         }
     }
 }

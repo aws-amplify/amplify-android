@@ -1,3 +1,34 @@
+## [Release 1.28.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.2)
+
+### Miscellaneous
+- fix(datastore):predicate handling for observe (#1537)
+
+[See all changes between 1.28.1 and 1.28.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.1...release_v1.28.2)
+
+## [Release 1.28.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.1)
+
+### Miscellaneous
+- Observe query updates (#1520)
+- Update AWS SDK ver to 2.33.0 (#1526)
+
+[See all changes between 1.28.0 and 1.28.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.0...release_v1.28.1)
+
+## [Release 1.28.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.0)
+
+### Features
+- **datastore:** Add support for parsing match none predicate in AppSync request builder (#1515)
+- **datastore:** Add support for observe query (#1470)
+
+### Bug Fixes
+- **datastore:** timeout period not increasing for flutter (#1505)
+- **datastore:** Ensure not to parse SerializedCustomType if value is null (#1513)
+- **datastore:** Fix for issue with foreign keys on schema upgrade delete (#1501)
+
+### Miscellaneous
+- better announce which schema is failing to sync (#1479)
+
+[See all changes between 1.27.0 and 1.28.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.27.0...release_v1.28.0)
+
 ## [Release 1.27.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.27.0)
 
 ### Features

@@ -34,6 +34,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -276,7 +277,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @WorkerThread
     private Completable initializeStorageAdapter(Context context) {
         return Completable.defer(() -> Completable.create(emitter ->
-            sqliteStorageAdapter.initialize(context, schemaList -> emitter.onComplete(), emitter::onError)
+            sqliteStorageAdapter.initialize(context, schemaList -> emitter.onComplete(),
+                    emitter::onError, pluginConfiguration)
         ));
     }
 
@@ -503,6 +505,25 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     @Override
+    public <T extends Model> void observeQuery(
+            @NonNull Class<T> itemClass,
+            @NonNull ObserveQueryOptions options,
+            @NonNull Consumer<Cancelable> onObservationStarted,
+            @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+            @NonNull Consumer<DataStoreException> onObservationError,
+            @NonNull Action onObservationComplete) {
+        Objects.requireNonNull(onObservationStarted);
+        Objects.requireNonNull(onObservationError);
+        Objects.requireNonNull(onObservationComplete);
+        start(() -> sqliteStorageAdapter.observeQuery(itemClass,
+                                            options,
+                                            onObservationStarted,
+                                            onQuerySnapshot,
+                                            onObservationError,
+                                            onObservationComplete), onObservationError);
+    }
+
+    @Override
     public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
             @NonNull Consumer<Cancelable> onObservationStarted,
@@ -600,7 +621,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             itemChange -> {
                 try {
                     if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName()) &&
-                            selectionCriteria.evaluate(itemChange)) {
+                            selectionCriteria.evaluate(itemChange.item())) {
                         @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
                         onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));

@@ -36,12 +36,10 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
-import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -579,7 +577,7 @@ public final class AWSDataStorePluginTest {
             }
         });
         awsDataStorePlugin.observe(Person.class,
-            QueryField.field("type").eq(StorageItemChange.Type.CREATE),
+            Person.FIRST_NAME.eq("Test"),
             value -> { },
             onObserveResult,
             error -> {
@@ -620,7 +618,7 @@ public final class AWSDataStorePluginTest {
             }
         });
         awsDataStorePlugin.observe(Person.class,
-            QueryField.field("type").eq(StorageItemChange.Type.UPDATE),
+            Person.FIRST_NAME.eq("NO MATCH"),
             value -> { },
             onObserveResult,
             error -> {
