@@ -36,9 +36,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface ModelConfig {
     /**
-     * @Deprecated instead use listPluralName or syncPluralName
      * Specifies the plural version of the model name.
      * @return the plural version of the name.
+     * @Deprecated instead use listPluralName or syncPluralName
      */
     String pluralName() default "";
 

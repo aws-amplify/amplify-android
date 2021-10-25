@@ -48,9 +48,9 @@ public final class ModelSchema {
     // Name of the Model.
     private final String name;
 
-    // The plural version of the name of the model.
-    // Useful for generating GraphQL list query names.
     /**
+     * The plural version of the name of the model.
+     * Useful for generating GraphQL list query names.
      * @Deprecated Use of pluralName is deprecated, use syncPluralName instead.
      */
     private final String pluralName;
@@ -264,12 +264,12 @@ public final class ModelSchema {
     }
 
     /**
-     * @Deprecated instead use getListPluralName() or getSyncPluralName()
      * Returns the plural name of the Model in the target.
      * Null if not explicitly annotated in ModelConfig.
      *
      * @return the plural name of the Model in the target
      *         if explicitly provided.
+     * @Deprecated instead use getListPluralName() or getSyncPluralName()
      */
     @Nullable
     public String getPluralName() {
