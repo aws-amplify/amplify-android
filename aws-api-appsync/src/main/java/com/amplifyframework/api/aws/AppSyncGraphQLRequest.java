@@ -159,16 +159,16 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         if (QueryType.LIST.equals(operation)) {
             modelName = modelSchema.getListPluralName() != null
                     && !modelSchema.getListPluralName().isEmpty()
-                    ? modelSchema.getListPluralName()
+                    ? Casing.capitalizeFirst(modelSchema.getListPluralName())
                     : modelName + "s";
         } else if (QueryType.SYNC.equals(operation)) {
             // The sync operation name is pluralized using pluralize.js, which uses more complex pluralization rules
             // than simply adding an 's' at the end (e.g. baby > babies, person > people, etc).  This pluralized name
             // is an annotation on the codegen'd model class, so we will just grab it from the ModelSchema.
             modelName = modelSchema.getSyncPluralName() != null
-                        && modelSchema.getSyncPluralName().isEmpty()
-                    ? Casing.capitalizeFirst(modelSchema.getPluralName())
-                    : Casing.capitalizeFirst(modelSchema.getSyncPluralName());
+                        && !modelSchema.getSyncPluralName().isEmpty()
+                    ? Casing.capitalizeFirst(modelSchema.getSyncPluralName())
+                    : Casing.capitalizeFirst(modelSchema.getPluralName());
         }
 
         String operationString =
