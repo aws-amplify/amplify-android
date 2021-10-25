@@ -1,3 +1,18 @@
+## [Release 1.28.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.2)
+
+### Miscellaneous
+- fix(datastore):predicate handling for observe (#1537)
+
+[See all changes between 1.28.1 and 1.28.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.1...release_v1.28.2)
+
+## [Release 1.28.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.1)
+
+### Miscellaneous
+- Observe query updates (#1520)
+- Update AWS SDK ver to 2.33.0 (#1526)
+
+[See all changes between 1.28.0 and 1.28.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.0...release_v1.28.1)
+
 ## [Release 1.28.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.0)
 
 ### Features
