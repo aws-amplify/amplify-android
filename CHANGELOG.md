@@ -1,3 +1,10 @@
+## [Release 1.28.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.2)
+
+### Miscellaneous
+- fix(datastore):predicate handling for observe (#1537)
+
+[See all changes between 1.28.1 and 1.28.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.1...release_v1.28.2)
+
 ## [Release 1.28.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.1)
 
 ### Miscellaneous
