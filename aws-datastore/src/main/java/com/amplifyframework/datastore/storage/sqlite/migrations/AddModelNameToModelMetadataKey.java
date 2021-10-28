@@ -98,7 +98,7 @@ public final class AddModelNameToModelMetadataKey implements ModelMigration {
                 .append(modelName);
         }
         sb.insert(0, "SELECT id, tableName, count(id) as count FROM (");
-        sb.append(") GROUP BY id, tableName HAVING count > 1");
+        sb.append(") GROUP BY id HAVING count > 1");
         LOG.debug("Check for duplicate IDs:" + sb.toString());
         return database.rawQuery(sb.toString(), new String[]{});
     }
