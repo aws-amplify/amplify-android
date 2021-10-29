@@ -35,6 +35,16 @@ readonly config_files=(
     "aws-storage-s3/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-storage-s3/src/androidTest/res/raw/awsconfiguration.json"
     "aws-storage-s3/src/androidTest/res/raw/credentials.json"
+
+    # Geo
+    "aws-geo-location/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-geo-location/src/androidTest/res/raw/awsconfiguration.json"
+    "aws-geo-location/src/androidTest/res/raw/credentials.json"
+
+    # Maplibre Adapter
+    "maplibre-adapter/src/androidTest/res/raw/amplifyconfiguration.json"
+    "maplibre-adapter/src/androidTest/res/raw/awsconfiguration.json"
+    "maplibre-adapter/src/androidTest/res/raw/credentials.json"
 )
 
 # Copy remote files into the local directory.

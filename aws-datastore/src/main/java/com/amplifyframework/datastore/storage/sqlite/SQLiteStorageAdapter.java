@@ -51,6 +51,7 @@ import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
+import com.amplifyframework.datastore.storage.sqlite.migrations.ModelMigrations;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
@@ -827,6 +828,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     Objects.requireNonNull(sqliteStorageHelper);
                     Objects.requireNonNull(databaseConnectionHandle);
                     sqliteStorageHelper.update(databaseConnectionHandle, oldVersion, newVersion);
+                } else {
+                    LOG.debug("Database up to date. Checking ModelMetadata.");
+                    new ModelMigrations(databaseConnectionHandle, modelsProvider).apply();
                 }
             }
             PersistentModelVersion persistentModelVersion = new PersistentModelVersion(modelsProvider.version());
