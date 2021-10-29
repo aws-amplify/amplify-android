@@ -31,6 +31,7 @@ import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptio
 import com.amplifyframework.geo.location.service.AmazonLocationService
 import com.amplifyframework.geo.location.service.GeoService
 import com.amplifyframework.geo.models.Coordinates
+import com.amplifyframework.geo.models.CountryCode
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
@@ -154,12 +155,15 @@ class AWSLocationGeoPlugin(
                 val searchIndex = if (options is AmazonLocationSearchByTextOptions) {
                     options.searchIndex ?: defaultSearchIndexName
                 } else defaultSearchIndexName
+                val countries = if (options.countries.isEmpty()) {
+                    listOf(CountryCode.USA) // default to USA if no filter provided
+                } else options.countries
                 val places = geoService.geocode(
                     searchIndex,
                     query,
                     options.maxResults,
                     options.searchArea,
-                    options.countries
+                    countries
                 )
                 GeoSearchResult.withPlaces(places)
             },

@@ -78,6 +78,24 @@ public final class Coordinates implements Geometry {
         this.longitude = longitude;
     }
 
+    /**
+     * Uses haversine formula to calculate the central angle between this set of
+     * coordinates and another set of coordinates. Multiply this value by the radius
+     * of Earth to obtain the distance between these two points.
+     *
+     * @param coordinates the set of coordinates to central angle between.
+     * @return the central angle in radians (unit-less).
+     */
+    public double centralAngle(Coordinates coordinates) {
+        double dLat = Math.toRadians(latitude - coordinates.latitude);
+        double dLng = Math.toRadians(longitude - coordinates.longitude);
+        double angle = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.sin(dLng/2) * Math.sin(dLng/2) *
+                Math.cos(Math.toRadians(latitude)) *
+                Math.cos(Math.toRadians(coordinates.latitude));
+        return 2 * Math.atan2(Math.sqrt(angle), Math.sqrt(1-angle));
+    }
+
     @Override
     public String toString() {
         return "Coordinates{" +
