@@ -1,3 +1,15 @@
+## [Release 0.12.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.3)
+
+### Bug Fixes
+- **geo:** Specify jvm target for kotlin package (#1546)
+- **api:** replace pluralName with listPluralName & syncPluralName (#1523)
+- **datastore:** Allow different model types with same ID (#1541)
+
+### Miscellaneous
+- Update build.gradle (#1553)
+
+[See all changes between 0.12.2 and 0.12.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.12.2...release-kotlin_v0.12.3)
+
 ## [Release 0.12.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.2)
 
 ### Miscellaneous
