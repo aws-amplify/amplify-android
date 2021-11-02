@@ -69,20 +69,9 @@ internal class AmazonLocationService(
             .withText(query)
             .withMaxResults(limit)
             .withFilterCountries(countries.map { it.name })
-        if (area?.biasPosition != null) {
-            val position = listOf(
-                area.biasPosition!!.longitude,
-                area.biasPosition!!.latitude
-            )
-            request.setBiasPosition(position)
-        } else if (area?.boundingBox != null) {
-            val boundary = listOf(
-                area.boundingBox!!.longitudeSW,
-                area.boundingBox!!.latitudeSW,
-                area.boundingBox!!.longitudeNE,
-                area.boundingBox!!.latitudeNE
-            )
-            request.setFilterBBox(boundary)
+        area?.biasPosition?.let { request.setBiasPosition(listOf(it.longitude, it.latitude)) }
+        area?.boundingBox?.let {
+            request.setFilterBBox(listOf(it.longitudeSW, it.latitudeSW, it.longitudeNE, it.latitudeNE))
         }
         val response = provider.searchPlaceIndexForText(request)
         return response.results.map { AmazonLocationPlace(it.place) }
