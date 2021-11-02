@@ -16,70 +16,45 @@
 package com.amplifyframework.geo.maplibre
 
 import android.content.Context
-import androidx.annotation.VisibleForTesting
-
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.GeoCategory
-import com.amplifyframework.geo.maplibre.http.AWS4SigningInterceptor
+import com.amplifyframework.geo.location.AWSLocationGeoPlugin
+import com.amplifyframework.geo.maplibre.http.AWSRequestSignerInterceptor
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
-
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.WellKnownTileServer
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.module.http.HttpRequestUtil
-import kotlinx.coroutines.*
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
-/**
- * Entry point to initialize MapLibre instance and configure it to be
- * authorized to make requests directly to Amazon Location Service.
- */
-object AmplifyMapLibreAdapter {
-    private const val COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
-    private const val GEO_SERVICE_NAME = "geo"
+private const val LOCATION_GEO_PLUGIN_KEY = "awsLocationGeoPlugin"
 
-    private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
+class AmplifyMapLibreAdapter(
+    private val context: Context,
+    private val geo: GeoCategory = Amplify.Geo
+) {
 
-    @VisibleForTesting internal var geo: GeoCategory = Amplify.Geo
-    @VisibleForTesting internal var auth: AuthCategory = Amplify.Auth
+    companion object {
+        private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
+    }
 
-    /**
-     * Instantiates MapLibre SDK and attaches AWS Signature V4 signer.
-     *
-     * @param context Android context which holds or is an application context
-     * @return the single instance of Mapbox
-     */
-    @JvmStatic
-    fun getInstance(context: Context): AmplifyMapLibreAdapter {
-        return synchronized(this) {
-            Mapbox.getInstance(context, null, WellKnownTileServer.Mapbox)
-            val interceptor = AWS4SigningInterceptor(credentialsProvider(), GEO_SERVICE_NAME)
-            val client = OkHttpClient.Builder()
-                .addInterceptor(interceptor)
+    private val plugin: AWSLocationGeoPlugin by lazy {
+        geo.getPlugin(LOCATION_GEO_PLUGIN_KEY) as AWSLocationGeoPlugin
+    }
+
+    fun initialize() {
+        Mapbox.getInstance(context, null, WellKnownTileServer.MapLibre)
+        HttpRequestUtil.setOkHttpClient(
+            OkHttpClient.Builder()
+                .addInterceptor(AWSRequestSignerInterceptor(plugin))
                 .build()
-            HttpRequestUtil.setOkHttpClient(client)
-            this
-        }
+        )
     }
 
-    private fun credentialsProvider(): AWSCredentialsProvider {
-        val authPlugin = auth.getPlugin(COGNITO_AUTH_PLUGIN_KEY)
-        return authPlugin.escapeHatch as AWSCredentialsProvider
-    }
-
-    /**
-     * Convenience method to use style from Amplify directly with MapLibre's [MapboxMap].
-     *
-     * @param map MapLibre's map instance to load style on
-     * @param style Amplify map style to use
-     * @param callback Callback to trigger upon successfully loading map style
-     */
-    @JvmStatic
-    @JvmOverloads
     fun setStyle(map: MapboxMap, style: MapStyle? = null, callback: Style.OnStyleLoaded) {
         val options = if (style == null) {
             // Use default map if no style is provided
@@ -109,4 +84,5 @@ object AmplifyMapLibreAdapter {
             }
         )
     }
+
 }

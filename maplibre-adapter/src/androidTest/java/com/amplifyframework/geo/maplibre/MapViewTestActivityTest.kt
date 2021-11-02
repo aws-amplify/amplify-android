@@ -15,41 +15,35 @@
 
 package com.amplifyframework.geo.maplibre
 
-import androidx.test.core.app.ActivityScenario.launch
-
+import androidx.test.core.app.launchActivity
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+
+import com.amplifyframework.geo.GeoCategory
+import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import com.amplifyframework.testutils.sync.TestCategory
 
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import org.junit.Assert.assertNotNull
-import org.junit.Before
 import org.junit.Test
 import java.lang.RuntimeException
 import kotlin.coroutines.*
 import kotlinx.coroutines.runBlocking
 
 class MapViewTestActivityTest {
-    /**
-     * Configure MapLibre Adapter's auth provider.
-     */
-    @Before
-    fun setUpAuth() {
-        AmplifyMapLibreAdapter.auth = TestCategory.forPlugin(AWSCognitoAuthPlugin()) as AuthCategory
-    }
 
     /**
      * Tests that activity can successfully load a map instance.
      */
     @Test
     fun loadsMapSuccessfully() = runBlocking {
-        val scenario = launch(MapViewTestActivity::class.java)
+        val scenario = launchActivity<MapViewTestActivity>()
         val map = suspendCoroutine<MapboxMap> { continuation ->
             scenario.onActivity { activity ->
-                activity.mapView?.addOnDidFailLoadingMapListener { error ->
+                activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
-                activity.mapView?.getMapAsync { map ->
+                activity.mapView.getMapAsync { map ->
                     continuation.resume(map)
                 }
             }

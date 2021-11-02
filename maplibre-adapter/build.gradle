@@ -13,24 +13,37 @@
  * permissions and limitations under the License.
  */
 
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
+def composeVersion = "1.0.4"
+
+android {
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
+}
+
 dependencies {
-    implementation project(':core')
-    implementation project(':aws-geo-location')
     implementation project(':aws-auth-cognito')
+    implementation project(":aws-geo-location")
+    implementation project(":core")
     implementation dependency.aws.core
     implementation dependency.maplibre
     implementation dependency.okhttp
     implementation dependency.kotlin.coroutines
 
-    androidTestImplementation project(':testutils')
+    compileOnly dependency.aws.location
+    compileOnly "androidx.compose.ui:ui:$composeVersion"
+    compileOnly "androidx.compose.foundation:foundation:$composeVersion"
+
+    androidTestImplementation project(":testutils")
     androidTestImplementation dependency.androidx.appcompat
     androidTestImplementation dependency.androidx.test.junit
     androidTestImplementation dependency.androidx.test.core
+    androidTestImplementation dependency.androidx.test.core_ktx
     androidTestImplementation dependency.androidx.test.runner
 }
 
