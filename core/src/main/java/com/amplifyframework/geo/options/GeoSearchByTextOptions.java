@@ -104,7 +104,10 @@ public class GeoSearchByTextOptions {
         private SearchArea searchArea;
         private List<CountryCode> countries;
 
-        private Builder() {
+        /**
+         * Instantiates a new builder for search options.
+         */
+        protected Builder() {
             // Default to filtering inside USA
             this.countries = Collections.singletonList(CountryCode.USA);
         }

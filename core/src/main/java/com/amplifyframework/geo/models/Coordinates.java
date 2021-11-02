@@ -89,11 +89,11 @@ public final class Coordinates implements Geometry {
     public double centralAngle(Coordinates coordinates) {
         double dLat = Math.toRadians(latitude - coordinates.latitude);
         double dLng = Math.toRadians(longitude - coordinates.longitude);
-        double angle = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.sin(dLng/2) * Math.sin(dLng/2) *
+        double angle = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.sin(dLng / 2) * Math.sin(dLng / 2) *
                 Math.cos(Math.toRadians(latitude)) *
                 Math.cos(Math.toRadians(coordinates.latitude));
-        return 2 * Math.atan2(Math.sqrt(angle), Math.sqrt(1-angle));
+        return 2 * Math.atan2(Math.sqrt(angle), Math.sqrt(1 - angle));
     }
 
     @Override
