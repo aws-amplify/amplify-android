@@ -25,12 +25,10 @@ import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
-import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
-import org.json.JSONObject
 import org.junit.Assert.*
 
 import org.junit.Before
@@ -104,8 +102,8 @@ class SearchApiTest {
         signInWithCognito()
         val query = UUID.randomUUID().toString()
         val result = geo?.searchByText(query, GeoSearchByTextOptions.defaults())
-        assertNotNull(result!!)
-        assertNotNull(result.places)
+        assertNotNull(result)
+        assertNotNull(result!!.places)
     }
 
     /**
@@ -123,8 +121,8 @@ class SearchApiTest {
             nextDouble(-180.0, 180.0)
         )
         val result = geo?.searchByCoordinates(coordinates, GeoSearchByCoordinatesOptions.defaults())
-        assertNotNull(result!!)
-        assertNotNull(result.places)
+        assertNotNull(result)
+        assertNotNull(result!!.places)
 
         // Reverse lookup will always return at least one result
         assertFalse(result.places.isEmpty())

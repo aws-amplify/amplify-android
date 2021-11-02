@@ -38,8 +38,9 @@ data class AmazonLocationPlace(
     val postalCode: String? = null
 ) : Place(coordinates) {
     internal constructor(place: AmazonPlace) : this(
-        // AmazonPlace's point is a list in the format of [long, lat]
-        Coordinates(place.geometry.point[1], place.geometry.point[0]),
+        // Amazon Location Service represents 2d point as [long, lat]
+        Coordinates(place.geometry.point[1],  // latitude
+                    place.geometry.point[0]), // longitude
         place.label,
         place.addressNumber,
         place.street,

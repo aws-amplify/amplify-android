@@ -22,7 +22,7 @@ import com.amplifyframework.geo.models.CountryCode;
 import com.amplifyframework.geo.models.SearchArea;
 import com.amplifyframework.util.Immutable;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -102,7 +102,12 @@ public class GeoSearchByTextOptions {
 
         private int maxResults = DEFAULT_MAX_RESULTS_LIMIT;
         private SearchArea searchArea;
-        private List<CountryCode> countries = new ArrayList<>();
+        private List<CountryCode> countries;
+
+        private Builder() {
+            // Default to filtering inside USA
+            this.countries = Collections.singletonList(CountryCode.USA);
+        }
 
         /**
          * Sets the max results limit and returns itself.
@@ -130,6 +135,7 @@ public class GeoSearchByTextOptions {
 
         /**
          * Sets the list of countries to search from and returns itself.
+         * List cannot be empty.
          *
          * @param countries the list of countries to search from.
          * @return this builder instance.
@@ -137,6 +143,9 @@ public class GeoSearchByTextOptions {
         @NonNull
         public Builder countries(@NonNull List<CountryCode> countries) {
             this.countries = Objects.requireNonNull(countries);
+            if (countries.isEmpty()) {
+                throw new IllegalArgumentException("Country filter cannot be empty.");
+            }
             return this;
         }
 
