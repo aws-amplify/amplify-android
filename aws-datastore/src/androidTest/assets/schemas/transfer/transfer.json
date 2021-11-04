@@ -1,0 +1,61 @@
+{
+  "associations": {
+    "fromUser": {
+      "associatedType": "User",
+      "name": "BelongsTo",
+      "targetName": "userId"
+    },
+    "toUser": {
+      "associatedType": "User",
+      "name": "BelongsTo",
+      "targetName": "userId"
+    }
+  },
+  "authRules": [],
+  "fields": {
+    "id": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": true,
+      "javaClassForValue": "java.lang.String",
+      "name": "id",
+      "targetType": "ID"
+    },
+    "amount": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": true,
+      "javaClassForValue": "java.lang.Integer",
+      "name": "amount",
+      "targetType": "Int"
+    },
+    "fromUser": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": true,
+      "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+      "name": "fromUser",
+      "targetType": "User"
+    },
+    "toUser": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": true,
+      "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+      "name": "toUser",
+      "targetType": "User"
+    }
+  },
+  "indexes": {},
+  "modelClass": "com.amplifyframework.core.model.SerializedModel",
+  "name": "Transfer",
+  "pluralName": "Transfers"
+}

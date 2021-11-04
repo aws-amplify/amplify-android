@@ -170,6 +170,16 @@ public final class SQLiteStorageAdapterQueryTest {
     }
 
     /**
+     * Test that querying the saved item with multiple foreign keys from the same
+     * model also populates that instance variable with object.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void querySavedDataWithMultipleForeignKeysOfSameType() throws DataStoreException {
+        // TODO
+    }
+
+    /**
      * Test that querying the saved item with a foreign key
      * also populates that instance variable with object.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore

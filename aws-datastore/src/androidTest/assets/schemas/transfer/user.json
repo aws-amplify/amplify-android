@@ -1,0 +1,29 @@
+{
+  "authRules": [],
+  "fields": {
+    "id": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": true,
+      "javaClassForValue": "java.lang.String",
+      "name": "id",
+      "targetType": "ID"
+    },
+    "name": {
+      "authRules": [],
+      "isArray": false,
+      "isEnum": false,
+      "isModel": false,
+      "isRequired": true,
+      "javaClassForValue": "java.lang.String",
+      "name": "name",
+      "targetType": "String"
+    }
+  },
+  "indexes": {},
+  "modelClass": "com.amplifyframework.core.model.SerializedModel",
+  "name": "User",
+  "pluralName": "Users"
+}
