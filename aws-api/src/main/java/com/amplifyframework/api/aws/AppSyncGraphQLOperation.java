@@ -31,6 +31,7 @@ import com.amplifyframework.logging.Logger;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -56,33 +57,23 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private final OkHttpClient client;
     private final Consumer<GraphQLResponse<R>> onResponse;
     private final Consumer<ApiException> onFailure;
+    private final ExecutorService executorService;
     private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
 
     private Call ongoingCall;
 
     /**
      * Constructs a new AppSyncGraphQLOperation.
-     * @param endpoint API endpoint being hit
-     * @param client OkHttp client being used to hit the endpoint
-     * @param request GraphQL request being enacted
-     * @param responseFactory an implementation of GsonGraphQLResponseFactory
-     * @param onResponse Invoked when response is attained from endpoint
-     * @param onFailure Invoked upon failure to obtain response from endpoint
+     * @param builder operation builder instance
      */
-    private AppSyncGraphQLOperation(
-            @NonNull String endpoint,
-            @NonNull OkHttpClient client,
-            @NonNull GraphQLRequest<R> request,
-            @NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory,
-            @NonNull GraphQLResponse.Factory responseFactory,
-            @NonNull Consumer<GraphQLResponse<R>> onResponse,
-            @NonNull Consumer<ApiException> onFailure) {
-        super(request, responseFactory);
-        this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
-        this.endpoint = endpoint;
-        this.client = client;
-        this.onResponse = onResponse;
-        this.onFailure = onFailure;
+    private AppSyncGraphQLOperation(@NonNull Builder<R> builder) {
+        super(builder.request, builder.responseFactory);
+        this.endpoint = Objects.requireNonNull(builder.endpoint);
+        this.client = Objects.requireNonNull(builder.client);
+        this.apiRequestDecoratorFactory = Objects.requireNonNull(builder.apiRequestDecoratorFactory);
+        this.executorService = Objects.requireNonNull(builder.executorService);
+        this.onResponse = Objects.requireNonNull(builder.onResponse);
+        this.onFailure = Objects.requireNonNull(builder.onFailure);
     }
 
     @Override
@@ -91,7 +82,10 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         if (ongoingCall != null && (ongoingCall.isExecuted() || ongoingCall.isCanceled())) {
             return;
         }
+        executorService.submit(this::dispatchRequest);
+    }
 
+    private void dispatchRequest() {
         try {
             LOG.debug("Request: " + getRequest().getContent());
             RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
@@ -101,8 +95,8 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 .addHeader("content-type", CONTENT_TYPE)
                 .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
                 .build();
-            ongoingCall = client.newCall(requestDecorator.decorate(okHttpRequest));
 
+            ongoingCall = client.newCall(requestDecorator.decorate(okHttpRequest));
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {
             // Cancel if possible
@@ -119,7 +113,9 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
     @Override
     public void cancel() {
-        ongoingCall.cancel();
+        if (ongoingCall != null) {
+            ongoingCall.cancel();
+        }
     }
 
     static <R> Builder<R> builder() {
@@ -175,6 +171,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         private ApiRequestDecoratorFactory apiRequestDecoratorFactory;
         private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
+        private ExecutorService executorService;
 
         Builder<R> endpoint(@NonNull String endpoint) {
             this.endpoint = Objects.requireNonNull(endpoint);
@@ -206,23 +203,19 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
             return this;
         }
 
-        Builder<R> apiRequestDecoratorFactory(ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
-            this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
+        Builder<R> apiRequestDecoratorFactory(@NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
+            this.apiRequestDecoratorFactory = Objects.requireNonNull(apiRequestDecoratorFactory);
+            return this;
+        }
+
+        Builder<R> executorService(@NonNull ExecutorService executorService) {
+            this.executorService = executorService;
             return this;
         }
 
         @SuppressLint("SyntheticAccessor")
         AppSyncGraphQLOperation<R> build() {
-            return new AppSyncGraphQLOperation<>(
-                Objects.requireNonNull(endpoint),
-                Objects.requireNonNull(client),
-                Objects.requireNonNull(request),
-                Objects.requireNonNull(apiRequestDecoratorFactory),
-                Objects.requireNonNull(responseFactory),
-                Objects.requireNonNull(onResponse),
-                Objects.requireNonNull(onFailure)
-            );
+            return new AppSyncGraphQLOperation<>(this);
         }
-
     }
 }
