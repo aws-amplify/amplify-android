@@ -314,11 +314,27 @@ final class SubscriptionEndpoint {
             );
         }
 
+        DomainType domainType = DomainType.from(apiConfiguration.getEndpoint());
+
+        if (domainType == DomainType.INVALID) {
+            throw new ApiException("Invalid API URL : " + apiConfiguration.getEndpoint(),
+                    "Verify that GraphQL endpoint is of supported type.");
+        }
+
+        String authority = appSyncEndpoint.getHost();
+        if (domainType == DomainType.STANDARD) {
+            authority = authority.replace("appsync-api", "appsync-realtime-api");
+        }
+
+        String path = appSyncEndpoint.getPath();
+        if (domainType == DomainType.CUSTOM) {
+            path = path + "/realtime";
+        }
+
         return new Uri.Builder()
             .scheme("wss")
-            .authority(appSyncEndpoint.getHost()
-                .replace("appsync-api", "appsync-realtime-api"))
-            .appendPath(appSyncEndpoint.getPath())
+            .authority(authority)
+            .appendPath(path)
             .appendQueryParameter("header", Base64.encodeToString(rawHeader, Base64.DEFAULT))
             .appendQueryParameter("payload", "e30=")
             .build()
