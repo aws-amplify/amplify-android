@@ -41,13 +41,4 @@ public class DomainTypeTest {
     public void testCustomURLMatch() {
         Assert.assertEquals(CUSTOM, DomainType.from(CUSTOM_URL));
     }
-
-    /**
-     * Test that Domain type is set to {@link DomainType#INVALID} for invalid URLs.
-     */
-    @Test
-    public void testInvalidURLMatch() {
-        Assert.assertEquals(DomainType.INVALID, DomainType.from("http://somedomain.com"));
-    }
-
 }

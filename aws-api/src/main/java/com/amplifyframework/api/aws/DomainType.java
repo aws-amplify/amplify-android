@@ -23,11 +23,6 @@ import java.util.regex.Pattern;
  */
 public enum DomainType {
     /**
-     * Invalid or unsupported domain type.
-     */
-    INVALID,
-
-    /**
      * Standard domain type composed of randomly generated 26 char subdomain.
      */
     STANDARD,
@@ -46,10 +41,6 @@ public enum DomainType {
      * @return {@link DomainType} based on supplied endpoint.
      */
     static DomainType from(String endpoint) {
-        if (!(endpoint.startsWith("https://") && endpoint.endsWith("/graphql"))) {
-            return INVALID;
-        }
-
         if (isRegexMatch(endpoint, STANDARD_ENDPOINT_REGEX)) {
             return STANDARD;
         }

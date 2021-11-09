@@ -316,11 +316,6 @@ final class SubscriptionEndpoint {
 
         DomainType domainType = DomainType.from(apiConfiguration.getEndpoint());
 
-        if (domainType == DomainType.INVALID) {
-            throw new ApiException("Invalid API URL : " + apiConfiguration.getEndpoint(),
-                    "Verify that GraphQL endpoint is of supported type.");
-        }
-
         String authority = appSyncEndpoint.getHost();
         if (domainType == DomainType.STANDARD) {
             authority = authority.replace("appsync-api", "appsync-realtime-api");
