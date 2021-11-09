@@ -329,6 +329,30 @@ public final class SQLiteStorageAdapterQueryTest {
     }
 
     /**
+     * Test querying with Where.Id predicate condition on connected model.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void querySavedDataWithIdPredicateOnForeignKey() throws DataStoreException {
+        final BlogOwner blogOwner = BlogOwner.builder()
+                .name("Jane Doe")
+                .build();
+        adapter.save(blogOwner);
+
+        final Blog blog = Blog.builder()
+                .name("Jane's Commercial Real Estate Blog")
+                .owner(blogOwner)
+                .build();
+        adapter.save(blog);
+
+        final List<Blog> blogsOwnedByJaneDoe = adapter.query(
+                Blog.class,
+                Where.id(blog.getId())
+        );
+        assertTrue(blogsOwnedByJaneDoe.contains(blog));
+    }
+
+    /**
      * Test query with SQL injection.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
