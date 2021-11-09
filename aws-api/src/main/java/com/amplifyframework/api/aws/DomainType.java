@@ -23,12 +23,13 @@ import java.util.regex.Pattern;
  */
 public enum DomainType {
     /**
-     * Standard domain type composed of randomly generated 26 char subdomain.
+     * Standard domain type composed of AWS AppSync endpoint where unique-id is made of 26 alphanumeric characters.
+     * See <a href="https://docs.aws.amazon.com/general/latest/gr/appsync.html">AppSync Endpoints</a>
      */
     STANDARD,
 
     /**
-     * Custom domain defined by user. It must be "https" and have path "graphql" in URL.
+     * Custom domain defined by the user.
      */
     CUSTOM;
 
