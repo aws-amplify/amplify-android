@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <string name="label_compassIndicator">Compass</string>
+    <string name="label_zoomIn">Zoom in</string>
+    <string name="label_zoomOut">Zoom out</string>
+
+    <dimen name="controls_margin">10dp</dimen>
+    <dimen name="controls_elevation">3dp</dimen>
+    <dimen name="controls_borderRadius">2.5dp</dimen>
+    <dimen name="controls_borderSize">1dp</dimen>
+    <dimen name="controls_size">32dp</dimen>
+    <dimen name="controls_padding">6dp</dimen>
+<!--    <dimen name="controls_paddingVertical">6dp</dimen>-->
+
+    <color name="controls_background">#ffffff</color>
+    <color name="controls_border">#bcbcbc</color>
+<!--    <color name="controls_border">@android:color/holo_red_light</color>-->
+    <color name="controls_foreground">#545454</color>
+
+    <declare-styleable name="map_AmplifyMapView">
+        <!-- MapViewOptions -->
+        <attr format="string" name="map_attribution" />
+        <attr format="float" name="map_centerLatitude" />
+        <attr format="float" name="map_centerLongitude" />
+        <attr format="integer" name="map_minZoomLevel" />
+        <attr format="integer" name="map_maxZoomLevel" />
+        <attr format="boolean" name="map_showCompassIndicator" />
+        <attr format="boolean" name="map_showUserLocation" />
+        <attr format="boolean" name="map_showZoomControls" />
+        <attr format="integer" name="map_zoomLevel" />
+    </declare-styleable>
+
+</resources>

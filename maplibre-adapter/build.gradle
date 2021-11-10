@@ -13,12 +13,17 @@
  * permissions and limitations under the License.
  */
 
-apply plugin: "com.android.library"
-apply plugin: "kotlin-android"
+plugins {
+    id "com.android.library"
+    id "kotlin-android"
+    id "kotlin-parcelize"
+}
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
-def composeVersion = "1.0.4"
+ext {
+    minSdkVersion = 21
+}
 
 android {
     kotlinOptions {
@@ -27,7 +32,9 @@ android {
 }
 
 dependencies {
-    implementation project(':aws-auth-cognito')
+    def lifecycleVersion = "2.4.0"
+
+    implementation project(":aws-auth-cognito")
     implementation project(":aws-geo-location")
     implementation project(":core")
     implementation dependency.aws.core
@@ -35,9 +42,11 @@ dependencies {
     implementation dependency.okhttp
     implementation dependency.kotlin.coroutines
 
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
+
     compileOnly dependency.aws.location
-    compileOnly "androidx.compose.ui:ui:$composeVersion"
-    compileOnly "androidx.compose.foundation:foundation:$composeVersion"
 
     androidTestImplementation project(":testutils")
     androidTestImplementation dependency.androidx.appcompat
@@ -50,4 +59,3 @@ dependencies {
 afterEvaluate {
     it.android.kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
 }
-

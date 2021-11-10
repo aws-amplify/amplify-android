@@ -150,7 +150,7 @@ private void configureAndroidLibrary(Project project) {
 
         defaultConfig {
             multiDexEnabled true
-            minSdkVersion rootProject.ext.minSdkVersion
+            minSdkVersion project.findProperty('minSdkVersion')
             targetSdkVersion rootProject.ext.targetSdkVersion
             versionName project.ext.VERSION_NAME
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'

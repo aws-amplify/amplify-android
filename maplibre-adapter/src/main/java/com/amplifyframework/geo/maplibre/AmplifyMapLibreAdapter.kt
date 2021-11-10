@@ -33,7 +33,7 @@ import okhttp3.OkHttpClient
 
 private const val LOCATION_GEO_PLUGIN_KEY = "awsLocationGeoPlugin"
 
-class AmplifyMapLibreAdapter(
+class AmplifyMapLibreAdapter internal constructor(
     private val context: Context,
     private val geo: GeoCategory = Amplify.Geo
 ) {
@@ -46,6 +46,10 @@ class AmplifyMapLibreAdapter(
         geo.getPlugin(LOCATION_GEO_PLUGIN_KEY) as AWSLocationGeoPlugin
     }
 
+    /**
+     * Initialize the Mapbox instance and add the [AWSRequestSignerInterceptor]
+     * to the default [OkHttpClient] used by the underlying Mapbox component.
+     */
     fun initialize() {
         Mapbox.getInstance(context, null, WellKnownTileServer.MapLibre)
         HttpRequestUtil.setOkHttpClient(
@@ -55,6 +59,13 @@ class AmplifyMapLibreAdapter(
         )
     }
 
+    /**
+     * Convenience method to use style from Amplify directly with MapLibre's [MapboxMap].
+     *
+     * @param map MapLibre's map instance to load style on
+     * @param style Amplify map style to use
+     * @param callback Callback to trigger upon successfully loading map style
+     */
     fun setStyle(map: MapboxMap, style: MapStyle? = null, callback: Style.OnStyleLoaded) {
         val options = if (style == null) {
             // Use default map if no style is provided

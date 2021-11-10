@@ -16,19 +16,17 @@
 package com.amplifyframework.geo.maplibre
 
 import androidx.test.core.app.launchActivity
-import com.amplifyframework.auth.AuthCategory
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-
-import com.amplifyframework.geo.GeoCategory
-import com.amplifyframework.geo.location.AWSLocationGeoPlugin
-import com.amplifyframework.testutils.sync.TestCategory
 
 import com.mapbox.mapboxsdk.maps.MapboxMap
+
+import kotlinx.coroutines.runBlocking
+
 import org.junit.Assert.assertNotNull
 import org.junit.Test
-import java.lang.RuntimeException
-import kotlin.coroutines.*
-import kotlinx.coroutines.runBlocking
+
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class MapViewTestActivityTest {
 
