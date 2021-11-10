@@ -135,15 +135,25 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
         onObservationStarted.accept(this);
 
         Consumer<Object> onItemChanged = value -> {
+
             @SuppressWarnings("unchecked") StorageItemChange<T> itemChanged = (StorageItemChange<T>) value;
-            updateCompleteItemMap(itemChanged);
-            collect(itemChanged, onQuerySnapshot, itemClass, options, onObservationError);
+            try{
+                if(sqlQueryProcessor.modelExists(itemChanged.item(), options.getQueryPredicate())){
+                    updateCompleteItemMap(itemChanged);
+                } else if(itemChanged.type() == StorageItemChange.Type.UPDATE){
+                    completeItemMap.remove(itemChanged.item().getId());
+                }
+                collect(itemChanged, onQuerySnapshot, itemClass, options, onObservationError);
+            } catch (DataStoreException exception) {
+                onObservationError.accept(exception);
+            }
+
+
         };
         threadPool.submit(() -> queryLocalData(itemClass, options, onQuerySnapshot, onObservationError));
 
         disposable = itemChangeSubject
-            .filter(x -> x.item().getClass().isAssignableFrom(itemClass) &&
-                    sqlQueryProcessor.modelExists(x.item(), options.getQueryPredicate()))
+            .filter(x -> x.item().getClass().isAssignableFrom(itemClass))
             .subscribe(
                 onItemChanged::accept,
                 failure -> {
