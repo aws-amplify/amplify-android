@@ -18,9 +18,13 @@ package com.amplifyframework.geo;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.geo.models.Coordinates;
 import com.amplifyframework.geo.models.MapStyle;
 import com.amplifyframework.geo.models.MapStyleDescriptor;
+import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions;
+import com.amplifyframework.geo.options.GeoSearchByTextOptions;
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
+import com.amplifyframework.geo.result.GeoSearchResult;
 
 import java.util.Collection;
 
@@ -72,6 +76,62 @@ public interface GeoCategoryBehavior {
     void getMapStyleDescriptor(
             @NonNull GetMapStyleDescriptorOptions options,
             @NonNull Consumer<MapStyleDescriptor> onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Searches for locations that match text query.
+     *
+     * @param query    Search query text.
+     * @param onResult Called upon successfully searching.
+     * @param onError  Called upon failure to search.
+     */
+    void searchByText(
+            @NonNull String query,
+            @NonNull Consumer<GeoSearchResult> onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Searches for locations that match text query.
+     *
+     * @param query    Search query text.
+     * @param options  Search options to use.
+     * @param onResult Called upon successfully searching.
+     * @param onError  Called upon failure to search.
+     */
+    void searchByText(
+            @NonNull String query,
+            @NonNull GeoSearchByTextOptions options,
+            @NonNull Consumer<GeoSearchResult> onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Searches for location with given set of coordinates.
+     *
+     * @param position Coordinates to look-up.
+     * @param onResult Called upon successfully searching.
+     * @param onError  Called upon failure to search.
+     */
+    void searchByCoordinates(
+            @NonNull Coordinates position,
+            @NonNull Consumer<GeoSearchResult> onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Searches for location with given set of coordinates.
+     *
+     * @param position Coordinates to look-up.
+     * @param options  Search options to use.
+     * @param onResult Called upon successfully searching.
+     * @param onError  Called upon failure to search.
+     */
+    void searchByCoordinates(
+            @NonNull Coordinates position,
+            @NonNull GeoSearchByCoordinatesOptions options,
+            @NonNull Consumer<GeoSearchResult> onResult,
             @NonNull Consumer<GeoException> onError
     );
 }
