@@ -20,6 +20,8 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.NoOpAction;
+import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.ObserveQueryOptions;
@@ -114,16 +116,13 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 .name("Alan Turing")
                 .build();
         adapter.save(blogOwner);
-        Consumer<Cancelable> observationStarted = value -> {
-        };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
             assertTrue(value.getItems().contains(blogOwner));
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value -> {
-        };
-        Action onObservationComplete = () -> {
-        };
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
 
         adapter.observeQuery(
                 BlogOwner.class,
@@ -154,18 +153,15 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             adapter.save(blogOwner);
             savedModels.add(blogOwner);
         }
-        Consumer<Cancelable> observationStarted = value -> {
-        };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
             for (BlogOwner blogOwner : savedModels) {
                 assertTrue(value.getItems().contains(blogOwner));
             }
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value -> {
-        };
-        Action onObservationComplete = () -> {
-        };
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
 
         adapter.observeQuery(
                 BlogOwner.class,
@@ -197,16 +193,13 @@ public final class SQLiteStorageAdapterObserveQueryTest {
         adapter.save(blogOwner);
         adapter.save(blog);
 
-        Consumer<Cancelable> observationStarted = value -> {
-        };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         Consumer<DataStoreQuerySnapshot<Blog>> onQuerySnapshot = value -> {
             assertTrue(value.getItems().contains(blog));
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value -> {
-        };
-        Action onObservationComplete = () -> {
-        };
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
 
         adapter.observeQuery(
                 Blog.class,
@@ -254,8 +247,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
         adapter.save(post);
         adapter.save(comment);
 
-        Consumer<Cancelable> observationStarted = value -> {
-        };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         Consumer<DataStoreQuerySnapshot<Comment>> onQuerySnapshot = value -> {
             assertTrue(value.getItems().contains(comment));
             assertEquals(value.getItems().get(0).getPost(), post);
@@ -263,10 +255,8 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             assertEquals(value.getItems().get(0).getPost().getBlog().getOwner(), blogOwner);
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value -> {
-        };
-        Action onObservationComplete = () -> {
-        };
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
 
         adapter.observeQuery(
                 Comment.class,
@@ -313,7 +303,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 .or(Post.RATING.eq(1)
                                 .and(Post.RATING.ne(7)));
 
-        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         AtomicInteger count = new AtomicInteger(0);
         Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value -> {
             if (count.get() == 0) {
@@ -334,8 +324,8 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             }
             count.incrementAndGet();
         };
-        Consumer<DataStoreException> onObservationError = value -> { };
-        Action onObservationComplete = () -> { };
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
 
         adapter.observeQuery(
                 Post.class,
@@ -387,18 +377,15 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             savedModels.add(post);
         }
         CountDownLatch latch = new CountDownLatch(1);
-        Consumer<Cancelable> observationStarted = value -> {
-        };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value -> {
             assertTrue(value.getItems().contains(savedModels.get(4)));
             assertTrue(value.getItems().contains(savedModels.get(7)));
             assertFalse(value.getItems().contains(savedModels.get(9)));
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value -> {
-        };
-        Action onObservationComplete = () -> {
-        };
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
 
         adapter.observeQuery(
                 Post.class,
@@ -428,12 +415,12 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 .build();
         adapter.save(blog);
         CountDownLatch latch = new CountDownLatch(1);
-        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         Consumer<DataStoreQuerySnapshot<Blog>> onQuerySnapshot = value -> {
             assertTrue(value.getItems().contains(blog));
             latch.countDown(); };
-        Consumer<DataStoreException> onObservationError = value -> { };
-        Action onObservationComplete = () -> { };
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
 
         adapter.observeQuery(
                 Blog.class,
@@ -460,8 +447,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
 
         QueryPredicate predicate = BlogOwner.NAME.eq("Jane; DROP TABLE Person; --");
         CountDownLatch latch = new CountDownLatch(2);
-        Consumer<Cancelable> observationStarted = value -> {
-        };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onMaliciousQuerySnapshot =
             resultOfMaliciousQuery -> {
                 assertTrue(resultOfMaliciousQuery.getItems().isEmpty());
@@ -469,8 +455,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             };
         Consumer<DataStoreException> onObservationError = value -> {
         };
-        Action onObservationComplete = () -> {
-        };
+        Action onObservationComplete = NoOpAction.create();
         adapter.observeQuery(
                 BlogOwner.class,
                 new ObserveQueryOptions(predicate, null),
@@ -523,13 +508,13 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 .reversed()
                 .thenComparing(BlogOwner::getWea)
         );
-        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
             assertEquals(sorted, value.getItems());
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value -> { };
-        Action onObservationComplete = () -> { };
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
         List<QuerySortBy> sortBy = new ArrayList<>();
         sortBy.add(BlogOwner.NAME.descending());
         sortBy.add(BlogOwner.WEA.ascending());
@@ -571,13 +556,13 @@ public final class SQLiteStorageAdapterObserveQueryTest {
         }
         List<Blog> sorted = new ArrayList<>(blogs);
         Collections.sort(sorted, Comparator.comparing(blog -> blog.getOwner().getName()));
-        Consumer<Cancelable> observationStarted = value -> { };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         Consumer<DataStoreQuerySnapshot<Blog>> onQuerySnapshot = value -> {
             assertEquals(sorted, value.getItems());
             latch.countDown();
         };
-        Consumer<DataStoreException> onObservationError = value -> { };
-        Action onObservationComplete = () -> { };
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
         List<QuerySortBy> sortBy = new ArrayList<>();
         sortBy.add(BlogOwner.NAME.ascending());
 
@@ -602,9 +587,9 @@ public final class SQLiteStorageAdapterObserveQueryTest {
     public void querySavedDataWithMultipleItemsThenItemSaves() throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
-        Consumer<Cancelable> observationStarted = value -> { };
-        Consumer<DataStoreException> onObservationError = value -> { };
-        Action onObservationComplete = () -> { };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
         final List<BlogOwner> savedModels = new ArrayList<>();
         final int numModels = 10;
         AtomicInteger count = new AtomicInteger(0);
@@ -658,9 +643,9 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
-        Consumer<Cancelable> observationStarted = value -> { };
-        Consumer<DataStoreException> onObservationError = value -> { };
-        Action onObservationComplete = () -> { };
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
         final List<BlogOwner> savedModels = new ArrayList<>();
         final int numModels = 5;
         //Blogowner to be updated
