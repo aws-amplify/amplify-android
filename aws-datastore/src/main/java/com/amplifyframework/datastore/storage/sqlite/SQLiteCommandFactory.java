@@ -28,7 +28,9 @@ import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.QueryPaginationInput;
 import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
@@ -186,10 +188,21 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         if (!QueryPredicates.all().equals(predicate)) {
             final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
             bindings.addAll(sqlPredicate.getBindings());
+            String sqlPredicateString = sqlPredicate.toString();
+            if (predicate instanceof QueryPredicateOperation) {
+                QueryPredicateOperation<?> predicateOperation = (QueryPredicateOperation<?>) predicate;
+                String predicateOperationField = predicateOperation.field();
+                if (predicateOperationField.equals(PrimaryKey.fieldName()) && predicateOperation.modelName() == null
+                        && predicateOperation.operator().type() == QueryOperator.Type.EQUAL) {
+                    // The WHERE condition is Where.id("some-ID") but no model name is given.
+                    sqlPredicateString = sqlPredicateString.replace(predicateOperationField,
+                            tableName + "." + predicateOperationField);
+                }
+            }
             rawQuery.append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.WHERE)
                     .append(SqlKeyword.DELIMITER)
-                    .append(sqlPredicate);
+                    .append(sqlPredicateString);
         }
 
         // Append order by
