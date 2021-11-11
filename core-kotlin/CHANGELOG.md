@@ -1,3 +1,14 @@
+## [Release 0.13.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.13.0)
+
+### Features
+- **geo:** Add search APIs (#1558)
+- **api:** Add support for custom GraphQL endpoints. (#1564)
+
+### Bug Fixes
+- **datastore:** specify model name when querying with Where.id (#1548)
+
+[See all changes between 0.12.3 and 0.13.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.12.3...release-kotlin_v0.13.0)
+
 ## [Release 0.12.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.3)
 
 ### Bug Fixes
