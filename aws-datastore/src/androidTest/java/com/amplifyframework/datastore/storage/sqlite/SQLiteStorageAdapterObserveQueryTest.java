@@ -39,7 +39,6 @@ import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -324,7 +323,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 assertTrue(value.getItems().contains(savedModels.get(5)));
                 assertTrue(value.getItems().contains(savedModels.get(6)));
                 latch.countDown();
-            }else if (count.get() == 2) {
+            } else if (count.get() == 2) {
                 assertEquals(5, value.getItems().size());
                 assertTrue(value.getItems().contains(savedModels.get(1)));
                 assertTrue(value.getItems().contains(savedModels.get(4)));
@@ -655,7 +654,8 @@ public final class SQLiteStorageAdapterObserveQueryTest {
      * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void querySavedDataWithMultipleItemsThenUpdateOnItemSoItNoLongerSatisfiesPredicate() throws DataStoreException, InterruptedException {
+    public void querySavedDataWithMultipleItemsThenUpdateOnItemSoItNoLongerSatisfiesPredicate()
+            throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
         Consumer<Cancelable> observationStarted = value -> { };
