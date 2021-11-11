@@ -1,3 +1,14 @@
+## [Release 1.29.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.29.0)
+
+### Features
+- **geo:** Add search APIs (#1558)
+- **api:** Add support for custom GraphQL endpoints. (#1564)
+
+### Bug Fixes
+- **datastore:** specify model name when querying with Where.id (#1548)
+
+[See all changes between 1.28.3 and 1.29.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.3...release_v1.29.0)
+
 ## [Release 1.28.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.3)
 
 ### Bug Fixes
