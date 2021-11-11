@@ -317,11 +317,13 @@ public final class SQLiteStorageAdapterObserveQueryTest {
         AtomicInteger count = new AtomicInteger(0);
         Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value -> {
             if (count.get() == 0) {
-                assertEquals(4, value.getItems().size());
-                assertTrue(value.getItems().contains(savedModels.get(1)));
-                assertTrue(value.getItems().contains(savedModels.get(4)));
-                assertTrue(value.getItems().contains(savedModels.get(5)));
-                assertTrue(value.getItems().contains(savedModels.get(6)));
+                List<Post> expected = Arrays.asList(
+                    savedModels.get(1),
+                    savedModels.get(4),
+                    savedModels.get(5),
+                    savedModels.get(6)
+                );
+                assertEquals(new HashSet<>(expected), new HashSet<>(value.getItems()));
                 latch.countDown();
             } else if (count.get() == 2) {
                 assertEquals(5, value.getItems().size());
