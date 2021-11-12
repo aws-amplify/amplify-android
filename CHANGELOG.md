@@ -1,3 +1,26 @@
+## [Release 1.29.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.29.0)
+
+### Features
+- **geo:** Add search APIs (#1558)
+- **api:** Add support for custom GraphQL endpoints. (#1564)
+
+### Bug Fixes
+- **datastore:** specify model name when querying with Where.id (#1548)
+
+[See all changes between 1.28.3 and 1.29.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.3...release_v1.29.0)
+
+## [Release 1.28.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.3)
+
+### Bug Fixes
+- **geo:** Specify jvm target for kotlin package (#1546)
+- **api:** replace pluralName with listPluralName & syncPluralName (#1523)
+- **datastore:** Allow different model types with same ID (#1541)
+
+### Miscellaneous
+- Update build.gradle (#1553)
+
+[See all changes between 1.28.2 and 1.28.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.2...release_v1.28.3)
+
 ## [Release 1.28.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.2)
 
 ### Miscellaneous

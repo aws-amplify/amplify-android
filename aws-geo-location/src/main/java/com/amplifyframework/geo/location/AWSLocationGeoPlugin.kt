@@ -26,11 +26,17 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.geo.GeoCategoryPlugin
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
+import com.amplifyframework.geo.location.options.AmazonLocationSearchByCoordinatesOptions
+import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptions
 import com.amplifyframework.geo.location.service.AmazonLocationService
 import com.amplifyframework.geo.location.service.GeoService
+import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
+import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
+import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
+import com.amplifyframework.geo.result.GeoSearchResult
 
 import org.json.JSONObject
 import java.util.concurrent.Executors
@@ -53,6 +59,9 @@ class AWSLocationGeoPlugin(
     private val executor = Executors.newCachedThreadPool()
     private val defaultMapName: String by lazy {
         configuration.maps!!.default.mapName
+    }
+    private val defaultSearchIndexName: String by lazy {
+        configuration.searchIndices!!.default
     }
 
     override fun getPluginKey(): String {
@@ -120,6 +129,74 @@ class AWSLocationGeoPlugin(
                 MapStyleDescriptor(styleJson)
             },
             Errors::mapsError,
+            onResult,
+            onError
+        )
+    }
+
+    override fun searchByText(
+        query: String,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        val options = GeoSearchByTextOptions.defaults()
+        searchByText(query, options, onResult, onError)
+    }
+
+    override fun searchByText(
+        query: String,
+        options: GeoSearchByTextOptions,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        execute(
+            {
+                val searchIndex = if (options is AmazonLocationSearchByTextOptions) {
+                    options.searchIndex ?: defaultSearchIndexName
+                } else defaultSearchIndexName
+                val places = geoService.geocode(
+                    searchIndex,
+                    query,
+                    options.maxResults,
+                    options.searchArea,
+                    options.countries
+                )
+                GeoSearchResult.withPlaces(places)
+            },
+            Errors::searchError,
+            onResult,
+            onError
+        )
+    }
+
+    override fun searchByCoordinates(
+        position: Coordinates,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        val options = GeoSearchByCoordinatesOptions.defaults()
+        searchByCoordinates(position, options, onResult, onError)
+    }
+
+    override fun searchByCoordinates(
+        position: Coordinates,
+        options: GeoSearchByCoordinatesOptions,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        execute(
+            {
+                val searchIndex = if (options is AmazonLocationSearchByCoordinatesOptions) {
+                    options.searchIndex ?: defaultSearchIndexName
+                } else defaultSearchIndexName
+                val places = geoService.reverseGeocode(
+                    searchIndex,
+                    position,
+                    options.maxResults
+                )
+                GeoSearchResult.withPlaces(places)
+            },
+            Errors::searchError,
             onResult,
             onError
         )
