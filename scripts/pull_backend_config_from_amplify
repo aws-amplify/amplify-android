@@ -30,8 +30,9 @@ mkdir -p $res_dir
 for config_file in "$tmp_amplify_dir/config_files/raw"/*
 do
   filename="$(basename "$config_file")"
-  ln -s "$config_file" "$res_dir/$filename"
+  ln -s "$config_file" "$res_dir/$filename" &
 done
+wait
 ls -al $res_dir
 cd $base_dir
 echo "Completed project $project_name"
