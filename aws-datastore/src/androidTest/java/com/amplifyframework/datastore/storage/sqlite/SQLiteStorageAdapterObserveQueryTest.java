@@ -624,7 +624,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 onObservationError,
                 onObservationComplete);
 
-        assertTrue(latch.await(15, TimeUnit.SECONDS));
+        assertTrue(latch.await(30, TimeUnit.SECONDS));
         for (int counter = 11; counter < 13; counter++) {
             final BlogOwner blogOwner = BlogOwner.builder()
                     .name("namePrefix:" + counter)
