@@ -1,3 +1,13 @@
+## [Release 0.13.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.13.1)
+
+### Bug Fixes
+- **api:** Add null check before cancelling Call object. (#1570)
+
+### Miscellaneous
+- Update build.gradle (#1578)
+
+[See all changes between 0.13.0 and 0.13.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.13.0...release-kotlin_v0.13.1)
+
 ## [Release 0.13.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.13.0)
 
 ### Features
