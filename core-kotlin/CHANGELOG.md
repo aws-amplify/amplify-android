@@ -1,3 +1,10 @@
+## [Release 0.12.3-rc](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.3-rc)
+
+### Features
+- **api:** Add support for custom GraphQL endpoints. (#1564)
+
+[See all changes between 0.12.2 and 0.12.3-rc](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.12.2...release-kotlin_v0.12.3-rc)
+
 ## [Release 0.12.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.12.2)
 
 ### Miscellaneous

@@ -1,3 +1,10 @@
+## [Release 1.28.3-rc](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.3-rc)
+
+### Features
+- **api:** Add support for custom GraphQL endpoints. (#1564)
+
+[See all changes between 1.28.2 and 1.28.3-rc](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.2...release_v1.28.3-rc)
+
 ## [Release 1.28.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.2)
 
 ### Miscellaneous
