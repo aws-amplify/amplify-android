@@ -1,0 +1,89 @@
+{
+    "associations": {
+        "caller": {
+            "associatedType": "Person",
+            "name": "BelongsTo",
+            "targetName": "callerId"
+        },
+        "callee": {
+            "associatedType": "Person",
+            "name": "BelongsTo",
+            "targetName": "calleeId"
+        }
+    },
+    "authRules": [],
+    "fields": {
+        "id": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "id",
+            "targetType": "ID"
+        },
+        "startTime": {
+            "authRules": [],
+            "javaClassForValue": "com.amplifyframework.core.model.temporal.Temporal$DateTime",
+            "targetType": "AWSDateTime",
+            "isRequired": true,
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false
+        },
+        "endTime": {
+            "authRules": [],
+            "javaClassForValue": "com.amplifyframework.core.model.temporal.Temporal$DateTime",
+            "targetType": "AWSDateTime",
+            "isRequired": true,
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false
+        },
+        "callerId": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "callerId",
+            "targetType": "ID"
+        },
+        "calleeId": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "calleeId",
+            "targetType": "ID"
+        },
+        "caller": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": true,
+            "isRequired": true,
+            "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+            "name": "caller",
+            "targetType": "Person"
+        },
+        "callee": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": true,
+            "isRequired": true,
+            "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+            "name": "callee",
+            "targetType": "Person"
+        }
+    },
+    "indexes": {},
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
+    "name": "Call",
+    "pluralName": "Calls"
+}

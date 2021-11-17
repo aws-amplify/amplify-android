@@ -1,0 +1,15 @@
+type Person @model {
+    id: ID!
+    name: String!
+    calls: [Call] @connection(fields: ["id"])
+}
+
+type Call @model {
+    id: ID!
+    startTime: AWSDateTime!
+    endTime: AWSDateTime!
+    callerId: ID!
+    calleeId: ID!
+    caller: Person! @connection(fields: ["callerId"])
+    callee: Person! @connection(fields: ["calleeId"])
+}

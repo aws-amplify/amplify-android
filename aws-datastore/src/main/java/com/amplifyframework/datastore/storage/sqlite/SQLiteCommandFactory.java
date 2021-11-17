@@ -166,10 +166,12 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 String columnName = Wrap.inBackticks(tableAlias) + "." + Wrap.inBackticks(column.getName());
                 selectColumns.append(columnName);
                 // Alias primary keys to avoid duplicate column names
+                String columnAlias = column.getAliasedName();
+                // TODO : make sure the column alias will be unique
                 selectColumns.append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.AS)
                         .append(SqlKeyword.DELIMITER)
-                        .append(Wrap.inBackticks(column.getAliasedName()));
+                        .append(Wrap.inBackticks(columnAlias));
 
                 if (columnsIterator.hasNext()) {
                     selectColumns.append(",").append(SqlKeyword.DELIMITER);
@@ -276,6 +278,11 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
+        
+        LOG.info("Query string: " + rawQuery);
+        
+        // throw new DataStoreException("Testing", queryString);
+        
         return new SqlCommand(table.getName(), queryString, bindings);
     }
 
@@ -465,12 +472,14 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
             
             int newOwnedTableCount = 1;
+            String ownedTableAlias = ownedTableName;
+            String appendToColumnAlias = "";
             if (tableCount.containsKey(ownedTableName)) {
                 Integer currentOwnedTableCount = tableCount.get(ownedTableName);
                 newOwnedTableCount += currentOwnedTableCount == null ? 0 : currentOwnedTableCount;
+                ownedTableAlias = ownedTableName + newOwnedTableCount;
             }
             tableCount.put(ownedTableName, newOwnedTableCount);
-            String ownedTableAlias = ownedTableName + newOwnedTableCount;
             columns.put(ownedTableAlias, ownedTable.getSortedColumns());
             
             String foreignKeyName = Wrap.inBackticks(tableAlias) + "." + Wrap.inBackticks(foreignKey.getName());
