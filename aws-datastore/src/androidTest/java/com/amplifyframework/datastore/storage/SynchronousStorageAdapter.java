@@ -106,7 +106,7 @@ public final class SynchronousStorageAdapter {
                             DataStoreConfiguration.builder()
                                     .syncInterval(2L, TimeUnit.MINUTES)
                                     .observeQueryMaxRecords(2)
-                                    .observeQueryMaxTime(0)
+                                    .observeQueryMaxTime(1)
                                     .build());
                 } catch (DataStoreException exception) {
                     onError.accept(exception);

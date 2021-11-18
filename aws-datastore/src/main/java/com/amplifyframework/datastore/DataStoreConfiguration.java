@@ -364,8 +364,8 @@ public final class DataStoreConfiguration {
         /**
          * Sets the maximum time lapsed between changes , from the observe query, to process from a
          * item change operation.
-         * @param maxTimeRelapseForObserveQuery Max number of records client will consumer from
-         *                                      server at one time
+         * @param maxTimeRelapseForObserveQuery Max time lapsed between changes from
+         *                                      server at one time in seconds
          * @return Current builder instance
          */
         @NonNull
@@ -377,7 +377,7 @@ public final class DataStoreConfiguration {
         /**
          * Sets the maximum number of records, from the observe query, to process from a item change
          * operation.
-         * @param observeQueryMaxRecords Max number of records client will consumer from server at one time
+         * @param observeQueryMaxRecords Max number of records client will consume from server at one time
          * @return Current builder instance
          */
         @NonNull
