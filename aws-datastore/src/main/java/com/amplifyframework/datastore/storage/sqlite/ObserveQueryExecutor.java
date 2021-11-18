@@ -136,7 +136,8 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
 
         Consumer<Object> onItemChanged = value -> {
 
-            @SuppressWarnings("unchecked") StorageItemChange<T> itemChanged = (StorageItemChange<T>) value;
+            @SuppressWarnings("unchecked") 
+            StorageItemChange<T> itemChanged = (StorageItemChange<T>) value;
             try {
                 if (sqlQueryProcessor.modelExists(itemChanged.item(), options.getQueryPredicate())) {
                     updateCompleteItemMap(itemChanged);
