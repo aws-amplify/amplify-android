@@ -15,15 +15,11 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
