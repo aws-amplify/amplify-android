@@ -23,12 +23,18 @@ import androidx.lifecycle.*
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.maplibre.AmplifyMapLibreAdapter
+import com.amplifyframework.geo.models.MapStyle
+import com.mapbox.mapboxsdk.maps.MapView
+import com.mapbox.mapboxsdk.maps.Style
 
-typealias MapBoxView = com.mapbox.mapboxsdk.maps.MapView
 typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
 
 /**
- * The MapLibreView encapsulates the legacy MapBox map integration with Amplify.Geo.
+ * The MapLibreView encapsulates the MapBox map integration with `Amplify.Geo` and
+ * serves as the foundation of map components.
+ *
+ * The requests of map tiles and features are routed to the Amazon Location Services,
+ * check the documentation at [https://docs.amplify.aws/lib/geo/getting-started/q/platform/android]
  */
 class MapLibreView
 @JvmOverloads @UiThread constructor(
@@ -37,7 +43,7 @@ class MapLibreView
     defStyleAttr: Int = 0,
     options: MapLibreOptions = MapLibreOptions.createFromAttributes(context, attrs),
     private val geo: GeoCategory = Amplify.Geo
-) : MapBoxView(context, attrs, defStyleAttr) {
+) : MapView(context, attrs, defStyleAttr) {
 
     companion object {
         private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
@@ -57,6 +63,19 @@ class MapLibreView
         // see setup() where the superclass initialize is called
     }
 
+    /**
+     * Update the map using the passed style. If no style is style is set, the default
+     * configured using the Amplify CLI is used.
+     *
+     * @param style the map style object
+     * @param callback the function called when the style is done loaded
+     */
+    fun setStyle(style: MapStyle? = null, callback: Style.OnStyleLoaded) {
+        getMapAsync { map ->
+            adapter.setStyle(map, style, callback)
+        }
+    }
+
     private fun setup(context: Context, options: MapLibreOptions) {
         if (context is LifecycleOwner) {
             context.lifecycle.addObserver(LifecycleHandler())
@@ -66,9 +85,7 @@ class MapLibreView
     }
 
     internal fun loadDefaultStyle() {
-        getMapAsync { map ->
-            adapter.setStyle(map) { log.verbose("Amazon Location styles applied to MapView") }
-        }
+        setStyle { log.verbose("Amazon Location default styles loaded") }
     }
 
     inner class LifecycleHandler : DefaultLifecycleObserver {

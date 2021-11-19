@@ -20,7 +20,7 @@ import android.content.res.TypedArray
 import android.os.Parcelable
 import android.util.AttributeSet
 import androidx.annotation.StyleableRes
-import com.amplifyframework.geo.maplibre.Coordinates
+import com.amplifyframework.geo.maplibre.model.Coordinate2D
 import com.amplifyframework.geo.maplibre.R
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import kotlinx.parcelize.Parcelize
@@ -39,7 +39,7 @@ const val DEFAULT_SHOW_ZOOM_CONTROLS = false
 @Parcelize
 class MapViewOptions(
     val attribution: String? = null,
-    val center: Coordinates = Coordinates(),
+    val center: Coordinate2D = Coordinate2D(),
     val minZoomLevel: Double = DEFAULT_MIN_ZOOM,
     val maxZoomLevel: Double = DEFAULT_MAX_ZOOM,
     val showCompassIndicator: Boolean = DEFAULT_SHOW_COMPASS_INDICATOR,
@@ -69,7 +69,7 @@ class MapViewOptions(
                     R.styleable.map_AmplifyMapView_map_maxZoomLevel,
                     DEFAULT_MAX_ZOOM
                 )
-                val center = Coordinates(
+                val center = Coordinate2D(
                     latitude = typedArray.getDouble(R.styleable.map_AmplifyMapView_map_centerLatitude),
                     longitude = typedArray.getDouble(R.styleable.map_AmplifyMapView_map_centerLongitude)
                 )
