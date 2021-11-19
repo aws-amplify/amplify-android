@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
@@ -60,6 +61,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private final ExecutorService executorService;
     private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
 
+    @Nullable
     private Call ongoingCall;
 
     /**
@@ -112,7 +114,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     }
 
     @Override
-    public void cancel() {
+    public synchronized void cancel() {
         if (ongoingCall != null) {
             ongoingCall.cancel();
         }
