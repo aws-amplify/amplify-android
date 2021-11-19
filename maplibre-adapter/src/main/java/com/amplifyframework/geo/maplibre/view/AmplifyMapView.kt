@@ -15,34 +15,52 @@
 
 package com.amplifyframework.geo.maplibre.view
 
+import LoadingView
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Build
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
-import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
-import android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
 import androidx.annotation.UiThread
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams.MATCH_PARENT
+import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams.WRAP_CONTENT
 import androidx.core.content.ContextCompat
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.GeoCategory
+import com.amplifyframework.geo.GeoException
+import com.amplifyframework.geo.location.models.AmazonLocationPlace
 import com.amplifyframework.geo.maplibre.R
+import com.amplifyframework.geo.maplibre.util.*
+import com.amplifyframework.geo.maplibre.view.support.MapControls
+import com.amplifyframework.geo.models.BoundingBox
+import com.amplifyframework.geo.models.SearchArea
+import com.amplifyframework.geo.options.GeoSearchByTextOptions
+import com.amplifyframework.geo.result.GeoSearchResult
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.snackbar.Snackbar
+import com.mapbox.geojson.Feature
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
+import com.mapbox.mapboxsdk.geometry.LatLngBounds
+import com.mapbox.mapboxsdk.maps.MapboxMap
+import com.mapbox.mapboxsdk.plugins.annotation.Symbol
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import kotlin.math.abs
-
-private val FILL_CONTENT = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
 
 /**
  * The AmplifyMapView encapsulates the MapLibre map integration with Amplify.Geo and introduces
  * a handful of built-in features to the plain MapView, such as zoom controls, compass, search field,
  * and map markers.
  *
- * **Implementation note:** This view inherits from [FrameLayout], therefore any custom
+ * **Implementation note:** This view inherits from [CoordinatorLayout], therefore any custom
  * component can be added as an overlay if needed. The underlying map component can be accessed
  * through the `mapView` property for map-related listeners and properties.
  */
@@ -56,21 +74,43 @@ class AmplifyMapView
         attrs,
         defStyleAttr
     ),
-    geo: GeoCategory = Amplify.Geo
-) : FrameLayout(context) {
+    private val geo: GeoCategory = Amplify.Geo
+) : CoordinatorLayout(context) {
 
     companion object {
-        private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter:view")
+        private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
     }
 
-    private val overlayLayout: RelativeLayout = RelativeLayout(context)
-
+    /**
+     * The reference to the underlying map view.
+     */
     val mapView by lazy {
         MapLibreView(
             context = context,
             options = options.toMapLibreOptions(context),
             geo = geo
         )
+    }
+
+    /**
+     * The reference to the container used to overlay components on top of the [mapView]
+     */
+    val overlayLayout by lazy { RelativeLayout(context) }
+
+    val searchField by lazy {
+        SearchTextField(context)
+    }
+
+    val searchResultView by lazy {
+        SearchResultListView(context)
+    }
+
+    private val bottomSheet by lazy {
+        BottomSheetBehavior.from(searchResultView)
+    }
+
+    private val loadingView by lazy {
+        LoadingView(context)
     }
 
     private val controls by lazy {
@@ -81,23 +121,80 @@ class AmplifyMapView
         )
     }
 
+    var places: List<AmazonLocationPlace> = listOf()
+
+    var onPlaceSelectListener: OnPlaceSelectListener? = null
+
+    private var lastQuery: String? = null
+
+    private var lastQueryBounds: LatLngBounds? = null
+
+    private var symbols: List<Symbol> = listOf()
+
     init {
-        addView(mapView, FILL_CONTENT)
+        val defaultMargin = context.resources.getDimensionPixelSize(R.dimen.controls_margin)
+
+        overlayLayout.addView(
+            searchField,
+            RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+                marginStart = defaultMargin
+                marginEnd = defaultMargin
+                topMargin = defaultMargin
+                addRule(RelativeLayout.ALIGN_PARENT_TOP)
+            }
+        )
+        overlayLayout.addView(loadingView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
         if (options.shouldRenderControls()) {
             overlayLayout.addView(
                 controls,
                 RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
-                    topMargin = context.resources.getDimensionPixelSize(R.dimen.controls_margin)
-                    marginEnd = context.resources.getDimensionPixelSize(R.dimen.controls_margin)
+                    topMargin = defaultMargin
+                    marginEnd = defaultMargin
                     addRule(RelativeLayout.ALIGN_PARENT_END)
+                    addRule(RelativeLayout.BELOW, R.id.amplify_map_search_input)
                 }
             )
         }
-        addView(overlayLayout, FILL_CONTENT)
-        bindViewModel()
+        addView(mapView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        addView(overlayLayout, LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        addView(searchResultView, LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+            behavior = BottomSheetBehavior<SearchResultListView>().apply {
+                topMargin = context.resources.getDimensionPixelSize(R.dimen.search_visibleArea)
+                addBottomSheetCallback(BottomSheetCallback())
+            }
+        })
+        adjustMapCenter()
+        bindEvents()
     }
 
-    private fun bindViewModel() {
+
+    fun onPlaceSelect(listener: (AmazonLocationPlace, Symbol) -> Unit) {
+        onPlaceSelectListener = object : OnPlaceSelectListener {
+            override fun onSelect(place: AmazonLocationPlace, symbol: Symbol) {
+                listener(place, symbol)
+            }
+        }
+    }
+
+    private fun adjustMapCenter() = withMap {
+        it.animateCamera(CameraUpdateFactory.paddingTo(0.0, 80.0, 0.0, 0.0))
+    }
+
+    private fun bindEvents() {
+        searchField.onSearchModeChange {
+            bottomSheet.state = when (it) {
+                SearchTextField.SearchMode.LIST -> BottomSheetBehavior.STATE_EXPANDED
+                SearchTextField.SearchMode.MAP -> BottomSheetBehavior.STATE_COLLAPSED
+            }
+        }
+        searchField.onSearchAction {
+            if (it.isNotBlank()) {
+                search(it.trim())
+            } else {
+                places = listOf()
+                updateSearchResults()
+            }
+        }
         mapView.getMapAsync { map ->
             updateZoomControls(map.cameraPosition)
             controls.compassIndicatorButton.onClick {
@@ -113,8 +210,91 @@ class AmplifyMapView
                 val camera = map.cameraPosition
                 controls.compassIndicatorButton.rotateIcon(camera.bearing)
                 updateZoomControls(camera)
+//                updateSearchBounds(map.projection.visibleRegion.latLngBounds)
             }
+//            mapView.symbolManager.addClickListener { selected ->
+//                symbols.forEach { symbol ->
+//                    symbol.apply {
+//                        iconOpacity = 0.9f
+//                        iconSize = 1f
+//                    }
+//                    mapView.symbolManager.update(symbol)
+//                }
+//                val place = selected.getPlaceData()
+//                selected.apply {
+//                    iconOpacity = 1f
+//                    iconSize = 1.2f
+//                }
+//                return@addClickListener false
+//            }
         }
+    }
+
+    private fun search(query: String) = withMap { map ->
+        val coordinates = parseCoordinates(query)
+        if (coordinates != null) {
+            geo.searchByCoordinates(coordinates, ::onSearchResult, ::onSearchError)
+        } else {
+            val options = GeoSearchByTextOptions
+                .builder()
+                .searchArea(
+                    SearchArea.within(
+                        BoundingBox(
+                            map.projection.visibleRegion.nearLeft.toCoordinates(),
+                            map.projection.visibleRegion.farRight.toCoordinates()
+                        )
+                    )
+//                    SearchArea.near(
+//                        map.cameraPosition.target.toCoordinates()
+//                    )
+                )
+                .build()
+            geo.searchByText(query, options, ::onSearchResult, ::onSearchError)
+        }
+        this.lastQuery = query
+        this.lastQueryBounds = map.projection.visibleRegion.latLngBounds
+    }
+
+    private fun onSearchResult(result: GeoSearchResult) = post {
+        loadingView.hide()
+        places = result.places.filterIsInstance<AmazonLocationPlace>()
+        updateSearchResults()
+    }
+
+    private fun onSearchError(exception: GeoException) = post {
+        loadingView.hide()
+        log.error(exception.message, exception)
+        val defaultError = mapView.context.getString(R.string.search_defaultError, lastQuery)
+        val error = exception.message ?: defaultError
+        Snackbar
+            .make(this@AmplifyMapView, error, Snackbar.LENGTH_SHORT)
+            .show()
+    }
+
+    private fun updateSearchResults() = withMap {
+        println("-----------------------------------")
+        println(places)
+        println("-----------------------------------")
+        if (places.size == 1) {
+            val singleResult = places.first()
+            it.animateCamera(
+                CameraUpdateFactory.newLatLng(
+                    singleResult.coordinates.toLatLng()
+                )
+            )
+        }
+        mapView.symbolManager.deleteAll()
+        symbols = mapView.symbolManager.create(places.map { place ->
+            SymbolOptions()
+                .withData(place.toJsonElement())
+                .withLatLng(place.coordinates.toLatLng())
+                .withIconImage(MapLibreView.PLACE_ICON_NAME)
+//                .withIconOpacity(0.8f)
+//                .withIconColor(String.format("#%06X", (0xFFFFFF and mapView.defaultPlaceIconColor)))
+        })
+        println("-----------")
+        println(symbols)
+        searchResultView.places = places
     }
 
     private fun updateZoomControls(camera: CameraPosition) {
@@ -122,146 +302,25 @@ class AmplifyMapView
         controls.zoomInButton.isEnabled = camera.zoom < options.maxZoomLevel
     }
 
-}
-
-@SuppressLint("ViewConstructor")
-internal class MapControls(
-    context: Context,
-    val showCompassIndicator: Boolean = false,
-    val showZoomControls: Boolean = false
-) : LinearLayout(context) {
-
-    internal val compassIndicatorButton by lazy {
-        MapControl(
-            context,
-            iconResource = R.drawable.ic_baseline_navigation_24,
-            accessibilityLabel = R.string.label_compassIndicator,
-        )
+    private fun withMap(block: (MapboxMap) -> Unit) {
+        mapView.getMapAsync(block)
     }
 
-    internal val zoomInButton by lazy {
-        MapControl(
-            context,
-            iconResource = R.drawable.ic_baseline_add_24,
-            accessibilityLabel = R.string.label_zoomIn,
-        )
-    }
-
-    internal val zoomOutButton by lazy {
-        MapControl(
-            context,
-            iconResource = R.drawable.ic_baseline_minus_24,
-            accessibilityLabel = R.string.label_zoomOut,
-        )
-    }
-
-    init {
-        clipToOutline = true
-        clipChildren = true
-        background = ContextCompat.getDrawable(context, R.drawable.bg_control)
-        elevation = context.resources.getDimension(R.dimen.controls_elevation)
-        orientation = VERTICAL
-
-        val size = context.resources.getDimensionPixelSize(R.dimen.controls_size)
-        val buttonSize = LayoutParams(size, size)
-        if (showZoomControls) {
-            addView(zoomInButton, buttonSize)
-            addSeparator(context)
-            addView(zoomOutButton, buttonSize)
+    internal inner class BottomSheetCallback : BottomSheetBehavior.BottomSheetCallback() {
+        override fun onStateChanged(bottomSheet: View, newState: Int) {
+            if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
+                searchField.searchMode = SearchTextField.SearchMode.MAP
+            } else if (newState == BottomSheetBehavior.STATE_EXPANDED) {
+                searchField.searchMode = SearchTextField.SearchMode.LIST
+            }
         }
-        if (showCompassIndicator) {
-            if (showZoomControls) addSeparator(context)
-            addView(compassIndicatorButton, buttonSize)
-        }
+
+        override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
+
     }
 
-    private fun addSeparator(context: Context) {
-        val borderSize = context.resources.getDimensionPixelSize(R.dimen.controls_borderSize)
-        addView(
-            View(context).apply {
-                setBackgroundColor(ContextCompat.getColor(context, R.color.controls_border))
-            },
-            LayoutParams(LayoutParams.MATCH_PARENT, borderSize)
-        )
+    interface OnPlaceSelectListener {
+        fun onSelect(place: AmazonLocationPlace, symbol: Symbol)
     }
 
-}
-
-/**
- * Map button component used to control features like zoom in/out, compass. It is composed
- * by a Button and an ImageView (icon) inside a FrameLayout so the icon can be independently
- * animated, such as the compass icon.
- */
-@SuppressLint("ViewConstructor")
-internal class MapControl(
-    context: Context,
-    iconResource: Int,
-    accessibilityLabel: Int
-) : FrameLayout(context) {
-
-    private val button: Button by lazy {
-        Button(context).apply {
-            contentDescription = context.getText(accessibilityLabel)
-            val backgroundEffect = TypedValue()
-            context.theme.resolveAttribute(
-                android.R.attr.selectableItemBackground,
-                backgroundEffect,
-                true
-            )
-            setBackgroundResource(backgroundEffect.resourceId)
-            backgroundTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(context, R.color.controls_background)
-            )
-        }
-    }
-
-    private val icon: ImageView by lazy {
-        ImageView(context).apply {
-            setColorFilter(ContextCompat.getColor(context, R.color.controls_foreground))
-            setImageResource(iconResource)
-
-            val padding = context.resources.getDimensionPixelSize(R.dimen.controls_padding)
-            setPadding(padding, padding, padding, padding)
-        }
-    }
-
-    init {
-        addView(button)
-        addView(icon)
-    }
-
-    /**
-     * The default rotation logic provided by the Animation framework doesn't rotate
-     * to the direction of the shortest distance to the target angle, resulting in a
-     * unexpected animation (e.g. from 350 to 20 degrees it goes the whole way counter clockwise).
-     *
-     * This method calculates the shortest path from the current angle to the target and uses
-     * the `rotationBy` API to achieve the expected effect in a compass rotation.
-     */
-    fun rotateIcon(target: Double) {
-        val current = icon.rotation
-        val diff = target - current
-        val delta = abs(diff) % 360
-        val direction = if (diff in 0.0..180.0 || diff in -360.0..-180.0) 1 else -1
-        val angle = (if (delta > 180) 360 - delta else delta) * direction
-
-        icon.animate()
-            .setInterpolator(AccelerateDecelerateInterpolator())
-            .rotationBy(angle.toFloat())
-    }
-
-    fun onClick(listener: OnClickListener) = button.setOnClickListener(listener)
-
-    override fun setEnabled(enabled: Boolean) {
-        super.setEnabled(enabled)
-        button.isEnabled = enabled
-        icon.isEnabled = enabled
-
-        val alpha = if (enabled) 1.0f else 0.3f
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            icon.transitionAlpha = alpha
-        } else {
-            icon.alpha = alpha
-        }
-    }
 }

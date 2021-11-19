@@ -19,8 +19,10 @@ import com.amazonaws.DefaultRequest
 import com.amazonaws.http.HttpMethodName
 import com.amazonaws.util.IOUtils
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
-import okhttp3.*
-
+import okhttp3.HttpUrl
+import okhttp3.Interceptor
+import okhttp3.Request
+import okhttp3.Response
 import okio.Buffer
 import java.io.ByteArrayInputStream
 import java.net.URI
@@ -48,7 +50,7 @@ private fun Request.Builder.copyFrom(request: AWSRequest): Request.Builder {
  */
 internal class AWSRequestSignerInterceptor(
     private val plugin: AWSLocationGeoPlugin
-): Interceptor {
+) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
