@@ -38,13 +38,12 @@ dependencies {
     implementation project(":aws-geo-location")
     implementation project(":core")
     implementation dependency.aws.core
-    implementation dependency.maplibre
+    implementation dependency.maplibre.sdk
+    implementation dependency.maplibre.annotations
     implementation dependency.okhttp
     implementation dependency.kotlin.coroutines
 
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
 
     compileOnly dependency.aws.location
 

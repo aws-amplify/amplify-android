@@ -25,6 +25,7 @@ import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.maplibre.AmplifyMapLibreAdapter
 import com.amplifyframework.geo.models.MapStyle
 import com.mapbox.mapboxsdk.maps.MapView
+import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 
 typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
@@ -41,7 +42,10 @@ class MapLibreView
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
-    options: MapLibreOptions = MapLibreOptions.createFromAttributes(context, attrs),
+    options: MapLibreOptions = MapLibreOptions
+        .createFromAttributes(context, attrs)
+        .logoEnabled(false)
+        .attributionEnabled(false),
     private val geo: GeoCategory = Amplify.Geo
 ) : MapView(context, attrs, defStyleAttr) {
 
@@ -61,6 +65,32 @@ class MapLibreView
     override fun initialize(context: Context, options: MapLibreOptions) {
         // defer the execution after the Adapter is initialized
         // see setup() where the superclass initialize is called
+    }
+
+    /**
+     * Registers a listener executed when the map is ready for UI interactions.
+     *
+     * @param listener the event listener
+     */
+    fun onMapReady(listener: OnMapReadyListener) {
+        getMapAsync { map ->
+            map.getStyle { style ->
+                listener.onReady(map, style)
+            }
+        }
+    }
+
+    /**
+     * Registers a listener executed when the map is ready for UI interactions.
+     *
+     * @param listener the event listener lambda
+     */
+    fun onMapReady(listener: (MapboxMap, Style) -> Unit) {
+        onMapReady(object : OnMapReadyListener {
+            override fun onReady(map: MapboxMap, style: Style) {
+                listener(map, style)
+            }
+        })
     }
 
     /**
@@ -113,6 +143,14 @@ class MapLibreView
         override fun onDestroy(owner: LifecycleOwner) {
             this@MapLibreView.onDestroy()
         }
+    }
+
+    /**
+     * Listener interface that signals when a MapView is ready, meaning both the map and the styles
+     * are fully loaded.
+     */
+    interface OnMapReadyListener {
+        fun onReady(map: MapboxMap, style: Style)
     }
 
 }
