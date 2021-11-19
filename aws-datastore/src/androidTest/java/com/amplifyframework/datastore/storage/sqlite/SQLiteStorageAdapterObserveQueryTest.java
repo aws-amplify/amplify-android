@@ -276,7 +276,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
      * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
      * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
-    @Ignore("Failing in build")
+    //@Ignore("Failing in build")
     @Test
     public void querySavedDataWithNumericalPredicates() throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -588,7 +588,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
      * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
      * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
-    @Ignore("Failing in build")
+    //@Ignore("Failing in build")
     @Test
     public void querySavedDataWithMultipleItemsThenItemSaves() throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -614,7 +614,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
                 }
                 latch.countDown();
             } else {
-                assertEquals(11, value.getItems().size());
+                assertEquals(12, value.getItems().size());
                 changeLatch.countDown();
             }
             count.incrementAndGet();
