@@ -188,7 +188,7 @@ final class SubscriptionAuthorizer {
             boolean connectionFlag
     ) throws ApiException {
         final URI apiUrl = getRequestEndpoint(connectionFlag);
-        final String apiRegion = apiUrl.getAuthority().split("\\.")[2];
+        final String apiRegion = configuration.getRegion();
         final String requestContent = request != null ? request.getContent() : "{}";
 
         // Construct a request to be signed
