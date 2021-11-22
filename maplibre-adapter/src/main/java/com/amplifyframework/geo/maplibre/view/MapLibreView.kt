@@ -68,27 +68,37 @@ class MapLibreView
     }
 
     /**
-     * Registers a listener executed when the map is ready for UI interactions.
+     * Get the both the map and its style asynchronously.
      *
-     * @param listener the event listener
+     * @param callback the event listener
      */
-    fun onMapReady(listener: OnMapReadyListener) {
+    fun getStyle(callback: OnStyleLoaded) {
         getMapAsync { map ->
             map.getStyle { style ->
-                listener.onReady(map, style)
+                callback.onLoad(map, style)
             }
         }
     }
 
     /**
-     * Registers a listener executed when the map is ready for UI interactions.
+     * Get the both the map and its style asynchronously.
      *
-     * @param listener the event listener lambda
+     * **Implementation notes:** This is a shortcut to the existing nested callback solution:
+     *
+     * ```
+     * getMapAsync { map ->
+     *   map.getStyle { style ->
+     *     // use APIs that depend on both map and its style
+     *   }
+     * }
+     * ```
+     *
+     * @param callback the onLoad lambda
      */
-    fun onMapReady(listener: (MapboxMap, Style) -> Unit) {
-        onMapReady(object : OnMapReadyListener {
-            override fun onReady(map: MapboxMap, style: Style) {
-                listener(map, style)
+    fun getStyle(callback: (MapboxMap, Style) -> Unit) {
+        getStyle(object : OnStyleLoaded {
+            override fun onLoad(map: MapboxMap, style: Style) {
+                callback(map, style)
             }
         })
     }
@@ -146,11 +156,10 @@ class MapLibreView
     }
 
     /**
-     * Listener interface that signals when a MapView is ready, meaning both the map and the styles
-     * are fully loaded.
+     * Callback interface that is invoked when both the map and its style are fully loaded.
      */
-    interface OnMapReadyListener {
-        fun onReady(map: MapboxMap, style: Style)
+    interface OnStyleLoaded {
+        fun onLoad(map: MapboxMap, style: Style)
     }
 
 }
