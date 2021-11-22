@@ -276,7 +276,9 @@ public final class SelectionSet {
                         if (depth >= 1) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
-                            Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass, depth - 1, operation));
+                            Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass,
+                                                                depth - 1,
+                                                                operation));
                             result.add(new SelectionSet(fieldName, fields));
                         }
                     } else if (depth >= 1) {
