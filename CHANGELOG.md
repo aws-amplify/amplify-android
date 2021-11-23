@@ -6,9 +6,6 @@
 ### Bug Fixes
 - **api:** GraphQL operation is now launched from a new thread (#1562)
 
-### Miscellaneous
-- Oq update (#1567)
-
 [See all changes between 1.29.1 and 1.30.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.29.1...release_v1.30.0)
 
 ## [Release 1.29.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.29.1)
