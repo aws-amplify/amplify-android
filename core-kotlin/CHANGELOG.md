@@ -1,3 +1,16 @@
+## [Release 0.14.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.14.0)
+
+### Features
+- **maplibre-adapter:** MapLibreView and Geo adapter integration (#1568)
+
+### Bug Fixes
+- **api:** GraphQL operation is now launched from a new thread (#1562)
+
+### Miscellaneous
+- Oq update (#1567)
+
+[See all changes between 0.13.1 and 0.14.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.13.1...release-kotlin_v0.14.0)
+
 ## [Release 0.13.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.13.1)
 
 ### Bug Fixes
