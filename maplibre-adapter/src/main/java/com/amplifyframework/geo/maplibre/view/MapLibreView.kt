@@ -26,6 +26,10 @@ import androidx.lifecycle.*
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.maplibre.AmplifyMapLibreAdapter
+import com.amplifyframework.geo.models.MapStyle
+import com.mapbox.mapboxsdk.maps.MapView
+import com.mapbox.mapboxsdk.maps.MapboxMap
+import com.mapbox.mapboxsdk.maps.Style
 import com.amplifyframework.geo.maplibre.R
 import com.amplifyframework.geo.models.MapStyle
 import com.mapbox.mapboxsdk.maps.Style
@@ -46,20 +50,26 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 
 
-typealias MapBoxView = com.mapbox.mapboxsdk.maps.MapView
 typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
 
 /**
- * The MapLibreView encapsulates the legacy MapBox map integration with Amplify.Geo.
+ * The MapLibreView encapsulates the MapBox map integration with `Amplify.Geo` and
+ * serves as the foundation of map components.
+ *
+ * The requests of map tiles and features are routed to the Amazon Location Services,
+ * check the documentation at [https://docs.amplify.aws/lib/geo/getting-started/q/platform/android]
  */
 class MapLibreView
 @JvmOverloads @UiThread constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
-    options: MapLibreOptions = MapLibreOptions.createFromAttributes(context, attrs),
+    options: MapLibreOptions = MapLibreOptions
+        .createFromAttributes(context, attrs)
+        .logoEnabled(false)
+        .attributionEnabled(false),
     private val geo: GeoCategory = Amplify.Geo
-) : MapBoxView(context, attrs, defStyleAttr) {
+) : MapView(context, attrs, defStyleAttr) {
 
     companion object {
         private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
@@ -111,43 +121,52 @@ class MapLibreView
         // see setup() where the superclass initialize is called
     }
 
-//    fun onMapReady(listener: (MapboxMap, Style) -> Unit) {
-//        this.onMapReadyListener = object : OnMapReadyListener {
-//            override fun onReady(map: MapboxMap, style: Style) {
-//                listener(map, style)
-//            }
-//        }
-//    }
-
-    fun setStyle(style: MapStyle? = null) {
+    /**
+     * Get the both the map and its style asynchronously.
+     *
+     * @param callback the event listener
+     */
+    fun getStyle(callback: OnStyleLoaded) {
         getMapAsync { map ->
-            adapter.setStyle(map, style) {
-                log.verbose("Amazon Location styles applied to MapView")
-                this.style = it.apply {
-                    addImage(
-                        PLACE_ICON_NAME,
-                        BitmapFactory.decodeResource(resources, R.drawable.place)
-//                        BitmapUtils.getBitmapFromDrawable(defaultPlaceIcon)!!,
-//                        ,true
-                    )
-                    addLayer(SymbolLayer("places", "places").apply {
-                        setProperties(
-                            iconImage(PLACE_ICON_NAME)
-                        )
-                    })
-                    println("**************************")
-                    println(layers.joinToString(", ") { layer -> layer.id })
-                    println("**************************")
-//                    addLayer(SymbolLayer())
-                }
-//                this.symbolManager = SymbolManager(this, map, it, null, clusterOptions).apply {
-//                this.symbolManager = SymbolManager(this, map, it, "places", clusterOptions).apply {
-//                this.symbolManager = SymbolManager(this, map, it, "places", clusterOptions).apply {
-                this.symbolManager = SymbolManager(this, map, it).apply {
-                    iconAllowOverlap = true
-                    iconRotationAlignment = ICON_ROTATION_ALIGNMENT_VIEWPORT
-                }
+            map.getStyle { style ->
+                callback.onLoad(map, style)
             }
+        }
+    }
+
+    /**
+     * Get the both the map and its style asynchronously.
+     *
+     * **Implementation notes:** This is a shortcut to the existing nested callback solution:
+     *
+     * ```
+     * getMapAsync { map ->
+     *   map.getStyle { style ->
+     *     // use APIs that depend on both map and its style
+     *   }
+     * }
+     * ```
+     *
+     * @param callback the onLoad lambda
+     */
+    fun getStyle(callback: (MapboxMap, Style) -> Unit) {
+        getStyle(object : OnStyleLoaded {
+            override fun onLoad(map: MapboxMap, style: Style) {
+                callback(map, style)
+            }
+        })
+    }
+
+    /**
+     * Update the map using the passed style. If no style is style is set, the default
+     * configured using the Amplify CLI is used.
+     *
+     * @param style the map style object
+     * @param callback the function called when the style is done loaded
+     */
+    fun setStyle(style: MapStyle? = null, callback: Style.OnStyleLoaded) {
+        getMapAsync { map ->
+            adapter.setStyle(map, style, callback)
         }
     }
 
@@ -160,7 +179,7 @@ class MapLibreView
     }
 
     internal fun loadDefaultStyle() {
-        setStyle(null)
+        setStyle { log.verbose("Amazon Location default styles loaded") }
     }
 
     inner class LifecycleHandler : DefaultLifecycleObserver {
@@ -190,8 +209,11 @@ class MapLibreView
         }
     }
 
-//    interface OnMapReadyListener {
-//        fun onReady(map: MapboxMap, style: Style)
-//    }
+    /**
+     * Callback interface that is invoked when both the map and its style are fully loaded.
+     */
+    interface OnStyleLoaded {
+        fun onLoad(map: MapboxMap, style: Style)
+    }
 
 }
