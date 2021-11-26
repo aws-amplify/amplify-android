@@ -47,7 +47,7 @@ import java.util.concurrent.Executors
 class AWSLocationGeoPlugin(
     private val userConfiguration: GeoConfiguration? = null, // for programmatically overriding amplifyconfiguration.json
     private val authProvider: AuthCategory = Amplify.Auth
-): GeoCategoryPlugin<AmazonLocationClient?>() {
+) : GeoCategoryPlugin<AmazonLocationClient?>() {
     companion object {
         private const val GEO_PLUGIN_KEY = "awsLocationGeoPlugin"
         private const val AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
@@ -64,6 +64,11 @@ class AWSLocationGeoPlugin(
         configuration.searchIndices!!.default
     }
 
+    val credentialsProvider: AWSCredentialsProvider by lazy {
+        val authPlugin = authProvider.getPlugin(AUTH_PLUGIN_KEY)
+        authPlugin.escapeHatch as AWSCredentialsProvider
+    }
+
     override fun getPluginKey(): String {
         return GEO_PLUGIN_KEY
     }
@@ -71,11 +76,14 @@ class AWSLocationGeoPlugin(
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
-            this.configuration = userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build()
-            this.geoService = AmazonLocationService(credentialsProvider(), configuration.region)
+            this.configuration =
+                userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build()
+            this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
         } catch (error: Exception) {
-            throw GeoException("Failed to configure AWSLocationGeoPlugin.", error,
-                "Make sure your amplifyconfiguration.json is valid.")
+            throw GeoException(
+                "Failed to configure AWSLocationGeoPlugin.", error,
+                "Make sure your amplifyconfiguration.json is valid."
+            )
         }
     }
 
@@ -200,11 +208,6 @@ class AWSLocationGeoPlugin(
             onResult,
             onError
         )
-    }
-
-    private fun credentialsProvider(): AWSCredentialsProvider {
-        val authPlugin = authProvider.getPlugin(AUTH_PLUGIN_KEY)
-        return authPlugin.escapeHatch as AWSCredentialsProvider
     }
 
     // Helper method that launches given task on a new worker thread.
