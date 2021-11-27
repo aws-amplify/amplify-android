@@ -18,54 +18,30 @@ package com.amplifyframework.geo.maplibre
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 
-import com.mapbox.mapboxsdk.maps.MapView
+import com.amplifyframework.auth.AuthCategory
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.geo.GeoCategory
+import com.amplifyframework.geo.location.AWSLocationGeoPlugin
+import com.amplifyframework.geo.maplibre.view.MapLibreView
+import com.amplifyframework.testutils.sync.TestCategory
 
 /**
  * Activity that initializes MapLibre SDK with adapter on create.
  */
 class MapViewTestActivity : AppCompatActivity() {
-    var mapView: MapView? = null
-        private set
+
+    private val geo: GeoCategory by lazy {
+        val authCategory = TestCategory.forPlugin(AWSCognitoAuthPlugin()) as AuthCategory
+        TestCategory.forPlugin(AWSLocationGeoPlugin(authProvider = authCategory)) as GeoCategory
+    }
+
+    internal val mapView: MapLibreView by lazy {
+        MapLibreView(context = applicationContext, geo = geo)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AmplifyMapLibreAdapter.getInstance(applicationContext)
-        mapView = MapView(applicationContext)
         setContentView(mapView)
     }
 
-    override fun onResume() {
-        super.onResume()
-        mapView?.onResume()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        mapView?.onStart()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mapView?.onStop()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mapView?.onPause()
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mapView?.onLowMemory()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mapView?.onDestroy()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        mapView?.onSaveInstanceState(outState)
-    }
 }
