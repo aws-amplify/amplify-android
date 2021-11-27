@@ -675,6 +675,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             .request(graphQLRequest)
             .apiRequestDecoratorFactory(clientDetails.getApiRequestDecoratorFactory())
             .responseFactory(gqlResponseFactory)
+            .executorService(executorService)
             .onResponse(onResponse)
             .onFailure(onFailure)
             .build();

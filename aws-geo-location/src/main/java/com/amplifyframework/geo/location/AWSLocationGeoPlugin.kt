@@ -26,11 +26,17 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.geo.GeoCategoryPlugin
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
+import com.amplifyframework.geo.location.options.AmazonLocationSearchByCoordinatesOptions
+import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptions
 import com.amplifyframework.geo.location.service.AmazonLocationService
 import com.amplifyframework.geo.location.service.GeoService
+import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
+import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
+import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
+import com.amplifyframework.geo.result.GeoSearchResult
 
 import org.json.JSONObject
 import java.util.concurrent.Executors
@@ -41,7 +47,7 @@ import java.util.concurrent.Executors
 class AWSLocationGeoPlugin(
     private val userConfiguration: GeoConfiguration? = null, // for programmatically overriding amplifyconfiguration.json
     private val authProvider: AuthCategory = Amplify.Auth
-): GeoCategoryPlugin<AmazonLocationClient?>() {
+) : GeoCategoryPlugin<AmazonLocationClient?>() {
     companion object {
         private const val GEO_PLUGIN_KEY = "awsLocationGeoPlugin"
         private const val AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
@@ -54,6 +60,14 @@ class AWSLocationGeoPlugin(
     private val defaultMapName: String by lazy {
         configuration.maps!!.default.mapName
     }
+    private val defaultSearchIndexName: String by lazy {
+        configuration.searchIndices!!.default
+    }
+
+    val credentialsProvider: AWSCredentialsProvider by lazy {
+        val authPlugin = authProvider.getPlugin(AUTH_PLUGIN_KEY)
+        authPlugin.escapeHatch as AWSCredentialsProvider
+    }
 
     override fun getPluginKey(): String {
         return GEO_PLUGIN_KEY
@@ -62,11 +76,14 @@ class AWSLocationGeoPlugin(
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
-            this.configuration = userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build()
-            this.geoService = AmazonLocationService(credentialsProvider(), configuration.region)
+            this.configuration =
+                userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build()
+            this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
         } catch (error: Exception) {
-            throw GeoException("Failed to configure AWSLocationGeoPlugin.", error,
-                "Make sure your amplifyconfiguration.json is valid.")
+            throw GeoException(
+                "Failed to configure AWSLocationGeoPlugin.", error,
+                "Make sure your amplifyconfiguration.json is valid."
+            )
         }
     }
 
@@ -125,9 +142,72 @@ class AWSLocationGeoPlugin(
         )
     }
 
-    private fun credentialsProvider(): AWSCredentialsProvider {
-        val authPlugin = authProvider.getPlugin(AUTH_PLUGIN_KEY)
-        return authPlugin.escapeHatch as AWSCredentialsProvider
+    override fun searchByText(
+        query: String,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        val options = GeoSearchByTextOptions.defaults()
+        searchByText(query, options, onResult, onError)
+    }
+
+    override fun searchByText(
+        query: String,
+        options: GeoSearchByTextOptions,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        execute(
+            {
+                val searchIndex = if (options is AmazonLocationSearchByTextOptions) {
+                    options.searchIndex ?: defaultSearchIndexName
+                } else defaultSearchIndexName
+                val places = geoService.geocode(
+                    searchIndex,
+                    query,
+                    options.maxResults,
+                    options.searchArea,
+                    options.countries
+                )
+                GeoSearchResult.withPlaces(places)
+            },
+            Errors::searchError,
+            onResult,
+            onError
+        )
+    }
+
+    override fun searchByCoordinates(
+        position: Coordinates,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        val options = GeoSearchByCoordinatesOptions.defaults()
+        searchByCoordinates(position, options, onResult, onError)
+    }
+
+    override fun searchByCoordinates(
+        position: Coordinates,
+        options: GeoSearchByCoordinatesOptions,
+        onResult: Consumer<GeoSearchResult>,
+        onError: Consumer<GeoException>
+    ) {
+        execute(
+            {
+                val searchIndex = if (options is AmazonLocationSearchByCoordinatesOptions) {
+                    options.searchIndex ?: defaultSearchIndexName
+                } else defaultSearchIndexName
+                val places = geoService.reverseGeocode(
+                    searchIndex,
+                    position,
+                    options.maxResults
+                )
+                GeoSearchResult.withPlaces(places)
+            },
+            Errors::searchError,
+            onResult,
+            onError
+        )
     }
 
     // Helper method that launches given task on a new worker thread.

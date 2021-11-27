@@ -47,4 +47,23 @@ internal object Errors {
         }
         return GeoException(message, error, suggestion)
     }
+
+    fun searchError(error: Throwable): GeoException {
+        if (error is GeoException) {
+            return error
+        }
+        val (message, suggestion) = when (error) {
+            is UninitializedPropertyAccessException -> "AWSLocationGeoPlugin is not configured." to
+                    "Please verify that Geo plugin has been properly configured."
+            is NullPointerException -> "Plugin configuration is missing \"searchIndices\" configuration." to
+                    "Please verify that Geo plugin has been properly configured."
+            is AmazonServiceException -> "There was a problem with the data in the request." to
+                    "Please verify that a valid place index resource exists."
+            is AmazonClientException -> "Amplify failed to send a request to Amazon Location Service." to
+                    "Please ensure that you have a stable internet connection."
+            else -> "Unexpected error. Failed to get search place index." to
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+        }
+        return GeoException(message, error, suggestion)
+    }
 }
