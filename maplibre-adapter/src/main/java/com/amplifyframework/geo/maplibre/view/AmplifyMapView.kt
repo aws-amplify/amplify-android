@@ -15,30 +15,21 @@
 
 package com.amplifyframework.geo.maplibre.view
 
-import LoadingView
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.ColorStateList
-import android.os.Build
 import android.util.AttributeSet
-import android.util.TypedValue
-import android.view.Gravity
 import android.view.View
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
 import androidx.annotation.UiThread
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams.MATCH_PARENT
 import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams.WRAP_CONTENT
-import androidx.core.content.ContextCompat
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.models.AmazonLocationPlace
 import com.amplifyframework.geo.maplibre.R
 import com.amplifyframework.geo.maplibre.util.*
+import com.amplifyframework.geo.maplibre.view.support.LoadingView
 import com.amplifyframework.geo.maplibre.view.support.MapControls
 import com.amplifyframework.geo.models.BoundingBox
 import com.amplifyframework.geo.models.SearchArea
@@ -46,14 +37,12 @@ import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.result.GeoSearchResult
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
-import com.mapbox.geojson.Feature
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLngBounds
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
-import kotlin.math.abs
 
 /**
  * The AmplifyMapView encapsulates the MapLibre map integration with Amplify.Geo and introduces
@@ -187,15 +176,7 @@ class AmplifyMapView
                 SearchTextField.SearchMode.MAP -> BottomSheetBehavior.STATE_COLLAPSED
             }
         }
-        searchField.onSearchAction {
-            if (it.isNotBlank()) {
-                search(it.trim())
-            } else {
-                places = listOf()
-                updateSearchResults()
-            }
-        }
-        mapView.getMapAsync { map ->
+        mapView.getStyle { map, _ ->
             updateZoomControls(map.cameraPosition)
             controls.compassIndicatorButton.onClick {
                 map.animateCamera(CameraUpdateFactory.bearingTo(0.0))
@@ -206,27 +187,20 @@ class AmplifyMapView
             controls.zoomInButton.onClick {
                 map.animateCamera(CameraUpdateFactory.zoomIn())
             }
+            searchField.onSearchAction {
+                if (it.isNotBlank()) {
+                    search(it.trim())
+                } else {
+                    places = listOf()
+                    updateSearchResults()
+                }
+            }
             map.addOnCameraMoveListener {
                 val camera = map.cameraPosition
                 controls.compassIndicatorButton.rotateIcon(camera.bearing)
                 updateZoomControls(camera)
 //                updateSearchBounds(map.projection.visibleRegion.latLngBounds)
             }
-//            mapView.symbolManager.addClickListener { selected ->
-//                symbols.forEach { symbol ->
-//                    symbol.apply {
-//                        iconOpacity = 0.9f
-//                        iconSize = 1f
-//                    }
-//                    mapView.symbolManager.update(symbol)
-//                }
-//                val place = selected.getPlaceData()
-//                selected.apply {
-//                    iconOpacity = 1f
-//                    iconSize = 1.2f
-//                }
-//                return@addClickListener false
-//            }
         }
     }
 

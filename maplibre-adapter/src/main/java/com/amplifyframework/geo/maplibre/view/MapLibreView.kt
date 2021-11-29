@@ -17,37 +17,23 @@ package com.amplifyframework.geo.maplibre.view
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.util.AttributeSet
 import androidx.annotation.UiThread
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
+import androidx.core.util.Pair
 import androidx.lifecycle.*
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.maplibre.AmplifyMapLibreAdapter
+import com.amplifyframework.geo.maplibre.R
 import com.amplifyframework.geo.models.MapStyle
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
-import com.amplifyframework.geo.maplibre.R
-import com.amplifyframework.geo.models.MapStyle
-import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.plugins.annotation.ClusterOptions
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
-import com.mapbox.mapboxsdk.style.layers.Property.ICON_ROTATION_ALIGNMENT_VIEWPORT
-import com.mapbox.mapboxsdk.utils.BitmapUtils
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-
-import android.graphics.drawable.VectorDrawable
-import androidx.core.util.Pair
-import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.style.expressions.Expression
-import com.mapbox.mapboxsdk.style.layers.Layer
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage
-import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 
 
 typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
@@ -74,42 +60,28 @@ class MapLibreView
     companion object {
         private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
 
-        val PLACE_ICON_NAME = "place"
+        const val PLACE_ICON_NAME = "place"
     }
 
     private val adapter: AmplifyMapLibreAdapter by lazy {
         AmplifyMapLibreAdapter(context, geo)
     }
 
-//    private var ready: Boolean = false
-//        set(value) {
-//            field = value
-//            onMapReadyListener?.onReady(this.map)
-//        }
-
-    lateinit var style: Style
-
     lateinit var symbolManager: SymbolManager
 
-//    var onMapReadyListener: OnMapReadyListener? = null
-
-    var defaultPlaceIcon =
-        AppCompatResources.getDrawable(context, R.drawable.place)!!
-
-    var defaultPlaceIconColor = ContextCompat.getColor(context, R.color.search_placeIconColor)
+    var defaultPlaceIcon = ContextCompat.getDrawable(context, R.drawable.place)!!
 
     var clusterOptions: ClusterOptions = ClusterOptions()
-//        .withCircleRadius(
-//            Expre
-//        )
         .withCircleRadius(Expression.literal(25))
-        .withColorLevels(arrayOf(
-            Pair(0, Color.GRAY),
-            Pair(25, Color.BLUE),
-            Pair(50, Color.YELLOW),
-            Pair(75, Color.RED),
-            Pair(100, Color.MAGENTA),
-        ))
+        .withColorLevels(
+            arrayOf(
+                Pair(0, Color.GRAY),
+                Pair(25, Color.BLUE),
+                Pair(50, Color.YELLOW),
+                Pair(75, Color.RED),
+                Pair(100, Color.MAGENTA),
+            )
+        )
 
     init {
         setup(context, options)
@@ -166,7 +138,10 @@ class MapLibreView
      */
     fun setStyle(style: MapStyle? = null, callback: Style.OnStyleLoaded) {
         getMapAsync { map ->
-            adapter.setStyle(map, style, callback)
+            adapter.setStyle(map, style) {
+                this.symbolManager = SymbolManager(this, map, it)
+                callback.onStyleLoaded(it)
+            }
         }
     }
 
