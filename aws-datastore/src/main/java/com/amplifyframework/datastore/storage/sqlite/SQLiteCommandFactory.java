@@ -523,10 +523,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append(SqlKeyword.DELIMITER)
                     .append("(");
             int numIndexFieldsAdded = 0;
-            for (String filed : indexFields) {
+            for (String field : indexFields) {
                 numIndexFieldsAdded++;
                 builder.append(SqlKeyword.DELIMITER)
-                        .append(filed);
+                        .append(field);
                 if (numIndexFieldsAdded != indexFields.size()) {
                     builder.append(",");
                 }
