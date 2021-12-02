@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_attributionIconDescription">Attribution icon. Activate to show attribution dialog.</string>
+    <string name="map_attributionText">Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors, and the GIS User Community</string>
+</resources>

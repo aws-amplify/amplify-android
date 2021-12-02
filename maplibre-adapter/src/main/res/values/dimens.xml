@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="map_defaultMargin">10dp</dimen>
+
+    <dimen name="map_attributionIconPadding">2dp</dimen>
+    <dimen name="map_attributionTextPadding">6dp</dimen>
+    <dimen name="map_attributionTextSize">14sp</dimen>
+    <dimen name="map_attributionTextBorderRadius">2dp</dimen>
+</resources>
