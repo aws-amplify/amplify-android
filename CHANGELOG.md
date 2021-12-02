@@ -1,3 +1,11 @@
+## [Release 1.30.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.30.1)
+
+### Bug Fixes
+- **aws-api-appsync:** include nested belongsTo object in query selection set (#1585)
+- **maplibre-adapter:** add content attribution info to map view (#1591)
+
+[See all changes between 1.30.0 and 1.30.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.30.0...release_v1.30.1)
+
 ## [Release 1.30.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.30.0)
 
 ### Features
