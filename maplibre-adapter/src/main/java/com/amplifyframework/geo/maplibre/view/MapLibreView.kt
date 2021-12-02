@@ -19,13 +19,18 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
+import android.view.Gravity
 import androidx.annotation.UiThread
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.core.util.Pair
 import androidx.lifecycle.*
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.maplibre.AmplifyMapLibreAdapter
+import com.amplifyframework.geo.maplibre.R
+import com.amplifyframework.geo.maplibre.view.support.AttributionInfoView
 import com.amplifyframework.geo.maplibre.R
 import com.amplifyframework.geo.models.MapStyle
 import com.mapbox.mapboxsdk.maps.MapView
@@ -67,6 +72,10 @@ class MapLibreView
         AmplifyMapLibreAdapter(context, geo)
     }
 
+    private val attributionInfoView by lazy {
+        AttributionInfoView(context)
+    }
+
     lateinit var symbolManager: SymbolManager
 
     var defaultPlaceIcon = ContextCompat.getDrawable(context, R.drawable.place)!!
@@ -85,6 +94,17 @@ class MapLibreView
 
     init {
         setup(context, options)
+        addView(
+            attributionInfoView,
+            LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                gravity = Gravity.BOTTOM or Gravity.START
+
+                val margin = context.resources.getDimensionPixelSize(R.dimen.map_defaultMargin)
+                marginEnd = margin
+                marginStart = margin
+                bottomMargin = margin
+            }
+        )
     }
 
     @SuppressLint("MissingSuperCall")

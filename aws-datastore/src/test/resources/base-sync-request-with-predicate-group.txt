@@ -6,7 +6,12 @@
       _lastChangedAt
       _version
       blog {
+        _deleted
+        _lastChangedAt
+        _version
+        createdAt
         id
+        name
       }
       createdAt
       id
