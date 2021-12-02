@@ -531,7 +531,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     builder.append(",");
                 }
             }
-            builder .append(")");
+            builder.append(")");
         }
         return builder;
     }
