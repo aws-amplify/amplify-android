@@ -41,6 +41,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -79,16 +80,35 @@ public class SqlCommandTest {
      * CREATE TABLE SQL command.
      */
     @Test
-    public void validModelSchemaReturnsExpectedSqlCommand() {
+    public void validModelSchemaReturnsExpectedSqlCommandWhenNoCustomPrimaryKeyIsDefined() {
         final ModelSchema personSchema = getPersonModelSchema();
 
         final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(personSchema);
         assertEquals("Person", sqlCommand.tableName());
         assertEquals("CREATE TABLE IF NOT EXISTS `Person` (" +
-                "`id` TEXT PRIMARY KEY NOT NULL, " +
+                "`id` TEXT NOT NULL, " +
                 "`age` INTEGER, " +
                 "`firstName` TEXT NOT NULL, " +
-                "`lastName` TEXT NOT NULL);", sqlCommand.sqlStatement());
+                "`lastName` TEXT NOT NULL, " +
+                "PRIMARY KEY ( id));", sqlCommand.sqlStatement());
+    }
+
+    /**
+     * Test if a valid {@link ModelSchema} returns an expected
+     * CREATE TABLE SQL command when custom primary key is defined.
+     */
+    @Test
+    public void validModelSchemaReturnsExpectedSqlCommandWhenCustomPrimaryKeyIsDefined() {
+        final ModelSchema personSchema = getPersonModelSchemaWithCompositePrimaryKey();
+
+        final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(personSchema);
+        assertEquals("Person", sqlCommand.tableName());
+        assertEquals("CREATE TABLE IF NOT EXISTS `Person` (" +
+                "`age` INTEGER, " +
+                "`firstName` TEXT NOT NULL, " +
+                "`hobbies` TEXT NOT NULL, " +
+                "`lastName` TEXT NOT NULL, " +
+                "PRIMARY KEY ( firstName, lastName, age));", sqlCommand.sqlStatement());
     }
 
     /**
@@ -296,5 +316,30 @@ public class SqlCommandTest {
                 .javaClassForValue(Integer.class)
                 .build());
         return fields;
+    }
+
+    private static ModelSchema getPersonModelSchemaWithCompositePrimaryKey() {
+        final SortedMap<String, ModelField> fields = getFieldsMap();
+        fields.remove("id");
+        fields.put("hobbies", ModelField.builder()
+                .name("hobbies")
+                .isRequired(true)
+                .targetType("String")
+                .javaClassForValue(String.class)
+                .build());
+        final List<String> indexFieldNames = new ArrayList<String>();
+        indexFieldNames.add("firstName");
+        indexFieldNames.add("lastName");
+        indexFieldNames.add("age");
+        final ModelIndex index = ModelIndex.builder()
+                .indexName("undefined")
+                .indexFieldNames(Collections.unmodifiableList(indexFieldNames))
+                .build();
+
+        return ModelSchema.builder()
+                .name("Person")
+                .fields(fields)
+                .indexes(Collections.singletonMap("undefined", index))
+                .build();
     }
 }

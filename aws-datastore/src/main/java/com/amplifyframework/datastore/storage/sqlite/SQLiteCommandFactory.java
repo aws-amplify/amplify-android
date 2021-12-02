@@ -85,7 +85,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             return new SqlCommand(table.getName(), stringBuilder.toString());
         }
 
-        stringBuilder.append("(").append(parseColumns(table));
+        stringBuilder.append("(").append(parseColumns(table))
+                .append(",")
+                .append(SqlKeyword.DELIMITER)
+                .append(createPrimaryKey(modelSchema).toString());
         if (!table.getForeignKeys().isEmpty()) {
             stringBuilder.append(",")
                     .append(SqlKeyword.DELIMITER)
@@ -471,11 +474,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             builder.append(Wrap.inBackticks(columnName))
                     .append(SqlKeyword.DELIMITER)
                     .append(column.getColumnType());
-
-            if (column.isPrimaryKey()) {
-                builder.append(SqlKeyword.DELIMITER).append("PRIMARY KEY");
-            }
-
             if (column.isNonNull()) {
                 builder.append(SqlKeyword.DELIMITER).append("NOT NULL");
             }
@@ -512,6 +510,28 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             if (foreignKeyIterator.hasNext()) {
                 builder.append(",").append(SqlKeyword.DELIMITER);
             }
+        }
+        return builder;
+    }
+
+    // Utility method to create SQL for Primary key on table
+    private StringBuilder createPrimaryKey(@NonNull ModelSchema modelSchema) {
+        final StringBuilder builder = new StringBuilder();
+        final List<String> indexFields = modelSchema.getPrimaryIndexFields();
+        if (indexFields.size() > 0) {
+            builder.append("PRIMARY KEY")
+                    .append(SqlKeyword.DELIMITER)
+                    .append("(");
+            int numIndexFieldsAdded = 0;
+            for (String field : indexFields) {
+                numIndexFieldsAdded++;
+                builder.append(SqlKeyword.DELIMITER)
+                        .append(field);
+                if (numIndexFieldsAdded != indexFields.size()) {
+                    builder.append(",");
+                }
+            }
+            builder.append(")");
         }
         return builder;
     }
