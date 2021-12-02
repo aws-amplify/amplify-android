@@ -5,7 +5,6 @@ import com.amplifyframework.geo.models.Coordinates
 import com.google.gson.JsonElement
 import com.google.gson.JsonNull
 import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol
 import kotlin.reflect.KProperty1
 

@@ -2,34 +2,6 @@
 
 <resources>
 
-    <string name="label_compassIndicator">Compass</string>
-    <string name="label_zoomIn">Zoom in</string>
-    <string name="label_zoomOut">Zoom out</string>
-
-    <string name="search_defaultError">Error searching for %1$s</string>
-    <dimen name="search_visibleArea">180dp</dimen>
-    <dimen name="search_inputTextSize">16sp</dimen>
-    <dimen name="search_inputPadding">6dp</dimen>
-    <dimen name="search_itemPadding">16dp</dimen>
-    <dimen name="search_itemTextSize">16sp</dimen>
-    <string name="search_inputPlaceholder">Search</string>
-    <color name="search_itemBackground">#ffffff</color>
-    <color name="search_placeIconColor">#d32f2f</color>
-
-    <dimen name="controls_margin">10dp</dimen>
-    <dimen name="controls_elevation">4dp</dimen>
-    <dimen name="controls_borderRadius">4dp</dimen>
-    <dimen name="controls_borderSize">1dp</dimen>
-    <dimen name="controls_size">32dp</dimen>
-    <dimen name="controls_padding">6dp</dimen>
-
-    <color name="controls_background">#ffffff</color>
-    <color name="controls_border">#bcbcbc</color>
-    <color name="controls_foreground">#646464</color>
-
-    <color name="map_loadingBackground">#4dffffff</color>
-    <dimen name="map_searchPadding">48dp</dimen>
-
     <declare-styleable name="map_AmplifyMapView">
         <!-- MapViewOptions -->
         <attr format="string" name="map_attribution" />

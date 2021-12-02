@@ -40,7 +40,7 @@ internal class MapControls(
         MapControl(
             context,
             iconResource = R.drawable.ic_baseline_navigation_24,
-            accessibilityLabel = R.string.label_compassIndicator,
+            accessibilityLabel = R.string.map_control_compassIndicator,
         )
     }
 
@@ -48,7 +48,7 @@ internal class MapControls(
         MapControl(
             context,
             iconResource = R.drawable.ic_baseline_add_24,
-            accessibilityLabel = R.string.label_zoomIn,
+            accessibilityLabel = R.string.map_control_zoomIn,
         )
     }
 
@@ -56,7 +56,7 @@ internal class MapControls(
         MapControl(
             context,
             iconResource = R.drawable.ic_baseline_minus_24,
-            accessibilityLabel = R.string.label_zoomOut,
+            accessibilityLabel = R.string.map_control_zoomOut,
         )
     }
 
@@ -64,14 +64,14 @@ internal class MapControls(
         clipToOutline = true
         clipChildren = true
         background = ContextCompat.getDrawable(context, R.drawable.control_background)
-        elevation = context.resources.getDimension(R.dimen.controls_elevation)
+        elevation = context.resources.getDimension(R.dimen.map_controls_elevation)
         orientation = VERTICAL
 
         // divider
         showDividers = SHOW_DIVIDER_MIDDLE
         dividerDrawable = ContextCompat.getDrawable(context, R.drawable.control_divider)
 
-        val size = context.resources.getDimensionPixelSize(R.dimen.controls_size)
+        val size = context.resources.getDimensionPixelSize(R.dimen.map_controls_size)
         val buttonSize = LayoutParams(size, size)
         if (showZoomControls) {
             addView(zoomInButton, buttonSize)
@@ -105,17 +105,17 @@ internal class MapControls(
                 )
                 setBackgroundResource(backgroundEffect.resourceId)
                 backgroundTintList = ColorStateList.valueOf(
-                    ContextCompat.getColor(context, R.color.controls_background)
+                    ContextCompat.getColor(context, R.color.map_controls_background)
                 )
             }
         }
 
         private val icon: ImageView by lazy {
             ImageView(context).apply {
-                setColorFilter(ContextCompat.getColor(context, R.color.controls_foreground))
+                setColorFilter(ContextCompat.getColor(context, R.color.map_controls_foreground))
                 setImageResource(iconResource)
 
-                val padding = context.resources.getDimensionPixelSize(R.dimen.controls_padding)
+                val padding = context.resources.getDimensionPixelSize(R.dimen.map_controls_padding)
                 setPaddingRelative(padding, padding, padding, padding)
             }
         }

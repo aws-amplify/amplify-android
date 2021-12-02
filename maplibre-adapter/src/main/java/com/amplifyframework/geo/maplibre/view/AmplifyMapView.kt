@@ -121,7 +121,7 @@ class AmplifyMapView
     private var symbols: List<Symbol> = listOf()
 
     init {
-        val defaultMargin = context.resources.getDimensionPixelSize(R.dimen.controls_margin)
+        val defaultMargin = context.resources.getDimensionPixelSize(R.dimen.map_controls_margin)
 
         overlayLayout.addView(
             searchField,
@@ -140,7 +140,7 @@ class AmplifyMapView
                     topMargin = defaultMargin
                     marginEnd = defaultMargin
                     addRule(RelativeLayout.ALIGN_PARENT_END)
-                    addRule(RelativeLayout.BELOW, R.id.amplify_map_search_input)
+                    addRule(RelativeLayout.BELOW, R.id.map_search_input)
                 }
             )
         }
@@ -148,7 +148,7 @@ class AmplifyMapView
         addView(overlayLayout, LayoutParams(MATCH_PARENT, MATCH_PARENT))
         addView(searchResultView, LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
             behavior = BottomSheetBehavior<SearchResultListView>().apply {
-                topMargin = context.resources.getDimensionPixelSize(R.dimen.search_visibleArea)
+                topMargin = context.resources.getDimensionPixelSize(R.dimen.map_search_visibleArea)
                 addBottomSheetCallback(BottomSheetCallback())
             }
         })
@@ -238,7 +238,7 @@ class AmplifyMapView
     private fun onSearchError(exception: GeoException) = post {
         loadingView.hide()
         log.error(exception.message, exception)
-        val defaultError = mapView.context.getString(R.string.search_defaultError, lastQuery)
+        val defaultError = mapView.context.getString(R.string.map_search_defaultError, lastQuery)
         val error = exception.message ?: defaultError
         Snackbar
             .make(this@AmplifyMapView, error, Snackbar.LENGTH_SHORT)

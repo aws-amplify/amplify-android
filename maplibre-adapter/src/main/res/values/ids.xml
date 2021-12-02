@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="amplify_map_view" type="id" />
-    <item name="amplify_map_search_input" type="id" />
+    <item name="map_view" type="id" />
+    <item name="map_search_input" type="id" />
 </resources>

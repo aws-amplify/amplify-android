@@ -2,8 +2,22 @@
 <resources>
     <dimen name="map_defaultMargin">10dp</dimen>
 
-    <dimen name="map_attributionIconPadding">2dp</dimen>
-    <dimen name="map_attributionTextPadding">6dp</dimen>
-    <dimen name="map_attributionTextSize">14sp</dimen>
-    <dimen name="map_attributionTextBorderRadius">2dp</dimen>
+    <dimen name="map_attribution_iconPadding">2dp</dimen>
+    <dimen name="map_attribution_textPadding">6dp</dimen>
+    <dimen name="map_attribution_textSize">14sp</dimen>
+    <dimen name="map_attribution_textBorderRadius">2dp</dimen>
+
+    <dimen name="map_controls_borderRadius">4dp</dimen>
+    <dimen name="map_controls_borderSize">1dp</dimen>
+    <dimen name="map_controls_elevation">4dp</dimen>
+    <dimen name="map_controls_size">32dp</dimen>
+    <dimen name="map_controls_margin">10dp</dimen>
+    <dimen name="map_controls_padding">6dp</dimen>
+
+    <dimen name="map_search_visibleArea">180dp</dimen>
+    <dimen name="map_search_inputTextSize">16sp</dimen>
+    <dimen name="map_search_inputPadding">6dp</dimen>
+    <dimen name="map_search_itemPadding">16dp</dimen>
+    <dimen name="map_search_itemTextSize">16sp</dimen>
+    <dimen name="map_search_padding">48dp</dimen>
 </resources>

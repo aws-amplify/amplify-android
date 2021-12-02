@@ -24,7 +24,7 @@ class SearchResultItemView(
             typeface = Typeface.DEFAULT_BOLD
             setTextSize(
                 TypedValue.COMPLEX_UNIT_PX,
-                context.resources.getDimension(R.dimen.search_inputTextSize)
+                context.resources.getDimension(R.dimen.map_search_inputTextSize)
             )
         }
     }
@@ -33,16 +33,16 @@ class SearchResultItemView(
         TextView(context).apply {
             setTextSize(
                 TypedValue.COMPLEX_UNIT_PX,
-                context.resources.getDimension(R.dimen.search_inputTextSize)
+                context.resources.getDimension(R.dimen.map_search_inputTextSize)
             )
         }
     }
 
     init {
         orientation = VERTICAL
-        setBackgroundColor(ContextCompat.getColor(context, R.color.search_itemBackground))
+        setBackgroundColor(ContextCompat.getColor(context, R.color.map_search_itemBackground))
 
-        val padding = context.resources.getDimensionPixelSize(R.dimen.search_itemPadding)
+        val padding = context.resources.getDimensionPixelSize(R.dimen.map_search_itemPadding)
         setPaddingRelative(padding, padding, padding, padding)
 
         addView(label)

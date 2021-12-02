@@ -2,9 +2,7 @@ package com.amplifyframework.geo.maplibre.view
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -36,7 +34,7 @@ class SearchResultListView(context: Context) : LinearLayout(context) {
         RecyclerView(context).apply {
             adapter = dataAdapter
             layoutManager = LinearLayoutManager(context)
-            setBackgroundColor(ContextCompat.getColor(context, R.color.search_itemBackground))
+            setBackgroundColor(ContextCompat.getColor(context, R.color.map_search_itemBackground))
             addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
             setHasFixedSize(true)
         }

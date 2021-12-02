@@ -21,7 +21,7 @@ class SearchTextField @JvmOverloads constructor(
 
     private val field: EditText by lazy {
         EditText(context).apply {
-            val label = context.getText(R.string.search_inputPlaceholder)
+            val label = context.getText(R.string.map_search_inputPlaceholder)
             hint = label
             isSingleLine = true
             imeOptions = EditorInfo.IME_ACTION_SEARCH
@@ -30,7 +30,7 @@ class SearchTextField @JvmOverloads constructor(
             setTextIsSelectable(true)
             setTextSize(
                 TypedValue.COMPLEX_UNIT_PX,
-                context.resources.getDimension(R.dimen.search_inputTextSize)
+                context.resources.getDimension(R.dimen.map_search_inputTextSize)
             )
             setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -44,7 +44,7 @@ class SearchTextField @JvmOverloads constructor(
 
     private val searchIcon: ImageView by lazy {
         ImageView(context).apply {
-            setColorFilter(ContextCompat.getColor(context, R.color.controls_border))
+            setColorFilter(ContextCompat.getColor(context, R.color.map_controls_border))
             setImageResource(R.drawable.ic_baseline_search_24)
             setOnClickListener { field.requestFocus() }
         }
@@ -52,7 +52,7 @@ class SearchTextField @JvmOverloads constructor(
 
     private val clearIcon: ImageView by lazy {
         ImageView(context).apply {
-            setColorFilter(ContextCompat.getColor(context, R.color.controls_foreground))
+            setColorFilter(ContextCompat.getColor(context, R.color.map_controls_foreground))
             setImageResource(R.drawable.ic_baseline_clear_24)
             setOnClickListener {
                 field.text.clear()
@@ -63,7 +63,7 @@ class SearchTextField @JvmOverloads constructor(
 
     private val searchModeIcon: ImageView by lazy {
         ImageView(context).apply {
-            setColorFilter(ContextCompat.getColor(context, R.color.controls_foreground))
+            setColorFilter(ContextCompat.getColor(context, R.color.map_controls_foreground))
             setImageResource(R.drawable.ic_baseline_format_list_bulleted_24)
             setOnClickListener {
                 searchMode = if (searchMode == SearchMode.MAP) SearchMode.LIST else SearchMode.MAP
@@ -98,16 +98,16 @@ class SearchTextField @JvmOverloads constructor(
 
     init {
         clipToOutline = true
-        elevation = context.resources.getDimension(R.dimen.controls_elevation)
+        elevation = context.resources.getDimension(R.dimen.map_controls_elevation)
         orientation = HORIZONTAL
         if (attrs == null) {
-            id = R.id.amplify_map_search_input
+            id = R.id.map_search_input
             setBackgroundResource(R.drawable.control_background)
         }
         gravity = Gravity.CENTER_VERTICAL
 
         // spacing
-        val padding = context.resources.getDimensionPixelSize(R.dimen.search_inputPadding)
+        val padding = context.resources.getDimensionPixelSize(R.dimen.map_search_inputPadding)
         setPaddingRelative(padding, padding / 2, padding, padding / 2)
         dividerDrawable = ContextCompat.getDrawable(context, R.drawable.input_icon_spacer)
         showDividers = SHOW_DIVIDER_MIDDLE
