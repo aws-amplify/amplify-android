@@ -1,7 +1,23 @@
+/*
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.geo.maplibre.view
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
@@ -23,12 +39,11 @@ class SearchResultListView(context: Context) : LinearLayout(context) {
 
     var addressFormatter: AddressFormatter = DefaultAddressFormatter
 
-//    private val topHandle by lazy {
-//        View(context).apply {
-//            elevation = 10f
-//            setBackgroundResource(R.drawable.sheet_handle_background)
-//        }
-//    }
+    private val topHandle by lazy {
+        View(context).apply {
+            setBackgroundResource(R.drawable.map_search_sheet_handle_background)
+        }
+    }
 
     private val recyclerView by lazy {
         RecyclerView(context).apply {
@@ -46,9 +61,8 @@ class SearchResultListView(context: Context) : LinearLayout(context) {
 
     init {
         orientation = VERTICAL
-//        setBackgroundColor(ContextCompat.getColor(context, R.color.search_itemBackground))
-//        setPadding(0, 20, 0, 0)
-//        addView(topHandle, LayoutParams(LayoutParams.MATCH_PARENT, 80))
+        val handleHeight = context.resources.getDimensionPixelSize(R.dimen.map_search_resultTopHandleHeight)
+        addView(topHandle, LayoutParams(LayoutParams.MATCH_PARENT, handleHeight))
         addView(recyclerView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     }
 

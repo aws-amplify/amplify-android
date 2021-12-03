@@ -1,3 +1,18 @@
+/*
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.geo.maplibre.view
 
 import android.content.Context
@@ -102,14 +117,14 @@ class SearchTextField @JvmOverloads constructor(
         orientation = HORIZONTAL
         if (attrs == null) {
             id = R.id.map_search_input
-            setBackgroundResource(R.drawable.control_background)
+            setBackgroundResource(R.drawable.map_control_background)
         }
         gravity = Gravity.CENTER_VERTICAL
 
         // spacing
         val padding = context.resources.getDimensionPixelSize(R.dimen.map_search_inputPadding)
         setPaddingRelative(padding, padding / 2, padding, padding / 2)
-        dividerDrawable = ContextCompat.getDrawable(context, R.drawable.input_icon_spacer)
+        dividerDrawable = ContextCompat.getDrawable(context, R.drawable.map_search_input_icon_spacer)
         showDividers = SHOW_DIVIDER_MIDDLE
 
         // children

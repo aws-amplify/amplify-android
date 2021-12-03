@@ -63,13 +63,13 @@ internal class MapControls(
     init {
         clipToOutline = true
         clipChildren = true
-        background = ContextCompat.getDrawable(context, R.drawable.control_background)
+        background = ContextCompat.getDrawable(context, R.drawable.map_control_background)
         elevation = context.resources.getDimension(R.dimen.map_controls_elevation)
         orientation = VERTICAL
 
         // divider
         showDividers = SHOW_DIVIDER_MIDDLE
-        dividerDrawable = ContextCompat.getDrawable(context, R.drawable.control_divider)
+        dividerDrawable = ContextCompat.getDrawable(context, R.drawable.map_control_divider)
 
         val size = context.resources.getDimensionPixelSize(R.dimen.map_controls_size)
         val buttonSize = LayoutParams(size, size)

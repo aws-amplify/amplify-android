@@ -20,4 +20,6 @@
     <dimen name="map_search_itemPadding">16dp</dimen>
     <dimen name="map_search_itemTextSize">16sp</dimen>
     <dimen name="map_search_padding">48dp</dimen>
+    <dimen name="map_search_resultTopHandleHeight">28dp</dimen>
+    <dimen name="map_search_resultTopHandleRadius">18dp</dimen>
 </resources>
