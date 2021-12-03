@@ -219,7 +219,6 @@ public final class SQLiteStorageAdapterQueryTest {
         callAdapter.save(phoneCall);
 
         final List<Call> phoneCalls = callAdapter.query(Call.class);
-        // throw new DataStoreException("Testing", "phoneCalls: " + phoneCalls.get(0));
         assertTrue(phoneCalls.contains(phoneCall));
         
         teardownForCallModel();

@@ -56,15 +56,30 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
     private final Gson gson;
     private final Map<String, SQLiteColumn> columns;
 
+    // Map from inner model name to number of occurrences in the cursor.
+    private final Map<String, Integer> cursorInnerModelCounts;
+    private final String addToColumnAlias;
+
     SQLiteModelFieldTypeConverter(
             @NonNull ModelSchema parentSchema,
             @NonNull SchemaRegistry schemaRegistry,
             @NonNull Gson gson
     ) {
+        this(parentSchema, schemaRegistry, gson, "");
+    }
+
+    SQLiteModelFieldTypeConverter(
+            @NonNull ModelSchema parentSchema,
+            @NonNull SchemaRegistry schemaRegistry,
+            @NonNull Gson gson,
+            @NonNull String addToColumnAlias
+    ) {
         this.parentSchema = Objects.requireNonNull(parentSchema);
         this.schemaRegistry = Objects.requireNonNull(schemaRegistry);
         this.gson = Objects.requireNonNull(gson);
         this.columns = SQLiteTable.fromSchema(parentSchema).getColumns();
+        this.addToColumnAlias = addToColumnAlias;
+        this.cursorInnerModelCounts = new HashMap<>();
     }
 
     /**
@@ -128,6 +143,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         for (Map.Entry<String, ModelField> entry : parentSchema.getFields().entrySet()) {
             mapForModel.put(entry.getKey(), convertValueFromSource(cursor, entry.getValue()));
         }
+        cursorInnerModelCounts.clear();
         return mapForModel;
     }
 
@@ -144,8 +160,18 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 LOGGER.verbose(String.format("Column with name %s does not exist", field.getName()));
                 return null;
             }
+            
+            if (javaFieldType == JavaFieldType.MODEL) {
+                int newInnerModelCount = 1;
+                String fieldTargetType = field.getTargetType();
+                if (cursorInnerModelCounts.containsKey(fieldTargetType)) {
+                    Integer currentInnerModelCount = cursorInnerModelCounts.get(fieldTargetType);
+                    newInnerModelCount += currentInnerModelCount == null ? 0 : currentInnerModelCount;
+                }
+                cursorInnerModelCounts.put(fieldTargetType, newInnerModelCount);
+            }
 
-            final String columnName = column.getAliasedName();
+            final String columnName = column.getAliasedName() + addToColumnAlias;
             final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
             // This check is necessary, because primitive values will return 0 even when null
             if (cursor.isNull(columnIndex)) {
@@ -206,8 +232,14 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         // columns IF AND ONLY IF the model is a foreign key to the inner model.
         ModelSchema innerModelSchema =
             schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
+        String newAliasCharacter = "";
+        Integer innerModelCount = cursorInnerModelCounts.get(field.getTargetType());
+        if (innerModelCount != null && !innerModelCount.equals(1)) {
+            // More than 1 of the model the field belongs to is present in the cursor.
+            newAliasCharacter += innerModelCount;
+        }
         SQLiteModelFieldTypeConverter nestedModelConverter =
-            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson);
+            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, newAliasCharacter);
         return nestedModelConverter.buildMapForModel(cursor);
     }
 

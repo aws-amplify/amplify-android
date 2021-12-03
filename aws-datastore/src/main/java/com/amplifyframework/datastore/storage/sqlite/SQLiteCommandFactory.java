@@ -163,11 +163,11 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             Iterator<SQLiteColumn> columnsIterator = Objects.requireNonNull(columns.get(tableAlias)).iterator();
             while (columnsIterator.hasNext()) {
                 final SQLiteColumn column = columnsIterator.next();
-                String columnName = Wrap.inBackticks(tableAlias) + "." + Wrap.inBackticks(column.getName());
+                String columnName = column.getQuotedColumnName().replace(column.getTableName(), tableAlias);
                 selectColumns.append(columnName);
-                // Alias primary keys to avoid duplicate column names
-                String columnAlias = column.getAliasedName();
-                // TODO : make sure the column alias will be unique
+                // Alias columns with a unique alias to avoid duplicate column names or alias names
+                String columnAlias = column.getAliasedName()
+                        + tableAlias.substring(column.getTableName().length());
                 selectColumns.append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.AS)
                         .append(SqlKeyword.DELIMITER)
@@ -178,21 +178,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 }
             }
         }
-        /*Iterator<SQLiteColumn> columnsIterator = columns.iterator();
-        while (columnsIterator.hasNext()) {
-            final SQLiteColumn column = columnsIterator.next();
-            selectColumns.append(column.getQuotedColumnName());
-
-            // Alias primary keys to avoid duplicate column names
-            selectColumns.append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.AS)
-                    .append(SqlKeyword.DELIMITER)
-                    .append(Wrap.inBackticks(column.getAliasedName()));
-
-            if (columnsIterator.hasNext()) {
-                selectColumns.append(",").append(SqlKeyword.DELIMITER);
-            }
-        }*/
 
         // Start SELECT statement.
         // SELECT columns FROM tableName
@@ -278,10 +263,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
-        
-        LOG.info("Query string: " + rawQuery);
-        
-        // throw new DataStoreException("Testing", queryString);
         
         return new SqlCommand(table.getName(), queryString, bindings);
     }
@@ -473,20 +454,13 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             
             int newOwnedTableCount = 1;
             String ownedTableAlias = ownedTableName;
-            String appendToColumnAlias = "";
             if (tableCount.containsKey(ownedTableName)) {
                 Integer currentOwnedTableCount = tableCount.get(ownedTableName);
                 newOwnedTableCount += currentOwnedTableCount == null ? 0 : currentOwnedTableCount;
-                ownedTableAlias = ownedTableName + newOwnedTableCount;
+                ownedTableAlias += newOwnedTableCount;
             }
             tableCount.put(ownedTableName, newOwnedTableCount);
             columns.put(ownedTableAlias, ownedTable.getSortedColumns());
-            
-            String foreignKeyName = Wrap.inBackticks(tableAlias) + "." + Wrap.inBackticks(foreignKey.getName());
-            SQLiteColumn ownedTablePrimaryKey = ownedTable.getPrimaryKey();
-            String ownedTablePrimaryKeyName = Wrap.inBackticks(ownedTableAlias) + "."
-                    + Wrap.inBackticks(ownedTablePrimaryKey == null ? PrimaryKey.fieldName() :
-                    ownedTablePrimaryKey.getName());
 
             SqlKeyword joinType = foreignKey.isNonNull()
                 ? SqlKeyword.INNER_JOIN
@@ -495,18 +469,24 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             joinStatement.append(joinType)
                 .append(SqlKeyword.DELIMITER)
                 .append(Wrap.inBackticks(ownedTableName))
-                .append(SqlKeyword.DELIMITER)
-                .append(SqlKeyword.AS)
-                .append(SqlKeyword.DELIMITER)
-                .append(Wrap.inBackticks(ownedTableAlias))
-                .append(SqlKeyword.DELIMITER)
-                .append(SqlKeyword.ON)
+                .append(SqlKeyword.DELIMITER);
+            
+            if (!ownedTableName.equals(ownedTableAlias)) {
+                joinStatement.append(SqlKeyword.AS)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(Wrap.inBackticks(ownedTableAlias))
+                        .append(SqlKeyword.DELIMITER);
+            }
+
+            // Reference the foreign key and primary key using the corresponding table's alias.
+            String foreignKeyName = foreignKey.getQuotedColumnName().replace(table.getName(), tableAlias);
+            String ownedTablePrimaryKeyName = ownedTable.getPrimaryKeyColumnName().replace(ownedTableName,
+                    ownedTableAlias);
+            joinStatement.append(SqlKeyword.ON)
                 .append(SqlKeyword.DELIMITER)
                 .append(foreignKeyName)
-                // .append(foreignKey.getQuotedColumnName())
                 .append(SqlKeyword.EQUAL)
                 .append(ownedTablePrimaryKeyName);
-                // .append(ownedTable.getPrimaryKeyColumnName());
 
             if (foreignKeyIterator.hasNext()) {
                 joinStatement.append(SqlKeyword.DELIMITER);
