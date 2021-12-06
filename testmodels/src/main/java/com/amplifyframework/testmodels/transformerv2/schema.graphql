@@ -1,0 +1,151 @@
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
+
+#1 Configure a secondary index
+
+type Customer1 @model {
+  id: ID!
+  name: String!
+  phoneNumber: String
+  accountRepresentativeID: ID! @index(name: "byRepresentative", queryField: "customerByRepresentative")
+}
+
+#2 Assign Default Values for Fields
+
+type Todo2 @model {
+  content: String @default(value: "My new Todo")
+}
+
+#3 Record creation and update timestamp
+
+type Todo3 @model(timestamps: { createdAt: "createdOn", updatedAt: "updatedOn" }) {
+  content: String
+}
+
+#4 Implicit Has One Relationship
+
+type Project4 @model {
+  id: ID!
+  name: String
+  team: Team4 @hasOne
+}
+
+type Team4 @model {
+  id: ID!
+  name: String!
+}
+
+#5 Explicit Has One Relationship
+
+type Project5 @model {
+  id: ID!
+  name: String
+  teamID: ID
+  team: Team5 @hasOne(fields: ["teamID"])
+}
+
+type Team5 @model {
+  id: ID!
+  name: String!
+}
+
+#6 Implicit Has Many Relationship
+
+type Post6 @model {
+  id: ID!
+  title: String!
+  comments: [Comment6] @hasMany
+}
+
+type Comment6 @model {
+  id: ID!
+  content: String!
+}
+
+#7 Explicit Has Many Relationship
+
+type Post7 @model {
+  id: ID!
+  title: String!
+  comments: [Comment7] @hasMany(indexName: "byPost", fields: ["id"])
+}
+
+type Comment7 @model {
+  id: ID!
+  postID: ID! @index(name: "byPost", sortKeyFields: ["content"])
+  content: String!
+}
+
+#8 Many to Many relationship
+
+type Post8 @model {
+  id: ID!
+  title: String!
+  content: String
+  tags: [Tag8] @manyToMany(relationName: "PostTags")
+}
+
+type Tag8 @model {
+  id: ID!
+  label: String!
+  posts: [Post8] @manyToMany(relationName: "PostTags")
+}
+
+#9 Implicit Belongs to Relationship
+
+type Project9 @model {
+  id: ID!
+  name: String
+  team: Team9 @hasOne
+}
+
+type Team9 @model {
+  id: ID!
+  name: String!
+  project: Project9 @belongsTo
+}
+
+#10 Explicit Belongs to Relationship
+
+type Project10 @model {
+  id: ID!
+  name: String
+  team: Team10 @hasOne
+}
+
+type Team10 @model {
+  id: ID!
+  name: String!
+  projectID: ID
+  project: Project10 @belongsTo(fields: ["projectID"])
+}
+
+#11 Explicit Bi-Directional Belongs to Relationship
+
+type Post11 @model {
+  id: ID!
+  title: String!
+  comments: [Comment11] @hasMany(indexName: "byPost", fields: ["id"])
+}
+
+type Comment11 @model {
+  id: ID!
+  postID: ID! @index(name: "byPost", sortKeyFields: ["content"])
+  content: String!
+  post: Post11 @belongsTo(fields: ["postID"])
+}
+
+#12 Belongs to Relationship field and type names don’t align
+
+type CookingBlog12 @model {
+  id: ID!
+  name: String!
+  posts: [RecipePost12] @hasMany
+}
+
+type RecipePost12 @model {
+ id: ID!
+ title: String!
+ blog: CookingBlog12 @belongsTo
+}

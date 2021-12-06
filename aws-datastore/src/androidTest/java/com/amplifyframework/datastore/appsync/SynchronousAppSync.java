@@ -17,15 +17,17 @@ package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.core.NoOpConsumer;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.testutils.AmplifyDisposables;
 import com.amplifyframework.testutils.Await;
 
 import java.util.Objects;
@@ -167,8 +169,17 @@ public final class SynchronousAppSync {
      */
     @NonNull
     public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onCreate(@NonNull ModelSchema schema) {
-        return Observable.defer(() -> Observable.create(emitter ->
-            appSync.onCreate(schema, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
+        return Observable.create(emitter -> Await.<String, ApiException>result(
+                (onSubscriptionStarted, onError) -> {
+                    Cancelable cancelable = appSync.onCreate(
+                            schema,
+                            onSubscriptionStarted,
+                            emitter::onNext,
+                            emitter::onError,
+                            emitter::onComplete
+                    );
+                    emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
+                }
         ));
     }
 
@@ -180,8 +191,17 @@ public final class SynchronousAppSync {
      */
     @NonNull
     public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onUpdate(@NonNull ModelSchema schema) {
-        return Observable.defer(() -> Observable.create(emitter ->
-            appSync.onUpdate(schema, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
+        return Observable.create(emitter -> Await.<String, ApiException>result(
+                (onSubscriptionStarted, onError) -> {
+                    Cancelable cancelable = appSync.onUpdate(
+                            schema,
+                            onSubscriptionStarted,
+                            emitter::onNext,
+                            emitter::onError,
+                            emitter::onComplete
+                    );
+                    emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
+                }
         ));
     }
 
@@ -193,8 +213,17 @@ public final class SynchronousAppSync {
      */
     @NonNull
     public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onDelete(@NonNull ModelSchema schema) {
-        return Observable.defer(() -> Observable.create(emitter ->
-            appSync.onDelete(schema, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
+        return Observable.create(emitter -> Await.<String, ApiException>result(
+            (onSubscriptionStarted, onError) -> {
+                Cancelable cancelable = appSync.onDelete(
+                        schema,
+                        onSubscriptionStarted,
+                        emitter::onNext,
+                        emitter::onError,
+                        emitter::onComplete
+                );
+                emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
+            }
         ));
     }
 }

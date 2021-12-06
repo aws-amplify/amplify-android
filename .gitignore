@@ -93,6 +93,7 @@ __pycache__/
 .gradle/**
 
 #amplify
+app/
 amplify/
 build/
 dist/
@@ -107,3 +108,6 @@ build-artifacts.tar.gz
 
 # add ignore for jenv
 .java-version
+
+# resources
+**/raw/*
