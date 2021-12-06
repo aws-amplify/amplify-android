@@ -18,11 +18,15 @@ package com.amplifyframework.geo.maplibre.view
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
+import android.view.Gravity
 import androidx.annotation.UiThread
-import androidx.lifecycle.*
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.maplibre.AmplifyMapLibreAdapter
+import com.amplifyframework.geo.maplibre.R
+import com.amplifyframework.geo.maplibre.view.support.AttributionInfoView
 import com.amplifyframework.geo.models.MapStyle
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
@@ -57,8 +61,23 @@ class MapLibreView
         AmplifyMapLibreAdapter(context, geo)
     }
 
+    private val attributionInfoView by lazy {
+        AttributionInfoView(context)
+    }
+
     init {
         setup(context, options)
+        addView(
+            attributionInfoView,
+            LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                gravity = Gravity.BOTTOM or Gravity.START
+
+                val margin = context.resources.getDimensionPixelSize(R.dimen.map_defaultMargin)
+                marginEnd = margin
+                marginStart = margin
+                bottomMargin = margin
+            }
+        )
     }
 
     @SuppressLint("MissingSuperCall")
