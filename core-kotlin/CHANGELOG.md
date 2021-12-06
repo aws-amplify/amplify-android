@@ -1,3 +1,11 @@
+## [Release 0.14.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.14.1)
+
+### Bug Fixes
+- **aws-api-appsync:** include nested belongsTo object in query selection set (#1585)
+- **maplibre-adapter:** add content attribution info to map view (#1591)
+
+[See all changes between 0.14.0 and 0.14.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.14.0...release-kotlin_v0.14.1)
+
 ## [Release 0.14.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.14.0)
 
 ### Features
