@@ -198,7 +198,6 @@ class AmplifyMapView
         )
         addView(mapView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
         addView(overlayLayout, LayoutParams(MATCH_PARENT, MATCH_PARENT))
-//        addView(placeInfoPopupView, LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
         addView(searchResultView, LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
             behavior = BottomSheetBehavior<SearchResultListView>().apply {
                 topMargin = context.resources.getDimensionPixelSize(R.dimen.map_search_visibleArea)
@@ -271,12 +270,17 @@ class AmplifyMapView
         if (query.isNotBlank()) {
             search(query.trim())
         } else {
-            places = listOf()
-            activeSymbol = null
-            lastQuery = null
-            lastQueryBounds = null
+            clearSearch()
             updateSearchResults()
         }
+    }
+
+    private fun clearSearch() {
+        places = listOf()
+        activeSymbol = null
+        lastQuery = null
+        lastQueryBounds = null
+        updateSearchButton.fadeOut()
     }
 
     private fun search(query: String) = withMap { map ->
