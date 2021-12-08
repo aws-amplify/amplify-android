@@ -16,6 +16,10 @@
 
     <dimen name="map_search_visibleArea">180dp</dimen>
     <dimen name="map_search_inputTextSize">16sp</dimen>
+    <dimen name="map_search_infoTitleTextSize">18sp</dimen>
+    <dimen name="map_search_infoPopupMargin">28dp</dimen>
+    <dimen name="map_search_infoPopupClosePadding">4dp</dimen>
+    <dimen name="map_search_infoTextSize">16sp</dimen>
     <dimen name="map_search_inputPadding">6dp</dimen>
     <dimen name="map_search_itemPadding">16dp</dimen>
     <dimen name="map_search_itemTextSize">16sp</dimen>
@@ -23,5 +27,5 @@
     <dimen name="map_search_updateButtonPadding">20dp</dimen>
     <dimen name="map_search_resultTopHandleHeight">28dp</dimen>
     <dimen name="map_search_resultTopHandleRadius">18dp</dimen>
-    <dimen name="map_search_resultTopHandleShadowRadius">20dp</dimen>
+    <dimen name="map_search_resultTopHandleShadowRadius">22dp</dimen>
 </resources>

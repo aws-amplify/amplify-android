@@ -24,7 +24,6 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
-import com.amplifyframework.geo.maplibre.R
 
 /**
  * Utility to show the view using an alpha animation that animates from current alpha to 1f.

@@ -31,6 +31,7 @@ import com.amplifyframework.geo.location.models.AmazonLocationPlace
 import com.amplifyframework.geo.maplibre.R
 import com.amplifyframework.geo.maplibre.util.*
 import com.amplifyframework.geo.maplibre.view.support.MapControls
+import com.amplifyframework.geo.maplibre.view.support.PlaceInfoPopupView
 import com.amplifyframework.geo.maplibre.view.support.fadeIn
 import com.amplifyframework.geo.maplibre.view.support.fadeOut
 import com.amplifyframework.geo.models.SearchArea
@@ -101,6 +102,18 @@ class AmplifyMapView
         }
     }
 
+    private val placeInfoPopupView by lazy {
+        PlaceInfoPopupView(context).apply {
+            alpha = 0f
+            visibility = GONE
+            onVisibilityChanged { isVisible ->
+                if (!isVisible) {
+                    deselectActiveSymbol()
+                }
+            }
+        }
+    }
+
     private val updateSearchButton by lazy {
         Button(context).apply {
             alpha = 0f
@@ -150,6 +163,10 @@ class AmplifyMapView
         val defaultMargin = context.resources.getDimensionPixelSize(R.dimen.map_controls_margin)
 
         overlayLayout.addView(
+            placeInfoPopupView,
+            RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+        )
+        overlayLayout.addView(
             searchField,
             RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
                 marginStart = defaultMargin
@@ -181,6 +198,7 @@ class AmplifyMapView
         )
         addView(mapView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
         addView(overlayLayout, LayoutParams(MATCH_PARENT, MATCH_PARENT))
+//        addView(placeInfoPopupView, LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
         addView(searchResultView, LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
             behavior = BottomSheetBehavior<SearchResultListView>().apply {
                 topMargin = context.resources.getDimensionPixelSize(R.dimen.map_search_visibleArea)
@@ -232,11 +250,18 @@ class AmplifyMapView
                 map.animateCamera(CameraUpdateFactory.zoomIn())
             }
             searchField.onSearchAction(::handleSearchAction)
+
+            // bind map camera events
+
+            mapView.addOnCameraIsChangingListener {
+                updatePlaceInfoViewPosition()
+            }
             map.addOnCameraMoveListener {
                 val camera = map.cameraPosition
                 controls.compassIndicatorButton.rotateIcon(camera.bearing)
                 updateZoomControls(camera)
                 updateSearchBounds(map.projection.visibleRegion.latLngBounds)
+                updatePlaceInfoViewPosition()
             }
             mapView.symbolManager.addClickListener(this::handlePlaceMarkerClick)
         }
@@ -262,9 +287,7 @@ class AmplifyMapView
             val options = GeoSearchByTextOptions
                 .builder()
                 .searchArea(
-                    SearchArea.near(
-                        map.cameraPosition.target.toCoordinates()
-                    )
+                    SearchArea.near(map.cameraPosition.target.toCoordinates())
                 )
                 .build()
             geo.searchByText(query, options, ::onSearchResult, ::onSearchError)
@@ -275,10 +298,7 @@ class AmplifyMapView
 
     private fun handlePlaceMarkerClick(symbol: Symbol, toggle: Boolean = true): Boolean {
         if (activeSymbol == symbol && toggle) {
-            activeSymbol = null
-            symbol.iconImage = MapLibreView.PLACE_ICON_NAME
-            symbol.symbolSortKey = symbols.indexOf(symbol).toFloat()
-            mapView.symbolManager.update(symbol)
+            deselectActiveSymbol()
         } else {
             activeSymbol?.let {
                 it.iconImage = MapLibreView.PLACE_ICON_NAME
@@ -289,6 +309,9 @@ class AmplifyMapView
             symbol.symbolSortKey = symbols.size.toFloat()
             mapView.symbolManager.update(symbol)
             activeSymbol = symbol
+
+            // update map UI based on the selected place
+            val place = symbol.getPlaceData()
             withMap { map ->
                 val zoom = map.cameraPosition.zoom.coerceAtLeast(12.0)
                 if (zoom == map.cameraPosition.zoom) {
@@ -296,10 +319,24 @@ class AmplifyMapView
                 } else {
                     map.animateCamera(CameraUpdateFactory.newLatLngZoom(symbol.latLng, zoom))
                 }
+
+                val ref = map.projection.toScreenLocation(place.coordinates.toLatLng())
+                placeInfoPopupView.show(place, ref)
             }
-            onPlaceSelectListener?.onSelect(symbol.getPlaceData(), symbol)
+
+            onPlaceSelectListener?.onSelect(place, symbol)
         }
         return true
+    }
+
+    private fun deselectActiveSymbol() {
+        activeSymbol?.let { symbol ->
+            placeInfoPopupView.hide()
+            symbol.iconImage = MapLibreView.PLACE_ICON_NAME
+            symbol.symbolSortKey = symbols.indexOf(symbol).toFloat()
+            mapView.symbolManager.update(symbol)
+            activeSymbol = null
+        }
     }
 
     private fun onSearchResult(result: GeoSearchResult) = post {
@@ -317,6 +354,7 @@ class AmplifyMapView
     }
 
     private fun updateSearchResults() = withMap {
+        placeInfoPopupView.hide()
         if (places.size == 1) {
             val singleResult = places.first()
             it.animateCamera(
@@ -325,6 +363,7 @@ class AmplifyMapView
                 )
             )
         }
+        activeSymbol = null
         mapView.symbolManager.deleteAll()
         symbols = mapView.symbolManager.create(places.mapIndexed { index, place ->
             SymbolOptions()
@@ -352,6 +391,13 @@ class AmplifyMapView
             if (boundariesUpdated) {
                 updateSearchButton.fadeIn()
             }
+        }
+    }
+
+    private fun updatePlaceInfoViewPosition() = withMap { map ->
+        activeSymbol?.let { symbol ->
+            val position = map.projection.toScreenLocation(symbol.latLng)
+            placeInfoPopupView.update(position)
         }
     }
 

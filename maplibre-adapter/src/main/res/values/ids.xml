@@ -2,4 +2,7 @@
 <resources>
     <item name="map_view" type="id" />
     <item name="map_search_input" type="id" />
+
+    <item name="map_search_info_container" type="id" />
+    <item name="map_search_info_close" type="id" />
 </resources>
