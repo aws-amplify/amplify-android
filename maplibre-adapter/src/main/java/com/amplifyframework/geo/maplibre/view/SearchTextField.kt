@@ -28,6 +28,9 @@ import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import com.amplifyframework.geo.maplibre.R
 
+/**
+ * The location search text field, with built-in search mode and clear search capabilities.
+ */
 class SearchTextField @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -49,7 +52,7 @@ class SearchTextField @JvmOverloads constructor(
             )
             setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    onSearchAction?.handle(field.text.toString())
+                    onSearchActionListener?.handle(field.text.toString())
                 }
                 // always return false so the keyboard is dismissed
                 return@setOnEditorActionListener false
@@ -71,7 +74,7 @@ class SearchTextField @JvmOverloads constructor(
             setImageResource(R.drawable.ic_baseline_clear_24)
             setOnClickListener {
                 field.text.clear()
-                onSearchAction?.handle("")
+                onSearchActionListener?.handle("")
             }
         }
     }
@@ -87,29 +90,31 @@ class SearchTextField @JvmOverloads constructor(
     }
 
     /**
-     *
+     * The search display mode, map or list.
+     * @see onSearchModeChange
+     * @see onSearchModeChangeListener
      */
     var searchMode: SearchMode = SearchMode.MAP
         set(value) {
             field = value
             updateSearchModeIcon()
-            onSearchModeChange?.onChange(field)
+            onSearchModeChangeListener?.onChange(field)
         }
 
     /**
-     *
+     * Action listener invoked when the search action is executed.
      */
-    var onSearchAction: OnSearchActionListener? = null
+    var onSearchActionListener: OnSearchActionListener? = null
 
     /**
-     *
+     *  Action listener invoked when the search query changes.
      */
-    var onSearchQueryChange: OnSearchQueryChangeListener? = null
+    var onSearchQueryChangeListener: OnSearchQueryChangeListener? = null
 
     /**
-     *
+     * Action listener invoked when the search mode changes.
      */
-    var onSearchModeChange: OnSearchModeChangeListener? = null
+    var onSearchModeChangeListener: OnSearchModeChangeListener? = null
 
     init {
         clipToOutline = true
@@ -146,10 +151,10 @@ class SearchTextField @JvmOverloads constructor(
     }
 
     /**
-     *
+     * Functional listener of [onSearchActionListener].
      */
     fun onSearchAction(listener: (String) -> Unit) {
-        this.onSearchAction = object : OnSearchActionListener {
+        this.onSearchActionListener = object : OnSearchActionListener {
             override fun handle(query: String) {
                 listener(query)
             }
@@ -157,10 +162,10 @@ class SearchTextField @JvmOverloads constructor(
     }
 
     /**
-     *
+     * Functional listener of [onSearchQueryChangeListener].
      */
     fun onSearchQueryChange(listener: (String) -> Unit) {
-        this.onSearchQueryChange = object : OnSearchQueryChangeListener {
+        this.onSearchQueryChangeListener = object : OnSearchQueryChangeListener {
             override fun onChange(query: String) {
                 listener(query)
             }
@@ -168,10 +173,10 @@ class SearchTextField @JvmOverloads constructor(
     }
 
     /**
-     *
+     * Functional listener of [onSearchModeChangeListener].
      */
     fun onSearchModeChange(listener: (SearchMode) -> Unit) {
-        this.onSearchModeChange = object : OnSearchModeChangeListener {
+        this.onSearchModeChangeListener = object : OnSearchModeChangeListener {
             override fun onChange(mode: SearchMode) {
                 listener(mode)
             }
@@ -192,7 +197,7 @@ class SearchTextField @JvmOverloads constructor(
             }
 
             override fun afterTextChanged(content: Editable?) {
-                this@SearchTextField.onSearchQueryChange?.onChange(content?.toString() ?: "")
+                this@SearchTextField.onSearchQueryChangeListener?.onChange(content?.toString() ?: "")
             }
 
         })
@@ -211,7 +216,7 @@ class SearchTextField @JvmOverloads constructor(
     }
 
     /**
-     *
+     * The search mode enum. It can be either `LIST` or `MAP`.
      */
     enum class SearchMode {
         LIST,
@@ -219,21 +224,21 @@ class SearchTextField @JvmOverloads constructor(
     }
 
     /**
-     *
+     * Listener interface for search query change events.
      */
     interface OnSearchQueryChangeListener {
         fun onChange(query: String)
     }
 
     /**
-     *
+     * Listener interface for search mode change events.
      */
     interface OnSearchModeChangeListener {
         fun onChange(mode: SearchMode)
     }
 
     /**
-     *
+     * Listener interface for search action events.
      */
     interface OnSearchActionListener {
         fun handle(query: String)

@@ -22,11 +22,11 @@ import android.text.TextUtils
 import android.util.TypedValue
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import com.amplifyframework.geo.maplibre.R
+import com.amplifyframework.geo.maplibre.view.support.setSelectableBackground
 
 @SuppressLint("ViewConstructor")
-class SearchResultItemView(
+internal class SearchResultItemView(
     context: Context,
 ) : LinearLayout(context) {
 
@@ -53,7 +53,9 @@ class SearchResultItemView(
 
     init {
         orientation = VERTICAL
-        setBackgroundColor(ContextCompat.getColor(context, R.color.map_search_itemBackground))
+        isClickable = true
+
+        setSelectableBackground(context, R.color.map_search_itemBackground)
 
         val padding = context.resources.getDimensionPixelSize(R.dimen.map_search_itemPadding)
         setPaddingRelative(padding, padding, padding, padding)

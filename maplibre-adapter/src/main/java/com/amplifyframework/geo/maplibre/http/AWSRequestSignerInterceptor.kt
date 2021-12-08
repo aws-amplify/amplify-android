@@ -45,6 +45,8 @@ private fun Request.Builder.copyFrom(request: AWSRequest): Request.Builder {
     return this.url(urlBuilder.build())
 }
 
+const val AMAZON_HOST = "amazonaws.com"
+
 /**
  * Interceptor that can authorize requests using AWS Signature V4 signer.
  */
@@ -54,6 +56,9 @@ internal class AWSRequestSignerInterceptor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
+        if (!request.url.host.contains(AMAZON_HOST)) {
+            return chain.proceed(request)
+        }
 
         // OkHttpRequest -> Signed AWSRequest
         val awsRequest = signRequest(request)

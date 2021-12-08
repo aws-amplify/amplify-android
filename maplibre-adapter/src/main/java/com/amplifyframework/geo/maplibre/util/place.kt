@@ -60,6 +60,9 @@ fun AmazonLocationPlace.toJsonElement(): JsonElement {
     return place
 }
 
+val AmazonLocationPlace.id: String
+    get() = "$label:${coordinates.latitude}:${coordinates.longitude}"
+
 fun Symbol.getPlaceData(): AmazonLocationPlace {
     return data?.let { it.toPlace() } ?: throw IllegalStateException("Symbol place data missing")
 }

@@ -29,7 +29,7 @@ import com.amplifyframework.geo.maplibre.R
 import com.amplifyframework.geo.maplibre.util.AddressFormatter
 import com.amplifyframework.geo.maplibre.util.DefaultAddressFormatter
 
-class SearchResultListView(context: Context) : LinearLayout(context) {
+internal class SearchResultListView(context: Context) : LinearLayout(context) {
 
     var places: List<AmazonLocationPlace> = listOf()
         set(value) {
@@ -38,6 +38,16 @@ class SearchResultListView(context: Context) : LinearLayout(context) {
         }
 
     var addressFormatter: AddressFormatter = DefaultAddressFormatter
+
+    var onItemClickListener: OnItemClickListener? = null
+
+    fun onItemClick(listener: (place: AmazonLocationPlace) -> Unit) {
+        onItemClickListener = object : OnItemClickListener {
+            override fun onClick(place: AmazonLocationPlace) {
+                listener(place)
+            }
+        }
+    }
 
     private val topHandle by lazy {
         View(context).apply {
@@ -61,7 +71,8 @@ class SearchResultListView(context: Context) : LinearLayout(context) {
 
     init {
         orientation = VERTICAL
-        val handleHeight = context.resources.getDimensionPixelSize(R.dimen.map_search_resultTopHandleHeight)
+        val handleHeight =
+            context.resources.getDimensionPixelSize(R.dimen.map_search_resultTopHandleHeight)
         addView(topHandle, LayoutParams(LayoutParams.MATCH_PARENT, handleHeight))
         addView(recyclerView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     }
@@ -80,12 +91,22 @@ class SearchResultListView(context: Context) : LinearLayout(context) {
     ) : RecyclerView.Adapter<ItemViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-            return ItemViewHolder(SearchResultItemView(parent.context))
+            return ItemViewHolder(
+                SearchResultItemView(parent.context).apply {
+                    layoutParams = LayoutParams(
+                        LayoutParams.MATCH_PARENT,
+                        LayoutParams.WRAP_CONTENT
+                    )
+                }
+            )
         }
 
         override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
             val place = result[position]
             holder.bind(place)
+            holder.itemView.setOnClickListener {
+                onItemClickListener?.onClick(place)
+            }
         }
 
         override fun getItemCount() = result.size
@@ -97,6 +118,10 @@ class SearchResultListView(context: Context) : LinearLayout(context) {
             notifyDataSetChanged()
         }
 
+    }
+
+    interface OnItemClickListener {
+        fun onClick(place: AmazonLocationPlace)
     }
 
 }

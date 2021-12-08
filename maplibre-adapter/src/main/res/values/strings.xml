@@ -7,6 +7,7 @@
 
     <string name="map_search_defaultError">Error searching for %1$s</string>
     <string name="map_search_inputPlaceholder">Search</string>
+    <string name="map_search_updateSearchArea">Search this area</string>
 
     <string name="map_attributionIconDescription">Attribution icon. Activate to show attribution dialog.</string>
     <string name="map_attributionText">Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors, and the GIS User Community</string>

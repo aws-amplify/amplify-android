@@ -17,12 +17,10 @@ package com.amplifyframework.geo.maplibre.view
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
+import android.graphics.BitmapFactory
 import android.util.AttributeSet
 import android.view.Gravity
 import androidx.annotation.UiThread
-import androidx.core.content.ContextCompat
-import androidx.core.util.Pair
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.amplifyframework.core.Amplify
@@ -34,9 +32,9 @@ import com.amplifyframework.geo.models.MapStyle
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
-import com.mapbox.mapboxsdk.plugins.annotation.ClusterOptions
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
-import com.mapbox.mapboxsdk.style.expressions.Expression
+import com.mapbox.mapboxsdk.style.layers.CircleLayer
+import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 
 
 typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
@@ -64,6 +62,7 @@ class MapLibreView
         private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
 
         const val PLACE_ICON_NAME = "place"
+        const val PLACE_ACTIVE_ICON_NAME = "place-active"
     }
 
     private val adapter: AmplifyMapLibreAdapter by lazy {
@@ -76,19 +75,8 @@ class MapLibreView
 
     lateinit var symbolManager: SymbolManager
 
-    var defaultPlaceIcon = ContextCompat.getDrawable(context, R.drawable.place)!!
-
-    var clusterOptions: ClusterOptions = ClusterOptions()
-        .withCircleRadius(Expression.literal(25))
-        .withColorLevels(
-            arrayOf(
-                Pair(0, Color.GRAY),
-                Pair(25, Color.BLUE),
-                Pair(50, Color.YELLOW),
-                Pair(75, Color.RED),
-                Pair(100, Color.MAGENTA),
-            )
-        )
+    var defaultPlaceIcon = R.drawable.place
+    var defaultPlaceActiveIcon = R.drawable.place_active
 
     init {
         setup(context, options)
@@ -157,7 +145,24 @@ class MapLibreView
     fun setStyle(style: MapStyle? = null, callback: Style.OnStyleLoaded) {
         getMapAsync { map ->
             adapter.setStyle(map, style) {
-                this.symbolManager = SymbolManager(this, map, it)
+                // setup the symbol manager
+                it.apply {
+                    addImage(
+                        PLACE_ICON_NAME,
+                        BitmapFactory.decodeResource(resources, defaultPlaceIcon)
+                    )
+                    addImage(
+                        PLACE_ACTIVE_ICON_NAME,
+                        BitmapFactory.decodeResource(resources, defaultPlaceActiveIcon)
+                    )
+                    addLayer(SymbolLayer("places", "places"))
+                    addLayer(CircleLayer("cluster", "cluster"))
+                }
+                this.symbolManager = SymbolManager(this, map, it, null, null).apply {
+                    iconAllowOverlap = true
+                    iconIgnorePlacement = true
+                }
+
                 callback.onStyleLoaded(it)
             }
         }

@@ -17,9 +17,7 @@ package com.amplifyframework.geo.maplibre.view.support
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.ColorStateList
 import android.os.Build
-import android.util.TypedValue
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Button
 import android.widget.FrameLayout
@@ -97,16 +95,7 @@ internal class MapControls(
         private val button: Button by lazy {
             Button(context).apply {
                 contentDescription = context.getText(accessibilityLabel)
-                val backgroundEffect = TypedValue()
-                context.theme.resolveAttribute(
-                    android.R.attr.selectableItemBackground,
-                    backgroundEffect,
-                    true
-                )
-                setBackgroundResource(backgroundEffect.resourceId)
-                backgroundTintList = ColorStateList.valueOf(
-                    ContextCompat.getColor(context, R.color.map_controls_background)
-                )
+                setSelectableBackground(context, R.color.map_controls_background)
             }
         }
 
