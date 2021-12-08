@@ -32,7 +32,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -63,10 +62,10 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                 .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer<>(request))
                 .create();
             return responseGson.fromJson(responseJson, responseType);
-        } catch (JsonSyntaxException jsonSyntaxException) {
+        } catch (JsonParseException jsonParseException) {
             throw new ApiException(
                 "Amplify encountered an error while deserializing an object.",
-                jsonSyntaxException,
+                jsonParseException,
                 AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }
