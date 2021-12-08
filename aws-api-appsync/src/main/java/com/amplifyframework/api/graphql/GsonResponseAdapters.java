@@ -201,6 +201,10 @@ public final class GsonResponseAdapters {
                 }
             }
 
+            if (message == null) {
+                message = "Message was null or missing while deserializing error";
+            }
+
             // Merge nonSpecifiedData into extensions, but don't overwrite anything already there.
             for (String key : nonSpecifiedData.keySet()) {
                 if (!extensionsJson.has(key)) {
