@@ -34,6 +34,7 @@ import com.amplifyframework.geo.maplibre.view.support.MapControls
 import com.amplifyframework.geo.maplibre.view.support.PlaceInfoPopupView
 import com.amplifyframework.geo.maplibre.view.support.fadeIn
 import com.amplifyframework.geo.maplibre.view.support.fadeOut
+import com.amplifyframework.geo.models.BoundingBox
 import com.amplifyframework.geo.models.SearchArea
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.result.GeoSearchResult
@@ -295,7 +296,7 @@ class AmplifyMapView
             val options = GeoSearchByTextOptions
                 .builder()
                 .searchArea(
-                    SearchArea.near(map.cameraPosition.target.toCoordinates())
+                    SearchArea.within(map.projection.visibleRegion.toBoundingBox())
                 )
                 .build()
             geo.searchByText(query, options, ::onSearchResult, ::onSearchError)
