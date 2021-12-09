@@ -271,6 +271,7 @@ class AmplifyMapView
     }
 
     private fun handleSearchAction(query: String) {
+        updateSearchButton.fadeOut()
         if (query.isNotBlank()) {
             search(query.trim())
         } else {
@@ -284,7 +285,6 @@ class AmplifyMapView
         activeSymbol = null
         lastQuery = null
         lastQueryBounds = null
-        updateSearchButton.fadeOut()
     }
 
     private fun search(query: String) = withMap { map ->
