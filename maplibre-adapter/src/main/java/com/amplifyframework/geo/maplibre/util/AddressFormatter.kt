@@ -49,8 +49,6 @@ object DefaultAddressFormatter : AddressFormatter {
      * Joins some address data in a 2-line string format, cleaning up `null` values when found.
      */
     override fun formatAddress(place: AmazonLocationPlace): String {
-        println("DefaultAddressFormatter.formatAddress")
-        println("place = ${place}")
         val addressLine1 = listOfNotNull(place.addressNumber, place.street)
             .joinToString(", ")
         val addressLine2 = listOfNotNull(place.municipality, place.region, place.postalCode)

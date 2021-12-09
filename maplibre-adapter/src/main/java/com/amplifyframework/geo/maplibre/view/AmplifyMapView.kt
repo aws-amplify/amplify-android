@@ -67,7 +67,7 @@ class AmplifyMapView
         defStyleAttr
     ),
     private val geo: GeoCategory = Amplify.Geo
-) : CoordinatorLayout(context) {
+) : CoordinatorLayout(context, attrs, defStyleAttr) {
 
     companion object {
         private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
