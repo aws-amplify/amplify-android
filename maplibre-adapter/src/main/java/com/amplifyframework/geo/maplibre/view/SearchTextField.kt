@@ -22,6 +22,7 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -52,12 +53,23 @@ class SearchTextField @JvmOverloads constructor(
             )
             setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    onSearchActionListener?.handle(field.text.toString())
+                    handleSearchAction()
+                    return@setOnEditorActionListener true
                 }
                 // always return false so the keyboard is dismissed
                 return@setOnEditorActionListener false
             }
         }
+    }
+
+    private fun handleSearchAction() {
+        onSearchActionListener?.handle(field.text.toString())
+
+        // dismiss the keyboard once action is handled
+        field.clearFocus()
+        val inputManager: InputMethodManager =
+            context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputManager.hideSoftInputFromWindow(windowToken, 0)
     }
 
     private val searchIcon: ImageView by lazy {
@@ -129,7 +141,8 @@ class SearchTextField @JvmOverloads constructor(
         // spacing
         val padding = context.resources.getDimensionPixelSize(R.dimen.map_search_inputPadding)
         setPaddingRelative(padding, padding / 2, padding, padding / 2)
-        dividerDrawable = ContextCompat.getDrawable(context, R.drawable.map_search_input_icon_spacer)
+        dividerDrawable =
+            ContextCompat.getDrawable(context, R.drawable.map_search_input_icon_spacer)
         showDividers = SHOW_DIVIDER_MIDDLE
 
         // children
@@ -197,7 +210,9 @@ class SearchTextField @JvmOverloads constructor(
             }
 
             override fun afterTextChanged(content: Editable?) {
-                this@SearchTextField.onSearchQueryChangeListener?.onChange(content?.toString() ?: "")
+                this@SearchTextField.onSearchQueryChangeListener?.onChange(
+                    content?.toString() ?: ""
+                )
             }
 
         })
