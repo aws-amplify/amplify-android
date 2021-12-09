@@ -15,6 +15,7 @@
 
 package com.amplifyframework.geo.maplibre.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.TypedArray
 import android.os.Parcelable
@@ -36,6 +37,7 @@ const val DEFAULT_SHOW_COMPASS_INDICATOR = true
 const val DEFAULT_SHOW_USER_LOCATION = false
 const val DEFAULT_SHOW_ZOOM_CONTROLS = false
 
+@SuppressLint("ParcelCreator")
 @Parcelize
 class MapViewOptions(
     val attribution: String? = null,

@@ -15,11 +15,13 @@
 
 package com.amplifyframework.geo.maplibre
 
+import android.annotation.SuppressLint
 import android.location.Location
 import android.os.Parcelable
 import com.mapbox.mapboxsdk.geometry.LatLng
 import kotlinx.parcelize.Parcelize
 
+@SuppressLint("ParcelCreator")
 @Parcelize
 data class Coordinate2D(
     val longitude: Double = 0.0,
