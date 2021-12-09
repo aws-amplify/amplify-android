@@ -122,17 +122,22 @@ internal class MapControls(
          * This method calculates the shortest path from the current angle to the target and uses
          * the `rotationBy` API to achieve the expected effect in a compass rotation.
          */
-        fun rotateIcon(bearing: Double) {
+        fun rotateIcon(bearing: Double, animate: Boolean = true) {
             val target = bearing.unaryMinus().toFloat()
-            val current = icon.rotation
-            val diff = target - current
-            val delta = abs(diff) % 360
-            val direction = if (diff in 0.0..180.0 || diff in -360.0..-180.0) 1 else -1
-            val angle = (if (delta > 180) 360 - delta else delta) * direction
+            if (animate) {
+                val current = icon.rotation
+                val diff = target - current
+                val delta = abs(diff) % 360
+                val direction = if (diff in 0.0..180.0 || diff in -360.0..-180.0) 1 else -1
+                val angle = (if (delta > 180) 360 - delta else delta) * direction
 
-            icon.animate()
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .rotationBy(angle)
+                icon.animate()
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .rotationBy(angle)
+
+            } else {
+                icon.rotation = target
+            }
         }
 
         fun onClick(listener: OnClickListener) = button.setOnClickListener(listener)

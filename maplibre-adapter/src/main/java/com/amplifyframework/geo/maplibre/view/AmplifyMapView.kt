@@ -262,7 +262,7 @@ class AmplifyMapView
             }
             map.addOnCameraMoveListener {
                 val camera = map.cameraPosition
-                controls.compassIndicatorButton.rotateIcon(camera.bearing)
+                controls.compassIndicatorButton.rotateIcon(camera.bearing, animate = false)
                 updateZoomControls(camera)
                 updateSearchBounds(map.projection.visibleRegion.latLngBounds)
                 updatePlaceInfoViewPosition()
