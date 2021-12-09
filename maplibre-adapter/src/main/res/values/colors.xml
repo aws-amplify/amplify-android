@@ -3,8 +3,6 @@
     <color name="map_attribution_textBackground">#b3fbfbfb</color>
 
     <color name="map_search_itemBackground">#ffffff</color>
-    <color name="map_search_placeIconColor">#00b0ff</color>
-    <color name="map_search_placeIconActiveColor">#ff5722</color>
 
     <color name="map_controls_background">#ffffff</color>
     <color name="map_controls_border">#bcbcbc</color>
