@@ -33,7 +33,6 @@ import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
-import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 
 
 typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
@@ -154,7 +153,6 @@ class MapLibreView
                         PLACE_ACTIVE_ICON_NAME,
                         BitmapFactory.decodeResource(resources, defaultPlaceActiveIcon)
                     )
-                    addLayer(SymbolLayer("places", "places"))
                 }
                 this.symbolManager = SymbolManager(this, map, it, null, null).apply {
                     iconAllowOverlap = true

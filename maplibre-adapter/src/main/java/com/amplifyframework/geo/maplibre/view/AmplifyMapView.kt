@@ -161,10 +161,14 @@ class AmplifyMapView
 
     init {
         val defaultMargin = context.resources.getDimensionPixelSize(R.dimen.map_controls_margin)
+        val largeMargin = defaultMargin * 3
 
         overlayLayout.addView(
             placeInfoPopupView,
-            RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+            RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
+                marginStart = largeMargin
+                marginEnd = largeMargin
+            }
         )
         overlayLayout.addView(
             searchField,
@@ -191,7 +195,7 @@ class AmplifyMapView
             RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
                 marginStart = defaultMargin
                 marginEnd = defaultMargin
-                topMargin = defaultMargin * 3
+                topMargin = largeMargin
                 addRule(RelativeLayout.BELOW, R.id.map_search_input)
                 addRule(RelativeLayout.CENTER_HORIZONTAL)
             }

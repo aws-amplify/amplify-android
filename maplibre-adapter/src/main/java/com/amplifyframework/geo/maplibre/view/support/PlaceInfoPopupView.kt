@@ -29,6 +29,10 @@ import com.amplifyframework.geo.maplibre.R
 import com.amplifyframework.geo.maplibre.util.AddressFormatter
 import com.amplifyframework.geo.maplibre.util.DefaultAddressFormatter
 
+/**
+ * A support view that displays name and address information of places in the map
+ * as a popup view.
+ */
 class PlaceInfoPopupView(context: Context) : RelativeLayout(context) {
 
     var onVisibilityChangedListener: OnVisibilityChangedListener? = null
@@ -58,11 +62,6 @@ class PlaceInfoPopupView(context: Context) : RelativeLayout(context) {
         LinearLayout(context).apply {
             id = R.id.map_search_info_container
             orientation = LinearLayout.VERTICAL
-
-            val padding = context.resources.getDimensionPixelSize(
-                R.dimen.map_search_itemPadding
-            )
-            setPaddingRelative(padding, padding, padding, padding)
         }
     }
 
@@ -90,13 +89,10 @@ class PlaceInfoPopupView(context: Context) : RelativeLayout(context) {
         elevation = context.resources.getDimension(R.dimen.map_controls_elevation)
         setBackgroundResource(R.drawable.map_control_background)
 
+        val margin = context.resources.getDimensionPixelSize(R.dimen.map_search_itemPadding)
         placeInfo.addView(
             label,
             LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
-                addRule(ALIGN_PARENT_TOP)
-                addRule(ALIGN_PARENT_START)
-                val margin = context.resources.getDimensionPixelSize(R.dimen.map_search_itemPadding)
-                marginEnd = margin
                 bottomMargin = margin / 2
             }
         )
@@ -104,8 +100,17 @@ class PlaceInfoPopupView(context: Context) : RelativeLayout(context) {
             address,
             LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         )
-        addView(placeInfo, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT))
-        addView(closeButton,
+
+        addView(
+            placeInfo,
+            LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                addRule(ALIGN_TOP)
+                addRule(ALIGN_START)
+                setMargins(margin, margin, margin, margin)
+            }
+        )
+        addView(
+            closeButton,
             LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
                 addRule(ALIGN_TOP)
                 addRule(ALIGN_END)
