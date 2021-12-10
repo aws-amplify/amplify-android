@@ -15,13 +15,18 @@
 -->
 
 <resources>
-    <color name="map_attribution_textBackground">#b3fbfbfb</color>
 
-    <color name="map_search_itemBackground">#ffffff</color>
+    <declare-styleable name="map_AmplifyMapView">
+        <!-- MapViewOptions -->
+        <attr format="string" name="map_attribution" />
+        <attr format="float" name="map_centerLatitude" />
+        <attr format="float" name="map_centerLongitude" />
+        <attr format="integer" name="map_minZoomLevel" />
+        <attr format="integer" name="map_maxZoomLevel" />
+        <attr format="boolean" name="map_showCompassIndicator" />
+        <attr format="boolean" name="map_showUserLocation" />
+        <attr format="boolean" name="map_showZoomControls" />
+        <attr format="integer" name="map_zoomLevel" />
+    </declare-styleable>
 
-    <color name="map_controls_background">#ffffff</color>
-    <color name="map_controls_border">#bcbcbc</color>
-    <color name="map_controls_foreground">#646464</color>
-
-    <color name="map_loadingBackground">#4dffffff</color>
 </resources>

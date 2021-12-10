@@ -36,7 +36,7 @@ internal class AttributionInfoView(context: Context) : FrameLayout(context) {
             setBackgroundColor(Color.TRANSPARENT)
 
             val padding = context.resources
-                .getDimensionPixelSize(R.dimen.map_attributionIconPadding)
+                .getDimensionPixelSize(R.dimen.map_attribution_iconPadding)
             setPaddingRelative(padding, padding, padding, padding)
 
             setOnClickListener { show() }
@@ -51,11 +51,11 @@ internal class AttributionInfoView(context: Context) : FrameLayout(context) {
             setBackgroundResource(R.drawable.map_attribution_text_background)
 
             val padding = context.resources
-                .getDimensionPixelSize(R.dimen.map_attributionTextPadding)
+                .getDimensionPixelSize(R.dimen.map_attribution_textPadding)
             setPaddingRelative(padding, padding, padding, padding)
 
             val size = context.resources
-                .getDimensionPixelSize(R.dimen.map_attributionTextSize)
+                .getDimensionPixelSize(R.dimen.map_attribution_textSize)
                 .toFloat()
             setTextSize(TypedValue.COMPLEX_UNIT_PX, size)
             setOnClickListener { hide() }

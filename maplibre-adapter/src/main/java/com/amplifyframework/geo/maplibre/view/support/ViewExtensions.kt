@@ -17,8 +17,13 @@ package com.amplifyframework.geo.maplibre.view.support
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.content.Context
+import android.content.res.ColorStateList
+import android.util.TypedValue
 import android.view.View
 import android.widget.FrameLayout
+import androidx.annotation.ColorRes
+import androidx.core.content.ContextCompat
 
 /**
  * Utility to show the view using an alpha animation that animates from current alpha to 1f.
@@ -45,4 +50,23 @@ fun View.fadeOut() {
                 visibility = FrameLayout.GONE
             }
         })
+}
+
+/**
+ * Utility to set the selectable background (aka "ripple effect") of any View.
+ *
+ * @param context the view Context
+ * @param colorRes the color resource reference
+ */
+fun View.setSelectableBackground(context: Context, @ColorRes colorRes: Int) {
+    val backgroundEffect = TypedValue()
+    context.theme.resolveAttribute(
+        android.R.attr.selectableItemBackground,
+        backgroundEffect,
+        true
+    )
+    setBackgroundResource(backgroundEffect.resourceId)
+    backgroundTintList = ColorStateList.valueOf(
+        ContextCompat.getColor(context, colorRes)
+    )
 }
