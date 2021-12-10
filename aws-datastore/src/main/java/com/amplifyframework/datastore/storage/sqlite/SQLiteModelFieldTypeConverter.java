@@ -68,7 +68,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         this(parentSchema, schemaRegistry, gson, "");
     }
 
-    SQLiteModelFieldTypeConverter(
+    private SQLiteModelFieldTypeConverter(
             @NonNull ModelSchema parentSchema,
             @NonNull SchemaRegistry schemaRegistry,
             @NonNull Gson gson,
@@ -232,14 +232,14 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         // columns IF AND ONLY IF the model is a foreign key to the inner model.
         ModelSchema innerModelSchema =
             schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
-        String newAliasCharacter = "";
+        String newAdditionToAlias = "";
         Integer innerModelCount = cursorInnerModelCounts.get(field.getTargetType());
         if (innerModelCount != null && !innerModelCount.equals(1)) {
             // More than 1 of the model the field belongs to is present in the cursor.
-            newAliasCharacter += innerModelCount;
+            newAdditionToAlias += innerModelCount;
         }
         SQLiteModelFieldTypeConverter nestedModelConverter =
-            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, newAliasCharacter);
+            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, newAdditionToAlias);
         return nestedModelConverter.buildMapForModel(cursor);
     }
 

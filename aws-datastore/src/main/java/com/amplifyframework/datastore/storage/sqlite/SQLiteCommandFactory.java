@@ -141,11 +141,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         StringBuilder joinStatement = new StringBuilder();
         final List<Object> bindings = new ArrayList<>();
 
-        // Track the list of columns to return
-        // List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
+        // Track the list of columns to return, along with the alias for the corresponding table
         Map<String, List<SQLiteColumn>> columns = new HashMap<>();
         columns.put(table.getName(), table.getSortedColumns());
-        
         Map<String, Integer> tableCount = new HashMap<>();
         tableCount.put(tableName, 1);
 
@@ -263,7 +261,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
-        
         return new SqlCommand(table.getName(), queryString, bindings);
     }
 
