@@ -17,10 +17,8 @@
 
 package com.amplifyframework.geo.maplibre.util
 
-import com.amplifyframework.geo.models.BoundingBox
 import com.amplifyframework.geo.models.Coordinates
 import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.geometry.VisibleRegion
 
 /**
  * Converts the Amplify `Coordinates` to MapLibre's `LatLng` object.
@@ -39,13 +37,6 @@ fun Coordinates.toLatLng(): LatLng = LatLng(
 fun LatLng.toCoordinates(): Coordinates = Coordinates(
     this.latitude, this.longitude
 )
-
-/**
- * Converts the MapLibre's `VisibleRegion` to the Amplify `BoundingBox` model.
- * @return the bounding box model
- */
-fun VisibleRegion.toBoundingBox(): BoundingBox =
-    BoundingBox(this.nearLeft.toCoordinates(), this.farRight.toCoordinates())
 
 /**
  * Parse a string in the format of "latitude,longitude" to a `Coordinates`
