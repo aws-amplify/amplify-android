@@ -1,3 +1,10 @@
+## [Release 0.15.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.15.0)
+
+### Features
+- **maplibre-adapter:** amplify map view with markers and search capabilities (#1598)
+
+[See all changes between 0.14.1 and 0.15.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.14.1...release-kotlin_v0.15.0)
+
 ## [Release 0.14.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.14.1)
 
 ### Bug Fixes
