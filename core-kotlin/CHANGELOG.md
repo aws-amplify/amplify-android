@@ -1,3 +1,38 @@
+## [Release 0.15.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.15.0)
+
+### Features
+- **maplibre-adapter:** amplify map view with markers and search capabilities (#1598)
+
+[See all changes between 0.14.1 and 0.15.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.14.1...release-kotlin_v0.15.0)
+
+## [Release 0.14.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.14.1)
+
+### Bug Fixes
+- **aws-api-appsync:** include nested belongsTo object in query selection set (#1585)
+- **maplibre-adapter:** add content attribution info to map view (#1591)
+
+[See all changes between 0.14.0 and 0.14.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.14.0...release-kotlin_v0.14.1)
+
+## [Release 0.14.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.14.0)
+
+### Features
+- **maplibre-adapter:** MapLibreView and Geo adapter integration (#1568)
+
+### Bug Fixes
+- **api:** GraphQL operation is now launched from a new thread (#1562)
+
+[See all changes between 0.13.1 and 0.14.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.13.1...release-kotlin_v0.14.0)
+
+## [Release 0.13.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.13.1)
+
+### Bug Fixes
+- **api:** Add null check before cancelling Call object. (#1570)
+
+### Miscellaneous
+- Update build.gradle (#1578)
+
+[See all changes between 0.13.0 and 0.13.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.13.0...release-kotlin_v0.13.1)
+
 ## [Release 0.13.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.13.0)
 
 ### Features
