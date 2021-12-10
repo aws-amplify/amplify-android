@@ -39,6 +39,7 @@ import com.amplifyframework.geo.models.SearchArea
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.result.GeoSearchResult
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
@@ -358,7 +359,7 @@ class AmplifyMapView
         val defaultError = mapView.context.getString(R.string.map_search_defaultError, lastQuery)
         val error = exception.message ?: defaultError
         Snackbar
-            .make(this@AmplifyMapView, error, Snackbar.LENGTH_SHORT)
+            .make(this@AmplifyMapView, error, BaseTransientBottomBar.LENGTH_SHORT)
             .show()
     }
 
