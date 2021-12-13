@@ -50,6 +50,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -278,6 +279,9 @@ public final class TransformerV2Test {
         Team4 remoteTeam = api.get(Team4.class, team.getId());
         Team4 localTeam = dataStore.get(Team4.class, team.getId());
         assertEquals(localTeam, remoteTeam);
+
+        // Assert linked
+        assertEquals(team.getId(), remoteProject.getProject4TeamId());
     }
 
     @Test
@@ -387,6 +391,10 @@ public final class TransformerV2Test {
         Team5 remoteTeam = api.get(Team5.class, team.getId());
         Team5 localTeam = dataStore.get(Team5.class, team.getId());
         assertEquals(localTeam, remoteTeam);
+
+        // Assert linked
+        assertEquals(team.getId(), remoteProject.getTeamId());
+        assertEquals(remoteTeam, remoteProject.getTeam());
     }
 
     @Test
@@ -481,7 +489,7 @@ public final class TransformerV2Test {
                 .build();
         Comment6 comment = Comment6.builder()
                 .content(RandomString.string())
-                .post6CommentsId(post.getId())
+//                .post6CommentsId(post.getId())
                 .build();
         saveAndWaitForSync(post);
         saveAndWaitForSync(comment);
@@ -494,6 +502,9 @@ public final class TransformerV2Test {
         Comment6 remoteComment = api.get(Comment6.class, comment.getId());
         Comment6 localComment = dataStore.get(Comment6.class, comment.getId());
         assertEquals(localComment, remoteComment);
+
+        // Assert linked
+        assertEquals(Collections.singletonList(remoteComment), post.getComments());
     }
 
     @Test
@@ -504,7 +515,7 @@ public final class TransformerV2Test {
                 .build();
         Comment6 comment = Comment6.builder()
                 .content(RandomString.string())
-                .post6CommentsId(post.getId())
+//                .post6CommentsId(post.getId())
                 .build();
         saveAndWaitForSync(post);
         saveAndWaitForSync(comment);
@@ -530,7 +541,7 @@ public final class TransformerV2Test {
                 .build();
         Comment6 comment = Comment6.builder()
                 .content(RandomString.string())
-                .post6CommentsId(post.getId())
+//                .post6CommentsId(post.getId())
                 .build();
         saveAndWaitForSync(post);
         saveAndWaitForSync(comment);
@@ -556,7 +567,7 @@ public final class TransformerV2Test {
                 .build();
         Comment6 comment = Comment6.builder()
                 .content(RandomString.string())
-                .post6CommentsId(post.getId())
+//                .post6CommentsId(post.getId())
                 .build();
         saveAndWaitForSync(post);
         saveAndWaitForSync(comment);
@@ -595,6 +606,10 @@ public final class TransformerV2Test {
         Comment7 remoteComment = api.get(Comment7.class, comment.getId());
         Comment7 localComment = dataStore.get(Comment7.class, comment.getId());
         assertEquals(localComment, remoteComment);
+
+        // Assert synced
+        assertEquals(post.getId(), remoteComment.getPostId());
+        assertEquals(Collections.singletonList(remoteComment), remotePost.getComments());
     }
 
     @Test
@@ -701,8 +716,15 @@ public final class TransformerV2Test {
         Tag8 localTag = dataStore.get(Tag8.class, tag.getId());
         assertEquals(localTag, remoteTag);
 
-        // Assert associated
-        assertEquals(remotePost.getTags(), remoteTag.getPosts());
+        PostTags remotePostTag = api.get(PostTags.class, postTag.getId());
+        PostTags localPostTag = dataStore.get(PostTags.class, postTag.getId());
+        assertEquals(localPostTag, remotePostTag);
+
+        // Assert linked
+        assertEquals(Collections.singletonList(remotePostTag), remotePost.getTags());
+        assertEquals(Collections.singletonList(remotePostTag), remoteTag.getPosts());
+        assertEquals(remotePost, remotePostTag.getPost8());
+        assertEquals(remoteTag, remotePostTag.getTag8());
     }
 
     @Test
@@ -776,12 +798,15 @@ public final class TransformerV2Test {
     @Test
     public void testCreateModelWithImplicitBelongsToRelationship() throws AmplifyException {
         // Create project & team
-        Project9 project = Project9.builder()
+        Project9 projectTemp = Project9.builder()
                 .name(RandomString.string())
                 .build();
         Team9 team = Team9.builder()
                 .name(RandomString.string())
-                .project(project)
+                .project(projectTemp)
+                .build();
+        Project9 project = projectTemp.copyOfBuilder()
+                .project9TeamId(team.getId())
                 .build();
         saveAndWaitForSync(project);
         saveAndWaitForSync(team);
@@ -794,6 +819,10 @@ public final class TransformerV2Test {
         Team9 remoteTeam = api.get(Team9.class, team.getId());
         Team9 localTeam = dataStore.get(Team9.class, team.getId());
         assertEquals(localTeam, remoteTeam);
+
+        // Assert linked
+        assertEquals(remoteTeam, remoteProject.getTeam());
+        assertEquals(remoteProject, remoteTeam.getProject());
     }
 
     @Test
@@ -860,12 +889,15 @@ public final class TransformerV2Test {
     @Test
     public void testCreateModelWithExplicitBelongsToRelationship() throws AmplifyException {
         // Create project & team
-        Project10 project = Project10.builder()
+        Project10 projectTemp = Project10.builder()
                 .name(RandomString.string())
                 .build();
         Team10 team = Team10.builder()
                 .name(RandomString.string())
-                .project(project)
+                .project(projectTemp)
+                .build();
+        Project10 project = projectTemp.copyOfBuilder()
+                .project10TeamId(team.getId())
                 .build();
         saveAndWaitForSync(project);
         saveAndWaitForSync(team);
@@ -878,6 +910,10 @@ public final class TransformerV2Test {
         Team10 remoteTeam = api.get(Team10.class, team.getId());
         Team10 localTeam = dataStore.get(Team10.class, team.getId());
         assertEquals(localTeam, remoteTeam);
+
+        // Assert linked
+        assertEquals(remoteTeam, remoteProject.getTeam());
+        assertEquals(remoteProject, remoteTeam.getProject());
     }
 
     @Test
@@ -962,6 +998,10 @@ public final class TransformerV2Test {
         Comment11 remoteComment = api.get(Comment11.class, comment.getId());
         Comment11 localComment = dataStore.get(Comment11.class, comment.getId());
         assertEquals(localComment, remoteComment);
+
+        // Assert linked
+        assertEquals(Collections.singletonList(remoteComment), remotePost.getComments());
+        assertEquals(remotePost, remoteComment.getPost());
     }
 
     @Test
@@ -1046,6 +1086,10 @@ public final class TransformerV2Test {
         RecipePost12 remotePost = api.get(RecipePost12.class, post.getId());
         RecipePost12 localPost = dataStore.get(RecipePost12.class, post.getId());
         assertEquals(localPost, remotePost);
+
+        // Assert linked
+        assertEquals(Collections.singletonList(remotePost), remoteBlog.getPosts());
+        assertEquals(remoteBlog, remotePost.getBlog());
     }
 
     @Test
