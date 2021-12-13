@@ -26,7 +26,7 @@ public final class Project10 implements Model {
   public static final QueryField PROJECT10_TEAM_ID = field("Project10", "project10TeamId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
-  private final @ModelField(targetType="Team10") @HasOne(associatedWith = "id", type = Team10.class) Team10 team = null;
+  private final @ModelField(targetType="Team10") @HasOne(associatedWith = "project", type = Team10.class) Team10 team = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="ID") String project10TeamId;

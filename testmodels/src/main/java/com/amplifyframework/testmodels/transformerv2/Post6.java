@@ -25,7 +25,7 @@ public final class Post6 implements Model {
   public static final QueryField TITLE = field("Post6", "title");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String title;
-  private final @ModelField(targetType="Comment6") @HasMany(associatedWith = "post6CommentsId", type = Comment6.class) List<Comment6> comments = null;
+  private final @ModelField(targetType="Comment6") @HasMany(associatedWith = "id", type = Comment6.class) List<Comment6> comments = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   public String getId() {

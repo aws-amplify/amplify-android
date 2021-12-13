@@ -25,7 +25,7 @@ public final class CookingBlog12 implements Model {
   public static final QueryField NAME = field("CookingBlog12", "name");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="RecipePost12") @HasMany(associatedWith = "cookingBlog12PostsId", type = RecipePost12.class) List<RecipePost12> posts = null;
+  private final @ModelField(targetType="RecipePost12") @HasMany(associatedWith = "blog", type = RecipePost12.class) List<RecipePost12> posts = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   public String getId() {
