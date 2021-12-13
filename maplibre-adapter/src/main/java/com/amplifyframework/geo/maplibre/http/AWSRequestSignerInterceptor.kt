@@ -19,8 +19,10 @@ import com.amazonaws.DefaultRequest
 import com.amazonaws.http.HttpMethodName
 import com.amazonaws.util.IOUtils
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
-import okhttp3.*
-
+import okhttp3.HttpUrl
+import okhttp3.Interceptor
+import okhttp3.Request
+import okhttp3.Response
 import okio.Buffer
 import java.io.ByteArrayInputStream
 import java.net.URI
@@ -43,15 +45,20 @@ private fun Request.Builder.copyFrom(request: AWSRequest): Request.Builder {
     return this.url(urlBuilder.build())
 }
 
+const val AMAZON_HOST = "amazonaws.com"
+
 /**
  * Interceptor that can authorize requests using AWS Signature V4 signer.
  */
 internal class AWSRequestSignerInterceptor(
     private val plugin: AWSLocationGeoPlugin
-): Interceptor {
+) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
+        if (!request.url.host.contains(AMAZON_HOST)) {
+            return chain.proceed(request)
+        }
 
         // OkHttpRequest -> Signed AWSRequest
         val awsRequest = signRequest(request)

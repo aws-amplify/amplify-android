@@ -15,13 +15,9 @@
 -->
 
 <resources>
-    <color name="map_attribution_textBackground">#b3fbfbfb</color>
+    <item name="map_view" type="id" />
+    <item name="map_search_input" type="id" />
 
-    <color name="map_search_itemBackground">#ffffff</color>
-
-    <color name="map_controls_background">#ffffff</color>
-    <color name="map_controls_border">#bcbcbc</color>
-    <color name="map_controls_foreground">#646464</color>
-
-    <color name="map_loadingBackground">#4dffffff</color>
+    <item name="map_search_info_container" type="id" />
+    <item name="map_search_info_close" type="id" />
 </resources>

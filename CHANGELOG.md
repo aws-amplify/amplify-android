@@ -1,3 +1,10 @@
+## [Release 1.31.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.31.0)
+
+### Features
+- **maplibre-adapter:** amplify map view with markers and search capabilities (#1598)
+
+[See all changes between 1.30.1 and 1.31.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.30.1...release_v1.31.0)
+
 ## [Release 1.30.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.30.1)
 
 ### Bug Fixes
