@@ -489,7 +489,7 @@ public final class TransformerV2Test {
                 .build();
         Comment6 comment = Comment6.builder()
                 .content(RandomString.string())
-//                .post6CommentsId(post.getId())
+                .post6CommentsId(post.getId())
                 .build();
         saveAndWaitForSync(post);
         saveAndWaitForSync(comment);
@@ -515,7 +515,7 @@ public final class TransformerV2Test {
                 .build();
         Comment6 comment = Comment6.builder()
                 .content(RandomString.string())
-//                .post6CommentsId(post.getId())
+                .post6CommentsId(post.getId())
                 .build();
         saveAndWaitForSync(post);
         saveAndWaitForSync(comment);
@@ -541,7 +541,7 @@ public final class TransformerV2Test {
                 .build();
         Comment6 comment = Comment6.builder()
                 .content(RandomString.string())
-//                .post6CommentsId(post.getId())
+                .post6CommentsId(post.getId())
                 .build();
         saveAndWaitForSync(post);
         saveAndWaitForSync(comment);
@@ -567,7 +567,7 @@ public final class TransformerV2Test {
                 .build();
         Comment6 comment = Comment6.builder()
                 .content(RandomString.string())
-//                .post6CommentsId(post.getId())
+                .post6CommentsId(post.getId())
                 .build();
         saveAndWaitForSync(post);
         saveAndWaitForSync(comment);
@@ -1151,6 +1151,108 @@ public final class TransformerV2Test {
         assertTrue(deletedIds.contains(post.getId()));
         assertThrows(NoSuchElementException.class, () -> dataStore.get(CookingBlog12.class, blog.getId()));
         assertThrows(NoSuchElementException.class, () -> dataStore.get(RecipePost12.class, post.getId()));
+    }
+
+    @Test
+    public void testCreateModelWithMultipleBelongsToRelationship() throws AmplifyException {
+        // Create meeting & attendee & registration
+        Meeting13 meeting = Meeting13.builder()
+                .title(RandomString.string())
+                .build();
+        Attendee13 attendee = Attendee13.builder()
+                .build();
+        Registration13 registration = Registration13.builder()
+                .meeting(meeting)
+                .attendee(attendee)
+                .build();
+        saveAndWaitForSync(meeting);
+        saveAndWaitForSync(attendee);
+        saveAndWaitForSync(registration);
+
+        // Assert synced
+        Meeting13 remoteMeeting = api.get(Meeting13.class, meeting.getId());
+        Meeting13 localMeeting = dataStore.get(Meeting13.class, meeting.getId());
+        assertEquals(localMeeting, remoteMeeting);
+
+        Attendee13 remoteAttendee = api.get(Attendee13.class, attendee.getId());
+        Attendee13 localAttendee = dataStore.get(Attendee13.class, attendee.getId());
+        assertEquals(localAttendee, remoteAttendee);
+
+        Registration13 remoteRegistration = api.get(Registration13.class, registration.getId());
+        Registration13 localRegistration = dataStore.get(Registration13.class, registration.getId());
+        assertEquals(localRegistration, remoteRegistration);
+
+        // Assert linked
+        assertEquals(Collections.singletonList(remoteRegistration), remoteMeeting.getAttendees());
+        assertEquals(Collections.singletonList(remoteRegistration), remoteAttendee.getMeetings());
+        assertEquals(remoteMeeting, remoteRegistration.getMeeting());
+        assertEquals(remoteAttendee, remoteRegistration.getAttendee());
+    }
+
+    @Test
+    public void testUpdateModelWithMultipleBelongsToRelationship() throws AmplifyException {
+        // Create meeting & attendee & registration
+        Meeting13 meeting = Meeting13.builder()
+                .title(RandomString.string())
+                .build();
+        Attendee13 attendee = Attendee13.builder()
+                .build();
+        Registration13 registration = Registration13.builder()
+                .meeting(meeting)
+                .attendee(attendee)
+                .build();
+        saveAndWaitForSync(meeting);
+        saveAndWaitForSync(attendee);
+        saveAndWaitForSync(registration);
+
+        // Update meeting
+        Meeting13 updatedMeeting = meeting.copyOfBuilder()
+                .title(RandomString.string())
+                .build();
+        saveAndWaitForSync(updatedMeeting);
+
+        // Assert synced
+        Meeting13 remoteMeeting = api.get(Meeting13.class, meeting.getId());
+        Meeting13 localMeeting = dataStore.get(Meeting13.class, meeting.getId());
+        assertEquals(localMeeting, remoteMeeting);
+        assertEquals(updatedMeeting.getTitle(), remoteMeeting.getTitle());
+
+        // Assert associated
+        assertEquals(attendee.getId(), remoteMeeting.getAttendees().get(0).getAttendee().getId());
+    }
+
+    @Test
+    public void testDeleteModelWithMultipleBelongsToRelationship() throws AmplifyException {
+        // Create meeting & attendee & registration
+        Meeting13 meeting = Meeting13.builder()
+                .title(RandomString.string())
+                .build();
+        Attendee13 attendee = Attendee13.builder()
+                .build();
+        Registration13 registration = Registration13.builder()
+                .meeting(meeting)
+                .attendee(attendee)
+                .build();
+        saveAndWaitForSync(meeting);
+        saveAndWaitForSync(attendee);
+        saveAndWaitForSync(registration);
+
+        // Delete meeting
+        TestObserver<String> onDelete = subscribeOnDelete(Meeting13.class, Attendee13.class, Registration13.class);
+        deleteAndWaitForPublish(meeting);
+
+        // Assert synced
+        onDelete.awaitCount(2);
+        List<String> deletedIds = onDelete.values();
+        assertTrue(deletedIds.contains(meeting.getId()));
+        assertTrue(deletedIds.contains(registration.getId()));
+        assertThrows(NoSuchElementException.class, () -> dataStore.get(Meeting13.class, meeting.getId()));
+        assertThrows(NoSuchElementException.class, () -> dataStore.get(Registration13.class, registration.getId()));
+
+        // Assert attendee not deleted
+        Attendee13 remoteAttendee = api.get(Attendee13.class, attendee.getId());
+        Attendee13 localAttendee = dataStore.get(Attendee13.class, attendee.getId());
+        assertEquals(localAttendee, remoteAttendee);
     }
 
     private <T extends Model> void saveAndWaitForSync(T model) throws AmplifyException {

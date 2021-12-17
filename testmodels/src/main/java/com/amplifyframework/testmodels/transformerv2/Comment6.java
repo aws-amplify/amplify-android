@@ -22,10 +22,12 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 public final class Comment6 implements Model {
   public static final QueryField ID = field("Comment6", "id");
   public static final QueryField CONTENT = field("Comment6", "content");
+  public static final QueryField POST6_COMMENTS_ID = field("Comment6", "post6CommentsId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String content;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
+  private final @ModelField(targetType="ID") String post6CommentsId;
   public String getId() {
       return id;
   }
@@ -42,9 +44,14 @@ public final class Comment6 implements Model {
       return updatedAt;
   }
   
-  private Comment6(String id, String content) {
+  public String getPost6CommentsId() {
+      return post6CommentsId;
+  }
+  
+  private Comment6(String id, String content, String post6CommentsId) {
     this.id = id;
     this.content = content;
+    this.post6CommentsId = post6CommentsId;
   }
   
   @Override
@@ -58,7 +65,8 @@ public final class Comment6 implements Model {
       return ObjectsCompat.equals(getId(), comment6.getId()) &&
               ObjectsCompat.equals(getContent(), comment6.getContent()) &&
               ObjectsCompat.equals(getCreatedAt(), comment6.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), comment6.getUpdatedAt());
+              ObjectsCompat.equals(getUpdatedAt(), comment6.getUpdatedAt()) &&
+              ObjectsCompat.equals(getPost6CommentsId(), comment6.getPost6CommentsId());
       }
   }
   
@@ -69,6 +77,7 @@ public final class Comment6 implements Model {
       .append(getContent())
       .append(getCreatedAt())
       .append(getUpdatedAt())
+      .append(getPost6CommentsId())
       .toString()
       .hashCode();
   }
@@ -80,7 +89,8 @@ public final class Comment6 implements Model {
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("content=" + String.valueOf(getContent()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
-      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
+      .append("post6CommentsId=" + String.valueOf(getPost6CommentsId()))
       .append("}")
       .toString();
   }
@@ -100,13 +110,15 @@ public final class Comment6 implements Model {
   public static Comment6 justId(String id) {
     return new Comment6(
       id,
+      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      content);
+      content,
+      post6CommentsId);
   }
   public interface ContentStep {
     BuildStep content(String content);
@@ -116,25 +128,34 @@ public final class Comment6 implements Model {
   public interface BuildStep {
     Comment6 build();
     BuildStep id(String id);
+    BuildStep post6CommentsId(String post6CommentsId);
   }
   
 
   public static class Builder implements ContentStep, BuildStep {
     private String id;
     private String content;
+    private String post6CommentsId;
     @Override
      public Comment6 build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
         return new Comment6(
           id,
-          content);
+          content,
+          post6CommentsId);
     }
     
     @Override
      public BuildStep content(String content) {
         Objects.requireNonNull(content);
         this.content = content;
+        return this;
+    }
+    
+    @Override
+     public BuildStep post6CommentsId(String post6CommentsId) {
+        this.post6CommentsId = post6CommentsId;
         return this;
     }
     
@@ -150,14 +171,20 @@ public final class Comment6 implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String content) {
+    private CopyOfBuilder(String id, String content, String post6CommentsId) {
       super.id(id);
-      super.content(content);
+      super.content(content)
+        .post6CommentsId(post6CommentsId);
     }
     
     @Override
      public CopyOfBuilder content(String content) {
       return (CopyOfBuilder) super.content(content);
+    }
+    
+    @Override
+     public CopyOfBuilder post6CommentsId(String post6CommentsId) {
+      return (CopyOfBuilder) super.post6CommentsId(post6CommentsId);
     }
   }
   

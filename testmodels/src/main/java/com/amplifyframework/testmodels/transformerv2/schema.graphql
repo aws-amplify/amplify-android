@@ -149,3 +149,24 @@ type RecipePost12 @model {
  title: String!
  blog: CookingBlog12 @belongsTo
 }
+
+#13 Multiple hasOne-hasMany relationships on same type
+
+type Meeting13 @model {
+  id: ID! @primaryKey
+  title: String!
+  attendees: [Registration13] @hasMany(indexName: "byMeeting", fields: ["id"])
+}
+
+type Attendee13 @model {
+  id: ID! @primaryKey
+  meetings: [Registration13] @hasMany(indexName: "byAttendee", fields: ["id"])
+}
+
+type Registration13 @model {
+  id: ID! @primaryKey
+  meetingId: ID @index(name: "byMeeting", sortKeyFields: ["attendeeId"])
+  meeting: Meeting13! @belongsTo(fields: ["meetingId"])
+  attendeeId: ID @index(name: "byAttendee", sortKeyFields: ["meetingId"])
+  attendee: Attendee13! @belongsTo(fields: ["attendeeId"])
+}

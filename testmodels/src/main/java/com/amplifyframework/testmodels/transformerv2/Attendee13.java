@@ -17,27 +17,22 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the CookingBlog12 type in your schema. */
+/** This is an auto generated class representing the Attendee13 type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "CookingBlog12s")
-public final class CookingBlog12 implements Model {
-  public static final QueryField ID = field("CookingBlog12", "id");
-  public static final QueryField NAME = field("CookingBlog12", "name");
+@ModelConfig(pluralName = "Attendee13s")
+@Index(name = "undefined", fields = {"id"})
+public final class Attendee13 implements Model {
+  public static final QueryField ID = field("Attendee13", "id");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="RecipePost12") @HasMany(associatedWith = "cookingBlog12PostsId", type = RecipePost12.class) List<RecipePost12> posts = null;
+  private final @ModelField(targetType="Registration13") @HasMany(associatedWith = "attendee", type = Registration13.class) List<Registration13> meetings = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   public String getId() {
       return id;
   }
   
-  public String getName() {
-      return name;
-  }
-  
-  public List<RecipePost12> getPosts() {
-      return posts;
+  public List<Registration13> getMeetings() {
+      return meetings;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -48,9 +43,8 @@ public final class CookingBlog12 implements Model {
       return updatedAt;
   }
   
-  private CookingBlog12(String id, String name) {
+  private Attendee13(String id) {
     this.id = id;
-    this.name = name;
   }
   
   @Override
@@ -60,11 +54,10 @@ public final class CookingBlog12 implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      CookingBlog12 cookingBlog12 = (CookingBlog12) obj;
-      return ObjectsCompat.equals(getId(), cookingBlog12.getId()) &&
-              ObjectsCompat.equals(getName(), cookingBlog12.getName()) &&
-              ObjectsCompat.equals(getCreatedAt(), cookingBlog12.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), cookingBlog12.getUpdatedAt());
+      Attendee13 attendee13 = (Attendee13) obj;
+      return ObjectsCompat.equals(getId(), attendee13.getId()) &&
+              ObjectsCompat.equals(getCreatedAt(), attendee13.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), attendee13.getUpdatedAt());
       }
   }
   
@@ -72,7 +65,6 @@ public final class CookingBlog12 implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
-      .append(getName())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -82,16 +74,15 @@ public final class CookingBlog12 implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("CookingBlog12 {")
+      .append("Attendee13 {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("name=" + String.valueOf(getName()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
   
-  public static NameStep builder() {
+  public static BuildStep builder() {
       return new Builder();
   }
   
@@ -103,45 +94,29 @@ public final class CookingBlog12 implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    */
-  public static CookingBlog12 justId(String id) {
-    return new CookingBlog12(
-      id,
-      null
+  public static Attendee13 justId(String id) {
+    return new Attendee13(
+      id
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
-    return new CopyOfBuilder(id,
-      name);
+    return new CopyOfBuilder(id);
   }
-  public interface NameStep {
-    BuildStep name(String name);
-  }
-  
-
   public interface BuildStep {
-    CookingBlog12 build();
+    Attendee13 build();
     BuildStep id(String id);
   }
   
 
-  public static class Builder implements NameStep, BuildStep {
+  public static class Builder implements BuildStep {
     private String id;
-    private String name;
     @Override
-     public CookingBlog12 build() {
+     public Attendee13 build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new CookingBlog12(
-          id,
-          name);
-    }
-    
-    @Override
-     public BuildStep name(String name) {
-        Objects.requireNonNull(name);
-        this.name = name;
-        return this;
+        return new Attendee13(
+          id);
     }
     
     /** 
@@ -156,14 +131,9 @@ public final class CookingBlog12 implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name) {
+    private CopyOfBuilder(String id) {
       super.id(id);
-      super.name(name);
-    }
-    
-    @Override
-     public CopyOfBuilder name(String name) {
-      return (CopyOfBuilder) super.name(name);
+      
     }
   }
   
