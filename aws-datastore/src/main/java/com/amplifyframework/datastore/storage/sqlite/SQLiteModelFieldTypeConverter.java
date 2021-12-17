@@ -58,28 +58,31 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
 
     // Map from inner model name to number of occurrences in the cursor.
     private final Map<String, Integer> cursorInnerModelCounts;
-    private final String addToColumnAlias;
+    private final boolean isInnerModel;
 
     SQLiteModelFieldTypeConverter(
             @NonNull ModelSchema parentSchema,
             @NonNull SchemaRegistry schemaRegistry,
             @NonNull Gson gson
     ) {
-        this(parentSchema, schemaRegistry, gson, "");
+        this(parentSchema, schemaRegistry, gson, new HashMap<>());
     }
 
     private SQLiteModelFieldTypeConverter(
             @NonNull ModelSchema parentSchema,
             @NonNull SchemaRegistry schemaRegistry,
             @NonNull Gson gson,
-            @NonNull String addToColumnAlias
+            @NonNull Map<String, Integer> innerModelCounts
     ) {
         this.parentSchema = Objects.requireNonNull(parentSchema);
         this.schemaRegistry = Objects.requireNonNull(schemaRegistry);
         this.gson = Objects.requireNonNull(gson);
         this.columns = SQLiteTable.fromSchema(parentSchema).getColumns();
-        this.addToColumnAlias = addToColumnAlias;
-        this.cursorInnerModelCounts = new HashMap<>();
+        this.cursorInnerModelCounts = innerModelCounts;
+        this.isInnerModel = !this.cursorInnerModelCounts.isEmpty();
+        if (!this.isInnerModel) {
+            this.cursorInnerModelCounts.put(parentSchema.getName(), 1);
+        }
     }
 
     /**
@@ -143,7 +146,10 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         for (Map.Entry<String, ModelField> entry : parentSchema.getFields().entrySet()) {
             mapForModel.put(entry.getKey(), convertValueFromSource(cursor, entry.getValue()));
         }
-        cursorInnerModelCounts.clear();
+        if (!this.isInnerModel) {
+            cursorInnerModelCounts.clear();
+            cursorInnerModelCounts.put(parentSchema.getName(), 1);
+        }
         return mapForModel;
     }
 
@@ -160,7 +166,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 LOGGER.verbose(String.format("Column with name %s does not exist", field.getName()));
                 return null;
             }
-            
+
+            String columnName = column.getAliasedName();
             if (javaFieldType == JavaFieldType.MODEL) {
                 int newInnerModelCount = 1;
                 String fieldTargetType = field.getTargetType();
@@ -170,8 +177,14 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 }
                 cursorInnerModelCounts.put(fieldTargetType, newInnerModelCount);
             }
-
-            final String columnName = column.getAliasedName() + addToColumnAlias;
+            if (isInnerModel && cursorInnerModelCounts.containsKey(parentSchema.getName())) {
+                Integer modelCount = cursorInnerModelCounts.get(parentSchema.getName());
+                if (!Objects.equals(modelCount, 1)) {
+                    // More than 1 of the model the field belongs to is present in the cursor
+                    columnName += modelCount;
+                }
+            }
+            
             final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
             // This check is necessary, because primitive values will return 0 even when null
             if (cursor.isNull(columnIndex)) {
@@ -232,14 +245,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         // columns IF AND ONLY IF the model is a foreign key to the inner model.
         ModelSchema innerModelSchema =
             schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
-        String newAdditionToAlias = "";
-        Integer innerModelCount = cursorInnerModelCounts.get(field.getTargetType());
-        if (innerModelCount != null && !innerModelCount.equals(1)) {
-            // More than 1 of the model the field belongs to is present in the cursor.
-            newAdditionToAlias += innerModelCount;
-        }
         SQLiteModelFieldTypeConverter nestedModelConverter =
-            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, newAdditionToAlias);
+            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, cursorInnerModelCounts);
         return nestedModelConverter.buildMapForModel(cursor);
     }
 
