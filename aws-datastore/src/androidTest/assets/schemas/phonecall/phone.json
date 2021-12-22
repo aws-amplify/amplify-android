@@ -1,14 +1,14 @@
 {
     "associations": {
-        "caller": {
-            "associatedType": "Phone",
-            "name": "BelongsTo",
-            "targetName": "callerId"
+        "calls": {
+            "associatedName": "person",
+            "associatedType": "Call",
+            "name": "HasMany"
         },
-        "callee": {
-            "associatedType": "Phone",
+        "ownedBy": {
+            "associatedType": "Person",
             "name": "BelongsTo",
-            "targetName": "calleeId"
+            "targetName": "ownedById"
         }
     },
     "authRules": [],
@@ -23,58 +23,49 @@
             "name": "id",
             "targetType": "ID"
         },
-        "minutes": {
-            "authRules": [],
-            "javaClassForValue": "Integer",
-            "targetType": "Int",
-            "isRequired": true,
-            "isArray": false,
-            "isEnum": false,
-            "isModel": false
-        },
-        "callerId": {
+        "number": {
             "authRules": [],
             "isArray": false,
             "isEnum": false,
             "isModel": false,
             "isRequired": true,
             "javaClassForValue": "java.lang.String",
-            "name": "callerId",
-            "targetType": "ID"
+            "name": "number",
+            "targetType": "String"
         },
-        "calleeId": {
+        "ownedById": {
             "authRules": [],
             "isArray": false,
             "isEnum": false,
             "isModel": false,
             "isRequired": true,
             "javaClassForValue": "java.lang.String",
-            "name": "calleeId",
+            "name": "ownedById",
             "targetType": "ID"
         },
-        "caller": {
+        "ownedBy": {
             "authRules": [],
             "isArray": false,
             "isEnum": false,
             "isModel": true,
             "isRequired": true,
             "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
-            "name": "caller",
-            "targetType": "Phone"
+            "name": "ownedBy",
+            "targetType": "Person"
         },
-        "callee": {
+        "calls": {
             "authRules": [],
-            "isArray": false,
+            "isArray": true,
             "isEnum": false,
-            "isModel": true,
-            "isRequired": true,
-            "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
-            "name": "callee",
-            "targetType": "Phone"
+            "isModel": false,
+            "isRequired": false,
+            "javaClassForValue": "java.util.List",
+            "name": "calls",
+            "targetType": "Call"
         }
     },
     "indexes": {},
     "modelClass": "com.amplifyframework.core.model.SerializedModel",
-    "name": "Call",
-    "pluralName": "Calls"
+    "name": "Phone",
+    "pluralName": "Phones"
 }

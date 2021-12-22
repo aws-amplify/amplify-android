@@ -1,9 +1,4 @@
 {
-    "calls": {
-        "associatedName": "person",
-        "associatedType": "Call",
-        "name": "HasMany"
-    },
     "authRules": [],
     "fields": {
         "id": {
@@ -25,16 +20,6 @@
             "javaClassForValue": "java.lang.String",
             "name": "name",
             "targetType": "String"
-        },
-        "calls": {
-            "authRules": [],
-            "isArray": true,
-            "isEnum": false,
-            "isModel": false,
-            "isRequired": false,
-            "javaClassForValue": "java.util.List",
-            "name": "calls",
-            "targetType": "Call"
         }
     },
     "indexes": {},

@@ -18,7 +18,6 @@ package com.amplifyframework.datastore.storage.sqlite;
 import com.amplifyframework.core.model.query.Page;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
@@ -30,6 +29,7 @@ import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testmodels.phonecall.Call;
 import com.amplifyframework.testmodels.phonecall.Person;
+import com.amplifyframework.testmodels.phonecall.Phone;
 
 import org.junit.After;
 import org.junit.Before;
@@ -207,15 +207,25 @@ public final class SQLiteStorageAdapterQueryTest {
                 .name("Grace Hopper")
                 .build();
         
+        final Phone phoneCalling = Phone.builder()
+                .number("123-456-7890")
+                .ownedBy(personCalling)
+                .build();
+        final Phone phoneCalled = Phone.builder()
+                .number("567-890-1234")
+                .ownedBy(personCalled)
+                .build();
+        
         final Call phoneCall = Call.builder()
-                .startTime(new Temporal.DateTime("2001-02-03T01:30Z"))
-                .endTime(new Temporal.DateTime("2001-02-03T01:50Z"))
-                .caller(personCalling)
-                .callee(personCalled)
+                .minutes(10)
+                .caller(phoneCalling)
+                .callee(phoneCalled)
                 .build();
 
         callAdapter.save(personCalling);
         callAdapter.save(personCalled);
+        callAdapter.save(phoneCalling);
+        callAdapter.save(phoneCalled);
         callAdapter.save(phoneCall);
 
         final List<Call> phoneCalls = callAdapter.query(Call.class);

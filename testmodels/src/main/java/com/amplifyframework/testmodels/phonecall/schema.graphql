@@ -1,15 +1,21 @@
 type Person @model {
     id: ID!
     name: String!
+}
+
+type Phone @model {
+    id: ID!
+    number: String!
+    ownedById: ID!
+    ownedBy: Person! @connection(fields: ["ownedById"])
     calls: [Call] @connection(fields: ["id"])
 }
 
 type Call @model {
     id: ID!
-    startTime: AWSDateTime!
-    endTime: AWSDateTime!
+    minutes: Int!
     callerId: ID!
     calleeId: ID!
-    caller: Person! @connection(fields: ["callerId"])
-    callee: Person! @connection(fields: ["calleeId"])
+    caller: Phone! @connection(fields: ["callerId"])
+    callee: Phone! @connection(fields: ["calleeId"])
 }
