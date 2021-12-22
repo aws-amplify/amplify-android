@@ -86,7 +86,7 @@ class PlaceInfoPopupView(context: Context) : RelativeLayout(context) {
 
     init {
         clipToOutline = true
-        elevation = context.resources.getDimension(R.dimen.map_controls_elevation)
+        elevation = context.resources.getDimension(R.dimen.map_search_infoPopupElevation)
         setBackgroundResource(R.drawable.map_control_background)
 
         val margin = context.resources.getDimensionPixelSize(R.dimen.map_search_itemPadding)

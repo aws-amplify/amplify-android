@@ -32,6 +32,7 @@
     <dimen name="map_search_visibleArea">180dp</dimen>
     <dimen name="map_search_inputTextSize">16sp</dimen>
     <dimen name="map_search_infoTitleTextSize">18sp</dimen>
+    <dimen name="map_search_infoPopupElevation">2dp</dimen>
     <dimen name="map_search_infoPopupMargin">28dp</dimen>
     <dimen name="map_search_infoPopupClosePadding">4dp</dimen>
     <dimen name="map_search_infoTextSize">16sp</dimen>
