@@ -127,8 +127,8 @@ final class SQLiteModelTree {
                                 .get(association.getAssociatedName()) // get @BelongsTo association linked to this field
                                 .getTargetName(); // get the target field (parent) name
                     } catch (NullPointerException unexpectedAssociation) {
-                        LOG.warn("Schema uses unsupported model association type. " +
-                                "Failed to cascade deletion.",
+                        LOG.warn("Foreign key was not found due to unidirectional relationship without @BelongsTo. " +
+                                "Failed to publish cascading mutations.",
                                 unexpectedAssociation);
                         return;
                     }
