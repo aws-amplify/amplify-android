@@ -51,9 +51,9 @@ import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -78,9 +78,9 @@ import static org.junit.Assert.assertThrows;
 public final class BasicCloudSyncInstrumentationTest {
     private static final int TIMEOUT_SECONDS = 60;
 
-    private SynchronousApi api;
-    private SynchronousAppSync appSync;
-    private SynchronousDataStore dataStore;
+    private static SynchronousApi api;
+    private static SynchronousAppSync appSync;
+    private static SynchronousDataStore dataStore;
 
     /**
      * Once, before any/all tests in this class, setup miscellaneous dependencies,
@@ -89,8 +89,8 @@ public final class BasicCloudSyncInstrumentationTest {
      * {@link AWSDataStorePlugin}, which is the thing we're actually testing.
      * @throws AmplifyException On failure to read config, setup API or DataStore categories
      */
-    @Before
-    public void setup() throws AmplifyException {
+    @BeforeClass
+    public static void setup() throws AmplifyException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
 
         StrictMode.enable();
@@ -135,8 +135,8 @@ public final class BasicCloudSyncInstrumentationTest {
      * with this error: android.database.sqlite.SQLiteReadOnlyDatabaseException: attempt to write a readonly database.
      * @throws DataStoreException On failure to clear DataStore.
      */
-    @After
-    public void teardown() throws DataStoreException {
+    @AfterClass
+    public static void teardown() throws DataStoreException {
         if (dataStore != null) {
             try {
                 dataStore.clear();
