@@ -15,15 +15,15 @@
 
 package com.amplifyframework.api.aws.utils;
 
+import android.net.Uri;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.rest.HttpMethod;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.Map;
 import java.util.Objects;
 
@@ -76,8 +76,8 @@ public final class RestRequestFactory {
 
         try {
             String encodedUrl = builder.build().url().toString();
-            return new URL(URLDecoder.decode(encodePluses(encodedUrl), "UTF-8"));
-        } catch (UnsupportedEncodingException error) {
+            return new URL(Uri.decode(encodedUrl));
+        } catch (MalformedURLException error) {
             throw new MalformedURLException(error.getMessage());
         }
     }
@@ -152,13 +152,6 @@ public final class RestRequestFactory {
     // begin with either character. Strip them before appending.
     private static String stripLeadingSlashes(final String path) {
         return path.replaceAll("^[\\\\/]+", "");
-    }
-
-    // URLDecoder converts "+" in path segment into " ".
-    // Convert it to encoded version "%2B" so that decoded
-    // result is actually "+".
-    private static String encodePluses(final String encodedUrl) {
-        return encodedUrl.replaceAll("[+]", "%2B");
     }
 
     /**

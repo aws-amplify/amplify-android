@@ -18,6 +18,8 @@ package com.amplifyframework.api.aws.utils;
 import com.amplifyframework.api.rest.HttpMethod;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -33,6 +35,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Tests the {@link RestRequestFactory}.
  */
+@RunWith(RobolectricTestRunner.class)
 public final class RestRequestFactoryTest {
     /**
      * Test if we can create a valid URL.
