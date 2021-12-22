@@ -55,8 +55,7 @@ import static org.junit.Assert.assertTrue;
  * Test the query functionality of {@link SQLiteStorageAdapter} operations.
  */
 public final class SQLiteStorageAdapterQueryTest {
-    private SynchronousStorageAdapter blogAdapter;
-    private SynchronousStorageAdapter callAdapter;
+    private SynchronousStorageAdapter adapter;
 
     /**
      * Enables Android Strict Mode, to help catch common errors while using
@@ -74,7 +73,7 @@ public final class SQLiteStorageAdapterQueryTest {
     @Before
     public void setup() {
         TestStorageAdapter.cleanup();
-        this.blogAdapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
+        this.adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
     }
 
     /**
@@ -82,8 +81,8 @@ public final class SQLiteStorageAdapterQueryTest {
      * that is able to store the Phone Call family of models.
      */
     public void setupForCallModel() {
-        TestStorageAdapter.cleanup();
-        this.callAdapter = TestStorageAdapter.create(
+        teardown();
+        this.adapter = TestStorageAdapter.create(
                 com.amplifyframework.testmodels.phonecall.AmplifyModelProvider.getInstance()
         );
     }
@@ -93,14 +92,7 @@ public final class SQLiteStorageAdapterQueryTest {
      */
     @After
     public void teardown() {
-        TestStorageAdapter.cleanup(blogAdapter);
-    }
-
-    /**
-     * Close the open database, and cleanup any database files that it left.
-     */
-    public void teardownForCallModel() {
-        TestStorageAdapter.cleanup(callAdapter);
+        TestStorageAdapter.cleanup(adapter);
     }
 
     /**
@@ -112,9 +104,9 @@ public final class SQLiteStorageAdapterQueryTest {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Alan Turing")
             .build();
-        blogAdapter.save(blogOwner);
+        adapter.save(blogOwner);
 
-        final List<BlogOwner> blogOwners = blogAdapter.query(BlogOwner.class);
+        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertTrue(blogOwners.contains(blogOwner));
     }
 
@@ -127,14 +119,14 @@ public final class SQLiteStorageAdapterQueryTest {
         final BlogOwner blogOwner = BlogOwner.builder()
                 .name("Alan Turing")
                 .build();
-        blogAdapter.save(blogOwner);
+        adapter.save(blogOwner);
 
-        List<BlogOwner> blogOwners = blogAdapter.query(
+        List<BlogOwner> blogOwners = adapter.query(
                 BlogOwner.class,
                 Where.matches(BlogOwner.WEA.eq(null)));
         assertTrue(blogOwners.contains(blogOwner));
 
-        blogOwners = blogAdapter.query(
+        blogOwners = adapter.query(
                 BlogOwner.class,
                 Where.matches(BlogOwner.NAME.eq(null)));
         assertTrue(blogOwners.isEmpty());
@@ -152,7 +144,7 @@ public final class SQLiteStorageAdapterQueryTest {
             final BlogOwner blogOwner = BlogOwner.builder()
                 .name("namePrefix:" + counter)
                 .build();
-            blogAdapter.save(blogOwner);
+            adapter.save(blogOwner);
             savedModels.add(blogOwner);
         }
 
@@ -161,7 +153,7 @@ public final class SQLiteStorageAdapterQueryTest {
                 .toList()
                 .map(HashSet::new)
                 .blockingGet(),
-            Observable.fromIterable(blogAdapter.query(BlogOwner.class))
+            Observable.fromIterable(adapter.query(BlogOwner.class))
                 .toList()
                 .map(HashSet::new)
                 .blockingGet()
@@ -184,10 +176,10 @@ public final class SQLiteStorageAdapterQueryTest {
             .owner(blogOwner)
             .build();
 
-        blogAdapter.save(blogOwner);
-        blogAdapter.save(blog);
+        adapter.save(blogOwner);
+        adapter.save(blog);
 
-        final List<Blog> blogs = blogAdapter.query(Blog.class);
+        final List<Blog> blogs = adapter.query(Blog.class);
         assertTrue(blogs.contains(blog));
     }
 
@@ -199,7 +191,6 @@ public final class SQLiteStorageAdapterQueryTest {
     @Test
     public void querySavedDataWithMultipleForeignKeysOfSameType() throws DataStoreException {
         setupForCallModel();
-        
         final Person personCalling = Person.builder()
                 .name("Alan Turing")
                 .build();
@@ -222,16 +213,14 @@ public final class SQLiteStorageAdapterQueryTest {
                 .callee(phoneCalled)
                 .build();
 
-        callAdapter.save(personCalling);
-        callAdapter.save(personCalled);
-        callAdapter.save(phoneCalling);
-        callAdapter.save(phoneCalled);
-        callAdapter.save(phoneCall);
+        adapter.save(personCalling);
+        adapter.save(personCalled);
+        adapter.save(phoneCalling);
+        adapter.save(phoneCalled);
+        adapter.save(phoneCall);
 
-        final List<Call> phoneCalls = callAdapter.query(Call.class);
+        final List<Call> phoneCalls = adapter.query(Call.class);
         assertTrue(phoneCalls.contains(phoneCall));
-        
-        teardownForCallModel();
     }
 
     /**
@@ -262,12 +251,12 @@ public final class SQLiteStorageAdapterQueryTest {
             .post(post)
             .build();
 
-        blogAdapter.save(blogOwner);
-        blogAdapter.save(blog);
-        blogAdapter.save(post);
-        blogAdapter.save(comment);
+        adapter.save(blogOwner);
+        adapter.save(blog);
+        adapter.save(post);
+        adapter.save(comment);
 
-        final List<Comment> comments = blogAdapter.query(Comment.class);
+        final List<Comment> comments = adapter.query(Comment.class);
         assertTrue(comments.contains(comment));
         assertEquals(comments.get(0).getPost(), post);
         assertEquals(comments.get(0).getPost().getBlog(), blog);
@@ -285,9 +274,9 @@ public final class SQLiteStorageAdapterQueryTest {
         final int numModels = 10;
 
         BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
-        blogAdapter.save(blogOwner);
+        adapter.save(blogOwner);
         Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
-        blogAdapter.save(blog);
+        adapter.save(blog);
 
         for (int counter = 0; counter < numModels; counter++) {
             final Post post = Post.builder()
@@ -296,7 +285,7 @@ public final class SQLiteStorageAdapterQueryTest {
                 .rating(counter)
                 .blog(blog)
                 .build();
-            blogAdapter.save(post);
+            adapter.save(post);
             savedModels.add(post);
         }
 
@@ -314,7 +303,7 @@ public final class SQLiteStorageAdapterQueryTest {
                 .toList()
                 .map(HashSet::new)
                 .blockingGet(),
-            Observable.fromIterable(blogAdapter.query(Post.class, Where.matches(predicate)))
+            Observable.fromIterable(adapter.query(Post.class, Where.matches(predicate)))
                 .toList()
                 .map(HashSet::new)
                 .blockingGet()
@@ -331,9 +320,9 @@ public final class SQLiteStorageAdapterQueryTest {
         final List<Post> savedModels = new ArrayList<>();
         
         BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
-        blogAdapter.save(blogOwner);
+        adapter.save(blogOwner);
         Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
-        blogAdapter.save(blog);
+        adapter.save(blog);
 
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
@@ -343,11 +332,11 @@ public final class SQLiteStorageAdapterQueryTest {
                 .rating(counter)
                 .blog(blog)
                 .build();
-            blogAdapter.save(post);
+            adapter.save(post);
             savedModels.add(post);
         }
 
-        final List<Post> actualPosts = blogAdapter.query(
+        final List<Post> actualPosts = adapter.query(
                 Post.class,
                 Where.matches(
                     Post.TITLE.beginsWith("4")
@@ -378,15 +367,15 @@ public final class SQLiteStorageAdapterQueryTest {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Jane Doe")
             .build();
-        blogAdapter.save(blogOwner);
+        adapter.save(blogOwner);
 
         final Blog blog = Blog.builder()
             .name("Jane's Commercial Real Estate Blog")
             .owner(blogOwner)
             .build();
-        blogAdapter.save(blog);
+        adapter.save(blog);
 
-        final List<Blog> blogsOwnedByJaneDoe = blogAdapter.query(
+        final List<Blog> blogsOwnedByJaneDoe = adapter.query(
             Blog.class,
             Where.matches(BlogOwner.NAME.eq("Jane Doe"))
         );
@@ -402,15 +391,15 @@ public final class SQLiteStorageAdapterQueryTest {
         final BlogOwner blogOwner = BlogOwner.builder()
                 .name("Jane Doe")
                 .build();
-        blogAdapter.save(blogOwner);
+        adapter.save(blogOwner);
 
         final Blog blog = Blog.builder()
                 .name("Jane's Commercial Real Estate Blog")
                 .owner(blogOwner)
                 .build();
-        blogAdapter.save(blog);
+        adapter.save(blog);
 
-        final List<Blog> blogsOwnedByJaneDoe = blogAdapter.query(
+        final List<Blog> blogsOwnedByJaneDoe = adapter.query(
                 Blog.class,
                 Where.id(blog.getId())
         );
@@ -426,13 +415,13 @@ public final class SQLiteStorageAdapterQueryTest {
         final BlogOwner jane = BlogOwner.builder()
             .name("Jane Doe")
             .build();
-        blogAdapter.save(jane);
+        adapter.save(jane);
 
         QueryPredicate predicate = BlogOwner.NAME.eq("Jane; DROP TABLE Person; --");
-        final List<BlogOwner> resultOfMaliciousQuery = blogAdapter.query(BlogOwner.class, Where.matches(predicate));
+        final List<BlogOwner> resultOfMaliciousQuery = adapter.query(BlogOwner.class, Where.matches(predicate));
         assertTrue(resultOfMaliciousQuery.isEmpty());
 
-        final List<BlogOwner> resultAfterMaliciousQuery = blogAdapter.query(BlogOwner.class);
+        final List<BlogOwner> resultAfterMaliciousQuery = adapter.query(BlogOwner.class);
         assertTrue(resultAfterMaliciousQuery.contains(jane));
     }
 
@@ -446,7 +435,7 @@ public final class SQLiteStorageAdapterQueryTest {
         final int pageSize = 10;
         createBlogOwnerRecords(pageSize * 2);
 
-        List<BlogOwner> result = blogAdapter.query(
+        List<BlogOwner> result = adapter.query(
             BlogOwner.class,
             Where.paginated(Page.startingAt(0).withLimit(pageSize))
         );
@@ -464,7 +453,7 @@ public final class SQLiteStorageAdapterQueryTest {
         final int pageSize = 100;
         createBlogOwnerRecords(pageSize + 2);
 
-        List<BlogOwner> result = blogAdapter.query(
+        List<BlogOwner> result = adapter.query(
             BlogOwner.class,
             Where.paginated(Page.firstPage())
         );
@@ -483,7 +472,7 @@ public final class SQLiteStorageAdapterQueryTest {
     public void queryWithPaginationWithFirstResult() throws DataStoreException {
         createBlogOwnerRecords(2);
 
-        List<BlogOwner> result = blogAdapter.query(
+        List<BlogOwner> result = adapter.query(
             BlogOwner.class,
             Where.paginated(Page.firstResult())
         );
@@ -508,12 +497,12 @@ public final class SQLiteStorageAdapterQueryTest {
                     .name(names.get(i))
                     .wea(weas.get(i))
                     .build();
-            blogAdapter.save(owner);
+            adapter.save(owner);
             owners.add(owner);
         }
 
         // Act
-        List<BlogOwner> result = blogAdapter.query(
+        List<BlogOwner> result = adapter.query(
                 BlogOwner.class,
                 Where.sorted(BlogOwner.NAME.descending(), BlogOwner.WEA.ascending())
         );
@@ -542,17 +531,17 @@ public final class SQLiteStorageAdapterQueryTest {
             BlogOwner owner = BlogOwner.builder()
                     .name(name)
                     .build();
-            blogAdapter.save(owner);
+            adapter.save(owner);
             Blog blog = Blog.builder()
                     .name("")
                     .owner(owner)
                     .build();
-            blogAdapter.save(blog);
+            adapter.save(blog);
             blogs.add(blog);
         }
 
         // Act: Query Blogs sorted by owner's name
-        List<Blog> result = blogAdapter.query(Blog.class, Where.sorted(BlogOwner.NAME.ascending()));
+        List<Blog> result = adapter.query(Blog.class, Where.sorted(BlogOwner.NAME.ascending()));
 
         // Verify: Query result is sorted by owner's name
         List<Blog> sorted = new ArrayList<>(blogs);
@@ -567,9 +556,9 @@ public final class SQLiteStorageAdapterQueryTest {
     @Test
     public void queryFieldsAreBackwardsCompatible() throws DataStoreException {
         BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
-        blogAdapter.save(blogOwner);
+        adapter.save(blogOwner);
         Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
-        blogAdapter.save(blog);
+        adapter.save(blog);
 
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
@@ -579,17 +568,17 @@ public final class SQLiteStorageAdapterQueryTest {
                     .rating(counter)
                     .blog(blog)
                     .build();
-            blogAdapter.save(post);
+            adapter.save(post);
         }
 
         // Assert that using QueryField without model name yields same results if there is no column ambiguity
         assertEquals(
-            blogAdapter.query(Post.class, Where.matches(field("Post", "title").contains("4"))),
-            blogAdapter.query(Post.class, Where.matches(field("title").contains("4")))
+            adapter.query(Post.class, Where.matches(field("Post", "title").contains("4"))),
+            adapter.query(Post.class, Where.matches(field("title").contains("4")))
         );
         assertEquals(
-            blogAdapter.query(Post.class, Where.matches(field("Post", "rating").gt(3))),
-            blogAdapter.query(Post.class, Where.matches(field("rating").gt(3)))
+            adapter.query(Post.class, Where.matches(field("Post", "rating").gt(3))),
+            adapter.query(Post.class, Where.matches(field("rating").gt(3)))
         );
     }
 
@@ -598,7 +587,7 @@ public final class SQLiteStorageAdapterQueryTest {
             final BlogOwner blogOwner = BlogOwner.builder()
                     .name("John Doe " + i)
                     .build();
-            blogAdapter.save(blogOwner);
+            adapter.save(blogOwner);
         }
     }
 }
