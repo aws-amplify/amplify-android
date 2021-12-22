@@ -21,7 +21,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -51,21 +51,21 @@ final class TopologicalOrdering {
     }
 
     /**
-     * Gets a TopologicalOrdering of the ModelSchema in the ModelSchemaRegistry.
+     * Gets a TopologicalOrdering of the ModelSchema in the SchemaRegistry.
      * The set of ModelSchema in that registry is not expected to change during runtime,
      * so the results of this TopologicalOrdering should likewise be stable at runtime.
-     * @param modelSchemaRegistry A registry of ModelSchema
+     * @param schemaRegistry A registry of ModelSchema
      * @param modelProvider A ModelProvider
      * @return A topological ordering of the model schema in the registry
      */
     @SuppressLint("SyntheticAccessor")
     static TopologicalOrdering forRegisteredModels(
-            @NonNull ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull SchemaRegistry schemaRegistry,
             @NonNull ModelProvider modelProvider) {
         Objects.requireNonNull(modelProvider);
         final List<ModelSchema> schemaForModels = new ArrayList<>();
         for (String modelClassName : modelProvider.modelNames()) {
-            final ModelSchema schemaForModelClass = modelSchemaRegistry.getModelSchemaForModelClass(modelClassName);
+            final ModelSchema schemaForModelClass = schemaRegistry.getModelSchemaForModelClass(modelClassName);
             schemaForModels.add(schemaForModelClass);
         }
         return new TopologicalOrdering(new TopologicalSort(schemaForModels).result());

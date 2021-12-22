@@ -19,10 +19,12 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Exception thrown by API category plugins.
  */
-public final class ApiException extends AmplifyException {
+public class ApiException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,5 +52,50 @@ public final class ApiException extends AmplifyException {
             @NonNull final String recoverySuggestion
     ) {
         super(message, recoverySuggestion);
+    }
+
+    /**
+     * This type of exception should not be retried.
+     */
+    public static final class NonRetryableException extends ApiException {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * Constructor for NonRetryable Exception.
+         * @param message message for exception.
+         * @param recoverySuggestion recovery suggestions.
+         */
+        public NonRetryableException(@NonNull @NotNull String message, @NotNull String recoverySuggestion) {
+
+            super(message, recoverySuggestion);
+        }
+    }
+
+    /**
+     * Represents authn/authz errors as it relates to interacting with the API backend.
+     */
+    public static final class ApiAuthException extends ApiException {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * Public constructor that accepts an exception to be used as a cause.
+         * @param message message Explains the reason for the exception.
+         * @param throwable An exception to be used as a cause.
+         * @param recoverySuggestion Text suggesting a way to recover from the error being described.
+         */
+        public ApiAuthException(@NonNull String message,
+                                Throwable throwable,
+                                @NonNull String recoverySuggestion) {
+            super(message, throwable, recoverySuggestion);
+        }
+
+        /**
+         * Public constructor that takes a message and a recovery suggestion.
+         * @param message message Explains the reason for the exception.
+         * @param recoverySuggestion Text suggesting a way to recover from the error being described.
+         */
+        public ApiAuthException(@NonNull String message, @NonNull String recoverySuggestion) {
+            super(message, recoverySuggestion);
+        }
     }
 }

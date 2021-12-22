@@ -2,11 +2,14 @@
   authors {
     items {
       author {
+        createdAt
         id
         name
       }
+      createdAt
       id
       post {
+        createdAt
         id
         rating
         status
@@ -16,15 +19,19 @@
     nextToken
   }
   blog {
+    createdAt
     id
     name
     owner {
+      createdAt
       id
       name
+      updatedAt
       wea
     }
     posts {
       items {
+        createdAt
         id
         rating
         status
@@ -36,8 +43,10 @@
   comments {
     items {
       content
+      createdAt
       id
       post {
+        createdAt
         id
         rating
         status
@@ -46,6 +55,7 @@
     }
     nextToken
   }
+  createdAt
   id
   rating
   status

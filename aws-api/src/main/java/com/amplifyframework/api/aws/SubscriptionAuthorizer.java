@@ -19,10 +19,12 @@ import android.net.Uri;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.Amplify;
@@ -57,19 +59,23 @@ final class SubscriptionAuthorizer {
     /**
      * Return authorization json to be used explicitly for subscription registration.
      */
-    JSONObject createHeadersForSubscription(GraphQLRequest<?> request) throws ApiException {
-        return createHeaders(request, false);
+    JSONObject createHeadersForSubscription(GraphQLRequest<?> request,
+                                            AuthorizationType authorizationType) throws ApiException {
+        return createHeaders(request, authorizationType, false);
     }
 
     /**
      * Return authorization json to be used explicitly for establishing connection.
      */
-    JSONObject createHeadersForConnection() throws ApiException {
-        return createHeaders(null, true);
+    JSONObject createHeadersForConnection(AuthorizationType authorizationType) throws ApiException {
+        return createHeaders(null, authorizationType, true);
     }
 
-    private JSONObject createHeaders(GraphQLRequest<?> request, boolean connectionFlag) throws ApiException {
-        switch (configuration.getAuthorizationType()) {
+    private JSONObject createHeaders(GraphQLRequest<?> request,
+                                     AuthorizationType authType,
+                                     boolean connectionFlag) throws ApiException {
+
+        switch (authType) {
             case API_KEY:
                 ApiKeyAuthProvider keyProvider = authProviders.getApiKeyAuthProvider();
                 if (keyProvider == null) {
@@ -92,7 +98,7 @@ final class SubscriptionAuthorizer {
                 OidcAuthProvider oidcProvider = authProviders.getOidcAuthProvider();
                 if (oidcProvider == null) {
                     oidcProvider = () -> {
-                        throw new ApiException(
+                        throw new ApiAuthException(
                                 "OidcAuthProvider interface is not implemented.",
                                 "Please implement OidcAuthProvider interface to return " +
                                         "appropriate token from the appropriate service."
@@ -100,6 +106,19 @@ final class SubscriptionAuthorizer {
                     };
                 }
                 return forOidc(oidcProvider);
+            case AWS_LAMBDA:
+                FunctionAuthProvider functionAuthProvider = authProviders.getFunctionAuthProvider();
+                if (functionAuthProvider == null) {
+                    functionAuthProvider = () -> {
+                        throw new ApiAuthException(
+                                "FunctionAuthProvider interface is not implemented.",
+                                "Please implement FunctionAuthProvider interface to return " +
+                                        "appropriate token from the appropriate service."
+                        );
+                    };
+                }
+                return forAwsLambda(functionAuthProvider);
+
             case NONE:
             default:
                 return new JSONObject();
@@ -149,13 +168,27 @@ final class SubscriptionAuthorizer {
         }
     }
 
+    private JSONObject forAwsLambda(FunctionAuthProvider functionAuthProvider) throws ApiException {
+        try {
+            return new JSONObject()
+                    .put("host", getHost())
+                    .put("Authorization", functionAuthProvider.getLatestAuthToken());
+        } catch (JSONException jsonException) {
+            // This error should never be thrown
+            throw new ApiException(
+                    "Error constructing the authorization json for the AWS_LAMBDA auth type.",
+                    jsonException, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+            );
+        }
+    }
+
     private JSONObject forIam(
             AWSCredentialsProvider credentialsProvider,
             GraphQLRequest<?> request,
             boolean connectionFlag
     ) throws ApiException {
         final URI apiUrl = getRequestEndpoint(connectionFlag);
-        final String apiRegion = apiUrl.getAuthority().split("\\.")[2];
+        final String apiRegion = configuration.getRegion();
         final String requestContent = request != null ? request.getContent() : "{}";
 
         // Construct a request to be signed

@@ -226,8 +226,8 @@ public final class AppSyncMockingTest {
         Single
             .<GraphQLResponse<ModelWithMetadata<BlogOwner>>>create(emitter ->
                 appSync.delete(
+                    StrawMen.TONY_MODEL,
                     schema,
-                    StrawMen.TONY_MODEL.getId(),
                     1,
                     QueryPredicates.all(),
                     emitter::onSuccess,
@@ -253,8 +253,8 @@ public final class AppSyncMockingTest {
             .mockErrorResponse(StrawMen.JOE_MODEL, 1, error);
         Single
             .create(emitter -> appSync.delete(
+                StrawMen.JOE_MODEL,
                 schema,
-                StrawMen.JOE_MODEL.getId(),
                 1,
                 QueryPredicates.all(),
                 emitter::onSuccess,

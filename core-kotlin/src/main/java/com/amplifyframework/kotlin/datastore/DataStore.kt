@@ -16,12 +16,14 @@
 package com.amplifyframework.kotlin.datastore
 
 import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.amplifyframework.core.model.query.QueryOptions
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreItemChange
+import com.amplifyframework.datastore.DataStoreQuerySnapshot
 import kotlin.reflect.KClass
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -97,6 +99,20 @@ interface DataStore {
         itemClass: KClass<T>,
         itemId: String
     ): Flow<DataStoreItemChange<T>>
+
+    /**
+     * Query and Observe all changes to any/all item(s) in the DataStore.
+     * @param itemClass class which is being observed
+     * @param options query predicate and sort order
+     * @return A flow of DataStoreQuerySnapshot  once for local data then batched changes that
+     * occurs to item(s) in the DataStore based on predicates and item class.
+     */
+    @ExperimentalCoroutinesApi
+    @Throws(DataStoreException::class)
+    suspend fun <T : Model> observeQuery(
+        itemClass: KClass<T>,
+        options: ObserveQueryOptions
+    ): Flow<DataStoreQuerySnapshot<T>>
 
     /**
      * Observe the DataStore for changes to a particular type of model

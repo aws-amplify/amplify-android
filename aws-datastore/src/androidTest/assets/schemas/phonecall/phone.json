@@ -1,0 +1,71 @@
+{
+    "associations": {
+        "calls": {
+            "associatedName": "person",
+            "associatedType": "Call",
+            "name": "HasMany"
+        },
+        "ownedBy": {
+            "associatedType": "Person",
+            "name": "BelongsTo",
+            "targetName": "ownedById"
+        }
+    },
+    "authRules": [],
+    "fields": {
+        "id": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "id",
+            "targetType": "ID"
+        },
+        "number": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "number",
+            "targetType": "String"
+        },
+        "ownedById": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "ownedById",
+            "targetType": "ID"
+        },
+        "ownedBy": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": true,
+            "isRequired": true,
+            "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+            "name": "ownedBy",
+            "targetType": "Person"
+        },
+        "calls": {
+            "authRules": [],
+            "isArray": true,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": false,
+            "javaClassForValue": "java.util.List",
+            "name": "calls",
+            "targetType": "Call"
+        }
+    },
+    "indexes": {},
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
+    "name": "Phone",
+    "pluralName": "Phones"
+}

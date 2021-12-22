@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.annotations.Index;
+import com.amplifyframework.core.model.annotations.Indexes;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Immutable;
@@ -47,9 +48,16 @@ public final class ModelSchema {
     // Name of the Model.
     private final String name;
 
-    // The plural version of the name of the model.
-    // Useful for generating GraphQL list query names.
+    /**
+     * The plural version of the name of the model.
+     * Useful for generating GraphQL list query names.
+     * @Deprecated Use of pluralName is deprecated, use syncPluralName instead.
+     */
     private final String pluralName;
+
+    private final String syncPluralName;
+
+    private final String listPluralName;
 
     // Denotes whether this model has owner based authorization which changes the parameters for subscriptions
     // e.g. @auth(rules: [{allow: owner}]) on the model in the GraphQL Schema
@@ -73,6 +81,8 @@ public final class ModelSchema {
     private ModelSchema(Builder builder) {
         this.name = builder.name;
         this.pluralName = builder.pluralName;
+        this.listPluralName = builder.listPluralName;
+        this.syncPluralName = builder.syncPluralName;
         this.authRules = builder.authRules;
         this.fields = builder.fields;
         this.associations = builder.associations;
@@ -112,6 +122,14 @@ public final class ModelSchema {
                     ? modelConfig.pluralName()
                     : null;
 
+            final String listPluralName = modelConfig != null && !modelConfig.listPluralName().isEmpty()
+                    ? modelConfig.listPluralName()
+                    : null;
+
+            final String syncPluralName = modelConfig != null && !modelConfig.syncPluralName().isEmpty()
+                    ? modelConfig.syncPluralName()
+                    : null;
+
             if (modelConfig != null) {
                 for (com.amplifyframework.core.model.annotations.AuthRule ruleAnnotation : modelConfig.authRules()) {
                     authRules.add(new AuthRule(ruleAnnotation));
@@ -119,8 +137,14 @@ public final class ModelSchema {
             }
 
             for (Annotation annotation : clazz.getAnnotations()) {
-                ModelIndex modelIndex = createModelIndex(annotation);
-                if (modelIndex != null) {
+                if (annotation.annotationType().isAssignableFrom(Indexes.class)) {
+                    Indexes indexesAnnotation = (Indexes) annotation;
+                    for (Index indexAnnotation : indexesAnnotation.value()) {
+                        ModelIndex modelIndex = createModelIndex(indexAnnotation);
+                        indexes.put(modelIndex.getIndexName(), modelIndex);
+                    }
+                } else if (annotation.annotationType().isAssignableFrom(Index.class)) {
+                    ModelIndex modelIndex = createModelIndex((Index) annotation);
                     indexes.put(modelIndex.getIndexName(), modelIndex);
                 }
             }
@@ -139,6 +163,8 @@ public final class ModelSchema {
             return ModelSchema.builder()
                     .name(modelName)
                     .pluralName(modelPluralName)
+                    .listPluralName(listPluralName)
+                    .syncPluralName(syncPluralName)
                     .authRules(authRules)
                     .fields(fields)
                     .associations(associations)
@@ -152,6 +178,15 @@ public final class ModelSchema {
                     AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }
+    }
+
+    /**
+     * Indicates whether this model has any auth rules at the model level. This should be
+     * used to assert whether the API's default auth provider should be used.
+     * @return True if there are no model-level auth rules; false otherwise.
+     */
+    public boolean hasModelLevelRules() {
+        return this.authRules.size() > 0;
     }
 
     // Utility method to extract field metadata
@@ -170,6 +205,7 @@ public final class ModelSchema {
                     .name(fieldName)
                     .javaClassForValue(fieldType)
                     .targetType(targetType.isEmpty() ? fieldType.getSimpleName() : targetType)
+                    .isReadOnly(annotation.isReadOnly())
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
@@ -210,15 +246,11 @@ public final class ModelSchema {
     }
 
     // Utility method to extract model index metadata
-    private static ModelIndex createModelIndex(Annotation annotation) {
-        if (annotation.annotationType().isAssignableFrom(Index.class)) {
-            Index indexAnnotation = (Index) annotation;
-            return ModelIndex.builder()
-                    .indexName(indexAnnotation.name())
-                    .indexFieldNames(Arrays.asList(indexAnnotation.fields()))
-                    .build();
-        }
-        return null;
+    private static ModelIndex createModelIndex(Index indexAnnotation) {
+        return ModelIndex.builder()
+                .indexName(indexAnnotation.name())
+                .indexFieldNames(Arrays.asList(indexAnnotation.fields()))
+                .build();
     }
 
     /**
@@ -237,10 +269,35 @@ public final class ModelSchema {
      *
      * @return the plural name of the Model in the target
      *         if explicitly provided.
+     * @Deprecated instead use getListPluralName() or getSyncPluralName()
      */
     @Nullable
     public String getPluralName() {
         return pluralName;
+    }
+
+    /**
+     * Returns the plural name for list query of the Model in the target.
+     * Null if not explicitly annotated in ModelConfig.
+     *
+     * @return the plural name of the Model for list query in the target
+     *         if explicitly provided.
+     */
+    @Nullable
+    public String getListPluralName() {
+        return listPluralName;
+    }
+
+    /**
+     * Returns the plural name for sync query of the Model in the target.
+     * Null if not explicitly annotated in ModelConfig.
+     *
+     * @return the plural name of the Model for sync query in the target
+     *         if explicitly provided.
+     */
+    @Nullable
+    public String getSyncPluralName() {
+        return syncPluralName;
     }
 
     /**
@@ -286,6 +343,29 @@ public final class ModelSchema {
     }
 
     /**
+     * Returns the list of fields that make up the primary key for the {@link Model}.
+     * @return the list of fields that make up the primary key for the {@link Model}.
+     */
+    @NonNull
+    public List<String> getPrimaryIndexFields() {
+        ModelIndex customPrimaryIndex = indexes.get("undefined");
+        if (customPrimaryIndex != null && customPrimaryIndex.getIndexFieldNames().size() >= 1) {
+            return customPrimaryIndex.getIndexFieldNames();
+        } else {
+            return Arrays.asList(PrimaryKey.fieldName());
+        }
+    }
+
+    /**
+      * Returns the hash key for the {@link Model}, which should be used as the unique identifier.
+      * @return the hash key for the {@link Model}, which should be used as the unique identifier.
+     */
+    @NonNull
+    public String getPrimaryKeyName() {
+        return getPrimaryIndexFields().get(0);
+    }
+
+    /**
      * Returns the class of {@link Model}.
      *
      * @return the class of {@link Model}.
@@ -305,6 +385,8 @@ public final class ModelSchema {
             ModelSchema that = (ModelSchema) obj;
             return ObjectsCompat.equals(getName(), that.getName()) &&
                 ObjectsCompat.equals(getPluralName(), that.getPluralName()) &&
+                ObjectsCompat.equals(getListPluralName(), that.getListPluralName()) &&
+                ObjectsCompat.equals(getSyncPluralName(), that.getSyncPluralName()) &&
                 ObjectsCompat.equals(getAuthRules(), that.getAuthRules()) &&
                 ObjectsCompat.equals(getFields(), that.getFields()) &&
                 ObjectsCompat.equals(getAssociations(), that.getAssociations()) &&
@@ -318,6 +400,8 @@ public final class ModelSchema {
         return ObjectsCompat.hash(
                 getName(),
                 getPluralName(),
+                getListPluralName(),
+                getSyncPluralName(),
                 getAuthRules(),
                 getFields(),
                 getAssociations(),
@@ -331,6 +415,8 @@ public final class ModelSchema {
         return "ModelSchema{" +
             "name='" + name + '\'' +
             ", pluralName='" + pluralName + '\'' +
+            ", listPluralName='" + listPluralName + '\'' +
+            ", syncPluralName='" + syncPluralName + '\'' +
             ", authRules=" + authRules +
             ", fields=" + fields +
             ", associations=" + associations +
@@ -350,6 +436,8 @@ public final class ModelSchema {
         private Class<? extends Model> modelClass;
         private String name;
         private String pluralName;
+        private String listPluralName;
+        private String syncPluralName;
         private final List<AuthRule> authRules;
 
         Builder() {
@@ -379,6 +467,30 @@ public final class ModelSchema {
         @NonNull
         public Builder pluralName(@Nullable String pluralName) {
             this.pluralName = pluralName;
+            return this;
+        }
+
+        /**
+         * The plural version of the name of the Model for list query.
+         * If null, a default plural version name will be generated.
+         * @param listPluralName the plural version of model name for list query.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder listPluralName(@Nullable String listPluralName) {
+            this.listPluralName = listPluralName;
+            return this;
+        }
+
+        /**
+         * The plural version of the name of the Model for sync query.
+         * If null, a default plural version name will be generated.
+         * @param syncPluralName the plural version of model name for sync sync.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder syncPluralName(@Nullable String syncPluralName) {
+            this.syncPluralName = syncPluralName;
             return this;
         }
 

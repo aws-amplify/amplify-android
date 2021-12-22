@@ -1,0 +1,25 @@
+type Customer @model @key(fields: ["email"]) {
+  email: String!
+  username: String
+}
+
+type Order @model @key(fields: ["customerEmail", "createdAt"]) {
+    customerEmail: String!
+    createdAt: String!
+    orderId: ID!
+}
+
+type Item @model
+  @key(fields: ["orderId", "status", "createdAt"])
+  @key(name: "ByStatus", fields: ["status", "createdAt"], queryField: "itemsByStatus") {
+  orderId: ID!
+  status: Status!
+  createdAt: AWSDateTime!
+  name: String!
+}
+enum Status {
+  DELIVERED
+  IN_TRANSIT
+  PENDING
+  UNKNOWN
+}

@@ -5,11 +5,13 @@
     _lastChangedAt
     _version
     age
+    createdAt
     dob
     first_name
     id
     last_name
     relationship
+    updatedAt
   }
 }
 ",
@@ -21,7 +23,7 @@
     },
     "input" : {
       "_version" : 456,
-      "id" : "123"
+      "id" : "17521540-ccaa-4357-a622-34c42d8cfa24"
     }
   }
 }

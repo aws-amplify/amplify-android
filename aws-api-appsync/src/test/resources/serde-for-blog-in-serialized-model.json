@@ -10,6 +10,8 @@
         "javaClassForValue": "java.lang.String",
         "targetType": "ID",
         "isRequired": true,
+        "isCustomType": false,
+        "isReadOnly": false,
         "isArray": false,
         "isEnum": false,
         "isModel": false,
@@ -20,6 +22,8 @@
         "javaClassForValue": "java.lang.String",
         "targetType": "String",
         "isRequired": true,
+        "isCustomType": false,
+        "isReadOnly": false,
         "isArray": false,
         "isEnum": false,
         "isModel": false,
@@ -27,9 +31,11 @@
       },
       "owner": {
         "name": "owner",
-        "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
+        "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
         "targetType": "BlogOwner",
         "isRequired": true,
+        "isCustomType": false,
+        "isReadOnly": false,
         "isArray": false,
         "isEnum": false,
         "isModel": true,
@@ -40,6 +46,8 @@
         "javaClassForValue": "java.util.List",
         "targetType": "Post",
         "isRequired": false,
+        "isCustomType": false,
+        "isReadOnly": false,
         "isArray": true,
         "isEnum": false,
         "isModel": false,
@@ -59,7 +67,7 @@
       }
     },
     "indexes": {},
-    "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel"
+    "modelClass": "com.amplifyframework.core.model.SerializedModel"
   },
   "serializedData": {
     "owner": "2cb080ce-bc93-44c6-aa77-f985af311afa",

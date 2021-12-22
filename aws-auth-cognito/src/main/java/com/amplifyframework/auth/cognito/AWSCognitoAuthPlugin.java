@@ -33,16 +33,32 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResetPasswordOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
 import com.amplifyframework.auth.cognito.util.AuthProviderConverter;
 import com.amplifyframework.auth.cognito.util.CognitoAuthExceptionConverter;
 import com.amplifyframework.auth.cognito.util.SignInStateConverter;
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
+import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
+import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSessionResult;
@@ -85,7 +101,7 @@ import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.cognitoauth.AuthClient;
 import com.amazonaws.mobileconnectors.cognitoauth.exceptions.AuthNavigationException;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
-import com.amazonaws.services.cognitoidentity.model.NotAuthorizedException;
+import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -123,7 +139,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     public AWSCognitoAuthPlugin() {
         this.awsMobileClient = AWSMobileClient.getInstance();
     }
-    
+
     @VisibleForTesting
     AWSCognitoAuthPlugin(AWSMobileClient instance, String userId) {
         this.awsMobileClient = instance;
@@ -196,14 +212,15 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                 }
                                 break;
                             case SIGNED_IN:
-                                fetchAndSetUserId(() -> { /* No response needed */ });
-                                if (lastEvent != AuthChannelEventName.SIGNED_IN) {
-                                    lastEvent = AuthChannelEventName.SIGNED_IN;
-                                    Amplify.Hub.publish(
-                                            HubChannel.AUTH,
-                                            HubEvent.create(AuthChannelEventName.SIGNED_IN)
-                                    );
-                                }
+                                fetchAndSetUserId(() -> {
+                                    if (lastEvent != AuthChannelEventName.SIGNED_IN) {
+                                        lastEvent = AuthChannelEventName.SIGNED_IN;
+                                        Amplify.Hub.publish(
+                                                HubChannel.AUTH,
+                                                HubEvent.create(AuthChannelEventName.SIGNED_IN)
+                                        );
+                                    }
+                                });
                                 break;
                             case SIGNED_OUT_FEDERATED_TOKENS_INVALID:
                             case SIGNED_OUT_USER_POOLS_TOKENS_INVALID:
@@ -267,6 +284,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     ) {
         Map<String, String> userAttributes = new HashMap<>();
         Map<String, String> validationData = new HashMap<>();
+        Map<String, String> clientMetadata = new HashMap<>();
 
         if (options.getUserAttributes() != null) {
             for (AuthUserAttribute attribute : options.getUserAttributes()) {
@@ -276,6 +294,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
         if (options instanceof AWSCognitoAuthSignUpOptions) {
             validationData = ((AWSCognitoAuthSignUpOptions) options).getValidationData();
+            clientMetadata = ((AWSCognitoAuthSignUpOptions) options).getClientMetadata();
         }
 
         awsMobileClient.signUp(
@@ -283,6 +302,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             password,
             userAttributes,
             validationData,
+            clientMetadata,
             new Callback<SignUpResult>() {
                 @Override
                 public void onResult(SignUpResult result) {
@@ -301,12 +321,20 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
     @Override
     public void confirmSignUp(
-        @NonNull String username,
-        @NonNull String confirmationCode,
-        @NonNull final Consumer<AuthSignUpResult> onSuccess,
-        @NonNull final Consumer<AuthException> onException
+            @NonNull String username,
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmSignUpOptions options,
+            @NonNull final Consumer<AuthSignUpResult> onSuccess,
+            @NonNull final Consumer<AuthException> onException
     ) {
-        awsMobileClient.confirmSignUp(username, confirmationCode, new Callback<SignUpResult>() {
+        final Map<String, String> clientMetadata = new HashMap<>();
+
+        if (options instanceof AWSCognitoAuthConfirmSignUpOptions) {
+            AWSCognitoAuthConfirmSignUpOptions cognitoOptions = (AWSCognitoAuthConfirmSignUpOptions) options;
+            clientMetadata.putAll(cognitoOptions.getClientMetadata());
+        }
+
+        awsMobileClient.confirmSignUp(username, confirmationCode, clientMetadata, new Callback<SignUpResult>() {
             @Override
             public void onResult(SignUpResult result) {
                 onSuccess.accept(convertSignUpResult(result, username));
@@ -322,12 +350,29 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     @Override
+    public void confirmSignUp(
+            @NonNull String username,
+            @NonNull String confirmationCode,
+            @NonNull final Consumer<AuthSignUpResult> onSuccess,
+            @NonNull final Consumer<AuthException> onException
+    ) {
+        confirmSignUp(username, confirmationCode, AuthConfirmSignUpOptions.defaults(), onSuccess, onException);
+    }
+
+    @Override
     public void resendSignUpCode(
             @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onException
     ) {
-        awsMobileClient.resendSignUp(username, new Callback<SignUpResult>() {
+        final Map<String, String> clientMetadata = new HashMap<>();
+
+        if (options instanceof AWSCognitoAuthResendSignUpCodeOptions) {
+            AWSCognitoAuthResendSignUpCodeOptions cognitoOptions = (AWSCognitoAuthResendSignUpCodeOptions) options;
+            clientMetadata.putAll(cognitoOptions.getMetadata());
+        }
+        awsMobileClient.resendSignUp(username, clientMetadata, new Callback<SignUpResult>() {
             @Override
             public void onResult(SignUpResult result) {
                 onSuccess.accept(convertSignUpResult(result, username));
@@ -341,6 +386,15 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 );
             }
         });
+    }
+
+    @Override
+    public void resendSignUpCode(
+            @NonNull String username,
+            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), onSuccess, onException);
     }
 
     @Override
@@ -389,10 +443,21 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public void confirmSignIn(
             @NonNull String confirmationCode,
+            @NonNull AuthConfirmSignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onException
     ) {
-        awsMobileClient.confirmSignIn(confirmationCode, new Callback<SignInResult>() {
+        final Map<String, String> metadata = new HashMap<>();
+        final Map<String, String> userAttributes = new HashMap<>();
+        if (options instanceof AWSCognitoAuthConfirmSignInOptions) {
+            metadata.putAll(((AWSCognitoAuthConfirmSignInOptions) options).getMetadata());
+            for (AuthUserAttribute attribute : ((AWSCognitoAuthConfirmSignInOptions) options).getUserAttributes()) {
+                userAttributes.put(attribute.getKey().getKeyString(), attribute.getValue());
+            }
+
+        }
+
+        awsMobileClient.confirmSignIn(confirmationCode, metadata, userAttributes, new Callback<SignInResult>() {
             @Override
             public void onResult(SignInResult result) {
                 try {
@@ -411,6 +476,15 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 );
             }
         });
+    }
+
+    @Override
+    public void confirmSignIn(
+            @NonNull String confirmationCode,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        confirmSignIn(confirmationCode, AuthConfirmSignInOptions.defaults(), onSuccess, onException);
     }
 
     @Override
@@ -510,11 +584,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                 @Override
                 public void onError(Exception exception) {
-                    onException.accept(new AuthException(
-                            "An error occurred while attempting to retrieve your user details",
-                            exception,
-                            "See attached exception for more details"
-                    ));
+                    onException.accept(CognitoAuthExceptionConverter.lookup(
+                            exception, "Fetching authorization session failed."));
                 }
             });
         } catch (Throwable exception) {
@@ -539,11 +610,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
-                onException.accept(new AuthException(
-                        "An error occurred while remembering a device",
-                        exception,
-                        "See attached exception for more details"
-                ));
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Remember device failed."));
             }
         });
     }
@@ -561,11 +629,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
-                onException.accept(new AuthException(
-                        "An error occurred while forgetting a device",
-                        exception,
-                        "See attached exception for more details"
-                ));
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Forget device failed."));
             }
         });
     }
@@ -584,11 +649,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
-                onException.accept(new AuthException(
-                        "An error occurred while forgetting a device",
-                        exception,
-                        "See attached exception for more details"
-                ));
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Forget device failed."));
             }
         });
     }
@@ -610,11 +672,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
-                onException.accept(new AuthException(
-                        "An error occurred while fetching remembered devices.",
-                        exception,
-                        "See attached exception for more details"
-                ));
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Fetching devices failed."));
             }
         });
     }
@@ -622,10 +681,17 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public void resetPassword(
             @NonNull String username,
+            @NonNull AuthResetPasswordOptions options,
             @NonNull Consumer<AuthResetPasswordResult> onSuccess,
             @NonNull Consumer<AuthException> onException
     ) {
-        awsMobileClient.forgotPassword(username, new Callback<ForgotPasswordResult>() {
+        final Map<String, String> clientMetadata = new HashMap<>();
+
+        if (options instanceof AWSCognitoAuthResetPasswordOptions) {
+            AWSCognitoAuthResetPasswordOptions cognitoOptions = (AWSCognitoAuthResetPasswordOptions) options;
+            clientMetadata.putAll(cognitoOptions.getMetadata());
+        }
+        awsMobileClient.forgotPassword(username, clientMetadata, new Callback<ForgotPasswordResult>() {
             @Override
             public void onResult(ForgotPasswordResult result) {
                 if (result.getState().equals(ForgotPasswordState.CONFIRMATION_CODE)) {
@@ -647,25 +713,40 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
-                onException.accept(new AuthException(
-                        "An error occurred triggering password recovery",
-                        exception,
-                        "See attached exception for more details"
-                ));
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Reset password failed."));
             }
         });
+    }
+
+    @Override
+    public void resetPassword(
+            @NonNull String username,
+            @NonNull Consumer<AuthResetPasswordResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        resetPassword(username, AuthResetPasswordOptions.defaults(), onSuccess, onException);
     }
 
     @Override
     public void confirmResetPassword(
             @NonNull String newPassword,
             @NonNull String confirmationCode,
+            @NonNull AuthConfirmResetPasswordOptions options,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onException
     ) {
+        final Map<String, String> clientMetadata = new HashMap<>();
+
+        if (options instanceof AWSCognitoAuthConfirmResetPasswordOptions) {
+            AWSCognitoAuthConfirmResetPasswordOptions cognitoOptions =
+                    (AWSCognitoAuthConfirmResetPasswordOptions) options;
+            clientMetadata.putAll(cognitoOptions.getMetadata());
+        }
         awsMobileClient.confirmForgotPassword(
             newPassword,
             confirmationCode,
+            clientMetadata,
             new Callback<ForgotPasswordResult>() {
                 @Override
                 public void onResult(ForgotPasswordResult result) {
@@ -682,13 +763,26 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                 @Override
                 public void onError(Exception error) {
-                    onException.accept(new AuthException(
-                            "An error occurred confirming password recovery code",
-                            error,
-                            "See attached exception for more details"
-                    ));
+                    onException.accept(CognitoAuthExceptionConverter.lookup(
+                            error, "Confirm reset password failed."));
                 }
             }
+        );
+    }
+
+    @Override
+    public void confirmResetPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        confirmResetPassword(
+                newPassword,
+                confirmationCode,
+                AuthConfirmResetPasswordOptions.defaults(),
+                onSuccess,
+                onException
         );
     }
 
@@ -706,12 +800,9 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             }
 
             @Override
-            public void onError(Exception error) {
-                onException.accept(new AuthException(
-                        "Failed to change password",
-                        error,
-                        "See attached exception for more details"
-                ));
+            public void onError(Exception exception) {
+                onException.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Update password failed."));
             }
         });
     }
@@ -734,11 +825,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception error) {
-                onError.accept(new AuthException(
-                        "Failed to fetch user attributes",
-                        error,
-                        "Ensure that you are logged in and online"
-                ));
+                onError.accept(CognitoAuthExceptionConverter.lookup(
+                        error, "Fetching user attributes failed."));
             }
         });
     }
@@ -746,12 +834,21 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public void updateUserAttribute(
             @NonNull AuthUserAttribute attribute,
+            @NonNull AuthUpdateUserAttributeOptions options,
             @NonNull Consumer<AuthUpdateAttributeResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
 
+        final Map<String, String> clientMetadata = new HashMap<>();
+        if (options instanceof AWSCognitoAuthUpdateUserAttributeOptions) {
+            AWSCognitoAuthUpdateUserAttributeOptions cognitoOptions =
+                    (AWSCognitoAuthUpdateUserAttributeOptions) options;
+            clientMetadata.putAll(cognitoOptions.getMetadata());
+        }
+
         awsMobileClient.updateUserAttributes(
                 Collections.singletonMap(attribute.getKey().getKeyString(), attribute.getValue()),
+                clientMetadata,
                 new Callback<List<UserCodeDeliveryDetails>>() {
                     @Override
                     public void onResult(List<UserCodeDeliveryDetails> result) {
@@ -787,11 +884,29 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     @Override
+    public void updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull Consumer<AuthUpdateAttributeResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        updateUserAttribute(attribute, AuthUpdateUserAttributeOptions.defaults(), onSuccess, onError);
+    }
+
+    @Override
     public void updateUserAttributes(
             @NonNull List<AuthUserAttribute> attributes,
+            @NonNull AuthUpdateUserAttributesOptions options,
             @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
+
+        final Map<String, String> clientMetadata = new HashMap<>();
+        if (options instanceof AWSCognitoAuthUpdateUserAttributesOptions) {
+            AWSCognitoAuthUpdateUserAttributesOptions cognitoOptions =
+                    (AWSCognitoAuthUpdateUserAttributesOptions) options;
+            clientMetadata.putAll(cognitoOptions.getMetadata());
+        }
+
         Map<String, String> attributesMap = new HashMap<>();
         for (AuthUserAttribute attribute : attributes) {
             attributesMap.put(attribute.getKey().getKeyString(), attribute.getValue());
@@ -799,6 +914,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
         awsMobileClient.updateUserAttributes(
                 attributesMap,
+                clientMetadata,
                 new Callback<List<UserCodeDeliveryDetails>>() {
                     @Override
                     public void onResult(List<UserCodeDeliveryDetails> result) {
@@ -831,8 +947,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                                         null)
                                         ));
                             }
-                            onSuccess.accept(resultMap);
                         }
+                        onSuccess.accept(resultMap);
                     }
 
                     @Override
@@ -847,27 +963,67 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     @Override
+    public void updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        updateUserAttributes(
+                attributes,
+                AuthUpdateUserAttributesOptions.defaults(),
+                onSuccess,
+                onError
+        );
+    }
+
+    @Override
+    public void resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull AuthResendUserAttributeConfirmationCodeOptions options,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+
+        final Map<String, String> clientMetadata = new HashMap<>();
+        if (options instanceof AWSCognitoAuthResendUserAttributeConfirmationCodeOptions) {
+            AWSCognitoAuthResendUserAttributeConfirmationCodeOptions cognitoOptions =
+                    (AWSCognitoAuthResendUserAttributeConfirmationCodeOptions) options;
+            clientMetadata.putAll(cognitoOptions.getMetadata());
+        }
+
+        String attributeName = attributeKey.getKeyString();
+        awsMobileClient.verifyUserAttribute(
+                attributeName,
+                clientMetadata,
+                new Callback<UserCodeDeliveryDetails>() {
+                    @Override
+                    public void onResult(UserCodeDeliveryDetails result) {
+                        onSuccess.accept(convertCodeDeliveryDetails(result));
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        onError.accept(new AuthException(
+                                "Failed to resend user attribute confirmation code",
+                                error,
+                                "See attached exception for more details"
+                        ));
+                    }
+                });
+    }
+
+    @Override
     public void resendUserAttributeConfirmationCode(
             @NonNull AuthUserAttributeKey attributeKey,
             @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        String attributeName = attributeKey.getKeyString();
-        awsMobileClient.verifyUserAttribute(attributeName, new Callback<UserCodeDeliveryDetails>() {
-            @Override
-            public void onResult(UserCodeDeliveryDetails result) {
-                onSuccess.accept(convertCodeDeliveryDetails(result));
-            }
-
-            @Override
-            public void onError(Exception error) {
-                onError.accept(new AuthException(
-                        "Failed to resend user attribute confirmation code",
-                        error,
-                        "See attached exception for more details"
-                ));
-            }
-        });
+        resendUserAttributeConfirmationCode(
+                attributeKey,
+                AuthResendUserAttributeConfirmationCodeOptions.defaults(),
+                onSuccess,
+                onError
+        );
     }
 
     @Override
@@ -889,18 +1045,15 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                     @Override
                     public void onError(Exception error) {
-                        onError.accept(new AuthException(
-                                "An error occurred confirming user attribute",
-                                error,
-                                "See attached exception for more details"
-                        ));
+                        onError.accept(CognitoAuthExceptionConverter.lookup(
+                                error, "Confirming user attributes failed."));
                     }
                 });
     }
 
     @Override
     public AuthUser getCurrentUser() {
-        if (userId != null) {
+        if (userId != null && awsMobileClient.getUsername() != null) {
             return new AuthUser(userId, awsMobileClient.getUsername());
         } else {
             return null;

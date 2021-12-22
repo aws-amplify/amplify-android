@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -34,12 +35,14 @@ public final class ApiAuthProviders {
     private final AWSCredentialsProvider awsCredentialsProvider;
     private final CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
     private final OidcAuthProvider oidcAuthProvider;
+    private final FunctionAuthProvider functionAuthProvider;
 
     private ApiAuthProviders(Builder builder) {
         this.apiKeyAuthProvider = builder.getApiKeyAuthProvider();
         this.awsCredentialsProvider = builder.getAWSCredentialsProvider();
         this.oidcAuthProvider = builder.getOidcAuthProvider();
         this.cognitoUserPoolsAuthProvider = builder.getCognitoUserPoolsAuthProvider();
+        this.functionAuthProvider = builder.getFunctionAuthProvider();
     }
 
     /**
@@ -75,6 +78,14 @@ public final class ApiAuthProviders {
     }
 
     /**
+     * Gets the custom auth provider.
+     * @return an implementation of {@link FunctionAuthProvider}
+     */
+    public FunctionAuthProvider getFunctionAuthProvider() {
+        return this.functionAuthProvider;
+    }
+
+    /**
      * Statically gets the builder for conveniently
      * configuring an immutable instance of {@link ApiAuthProviders}.
      * @return the builder object for {@link ApiAuthProviders}
@@ -101,6 +112,7 @@ public final class ApiAuthProviders {
         private AWSCredentialsProvider awsCredentialsProvider;
         private CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
         private OidcAuthProvider oidcAuthProvider;
+        private FunctionAuthProvider functionAuthProvider;
 
         /**
          * Assigns an API key Auth provider.
@@ -143,6 +155,16 @@ public final class ApiAuthProviders {
         }
 
         /**
+         * Assigns a serverless function (e.g. AWS Lambda) auth provider.
+         * @param provider an instance of {@link FunctionAuthProvider}
+         * @return this builder object for chaining
+         */
+        public ApiAuthProviders.Builder functionAuthProvider(@NonNull FunctionAuthProvider provider) {
+            ApiAuthProviders.Builder.this.functionAuthProvider = Objects.requireNonNull(provider);
+            return ApiAuthProviders.Builder.this;
+        }
+
+        /**
          * Creates an immutable instance of {@link ApiAuthProviders}
          * configured to this builder instance.
          * @return The configured {@link ApiAuthProviders} instance
@@ -165,6 +187,10 @@ public final class ApiAuthProviders {
 
         OidcAuthProvider getOidcAuthProvider() {
             return ApiAuthProviders.Builder.this.oidcAuthProvider;
+        }
+
+        FunctionAuthProvider getFunctionAuthProvider() {
+            return ApiAuthProviders.Builder.this.functionAuthProvider;
         }
     }
 }

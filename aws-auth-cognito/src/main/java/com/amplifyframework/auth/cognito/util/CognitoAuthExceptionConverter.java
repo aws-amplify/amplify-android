@@ -26,9 +26,13 @@ import com.amazonaws.services.cognitoidentityprovider.model.ExpiredCodeException
 import com.amazonaws.services.cognitoidentityprovider.model.InvalidParameterException;
 import com.amazonaws.services.cognitoidentityprovider.model.InvalidPasswordException;
 import com.amazonaws.services.cognitoidentityprovider.model.LimitExceededException;
+import com.amazonaws.services.cognitoidentityprovider.model.MFAMethodNotFoundException;
+import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException;
 import com.amazonaws.services.cognitoidentityprovider.model.PasswordResetRequiredException;
 import com.amazonaws.services.cognitoidentityprovider.model.ResourceNotFoundException;
+import com.amazonaws.services.cognitoidentityprovider.model.SoftwareTokenMFANotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.TooManyFailedAttemptsException;
+import com.amazonaws.services.cognitoidentityprovider.model.TooManyRequestsException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException;
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.UsernameExistsException;
@@ -91,12 +95,28 @@ public final class CognitoAuthExceptionConverter {
             return new AuthException.LimitExceededException(error);
         }
 
+        if (error instanceof MFAMethodNotFoundException) {
+            return new AuthException.MFAMethodNotFoundException(error);
+        }
+
+        if (error instanceof NotAuthorizedException) {
+            return new AuthException.NotAuthorizedException(error);
+        }
+
         if (error instanceof ResourceNotFoundException) {
             return new AuthException.ResourceNotFoundException(error);
         }
 
+        if (error instanceof SoftwareTokenMFANotFoundException) {
+            return new AuthException.SoftwareTokenMFANotFoundException(error);
+        }
+
         if (error instanceof TooManyFailedAttemptsException) {
             return new AuthException.FailedAttemptsLimitExceededException(error);
+        }
+
+        if (error instanceof TooManyRequestsException) {
+            return new AuthException.TooManyRequestsException(error);
         }
 
         if (error instanceof PasswordResetRequiredException) {

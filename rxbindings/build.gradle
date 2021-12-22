@@ -20,6 +20,7 @@ apply from: rootProject.file("configuration/publishing.gradle")
 dependencies {
     implementation project(path: ':core')
     implementation dependency.androidx.annotation
+    implementation dependency.androidx.appcompat
     implementation dependency.rxjava
 
     testImplementation project(path: ':testutils')

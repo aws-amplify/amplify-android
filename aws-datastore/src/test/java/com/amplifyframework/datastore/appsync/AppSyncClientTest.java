@@ -27,6 +27,8 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.ecommerce.Item;
+import com.amplifyframework.testmodels.ecommerce.Status;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
@@ -179,4 +181,34 @@ public final class AppSyncClientTest {
         JSONAssert.assertEquals(Resources.readAsString("update-meeting.txt"),
                 capturedRequest.getContent(), true);
     }
+
+    /**
+     * Validates delete mutation for item with custom primary key.
+     * @throws JSONException from JSONAssert.assertEquals JSON parsing error
+     * @throws AmplifyException from ModelSchema.fromModelClass to convert model to schema
+     */
+    @Test
+    public void validateDeleteMutationWithCustomPrimaryKey() throws AmplifyException, JSONException {
+        final Item item = Item.builder()
+                .orderId("123a7asa")
+                .status(Status.IN_TRANSIT)
+                .createdAt(new Temporal.DateTime("2021-04-20T15:20:32.651Z"))
+                .name("Gummy Bears")
+                .build();
+        ModelSchema schema = ModelSchema.fromModelClass(Item.class);
+        endpoint.delete(item, schema, 1, response -> { }, error -> { });
+
+        // Now, capture the request argument on API, so we can see what was passed.
+        ArgumentCaptor<GraphQLRequest<ModelWithMetadata<Item>>> requestCaptor =
+                ArgumentCaptor.forClass(GraphQLRequest.class);
+        verify(api).mutate(requestCaptor.capture(), any(Consumer.class), any(Consumer.class));
+        GraphQLRequest<ModelWithMetadata<Item>> capturedRequest = requestCaptor.getValue();
+
+        // Assert
+        assertEquals(TypeMaker.getParameterizedType(ModelWithMetadata.class, Item.class),
+                capturedRequest.getResponseType());
+        JSONAssert.assertEquals(Resources.readAsString("delete-item.txt"),
+                capturedRequest.getContent(), true);
+    }
+
 }

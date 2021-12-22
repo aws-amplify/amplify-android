@@ -43,13 +43,20 @@ public final class DataStoreConfiguration {
     static final int DEFAULT_SYNC_MAX_RECORDS = 10_000;
     @VisibleForTesting 
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
+    @VisibleForTesting
+    static final boolean DEFAULT_DO_SYNC_RETRY = false;
+    static final int MAX_RECORDS = 1000;
+    static final long MAX_TIME_SEC = 2;
 
     private final DataStoreErrorHandler errorHandler;
     private final DataStoreConflictHandler conflictHandler;
     private final Integer syncMaxRecords;
     private final Integer syncPageSize;
+    private final boolean doSyncRetry;
     private final Map<String, DataStoreSyncExpression> syncExpressions;
     private final Long syncIntervalInMinutes;
+    private final Long maxTimeLapseForObserveQuery;
+    private final Integer observeQueryMaxRecords;
 
     private DataStoreConfiguration(Builder builder) {
         this.errorHandler = builder.errorHandler;
@@ -58,6 +65,9 @@ public final class DataStoreConfiguration {
         this.syncPageSize = builder.syncPageSize;
         this.syncIntervalInMinutes = builder.syncIntervalInMinutes;
         this.syncExpressions = builder.syncExpressions;
+        this.doSyncRetry = builder.doSyncRetry;
+        this.maxTimeLapseForObserveQuery = builder.maxTimeLapseForObserveQuery;
+        this.observeQueryMaxRecords = builder.observeQueryMaxRecords;
     }
 
     /**
@@ -111,6 +121,9 @@ public final class DataStoreConfiguration {
             .syncInterval(DEFAULT_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .syncPageSize(DEFAULT_SYNC_PAGE_SIZE)
             .syncMaxRecords(DEFAULT_SYNC_MAX_RECORDS)
+                .doSyncRetry(DEFAULT_DO_SYNC_RETRY)
+                .observeQueryMaxTime(MAX_TIME_SEC)
+                .observeQueryMaxRecords(MAX_RECORDS)
             .build();
     }
 
@@ -175,6 +188,15 @@ public final class DataStoreConfiguration {
     }
 
     /**
+     * Gets the boolean for enabling retry on sync failure
+     * a sync operation.
+     * @return Desired size of a page of results from an AppSync sync response
+     */
+    public Boolean getDoSyncRetry() {
+        return this.doSyncRetry;
+    }
+
+    /**
      * Returns the Map of all {@link DataStoreSyncExpression}s used to filter data received from AppSync, either during
      * a sync or over the real-time subscription.
      * @return the Map of all {@link DataStoreSyncExpression}s.
@@ -211,6 +233,15 @@ public final class DataStoreConfiguration {
         if (!ObjectsCompat.equals(getSyncExpressions(), that.getSyncExpressions())) {
             return false;
         }
+        if (!ObjectsCompat.equals(getDoSyncRetry(), that.getDoSyncRetry())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getMaxTimeLapseForObserveQuery(), that.getMaxTimeLapseForObserveQuery())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getObserveQueryMaxRecords(), that.getObserveQueryMaxRecords())) {
+            return false;
+        }
         return true;
     }
 
@@ -222,6 +253,9 @@ public final class DataStoreConfiguration {
         result = 31 * result + (getSyncPageSize() != null ? getSyncPageSize().hashCode() : 0);
         result = 31 * result + (getSyncIntervalInMinutes() != null ? getSyncIntervalInMinutes().hashCode() : 0);
         result = 31 * result + (getSyncExpressions() != null ? getSyncExpressions().hashCode() : 0);
+        result = 31 * result + getDoSyncRetry().hashCode();
+        result = 31 * result + (getObserveQueryMaxRecords() != null ? getObserveQueryMaxRecords().hashCode() : 0);
+        result = 31 * result + getMaxTimeLapseForObserveQuery().hashCode();
         return result;
     }
 
@@ -234,7 +268,29 @@ public final class DataStoreConfiguration {
             ", syncPageSize=" + syncPageSize +
             ", syncIntervalInMinutes=" + syncIntervalInMinutes +
             ", syncExpressions=" + syncExpressions +
+                ", doSyncRetry=" + doSyncRetry +
+                ", maxTimeRelapseForObserveQuery=" + maxTimeLapseForObserveQuery +
+                ", observeQueryMaxRecords=" + observeQueryMaxRecords +
             '}';
+    }
+
+    /**
+     * Gets the Time lapse for observe query snapshot, expressed in minutes.
+     * This method serves the same purpose as {@link #getMaxTimeLapseForObserveQuery()}
+     * -- except, for convenience, returns the value in
+     * minutes, not milliseconds.
+     * @return The max delay interval, expressed in minutes.
+     */
+    public Long getMaxTimeLapseForObserveQuery() {
+        return maxTimeLapseForObserveQuery;
+    }
+
+    /**
+     * Gets the maximum number of records to be batched for observe query.
+     * @return The max number of records to be batched for observe query.
+     */
+    public Integer getObserveQueryMaxRecords() {
+        return observeQueryMaxRecords;
     }
 
     /**
@@ -247,10 +303,13 @@ public final class DataStoreConfiguration {
         private Long syncIntervalInMinutes;
         private Integer syncMaxRecords;
         private Integer syncPageSize;
+        private boolean doSyncRetry;
         private Map<String, DataStoreSyncExpression> syncExpressions;
         private boolean ensureDefaults;
         private JSONObject pluginJson;
         private DataStoreConfiguration userProvidedConfiguration;
+        private Integer observeQueryMaxRecords;
+        private long maxTimeLapseForObserveQuery;
 
         private Builder() {
             this.errorHandler = DefaultDataStoreErrorHandler.instance();
@@ -303,6 +362,31 @@ public final class DataStoreConfiguration {
         }
 
         /**
+         * Sets the maximum time lapsed between changes , from the observe query, to process from a
+         * item change operation.
+         * @param maxTimeRelapseForObserveQuery Max time lapsed between changes from
+         *                                      server at one time in seconds
+         * @return Current builder instance
+         */
+        @NonNull
+        public Builder observeQueryMaxTime(long maxTimeRelapseForObserveQuery) {
+            this.maxTimeLapseForObserveQuery = maxTimeRelapseForObserveQuery;
+            return Builder.this;
+        }
+
+        /**
+         * Sets the maximum number of records, from the observe query, to process from a item change
+         * operation.
+         * @param observeQueryMaxRecords Max number of records client will consume from server at one time
+         * @return Current builder instance
+         */
+        @NonNull
+        public Builder observeQueryMaxRecords(@IntRange(from = 0) Integer observeQueryMaxRecords) {
+            this.observeQueryMaxRecords = observeQueryMaxRecords;
+            return Builder.this;
+        }
+
+        /**
          * Sets the maximum number of records, from the server, to process from a sync operation.
          * @param syncMaxRecords Max number of records client will consumer from server at one time
          * @return Current builder instance
@@ -310,6 +394,17 @@ public final class DataStoreConfiguration {
         @NonNull
         public Builder syncMaxRecords(@IntRange(from = 0) Integer syncMaxRecords) {
             this.syncMaxRecords = syncMaxRecords;
+            return Builder.this;
+        }
+
+        /**
+         * Sets the retry enabled on datastore sync.
+         * @param doSyncRetry Is retry enabled on datastore sync
+         * @return Current builder instance
+         */
+        @NonNull
+        public Builder doSyncRetry(boolean doSyncRetry) {
+            this.doSyncRetry = doSyncRetry;
             return Builder.this;
         }
 
@@ -325,8 +420,9 @@ public final class DataStoreConfiguration {
         }
 
         /**
-         * Sets a sync expression for a particular model to filter which data is synced locally.  The expression
-         * is evaluated each time DataStore is started.  The QueryPredicate is applied on both sync and subscriptions.
+         * Sets a sync expression for a particular model to filter which data is synced locally.
+         * The expression is evaluated each time DataStore is started.
+         * The QueryPredicate is applied on both sync and subscriptions.
          * @param modelClass the model class for which the filter applies
          * @param syncExpression DataStoreSyncExpression that should be used to filter the data that is synced.
          * @return Current builder
@@ -336,6 +432,24 @@ public final class DataStoreConfiguration {
                                       @NonNull DataStoreSyncExpression syncExpression) {
             this.syncExpressions.put(
                     Objects.requireNonNull(modelClass).getSimpleName(),
+                    Objects.requireNonNull(syncExpression)
+            );
+            return Builder.this;
+        }
+
+        /**
+         * Sets a sync expression for a particular model to filter which data is synced locally.
+         * The expression is evaluated each time DataStore is started.
+         * The QueryPredicate is applied on both sync and subscriptions.
+         * @param modelName the name of the model for which the filter applies
+         * @param syncExpression DataStoreSyncExpression that should be used to filter the data that is synced.
+         * @return Current builder
+         */
+        @NonNull
+        public Builder syncExpression(@NonNull String modelName,
+                                      @NonNull DataStoreSyncExpression syncExpression) {
+            this.syncExpressions.put(
+                    Objects.requireNonNull(modelName),
                     Objects.requireNonNull(syncExpression)
             );
             return Builder.this;
@@ -393,6 +507,11 @@ public final class DataStoreConfiguration {
             syncMaxRecords = getValueOrDefault(userProvidedConfiguration.getSyncMaxRecords(), syncMaxRecords);
             syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
             syncExpressions = userProvidedConfiguration.getSyncExpressions();
+            doSyncRetry = getValueOrDefault(userProvidedConfiguration.getDoSyncRetry(), doSyncRetry);
+            observeQueryMaxRecords = getValueOrDefault(userProvidedConfiguration.getObserveQueryMaxRecords(),
+                    observeQueryMaxRecords);
+            maxTimeLapseForObserveQuery = userProvidedConfiguration.getMaxTimeLapseForObserveQuery()
+                    == 0 ? maxTimeLapseForObserveQuery : userProvidedConfiguration.getMaxTimeLapseForObserveQuery();
         }
 
         private static <T> T getValueOrDefault(T value, T defaultValue) {
@@ -419,6 +538,9 @@ public final class DataStoreConfiguration {
                 syncIntervalInMinutes = getValueOrDefault(syncIntervalInMinutes, DEFAULT_SYNC_INTERVAL_MINUTES);
                 syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
+                observeQueryMaxRecords = getValueOrDefault(observeQueryMaxRecords, MAX_RECORDS);
+                maxTimeLapseForObserveQuery = maxTimeLapseForObserveQuery == 0 ? MAX_TIME_SEC :
+                        maxTimeLapseForObserveQuery;
             }
             return new DataStoreConfiguration(this);
         }

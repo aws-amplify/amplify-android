@@ -24,10 +24,13 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.appsync.SerializedModel;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -59,11 +62,12 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     }
 
     @Override
-    public void initialize(
-            @NonNull Context context,
-            @NonNull Consumer<List<ModelSchema>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError
-    ) {}
+    public void initialize(@NonNull Context context,
+                            @NonNull Consumer<List<ModelSchema>> onSuccess,
+                            @NonNull Consumer<DataStoreException> onError,
+                            @NonNull DataStoreConfiguration dataStoreConfiguration) {
+
+    }
 
     @Override
     public <T extends Model> void save(
@@ -90,8 +94,10 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             }
         }
         final ModelSchema schema;
+        final SerializedModel patchItem;
         try {
             schema = ModelSchema.fromModelClass(item.getClass());
+            patchItem = SerializedModel.difference(item, savedItem, schema);
         } catch (AmplifyException schemaBuildFailure) {
             onError.accept(new DataStoreException(
                 "Failed to build model schema.", schemaBuildFailure, "Verify your model."
@@ -101,7 +107,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         items.add(item);
         StorageItemChange<T> change = StorageItemChange.<T>builder()
             .item(item)
-            .patchItem(SerializedModel.difference(item, savedItem, schema))
+            .patchItem(patchItem)
             .modelSchema(schema)
             .type(type)
             .predicate(predicate)
@@ -165,8 +171,10 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         Model savedItem = items.remove(index);
 
         final ModelSchema schema;
+        final SerializedModel patchItem;
         try {
             schema = ModelSchema.fromModelClass(item.getClass());
+            patchItem = SerializedModel.create(savedItem, schema);
         } catch (AmplifyException schemaBuildFailure) {
             onError.accept(new DataStoreException(
                 "Failed to build model schema.", schemaBuildFailure, "Verify your model."
@@ -181,7 +189,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         }
         StorageItemChange<T> deletion = StorageItemChange.<T>builder()
             .item((T) savedItem)
-            .patchItem(SerializedModel.create(savedItem, schema))
+            .patchItem(patchItem)
             .modelSchema(schema)
             .type(StorageItemChange.Type.DELETE)
             .predicate(predicate)
@@ -249,6 +257,16 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             onSubscriptionComplete::call
         );
         return disposable::dispose;
+    }
+
+    @Override
+    public <T extends Model> void observeQuery(@NonNull Class<T> itemClass,
+                                               @NonNull ObserveQueryOptions options,
+                                               @NonNull Consumer<Cancelable> onObservationStarted,
+                                               @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+                                               @NonNull Consumer<DataStoreException> onObservationError,
+                                               @NonNull Action onObservationComplete) {
+    //TODOPM: to be implemented for tests.
     }
 
     @Override

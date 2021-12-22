@@ -2,11 +2,13 @@
   "query": "query GetPerson($id: ID!) {
   getPerson(id: $id) {
     age
+    createdAt
     dob
     first_name
     id
     last_name
     relationship
+    updatedAt
   }
 }
 ",

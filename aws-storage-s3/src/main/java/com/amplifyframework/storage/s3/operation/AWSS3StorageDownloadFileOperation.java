@@ -173,11 +173,7 @@ public final class AWSS3StorageDownloadFileOperation
                     onSuccess.accept(StorageDownloadFileResult.fromFile(file));
                     return;
                 case FAILED:
-                    onError.accept(new StorageException(
-                            "Storage download operation was interrupted.",
-                            "Please verify that you have a stable internet connection."
-                    ));
-                    return;
+                    // no-op;
                 default:
                     // no-op;
             }

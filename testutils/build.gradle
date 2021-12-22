@@ -15,6 +15,7 @@
 
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
+apply plugin: 'kotlin-android'
 
 dependencies {
     implementation project(path: ':core')

@@ -22,13 +22,15 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.PrimaryKey;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.QueryPaginationInput;
 import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
@@ -42,9 +44,9 @@ import com.amplifyframework.util.Wrap;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,16 +59,16 @@ import java.util.Set;
 final class SQLiteCommandFactory implements SQLCommandFactory {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private final ModelSchemaRegistry modelSchemaRegistry;
+    private final SchemaRegistry schemaRegistry;
     private final Gson gson;
 
     /**
      * Default constructor.
      */
     SQLiteCommandFactory(
-            @NonNull ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull SchemaRegistry schemaRegistry,
             @NonNull Gson gson) {
-        this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
+        this.schemaRegistry = Objects.requireNonNull(schemaRegistry);
         this.gson = Objects.requireNonNull(gson);
     }
 
@@ -139,26 +141,39 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         StringBuilder joinStatement = new StringBuilder();
         final List<Object> bindings = new ArrayList<>();
 
-        // Track the list of columns to return
-        List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
+        // Track the list of columns to return, along with the alias for the corresponding table
+        Map<String, List<SQLiteColumn>> columns = new HashMap<>();
+        columns.put(table.getName(), table.getSortedColumns());
+        Map<String, Integer> tableCount = new HashMap<>();
+        tableCount.put(tableName, 1);
 
         // Joins the foreign keys
-        recursivelyBuildJoins(table, columns, joinStatement);
+        recursivelyBuildJoins(table, columns, joinStatement, tableCount, tableName);
 
         // Convert columns to comma-separated column names
-        Iterator<SQLiteColumn> columnsIterator = columns.iterator();
-        while (columnsIterator.hasNext()) {
-            final SQLiteColumn column = columnsIterator.next();
-            selectColumns.append(column.getQuotedColumnName());
-
-            // Alias primary keys to avoid duplicate column names
-            selectColumns.append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.AS)
-                    .append(SqlKeyword.DELIMITER)
-                    .append(Wrap.inBackticks(column.getAliasedName()));
-
-            if (columnsIterator.hasNext()) {
+        boolean firstTable = true;
+        for (String tableAlias : columns.keySet()) {
+            if (!firstTable) {
                 selectColumns.append(",").append(SqlKeyword.DELIMITER);
+            } else {
+                firstTable = false;
+            }
+            Iterator<SQLiteColumn> columnsIterator = Objects.requireNonNull(columns.get(tableAlias)).iterator();
+            while (columnsIterator.hasNext()) {
+                final SQLiteColumn column = columnsIterator.next();
+                String columnName = column.getQuotedColumnName().replace(column.getTableName(), tableAlias);
+                selectColumns.append(columnName);
+                // Alias columns with a unique alias to avoid duplicate column names or alias names
+                String columnAlias = column.getAliasedName()
+                        + tableAlias.substring(column.getTableName().length());
+                selectColumns.append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.AS)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(Wrap.inBackticks(columnAlias));
+
+                if (columnsIterator.hasNext()) {
+                    selectColumns.append(",").append(SqlKeyword.DELIMITER);
+                }
             }
         }
 
@@ -186,10 +201,21 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         if (!QueryPredicates.all().equals(predicate)) {
             final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
             bindings.addAll(sqlPredicate.getBindings());
+            String sqlPredicateString = sqlPredicate.toString();
+            if (predicate instanceof QueryPredicateOperation) {
+                QueryPredicateOperation<?> predicateOperation = (QueryPredicateOperation<?>) predicate;
+                String predicateOperationField = predicateOperation.field();
+                if (predicateOperationField.equals(PrimaryKey.fieldName()) && predicateOperation.modelName() == null
+                        && predicateOperation.operator().type() == QueryOperator.Type.EQUAL) {
+                    // The WHERE condition is Where.id("some-ID") but no model name is given.
+                    sqlPredicateString = sqlPredicateString.replace(predicateOperationField,
+                            tableName + "." + predicateOperationField);
+                }
+            }
             rawQuery.append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.WHERE)
                     .append(SqlKeyword.DELIMITER)
-                    .append(sqlPredicate);
+                    .append(sqlPredicateString);
         }
 
         // Append order by
@@ -393,10 +419,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     // extract model field values to save in database
     private List<Object> extractFieldValues(@NonNull Model model) throws DataStoreException {
         final String modelName = model.getModelName();
-        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
+        final ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable table = SQLiteTable.fromSchema(schema);
         final SQLiteModelFieldTypeConverter converter =
-                new SQLiteModelFieldTypeConverter(schema, modelSchemaRegistry, gson);
+                new SQLiteModelFieldTypeConverter(schema, schemaRegistry, gson);
         final Map<String, ModelField> modelFields = schema.getFields();
         final List<Object> bindings = new ArrayList<>();
         for (SQLiteColumn column : table.getSortedColumns()) {
@@ -411,18 +437,27 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * Recursively build joins for multilevel nested joins.
      *
      */
-    private void recursivelyBuildJoins(SQLiteTable table, List<SQLiteColumn> columns,
-                                       StringBuilder joinStatement) {
+    private void recursivelyBuildJoins(SQLiteTable table, Map<String, List<SQLiteColumn>> columns,
+                                       StringBuilder joinStatement, Map<String, Integer> tableCount,
+                                       String tableAlias) {
         // Joins the foreign keys
         // LEFT JOIN if foreign key is optional, INNER JOIN otherwise.
         final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
         while (foreignKeyIterator.hasNext()) {
             final SQLiteColumn foreignKey = foreignKeyIterator.next();
             final String ownedTableName = foreignKey.getOwnedType();
-            final ModelSchema ownedSchema = modelSchemaRegistry.getModelSchemaForModelClass(ownedTableName);
+            final ModelSchema ownedSchema = schemaRegistry.getModelSchemaForModelClass(ownedTableName);
             final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
-
-            columns.addAll(ownedTable.getSortedColumns());
+            
+            int newOwnedTableCount = 1;
+            String ownedTableAlias = ownedTableName;
+            if (tableCount.containsKey(ownedTableName)) {
+                Integer currentOwnedTableCount = tableCount.get(ownedTableName);
+                newOwnedTableCount += currentOwnedTableCount == null ? 0 : currentOwnedTableCount;
+                ownedTableAlias += newOwnedTableCount;
+            }
+            tableCount.put(ownedTableName, newOwnedTableCount);
+            columns.put(ownedTableAlias, ownedTable.getSortedColumns());
 
             SqlKeyword joinType = foreignKey.isNonNull()
                 ? SqlKeyword.INNER_JOIN
@@ -431,19 +466,31 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             joinStatement.append(joinType)
                 .append(SqlKeyword.DELIMITER)
                 .append(Wrap.inBackticks(ownedTableName))
+                .append(SqlKeyword.DELIMITER);
+            
+            if (!ownedTableName.equals(ownedTableAlias)) {
+                joinStatement.append(SqlKeyword.AS)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(Wrap.inBackticks(ownedTableAlias))
+                        .append(SqlKeyword.DELIMITER);
+            }
+
+            // Reference the foreign key and primary key using the corresponding table's alias.
+            String foreignKeyName = foreignKey.getQuotedColumnName().replace(table.getName(), tableAlias);
+            String ownedTablePrimaryKeyName = ownedTable.getPrimaryKeyColumnName().replace(ownedTableName,
+                    ownedTableAlias);
+            joinStatement.append(SqlKeyword.ON)
                 .append(SqlKeyword.DELIMITER)
-                .append(SqlKeyword.ON)
-                .append(SqlKeyword.DELIMITER)
-                .append(foreignKey.getQuotedColumnName())
+                .append(foreignKeyName)
                 .append(SqlKeyword.EQUAL)
-                .append(ownedTable.getPrimaryKeyColumnName());
+                .append(ownedTablePrimaryKeyName);
 
             if (foreignKeyIterator.hasNext()) {
                 joinStatement.append(SqlKeyword.DELIMITER);
             }
 
             // important that this comes last to maintain the order of the joins
-            recursivelyBuildJoins(ownedTable, columns, joinStatement);
+            recursivelyBuildJoins(ownedTable, columns, joinStatement, tableCount, ownedTableAlias);
         }
     }
 

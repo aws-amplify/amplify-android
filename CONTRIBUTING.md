@@ -11,24 +11,26 @@ all information necessary to effectively respond to your bug report or
 contribution.
 
 - [Contributing Guidelines](#contributing-guidelines)
-  * [Getting Started](#getting-started)
-    + [Consuming Development Versions of the Framework](#consuming-development-versions-of-the-framework)
-  * [Tools](#tools)
-  * [Workflows](#workflows)
-    + [Adding Code to Support a New Feature](#adding-code-to-support-a-new-feature)
-    + [Build and Validate Your Work](#build-and-validate-your-work)
-    + [Run Instrumentation Tests](#run-instrumentation-tests)
-  * [Reporting Bugs/Feature Requests](#reporting-bugs-feature-requests)
-  * [Contributing via Pull Requests](#contributing-via-pull-requests)
-  * [Troubleshooting](#troubleshooting)
-    + [Environment Debugging](#environment-debugging)
-    + [Problems with the Build](#problems-with-the-build)
-    + [Failing Instrumentation Tests](#failing-instrumentation-tests)
-  * [Related Repositories](#related-repositories)
-  * [Finding Contributions to Make](#finding-contributions-to-make)
-  * [Code of Conduct](#code-of-conduct)
-  * [Security Issue Notifications](#security-issue-notifications)
-  * [Licensing](#licensing)
+  - [Getting Started](#getting-started)
+    - [Consuming Development Versions of the Framework](#consuming-development-versions-of-the-framework)
+  - [Tools](#tools)
+  - [Workflows](#workflows)
+    - [Adding Code to Support a New Feature](#adding-code-to-support-a-new-feature)
+    - [Build and Validate Your Work](#build-and-validate-your-work)
+    - [Run Instrumentation Tests](#run-instrumentation-tests)
+    - [Test changes to CodeBuild build definitions](#test-changes-to-codebuild-build-definitions)
+  - [Reporting Bugs/Feature Requests](#reporting-bugsfeature-requests)
+  - [Contributing via Pull Requests](#contributing-via-pull-requests)
+  - [Troubleshooting](#troubleshooting)
+    - [Environment Debugging](#environment-debugging)
+    - [Problems with the Build](#problems-with-the-build)
+    - [Getting More Output](#getting-more-output)
+    - [Failing Instrumentation Tests](#failing-instrumentation-tests)
+  - [Related Repositories](#related-repositories)
+  - [Finding Contributions to Make](#finding-contributions-to-make)
+  - [Code of Conduct](#code-of-conduct)
+  - [Security Issue Notifications](#security-issue-notifications)
+  - [Licensing](#licensing)
 
 ## Getting Started
 
@@ -346,6 +348,18 @@ To run __all__ tests:
 ```shell
 ./gradlew cAT
 ```
+
+### Test changes to CodeBuild build definitions
+
+Changes made to one of the buildspec files under the `./scripts` folder can be tested locally inside a docker container (See [setup instructions](https://docs.aws.amazon.com/codebuild/latest/userguide/use-codebuild-agent.html) in the CodeBuild docs).
+
+The following command will spin up a docker container locally and run through the build definition in the buildspec file.
+
+```bash
+./scripts/codebuild_build.sh -i aws/codebuild/standard:4.0  -a build/codebuild-out -s . -d -m -c -b "scripts/<build_spec_file>.yml"
+```
+
+Note that the `-c` option pulls in AWS configuration from your local environment into the docker container. That means any `AWS_*` environment variables will be set inside the container. This is useful when the build process needs to access AWS resources from an AWS account. **Be sure to check which AWS account your current credentials belong to and which permissions are granted**. Typically, the target account should be a development account.
 
 ## Reporting Bugs/Feature Requests
 

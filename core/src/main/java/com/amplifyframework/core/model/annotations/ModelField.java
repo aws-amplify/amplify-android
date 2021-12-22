@@ -44,6 +44,14 @@ public @interface ModelField {
     boolean isRequired() default false;
 
     /**
+     * Returns flag indicating if the field value should be included in the input variable on a GraphQL update mutation.
+     * @return flag indicating if the field value should be included in the input variable on a GraphQL update mutation.
+     *     True if readonly.
+     *     Default is false.
+     */
+    boolean isReadOnly() default false;
+
+    /**
      * Returns the target type of the field.
      * @return the data type of the field in the target.
      *         For example: the data type of the field

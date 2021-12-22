@@ -28,6 +28,8 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -36,23 +38,36 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
+import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Comment;
+import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.commentsblog.PostAuthorJoin;
+import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testutils.HubAccumulator;
+import com.amplifyframework.testutils.ModelAssert;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static com.amplifyframework.datastore.DataStoreHubEventFilters.publicationOf;
 import static com.amplifyframework.datastore.DataStoreHubEventFilters.receiptOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 /**
  * Tests the functions of {@link AWSDataStorePlugin}.
@@ -60,16 +75,8 @@ import static org.junit.Assert.assertEquals;
  * which were defined by the schema in:
  * testmodels/src/main/java/com/amplifyframework/testmodels/commentsblog/schema.graphql.
  */
-@Ignore(
-    "Over time, this test will create a large DynamoDB table. Even if we delete the content " +
-    "through the AppSyncClient utility, the database will have lots of tombstone'd rows. " +
-    "These entries will be synced, the next time this test runs, and the DataStore initializes. " +
-    "After several runs, that sync will grow large and timeout the test, before the test can " +
-    "run any business logic. A manual workaround exists, by running this cleanup script: " +
-    "https://gist.github.com/jamesonwilliams/c76169676cb99c51d997ef0817eb9278#quikscript-to-clear-appsync-tables"
-)
 public final class BasicCloudSyncInstrumentationTest {
-    private static final int TIMEOUT_SECONDS = 10;
+    private static final int TIMEOUT_SECONDS = 60;
 
     private SynchronousApi api;
     private SynchronousAppSync appSync;
@@ -82,7 +89,6 @@ public final class BasicCloudSyncInstrumentationTest {
      * {@link AWSDataStorePlugin}, which is the thing we're actually testing.
      * @throws AmplifyException On failure to read config, setup API or DataStore categories
      */
-    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Before
     public void setup() throws AmplifyException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
@@ -103,6 +109,8 @@ public final class BasicCloudSyncInstrumentationTest {
         api = SynchronousApi.delegatingTo(apiCategory);
         appSync = SynchronousAppSync.using(AppSyncClient.via(apiCategory));
 
+        long tenMinutesAgo = new Date().getTime() - TimeUnit.MINUTES.toMillis(10);
+        Temporal.DateTime tenMinutesAgoDateTime = new Temporal.DateTime(new Date(tenMinutesAgo), 0);
         DataStoreCategory dataStoreCategory = DataStoreCategoryConfigurator.begin()
             .api(apiCategory)
             .clearDatabase(true)
@@ -110,8 +118,32 @@ public final class BasicCloudSyncInstrumentationTest {
             .modelProvider(AmplifyModelProvider.getInstance())
             .resourceId(configResourceId)
             .timeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .dataStoreConfiguration(DataStoreConfiguration.builder()
+                .syncExpression(BlogOwner.class, () -> BlogOwner.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Blog.class, () -> Blog.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Post.class, () -> Post.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Comment.class, () -> Comment.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Author.class, () -> Author.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(PostAuthorJoin.class, () -> PostAuthorJoin.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .build())
             .finish();
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
+    }
+
+    /**
+     * Clear the DataStore after each test.  Without calling clear in between tests, all tests after the first will fail
+     * with this error: android.database.sqlite.SQLiteReadOnlyDatabaseException: attempt to write a readonly database.
+     * @throws DataStoreException On failure to clear DataStore.
+     */
+    @After
+    public void teardown() throws DataStoreException {
+        if (dataStore != null) {
+            try {
+                dataStore.clear();
+            } catch (Exception error) {
+                // ok to ignore since problem encountered during tear down of the test.
+            }
+        }
     }
 
     /**
@@ -122,7 +154,6 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
      *                          {@link DataStoreCategoryConfigurator}
      */
-    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Test
     public void syncUpToCloudIsWorking() throws AmplifyException {
         // Start listening for model publication events on the Hub.
@@ -157,7 +188,6 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
      *                          {@link DataStoreCategoryConfigurator}
      */
-    @Ignore("It passes. Not automating due to operational concerns as noted in class-level @Ignore.")
     @Test
     public void syncDownFromCloudIsWorking() throws AmplifyException {
         // This model will get saved to the cloud.
@@ -183,5 +213,320 @@ public final class BasicCloudSyncInstrumentationTest {
         BlogOwner owner = dataStore.get(BlogOwner.class, jameson.getId());
         assertEquals("Jameson Williams", owner.getName());
         assertEquals(jameson.getId(), owner.getId());
+    }
+
+    /**
+     * Verify that updating an item shortly after creating it succeeds.  This can be tricky because the _version
+     * returned in the response from the create request must be included in the input for the subsequent update request.
+     * @throws DataStoreException On failure to save or query items from DataStore.
+     * @throws ApiException On failure to query the API.
+     */
+    @Test
+    public void updateAfterCreate() throws DataStoreException, ApiException {
+        // Setup
+        BlogOwner richard = BlogOwner.builder()
+                .name("Richard")
+                .build();
+        BlogOwner updatedRichard = richard.copyOfBuilder()
+                .name("Richard McClellan")
+                .build();
+        String modelName = BlogOwner.class.getSimpleName();
+
+        // Expect two mutations to be published to AppSync.
+        HubAccumulator richardAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, richard.getId()), 2)
+                .start();
+
+        // Create an item, then update it and save it again.
+        dataStore.save(richard);
+        dataStore.save(updatedRichard);
+
+        // Verify that 2 mutations were published.
+        richardAccumulator.await(30, TimeUnit.SECONDS);
+
+        // Verify that the updatedRichard is saved in the DataStore.
+        BlogOwner localRichard = dataStore.get(BlogOwner.class, richard.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(updatedRichard, localRichard);
+
+        // Verify that the updatedRichard is saved on the backend.
+        BlogOwner remoteRichard = api.get(BlogOwner.class, richard.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(updatedRichard, remoteRichard);
+    }
+
+    /**
+     * Verify that updating a different field of an item shortly after creating it succeeds.
+     * @throws DataStoreException On failure to save or query items from DataStore.
+     * @throws ApiException On failure to query the API.
+     */
+    @Test
+    public void createThenUpdateDifferentField() throws DataStoreException, ApiException {
+        // Setup
+        BlogOwner owner = BlogOwner.builder()
+                .name("Richard")
+                .build();
+        BlogOwner updatedOwner = owner.copyOfBuilder()
+                .wea("pon")
+                .build();
+        String modelName = BlogOwner.class.getSimpleName();
+
+        // Expect two mutations to be published to AppSync.
+        HubAccumulator accumulator =
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 2)
+                        .start();
+
+        // Create an item, then update it with different field and save it again.
+        dataStore.save(owner);
+        dataStore.save(updatedOwner);
+
+        // Verify that 2 mutations were published.
+        accumulator.await(30, TimeUnit.SECONDS);
+
+        // Verify that the updatedOwner is saved in the DataStore.
+        BlogOwner localOwner = dataStore.get(BlogOwner.class, owner.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(updatedOwner, localOwner);
+
+        // Verify that the updatedOwner is saved on the backend.
+        BlogOwner remoteOwner = api.get(BlogOwner.class, owner.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(updatedOwner, remoteOwner);
+    }
+
+    /**
+     * Verify that updating a different field of the last created shortly after creating two items succeeds.
+     * @throws DataStoreException On failure to save or query items from DataStore.
+     * @throws ApiException On failure to query the API.
+     */
+    @Test
+    public void create1ThenCreate2ThenUpdate2() throws DataStoreException, ApiException {
+        // Setup
+        BlogOwner owner = BlogOwner.builder()
+                .name("Jean")
+                .build();
+        BlogOwner anotherOwner = BlogOwner.builder()
+                .name("Richard")
+                .build();
+        BlogOwner updatedOwner = anotherOwner.copyOfBuilder()
+                .wea("pon")
+                .build();
+        String modelName = BlogOwner.class.getSimpleName();
+
+        // Expect two mutations to be published to AppSync.
+        HubAccumulator accumulator =
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, anotherOwner.getId()), 2)
+                        .start();
+
+        // Create an item, then update it with different field and save it again.
+        dataStore.save(owner);
+        dataStore.save(anotherOwner);
+        dataStore.save(updatedOwner);
+
+        // Verify that 2 mutations were published.
+        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Verify that the updatedOwner is saved in the DataStore.
+        BlogOwner localOwner = dataStore.get(BlogOwner.class, anotherOwner.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(updatedOwner, localOwner);
+
+        // Verify that the updatedOwner is saved on the backend.
+        BlogOwner remoteOwner = api.get(BlogOwner.class, anotherOwner.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(updatedOwner, remoteOwner);
+    }
+
+    /**
+     * Verify that creating a new item, waiting for it to sync, and then updating 10 times consecutively succeeds.
+     * @throws DataStoreException On failure to save or query items from DataStore.
+     * @throws ApiException On failure to query the API.
+     */
+    @Test
+    public void createWaitThenUpdateMultipleTimes() throws DataStoreException, ApiException {
+        // Setup
+        BlogOwner owner = BlogOwner.builder()
+                .name("Jean")
+                .build();
+        String modelName = BlogOwner.class.getSimpleName();
+        
+        HubAccumulator accumulator =
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 1)
+                        .start();
+        // Create an item.
+        dataStore.save(owner);
+        // Wait for the sync.
+        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Setup 10 updates
+        List<String> weas = Arrays.asList("pon", "lth", "ver", "kly", "ken", "sel", "ner", "rer", "ten", "ned");
+        HubAccumulator updateAccumulator =
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 3).start();
+                
+        // Updating multiple times consecutively
+        // Accumulator crashes for more than 3 consecutive saves. Need to open ticket to investigate
+        for (int i = 0; i < 3; i++) {
+            BlogOwner updatedOwner = owner.copyOfBuilder().wea(weas.get(i)).build();
+            dataStore.save(updatedOwner);
+        }
+        updateAccumulator.await(120, TimeUnit.SECONDS);
+        
+        // Verify that the updatedOwner is saved on the backend.
+        BlogOwner remoteOwner = api.get(BlogOwner.class, owner.getId());
+        Assert.assertEquals(weas.get(2), remoteOwner.getWea());
+        
+        // Verify that the last update is saved in the DataStore.
+        BlogOwner localOwner = dataStore.get(BlogOwner.class, owner.getId());
+        Assert.assertEquals(weas.get(2), localOwner.getWea());
+    }
+
+    /**
+     * Verify that creating a new item, then immediately delete succeeds.
+     * @throws DataStoreException On failure to save or query items from DataStore.
+     * @throws ApiException On failure to query the API.
+     */
+    @Test
+    public void createThenDelete() throws DataStoreException, ApiException {
+        // Setup
+        BlogOwner owner = BlogOwner.builder()
+                .name("Jean")
+                .build();
+        String modelName = BlogOwner.class.getSimpleName();
+        
+        HubAccumulator accumulator =
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 2)
+                        .start();
+        dataStore.save(owner);
+        dataStore.delete(owner);
+        
+        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        
+        // Verify that the owner is deleted from the local data store.
+        assertThrows(NoSuchElementException.class, () -> dataStore.get(BlogOwner.class, owner.getId()));
+        
+        // Note: Currently, default GraphQL resolvers do not filter records that have been deleted.
+        // Therefore, calling api to get the item at this point would still succeed.
+    }
+
+    /**
+     * The test is to create a new Post with Comment, reassign Comment to a different Post.
+     * @throws DataStoreException On failure to save or query items from DataStore.
+     * @throws ApiException On failure to query the API.
+     */
+    @Test
+    public void createPost1WithCommentThenReassignCommentToPost2() throws DataStoreException, ApiException {
+        // Setup
+        BlogOwner owner = BlogOwner.builder().name("Owner").build();
+        Blog blog = Blog.builder().name("MyBlog").owner(owner).build();
+        Post firstPost = Post.builder().title("First Post").status(PostStatus.ACTIVE).rating(3).blog(blog).build();
+        Post secondPost = Post.builder().title("Second Post").status(PostStatus.ACTIVE).rating(5).blog(blog).build();
+        Comment comment = Comment.builder().content("Some comment").post(firstPost).build();
+        String modelName = Comment.class.getSimpleName();
+
+        // Save first post and comment. Then verify that first post and comment were saved.
+        HubAccumulator accumulator =
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, comment.getId()), 1)
+                        .start();
+        dataStore.save(owner);
+        dataStore.save(blog);
+        dataStore.save(firstPost);
+        dataStore.save(comment);
+        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        
+        Comment localComment = dataStore.get(Comment.class, comment.getId());
+        Assert.assertEquals(comment.getPost().getId(), localComment.getPost().getId());
+        Comment remoteComment = api.get(Comment.class, comment.getId());
+        Assert.assertEquals(comment.getPost().getId(), remoteComment.getPost().getId());
+
+        // Reassign comment to second post, save and sync
+        Comment commentCopy = comment.copyOfBuilder().post(secondPost).build();
+        accumulator = HubAccumulator.create(HubChannel.DATASTORE, 
+                publicationOf(modelName, commentCopy.getId()), 1).start();
+        dataStore.save(secondPost);
+        dataStore.save(commentCopy);
+        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        
+        // Verify that comment was reassigned
+        Comment currentLocalComment = dataStore.get(Comment.class, comment.getId());
+        Assert.assertEquals(secondPost.getId(), currentLocalComment.getPost().getId());
+        Comment currentRemoteComment = api.get(Comment.class, comment.getId());
+        Assert.assertEquals(secondPost.getId(), currentRemoteComment.getPost().getId());
+    }
+
+    /**
+     * The test is to test consecutive updates with predicate.
+     * @throws DataStoreException On failure to save or query items from DataStore.
+     * @throws ApiException On failure to query the API.
+     */
+    @Test
+    public void createWaitThenUpdate10TimesWithPredicate() throws DataStoreException, ApiException {
+        // Setup
+        BlogOwner owner = BlogOwner.builder()
+                .name("Blogger")
+                .wea("ryt")
+                .build();
+        String modelName = BlogOwner.class.getSimpleName();
+        QueryPredicate predicate = BlogOwner.WEA.beginsWith("r");
+
+        // Setup 10 updates
+        List<String> weas = Arrays.asList("ron", "rth", "rer", "rly", "ren", "rel", "ral", "rec", "rin", "reh");
+        List<BlogOwner> owners = new ArrayList<>();
+        for (int i = 0; i < weas.size(); i++) {
+            BlogOwner updatedOwner = owner.copyOfBuilder().wea(weas.get(i)).build();
+            owners.add(updatedOwner);
+        }
+
+        HubAccumulator accumulator =
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 1)
+                        .start();
+
+        // Create an item.
+        dataStore.save(owner);
+
+        // Wait for the sync.
+        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Make 10 consecutive updates with predicate
+        HubAccumulator updateAccumulator =
+                HubAccumulator.create(HubChannel.DATASTORE,
+                        publicationOf(modelName, owner.getId()), 10).start();
+        for (int i = 0; i < weas.size(); i++) {
+            dataStore.save(owners.get(i), predicate);
+        }
+        updateAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        
+        BlogOwner lastUpdate = owners.get(owners.size() - 1);
+        BlogOwner localOwner = dataStore.get(BlogOwner.class, lastUpdate.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(lastUpdate, localOwner);
+        BlogOwner remoteOwner = api.get(BlogOwner.class, lastUpdate.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(lastUpdate, remoteOwner);
+    }
+
+    /**
+     * Create new item, then immediately update a different field. 
+     * Wait for sync round trip. Then update the first field.
+     * @throws DataStoreException On failure to save or query items from DataStore.
+     * @throws ApiException On failure to query the API.
+     */
+    @Test
+    public void createItemThenUpdateThenWaitThenUpdate() throws DataStoreException, ApiException {
+        // Setup
+        BlogOwner owner = BlogOwner.builder().name("ownerName").build();
+        BlogOwner updatedOwner = owner.copyOfBuilder().wea("pon").build();
+        String modelName = BlogOwner.class.getSimpleName();
+        
+        HubAccumulator accumulator =
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 2)
+                        .start();
+        // Create new and then immediately update
+        dataStore.save(owner);
+        dataStore.save(updatedOwner);
+        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        
+        // Update the field
+        BlogOwner diffFieldUpdated = updatedOwner.copyOfBuilder().name("ownerUpdatedName").build();
+        accumulator = HubAccumulator.create(HubChannel.DATASTORE, 
+                publicationOf(modelName, diffFieldUpdated.getId()), 1).start();
+        dataStore.save(diffFieldUpdated);
+        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        BlogOwner localOwner = dataStore.get(BlogOwner.class, diffFieldUpdated.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(diffFieldUpdated, localOwner);
+        BlogOwner remoteOwner = api.get(BlogOwner.class, diffFieldUpdated.getId());
+        ModelAssert.assertEqualsIgnoringTimestamps(diffFieldUpdated, remoteOwner);
     }
 }

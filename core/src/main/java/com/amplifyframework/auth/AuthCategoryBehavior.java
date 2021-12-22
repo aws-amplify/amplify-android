@@ -20,9 +20,17 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
+import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
+import com.amplifyframework.auth.options.AuthResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -61,12 +69,42 @@ public interface AuthCategoryBehavior {
      * to enter the confirmation code they received to activate their account.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param confirmationCode The confirmation code the user received
+     * @param options Advanced options such as a map of auth information for custom auth
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void confirmSignUp(
             @NonNull String username,
             @NonNull String confirmationCode,
+            @NonNull AuthConfirmSignUpOptions options,
+            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * If you have attribute confirmation enabled, this will allow the user
+     * to enter the confirmation code they received to activate their account.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param confirmationCode The confirmation code the user received
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void confirmSignUp(
+            @NonNull String username,
+            @NonNull String confirmationCode,
+            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * If the user's code expires or they just missed it, this method can
+     * be used to send them a new one.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void resendSignUpCode(
+            @NonNull String username,
+            @NonNull AuthResendSignUpCodeOptions options,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
@@ -108,6 +146,19 @@ public interface AuthCategoryBehavior {
     void signIn(
             @Nullable String username,
             @Nullable String password,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Submit the confirmation code received as part of multi-factor Authentication during sign in.
+     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void confirmSignIn(
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmSignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
@@ -241,12 +292,40 @@ public interface AuthCategoryBehavior {
     /**
      * Trigger password recovery for the given username.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void resetPassword(
+            @NonNull String username,
+            @NonNull AuthResetPasswordOptions options,
+            @NonNull Consumer<AuthResetPasswordResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Trigger password recovery for the given username.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void resetPassword(
             @NonNull String username,
             @NonNull Consumer<AuthResetPasswordResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param newPassword The user's desired new password
+     * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void confirmResetPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull AuthConfirmResetPasswordOptions options,
+            @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
 
     /**
@@ -289,6 +368,20 @@ public interface AuthCategoryBehavior {
     /**
      * Update a single user attribute.
      * @param attribute Attribute to be updated
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void updateUserAttribute(
+            @NonNull AuthUserAttribute attribute,
+            @NonNull AuthUpdateUserAttributeOptions options,
+            @NonNull Consumer<AuthUpdateAttributeResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Update a single user attribute.
+     * @param attribute Attribute to be updated
      * @param onSuccess Success callback
      * @param onError Error callback
      */
@@ -300,12 +393,41 @@ public interface AuthCategoryBehavior {
     /**
      * Update multiple user attributes.
      * @param attributes Attributes to be updated
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void updateUserAttributes(
+            @NonNull List<AuthUserAttribute> attributes,
+            @NonNull AuthUpdateUserAttributesOptions options,
+            @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Update multiple user attributes.
+     * @param attributes Attributes to be updated
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void updateUserAttributes(
             @NonNull List<AuthUserAttribute> attributes,
             @NonNull Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * If the user's confirmation code expires or they just missed it, this method
+     * can be used to send them a new one.
+     * @param attributeKey Key of attribute that user wants to operate on
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void resendUserAttributeConfirmationCode(
+            @NonNull AuthUserAttributeKey attributeKey,
+            @NonNull AuthResendUserAttributeConfirmationCodeOptions options,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError
     );
 

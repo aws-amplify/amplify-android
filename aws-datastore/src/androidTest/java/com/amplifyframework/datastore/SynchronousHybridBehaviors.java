@@ -17,8 +17,8 @@ package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.Where;
-import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
 import java.util.Arrays;

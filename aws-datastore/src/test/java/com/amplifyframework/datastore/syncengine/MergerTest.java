@@ -150,7 +150,8 @@ public final class MergerTest {
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson")
             .build();
-        ModelMetadata metadata = new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now());
+        ModelMetadata metadata =
+            new ModelMetadata(blogOwner.getModelName() + "|" + blogOwner.getId(), false, 1, Temporal.Timestamp.now());
         // Note that storageAdapter.save(...) is NOT called!
         // storageAdapter.save(blogOwner, metadata);
 
@@ -178,7 +179,12 @@ public final class MergerTest {
             .name("Jameson The Original")
             .build();
         ModelMetadata originalMetadata =
-            new ModelMetadata(originalModel.getId(), false, 1, Temporal.Timestamp.now());
+            new ModelMetadata(
+                originalModel.getModelName() + "|" + originalModel.getId(),
+                false,
+                1,
+                Temporal.Timestamp.now()
+            );
         storageAdapter.save(originalModel, originalMetadata);
 
         // Act: merge a save.
@@ -336,7 +342,13 @@ public final class MergerTest {
         BlogOwner existingModel = BlogOwner.builder()
             .name("Cornelius Daniels")
             .build();
-        ModelMetadata existingMetadata = new ModelMetadata(existingModel.getId(), false, 55, Temporal.Timestamp.now());
+        ModelMetadata existingMetadata =
+            new ModelMetadata(
+                existingModel.getModelName() + "|" + existingModel.getId(),
+                false,
+                55,
+                Temporal.Timestamp.now()
+            );
         storageAdapter.save(existingModel, existingMetadata);
 
         // Act: try to merge, but specify a LOWER version.
@@ -359,7 +371,8 @@ public final class MergerTest {
         // And his metadata is the still the same.
         assertEquals(
             Collections.singletonList(existingMetadata),
-            storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getId()))
+            storageAdapter.query(ModelMetadata.class,
+                    Where.id(existingModel.getModelName() + "|" + existingModel.getId()))
         );
     }
 

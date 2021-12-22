@@ -1,6 +1,7 @@
 package com.amplifyframework.testmodels.commentsblog;
 
 import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,9 +24,11 @@ public final class Comment implements Model {
   public static final QueryField ID = field("Comment", "id");
   public static final QueryField CONTENT = field("Comment", "content");
   public static final QueryField POST = field("Comment", "commentPostId");
+  public static final QueryField CREATED_AT = field("Comment", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String content;
   private final @ModelField(targetType="Post") @BelongsTo(targetName = "commentPostId", type = Post.class) Post post;
+  private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -38,10 +41,15 @@ public final class Comment implements Model {
       return post;
   }
   
-  private Comment(String id, String content, Post post) {
+  public Temporal.DateTime getCreatedAt() {
+      return createdAt;
+  }
+  
+  private Comment(String id, String content, Post post, Temporal.DateTime createdAt) {
     this.id = id;
     this.content = content;
     this.post = post;
+    this.createdAt = createdAt;
   }
   
   @Override
@@ -54,7 +62,8 @@ public final class Comment implements Model {
       Comment comment = (Comment) obj;
       return ObjectsCompat.equals(getId(), comment.getId()) &&
               ObjectsCompat.equals(getContent(), comment.getContent()) &&
-              ObjectsCompat.equals(getPost(), comment.getPost());
+              ObjectsCompat.equals(getPost(), comment.getPost()) &&
+              ObjectsCompat.equals(getCreatedAt(), comment.getCreatedAt());
       }
   }
   
@@ -64,8 +73,21 @@ public final class Comment implements Model {
       .append(getId())
       .append(getContent())
       .append(getPost())
+      .append(getCreatedAt())
       .toString()
       .hashCode();
+  }
+  
+  @Override
+   public String toString() {
+    return new StringBuilder()
+      .append("Comment {")
+      .append("id=" + String.valueOf(getId()) + ", ")
+      .append("content=" + String.valueOf(getContent()) + ", ")
+      .append("post=" + String.valueOf(getPost()) + ", ")
+      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("}")
+      .toString();
   }
   
   public static BuildStep builder() {
@@ -80,7 +102,7 @@ public final class Comment implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    * @throws IllegalArgumentException Checks that ID is in the proper format
-   **/
+   */
   public static Comment justId(String id) {
     try {
       UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
@@ -94,6 +116,7 @@ public final class Comment implements Model {
     return new Comment(
       id,
       null,
+      null,
       null
     );
   }
@@ -101,13 +124,15 @@ public final class Comment implements Model {
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       content,
-      post);
+      post,
+      createdAt);
   }
   public interface BuildStep {
     Comment build();
     BuildStep id(String id) throws IllegalArgumentException;
     BuildStep content(String content);
     BuildStep post(Post post);
+    BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
 
@@ -115,6 +140,7 @@ public final class Comment implements Model {
     private String id;
     private String content;
     private Post post;
+    private Temporal.DateTime createdAt;
     @Override
      public Comment build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -122,7 +148,8 @@ public final class Comment implements Model {
         return new Comment(
           id,
           content,
-          post);
+          post,
+          createdAt);
     }
     
     @Override
@@ -137,13 +164,19 @@ public final class Comment implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep createdAt(Temporal.DateTime createdAt) {
+        this.createdAt = createdAt;
+        return this;
+    }
+    
     /** 
      * WARNING: Do not set ID when creating a new object. Leave this blank and one will be auto generated for you.
      * This should only be set when referring to an already existing object.
      * @param id id
      * @return Current Builder instance, for fluent method chaining
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     **/
+     */
     public BuildStep id(String id) throws IllegalArgumentException {
         this.id = id;
         
@@ -160,10 +193,11 @@ public final class Comment implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String content, Post post) {
+    private CopyOfBuilder(String id, String content, Post post, Temporal.DateTime createdAt) {
       super.id(id);
       super.content(content)
-        .post(post);
+        .post(post)
+        .createdAt(createdAt);
     }
     
     @Override
@@ -174,6 +208,11 @@ public final class Comment implements Model {
     @Override
      public CopyOfBuilder post(Post post) {
       return (CopyOfBuilder) super.post(post);
+    }
+    
+    @Override
+     public CopyOfBuilder createdAt(Temporal.DateTime createdAt) {
+      return (CopyOfBuilder) super.createdAt(createdAt);
     }
   }
   

@@ -64,6 +64,15 @@ public final class QueryPredicateGroup implements QueryPredicate {
     }
 
     /**
+     * Returns a group with an AND type, containing only the provided predicate.
+     * @param predicate the query predicate operation to wrap
+     * @return a group with an AND type, containing only the provided predicate.
+     */
+    public static QueryPredicate andOf(QueryPredicate predicate) {
+        return new QueryPredicateGroup(Type.AND, Arrays.asList(predicate));
+    }
+
+    /**
      * Return a group connecting this group with another group/operation with an AND type.
      * @param predicate the group/operation to connect to
      * @return a group connecting this group with another group/operation with an AND type

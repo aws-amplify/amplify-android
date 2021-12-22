@@ -28,6 +28,8 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
@@ -37,7 +39,6 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions.AppSyncErrorType;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -66,11 +67,12 @@ import io.reactivex.rxjava3.subjects.ReplaySubject;
  */
 final class SubscriptionProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long TIMEOUT_SECONDS_PER_MODEL = 2;
-    private static final long NETWORK_OP_TIMEOUT_SECONDS = 10;
+    private static final long TIMEOUT_SECONDS_PER_MODEL = 20;
+    private static final long NETWORK_OP_TIMEOUT_SECONDS = 60;
 
     private final AppSync appSync;
     private final ModelProvider modelProvider;
+    private final SchemaRegistry schemaRegistry;
     private final Merger merger;
     private final QueryPredicateProvider queryPredicateProvider;
     private final Consumer<Throwable> onFailure;
@@ -88,14 +90,18 @@ final class SubscriptionProcessor {
         this.merger = builder.merger;
         this.queryPredicateProvider = builder.queryPredicateProvider;
         this.onFailure = builder.onFailure;
+        this.schemaRegistry = builder.schemaRegistry;
 
         this.ongoingOperationsDisposable = new CompositeDisposable();
 
-        // Operation times out after 10 seconds. If there are more than 5 models,
-        // then 2 seconds are added to the timer per additional model count.
+        // Operation times out after 60 seconds. If there are more than 5 models,
+        // then 20 seconds are added to the timer per additional model count.
         this.adjustedTimeoutSeconds = Math.max(
             NETWORK_OP_TIMEOUT_SECONDS,
-            TIMEOUT_SECONDS_PER_MODEL * modelProvider.models().size()
+            TIMEOUT_SECONDS_PER_MODEL * Math.max(
+                    modelProvider.models().size(),
+                    modelProvider.modelSchemas().size()
+            )
         );
     }
 
@@ -258,7 +264,11 @@ final class SubscriptionProcessor {
         if (original.getModel() instanceof SerializedModel) {
             SerializedModel originalModel = (SerializedModel) original.getModel();
             SerializedModel newModel = SerializedModel.builder()
-                    .serializedData(originalModel.getSerializedData())
+                    .serializedData(SerializedModel.parseSerializedData(
+                            originalModel.getSerializedData(),
+                            event.modelSchema().getName(),
+                            schemaRegistry
+                    ))
                     .modelSchema(event.modelSchema())
                     .build();
             return merger.merge(new ModelWithMetadata<>(newModel, original.getSyncMetadata()));
@@ -338,13 +348,14 @@ final class SubscriptionProcessor {
     /**
      * Builds instances of {@link SubscriptionProcessor}s.
      */
-    public static final class Builder implements AppSyncStep, ModelProviderStep, MergerStep,
+    public static final class Builder implements AppSyncStep, ModelProviderStep, SchemaRegistryStep, MergerStep,
             QueryPredicateProviderStep, OnFailureStep, BuildStep {
         private AppSync appSync;
         private ModelProvider modelProvider;
         private Merger merger;
         private QueryPredicateProvider queryPredicateProvider;
         private Consumer<Throwable> onFailure;
+        private SchemaRegistry schemaRegistry;
 
         @NonNull
         @Override
@@ -355,8 +366,15 @@ final class SubscriptionProcessor {
 
         @NonNull
         @Override
-        public MergerStep modelProvider(@NonNull ModelProvider modelProvider) {
+        public SchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider) {
             this.modelProvider = Objects.requireNonNull(modelProvider);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public MergerStep schemaRegistry(@NonNull SchemaRegistry schemaRegistry) {
+            this.schemaRegistry = Objects.requireNonNull(schemaRegistry);
             return Builder.this;
         }
 
@@ -395,7 +413,12 @@ final class SubscriptionProcessor {
 
     interface ModelProviderStep {
         @NonNull
-        MergerStep modelProvider(@NonNull ModelProvider modelProvider);
+        SchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider);
+    }
+
+    interface SchemaRegistryStep {
+        @NonNull
+        MergerStep schemaRegistry(@NonNull SchemaRegistry schemaRegistry);
     }
 
     interface MergerStep {

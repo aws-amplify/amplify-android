@@ -64,6 +64,16 @@ public interface ModelProvider {
     }
 
     /**
+     * A default method to keep backwards compatibility with use cases
+     * that do not provide customTypeSchemas. This method returns
+     * an empty map for non-flutter use cases.
+     * @return an empty map.
+     */
+    default Map<String, CustomTypeSchema> customTypeSchemas() {
+        return new HashMap<>();
+    }
+
+    /**
      * A default helper method to return all the model names.
      * @return a set of all model names.
      */
@@ -76,5 +86,14 @@ public interface ModelProvider {
             modelNames.add(modelClass.getSimpleName());
         }
         return modelNames;
+    }
+
+    /**
+     * A default helper method to return all the custom type names.
+     * This method returns an empty map for non-flutter use cases.
+     * @return an empty map.
+     */
+    default Set<String> customTypeNames() {
+        return new HashSet<>();
     }
 }

@@ -1,6 +1,7 @@
 package com.amplifyframework.testmodels.commentsblog;
 
 import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,9 +26,11 @@ public final class PostAuthorJoin implements Model {
   public static final QueryField ID = field("PostAuthorJoin", "id");
   public static final QueryField AUTHOR = field("PostAuthorJoin", "authorId");
   public static final QueryField POST = field("PostAuthorJoin", "postId");
+  public static final QueryField CREATED_AT = field("PostAuthorJoin", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="Author") @BelongsTo(targetName = "authorId", type = Author.class) Author author;
   private final @ModelField(targetType="Post") @BelongsTo(targetName = "postId", type = Post.class) Post post;
+  private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -40,10 +43,15 @@ public final class PostAuthorJoin implements Model {
       return post;
   }
   
-  private PostAuthorJoin(String id, Author author, Post post) {
+  public Temporal.DateTime getCreatedAt() {
+      return createdAt;
+  }
+  
+  private PostAuthorJoin(String id, Author author, Post post, Temporal.DateTime createdAt) {
     this.id = id;
     this.author = author;
     this.post = post;
+    this.createdAt = createdAt;
   }
   
   @Override
@@ -56,7 +64,8 @@ public final class PostAuthorJoin implements Model {
       PostAuthorJoin postAuthorJoin = (PostAuthorJoin) obj;
       return ObjectsCompat.equals(getId(), postAuthorJoin.getId()) &&
               ObjectsCompat.equals(getAuthor(), postAuthorJoin.getAuthor()) &&
-              ObjectsCompat.equals(getPost(), postAuthorJoin.getPost());
+              ObjectsCompat.equals(getPost(), postAuthorJoin.getPost()) &&
+              ObjectsCompat.equals(getCreatedAt(), postAuthorJoin.getCreatedAt());
       }
   }
   
@@ -66,8 +75,21 @@ public final class PostAuthorJoin implements Model {
       .append(getId())
       .append(getAuthor())
       .append(getPost())
+      .append(getCreatedAt())
       .toString()
       .hashCode();
+  }
+  
+  @Override
+   public String toString() {
+    return new StringBuilder()
+      .append("PostAuthorJoin {")
+      .append("id=" + String.valueOf(getId()) + ", ")
+      .append("author=" + String.valueOf(getAuthor()) + ", ")
+      .append("post=" + String.valueOf(getPost()) + ", ")
+      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("}")
+      .toString();
   }
   
   public static BuildStep builder() {
@@ -82,7 +104,7 @@ public final class PostAuthorJoin implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    * @throws IllegalArgumentException Checks that ID is in the proper format
-   **/
+   */
   public static PostAuthorJoin justId(String id) {
     try {
       UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
@@ -96,6 +118,7 @@ public final class PostAuthorJoin implements Model {
     return new PostAuthorJoin(
       id,
       null,
+      null,
       null
     );
   }
@@ -103,13 +126,15 @@ public final class PostAuthorJoin implements Model {
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       author,
-      post);
+      post,
+      createdAt);
   }
   public interface BuildStep {
     PostAuthorJoin build();
     BuildStep id(String id) throws IllegalArgumentException;
     BuildStep author(Author author);
     BuildStep post(Post post);
+    BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
 
@@ -117,6 +142,7 @@ public final class PostAuthorJoin implements Model {
     private String id;
     private Author author;
     private Post post;
+    private Temporal.DateTime createdAt;
     @Override
      public PostAuthorJoin build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -124,7 +150,8 @@ public final class PostAuthorJoin implements Model {
         return new PostAuthorJoin(
           id,
           author,
-          post);
+          post,
+          createdAt);
     }
     
     @Override
@@ -139,13 +166,19 @@ public final class PostAuthorJoin implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep createdAt(Temporal.DateTime createdAt) {
+        this.createdAt = createdAt;
+        return this;
+    }
+    
     /** 
      * WARNING: Do not set ID when creating a new object. Leave this blank and one will be auto generated for you.
      * This should only be set when referring to an already existing object.
      * @param id id
      * @return Current Builder instance, for fluent method chaining
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     **/
+     */
     public BuildStep id(String id) throws IllegalArgumentException {
         this.id = id;
         
@@ -162,10 +195,11 @@ public final class PostAuthorJoin implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, Author author, Post post) {
+    private CopyOfBuilder(String id, Author author, Post post, Temporal.DateTime createdAt) {
       super.id(id);
       super.author(author)
-        .post(post);
+        .post(post)
+        .createdAt(createdAt);
     }
     
     @Override
@@ -176,6 +210,11 @@ public final class PostAuthorJoin implements Model {
     @Override
      public CopyOfBuilder post(Post post) {
       return (CopyOfBuilder) super.post(post);
+    }
+    
+    @Override
+     public CopyOfBuilder createdAt(Temporal.DateTime createdAt) {
+      return (CopyOfBuilder) super.createdAt(createdAt);
     }
   }
   

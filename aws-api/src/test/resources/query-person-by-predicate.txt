@@ -3,11 +3,13 @@
   listPersons(filter: $filter, limit: $limit) {
     items {
       age
+      createdAt
       dob
       first_name
       id
       last_name
       relationship
+      updatedAt
     }
     nextToken
   }

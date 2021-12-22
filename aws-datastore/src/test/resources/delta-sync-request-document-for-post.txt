@@ -7,21 +7,36 @@
       _version
       authors {
         items {
+          _deleted
+          _lastChangedAt
+          _version
+          createdAt
           id
         }
         nextToken
         startedAt
       }
       blog {
+        _deleted
+        _lastChangedAt
+        _version
+        createdAt
         id
+        name
       }
       comments {
         items {
+          _deleted
+          _lastChangedAt
+          _version
+          content
+          createdAt
           id
         }
         nextToken
         startedAt
       }
+      createdAt
       id
       rating
       status

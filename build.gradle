@@ -56,7 +56,7 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 30
 
-    awsSdkVersion = '2.22.3'
+    awsSdkVersion = '2.36.0'
     fragmentVersion = '1.3.1'
     navigationVersion = '2.3.4'
     dependency = [
@@ -79,18 +79,23 @@ ext {
             multidex: 'androidx.multidex:multidex:2.0.1',
             test: [
                 core: 'androidx.test:core:1.3.0',
+                core_ktx: 'androidx.test:core-ktx:1.3.0',
                 runner: 'androidx.test:runner:1.3.0',
                 junit: 'androidx.test.ext:junit:1.1.2',
                 espresso: 'androidx.test.espresso:espresso-core:3.3.0',
+                orchestrator: 'androidx.test:orchestrator:1.3.0',
                 navigation: "androidx.navigation:navigation-testing:$navigationVersion",
-                fragment: "androidx.fragment:fragment-testing:$fragmentVersion"
+                fragment: "androidx.fragment:fragment-testing:$fragmentVersion",
+                mockito: "org.mockito:mockito-core:3.8.0"
             ]
         ],
         aws: [
+            core: "com.amazonaws:aws-android-sdk-core:$awsSdkVersion",
             s3: "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion",
             comprehend: "com.amazonaws:aws-android-sdk-comprehend:$awsSdkVersion",
             authcore: "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion",
             cognitoauth: "com.amazonaws:aws-android-sdk-cognitoauth:$awsSdkVersion",
+            location: "com.amazonaws:aws-android-sdk-location:$awsSdkVersion",
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion",
             polly: "com.amazonaws:aws-android-sdk-polly:$awsSdkVersion",
@@ -103,8 +108,13 @@ ext {
             coroutines: 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2'
         ],
 
+        oauth2: 'com.google.auth:google-auth-library-oauth2-http:0.26.0',
         okhttp: 'com.squareup.okhttp3:okhttp:4.9.1',
         gson: 'com.google.code.gson:gson:2.8.6',
+        maplibre: [
+            sdk: 'org.maplibre.gl:android-sdk:9.5.2',
+            annotations: 'org.maplibre.gl:android-plugin-annotation-v9:1.0.0'
+        ],
         rxandroid: 'io.reactivex.rxjava3:rxandroid:3.0.0',
         rxjava: 'io.reactivex.rxjava3:rxjava:3.0.6',
         tensorflow: 'org.tensorflow:tensorflow-lite:2.0.0',
@@ -130,16 +140,24 @@ private void configureAndroidLibrary(Project project) {
         project.findProperty('VERSION_NAME') :
         rootProject.findProperty('VERSION_NAME')
 
+    if (project.hasProperty('signingKeyId')) {
+        System.out.println("Getting signing info from protected source.")
+        project.ext.'signing.keyId' = findProperty('signingKeyId') 
+        project.ext.'signing.password' = findProperty('signingPassword')
+        project.ext.'signing.inMemoryKey' = findProperty('signingInMemoryKey')
+    }
+
     project.android {
         buildToolsVersion rootProject.ext.buildToolsVersion
         compileSdkVersion rootProject.ext.compileSdkVersion
 
         defaultConfig {
             multiDexEnabled true
-            minSdkVersion rootProject.ext.minSdkVersion
+            minSdkVersion project.findProperty('minSdkVersion')
             targetSdkVersion rootProject.ext.targetSdkVersion
             versionName project.ext.VERSION_NAME
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+            testInstrumentationRunnerArguments clearPackageData: 'true'
             consumerProguardFiles rootProject.file('configuration/consumer-rules.pro')
 
             testOptions {
@@ -162,6 +180,14 @@ private void configureAndroidLibrary(Project project) {
             sourceCompatibility JavaVersion.VERSION_1_8
             targetCompatibility JavaVersion.VERSION_1_8
         }
+
+        // Needed when running integration tests. The oauth2 library uses relies on two
+        // dependencies (Apache's httpcore and httpclient), both of which include
+        // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
+        packagingOptions {
+            exclude 'META-INF/DEPENDENCIES'
+        }
+
     }
 
     project.dependencies {

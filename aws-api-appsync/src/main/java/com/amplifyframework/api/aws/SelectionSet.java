@@ -24,13 +24,15 @@ import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.CustomTypeField;
+import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.types.JavaFieldType;
-import com.amplifyframework.datastore.appsync.SerializedModel;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Wrap;
@@ -210,7 +212,7 @@ public final class SelectionSet {
             SelectionSet node = new SelectionSet(null,
                     SerializedModel.class == modelClass
                             ? getModelFields(modelSchema, requestOptions.maxDepth())
-                            : getModelFields(modelClass, requestOptions.maxDepth()));
+                            : getModelFields(modelClass, requestOptions.maxDepth(), operation));
             if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
                 node = wrapPagination(node);
             }
@@ -247,10 +249,10 @@ public final class SelectionSet {
          * @param clazz Class from which to build selection set
          * @param depth Number of children deep to explore
          * @return Selection Set
-         * @throws AmplifyException On faiulre to build selection set
+         * @throws AmplifyException On failure to build selection set
          */
         @SuppressWarnings("unchecked") // Cast to Class<Model>
-        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth)
+        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth, Operation operation)
                 throws AmplifyException {
             if (depth < 0) {
                 return new HashSet<>();
@@ -258,7 +260,10 @@ public final class SelectionSet {
 
             Set<SelectionSet> result = new HashSet<>();
 
-            if (depth == 0 && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())) {
+            if (depth == 0
+                    && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
+                    && operation != QueryType.SYNC
+            ) {
                 result.add(new SelectionSet("id"));
                 return result;
             }
@@ -271,11 +276,13 @@ public final class SelectionSet {
                         if (depth >= 1) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
-                            Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass, depth - 1));
+                            Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass,
+                                                                depth - 1,
+                                                                operation));
                             result.add(new SelectionSet(fieldName, fields));
                         }
                     } else if (depth >= 1) {
-                        Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1);
+                        Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1, operation);
                         result.add(new SelectionSet(fieldName, fields));
                     }
                 } else if (isCustomType(field)) {
@@ -359,14 +366,17 @@ public final class SelectionSet {
                 result.add(new SelectionSet("id"));
                 return result;
             }
+
+            SchemaRegistry modelSchemas = SchemaRegistry.instance();
+
             for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
                 String fieldName = entry.getKey();
                 ModelAssociation association = modelSchema.getAssociations().get(fieldName);
                 if (association != null) {
                     if (depth >= 1) {
                         String associatedModelName = association.getAssociatedType();
-                        ModelSchema associateModelSchema = ModelSchemaRegistry.instance()
-                                .getModelSchemaForModelClass(associatedModelName);
+                        ModelSchema associateModelSchema =
+                                modelSchemas.getModelSchemaForModelClass(associatedModelName);
                         Set<SelectionSet> fields;
                         if (entry.getValue().isArray()) { // If modelField is an Array
                             fields = wrapPagination(getModelFields(associateModelSchema, depth - 1));
@@ -375,6 +385,11 @@ public final class SelectionSet {
                         }
                         result.add(new SelectionSet(fieldName, fields));
                     }
+                } else if (entry.getValue().isCustomType()) {
+                    CustomTypeSchema fieldCustomTypeSchema =
+                            modelSchemas.getCustomTypeSchemaForCustomTypeClass(entry.getValue().getTargetType());
+                    Set<SelectionSet> fields = getCustomTypeFields(fieldCustomTypeSchema);
+                    result.add(new SelectionSet(fieldName, fields));
                 } else {
                     result.add(new SelectionSet(fieldName));
                 }
@@ -388,6 +403,25 @@ public final class SelectionSet {
             for (String fieldName : requestOptions.modelMetaFields()) {
                 result.add(new SelectionSet(fieldName));
             }
+            return result;
+        }
+
+        private Set<SelectionSet> getCustomTypeFields(@NonNull CustomTypeSchema customTypeSchema) {
+            SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+            Set<SelectionSet> result = new HashSet<>();
+
+            for (Map.Entry<String, CustomTypeField> entry : customTypeSchema.getFields().entrySet()) {
+                String fieldName = entry.getKey();
+                if (entry.getValue().isCustomType()) {
+                    CustomTypeSchema fieldCustomTypeSchema =
+                            schemaRegistry.getCustomTypeSchemaForCustomTypeClass(entry.getValue().getTargetType());
+                    Set<SelectionSet> fields = getCustomTypeFields(fieldCustomTypeSchema);
+                    result.add(new SelectionSet(fieldName, fields));
+                } else {
+                    result.add(new SelectionSet(fieldName));
+                }
+            }
+
             return result;
         }
     }

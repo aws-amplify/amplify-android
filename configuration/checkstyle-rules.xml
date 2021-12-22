@@ -25,7 +25,7 @@
 
     <!-- Check that source files have a license header. -->
     <module name="RegexpHeader">
-        <property name="headerFile" value="configuration/java.header" />
+        <property name="headerFile" value="${config_loc}/java.header" />
     </module>
 
     <!-- Complain if files become too long by count of lines. -->
@@ -296,7 +296,7 @@
 
     <!-- Apply project-wide suppressions from checkstyle-suppressions.xml. -->
     <module name="SuppressionFilter">
-        <property name="file" value="configuration/checkstyle-suppressions.xml"/>
+        <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
         <property name="optional" value="false"/>
     </module>
 </module>

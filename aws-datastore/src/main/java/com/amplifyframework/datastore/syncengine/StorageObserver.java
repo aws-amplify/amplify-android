@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.datastore.appsync.SerializedModel;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.logging.Logger;

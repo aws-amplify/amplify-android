@@ -38,6 +38,9 @@ public final class ModelField {
     // field in the GraphQL target.
     private final String targetType;
 
+    // If the field can be modified
+    private final boolean isReadOnly;
+
     // If the field is a required or an optional field
     private final boolean isRequired;
 
@@ -51,6 +54,9 @@ public final class ModelField {
     // True if the field is an instance of model.
     private final boolean isModel;
 
+    // True if the field is an instance of CustomType
+    private final boolean isCustomType;
+
     // An array of rules for owner based authorization
     private final List<AuthRule> authRules;
 
@@ -61,10 +67,12 @@ public final class ModelField {
         this.name = builder.name;
         this.javaClassForValue = builder.javaClassForValue;
         this.targetType = builder.targetType;
+        this.isReadOnly = builder.isReadOnly;
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
         this.isModel = builder.isModel;
+        this.isCustomType = builder.isCustomType;
         this.authRules = builder.authRules;
     }
 
@@ -102,11 +110,11 @@ public final class ModelField {
     }
 
     /**
-     * Returns true if the field represents a unique ID.
-     * @return True if the field represents a unique ID.
+     * Returns true if the field is read only.
+     * @return true if the field is read only.
      */
-    public boolean isId() {
-        return PrimaryKey.matches(name);
+    public boolean isReadOnly() {
+        return isReadOnly;
     }
 
     /**
@@ -147,6 +155,15 @@ public final class ModelField {
     }
 
     /**
+     * Returns true if the field's target type is CustomType.
+     *
+     * @return True if the field's target type is CustomType.
+     */
+    public boolean isCustomType() {
+        return isCustomType;
+    }
+
+    /**
      * Specifies an array of rules for owner based authorization.
      *
      * @return list of {@link AuthRule}s
@@ -166,6 +183,9 @@ public final class ModelField {
 
         ModelField that = (ModelField) thatObject;
 
+        if (isReadOnly != that.isReadOnly) {
+            return false;
+        }
         if (isRequired != that.isRequired) {
             return false;
         }
@@ -176,6 +196,9 @@ public final class ModelField {
             return false;
         }
         if (isModel != that.isModel) {
+            return false;
+        }
+        if (isCustomType != that.isCustomType) {
             return false;
         }
         if (!ObjectsCompat.equals(name, that.name)) {
@@ -192,10 +215,12 @@ public final class ModelField {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (javaClassForValue != null ? javaClassForValue.hashCode() : 0);
         result = 31 * result + (targetType != null ? targetType.hashCode() : 0);
+        result = 31 * result + (isReadOnly ? 1 : 0);
         result = 31 * result + (isRequired ? 1 : 0);
         result = 31 * result + (isArray ? 1 : 0);
         result = 31 * result + (isEnum ? 1 : 0);
         result = 31 * result + (isModel ? 1 : 0);
+        result = 31 * result + (isCustomType ? 1 : 0);
         return result;
     }
 
@@ -205,10 +230,12 @@ public final class ModelField {
             "name='" + name + '\'' +
             ", javaClassForValue='" + javaClassForValue + '\'' +
             ", targetType='" + targetType + '\'' +
+            ", isReadOnly=" + isReadOnly +
             ", isRequired=" + isRequired +
             ", isArray=" + isArray +
             ", isEnum=" + isEnum +
             ", isModel=" + isModel +
+            ", isCustomType=" + isCustomType +
             '}';
     }
 
@@ -226,6 +253,9 @@ public final class ModelField {
         // The data targetType of the field.
         private String targetType;
 
+        // If the field can be modified.
+        private boolean isReadOnly = false;
+
         // If the field is a required or an optional field
         private boolean isRequired = false;
 
@@ -238,6 +268,9 @@ public final class ModelField {
 
         // True if the field's target type is Model.
         private boolean isModel = false;
+
+        // True if the field's target type is CustomType.
+        private boolean isCustomType = false;
 
         // A list of rules for owner based authorization
         private List<AuthRule> authRules = new ArrayList<>();
@@ -281,6 +314,16 @@ public final class ModelField {
         }
 
         /**
+         * Set the flag indicating if the field can be modified.
+         * @param isReadOnly if the field can be modified.
+         * @return the builder object
+         */
+        public ModelFieldBuilder isReadOnly(boolean isReadOnly) {
+            this.isReadOnly = isReadOnly;
+            return this;
+        }
+
+        /**
          * Set the flag indicating if the field is a required field or not.
          * @param isRequired ff the field is a required or an optional field
          * @return the builder object
@@ -319,6 +362,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder isModel(boolean isModel) {
             this.isModel = isModel;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's target type is a Model.
+         * @param isCustomType flag indicating if the field is a model
+         * @return the builder object
+         */
+        public ModelFieldBuilder isCustomType(boolean isCustomType) {
+            this.isCustomType = isCustomType;
             return this;
         }
 

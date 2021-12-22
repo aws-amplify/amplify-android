@@ -185,11 +185,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                     onSuccess.accept(StorageUploadFileResult.fromKey(getRequest().getKey()));
                     return;
                 case FAILED:
-                    onError.accept(new StorageException(
-                            "Storage upload operation was interrupted.",
-                            "Please verify that you have a stable internet connection."
-                    ));
-                    return;
+                    // no-op;
                 default:
                     // no-op;
             }

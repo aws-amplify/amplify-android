@@ -15,18 +15,8 @@
 
 package com.amplifyframework.api.aws.sigv4;
 
-import com.amplifyframework.api.ApiException;
-
 /**
- * Interface to provide authentication token
- * from OpenID Connect to signer.
+ * Interface to provide an authentication token to the caller to be used for OpenID Connect authorization.
  */
-public interface OidcAuthProvider {
-    /**
-     * Vends the latest valid authentication token
-     * from OpenID Connect token vendor.
-     * @return the latest auth token
-     * @throws ApiException if retrieving token fails
-     */
-    String getLatestAuthToken() throws ApiException;
-}
+@FunctionalInterface
+public interface OidcAuthProvider extends AuthProvider { }

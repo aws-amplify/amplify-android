@@ -19,7 +19,7 @@ import com.amplifyframework.api.ApiException;
 
 /**
  * Interface to provide authentication token
- * from Cognito User Pools to signer.
+ * from Cognito User Pools to the caller.
  */
 public interface CognitoUserPoolsAuthProvider {
     /**

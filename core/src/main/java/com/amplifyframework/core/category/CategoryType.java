@@ -75,7 +75,13 @@ public enum CategoryType {
      * Storage is an interface to a remote repository to store and
      * retrieve instances of domain models.
      */
-    STORAGE("storage");
+    STORAGE("storage"),
+
+    /**
+     * Geo category provides an interface for maps and other location-aware
+     * capabilities such as location search, routing and asset tracking.
+     */
+    GEO("geo");
 
     /**
      * The key this category is listed under in the config JSON.

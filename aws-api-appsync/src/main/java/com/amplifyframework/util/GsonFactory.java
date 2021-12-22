@@ -20,6 +20,7 @@ import com.amplifyframework.core.model.query.predicate.GsonPredicateAdapters;
 import com.amplifyframework.core.model.temporal.GsonTemporalAdapters;
 import com.amplifyframework.core.model.types.GsonJavaTypeAdapters;
 import com.amplifyframework.datastore.appsync.ModelWithMetadataAdapter;
+import com.amplifyframework.datastore.appsync.SerializedCustomTypeAdapter;
 import com.amplifyframework.datastore.appsync.SerializedModelAdapter;
 
 import com.google.gson.Gson;
@@ -53,6 +54,7 @@ public final class GsonFactory {
         GsonResponseAdapters.register(builder);
         ModelWithMetadataAdapter.register(builder);
         SerializedModelAdapter.register(builder);
+        SerializedCustomTypeAdapter.register(builder);
         builder.serializeNulls();
         return builder.create();
     }

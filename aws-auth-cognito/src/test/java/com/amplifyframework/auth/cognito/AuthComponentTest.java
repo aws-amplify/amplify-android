@@ -29,9 +29,17 @@ import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResetPasswordOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSessionResult;
@@ -90,6 +98,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -133,7 +143,8 @@ public final class AuthComponentTest {
             "O8KyMzoWePPXetwjBk7HB-RX9k-kltuHGrdMMEXMCHlWkSZJ7VwQksLOA2RMfQs-0i0w";
     // User sub value here should match the one encoded in the access token above
     private static final String USER_SUB = "69bc252b-dd07-41c0-b1db-a46066b8ef51";
-    private static final Map<String, String> METADATA = Collections.singletonMap("aCustomKey", "aCustomVal");
+    private static final Map<String, String> VALIDATIONDATA = Collections.singletonMap("validationK", "validationV");
+    private static final Map<String, String> CLIENTMETADATA = Collections.singletonMap("metadataK", "metadataV");
     private AWSMobileClient mobileClient;
     private AuthCategory authCategory;
     private SynchronousAuth synchronousAuth;
@@ -194,15 +205,16 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            Callback<SignUpResult> callback = invocation.getArgument(4);
+            Callback<SignUpResult> callback = invocation.getArgument(5);
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-            .signUp(any(), any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
+            .signUp(any(), any(), any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
 
         AWSCognitoAuthSignUpOptions options = AWSCognitoAuthSignUpOptions.builder()
                 .userAttribute(AuthUserAttributeKey.email(), ATTRIBUTE_VAL)
-                .validationData(METADATA)
+                .validationData(VALIDATIONDATA)
+                .clientMetadata(CLIENTMETADATA)
                 .build();
 
         AuthSignUpResult result = synchronousAuth.signUp(
@@ -217,7 +229,8 @@ public final class AuthComponentTest {
             eq(USERNAME),
             eq(PASSWORD),
             eq(expectedAttributeMap),
-            eq(METADATA),
+            eq(VALIDATIONDATA),
+            eq(CLIENTMETADATA),
             Mockito.<Callback<SignUpResult>>any()
         );
     }
@@ -241,15 +254,55 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            Callback<SignUpResult> callback = invocation.getArgument(2);
+            Callback<SignUpResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignUp(any(), any(), Mockito.<Callback<SignUpResult>>any());
+        }).when(mobileClient).confirmSignUp(any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
 
         AuthSignUpResult result = synchronousAuth.confirmSignUp(USERNAME, CONFIRMATION_CODE);
         validateSignUpResult(result, AuthSignUpStep.DONE);
         verify(mobileClient)
-            .confirmSignUp(eq(USERNAME), eq(CONFIRMATION_CODE), Mockito.<Callback<SignUpResult>>any());
+            .confirmSignUp(eq(USERNAME), eq(CONFIRMATION_CODE), any(), Mockito.<Callback<SignUpResult>>any());
+    }
+
+    /**
+     * Tests that the confirmSignUp method of the Auth wrapper of AWSMobileClient (AMC) calls AMC.confirmSignUp with
+     * the username and confirmation code and options it received.
+     * Also ensures that in the onResult case, the success callback receives a valid AuthSignUpResult.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void confirmSignUpWithOptions() throws AuthException {
+        SignUpResult amcResult = new SignUpResult(
+                true,
+                new UserCodeDeliveryDetails(
+                        DESTINATION,
+                        DELIVERY_MEDIUM,
+                        ATTRIBUTE_NAME
+                ),
+                USER_SUB
+        );
+
+        AWSCognitoAuthConfirmSignUpOptions.CognitoBuilder options = AWSCognitoAuthConfirmSignUpOptions.builder();
+        Map<String, String> clientMetadata = new HashMap<String, String>();
+        clientMetadata.put("testKey", "testValue");
+        options.clientMetadata(clientMetadata);
+        AWSCognitoAuthConfirmSignUpOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<SignUpResult> callback = invocation.getArgument(3);
+            callback.onResult(amcResult);
+            return null;
+        }).when(mobileClient).confirmSignUp(any(), any(), any(), Mockito.<Callback<SignUpResult>>any());
+
+        AuthSignUpResult result = synchronousAuth.confirmSignUp(USERNAME, CONFIRMATION_CODE, builtOptions);
+        validateSignUpResult(result, AuthSignUpStep.DONE);
+        verify(mobileClient)
+                .confirmSignUp(
+                        eq(USERNAME),
+                        eq(CONFIRMATION_CODE),
+                        eq(clientMetadata),
+                        Mockito.<Callback<SignUpResult>>any());
     }
 
     /**
@@ -272,14 +325,50 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            Callback<SignUpResult> callback = invocation.getArgument(1);
+            Callback<SignUpResult> callback = invocation.getArgument(2);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).resendSignUp(any(), (Callback<SignUpResult>) any());
+        }).when(mobileClient).resendSignUp(any(), any(), (Callback<SignUpResult>) any());
 
         AuthSignUpResult result = synchronousAuth.resendSignUpCode(USERNAME);
         validateSignUpResult(result, AuthSignUpStep.CONFIRM_SIGN_UP_STEP);
-        verify(mobileClient).resendSignUp(eq(USERNAME), (Callback<SignUpResult>) any());
+        verify(mobileClient).resendSignUp(eq(USERNAME), any(), (Callback<SignUpResult>) any());
+    }
+
+    /**
+     * Tests that the resendSignUpCode method of the Auth wrapper of AWSMobileClient (AMC) calls AMC.resendSignUp with
+     * the username and options it received.
+     * Also ensures that in the onResult case, the success callback receives a valid AuthSignUpResult.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
+    public void resendSignUpCodeWithOptions() throws AuthException {
+        SignUpResult amcResult = new SignUpResult(
+                false,
+                new UserCodeDeliveryDetails(
+                        DESTINATION,
+                        DELIVERY_MEDIUM,
+                        ATTRIBUTE_NAME
+                ),
+                USER_SUB
+        );
+
+        AWSCognitoAuthResendSignUpCodeOptions.CognitoBuilder options = AWSCognitoAuthResendSignUpCodeOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthResendSignUpCodeOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<SignUpResult> callback = invocation.getArgument(2);
+            callback.onResult(amcResult);
+            return null;
+        }).when(mobileClient).resendSignUp(any(), any(), (Callback<SignUpResult>) any());
+
+        AuthSignUpResult result = synchronousAuth.resendSignUpCode(USERNAME, builtOptions);
+        validateSignUpResult(result, AuthSignUpStep.CONFIRM_SIGN_UP_STEP);
+        verify(mobileClient).resendSignUp(eq(USERNAME), eq(metadata), (Callback<SignUpResult>) any());
     }
 
     /**
@@ -316,7 +405,7 @@ public final class AuthComponentTest {
         AuthSignInResult result = synchronousAuth.signIn(
                 USERNAME,
                 PASSWORD,
-                AWSCognitoAuthSignInOptions.builder().metadata(METADATA).build()
+                AWSCognitoAuthSignInOptions.builder().metadata(CLIENTMETADATA).build()
         );
 
         validateSignInResult(
@@ -325,7 +414,7 @@ public final class AuthComponentTest {
                 AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
         );
 
-        verify(mobileClient).signIn(eq(USERNAME), eq(PASSWORD), eq(METADATA), (Callback<SignInResult>) any());
+        verify(mobileClient).signIn(eq(USERNAME), eq(PASSWORD), eq(CLIENTMETADATA), (Callback<SignInResult>) any());
     }
 
     /**
@@ -353,14 +442,61 @@ public final class AuthComponentTest {
         }).when(mobileClient).getTokens(any());
 
         doAnswer(invocation -> {
-            Callback<SignInResult> callback = invocation.getArgument(1);
+            Callback<SignInResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).confirmSignIn(any(String.class), (Callback<SignInResult>) any());
+        }).when(mobileClient).confirmSignIn(any(String.class), any(), any(), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE);
         validateSignInResult(result, true, AuthSignInStep.DONE);
-        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), (Callback<SignInResult>) any());
+        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), any(), any(), (Callback<SignInResult>) any());
+    }
+
+    /**
+     * Tests that the confirmSignIn method of the Auth wrapper of AWSMobileClient (AMC) calls AMC.confirmSignIn with
+     * the confirmation code and options it received and the success callback receives a valid AuthSignInResult.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
+    public void confirmSignInWithOptions() throws AuthException {
+        SignInResult amcResult = new SignInResult(
+                SignInState.DONE,
+                new UserCodeDeliveryDetails(
+                        DESTINATION,
+                        DELIVERY_MEDIUM,
+                        ATTRIBUTE_NAME
+                )
+        );
+
+        Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
+        AWSCognitoAuthConfirmSignInOptions.CognitoBuilder options = AWSCognitoAuthConfirmSignInOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        AuthUserAttribute attribute = new AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.test");
+        List<AuthUserAttribute> attributes = Collections.singletonList(attribute);
+        Map<String, String> attributeMap = Collections.singletonMap("email", "test@test.test");
+
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        options.userAttributes(attributes);
+        AWSCognitoAuthConfirmSignInOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<Tokens> callback = invocation.getArgument(0);
+            callback.onResult(tokensResult);
+            return null;
+        }).when(mobileClient).getTokens(any());
+
+        doAnswer(invocation -> {
+            Callback<SignInResult> callback = invocation.getArgument(3);
+            callback.onResult(amcResult);
+            return null;
+        }).when(mobileClient).confirmSignIn(any(String.class), any(), any(), (Callback<SignInResult>) any());
+
+        AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE, builtOptions);
+        validateSignInResult(result, true, AuthSignInStep.DONE);
+        verify(mobileClient)
+            .confirmSignIn(eq(CONFIRMATION_CODE), eq(metadata), eq(attributeMap), (Callback<SignInResult>) any());
     }
 
     /**
@@ -483,11 +619,11 @@ public final class AuthComponentTest {
         ));
 
         doAnswer(invocation -> {
-            Callback<ForgotPasswordResult> callback = invocation.getArgument(1);
+            Callback<ForgotPasswordResult> callback = invocation.getArgument(2);
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-            .forgotPassword(any(), Mockito.<Callback<ForgotPasswordResult>>any());
+            .forgotPassword(any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
 
         AuthResetPasswordResult result = synchronousAuth.resetPassword(USERNAME);
         assertFalse(result.isPasswordReset());
@@ -496,7 +632,46 @@ public final class AuthComponentTest {
                 result.getNextStep().getResetPasswordStep()
         );
         validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
-        verify(mobileClient).forgotPassword(eq(USERNAME), Mockito.<Callback<ForgotPasswordResult>>any());
+        verify(mobileClient).forgotPassword(eq(USERNAME), any(), Mockito.<Callback<ForgotPasswordResult>>any());
+    }
+
+    /**
+     * Tests that the resetPassword method of the Auth wrapper of AWSMobileClient (AMC) calls AMC.forgotPassword with
+     * the username and options it received.
+     * Also ensures that in the onResult case, the success callback receives a valid AuthResetPasswordResult and in
+     * the onError case, the error call back receives an AuthException with the root cause attached.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void resetPasswordWithOptions() throws AuthException {
+        ForgotPasswordResult amcResult = new ForgotPasswordResult(ForgotPasswordState.CONFIRMATION_CODE);
+        amcResult.setParameters(new UserCodeDeliveryDetails(
+                DESTINATION,
+                DELIVERY_MEDIUM,
+                ATTRIBUTE_NAME
+        ));
+
+        AWSCognitoAuthResetPasswordOptions.CognitoBuilder options = AWSCognitoAuthResetPasswordOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthResetPasswordOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<ForgotPasswordResult> callback = invocation.getArgument(2);
+            callback.onResult(amcResult);
+            return null;
+        }).when(mobileClient)
+                .forgotPassword(any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
+
+        AuthResetPasswordResult result = synchronousAuth.resetPassword(USERNAME, builtOptions);
+        assertFalse(result.isPasswordReset());
+        assertEquals(
+                AuthResetPasswordStep.CONFIRM_RESET_PASSWORD_WITH_CODE,
+                result.getNextStep().getResetPasswordStep()
+        );
+        validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
+        verify(mobileClient).forgotPassword(eq(USERNAME), eq(metadata), Mockito.<Callback<ForgotPasswordResult>>any());
     }
 
     /**
@@ -511,14 +686,43 @@ public final class AuthComponentTest {
         ForgotPasswordResult amcResult = new ForgotPasswordResult(ForgotPasswordState.DONE);
 
         doAnswer(invocation -> {
-            Callback<ForgotPasswordResult> callback = invocation.getArgument(2);
+            Callback<ForgotPasswordResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-            .confirmForgotPassword(any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
+            .confirmForgotPassword(anyString(), anyString(), anyMap(), Mockito.any());
 
         synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE);
-        verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), any());
+        verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), anyMap(), any());
+    }
+
+    /**
+     * Tests that the confirmResetPassword method of the Auth wrapper of AWSMobileClient (AMC) calls
+     * AMC.confirmForgotPassword with the new password and confirmation code it received.
+     * Also ensures that in the onResult case, the success callback is triggered and in the onError case,
+     * the error call back receives an AuthException with the root cause attached.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void confirmResetPasswordWithOptions() throws AuthException {
+        ForgotPasswordResult amcResult = new ForgotPasswordResult(ForgotPasswordState.DONE);
+
+        AWSCognitoAuthConfirmResetPasswordOptions.CognitoBuilder options =
+                AWSCognitoAuthConfirmResetPasswordOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthConfirmResetPasswordOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<ForgotPasswordResult> callback = invocation.getArgument(3);
+            callback.onResult(amcResult);
+            return null;
+        }).when(mobileClient)
+                .confirmForgotPassword(anyString(), anyString(), anyMap(), Mockito.any());
+
+        synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE, builtOptions);
+        verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), eq(metadata), any());
     }
 
     /**
@@ -559,11 +763,14 @@ public final class AuthComponentTest {
                 new UserCodeDeliveryDetails(DESTINATION, DELIVERY_MEDIUM, ATTRIBUTE_NAME));
 
         doAnswer(invocation -> {
-            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(1);
+            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(2);
             callback.onResult(userCodeDeliveryDetailsList);
             return null;
-        }).when(mobileClient)
-                .updateUserAttributes(any(), Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
+        }).when(mobileClient).updateUserAttributes(
+                any(),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
 
         AuthUpdateAttributeResult result = synchronousAuth.updateUserAttribute(attribute);
 
@@ -573,8 +780,58 @@ public final class AuthComponentTest {
                 result.getNextStep().getUpdateAttributeStep()
         );
         validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
-        verify(mobileClient).updateUserAttributes(eq(attributeMap),
-                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
+        verify(mobileClient).updateUserAttributes(
+                eq(attributeMap),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
+    }
+
+    /**
+     * Tests that updateUserAttribute method of the Auth wrapper of AWSMobileClient (AMC) calls
+     * AMC.updateUserAttributes with the user attribute and options it received.
+     * Also ensures that in the onResult case, the success callback receives a valid AuthUpdateAttributeResult and in
+     * the onError case, the error call back receives an AuthException with the root cause attached.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void updateUserAttributeWithOptions() throws AuthException {
+        AuthUserAttribute attribute = new AuthUserAttribute(AuthUserAttributeKey.custom(ATTRIBUTE_KEY), ATTRIBUTE_VAL);
+        Map<String, String> attributeMap =
+                Collections.singletonMap(attribute.getKey().getKeyString(), attribute.getValue());
+        List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(
+                new UserCodeDeliveryDetails(DESTINATION, DELIVERY_MEDIUM, ATTRIBUTE_NAME));
+
+        AWSCognitoAuthUpdateUserAttributeOptions.CognitoBuilder options =
+                AWSCognitoAuthUpdateUserAttributeOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthUpdateUserAttributeOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(2);
+            callback.onResult(userCodeDeliveryDetailsList);
+            return null;
+        }).when(mobileClient).updateUserAttributes(
+                any(),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
+
+        AuthUpdateAttributeResult result = synchronousAuth.updateUserAttribute(attribute, builtOptions);
+
+        assertTrue(result.isUpdated());
+        assertEquals(
+                AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                result.getNextStep().getUpdateAttributeStep()
+        );
+        validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
+        verify(mobileClient).updateUserAttributes(
+                eq(attributeMap),
+                eq(metadata),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
     }
 
     /**
@@ -606,11 +863,14 @@ public final class AuthComponentTest {
                 ));
 
         doAnswer(invocation -> {
-            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(1);
+            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(2);
             callback.onResult(userCodeDeliveryDetailsList);
             return null;
-        }).when(mobileClient)
-                .updateUserAttributes(any(), Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
+        }).when(mobileClient).updateUserAttributes(
+                any(),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
 
         Map<AuthUserAttributeKey, AuthUpdateAttributeResult> result =
                 synchronousAuth.updateUserAttributes(attributes);
@@ -627,7 +887,76 @@ public final class AuthComponentTest {
         );
         validateCodeDeliveryDetails(result.get(attributeKey).getNextStep().getCodeDeliveryDetails());
         verify(mobileClient).updateUserAttributes(
-                eq(attributesMap), Mockito.<Callback<List<UserCodeDeliveryDetails>>>any());
+                eq(attributesMap),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
+    }
+
+    /**
+     * Tests that updateUserAttributes method of the Auth wrapper of AWSMobileClient (AMC) Calls
+     * AMC.updateUserAttributes with the user attributes and options it received.
+     * Also ensures that in the onResult case, the success callback receives a valid Map which maps
+     * AuthUserAttributeKey into AuthUpdateAttributeResult, and in the onError case, the error call
+     * back receives an AuthException with the root cause attached.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void updateUserAttributesWithOptions() throws AuthException {
+        List<AuthUserAttribute> attributes = new ArrayList<>();
+        AuthUserAttributeKey attributeKey = AuthUserAttributeKey.custom(ATTRIBUTE_KEY);
+        AuthUserAttributeKey attributeKeyWithoutCode = AuthUserAttributeKey.custom(ATTRIBUTE_KEY_WITHOUT_CODE_DELIVERY);
+        attributes.add(new AuthUserAttribute(attributeKey, ATTRIBUTE_VAL));
+        attributes.add(new AuthUserAttribute(attributeKeyWithoutCode, ATTRIBUTE_VAL_WITHOUT_CODE_DELIVERY));
+
+        Map<String, String> attributesMap = new HashMap<>();
+        for (AuthUserAttribute attribute : attributes) {
+            attributesMap.put(attribute.getKey().getKeyString(), attribute.getValue());
+        }
+
+        List<UserCodeDeliveryDetails> userCodeDeliveryDetailsList = Collections.singletonList(
+                new UserCodeDeliveryDetails(
+                        DESTINATION,
+                        DELIVERY_MEDIUM,
+                        ATTRIBUTE_NAME
+                ));
+
+        AWSCognitoAuthUpdateUserAttributesOptions.CognitoBuilder options =
+                AWSCognitoAuthUpdateUserAttributesOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthUpdateUserAttributesOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<List<UserCodeDeliveryDetails>> callback = invocation.getArgument(2);
+            callback.onResult(userCodeDeliveryDetailsList);
+            return null;
+        }).when(mobileClient).updateUserAttributes(
+                any(),
+                any(),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
+
+        Map<AuthUserAttributeKey, AuthUpdateAttributeResult> result =
+                synchronousAuth.updateUserAttributes(attributes, builtOptions);
+
+        assertTrue(result.get(attributeKey).isUpdated());
+        assertTrue(result.get(attributeKeyWithoutCode).isUpdated());
+        assertEquals(
+                AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                result.get(attributeKey).getNextStep().getUpdateAttributeStep()
+        );
+        assertEquals(
+                AuthUpdateAttributeStep.DONE,
+                result.get(attributeKeyWithoutCode).getNextStep().getUpdateAttributeStep()
+        );
+        validateCodeDeliveryDetails(result.get(attributeKey).getNextStep().getCodeDeliveryDetails());
+        verify(mobileClient).updateUserAttributes(
+                eq(attributesMap),
+                eq(metadata),
+                Mockito.<Callback<List<UserCodeDeliveryDetails>>>any()
+        );
     }
 
     /**
@@ -645,16 +974,65 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            Callback<UserCodeDeliveryDetails> callback = invocation.getArgument(1);
+            Callback<UserCodeDeliveryDetails> callback = invocation.getArgument(2);
             callback.onResult(userCodeDeliveryDetails);
             return null;
-        }).when(mobileClient)
-                .verifyUserAttribute(any(), Mockito.<Callback<UserCodeDeliveryDetails>>any());
+        }).when(mobileClient).verifyUserAttribute(
+                any(),
+                any(),
+                Mockito.<Callback<UserCodeDeliveryDetails>>any()
+        );
 
         AuthCodeDeliveryDetails result = synchronousAuth.resendUserAttributeConfirmationCode(attributeKey);
         validateCodeDeliveryDetails(result);
-        verify(mobileClient).verifyUserAttribute(eq(attributeKey.getKeyString()),
-                Mockito.<Callback<UserCodeDeliveryDetails>>any());
+        verify(mobileClient).verifyUserAttribute(
+                eq(attributeKey.getKeyString()),
+                any(),
+                Mockito.<Callback<UserCodeDeliveryDetails>>any()
+        );
+    }
+
+    /**
+     * Tests the resendUserAttributeConfirmationCode method of the Auth wrapper of AWSMobileClient (AMC) Calls
+     * AMC.verifyUserAttribute with the user attribute key to be verified and options it received.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void resendUserAttributeConfirmationCodeWithOptions() throws AuthException {
+        AuthUserAttributeKey attributeKey = AuthUserAttributeKey.custom(ATTRIBUTE_KEY);
+        UserCodeDeliveryDetails userCodeDeliveryDetails = new UserCodeDeliveryDetails(
+                DESTINATION,
+                DELIVERY_MEDIUM,
+                ATTRIBUTE_NAME
+        );
+
+        AWSCognitoAuthResendUserAttributeConfirmationCodeOptions.CognitoBuilder options =
+                AWSCognitoAuthResendUserAttributeConfirmationCodeOptions.builder();
+        Map<String, String> metadata = new HashMap<String, String>();
+        metadata.put("key", "value");
+        options.metadata(metadata);
+        AWSCognitoAuthResendUserAttributeConfirmationCodeOptions builtOptions = options.build();
+
+        doAnswer(invocation -> {
+            Callback<UserCodeDeliveryDetails> callback = invocation.getArgument(2);
+            callback.onResult(userCodeDeliveryDetails);
+            return null;
+        }).when(mobileClient).verifyUserAttribute(
+                any(),
+                any(),
+                Mockito.<Callback<UserCodeDeliveryDetails>>any()
+        );
+
+        AuthCodeDeliveryDetails result = synchronousAuth.resendUserAttributeConfirmationCode(
+                attributeKey,
+                builtOptions
+        );
+        validateCodeDeliveryDetails(result);
+        verify(mobileClient).verifyUserAttribute(
+                eq(attributeKey.getKeyString()),
+                eq(metadata),
+                Mockito.<Callback<UserCodeDeliveryDetails>>any()
+        );
     }
 
     /**

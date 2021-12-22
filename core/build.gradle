@@ -37,6 +37,7 @@ dependencies {
     testImplementation dependency.rxjava
     testImplementation dependency.androidx.test.core
     testImplementation dependency.jsonassert
+    testImplementation dependency.gson
 
     androidTestImplementation (project(path: ':testutils')) {
         transitive = false

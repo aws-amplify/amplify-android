@@ -23,6 +23,7 @@ import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.UserProfile;
+import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testutils.Sleep;
@@ -50,6 +51,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -268,19 +270,9 @@ public class AnalyticsPinpointInstrumentedTest {
      * all provided Amplify attributes.
      */
     @Test
-    public void testIdentifyUser() {
-        UserProfile.Location location = UserProfile.Location.builder()
-                .latitude(47.6154086)
-                .longitude(-122.3349685)
-                .postalCode("98122")
-                .city("Seattle")
-                .region("WA")
-                .country("USA")
-                .build();
-        AnalyticsProperties properties = AnalyticsProperties.builder()
-                .add("TestStringProperty", "TestStringValue")
-                .add("TestDoubleProperty", 1.0)
-                .build();
+    public void testIdentifyUserWithDefaultProfile() {
+        UserProfile.Location location = getTestLocation();
+        AnalyticsProperties properties = getEndpointProperties();
         UserProfile userProfile = UserProfile.builder()
                 .name("test-user")
                 .email("user@test.com")
@@ -292,6 +284,42 @@ public class AnalyticsPinpointInstrumentedTest {
         Amplify.Analytics.identifyUser("userId", userProfile);
 
         EndpointProfile endpointProfile = targetingClient.currentEndpoint();
+        assertCommonEndpointProfileProperties(endpointProfile);
+        assertNull(endpointProfile.getUser().getUserAttributes());
+    }
+
+    /**
+     * {@link AWSPinpointUserProfile} extends {@link UserProfile} to include
+     * {@link AWSPinpointUserProfile#userAttributes} which is specific to Pinpoint. This test is very
+     * similar to testIdentifyUserWithDefaultProfile, but it adds user attributes in additional
+     * to the endpoint attributes.
+     */
+    @Test
+    public void testIdentifyUserWithUserAtrributes() {
+        UserProfile.Location location = getTestLocation();
+        AnalyticsProperties properties = getEndpointProperties();
+        AnalyticsProperties userAttributes = getUserAttributes();
+        AWSPinpointUserProfile pinpointUserProfile = AWSPinpointUserProfile.builder()
+                .name("test-user")
+                .email("user@test.com")
+                .plan("test-plan")
+                .location(location)
+                .customProperties(properties)
+                .userAttributes(userAttributes)
+                .build();
+
+        Amplify.Analytics.identifyUser("userId", pinpointUserProfile);
+
+        EndpointProfile endpointProfile = targetingClient.currentEndpoint();
+        assertCommonEndpointProfileProperties(endpointProfile);
+
+        assertEquals("User attribute value", endpointProfile.getUser()
+                .getUserAttributes()
+                .get("SomeUserAttribute")
+                .get(0));
+    }
+
+    private void assertCommonEndpointProfileProperties(EndpointProfile endpointProfile) {
         EndpointProfileLocation endpointProfileLocation = endpointProfile.getLocation();
         assertEquals("user@test.com", endpointProfile.getAttribute("email").get(0));
         assertEquals("test-user", endpointProfile.getAttribute("name").get(0));
@@ -304,6 +332,30 @@ public class AnalyticsPinpointInstrumentedTest {
         assertEquals("USA", endpointProfileLocation.getCountry());
         assertEquals("TestStringValue", endpointProfile.getAttribute("TestStringProperty").get(0));
         assertEquals((Double) 1.0, endpointProfile.getMetric("TestDoubleProperty"));
+    }
+
+    private AnalyticsProperties getUserAttributes() {
+        return AnalyticsProperties.builder()
+            .add("SomeUserAttribute", "User attribute value")
+            .build();
+    }
+
+    private AnalyticsProperties getEndpointProperties() {
+        return AnalyticsProperties.builder()
+            .add("TestStringProperty", "TestStringValue")
+            .add("TestDoubleProperty", 1.0)
+            .build();
+    }
+
+    private UserProfile.Location getTestLocation() {
+        return UserProfile.Location.builder()
+                .latitude(47.6154086)
+                .longitude(-122.3349685)
+                .postalCode("98122")
+                .city("Seattle")
+                .region("WA")
+                .country("USA")
+                .build();
     }
 
     private void waitForAutoFlush(AnalyticsClient analyticsClient) {

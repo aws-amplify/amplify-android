@@ -102,6 +102,12 @@ afterEvaluate { project ->
             project.ext.VERSION_NAME.contains("SNAPSHOT") == false &&
                 gradle.taskGraph.hasTask("uploadArchives")
         }
+        if (project.hasProperty('signing.inMemoryKey')) {
+            def signingKey = findProperty("signing.inMemoryKey").replace("\\n","\n")
+            def signingPassword = findProperty("signing.password")
+            def keyId = findProperty("signing.keyId")
+            useInMemoryPgpKeys(keyId, signingKey, signingPassword)
+        }
         sign configurations.archives
     }
 

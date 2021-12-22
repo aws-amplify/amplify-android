@@ -90,12 +90,6 @@ final class Merger {
             int incomingVersion = metadata.getVersion() == null ? -1 : metadata.getVersion();
             T model = modelWithMetadata.getModel();
 
-            // Check if there is a pending mutation for this model, in the outbox.
-            if (mutationOutbox.hasPendingMutation(model.getId())) {
-                LOG.info("Mutation outbox has pending mutation for " + model.getId() + ", refusing to merge.");
-                return Completable.complete();
-            }
-
             return versionRepository.findModelVersion(model)
                 .onErrorReturnItem(-1)
                 // If the incoming version is strictly less than the current version, it's "out of date,"
@@ -105,10 +99,17 @@ final class Merger {
                 // and the version would get bumped up.
                 .filter(currentVersion -> currentVersion == -1 || incomingVersion > currentVersion)
                 // If we should merge, then do so now, starting with the model data.
-                .flatMapCompletable(shouldMerge ->
-                        (isDelete ? delete(model, changeTypeConsumer) : save(model, changeTypeConsumer))
-                                .andThen(save(metadata, NoOpConsumer.create()))
-                )
+                .flatMapCompletable(shouldMerge -> {
+                    Completable firstStep;
+                    if (mutationOutbox.hasPendingMutation(model.getId())) {
+                        LOG.info("Mutation outbox has pending mutation for " + model.getId()
+                            + ". Saving the metadata, but not model itself.");
+                        firstStep = Completable.complete();
+                    } else {
+                        firstStep = (isDelete ? delete(model, changeTypeConsumer) : save(model, changeTypeConsumer));
+                    }
+                    return firstStep.andThen(save(metadata, NoOpConsumer.create()));
+                })
                 // Let the world know that we've done a good thing.
                 .doOnComplete(() -> {
                     announceSuccessfulMerge(modelWithMetadata);
@@ -132,7 +133,6 @@ final class Merger {
             long duration = System.currentTimeMillis() - startTime.get();
             LOG.verbose("Merged a single item in " + duration + " ms.");
         });
-
     }
 
     /**

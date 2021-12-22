@@ -22,6 +22,8 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.util.Immutable;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -38,11 +40,10 @@ public class DataStoreException extends AmplifyException {
      * @param throwable The underlying cause of this exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public DataStoreException(
-            @NonNull final String message,
+    public DataStoreException(@NonNull final String message,
             final Throwable throwable,
-            @NonNull final String recoverySuggestion
-    ) {
+            @NonNull final String recoverySuggestion) {
+
         super(message, throwable, recoverySuggestion);
     }
 
@@ -112,6 +113,23 @@ public class DataStoreException extends AmplifyException {
                     ", errors=" + errors +
                     ", recoverySuggestion=" + getRecoverySuggestion() +
                     '}';
+        }
+    }
+
+    /**
+     * IrRecoverable exception.
+     */
+    public static class IrRecoverableException extends DataStoreException {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * Constructor for irrecoverable exception.
+         * @param message message for the exception.
+         * @param recoverySuggestion recovery suggestion.
+         */
+        public IrRecoverableException(@NonNull @NotNull String message, @NotNull String recoverySuggestion) {
+
+            super(message, recoverySuggestion);
         }
     }
 }

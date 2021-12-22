@@ -103,7 +103,8 @@ public final class VersionRepositoryTest {
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson")
             .build();
-        ModelMetadata metadata = new ModelMetadata(blogOwner.getId(), null, null, null);
+        ModelMetadata metadata =
+                new ModelMetadata(blogOwner.getModelName() + "|" + blogOwner.getId(), null, null, null);
         storageAdapter.save(blogOwner, metadata);
 
         // Act: try to get the version.
@@ -135,7 +136,12 @@ public final class VersionRepositoryTest {
             .build();
         final int maxRandomVersion = 1_000;
         int expectedVersion = new Random().nextInt(maxRandomVersion);
-        storageAdapter.save(new ModelMetadata(owner.getId(), false, expectedVersion, Temporal.Timestamp.now()));
+        storageAdapter.save(new ModelMetadata(
+            owner.getModelName() + "|" + owner.getId(),
+            false,
+            expectedVersion,
+            Temporal.Timestamp.now()
+        ));
 
         // Act! Try to obtain it via the Versioning Repository.
         TestObserver<Integer> observer = versionRepository.findModelVersion(owner).test();

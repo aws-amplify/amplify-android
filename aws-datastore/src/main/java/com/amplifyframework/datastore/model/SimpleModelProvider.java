@@ -19,6 +19,7 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -39,6 +40,7 @@ public final class SimpleModelProvider implements ModelProvider {
     private final String version;
     private final LinkedHashSet<Class<? extends Model>> modelClasses = new LinkedHashSet<>();
     private final Map<String, ModelSchema> modelSchemaMap = new HashMap<>();
+    private final Map<String, CustomTypeSchema> customTypeSchemaMap = new HashMap<>();
 
     private SimpleModelProvider(String version, LinkedHashSet<Class<? extends Model>> modelClasses) {
         this.version = version;
@@ -48,6 +50,14 @@ public final class SimpleModelProvider implements ModelProvider {
     private SimpleModelProvider(String version, Map<String, ModelSchema> modelSchemaMap) {
         this.version = version;
         this.modelSchemaMap.putAll(modelSchemaMap);
+    }
+
+    private SimpleModelProvider(
+            String version, Map<String, ModelSchema> modelSchemaMap,
+            Map<String, CustomTypeSchema> customTypeSchemaMap) {
+        this.version = version;
+        this.modelSchemaMap.putAll(modelSchemaMap);
+        this.customTypeSchemaMap.putAll(customTypeSchemaMap);
     }
 
     /**
@@ -99,6 +109,24 @@ public final class SimpleModelProvider implements ModelProvider {
     }
 
     /**
+     * Creates a simple model provider with model schema and customType schema. The provider will return the given
+     * version, model schema and customType schema.
+     * @param version Version of the new model provider to return
+     * @param modelSchemaMap The map of model name to schema that the provider will provide
+     * @param customTypeSchemaMap The map of customType name to schema that the provider will provide
+     * @return A simple model provider, providing the given versions and model classes
+     */
+    @NonNull
+    public static SimpleModelProvider instance(
+            @NonNull String version,
+            @NonNull Map<String, ModelSchema> modelSchemaMap,
+            @NonNull Map<String, CustomTypeSchema> customTypeSchemaMap) {
+        Objects.requireNonNull(version);
+        Objects.requireNonNull(modelSchemaMap);
+        return new SimpleModelProvider(version, modelSchemaMap, customTypeSchemaMap);
+    }
+
+    /**
      * Creates a {@link SimpleModelProvider} which will provide the given model classes.
      * A random version will be used for the provider.
      * @param modelClasses Classes that the provider will provide
@@ -135,6 +163,16 @@ public final class SimpleModelProvider implements ModelProvider {
     @Override
     public Set<String> modelNames() {
         return modelSchemaMap.size() > 0 ? modelSchemaMap.keySet() : ModelProvider.super.modelNames();
+    }
+
+    @Override
+    public Map<String, CustomTypeSchema> customTypeSchemas() {
+        return customTypeSchemaMap.size() > 0 ? customTypeSchemaMap : ModelProvider.super.customTypeSchemas();
+    }
+
+    @Override
+    public Set<String> customTypeNames() {
+        return customTypeSchemaMap.size() > 0 ? customTypeSchemaMap.keySet() : ModelProvider.super.customTypeNames();
     }
 
     /**
@@ -184,10 +222,12 @@ public final class SimpleModelProvider implements ModelProvider {
     @SuppressWarnings("WeakerAccess")
     public static final class Builder {
         private final LinkedHashSet<Class<? extends Model>> modelClasses;
+        private final LinkedHashSet<CustomTypeSchema> customTypeSchemas;
         private String version;
 
         Builder() {
             this.modelClasses = new LinkedHashSet<>();
+            this.customTypeSchemas = new LinkedHashSet<>();
         }
 
         /**
@@ -216,6 +256,35 @@ public final class SimpleModelProvider implements ModelProvider {
             for (Class<? extends Model> clazz : modelClasses) {
                 Objects.requireNonNull(clazz);
                 Builder.this.addModel(clazz);
+            }
+            return Builder.this;
+        }
+
+        /**
+         * Adds a single customTypeSchema to the set of model classes that the newly-build
+         * {@link SimpleModelProvider} will provide.
+         * @param customTypeSchema A model class that will be provided in newly-built provider
+         * @param <T> Type of model that will be provided
+         * @return Current builder instance, with which to make chained builder configuration calls
+         */
+        @SuppressWarnings("UnusedReturnValue")
+        public <T extends Model> Builder addCustomTypeSchema(@NonNull CustomTypeSchema customTypeSchema) {
+            Objects.requireNonNull(customTypeSchema);
+            Builder.this.customTypeSchemas.add(customTypeSchema);
+            return Builder.this;
+        }
+
+        /**
+         * Adds a variable number of model classes to the set of model classes that will
+         * be provided by the newly-build {@link SimpleModelProvider}.
+         * @param customTypeSchemas These classes will be provided by the newly-build {@link SimpleModelProvider}
+         * @return Current builder instance, with which to make chained builder configuration calls
+         */
+        public Builder addCustomTypeSchemas(@NonNull CustomTypeSchema... customTypeSchemas) {
+            Objects.requireNonNull(customTypeSchemas);
+            for (CustomTypeSchema schema : customTypeSchemas) {
+                Objects.requireNonNull(schema);
+                Builder.this.addCustomTypeSchema(schema);
             }
             return Builder.this;
         }

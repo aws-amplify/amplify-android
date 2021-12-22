@@ -21,7 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.Page;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.QueryPaginationInput;
@@ -70,8 +70,8 @@ public class SqlCommandTest {
      */
     @Before
     public void createSqlCommandFactory() {
-        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
-        sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry, GsonFactory.instance());
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        sqlCommandFactory = new SQLiteCommandFactory(schemaRegistry, GsonFactory.instance());
     }
 
     /**

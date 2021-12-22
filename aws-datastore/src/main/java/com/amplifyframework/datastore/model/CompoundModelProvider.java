@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.model;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -57,13 +58,16 @@ public final class CompoundModelProvider implements ModelProvider {
     @NonNull
     public static CompoundModelProvider of(@NonNull ModelProvider... modelProviders) {
         final Map<String, ModelSchema> modelSchemaMap = new HashMap<>();
+        final Map<String, CustomTypeSchema> customTypeSchemaMap = new HashMap<>();
         StringBuilder componentVersionBuffer = new StringBuilder();
         for (ModelProvider componentProvider : modelProviders) {
             componentVersionBuffer.append(componentProvider.version());
             modelSchemaMap.putAll(componentProvider.modelSchemas());
+            customTypeSchemaMap.putAll(componentProvider.customTypeSchemas());
         }
         String version = UUID.nameUUIDFromBytes(componentVersionBuffer.toString().getBytes()).toString();
-        SimpleModelProvider delegateProvider = SimpleModelProvider.instance(version, modelSchemaMap);
+        SimpleModelProvider delegateProvider =
+                SimpleModelProvider.instance(version, modelSchemaMap, customTypeSchemaMap);
         return new CompoundModelProvider(delegateProvider);
     }
 
@@ -81,6 +85,16 @@ public final class CompoundModelProvider implements ModelProvider {
     @Override
     public Set<String> modelNames() {
         return delegateProvider.modelNames();
+    }
+
+    @Override
+    public Map<String, CustomTypeSchema> customTypeSchemas() {
+        return delegateProvider.customTypeSchemas();
+    }
+
+    @Override
+    public Set<String> customTypeNames() {
+        return delegateProvider.customTypeNames();
     }
 
     @NonNull

@@ -34,14 +34,13 @@
             "isEnum": false,
             "isModel": true,
             "isRequired": false,
-            "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
+            "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
             "name": "post",
             "targetType": "Post"
         }
     },
     "indexes": {},
-    "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel",
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
     "name": "Comment",
     "pluralName": "Comments"
 }
-

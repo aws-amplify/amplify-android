@@ -1,0 +1,52 @@
+{"query": "mutation CreatePerson($input: CreatePersonInput!) {
+  createPerson(input: $input) {
+    _deleted
+    _lastChangedAt
+    _version
+    bio {
+      email
+      phone {
+        area
+        country
+        number
+      }
+    }
+    id
+    mailingAddresses {
+      city
+      line1
+      line2
+      postalCode
+      state
+    }
+    name
+  }
+}
+",
+"variables": {
+  "input": {
+    "name": "Tester Testing",
+    "bio": {
+      "phone": { "area": "415", "country": "+1", "number": "6666666" },
+      "email": "test@testing.com"
+    },
+    "mailingAddresses": [
+      {
+        "city": "SFO",
+        "postalCode": "94105",
+        "state": "CA",
+        "line2": "apt 3",
+        "line1": "222 Somewhere far"
+      },
+      {
+        "city": "SEA",
+        "postalCode": "00000",
+        "state": "WA",
+        "line2": null,
+        "line1": "333 Somewhere close"
+      }
+    ],
+    "id": "123456"
+  }
+}
+}

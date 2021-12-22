@@ -140,8 +140,8 @@ public interface AppSync {
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
+     * @param model ID An instance of the Model to be deleted
      * @param modelSchema The schema of the object being deleted
-     * @param objectId ID id of the object to delete
      * @param version The version of the model we have
      * @param onResponse Invoked when response data is available.
      * @param onFailure Invoked on failure to obtain response data
@@ -150,8 +150,8 @@ public interface AppSync {
      */
     @NonNull
     <T extends Model> Cancelable delete(
+            @NonNull T model,
             @NonNull ModelSchema modelSchema,
-            @NonNull String objectId,
             @NonNull Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure
@@ -159,8 +159,8 @@ public interface AppSync {
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
+     * @param model ID id of the object to delete
      * @param modelSchema The schema of the object being deleted
-     * @param objectId ID id of the object to delete
      * @param version The version of the model we have
      * @param predicate Condition to use for the delete operation.
      * @param onResponse Invoked when response data is available.
@@ -170,8 +170,8 @@ public interface AppSync {
      */
     @NonNull
     <T extends Model> Cancelable delete(
+            @NonNull T model,
             @NonNull ModelSchema modelSchema,
-            @NonNull String objectId,
             @NonNull Integer version,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,

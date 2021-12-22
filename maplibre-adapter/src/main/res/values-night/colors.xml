@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="map_attribution_textBackground">#b3212121</color>
+
+    <color name="map_search_itemBackground">#212121</color>
+
+    <color name="map_controls_background">#212121</color>
+    <color name="map_controls_border">#424242</color>
+    <color name="map_controls_foreground">#ededed</color>
+
+</resources>

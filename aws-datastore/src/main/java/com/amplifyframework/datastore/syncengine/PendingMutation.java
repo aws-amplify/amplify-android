@@ -246,7 +246,6 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     public String toString() {
         return "PendingMutation{" +
             "mutatedItem=" + mutatedItem +
-            ", modelSchema=" + modelSchema +
             ", mutationType=" + mutationType +
             ", mutationId=" + mutationId +
             ", predicate=" + predicate +

@@ -39,7 +39,7 @@
             "isEnum": false,
             "isModel": true,
             "isRequired": true,
-            "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
+            "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
             "name": "owner",
             "targetType": "BlogOwner"
         },
@@ -49,14 +49,13 @@
             "isEnum": false,
             "isModel": true,
             "isRequired": false,
-            "javaClassForValue": "com.amplifyframework.datastore.appsync.SerializedModel",
+            "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
             "name": "posts",
             "targetType": "Post"
         }
     },
     "indexes": {},
-    "modelClass": "com.amplifyframework.datastore.appsync.SerializedModel",
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
     "name": "Blog",
     "pluralName": "Blogs"
 }
-

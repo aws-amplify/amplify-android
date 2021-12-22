@@ -24,6 +24,8 @@ readonly config_files=(
     # DataStore
     "aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-datastore/src/androidTest/res/raw/awsconfiguration.json"
+    "aws-datastore/src/androidTest/res/raw/credentials.json"
+    "aws-datastore/src/androidTest/res/raw/google_client_creds.json"
 
     # Predictions
     "aws-predictions/src/androidTest/res/raw/amplifyconfiguration.json"
@@ -33,11 +35,31 @@ readonly config_files=(
     "aws-storage-s3/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-storage-s3/src/androidTest/res/raw/awsconfiguration.json"
     "aws-storage-s3/src/androidTest/res/raw/credentials.json"
+
+    # Geo
+    "aws-geo-location/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-geo-location/src/androidTest/res/raw/awsconfiguration.json"
+    "aws-geo-location/src/androidTest/res/raw/credentials.json"
+
+    # Maplibre Adapter
+    "maplibre-adapter/src/androidTest/res/raw/amplifyconfiguration.json"
+    "maplibre-adapter/src/androidTest/res/raw/awsconfiguration.json"
+    "maplibre-adapter/src/androidTest/res/raw/credentials.json"
 )
 
-# Copy remote files into the local directory.
-for config_file in ${config_files[@]}; do
-    aws s3 cp "s3://$config_bucket/$config_file" "$config_file" &
-done
+# Set up output path
+declare -r dest_dir=$HOME/.aws-amplify/amplify-android
+mkdir -p "$dest_dir"
 
+# Download remote files into a local directory outside of the project.
+for config_file in ${config_files[@]}; do
+    aws s3 cp "s3://$config_bucket/$config_file" "$dest_dir/$config_file" &
+done
+wait
+
+# Create a symlink for each configuration file.
+for config_file in ${config_files[@]}; do
+    mkdir -p "$(dirname "$config_file")"
+    ln -s "$dest_dir/$config_file" "$config_file" &
+done
 wait
