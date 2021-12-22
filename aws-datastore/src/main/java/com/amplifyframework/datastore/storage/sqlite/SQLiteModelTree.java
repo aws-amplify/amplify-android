@@ -119,10 +119,19 @@ final class SQLiteModelTree {
                     String childModel = association.getAssociatedType(); // model name
                     ModelSchema childSchema = registry.getModelSchemaForModelClass(childModel);
                     SQLiteTable childTable = SQLiteTable.fromSchema(childSchema);
-                    String childId = childTable.getPrimaryKey().getName();
-                    String parentId = childSchema.getAssociations() // get a map of associations
-                            .get(association.getAssociatedName()) // get @BelongsTo association linked to this field
-                            .getTargetName(); // get the target field (parent) name
+                    String childId;
+                    String parentId;
+                    try {
+                        childId = childTable.getPrimaryKey().getName();
+                        parentId = childSchema.getAssociations() // get a map of associations
+                                .get(association.getAssociatedName()) // get @BelongsTo association linked to this field
+                                .getTargetName(); // get the target field (parent) name
+                    } catch (NullPointerException unexpectedAssociation) {
+                        LOG.warn("Schema uses unsupported model association type. " +
+                                "Failed to cascade deletion.",
+                                unexpectedAssociation);
+                        return;
+                    }
 
                     // Collect every children one level deeper than current level
                     Set<String> childrenIds = new HashSet<>();
