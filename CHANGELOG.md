@@ -1,3 +1,15 @@
+## [Release 1.31.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.31.1)
+
+### Bug Fixes
+- **datastore:** Alias table names and make column aliases unique in query (#1603)
+- **aws-datastore:** halt cascading delete if foreign key not found (#1614)
+- **maplibre-adapter** adjust pop-up elevation (#1601)
+
+### Miscellaneous
+- Bump SDK version in build.gradle (#1619)
+
+[See all changes between 1.31.0 and 1.31.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.31.0...release_v1.31.1)
+
 ## [Release 1.31.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.31.0)
 
 ### Features
