@@ -313,7 +313,6 @@ public class SelectionSetTest {
         postFields.put("title", postTitle);
         postFields.put("blog", postBlog);
 
-
         Map<String, ModelAssociation> associations = new HashMap<>();
         associations.put("blog", ModelAssociation.builder()
                 .name("BelongsTo")
