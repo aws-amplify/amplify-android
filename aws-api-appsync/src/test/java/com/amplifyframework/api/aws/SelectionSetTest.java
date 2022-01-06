@@ -21,6 +21,7 @@ import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.CustomTypeField;
 import com.amplifyframework.core.model.CustomTypeSchema;
+import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
@@ -266,5 +267,77 @@ public class SelectionSetTest {
         String result = selectionSet.toString();
         assertEquals(Resources.readAsString("selection-set-nested-serialized-model-serialized-custom-type.txt"),
                 result + "\n");
+    }
+
+    /**
+     * Test generating SelectionSet for nested ModelSchema using SerializedModel.
+     * @throws AmplifyException if a ModelSchema can't be derived from postSchema
+     */
+    @Test
+    public void nestedSerializedModel() throws AmplifyException {
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        ModelField blogModelId = ModelField.builder()
+                .isRequired(true)
+                .targetType("ID")
+                .build();
+        ModelField blogName = ModelField.builder()
+                .isRequired(true)
+                .targetType("String")
+                .build();
+        Map<String, ModelField> blogFields = new HashMap<>();
+        blogFields.put("id", blogModelId);
+        blogFields.put("name", blogName);
+
+        ModelSchema blogSchema = ModelSchema.builder()
+                .name("Blog")
+                .pluralName("Blogs")
+                .modelClass(SerializedModel.class)
+                .fields(blogFields)
+                .build();
+
+        ModelField postModelId = ModelField.builder()
+                .isRequired(true)
+                .targetType("ID")
+                .build();
+        ModelField postTitle = ModelField.builder()
+                .isRequired(true)
+                .targetType("String")
+                .build();
+        ModelField postBlog = ModelField.builder()
+                .isRequired(true)
+                .targetType("Blog")
+                .isModel(true)
+                .build();
+        Map<String, ModelField> postFields = new HashMap<>();
+        postFields.put("id", postModelId);
+        postFields.put("title", postTitle);
+        postFields.put("blog", postBlog);
+
+        Map<String, ModelAssociation> associations = new HashMap<>();
+        associations.put("blog", ModelAssociation.builder()
+                .name("BelongsTo")
+                .targetName("blogId")
+                .associatedType("Blog")
+                .build());
+
+        ModelSchema postSchema = ModelSchema.builder()
+                .name("Post")
+                .pluralName("Posts")
+                .modelClass(SerializedModel.class)
+                .fields(postFields)
+                .associations(associations)
+                .build();
+
+        schemaRegistry.register("Blog", blogSchema);
+        schemaRegistry.register("Post", postSchema);
+
+        SelectionSet selectionSet = SelectionSet.builder()
+                .modelClass(SerializedModel.class)
+                .modelSchema(postSchema)
+                .operation(QueryType.SYNC)
+                .requestOptions(new JustIDGraphQLRequestOptions())
+                .build();
+
+        assertEquals(Resources.readAsString("selection-set-post-nested.txt"), selectionSet.toString() + "\n");
     }
 }
