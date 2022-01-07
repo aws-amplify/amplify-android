@@ -13,24 +13,51 @@
  * permissions and limitations under the License.
  */
 
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+plugins {
+    id "com.android.library"
+    id "kotlin-android"
+    id "kotlin-parcelize"
+}
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
+ext {
+    minSdkVersion = 21
+}
+
+android {
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
+}
+
 dependencies {
-    implementation project(':core')
-    implementation project(':aws-geo-location')
-    implementation project(':aws-auth-cognito')
+    def lifecycleVersion = "2.4.0"
+
+    implementation project(":aws-auth-cognito")
+    implementation project(":aws-geo-location")
+    implementation project(":core")
     implementation dependency.aws.core
-    implementation dependency.maplibre
+    implementation dependency.maplibre.sdk
+    implementation dependency.maplibre.annotations
     implementation dependency.okhttp
     implementation dependency.kotlin.coroutines
 
-    androidTestImplementation project(':testutils')
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
+    implementation "com.google.android.material:material:1.4.0"
+
+    compileOnly dependency.aws.location
+
+    androidTestImplementation project(":testutils")
     androidTestImplementation dependency.androidx.appcompat
     androidTestImplementation dependency.androidx.test.junit
     androidTestImplementation dependency.androidx.test.core
+    androidTestImplementation dependency.androidx.test.core_ktx
     androidTestImplementation dependency.androidx.test.runner
 }
 
+afterEvaluate {
+    it.android.kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
+}

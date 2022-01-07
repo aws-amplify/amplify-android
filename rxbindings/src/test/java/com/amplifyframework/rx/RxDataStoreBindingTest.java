@@ -23,6 +23,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
@@ -30,12 +31,14 @@ import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.datastore.DataStoreItemChange.Initiator;
 import com.amplifyframework.datastore.DataStoreItemChange.Type;
 import com.amplifyframework.datastore.DataStorePlugin;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.testutils.random.RandomModel;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -45,6 +48,7 @@ import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -371,6 +375,131 @@ public final class RxDataStoreBindingTest {
 
         verify(delegate)
             .observe(eq(Model.class), anyConsumer(), anyConsumer(), anyConsumer(), anyAction());
+    }
+
+    /**
+     * The Rx binding for observeQuerying the DataStore should be an Observable stream
+     * of DataStore changes. It should emit events whenever they are observed
+     * on the observe behavior.
+     */
+    @Test
+    public void observeQueryReturnsCategoryBehaviorChanges() {
+        // Arrange: observe(Class<?>) will spit out some values from category behavior.
+        List<Model> modelList = new ArrayList<>();
+        modelList.add(RandomModel.model());
+        DataStoreQuerySnapshot<Model> changeEvent = new DataStoreQuerySnapshot<>(new ArrayList<>(), true);
+        doAnswer(invocation -> {
+            // 0 = clazz, 1 = options, 2 = start consumer, 3 = item consumer, 4 = failure consumer, 5 = onComplete
+            final int positionOfStartConsumer = 2;
+            Consumer<Cancelable> onStart = invocation.getArgument(positionOfStartConsumer);
+            onStart.accept(new NoOpCancelable());
+
+            final int positionOfValueConsumer = 3;
+            Consumer<DataStoreQuerySnapshot<Model>> onNext = invocation.getArgument(positionOfValueConsumer);
+            onNext.accept(changeEvent);
+
+            return null; // "void"
+        }).when(delegate)
+                .observeQuery(eq(Model.class),
+                        any(),
+                        anyConsumer(),
+                        anyConsumer(),
+                        anyConsumer(),
+                        anyAction());
+
+        // Act: Observe the DataStore via Rx binding
+        TestObserver<DataStoreQuerySnapshot<Model>> observer = rxDataStore.observeQuery(Model.class,
+                                                                    new ObserveQueryOptions()).test();
+
+        // Assert: event is observed
+        observer
+                .awaitCount(1)
+                .assertValue(changeEvent);
+
+        verify(delegate)
+                .observeQuery(eq(Model.class),
+                        any(),
+                        anyConsumer(),
+                        anyConsumer(),
+                        anyConsumer(),
+                        anyAction());
+    }
+
+    /**
+     * The Rx binding for the DataStore's observeQuery method is an Observable. It should
+     * complete when the Rx binding's completion callback is triggered.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
+     */
+    @Test
+    public void observeQueryCompletesWhenCategoryBehaviorDoes() throws InterruptedException {
+        // Category behavior is arranged to complete
+        doAnswer(invocation -> {
+            // 0 = clazz, 1 = options, 2 = start consumer, 3 = item consumer, 4 = failure consumer, 5 = onComplete
+            final int positionOfOnStart = 3;
+            Consumer<Cancelable> onStart = invocation.getArgument(positionOfOnStart);
+            onStart.accept(new NoOpCancelable());
+
+            final int positionOfOnComplete = 5;
+            Action onComplete = invocation.getArgument(positionOfOnComplete);
+            onComplete.call();
+
+            return null; // "void"
+        }).when(delegate)
+                .observeQuery(eq(Model.class), any(), anyConsumer(), anyConsumer(), anyConsumer(), anyAction());
+
+        // Act: observe via Rx binding
+        TestObserver<DataStoreQuerySnapshot<Model>> observer = rxDataStore.observeQuery(Model.class,
+                new ObserveQueryOptions()).test();
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertComplete();
+
+        verify(delegate)
+                .observeQuery(eq(Model.class), any(), anyConsumer(), anyConsumer(), anyConsumer(), anyAction());
+    }
+
+    /**
+     * The Rx binding for the DataStore's observeQuery behavior is an Observable. It should
+     * fail with an exception when the DataStore observe method calls back its error consumer.
+     * @throws InterruptedException If interrupted while test observer is awaiting terminal event
+     */
+    @Test
+    public void observeQueryFailsWhenCategoryBehaviorDoes() throws InterruptedException {
+        // Arrange for observer() to callback failure
+        DataStoreException expectedFailure = new DataStoreException("Expected", "Failure");
+        doAnswer(invocation -> {
+            // 0 = clazz, 1 = options, 2 = start consumer, 3 = item consumer, 4 = failure consumer, 5 = onComplete
+            final int positionOfOnStart = 3;
+            Consumer<Cancelable> onStart = invocation.getArgument(positionOfOnStart);
+            onStart.accept(new NoOpCancelable());
+
+            final int positionOfOnFailure = 4;
+            Consumer<DataStoreException> onFailure = invocation.getArgument(positionOfOnFailure);
+            onFailure.accept(expectedFailure);
+
+            return null; // "void"
+        }).when(delegate)
+                .observeQuery(eq(Model.class),
+                        any(),
+                        anyConsumer(),
+                        anyConsumer(),
+                        anyConsumer(),
+                        anyAction());
+
+        // Act: observe the DataStore via Rx binding
+        TestObserver<DataStoreQuerySnapshot<Model>> observer = rxDataStore.observeQuery(Model.class,
+                new ObserveQueryOptions()).test();
+
+        // Assert: failure is propagated
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertError(expectedFailure);
+
+        verify(delegate)
+                .observeQuery(eq(Model.class),
+                        any(),
+                        anyConsumer(),
+                        anyConsumer(),
+                        anyConsumer(),
+                        anyAction());
     }
 
     /**

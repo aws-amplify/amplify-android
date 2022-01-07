@@ -59,6 +59,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -182,6 +183,21 @@ public final class AppSyncRequestFactoryTest {
     }
 
     /**
+     * If a MatchNoneQueryPredicate is provided, it should be wrapped in an AND group.
+     * This enables AppSync to optimize by performing an DDB query instead of scan.
+     * @throws AmplifyException On failure to parse ModelSchema from model class
+     * @throws JSONException from JSONAssert.assertEquals.
+     */
+    @Test
+    public void validateMatchNonePredicateForSyncExpressionIsWrappedWithAnd() throws AmplifyException, JSONException {
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
+        final GraphQLRequest<Iterable<Post>> request =
+                AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.none());
+        JSONAssert.assertEquals(Resources.readAsString("base-sync-request-with-predicate-match-none.txt"),
+                request.getContent(), true);
+    }
+
+    /**
      * Checks that we're getting the expected output for a mutation with predicate.
      * @throws DataStoreException If the output does not match.
      * @throws AmplifyException On failure to parse ModelSchema from model class
@@ -279,15 +295,29 @@ public final class AppSyncRequestFactoryTest {
      */
     @Test
     public void validatePredicateGeneration() throws DataStoreException {
-        Map<String, Object> predicate =
-            AppSyncRequestFactory.parsePredicate(BlogOwner.NAME.eq("Test Dummy"));
         assertEquals(
-            "{name={eq=Test Dummy}}",
-            predicate.toString()
+            Collections.singletonMap("name", Collections.singletonMap("eq", "Test Dummy")),
+            AppSyncRequestFactory.parsePredicate(BlogOwner.NAME.eq("Test Dummy"))
         );
 
-        AppSyncRequestFactory.parsePredicate(
-            Blog.NAME.beginsWith("A day in the life of a...").and(Blog.OWNER.eq("DUMMY_OWNER_ID"))
+        assertEquals(
+            Collections.singletonMap("and", Arrays.asList(
+                Collections.singletonMap("name", Collections.singletonMap("beginsWith", "A day in the life of a...")),
+                Collections.singletonMap("blogOwnerId", Collections.singletonMap("eq", "DUMMY_OWNER_ID"))
+            )),
+            AppSyncRequestFactory.parsePredicate(
+                Blog.NAME.beginsWith("A day in the life of a...").and(Blog.OWNER.eq("DUMMY_OWNER_ID"))
+            )
+        );
+
+        assertEquals(
+            Collections.singletonMap("id", Collections.singletonMap("ne", null)),
+            AppSyncRequestFactory.parsePredicate(QueryPredicates.all())
+        );
+
+        assertEquals(
+            Collections.singletonMap("id", Collections.singletonMap("eq", null)),
+            AppSyncRequestFactory.parsePredicate(QueryPredicates.none())
         );
     }
 

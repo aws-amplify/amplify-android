@@ -55,13 +55,17 @@ final class VersionRepository {
     <T extends Model> Single<Integer> findModelVersion(T model) {
         return Single.create(emitter -> {
             // The ModelMetadata for the model uses the same ID as an identifier.
-            localStorageAdapter.query(ModelMetadata.class, Where.id(model.getId()), iterableResults -> {
-                try {
-                    emitter.onSuccess(extractVersion(model, iterableResults));
-                } catch (DataStoreException badVersionFailure) {
-                    emitter.onError(badVersionFailure);
-                }
-            }, emitter::onError);
+            localStorageAdapter.query(
+                ModelMetadata.class,
+                Where.id(model.getModelName() + "|" + model.getId()),
+                iterableResults -> {
+                    try {
+                        emitter.onSuccess(extractVersion(model, iterableResults));
+                    } catch (DataStoreException badVersionFailure) {
+                        emitter.onError(badVersionFailure);
+                    }
+                },
+                emitter::onError);
         });
     }
 

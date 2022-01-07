@@ -38,4 +38,5 @@ public abstract class DataStorePlugin<E> implements DataStoreCategoryBehavior, P
     @WorkerThread
     @Override
     public void initialize(@NonNull Context context) throws AmplifyException {}
+
 }

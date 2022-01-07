@@ -18,11 +18,13 @@ package com.amplifyframework.kotlin.datastore
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.async.Cancelable
 import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.amplifyframework.core.model.query.QueryOptions
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.datastore.DataStoreCategoryBehavior as Delegate
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreItemChange
+import com.amplifyframework.datastore.DataStoreQuerySnapshot
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -139,6 +141,24 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         delegate.observe(
             itemClass.java,
             selectionCriteria,
+            { observation.starts.tryEmit(it) },
+            { observation.changes.tryEmit(it) },
+            { observation.failures.tryEmit(it) },
+            { observation.completions.tryEmit(Unit) }
+        )
+        return observation.waitForStart()
+    }
+
+    @FlowPreview
+    @ExperimentalCoroutinesApi
+    override suspend fun <T : Model> observeQuery(
+        itemClass: KClass<T>,
+        options: ObserveQueryOptions
+    ): Flow<DataStoreQuerySnapshot<T>> {
+        val observation = Observation<DataStoreQuerySnapshot<T>>()
+        delegate.observeQuery(
+            itemClass.java,
+            options,
             { observation.starts.tryEmit(it) },
             { observation.changes.tryEmit(it) },
             { observation.failures.tryEmit(it) },

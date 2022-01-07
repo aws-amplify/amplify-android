@@ -211,8 +211,8 @@ public final class SelectionSet {
             Objects.requireNonNull(this.operation);
             SelectionSet node = new SelectionSet(null,
                     SerializedModel.class == modelClass
-                            ? getModelFields(modelSchema, requestOptions.maxDepth())
-                            : getModelFields(modelClass, requestOptions.maxDepth()));
+                            ? getModelFields(modelSchema, requestOptions.maxDepth(), operation)
+                            : getModelFields(modelClass, requestOptions.maxDepth(), operation));
             if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
                 node = wrapPagination(node);
             }
@@ -243,7 +243,7 @@ public final class SelectionSet {
 
         /**
          * Gets a selection set for the given class.
-         * TODO: this is mostly duplicative of {@link #getModelFields(ModelSchema, int)}.
+         * TODO: this is mostly duplicative of {@link #getModelFields(ModelSchema, int, Operation)}.
          * Long-term, we want to remove this current method and rely only on the ModelSchema-based
          * version.
          * @param clazz Class from which to build selection set
@@ -252,7 +252,7 @@ public final class SelectionSet {
          * @throws AmplifyException On failure to build selection set
          */
         @SuppressWarnings("unchecked") // Cast to Class<Model>
-        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth)
+        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth, Operation operation)
                 throws AmplifyException {
             if (depth < 0) {
                 return new HashSet<>();
@@ -260,7 +260,10 @@ public final class SelectionSet {
 
             Set<SelectionSet> result = new HashSet<>();
 
-            if (depth == 0 && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())) {
+            if (depth == 0
+                    && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
+                    && operation != QueryType.SYNC
+            ) {
                 result.add(new SelectionSet("id"));
                 return result;
             }
@@ -273,11 +276,13 @@ public final class SelectionSet {
                         if (depth >= 1) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
-                            Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass, depth - 1));
+                            Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass,
+                                                                depth - 1,
+                                                                operation));
                             result.add(new SelectionSet(fieldName, fields));
                         }
                     } else if (depth >= 1) {
-                        Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1);
+                        Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1, operation);
                         result.add(new SelectionSet(fieldName, fields));
                     }
                 } else if (isCustomType(field)) {
@@ -352,12 +357,16 @@ public final class SelectionSet {
 
         // TODO: this method is tech debt. We added it to support usage of the library from Flutter.
         // This version of the method needs to be unified with getModelFields(Class<? extends Model> clazz, int depth).
-        private Set<SelectionSet> getModelFields(ModelSchema modelSchema, int depth) {
+        private Set<SelectionSet> getModelFields(ModelSchema modelSchema, int depth, Operation operation) {
             if (depth < 0) {
                 return new HashSet<>();
             }
             Set<SelectionSet> result = new HashSet<>();
-            if (depth == 0 && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())) {
+            if (
+                    depth == 0
+                    && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
+                    && operation != QueryType.SYNC
+            ) {
                 result.add(new SelectionSet("id"));
                 return result;
             }
@@ -374,9 +383,9 @@ public final class SelectionSet {
                                 modelSchemas.getModelSchemaForModelClass(associatedModelName);
                         Set<SelectionSet> fields;
                         if (entry.getValue().isArray()) { // If modelField is an Array
-                            fields = wrapPagination(getModelFields(associateModelSchema, depth - 1));
+                            fields = wrapPagination(getModelFields(associateModelSchema, depth - 1, operation));
                         } else {
-                            fields = getModelFields(associateModelSchema, depth - 1);
+                            fields = getModelFields(associateModelSchema, depth - 1, operation);
                         }
                         result.add(new SelectionSet(fieldName, fields));
                     }

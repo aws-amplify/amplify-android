@@ -110,7 +110,7 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(new Integer(1), blogOwnerCreateResult.getSyncMetadata().getVersion());
         // TODO: BE AWARE THAT THE DELETED PROPERTY RETURNS NULL INSTEAD OF FALSE
         assertNull(blogOwnerCreateResult.getSyncMetadata().isDeleted());
-        assertEquals(owner.getId(), blogOwnerCreateResult.getSyncMetadata().getId());
+        assertTrue(blogOwnerCreateResult.getSyncMetadata().getId().endsWith(owner.getId()));
 
         // Subscribe to Blog creations
         Observable<GraphQLResponse<ModelWithMetadata<Blog>>> blogCreations = onCreate(blogSchema);
@@ -132,7 +132,7 @@ public final class AppSyncClientInstrumentationTest {
         Temporal.Timestamp createdBlogLastChangedAt = blogCreateResult.getSyncMetadata().getLastChangedAt();
         assertNotNull(createdBlogLastChangedAt);
         assertTrue(createdBlogLastChangedAt.getSecondsSinceEpoch() > startTimeSeconds);
-        assertEquals(blog.getId(), blogCreateResult.getSyncMetadata().getId());
+        assertTrue(blogCreateResult.getSyncMetadata().getId().endsWith(blog.getId()));
 
         // TODO: Subscriptions are currently failing.  More investigation required to fix this part of the test.
         // Validate that subscription picked up the mutation and end the subscription since we're done with.

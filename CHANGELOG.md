@@ -1,3 +1,104 @@
+## [Release 1.31.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.31.1)
+
+### Bug Fixes
+- **datastore:** Alias table names and make column aliases unique in query (#1603)
+- **aws-datastore:** halt cascading delete if foreign key not found (#1614)
+- **maplibre-adapter** adjust pop-up elevation (#1601)
+
+### Miscellaneous
+- Bump SDK version in build.gradle (#1619)
+
+[See all changes between 1.31.0 and 1.31.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.31.0...release_v1.31.1)
+
+## [Release 1.31.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.31.0)
+
+### Features
+- **maplibre-adapter:** amplify map view with markers and search capabilities (#1598)
+
+[See all changes between 1.30.1 and 1.31.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.30.1...release_v1.31.0)
+
+## [Release 1.30.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.30.1)
+
+### Bug Fixes
+- **aws-api-appsync:** include nested belongsTo object in query selection set (#1585)
+- **maplibre-adapter:** add content attribution info to map view (#1591)
+
+[See all changes between 1.30.0 and 1.30.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.30.0...release_v1.30.1)
+
+## [Release 1.30.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.30.0)
+
+### Features
+- **maplibre-adapter:** MapLibreView and Geo adapter integration (#1568)
+
+### Bug Fixes
+- **api:** GraphQL operation is now launched from a new thread (#1562)
+
+[See all changes between 1.29.1 and 1.30.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.29.1...release_v1.30.0)
+
+## [Release 1.29.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.29.1)
+
+### Bug Fixes
+- **api:** Add null check before cancelling Call object. (#1570)
+
+### Miscellaneous
+- Update build.gradle (#1578)
+
+[See all changes between 1.29.0 and 1.29.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.29.0...release_v1.29.1)
+
+## [Release 1.29.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.29.0)
+
+### Features
+- **geo:** Add search APIs (#1558)
+- **api:** Add support for custom GraphQL endpoints. (#1564)
+
+### Bug Fixes
+- **datastore:** specify model name when querying with Where.id (#1548)
+
+[See all changes between 1.28.3 and 1.29.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.3...release_v1.29.0)
+
+## [Release 1.28.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.3)
+
+### Bug Fixes
+- **geo:** Specify jvm target for kotlin package (#1546)
+- **api:** replace pluralName with listPluralName & syncPluralName (#1523)
+- **datastore:** Allow different model types with same ID (#1541)
+
+### Miscellaneous
+- Update build.gradle (#1553)
+
+[See all changes between 1.28.2 and 1.28.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.2...release_v1.28.3)
+
+## [Release 1.28.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.2)
+
+### Miscellaneous
+- fix(datastore):predicate handling for observe (#1537)
+
+[See all changes between 1.28.1 and 1.28.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.1...release_v1.28.2)
+
+## [Release 1.28.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.1)
+
+### Miscellaneous
+- Observe query updates (#1520)
+- Update AWS SDK ver to 2.33.0 (#1526)
+
+[See all changes between 1.28.0 and 1.28.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.28.0...release_v1.28.1)
+
+## [Release 1.28.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.28.0)
+
+### Features
+- **datastore:** Add support for parsing match none predicate in AppSync request builder (#1515)
+- **datastore:** Add support for observe query (#1470)
+
+### Bug Fixes
+- **datastore:** timeout period not increasing for flutter (#1505)
+- **datastore:** Ensure not to parse SerializedCustomType if value is null (#1513)
+- **datastore:** Fix for issue with foreign keys on schema upgrade delete (#1501)
+
+### Miscellaneous
+- better announce which schema is failing to sync (#1479)
+
+[See all changes between 1.27.0 and 1.28.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.27.0...release_v1.28.0)
+
 ## [Release 1.27.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.27.0)
 
 ### Features

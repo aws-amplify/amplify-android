@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -19,9 +19,11 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
@@ -105,8 +107,16 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider);
         List<ModelSchema> firstResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,
-            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                sqliteStorageAdapter.initialize(context, onResult, onError)
+            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) -> {
+                try {
+                    sqliteStorageAdapter.initialize(context, onResult, onError,
+                            DataStoreConfiguration.builder()
+                                    .syncInterval(2L, TimeUnit.MINUTES)
+                                    .build());
+                } catch (DataStoreException exception) {
+                    Amplify.Logging.forNamespace("amplify:aws-datastore").warn(exception.toString());
+                }
+            }
         );
         // Assert if initialize succeeds.
         assertFalse(Empty.check(firstResults));
@@ -135,8 +145,16 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         // Now, initialize storage adapter with the new models
         List<ModelSchema> secondResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,
-            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                sqliteStorageAdapter.initialize(context, onResult, onError)
+            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) -> {
+                try {
+                    sqliteStorageAdapter.initialize(context, onResult, onError,
+                            DataStoreConfiguration.builder()
+                            .syncInterval(2L, TimeUnit.MINUTES)
+                            .build());
+                } catch (DataStoreException exception) {
+                    Amplify.Logging.forNamespace("amplify:aws-datastore").warn(exception.toString());
+                }
+            }
         );
         assertFalse(Empty.check(secondResults));
 

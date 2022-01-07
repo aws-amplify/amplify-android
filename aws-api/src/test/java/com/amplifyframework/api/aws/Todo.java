@@ -18,7 +18,9 @@ package com.amplifyframework.api.aws;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.annotations.ModelConfig;
 
+@ModelConfig(listPluralName = "Todos", syncPluralName = "Todos")
 final class Todo implements Model {
     private final String id;
     private final String name;

@@ -15,8 +15,8 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply from: rootProject.file("configuration/checkstyle.gradle")
-apply from: rootProject.file("configuration/publishing.gradle")
+apply from: rootProject.file('configuration/checkstyle.gradle')
+apply from: rootProject.file('configuration/publishing.gradle')
 
 dependencies {
     implementation project(':core')
@@ -32,5 +32,9 @@ dependencies {
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
+}
+
+afterEvaluate {
+    it.android.kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
 }
 

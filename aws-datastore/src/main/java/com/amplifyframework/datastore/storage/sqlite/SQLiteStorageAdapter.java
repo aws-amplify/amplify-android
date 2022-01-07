@@ -37,17 +37,21 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
+import com.amplifyframework.datastore.storage.sqlite.migrations.ModelMigrations;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
@@ -136,6 +140,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // re-initialize the adapter after deleting the file in the clear() method
     private Context context;
 
+    private SqlQueryProcessor sqlQueryProcessor;
+
+    private DataStoreConfiguration dataStoreConfiguration;
+    private SyncStatus syncStatus;
+
     /**
      * Construct the SQLiteStorageAdapter object.
      * @param schemaRegistry A registry of schema for all models and custom types used by the system
@@ -206,7 +215,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public synchronized void initialize(
             @NonNull Context context,
             @NonNull Consumer<List<ModelSchema>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError) {
+            @NonNull Consumer<DataStoreException> onError,
+            @NonNull DataStoreConfiguration dataStoreConfiguration) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
@@ -215,6 +225,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         this.threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * THREAD_POOL_SIZE_MULTIPLIER);
         this.context = context;
+        this.dataStoreConfiguration = dataStoreConfiguration;
         threadPool.submit(() -> {
             try {
                 /*
@@ -270,6 +281,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 this.sqlCommandProcessor = new SQLCommandProcessor(databaseConnectionHandle);
 
+                sqlQueryProcessor = new SqlQueryProcessor(sqlCommandProcessor,
+                        sqlCommandFactory,
+                        schemaRegistry);
+                syncStatus = new SyncStatus(sqlQueryProcessor, dataStoreConfiguration);
+
                 /*
                  * Detect if the version of the models stored in SQLite is different
                  * from the version passed in through {@link ModelProvider#version()}.
@@ -315,12 +331,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final StorageItemChange.Type writeType;
                 SerializedModel patchItem = null;
 
-                if (modelExists(item, QueryPredicates.all())) {
+                if (sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
                     // if data exists already, then UPDATE the row
                     writeType = StorageItemChange.Type.UPDATE;
 
                     // Check if existing data meets the condition, only if a condition other than all() was provided.
-                    if (!QueryPredicates.all().equals(predicate) && !modelExists(item, predicate)) {
+                    if (!QueryPredicates.all().equals(predicate) && !sqlQueryProcessor.modelExists(item, predicate)) {
                         throw new DataStoreException(
                             "Save failed because condition did not match existing model instance.",
                             "The save will continue to fail until the model instance is updated."
@@ -385,35 +401,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
         threadPool.submit(() -> {
-            final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
-            try (Cursor cursor = sqlCommandProcessor.rawQuery(sqlCommandFactory.queryFor(modelSchema, options))) {
-                LOG.debug("Querying item for: " + itemClass.getSimpleName());
-                final List<T> models = new ArrayList<>();
-                final SQLiteModelFieldTypeConverter converter =
-                    new SQLiteModelFieldTypeConverter(modelSchema, schemaRegistry, gson);
-
-                if (cursor == null) {
-                    onError.accept(new DataStoreException(
-                        "Error in getting a cursor to the table for class: " + itemClass.getSimpleName(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                }
-
-                if (cursor.moveToFirst()) {
-                    do {
-                        Map<String, Object> map = converter.buildMapForModel(cursor);
-                        String jsonString = gson.toJson(map);
-                        models.add(gson.fromJson(jsonString, itemClass));
-                    } while (cursor.moveToNext());
-                }
-
-                onSuccess.accept(models.iterator());
-            } catch (Exception exception) {
-                onError.accept(new DataStoreException(
-                    "Error in querying the model.", exception,
-                    "See attached exception for details."
-                ));
-            }
+            List<T> models = sqlQueryProcessor.queryOfflineData(itemClass, options, onError);
+            onSuccess.accept(models.iterator());
         });
     }
 
@@ -487,7 +476,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(modelName);
 
                 // Check if data being deleted exists; "Succeed" deletion in that case.
-                if (!modelExists(item, QueryPredicates.all())) {
+                if (!sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
                     LOG.verbose(modelName + " model with id = " + item.getId() + " does not exist.");
                     // Pass back item change instance without publishing it.
                     onSuccess.accept(StorageItemChange.<T>builder()
@@ -502,7 +491,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 }
 
                 // Check if existing data meets the condition, only if a condition other than all() was provided.
-                if (!QueryPredicates.all().equals(predicate) && !modelExists(item, predicate)) {
+                if (!QueryPredicates.all().equals(predicate) && !sqlQueryProcessor.modelExists(item, predicate)) {
                     throw new DataStoreException(
                         "Deletion failed because condition did not match existing model instance.",
                         "The deletion will continue to fail until the model instance is updated."
@@ -650,6 +639,34 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return disposable::dispose;
     }
 
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T extends Model> void observeQuery(
+            @NonNull Class<T> itemClass,
+            @NonNull ObserveQueryOptions options,
+            @NonNull Consumer<Cancelable> onObservationStarted,
+            @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
+            @NonNull Consumer<DataStoreException> onObservationError,
+            @NonNull Action onObservationComplete) {
+        Objects.requireNonNull(onObservationStarted);
+        Objects.requireNonNull(onObservationError);
+        Objects.requireNonNull(onObservationComplete);
+        new ObserveQueryExecutor<>(itemChangeSubject, sqlQueryProcessor,
+                threadPool,
+                syncStatus,
+                new ModelSorter<T>(),
+                dataStoreConfiguration)
+                .observeQuery(itemClass,
+                        options,
+                        onObservationStarted,
+                        onQuerySnapshot,
+                        onObservationError,
+                        onObservationComplete);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -710,7 +727,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             exception -> onError.accept(new DataStoreException(
                 "Error occurred while trying to re-initialize the storage adapter",
                 String.valueOf(exception.getMessage())
-            ))
+            )),
+                dataStoreConfiguration
         );
     }
 
@@ -810,6 +828,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     Objects.requireNonNull(sqliteStorageHelper);
                     Objects.requireNonNull(databaseConnectionHandle);
                     sqliteStorageHelper.update(databaseConnectionHandle, oldVersion, newVersion);
+                } else {
+                    LOG.debug("Database up to date. Checking ModelMetadata.");
+                    new ModelMigrations(databaseConnectionHandle, modelsProvider).apply();
                 }
             }
             PersistentModelVersion persistentModelVersion = new PersistentModelVersion(modelsProvider.version());
@@ -875,7 +896,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 continue;
             }
 
-            if (field.isCustomType()) {
+            if (field.isCustomType() && entry.getValue() != null) {
                 if (field.isArray()) {
                     @SuppressWarnings("unchecked")
                     List<Map<String, Object>> listItems = (List<Map<String, Object>>) entry.getValue();

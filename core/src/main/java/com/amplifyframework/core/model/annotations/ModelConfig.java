@@ -38,8 +38,21 @@ public @interface ModelConfig {
     /**
      * Specifies the plural version of the model name.
      * @return the plural version of the name.
+     * @Deprecated instead use listPluralName or syncPluralName
      */
     String pluralName() default "";
+
+    /**
+     * Specifies the plural version for list query of the model name.
+     * @return the plural version of the name for list query.
+     */
+    String listPluralName() default "";
+
+    /**
+     * Specifies the plural version for sync query of the model name.
+     * @return the plural version of the name for sync query.
+     */
+    String syncPluralName() default "";
 
     /**
      * Specifies an array of authorization rules that should apply to this {@link Model}.

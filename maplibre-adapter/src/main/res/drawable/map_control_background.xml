@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <stroke
+        android:color="@color/map_controls_border"
+        android:width="@dimen/map_controls_borderSize" />
+    <solid android:color="@color/map_controls_background" />
+    <corners android:radius="@dimen/map_controls_borderRadius" />
+</shape>

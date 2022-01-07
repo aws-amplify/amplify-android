@@ -22,12 +22,14 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
+import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.rx.RxAdapters.VoidBehaviors;
 
 import java.util.Iterator;
@@ -131,6 +133,28 @@ final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
             @NonNull Class<T> itemClass, @NonNull QueryPredicate selectionCriteria) {
         return toObservable((onStart, onItem, onError, onComplete) ->
             dataStore.observe(itemClass, selectionCriteria, onStart, onItem, onError, onComplete)
+        );
+    }
+
+    @NonNull
+    @Override
+    public <T extends Model> Observable<DataStoreQuerySnapshot<T>> observeQuery(@NonNull Class<T> itemClass,
+                                                                                ObserveQueryOptions options) {
+        // The provided behavior receives a cancelable in callback.
+        // It is, in effect, like a cancelable behavior, we just have to remap the cancelable.
+        return RxAdapters.CancelableBehaviors.
+                <Cancelable, DataStoreQuerySnapshot<T>, DataStoreException>toObservable(
+            (onStart, onItem, onError, onComplete) -> {
+                AtomicReference<Cancelable> cancelableContainer = new AtomicReference<>();
+                dataStore.observeQuery(itemClass, options, cancelableContainer::set, onItem, onError, onComplete);
+
+                return () -> {
+                    final Cancelable containedCancelable = cancelableContainer.get();
+                    if (containedCancelable != null) {
+                        containedCancelable.cancel();
+                    }
+                };
+            }
         );
     }
 

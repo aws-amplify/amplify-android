@@ -98,6 +98,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -688,10 +690,10 @@ public final class AuthComponentTest {
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-            .confirmForgotPassword(any(), any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
+            .confirmForgotPassword(anyString(), anyString(), anyMap(), Mockito.any());
 
         synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE);
-        verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), any(), any());
+        verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), anyMap(), any());
     }
 
     /**
@@ -717,7 +719,7 @@ public final class AuthComponentTest {
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient)
-                .confirmForgotPassword(any(), any(), any(), Mockito.<Callback<ForgotPasswordResult>>any());
+                .confirmForgotPassword(anyString(), anyString(), anyMap(), Mockito.any());
 
         synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE, builtOptions);
         verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), eq(metadata), any());
