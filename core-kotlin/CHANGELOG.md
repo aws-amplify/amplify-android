@@ -1,3 +1,22 @@
+## [Release 0.15.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.15.1)
+
+### Bug Fixes
+- **datastore:** Alias table names and make column aliases unique in query (#1603)
+- **aws-datastore:** halt cascading delete if foreign key not found (#1614)
+- **maplibre-adapter** adjust pop-up elevation (#1601)
+
+### Miscellaneous
+- Bump SDK version in build.gradle (#1619)
+
+[See all changes between 0.15.0 and 0.15.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.15.0...release-kotlin_v0.15.1)
+
+## [Release 0.15.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.15.0)
+
+### Features
+- **maplibre-adapter:** amplify map view with markers and search capabilities (#1598)
+
+[See all changes between 0.14.1 and 0.15.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.14.1...release-kotlin_v0.15.0)
+
 ## [Release 0.14.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.14.1)
 
 ### Bug Fixes
