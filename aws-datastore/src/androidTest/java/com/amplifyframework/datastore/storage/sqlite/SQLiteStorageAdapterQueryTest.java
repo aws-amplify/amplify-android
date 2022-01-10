@@ -27,6 +27,9 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
+import com.amplifyframework.testmodels.phonecall.Call;
+import com.amplifyframework.testmodels.phonecall.Person;
+import com.amplifyframework.testmodels.phonecall.Phone;
 
 import org.junit.After;
 import org.junit.Before;
@@ -64,13 +67,24 @@ public final class SQLiteStorageAdapterQueryTest {
     }
 
     /**
-     * Remove any old database files, and the re-provision a new storage adapter,
+     * Remove any old database files, and then re-provision a new storage adapter,
      * that is able to store the Comment-Blog family of models.
      */
     @Before
     public void setup() {
         TestStorageAdapter.cleanup();
         this.adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
+    }
+
+    /**
+     * Remove any old database files, and then re-provision a new storage adapter,
+     * that is able to store the Phone Call family of models.
+     */
+    public void setupForCallModel() {
+        teardown();
+        this.adapter = TestStorageAdapter.create(
+                com.amplifyframework.testmodels.phonecall.AmplifyModelProvider.getInstance()
+        );
     }
 
     /**
@@ -167,6 +181,46 @@ public final class SQLiteStorageAdapterQueryTest {
 
         final List<Blog> blogs = adapter.query(Blog.class);
         assertTrue(blogs.contains(blog));
+    }
+
+    /**
+     * Test that querying the saved item with multiple foreign keys from the same
+     * model also populates that instance variable with object.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void querySavedDataWithMultipleForeignKeysOfSameType() throws DataStoreException {
+        setupForCallModel();
+        final Person personCalling = Person.builder()
+                .name("Alan Turing")
+                .build();
+        final Person personCalled = Person.builder()
+                .name("Grace Hopper")
+                .build();
+        
+        final Phone phoneCalling = Phone.builder()
+                .number("123-456-7890")
+                .ownedBy(personCalling)
+                .build();
+        final Phone phoneCalled = Phone.builder()
+                .number("567-890-1234")
+                .ownedBy(personCalled)
+                .build();
+        
+        final Call phoneCall = Call.builder()
+                .minutes(10)
+                .caller(phoneCalling)
+                .callee(phoneCalled)
+                .build();
+
+        adapter.save(personCalling);
+        adapter.save(personCalled);
+        adapter.save(phoneCalling);
+        adapter.save(phoneCalled);
+        adapter.save(phoneCall);
+
+        final List<Call> phoneCalls = adapter.query(Call.class);
+        assertTrue(phoneCalls.contains(phoneCall));
     }
 
     /**

@@ -1,0 +1,80 @@
+{
+    "associations": {
+        "caller": {
+            "associatedType": "Phone",
+            "name": "BelongsTo",
+            "targetName": "callerId"
+        },
+        "callee": {
+            "associatedType": "Phone",
+            "name": "BelongsTo",
+            "targetName": "calleeId"
+        }
+    },
+    "authRules": [],
+    "fields": {
+        "id": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "id",
+            "targetType": "ID"
+        },
+        "minutes": {
+            "authRules": [],
+            "javaClassForValue": "Integer",
+            "targetType": "Int",
+            "isRequired": true,
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false
+        },
+        "callerId": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "callerId",
+            "targetType": "ID"
+        },
+        "calleeId": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": false,
+            "isRequired": true,
+            "javaClassForValue": "java.lang.String",
+            "name": "calleeId",
+            "targetType": "ID"
+        },
+        "caller": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": true,
+            "isRequired": true,
+            "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+            "name": "caller",
+            "targetType": "Phone"
+        },
+        "callee": {
+            "authRules": [],
+            "isArray": false,
+            "isEnum": false,
+            "isModel": true,
+            "isRequired": true,
+            "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
+            "name": "callee",
+            "targetType": "Phone"
+        }
+    },
+    "indexes": {},
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
+    "name": "Call",
+    "pluralName": "Calls"
+}
