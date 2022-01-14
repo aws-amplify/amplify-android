@@ -155,9 +155,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             if (EndpointType.REST.equals(endpointType)) {
                 if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
                     AuthorizationType authorizationType = apiConfiguration.getAuthorizationType();
-                    RequestDecorator decorator = requestDecoratorFactory.forAuthType(authorizationType);
                     okHttpClientBuilder.addInterceptor(chain -> {
                         try {
+                            RequestDecorator decorator = requestDecoratorFactory.forAuthType(authorizationType);
                             return chain.proceed(decorator.decorate(chain.request()));
                         } catch (ApiException.ApiAuthException apiAuthException) {
                             throw new IOException("Failed to decorate request for authorization.", apiAuthException);
