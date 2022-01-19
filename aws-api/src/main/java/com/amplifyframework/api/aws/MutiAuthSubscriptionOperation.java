@@ -148,12 +148,14 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     public synchronized void cancel() {
         if (subscriptionId != null && !canceled.get()) {
             canceled.set(true);
-            try {
-                LOG.debug("Cancelling subscription: " + subscriptionId);
-                subscriptionEndpoint.releaseSubscription(subscriptionId);
-            } catch (ApiException exception) {
-                onSubscriptionError.accept(exception);
-            }
+            executorService.execute(() -> {
+                try {
+                    LOG.debug("Cancelling subscription: " + subscriptionId);
+                    subscriptionEndpoint.releaseSubscription(subscriptionId);
+                } catch (ApiException exception) {
+                    onSubscriptionError.accept(exception);
+                }
+            });
         } else if (subscriptionFuture != null && subscriptionFuture.cancel(true)) {
             LOG.debug("Subscription attempt was canceled.");
         } else {
