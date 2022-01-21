@@ -23,7 +23,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
             allow = AuthStrategy.OWNER,
             provider = "oidc",
             ownerField = "owner",
-            identityClaim = "cognito:username",
+            identityClaim = "sub",
             operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }
         )
 })

@@ -126,7 +126,7 @@ public final class AuthRule {
      * Used to specify a custom claim.
      * Defaults to "username" when using AuthStrategy.OWNER.
      *
-     * Note: An older version of the CLI incorrectly generated a value of "cognito:username"
+     * Note: An older version of the CLI incorrectly generated a value of "sub"
      * so we also check for this value and convert it to the proper default of "username" for 
      * backwards compatibility.
      *
@@ -134,7 +134,7 @@ public final class AuthRule {
      */
     @NonNull
     public String getIdentityClaimOrDefault() {
-        final String cliGeneratedIdentityClaim = "cognito:username";
+        final String cliGeneratedIdentityClaim = "sub";
         return Empty.check(identityClaim) || cliGeneratedIdentityClaim.equals(identityClaim)
             ? DEFAULT_IDENTITY_CLAIM
             : identityClaim;

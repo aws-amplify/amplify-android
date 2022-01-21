@@ -32,7 +32,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 public class MultiAuthorizationTypeIteratorTest {
-    private static final String DEFAULT_ID_CLAIM = "cognito:username";
+    private static final String DEFAULT_ID_CLAIM = "sub";
     private static final String DEFAULT_OWNER_FIELD = "owner";
     private static final String DEFAULT_GROUP_CLAIM = "cognito:groups";
     private static final String DEFAULT_GROUP_FIELD = "groups";

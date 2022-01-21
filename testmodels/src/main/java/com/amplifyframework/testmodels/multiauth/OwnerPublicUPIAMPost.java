@@ -21,7 +21,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 /** This is an auto generated class representing the OwnerPublicUPIAMPost type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "OwnerPublicUPIAMPosts", authRules = {
-  @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+  @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
   @AuthRule(allow = AuthStrategy.PUBLIC, provider = "iam", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ })
 })
 public final class OwnerPublicUPIAMPost implements Model {

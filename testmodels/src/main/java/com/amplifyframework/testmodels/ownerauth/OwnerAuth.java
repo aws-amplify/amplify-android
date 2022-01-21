@@ -22,7 +22,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
         @AuthRule(
             allow = AuthStrategy.OWNER,
             ownerField = "owner",
-            identityClaim = "cognito:username",
+            identityClaim = "sub",
             operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }
         )
 })
