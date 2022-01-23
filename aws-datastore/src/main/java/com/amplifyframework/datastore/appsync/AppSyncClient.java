@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -36,6 +37,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.logging.Logger;
 
 /**
  * An implementation of the {@link AppSync} client interface.
@@ -187,6 +189,9 @@ public final class AppSyncClient implements AppSync {
                                                          version,
                                                          predicate,
                                                          authModeStrategyType);
+            Log.d("AmplifyUpdate","request: "+request.toString());
+            Log.d("AmplifyUpdate","query: "+request.getQuery());
+            Log.d("AmplifyUpdate","variables: "+request.getVariables().toString());
             return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(
