@@ -15,11 +15,11 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedModel;
@@ -32,6 +32,7 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
 
 import com.google.gson.Gson;
@@ -60,6 +61,7 @@ import io.reactivex.rxjava3.core.Single;
  * {@link ModelWithMetadata} into the local store, unconditionally.
  */
 final class ConflictResolver {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final DataStoreConfigurationProvider configurationProvider;
     private final AppSync appSync;
 
@@ -100,11 +102,11 @@ final class ConflictResolver {
     @Nullable
     private <T extends Model> T getT(@NonNull PendingMutation<T> pendingMutation, T remote) {
         T local;
-        if(pendingMutation.getMutatedItem() instanceof SerializedModel){
+        if (pendingMutation.getMutatedItem() instanceof SerializedModel) {
             Gson gson = GsonFactory.instance();
             SerializedModel serializedModel = (SerializedModel) pendingMutation.getMutatedItem();
             String jsonString = gson.toJson(serializedModel.getSerializedData());
-            local =  gson.fromJson(jsonString, (Type) remote.getClass());
+            local = gson.fromJson(jsonString, (Type) remote.getClass());
         } else {
             local = pendingMutation.getMutatedItem();
         }
@@ -116,8 +118,8 @@ final class ConflictResolver {
             @NonNull ConflictData<T> conflictData,
             @NonNull ModelMetadata metadata,
             @NonNull ConflictResolutionDecision<T> decision) {
-        Log.d("AmplifyUpdate","conflict resolver: "+conflictData.toString());
-        Log.d("AmplifyUpdate","conflict resolver: "+decision.toString());
+        LOG.debug("conflict resolver: " + conflictData.toString());
+        LOG.debug("conflict resolver: " + decision.toString());
         switch (decision.getResolutionStrategy()) {
             case RETRY_LOCAL:
                 return publish(conflictData.getLocal(), metadata.getVersion());
@@ -137,7 +139,7 @@ final class ConflictResolver {
         return Single
             .<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
                 final ModelSchema schema = ModelSchema.fromModelClass(model.getClass());
-                Log.d("AmplifyUpdate","publish conflict resolver: "+model.toString());
+                LOG.debug("publish conflict resolver: " + model.toString());
                 appSync.update(model, schema, version, emitter::onSuccess, emitter::onError);
             })
             .flatMap(response -> {

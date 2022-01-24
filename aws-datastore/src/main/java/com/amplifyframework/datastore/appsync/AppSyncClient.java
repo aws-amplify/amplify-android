@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.appsync;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -29,6 +28,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
@@ -51,6 +51,7 @@ import com.amplifyframework.logging.Logger;
  * assumptions about the structure of data types (unique IDs, versioning information), etc.
  */
 public final class AppSyncClient implements AppSync {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final GraphQLBehavior api;
     private final AuthModeStrategyType authModeStrategyType;
 
@@ -189,9 +190,9 @@ public final class AppSyncClient implements AppSync {
                                                          version,
                                                          predicate,
                                                          authModeStrategyType);
-            Log.d("AmplifyUpdate","request: "+request.toString());
-            Log.d("AmplifyUpdate","query: "+request.getQuery());
-            Log.d("AmplifyUpdate","variables: "+request.getVariables().toString());
+            LOG.debug("AppSyncClient request: " + request.toString());
+            LOG.debug("AppSyncClient query: " + request.getQuery());
+            LOG.debug("AppSyncClient variables: " + request.getVariables().toString());
             return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(

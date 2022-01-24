@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
@@ -278,7 +277,7 @@ final class SyncProcessor {
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
         return Single.create(emitter -> {
-            Log.d("AmplifyUpdate","sync page sync processor: "+request.toString());
+            LOG.debug("sync page sync processor: " + request.toString());
             Cancelable cancelable = appSync.sync(request, result -> {
                 if (result.hasErrors()) {
                     emitter.onError(new DataStoreException(
