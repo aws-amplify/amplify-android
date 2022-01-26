@@ -21,5 +21,7 @@ jobs:
     steps:
       # Runs a single command using the runners shell
       - name: Run webhook curl command
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_COMMENT_WEBHOOK_URL }}
         shell: bash
-        run: curl -v POST ${{ secrets.SLACK_COMMENT_WEBHOOK_URL }} -H "Content-Type:application/json" --data '{"issue":"${{github.event.comment.html_url}}", "title":"${{github.event.issue.title}}", "body":"${{github.event.comment.body}}"}'
+        run: curl -vs POST "$WEBHOOK_URL" -H "Content-Type:application/json" --data '{"issue":"${{github.event.comment.html_url}}", "title":"${{github.event.issue.title}}", "body":"${{github.event.comment.body}}"}' > /dev/null
