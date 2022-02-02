@@ -383,7 +383,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(storage.query(PersistentRecord.class, Where.id(incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getId()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
         assertEquals(existingCreation, mutationOutbox.peek());
     }
 
@@ -425,7 +425,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(storage.query(PersistentRecord.class, Where.id(incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getId()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
         assertEquals(existingUpdate, mutationOutbox.peek());
     }
 
@@ -468,7 +468,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(storage.query(PersistentRecord.class, Where.id(incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getId()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
         assertEquals(existingDeletion, mutationOutbox.peek());
     }
 
@@ -510,7 +510,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(storage.query(PersistentRecord.class, Where.id(incomingUpdateId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getId()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
         assertEquals(existingDeletion, mutationOutbox.peek());
     }
 
@@ -648,7 +648,7 @@ public final class PersistentMutationOutboxTest {
 
         BlogOwner initialUpdate = BlogOwner.builder()
                 .name("Tony Jr")
-                .id(modelInSqlLite.getId())
+                .id(modelInSqlLite.resolveIdentifier())
                 .build();
 
         PendingMutation<SerializedModel> initialUpdatePendingMutation =
@@ -660,7 +660,7 @@ public final class PersistentMutationOutboxTest {
         BlogOwner incomingUpdatedModel = BlogOwner.builder()
                 .name("Papa Tony")
                 .wea("something else")
-                .id(modelInSqlLite.getId())
+                .id(modelInSqlLite.resolveIdentifier())
                 .build();
         PendingMutation<SerializedModel> incomingUpdate = PendingMutation.update(
                 SerializedModel.difference(incomingUpdatedModel, modelInSqlLite, schema),
@@ -680,7 +680,7 @@ public final class PersistentMutationOutboxTest {
 
         List<PersistentRecord> pendingMutationsFromStorage = getAllPendingMutationRecordFromStorage();
         for (PersistentRecord record : pendingMutationsFromStorage) {
-            if (!record.getContainedModelId().equals(incomingUpdate.getMutatedItem().getId())) {
+            if (!record.getContainedModelId().equals(incomingUpdate.getMutatedItem().resolveIdentifier())) {
                 pendingMutationsFromStorage.remove(record);
             }
         }
@@ -714,7 +714,7 @@ public final class PersistentMutationOutboxTest {
 
         BlogOwner initialUpdate = BlogOwner.builder()
                 .name("Tony Jr")
-                .id(modelInSqlLite.getId())
+                .id(modelInSqlLite.resolveIdentifier())
                 .build();
 
         PendingMutation<SerializedModel> initialUpdatePendingMutation =
@@ -726,7 +726,7 @@ public final class PersistentMutationOutboxTest {
         BlogOwner incomingUpdatedModel = BlogOwner.builder()
                 .name("Papa Tony")
                 .wea("something else")
-                .id(modelInSqlLite.getId())
+                .id(modelInSqlLite.resolveIdentifier())
                 .build();
         PendingMutation<SerializedModel> incomingUpdate = PendingMutation.update(
                 SerializedModel.difference(incomingUpdatedModel, modelInSqlLite, schema),
@@ -746,7 +746,7 @@ public final class PersistentMutationOutboxTest {
 
         List<PersistentRecord> pendingMutationsFromStorage = getAllPendingMutationRecordFromStorage();
         for (PersistentRecord record : pendingMutationsFromStorage) {
-            if (!record.getContainedModelId().equals(incomingUpdate.getMutatedItem().getId())) {
+            if (!record.getContainedModelId().equals(incomingUpdate.getMutatedItem().resolveIdentifier())) {
                 pendingMutationsFromStorage.remove(record);
             }
         }

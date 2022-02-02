@@ -10,7 +10,6 @@ import java.util.Objects;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -31,7 +30,9 @@ public final class Author implements Model {
   public String getId() {
       return id;
   }
-  
+    public String resolveIdentifier() {
+        return id;
+    }
   public String getName() {
       return name;
   }
@@ -58,7 +59,7 @@ public final class Author implements Model {
         return false;
       } else {
       Author author = (Author) obj;
-      return ObjectsCompat.equals(getId(), author.getId()) &&
+      return ObjectsCompat.equals(resolveIdentifier(), author.resolveIdentifier()) &&
               ObjectsCompat.equals(getName(), author.getName()) &&
               ObjectsCompat.equals(getCreatedAt(), author.getCreatedAt());
       }
@@ -67,7 +68,7 @@ public final class Author implements Model {
   @Override
    public int hashCode() {
     return new StringBuilder()
-      .append(getId())
+      .append(resolveIdentifier())
       .append(getName())
       .append(getCreatedAt())
       .toString()
@@ -78,7 +79,7 @@ public final class Author implements Model {
    public String toString() {
     return new StringBuilder()
       .append("Author {")
-      .append("id=" + String.valueOf(getId()) + ", ")
+      .append("id=" + String.valueOf(resolveIdentifier()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()))
       .append("}")

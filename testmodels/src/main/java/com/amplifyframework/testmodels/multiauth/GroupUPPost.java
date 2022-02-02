@@ -1,7 +1,6 @@
 package com.amplifyframework.testmodels.multiauth;
 
 
-import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
@@ -11,7 +10,6 @@ import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.annotations.AuthRule;
-import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -28,10 +26,14 @@ public final class GroupUPPost implements Model {
   public static final QueryField NAME = field("GroupUPPost", "name");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
+  public String resolveIdentifier() {
+      return id;
+  }
+
   public String getId() {
       return id;
   }
-  
+
   public String getName() {
       return name;
   }

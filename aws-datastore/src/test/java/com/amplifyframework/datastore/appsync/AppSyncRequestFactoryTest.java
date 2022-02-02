@@ -824,7 +824,7 @@ public final class AppSyncRequestFactoryTest {
 
         @NonNull
         @Override
-        public String getId() {
+        public String resolveIdentifier() {
             return "111";
         }
     }

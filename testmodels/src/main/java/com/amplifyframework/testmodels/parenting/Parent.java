@@ -8,7 +8,6 @@ import java.util.Objects;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -28,6 +27,10 @@ public final class Parent implements Model {
   private final @ModelField(targetType="Address", isRequired = true) Address address;
   private final @ModelField(targetType="Child") List<Child> children;
   public String getId() {
+      return id;
+  }
+
+  public String resolveIdentifier() {
       return id;
   }
   

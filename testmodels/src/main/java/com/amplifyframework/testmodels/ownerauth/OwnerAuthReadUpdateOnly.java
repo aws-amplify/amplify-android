@@ -26,7 +26,12 @@ public final class OwnerAuthReadUpdateOnly implements Model {
     public static final QueryField TITLE = field("title");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String", isRequired = true) String title;
+
     public String getId() {
+        return id;
+    }
+
+    public String resolveIdentifier() {
         return id;
     }
 

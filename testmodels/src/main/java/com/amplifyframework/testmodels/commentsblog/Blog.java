@@ -11,7 +11,6 @@ import java.util.Objects;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -31,10 +30,16 @@ public final class Blog implements Model {
   private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
   private final @ModelField(targetType="BlogOwner", isRequired = true) @BelongsTo(targetName = "blogOwnerId", type = BlogOwner.class) BlogOwner owner;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
-  public String getId() {
+
+  @Override
+  public String resolveIdentifier() {
       return id;
   }
-  
+
+    public String getId() {
+        return id;
+    }
+
   public String getName() {
       return name;
   }

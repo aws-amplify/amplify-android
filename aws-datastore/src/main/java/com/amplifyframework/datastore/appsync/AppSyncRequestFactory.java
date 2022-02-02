@@ -441,7 +441,7 @@ final class AppSyncRequestFactory {
             throws AmplifyException {
         final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
         if (modelField.isModel() && fieldValue instanceof Model) {
-            return ((Model) fieldValue).getId();
+            return ((Model) fieldValue).resolveIdentifier();
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else {

@@ -29,10 +29,14 @@ public final class GroupPublicUPIAMPost implements Model {
   public static final QueryField NAME = field("GroupPublicUPIAMPost", "name");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
+  public String resolveIdentifier() {
+      return id;
+  }
+
   public String getId() {
       return id;
   }
-  
+
   public String getName() {
       return name;
   }

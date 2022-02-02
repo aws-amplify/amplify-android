@@ -24,6 +24,10 @@ public final class PublicNote implements Model {
   public String getId() {
       return id;
   }
+
+  public String resolveIdentifier() {
+      return id;
+  }
   
   public String getContent() {
       return content;

@@ -192,7 +192,7 @@ public final class MergerTest {
             .name("Jameson The New and Improved")
             .build();
         ModelMetadata updatedMetadata =
-            new ModelMetadata(originalMetadata.getId(), false, 2, Temporal.Timestamp.now());
+            new ModelMetadata(originalMetadata.resolveIdentifier(), false, 2, Temporal.Timestamp.now());
         TestObserver<Void> observer = merger.merge(new ModelWithMetadata<>(updatedModel, updatedMetadata)).test();
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
         observer.assertComplete().assertNoErrors();
@@ -325,7 +325,7 @@ public final class MergerTest {
         // And his metadata is the still the same.
         assertEquals(
             Collections.singletonList(existingMetadata),
-            storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getId()))
+            storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getPrimaryKeyString()))
         );
     }
 

@@ -24,6 +24,10 @@ public final class PrivateNote implements Model {
   public String getId() {
       return id;
   }
+
+  public String resolveIdentifier() {
+      return id;
+  }
   
   public String getContent() {
       return content;

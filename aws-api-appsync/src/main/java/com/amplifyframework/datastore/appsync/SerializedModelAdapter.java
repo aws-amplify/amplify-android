@@ -56,14 +56,14 @@ public final class SerializedModelAdapter
         ModelSchema schema = src.getModelSchema();
 
         JsonObject result = new JsonObject();
-        result.add("id", context.serialize(src.getId()));
+        result.add("id", context.serialize(src.resolveIdentifier()));
         result.add("modelSchema", context.serialize(schema));
 
         JsonObject serializedData = new JsonObject();
         for (Map.Entry<String, Object> entry : src.getSerializedData().entrySet()) {
             if (entry.getValue() instanceof SerializedModel) {
                 SerializedModel serializedModel = (SerializedModel) entry.getValue();
-                serializedData.add(entry.getKey(), new JsonPrimitive(serializedModel.getId()));
+                serializedData.add(entry.getKey(), new JsonPrimitive(serializedModel.resolveIdentifier()));
             } else {
                 serializedData.add(entry.getKey(), context.serialize(entry.getValue()));
             }

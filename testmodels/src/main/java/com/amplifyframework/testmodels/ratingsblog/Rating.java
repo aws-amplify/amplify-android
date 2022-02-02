@@ -40,6 +40,10 @@ public final class Rating implements Model {
         return id;
     }
 
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public Integer getStars() {
         return stars;
     }

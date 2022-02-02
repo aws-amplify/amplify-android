@@ -28,6 +28,10 @@ public final class Call implements Model {
   private final @ModelField(targetType="Phone", isRequired = true) @BelongsTo(targetName = "calleeId", type = Phone.class) Phone callee;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
+  public String resolveIdentifier() {
+      return id;
+  }
+
   public String getId() {
       return id;
   }

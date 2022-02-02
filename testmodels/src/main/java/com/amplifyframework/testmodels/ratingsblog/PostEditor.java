@@ -43,6 +43,10 @@ public final class PostEditor implements Model {
         return id;
     }
 
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public Post getPost() {
         return post;
     }

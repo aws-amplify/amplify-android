@@ -169,7 +169,7 @@ public final class AppSyncMockingTest {
     @Test
     public void mockSuccessResponseForUpdate() {
         ModelMetadata updatedMetadata =
-            new ModelMetadata(StrawMen.TONY_MODEL.getId(), false, 2, StrawMen.JOE_METADATA.getLastChangedAt());
+            new ModelMetadata(StrawMen.TONY_MODEL.resolveIdentifier(), false, 2, StrawMen.JOE_METADATA.getLastChangedAt());
         ModelWithMetadata<BlogOwner> tonyWithUpdatedMetadata =
             new ModelWithMetadata<>(StrawMen.TONY_MODEL, updatedMetadata);
         AppSyncMocking.update(appSync)
@@ -216,7 +216,7 @@ public final class AppSyncMockingTest {
     @Test
     public void mockSuccessResponseForDelete() {
         ModelMetadata deletedMetadata =
-            new ModelMetadata(StrawMen.TONY_MODEL.getId(), true, 2, StrawMen.JOE_METADATA.getLastChangedAt());
+            new ModelMetadata(StrawMen.TONY_MODEL.resolveIdentifier(), true, 2, StrawMen.JOE_METADATA.getLastChangedAt());
         ModelWithMetadata<BlogOwner> tonyWithDeleteMetadata =
             new ModelWithMetadata<>(StrawMen.TONY_MODEL, deletedMetadata);
         AppSyncMocking.delete(appSync)
@@ -333,7 +333,7 @@ public final class AppSyncMockingTest {
             .name("Joe")
             .build();
         static final ModelMetadata JOE_METADATA =
-            new ModelMetadata(JOE_MODEL.getId(), false, 1, Temporal.Timestamp.now());
+            new ModelMetadata(JOE_MODEL.resolveIdentifier(), false, 1, Temporal.Timestamp.now());
         static final ModelWithMetadata<BlogOwner> JOE =
             new ModelWithMetadata<>(JOE_MODEL, JOE_METADATA);
 
@@ -341,7 +341,7 @@ public final class AppSyncMockingTest {
             .name("Tony")
             .build();
         static final ModelMetadata TONY_METADATA =
-            new ModelMetadata(TONY_MODEL.getId(), false, 1, Temporal.Timestamp.now());
+            new ModelMetadata(TONY_MODEL.resolveIdentifier(), false, 1, Temporal.Timestamp.now());
         static final ModelWithMetadata<BlogOwner> TONY =
             new ModelWithMetadata<>(TONY_MODEL, TONY_METADATA);
 

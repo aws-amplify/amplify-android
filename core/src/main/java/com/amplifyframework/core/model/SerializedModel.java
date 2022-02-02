@@ -206,7 +206,7 @@ public final class SerializedModel implements Model {
 
     @NonNull
     @Override
-    public String getId() {
+    public String resolveIdentifier() {
         return modelId;
     }
 

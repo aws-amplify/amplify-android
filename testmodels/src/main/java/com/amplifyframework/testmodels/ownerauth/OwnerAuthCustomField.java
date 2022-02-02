@@ -31,6 +31,10 @@ public final class OwnerAuthCustomField implements Model {
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String", isRequired = true) String title;
     private final @ModelField(targetType="String") List<String> editors;
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public String getId() {
         return id;
     }

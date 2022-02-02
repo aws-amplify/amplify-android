@@ -139,6 +139,10 @@ public final class Person implements Model {
         return id;
     }
 
+    public String resolveIdentifier() {
+        return  getId();
+    }
+
     /**
      * Returns the person's first name.
      * @return The person's first name.

@@ -41,6 +41,7 @@ import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.BlogOwnerWithCustomPK;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostAuthorJoin;
@@ -121,7 +122,8 @@ public final class BasicCloudSyncInstrumentationTest {
             .timeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .dataStoreConfiguration(DataStoreConfiguration.builder()
                 .syncExpression(BlogOwner.class, () -> BlogOwner.CREATED_AT.gt(tenMinutesAgoDateTime))
-                .syncExpression(Blog.class, () -> Blog.CREATED_AT.gt(tenMinutesAgoDateTime))
+                    .syncExpression(BlogOwnerWithCustomPK.class, () -> BlogOwnerWithCustomPK.CREATED_AT.gt(tenMinutesAgoDateTime))
+                    .syncExpression(Blog.class, () -> Blog.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Post.class, () -> Post.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Comment.class, () -> Comment.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Author.class, () -> Author.CREATED_AT.gt(tenMinutesAgoDateTime))
@@ -215,6 +217,44 @@ public final class BasicCloudSyncInstrumentationTest {
         assertEquals("Jameson Williams", owner.getName());
         assertEquals(jameson.getId(), owner.getId());
     }
+
+    /**
+     * The sync engine should receive mutations for its managed models, through its
+     * subscriptions. When we create a model remotely, the sync engine should respond
+     * by processing the subscription event and saving the model locally.
+     * @throws DataStoreException On failure to query the local data store for
+     *                            local presence of arranged data (second step)
+     * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
+     *                          {@link DataStoreCategoryConfigurator}
+     */
+    @Test
+    public void syncDownFromCloudIsWorkingWithCustomPrimaryKey() throws AmplifyException {
+        // This model will get saved to the cloud.
+        BlogOwnerWithCustomPK jameson = BlogOwnerWithCustomPK.builder()
+                .name("Jameson Williams")
+                .wea("wea")
+                .build();
+
+        // Start watching locally, to see if it shows up on the client.
+        HubAccumulator receiptAccumulator =
+                HubAccumulator.create(HubChannel.DATASTORE, receiptOf(jameson.getPrimaryKeyString()), 1)
+                        .start();
+
+        // Act: create the model in the cloud
+        ModelSchema schema = ModelSchema.fromModelClass(BlogOwnerWithCustomPK.class);
+        GraphQLResponse<ModelWithMetadata<BlogOwnerWithCustomPK>> createResponse = appSync.create(jameson, schema);
+        ModelMetadata metadata = createResponse.getData().getSyncMetadata();
+        assertEquals(Integer.valueOf(1), metadata.getVersion());
+
+        // Wait for the events to show up on Hub.
+        receiptAccumulator.awaitFirst(10, TimeUnit.SECONDS);
+
+        // Jameson should be in the local DataStore.
+        BlogOwnerWithCustomPK owner = dataStore.get(BlogOwnerWithCustomPK.class, jameson.getPrimaryKeyString());
+        assertEquals("Jameson Williams", owner.getName());
+        assertEquals(jameson.getWea(), owner.getWea());
+    }
+
 
     /**
      * Verify that updating an item shortly after creating it succeeds.  This can be tricky because the _version

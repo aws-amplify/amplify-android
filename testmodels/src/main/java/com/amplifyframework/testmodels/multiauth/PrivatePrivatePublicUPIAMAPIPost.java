@@ -1,7 +1,6 @@
 package com.amplifyframework.testmodels.multiauth;
 
 
-import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
@@ -31,6 +30,10 @@ public final class PrivatePrivatePublicUPIAMAPIPost implements Model {
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
   public String getId() {
+      return id;
+  }
+
+  public String resolveIdentifier() {
       return id;
   }
   

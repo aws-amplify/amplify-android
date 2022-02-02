@@ -57,7 +57,7 @@ final class VersionRepository {
             // The ModelMetadata for the model uses the same ID as an identifier.
             localStorageAdapter.query(
                 ModelMetadata.class,
-                Where.id(model.getModelName() + "|" + model.getId()),
+                Where.id(model.getModelName() + "|" + model.getPrimaryKeyString()),
                 iterableResults -> {
                     try {
                         emitter.onSuccess(extractVersion(model, iterableResults));
@@ -87,14 +87,14 @@ final class VersionRepository {
         // There should be only one metadata for the model....
         if (results.size() != 1) {
             throw new DataStoreException(
-                "Wanted 1 metadata for item with id = " + model.getId() + ", but had " + results.size() + ".",
+                "Wanted 1 metadata for item with id = " + model.getPrimaryKeyString() + ", but had " + results.size() + ".",
                 "This is likely a bug. please report to AWS."
             );
         }
         final Integer version = results.get(0).getVersion();
         if (version == null) {
             throw new DataStoreException(
-                "Metadata for item with id = " + model.getId() + " had null version.",
+                "Metadata for item with id = " + model.getPrimaryKeyString() + " had null version.",
                 "This is likely a bug. Please report to AWS."
             );
         }

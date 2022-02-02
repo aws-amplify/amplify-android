@@ -38,6 +38,10 @@ public final class Blog implements Model {
     private final @ModelField(targetType="String", isRequired = true) String name;
     private final @ModelField(targetType="String") List<String> tags;
     private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public String getId() {
         return id;
     }

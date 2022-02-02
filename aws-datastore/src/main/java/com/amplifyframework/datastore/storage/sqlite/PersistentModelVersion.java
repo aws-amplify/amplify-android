@@ -103,7 +103,7 @@ public final class PersistentModelVersion implements Model {
     /** {@inheritDoc}. */
     @NonNull
     @Override
-    public String getId() {
+    public String resolveIdentifier() {
         return this.id;
     }
 

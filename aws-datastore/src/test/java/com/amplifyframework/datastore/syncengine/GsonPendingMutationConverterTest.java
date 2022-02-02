@@ -78,7 +78,7 @@ public final class GsonPendingMutationConverterTest {
         // Try to construct a record from the PendingMutation instance.
         PendingMutation.PersistentRecord record = converter.toRecord(originalMutation);
         assertNotNull(record);
-        assertEquals(expectedMutationId, record.getId());
+        assertEquals(expectedMutationId, record.resolveIdentifier());
 
         // Now, try to convert it back...
         PendingMutation<Blog> reconstructedItemChange = converter.fromRecord(record);
@@ -109,7 +109,7 @@ public final class GsonPendingMutationConverterTest {
         // Try to construct a record from the PendingMutation instance.
         PendingMutation.PersistentRecord record = converter.toRecord(originalMutation);
         assertNotNull(record);
-        assertEquals(expectedMutationId, record.getId());
+        assertEquals(expectedMutationId, record.resolveIdentifier());
 
         // Now, try to convert it back...
         PendingMutation<SerializedModel> reconstructedItemChange = converter.fromRecord(record);
@@ -143,7 +143,7 @@ public final class GsonPendingMutationConverterTest {
         // Try to construct a record from the PendingMutation instance.
         PendingMutation.PersistentRecord record = converter.toRecord(originalMutation);
         assertNotNull(record);
-        assertEquals(expectedMutationId, record.getId());
+        assertEquals(expectedMutationId, record.resolveIdentifier());
 
         // Now, try to convert it back...
         PendingMutation<SerializedModel> reconstructedItemChange = converter.fromRecord(record);
@@ -182,7 +182,7 @@ public final class GsonPendingMutationConverterTest {
         // Try to construct a record from the PendingMutation instance.
         PendingMutation.PersistentRecord record = converter.toRecord(originalMutation);
         assertNotNull(record);
-        assertEquals(expectedMutationId, record.getId());
+        assertEquals(expectedMutationId, record.resolveIdentifier());
 
         // Now, try to convert it back...
         PendingMutation<SerializedModel> reconstructedItemChange = converter.fromRecord(record);

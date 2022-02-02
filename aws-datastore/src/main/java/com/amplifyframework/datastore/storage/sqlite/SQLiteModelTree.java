@@ -34,9 +34,11 @@ import com.amplifyframework.util.Wrap;
 
 import com.google.gson.Gson;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -82,7 +84,7 @@ final class SQLiteModelTree {
         ModelSchema rootSchema = registry.getModelSchemaForModelClass(getModelName(rootModel));
         Set<String> rootIds = new HashSet<>();
         for (T model : root) {
-            rootIds.add(model.getId());
+            rootIds.add(model.getPrimaryKeyString());
         }
         recurseTree(modelMap, rootSchema, rootIds);
 
@@ -163,6 +165,55 @@ final class SQLiteModelTree {
             }
         }
     }
+
+    private Cursor queryChildren(
+            @NonNull String childTable,
+            @NonNull String childIdField,
+            @NonNull HashMap<String, Collection<Serializable>> parentIdMap
+    ) {
+        // Wrap each ID with single quote
+        StringBuilder quotedIds = new StringBuilder();
+        // SELECT <child_id> FROM <child_table> WHERE <parent_id> IN (<id_1>, <id_2>, ...)
+        StringBuilder filterByIdsBuilder = new StringBuilder();
+        String queryString = String.valueOf(SqlKeyword.SELECT) +
+                SqlKeyword.DELIMITER +
+                Wrap.inBackticks(childIdField) +
+                SqlKeyword.DELIMITER +
+                SqlKeyword.FROM +
+                SqlKeyword.DELIMITER +
+                Wrap.inBackticks(childTable) +
+                SqlKeyword.DELIMITER +
+                SqlKeyword.WHERE +
+                SqlKeyword.DELIMITER;
+        filterByIdsBuilder.append(queryString);
+
+        for(Iterator<Map.Entry<String, Collection<Serializable>>> parentIdKeyValueIterator = parentIdMap.entrySet().iterator();
+            parentIdKeyValueIterator.hasNext();) {
+            Map.Entry<String, Collection<Serializable>> parentIdKeyValue = parentIdKeyValueIterator.next();
+            for (Iterator<Serializable> ids = parentIdKeyValue.getValue().iterator(); ids.hasNext(); ) {
+                quotedIds.append(Wrap.inSingleQuotes(ids.next().toString()));
+                if (ids.hasNext()) {
+                    quotedIds.append(SqlKeyword.SEPARATOR);
+                }
+            }
+
+            filterByIdsBuilder.append(Wrap.inBackticks(parentIdKeyValue.getKey()) +
+                    SqlKeyword.DELIMITER +
+                    SqlKeyword.IN +
+                    SqlKeyword.DELIMITER +
+                    Wrap.inParentheses(quotedIds.toString())) ;
+            if(parentIdKeyValueIterator.hasNext()){
+                filterByIdsBuilder.append(SqlKeyword.DELIMITER);
+                filterByIdsBuilder.append(SqlKeyword.AND);
+                filterByIdsBuilder.append(SqlKeyword.DELIMITER);
+            }
+        }
+
+
+        filterByIdsBuilder.append(";");
+        return database.rawQuery(filterByIdsBuilder.toString(), new String[0]);
+    }
+
 
     private Cursor queryChildren(
             @NonNull String childTable,

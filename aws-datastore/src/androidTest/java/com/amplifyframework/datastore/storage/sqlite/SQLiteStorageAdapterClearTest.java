@@ -148,13 +148,13 @@ public final class SQLiteStorageAdapterClearTest {
     }
 
     private <T extends Model> void assertRecordIsInDb(T item) throws DataStoreException {
-        List<? extends Model> results = adapter.query(item.getClass(), Where.id(item.getId()));
+        List<? extends Model> results = adapter.query(item.getClass(), Where.id(item.getPrimaryKeyString()));
         assertEquals(1, results.size());
         assertEquals(item, results.get(0));
     }
 
     private <T extends Model> void assertRecordIsNotInDb(T item) throws DataStoreException {
-        List<? extends Model> results = adapter.query(item.getClass(), Where.id(item.getId()));
+        List<? extends Model> results = adapter.query(item.getClass(), Where.id(item.getPrimaryKeyString()));
         assertNotNull(results);
         assertEquals(0, results.size());
     }

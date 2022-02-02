@@ -31,6 +31,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelPrimaryKey;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
@@ -51,6 +52,7 @@ import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -586,7 +588,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
-            @NonNull String uniqueId,
+            @NonNull Serializable uniqueId,
             @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
@@ -595,7 +597,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             itemChange -> {
                 try {
                     if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName()) &&
-                            itemChange.item().getId().equals(uniqueId)) {
+                            itemChange.item().getPrimaryKeyString().equals(ModelPrimaryKey.Helper.getUniqueKey(uniqueId))) {
                         @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
                         onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));

@@ -63,6 +63,10 @@ public final class Car implements Model {
      * Returns Id.
      * @return Id.
      */
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public String getId() {
         return id;
     }
