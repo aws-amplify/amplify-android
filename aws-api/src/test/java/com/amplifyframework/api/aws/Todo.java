@@ -15,10 +15,13 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
+
+import java.io.Serializable;
 
 @ModelConfig(listPluralName = "Todos", syncPluralName = "Todos")
 final class Todo implements Model {
@@ -80,6 +83,12 @@ final class Todo implements Model {
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         return result;
+    }
+
+    @NonNull
+    @Override
+    public String resolveIdentifier() {
+        return id;
     }
 
     static final class Builder {
