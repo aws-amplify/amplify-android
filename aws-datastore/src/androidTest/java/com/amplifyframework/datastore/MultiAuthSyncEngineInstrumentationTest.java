@@ -873,7 +873,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
         if (expectedAuthType != null) {
             expectedEventAccumulator =
                 HubAccumulator
-                    .create(HubChannel.DATASTORE, publicationOf(modelType.getSimpleName(), testRecord.getId()), 1)
+                    .create(HubChannel.DATASTORE, publicationOf(modelType.getSimpleName(), testRecord.getPrimaryKeyString()), 1)
                     .start();
         } else {
             expectedEventAccumulator = HubAccumulator

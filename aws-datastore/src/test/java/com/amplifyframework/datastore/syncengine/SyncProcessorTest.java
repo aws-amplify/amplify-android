@@ -845,7 +845,7 @@ public final class SyncProcessorTest {
          * @return negative if left is first, positive if right is; zero if equivalent
          */
         static int compare(Model left, Model right) {
-            return left.getId().compareTo(right.getId());
+            return left.getPrimaryKeyString().compareTo(right.getPrimaryKeyString());
         }
     }
 }

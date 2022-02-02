@@ -104,6 +104,10 @@ public final class LastSyncMetadata implements Model {
 
     @NonNull
     @Override
+    public String resolveIdentifier() {
+        return this.id;
+    }
+
     public String getId() {
         return this.id;
     }

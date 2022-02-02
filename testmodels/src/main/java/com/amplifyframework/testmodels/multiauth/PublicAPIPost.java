@@ -31,6 +31,10 @@ public final class PublicAPIPost implements Model {
   public String getId() {
       return id;
   }
+
+  public String resolveIdentifier() {
+      return id;
+  }
   
   public String getName() {
       return name;

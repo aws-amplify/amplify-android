@@ -46,12 +46,14 @@ import java.util.TreeMap;
 public final class SQLiteTable {
     private final String name;
     private final Map<String, SQLiteColumn> columns;
+    private final List<String> primaryKeyColumns;
     private final List<SQLiteColumn> sortedColumns;
 
-    private SQLiteTable(String name, Map<String, SQLiteColumn> columns) {
+    private SQLiteTable(String name, Map<String, SQLiteColumn> columns,  List<String> primaryKeyColumns) {
         this.name = name;
         this.columns = columns;
         this.sortedColumns = sortedColumns();
+        this.primaryKeyColumns = primaryKeyColumns;
     }
 
     /**
@@ -109,6 +111,7 @@ public final class SQLiteTable {
         return SQLiteTable.builder()
                 .name(modelSchema.getName())
                 .columns(sqlColumns)
+                .primaryKeyColumns(modelSchema.getPrimaryIndexFields())
                 .build();
     }
 
@@ -146,6 +149,15 @@ public final class SQLiteTable {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the primary key of this table.
+     * @return the primary key of this table
+     */
+    @NonNull
+    public List<String> getPrimaryKeyColumns() {
+        return primaryKeyColumns;
     }
 
     /**
@@ -278,6 +290,7 @@ public final class SQLiteTable {
      */
     public static final class Builder {
         private final Map<String, SQLiteColumn> columns;
+        private  List<String> primaryKeyColumns;
         private String name;
 
         Builder() {
@@ -292,6 +305,17 @@ public final class SQLiteTable {
         @NonNull
         public Builder name(@NonNull String name) {
             this.name = Objects.requireNonNull(name);
+            return this;
+        }
+
+        /**
+         * Sets the list of primary key columns of the table.
+         * @param primaryKeyColumns the name of the table
+         * @return builder instance with given name
+         */
+        @NonNull
+        public Builder primaryKeyColumns(@NonNull List<String> primaryKeyColumns) {
+            this.primaryKeyColumns = Objects.requireNonNull(primaryKeyColumns);
             return this;
         }
 
@@ -315,7 +339,7 @@ public final class SQLiteTable {
         @SuppressLint("SyntheticAccessor")
         @NonNull
         public SQLiteTable build() {
-            return new SQLiteTable(this.name, Immutable.of(this.columns));
+            return new SQLiteTable(this.name, Immutable.of(this.columns), primaryKeyColumns);
         }
     }
 }

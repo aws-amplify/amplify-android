@@ -37,6 +37,10 @@ public final class Team implements Model {
         return id;
     }
 
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }

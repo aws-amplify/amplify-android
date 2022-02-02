@@ -45,6 +45,10 @@ public final class Post implements Model {
         return id;
     }
 
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public String getTitle() {
         return title;
     }

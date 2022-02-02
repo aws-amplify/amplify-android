@@ -137,13 +137,13 @@ public final class HybridTemporalSyncInstrumentationTest {
             .modelSchema(modelSchema)
             .build();
         HubAccumulator publicationAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelSchema.getName(), sentModel.getId()), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelSchema.getName(), sentModel.resolveIdentifier()), 1)
                 .start();
         hybridBehaviors.save(sentModel);
         publicationAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Retrieve the model from AppSync.
-        Meeting remoteMeeting = api.get(Meeting.class, sentModel.getId());
+        Meeting remoteMeeting = api.get(Meeting.class, sentModel.resolveIdentifier());
 
         // Inspect the fields of the data in AppSync, and prepare it into a map
         // that we can compare with what we sent. Are they the same? They should be.
@@ -162,7 +162,7 @@ public final class HybridTemporalSyncInstrumentationTest {
         // Save a meeting, remotely. Wait for it to show up locally.
         Meeting meeting = createMeeting();
         HubAccumulator receiptAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(meeting.getId()), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(meeting.resolveIdentifier()), 1)
                 .start();
         appSync.create(meeting, modelSchema);
         receiptAccumulator.awaitFirst(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -178,7 +178,7 @@ public final class HybridTemporalSyncInstrumentationTest {
 
     private static SerializedModel findById(List<SerializedModel> haystackModels, String needleId) {
         for (SerializedModel serializedModel : haystackModels) {
-            if (serializedModel.getId().equals(needleId)) {
+            if (serializedModel.resolveIdentifier().equals(needleId)) {
                 return serializedModel;
             }
         }
@@ -197,7 +197,7 @@ public final class HybridTemporalSyncInstrumentationTest {
 
     private static Map<String, Object> toMap(Meeting meeting) {
         Map<String, Object> map = new HashMap<>();
-        map.put("id", meeting.getId());
+        map.put("id", meeting.resolveIdentifier());
         map.put("name", meeting.getName());
         map.put("date", meeting.getDate());
         map.put("dateTime", meeting.getDateTime());

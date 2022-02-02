@@ -56,4 +56,11 @@ type PostAuthorJoin
   createdAt: AWSDateTime
 }
 
+type BlogOwnerWithCustomPK @model
+@key(fields: ["name", "wea"]){
+  name: String!
+  id: ID!
+  wea: String!
+  createdAt: AWSDateTime
+}
 

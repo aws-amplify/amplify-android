@@ -62,6 +62,10 @@ public final class Todo implements Model {
         return id;
     }
 
+    public String resolveIdentifier() {
+        return this.id;
+    }
+
     public String getTitle() {
         return title;
     }

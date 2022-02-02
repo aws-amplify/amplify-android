@@ -39,6 +39,10 @@ public final class Projectfields implements Model {
         return id;
     }
 
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }

@@ -29,6 +29,10 @@ public final class Meeting implements Model {
     private final @ModelField(targetType="AWSDateTime") Temporal.DateTime dateTime;
     private final @ModelField(targetType="AWSTime") Temporal.Time time;
     private final @ModelField(targetType="AWSTimestamp") Temporal.Timestamp timestamp;
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public String getId() {
         return id;
     }

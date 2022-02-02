@@ -141,6 +141,7 @@ public class ObserveQueryExecutorTest {
                 Assert.assertEquals(4, value.getItems().size());
                 changeLatch.countDown();
             } else {
+                //TODOPM:  expected:<5> but was:<6>
                 Assert.assertEquals(5, value.getItems().size());
                 changeLatch.countDown();
             }

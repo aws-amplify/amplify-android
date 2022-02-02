@@ -1,7 +1,6 @@
 package com.amplifyframework.testmodels.multiauth;
 
 
-import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
@@ -31,6 +30,10 @@ public final class PrivateUPPost implements Model {
   public String getId() {
       return id;
   }
+
+    public String resolveIdentifier() {
+        return id;
+    }
   
   public String getName() {
       return name;

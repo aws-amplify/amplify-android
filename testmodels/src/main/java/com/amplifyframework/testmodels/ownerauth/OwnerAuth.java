@@ -31,12 +31,16 @@ public final class OwnerAuth implements Model {
     public static final QueryField TITLE = field("title");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String", isRequired = true) String title;
-    public String getId() {
+    public String resolveIdentifier() {
         return id;
     }
 
     public String getTitle() {
         return title;
+    }
+
+    public String getId() {
+        return id;
     }
 
     private OwnerAuth(String id, String title) {

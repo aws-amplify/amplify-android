@@ -121,12 +121,12 @@ public final class SQLiteModelTreeTest {
     private abstract static class TestModel implements Model {
         @Override
         public boolean equals(Object obj) {
-            return getId().equals(((Model) obj).getId());
+            return resolveIdentifier().equals(((Model) obj).resolveIdentifier());
         }
 
         @Override
         public int hashCode() {
-            return Integer.parseInt(getId());
+            return Integer.parseInt(getPrimaryKeyString());
         }
     }
 
@@ -135,7 +135,7 @@ public final class SQLiteModelTreeTest {
     private class A extends TestModel {
         @ModelField(targetType = "ID") private final String id;
         @ModelField(targetType = "B") @HasMany(associatedWith = "a", type = B.class) private List<B> b;
-        @NonNull public String getId() { return id; }
+        @NonNull public String resolveIdentifier() { return id; }
         private A(int id) { this.id = Integer.toString(id); }
     }
 
@@ -146,7 +146,7 @@ public final class SQLiteModelTreeTest {
         @ModelField(targetType = "ID") private final String id;
         @ModelField(targetType = "C") @HasMany(associatedWith = "b", type = C.class) private List<C> c;
         @ModelField(targetType = "A") @BelongsTo(targetName = "aId", type = A.class) private A a;
-        @NonNull public String getId() { return id; }
+        @NonNull public String resolveIdentifier() { return id; }
         private B(int id) { this.id = Integer.toString(id); }
     }
 
@@ -155,7 +155,7 @@ public final class SQLiteModelTreeTest {
     private class C extends TestModel {
         @ModelField(targetType = "ID") private final String id;
         @ModelField(targetType = "B") @BelongsTo(targetName = "bId", type = B.class) private B b;
-        @NonNull public String getId() { return id; }
+        @NonNull public String resolveIdentifier() { return id; }
         private C(int id) { this.id = Integer.toString(id); }
     }
 }

@@ -282,11 +282,14 @@ public final class AppSyncGraphQLRequestFactoryTest {
             this.description = description;
             this.owner = owner;
         }
-
-        @NonNull
-        @Override
         public String getId() {
             return "111";
+        }
+
+            @NonNull
+        @Override
+        public String resolveIdentifier() {
+            return getId();
         }
     }
 }

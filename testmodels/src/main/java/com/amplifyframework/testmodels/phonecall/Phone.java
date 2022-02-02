@@ -32,6 +32,10 @@ public final class Phone implements Model {
   public String getId() {
       return id;
   }
+
+  public String resolveIdentifier() {
+      return id;
+  }
   
   public String getNumber() {
       return number;

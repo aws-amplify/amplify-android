@@ -17,6 +17,8 @@ package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 
+import java.io.Serializable;
+
 /**
  * All models should conform to the Model
  * interface.
@@ -29,7 +31,7 @@ public interface Model {
      * @return the ID that is the primary key of a Model.
      */
     @NonNull
-    String getId();
+    Serializable resolveIdentifier();
 
     /**
      * Returns the name of this model as a String.
@@ -38,5 +40,19 @@ public interface Model {
     @NonNull
     default String getModelName() {
         return getClass().getSimpleName();
+    }
+
+    @NonNull
+    default String getPrimaryKeyString() {
+           try {
+               if (resolveIdentifier() instanceof ModelPrimaryKey  ) {
+                   return ((ModelPrimaryKey<?>) resolveIdentifier()).getIdentifier();
+               } else {
+                   return (String) resolveIdentifier();
+               }
+           }
+           catch (Exception ex){
+               throw (new IllegalStateException("Invalid Primary Key, It should either be of type String or composite Primary Key."));
+        }
     }
 }

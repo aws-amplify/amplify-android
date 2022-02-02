@@ -32,6 +32,10 @@ public final class PrivatePrivateUPIAMPost implements Model {
   public String getId() {
       return id;
   }
+
+  public String resolveIdentifier() {
+      return id;
+  }
   
   public String getName() {
       return name;

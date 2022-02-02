@@ -188,7 +188,11 @@ public final class SQLiteStorageReservedWordTest {
             return id;
         }
 
-        public String getAbort() {
+        public String resolveIdentifier() {
+            return id;
+        }
+
+            public String getAbort() {
             return abort;
         }
 
@@ -343,6 +347,10 @@ public final class SQLiteStorageReservedWordTest {
         private final @ModelField(targetType="String", isRequired = true) String index;
         private final @ModelField(targetType="Group") @BelongsTo(targetName = "groupID", type = Group.class) Group group;
         public String getId() {
+            return id;
+        }
+
+        public String resolveIdentifier() {
             return id;
         }
 

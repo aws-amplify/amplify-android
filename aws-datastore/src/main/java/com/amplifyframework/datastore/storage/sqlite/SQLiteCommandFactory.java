@@ -381,7 +381,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         // Append WHERE statement
         final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
         final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
-        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getId());
+        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getPrimaryKeyString());
         SQLPredicate sqlPredicate = new SQLPredicate(matchId);
         stringBuilder.append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.WHERE)

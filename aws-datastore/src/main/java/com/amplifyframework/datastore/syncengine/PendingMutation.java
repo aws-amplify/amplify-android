@@ -319,18 +319,18 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          */
         @NonNull
         @Override
-        public String getId() {
+        public String resolveIdentifier() {
             return this.id;
         }
 
         /**
          * Gets the ID of the Model instance that is contained within the mutation data.
-         * This is not the same as {@link #getId()}, which is an ID for the mutation itself.
+         * This is not the same as {@link #resolveIdentifier()} ()}, which is an ID for the mutation itself.
          * The mutation ID is a v1 UUID which can be compared by timestamp. This current ID
          * is a v4 ID which is a better choice choice for UUID since it does not rely on flaky
          * notions of time.
          * @return The ID of the model, that would be returned if that model were
-         *         extracted from the record, and {@link Model#getId()} were called. on it.
+         *         extracted from the record, and {@link Model#resolveIdentifier()} ()} were called. on it.
          */
         @NonNull
         String getContainedModelId() {
@@ -414,8 +414,8 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          */
         @Override
         public int compareTo(@NonNull PersistentRecord another) {
-            return TimeBasedUuid.fromString(getId())
-                .compareTo(TimeBasedUuid.fromString(another.getId()));
+            return TimeBasedUuid.fromString(resolveIdentifier())
+                .compareTo(TimeBasedUuid.fromString(another.resolveIdentifier()));
         }
 
         /**

@@ -28,6 +28,10 @@ public final class Task implements Model {
   public String getId() {
       return id;
   }
+
+  public String resolveIdentifier() {
+      return id;
+  }
   
   public String getTitle() {
       return title;

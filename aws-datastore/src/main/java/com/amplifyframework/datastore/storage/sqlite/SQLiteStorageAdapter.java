@@ -32,6 +32,7 @@ import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.ModelPrimaryKey;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
@@ -377,7 +378,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             } catch (DataStoreException dataStoreException) {
                 onError.accept(dataStoreException);
             } catch (Exception someOtherTypeOfException) {
-                String modelToString = item.getModelName() + "[id=" + item.getId() + "]";
+                String modelToString = item.getModelName() + "[id=" + item.getPrimaryKeyString() + "]";
                 DataStoreException dataStoreException = new DataStoreException(
                     "Error in saving the model: " + modelToString,
                     someOtherTypeOfException, "See attached exception for details."
@@ -477,7 +478,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 // Check if data being deleted exists; "Succeed" deletion in that case.
                 if (!sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
-                    LOG.verbose(modelName + " model with id = " + item.getId() + " does not exist.");
+                    LOG.verbose(modelName + " model with id = " + item.getPrimaryKeyString() + " does not exist.");
                     // Pass back item change instance without publishing it.
                     onSuccess.accept(StorageItemChange.<T>builder()
                         .item(item)
@@ -755,17 +756,18 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         // Generate SQL command for given action
         switch (writeType) {
             case CREATE:
-                LOG.verbose("Creating item in " + sqliteTable.getName() + " identified by ID: " + item.getId());
+                LOG.verbose("Creating item in " + sqliteTable.getName() + " identified by ID: " + item.getPrimaryKeyString());
                 sqlCommandProcessor.execute(sqlCommandFactory.insertFor(modelSchema, item));
                 break;
             case UPDATE:
-                LOG.verbose("Updating item in " + sqliteTable.getName() + " identified by ID: " + item.getId());
+                LOG.verbose("Updating item in " + sqliteTable.getName() + " identified by ID: " + item.getPrimaryKeyString());
                 sqlCommandProcessor.execute(sqlCommandFactory.updateFor(modelSchema, item));
                 break;
             case DELETE:
-                LOG.verbose("Deleting item in " + sqliteTable.getName() + " identified by ID: " + item.getId());
-                final String primaryKeyName = sqliteTable.getPrimaryKey().getName();
-                final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName).eq(item.getId());
+                LOG.verbose("Deleting item in " + sqliteTable.getName() + " identified by ID: " + item.getPrimaryKeyString());
+                //final String primaryKeyName = sqliteTable.getPrimaryKey().getName();
+                //final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName).eq(item.resolveIdentifier());
+                final QueryPredicate matchId = ModelPrimaryKey.Helper.getQueryPredicate(item, sqliteTable.getName(), sqliteTable.getPrimaryKeyColumns());
                 sqlCommandProcessor.execute(sqlCommandFactory.deleteFor(modelSchema, matchId));
                 break;
             default:
@@ -782,7 +784,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final SQLiteTable table = SQLiteTable.fromSchema(schema);
         final String tableName = table.getName();
         final String primaryKeyName = table.getPrimaryKey().getName();
-        final QueryPredicate matchId = QueryField.field(tableName, primaryKeyName).eq(model.getId());
+        final QueryPredicate matchId = QueryField.field(tableName, primaryKeyName).eq(model.getPrimaryKeyString());
         final QueryPredicate condition = predicate.and(matchId);
         return sqlCommandProcessor.executeExists(sqlCommandFactory.existsFor(schema, condition));
     }
@@ -798,7 +800,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable table = SQLiteTable.fromSchema(schema);
         final String primaryKeyName = table.getPrimaryKey().getName();
-        final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName).eq(model.getId());
+        final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName).eq(model.getPrimaryKeyString());
 
         Iterator<? extends Model> result = Single.<Iterator<? extends Model>>create(emitter -> {
             if (model instanceof SerializedModel) {

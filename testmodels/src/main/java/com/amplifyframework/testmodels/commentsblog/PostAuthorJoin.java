@@ -34,6 +34,10 @@ public final class PostAuthorJoin implements Model {
   public String getId() {
       return id;
   }
+
+  public String resolveIdentifier() {
+      return id;
+  }
   
   public Author getAuthor() {
       return author;
