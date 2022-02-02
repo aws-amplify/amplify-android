@@ -17,7 +17,19 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 apply from: rootProject.file("configuration/publishing.gradle")
+apply plugin: 'org.jetbrains.dokka'
 
+dokkaHtml {
+    dokkaSourceSets {
+        named("main") {
+            includeNonPublic.set(false)
+            skipEmptyPackages.set(true)
+            skipDeprecated.set(true)
+            reportUndocumented.set(true)
+            jdkVersion.set(8)
+        }
+    }
+}
 dependencies {
     implementation dependency.kotlin.stdlib
     implementation dependency.kotlin.coroutines
