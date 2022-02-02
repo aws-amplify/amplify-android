@@ -1,3 +1,12 @@
+## [Release 0.15.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.15.2)
+
+### Bug Fixes
+- **aws-api-appsync:** update getModelFields for flutter support (#1611)
+- **api:** create RequestDecorator in interceptor (#1623)
+- **api:** prevent thread blocking on subx cancellation (#1482)
+
+[See all changes between 0.15.1 and 0.15.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.15.1...release-kotlin_v0.15.2)
+
 ## [Release 0.15.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.15.1)
 
 ### Bug Fixes

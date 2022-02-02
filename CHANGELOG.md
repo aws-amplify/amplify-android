@@ -1,3 +1,12 @@
+## [Release 1.31.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.31.2)
+
+### Bug Fixes
+- **aws-api-appsync:** update getModelFields for flutter support (#1611)
+- **api:** create RequestDecorator in interceptor (#1623)
+- **api:** prevent thread blocking on subx cancellation (#1482)
+
+[See all changes between 1.31.1 and 1.31.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.31.1...release_v1.31.2)
+
 ## [Release 1.31.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.31.1)
 
 ### Bug Fixes
