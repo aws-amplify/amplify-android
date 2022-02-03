@@ -648,7 +648,7 @@ public final class PersistentMutationOutboxTest {
 
         BlogOwner initialUpdate = BlogOwner.builder()
                 .name("Tony Jr")
-                .id(modelInSqlLite.resolveIdentifier())
+                .id(modelInSqlLite.getPrimaryKeyString())
                 .build();
 
         PendingMutation<SerializedModel> initialUpdatePendingMutation =
@@ -660,7 +660,7 @@ public final class PersistentMutationOutboxTest {
         BlogOwner incomingUpdatedModel = BlogOwner.builder()
                 .name("Papa Tony")
                 .wea("something else")
-                .id(modelInSqlLite.resolveIdentifier())
+                .id(modelInSqlLite.getPrimaryKeyString())
                 .build();
         PendingMutation<SerializedModel> incomingUpdate = PendingMutation.update(
                 SerializedModel.difference(incomingUpdatedModel, modelInSqlLite, schema),
@@ -714,7 +714,7 @@ public final class PersistentMutationOutboxTest {
 
         BlogOwner initialUpdate = BlogOwner.builder()
                 .name("Tony Jr")
-                .id(modelInSqlLite.resolveIdentifier())
+                .id(modelInSqlLite.getPrimaryKeyString())
                 .build();
 
         PendingMutation<SerializedModel> initialUpdatePendingMutation =
@@ -726,7 +726,7 @@ public final class PersistentMutationOutboxTest {
         BlogOwner incomingUpdatedModel = BlogOwner.builder()
                 .name("Papa Tony")
                 .wea("something else")
-                .id(modelInSqlLite.resolveIdentifier())
+                .id(modelInSqlLite.getPrimaryKeyString())
                 .build();
         PendingMutation<SerializedModel> incomingUpdate = PendingMutation.update(
                 SerializedModel.difference(incomingUpdatedModel, modelInSqlLite, schema),

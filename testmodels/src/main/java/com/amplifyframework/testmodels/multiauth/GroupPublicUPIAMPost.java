@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.AuthStrategy;
@@ -29,6 +30,7 @@ public final class GroupPublicUPIAMPost implements Model {
   public static final QueryField NAME = field("GroupPublicUPIAMPost", "name");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
+  @NonNull
   public String resolveIdentifier() {
       return id;
   }

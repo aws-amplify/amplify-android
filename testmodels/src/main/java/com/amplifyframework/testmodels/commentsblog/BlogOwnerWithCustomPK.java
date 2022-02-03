@@ -6,6 +6,7 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -37,6 +38,7 @@ public final class BlogOwnerWithCustomPK implements Model {
         return id;
     }
 
+    @NonNull
     @Override
     public BlogOwnerPrimaryKey resolveIdentifier() {
         if (blogOwnerPrimaryKey == null){

@@ -2,6 +2,7 @@ package com.amplifyframework.testmodels.phonecall;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -33,6 +34,7 @@ public final class Phone implements Model {
       return id;
   }
 
+  @NonNull
   public String resolveIdentifier() {
       return id;
   }

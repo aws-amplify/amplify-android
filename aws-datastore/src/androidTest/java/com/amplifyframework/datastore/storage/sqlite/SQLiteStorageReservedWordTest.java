@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -188,6 +189,7 @@ public final class SQLiteStorageReservedWordTest {
             return id;
         }
 
+        @NonNull
         public String resolveIdentifier() {
             return id;
         }
@@ -350,6 +352,7 @@ public final class SQLiteStorageReservedWordTest {
             return id;
         }
 
+        @NonNull
         public String resolveIdentifier() {
             return id;
         }

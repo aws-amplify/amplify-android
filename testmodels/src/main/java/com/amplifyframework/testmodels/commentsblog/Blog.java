@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -31,10 +32,6 @@ public final class Blog implements Model {
   private final @ModelField(targetType="BlogOwner", isRequired = true) @BelongsTo(targetName = "blogOwnerId", type = BlogOwner.class) BlogOwner owner;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
 
-  @Override
-  public String resolveIdentifier() {
-      return id;
-  }
 
     public String getId() {
         return id;

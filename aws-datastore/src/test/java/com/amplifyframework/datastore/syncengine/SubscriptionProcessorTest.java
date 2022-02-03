@@ -190,7 +190,7 @@ public final class SubscriptionProcessorTest {
         BlogOwner model = BlogOwner.builder()
             .name(name)
             .build();
-        ModelMetadata modelMetadata = new ModelMetadata(model.resolveIdentifier(), false, 1, Temporal.Timestamp.now());
+        ModelMetadata modelMetadata = new ModelMetadata(model.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now());
         ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(model, modelMetadata);
         GraphQLResponse<ModelWithMetadata<BlogOwner>> response = new GraphQLResponse<>(modelWithMetadata, null);
         arrangeDataEmittingSubscription(appSync,
