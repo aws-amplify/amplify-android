@@ -2,6 +2,7 @@ package com.amplifyframework.testmodels.phonecall;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -28,6 +29,7 @@ public final class Call implements Model {
   private final @ModelField(targetType="Phone", isRequired = true) @BelongsTo(targetName = "calleeId", type = Phone.class) Phone callee;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
+  @NonNull
   public String resolveIdentifier() {
       return id;
   }

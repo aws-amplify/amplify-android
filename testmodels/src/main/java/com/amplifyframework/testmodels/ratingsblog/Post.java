@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testmodels.ratingsblog;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -45,6 +46,7 @@ public final class Post implements Model {
         return id;
     }
 
+    @NonNull
     public String resolveIdentifier() {
         return id;
     }

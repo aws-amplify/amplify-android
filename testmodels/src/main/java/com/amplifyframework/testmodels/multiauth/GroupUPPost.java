@@ -4,6 +4,7 @@ package com.amplifyframework.testmodels.multiauth;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.AuthStrategy;
@@ -26,6 +27,7 @@ public final class GroupUPPost implements Model {
   public static final QueryField NAME = field("GroupUPPost", "name");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
+  @NonNull
   public String resolveIdentifier() {
       return id;
   }

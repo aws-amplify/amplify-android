@@ -166,7 +166,7 @@ public final class MutationProcessorTest {
         assertEquals(1, accumulator.await().size());
 
         // And that it is no longer in the outbox.
-        assertFalse(mutationOutbox.hasPendingMutation(tony.resolveIdentifier()));
+        assertFalse(mutationOutbox.hasPendingMutation(tony.getPrimaryKeyString()));
 
         // And that it was passed to AppSync for publication.
         verify(appSync).create(eq(tony), any(), any(), any());

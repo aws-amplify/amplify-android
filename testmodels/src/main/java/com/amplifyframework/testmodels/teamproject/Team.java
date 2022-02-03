@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testmodels.teamproject;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -37,6 +38,7 @@ public final class Team implements Model {
         return id;
     }
 
+    @NonNull
     public String resolveIdentifier() {
         return id;
     }

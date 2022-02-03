@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -29,6 +30,7 @@ public final class Customer implements Model {
   private final @ModelField(targetType="String") String username;
   private CustomerPrimaryKey customerPrimaryKey;
 
+  @NonNull
   public Serializable resolveIdentifier() {
       if (customerPrimaryKey == null) {
           customerPrimaryKey = new CustomerPrimaryKey(email);

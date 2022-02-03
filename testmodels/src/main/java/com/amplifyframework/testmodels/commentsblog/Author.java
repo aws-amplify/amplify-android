@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -30,6 +31,7 @@ public final class Author implements Model {
   public String getId() {
       return id;
   }
+    @NonNull
     public String resolveIdentifier() {
         return id;
     }

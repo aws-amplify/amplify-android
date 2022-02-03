@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
@@ -62,6 +63,7 @@ public final class Todo implements Model {
         return id;
     }
 
+    @NonNull
     public String resolveIdentifier() {
         return this.id;
     }

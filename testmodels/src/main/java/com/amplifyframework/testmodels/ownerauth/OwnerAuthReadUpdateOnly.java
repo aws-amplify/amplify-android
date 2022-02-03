@@ -1,6 +1,7 @@
 package com.amplifyframework.testmodels.ownerauth;
 
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.AuthStrategy;
@@ -31,6 +32,7 @@ public final class OwnerAuthReadUpdateOnly implements Model {
         return id;
     }
 
+    @NonNull
     public String resolveIdentifier() {
         return id;
     }

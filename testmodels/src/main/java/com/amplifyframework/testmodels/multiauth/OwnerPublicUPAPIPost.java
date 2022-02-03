@@ -4,6 +4,7 @@ package com.amplifyframework.testmodels.multiauth;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.AuthStrategy;
@@ -31,6 +32,7 @@ public final class OwnerPublicUPAPIPost implements Model {
       return id;
   }
 
+    @NonNull
     public String resolveIdentifier() {
       return id;
   }

@@ -16,8 +16,17 @@
 package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.Logger;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Locale;
+import java.util.Objects;
 
 /**
  * All models should conform to the Model
@@ -31,7 +40,18 @@ public interface Model {
      * @return the ID that is the primary key of a Model.
      */
     @NonNull
-    Serializable resolveIdentifier();
+    default Serializable resolveIdentifier() {
+        try {
+            Method method = this.getClass().getMethod("getId");
+            return (Serializable) Objects.requireNonNull(method.invoke(this));
+        } catch (IllegalAccessException exception) {
+            throw (new IllegalStateException("Primary key field not found."));
+        } catch (NoSuchMethodException e) {
+            throw (new IllegalStateException("Primary key field not found."));
+        } catch (InvocationTargetException e) {
+            throw (new IllegalStateException("Primary key field not found."));
+        }
+    }
 
     /**
      * Returns the name of this model as a String.
@@ -54,5 +74,6 @@ public interface Model {
            catch (Exception ex){
                throw (new IllegalStateException("Invalid Primary Key, It should either be of type String or composite Primary Key."));
         }
+
     }
 }

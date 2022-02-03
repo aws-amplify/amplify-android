@@ -30,11 +30,6 @@ public final class BlogOwner implements Model {
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   private @ModelField(targetType = "AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
 
-  @Override
-  public String resolveIdentifier() {
-      return id;
-  }
-
   public String getId() {
       return id;
   }

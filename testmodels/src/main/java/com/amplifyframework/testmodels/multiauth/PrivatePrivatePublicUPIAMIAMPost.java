@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.AuthStrategy;
@@ -34,6 +35,7 @@ public final class PrivatePrivatePublicUPIAMIAMPost implements Model {
       return id;
   }
 
+  @NonNull
   public String resolveIdentifier() {
       return id;
   }
