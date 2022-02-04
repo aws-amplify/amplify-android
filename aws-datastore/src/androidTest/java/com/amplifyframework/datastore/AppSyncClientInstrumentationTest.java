@@ -110,7 +110,7 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(new Integer(1), blogOwnerCreateResult.getSyncMetadata().getVersion());
         // TODO: BE AWARE THAT THE DELETED PROPERTY RETURNS NULL INSTEAD OF FALSE
         assertNull(blogOwnerCreateResult.getSyncMetadata().isDeleted());
-        assertTrue(blogOwnerCreateResult.getSyncMetadata().resolveIdentifier().endsWith(owner.resolveIdentifier()));
+        assertTrue(blogOwnerCreateResult.getSyncMetadata().resolveIdentifier().endsWith(owner.getPrimaryKeyString()));
 
         // Subscribe to Blog creations
         Observable<GraphQLResponse<ModelWithMetadata<Blog>>> blogCreations = onCreate(blogSchema);
