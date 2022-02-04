@@ -25,4 +25,4 @@ jobs:
           WEBHOOK_URL: ${{ secrets.SLACK_COMMENT_WEBHOOK_URL }}
           BODY: ${{github.event.comment.body}}
         shell: bash
-        run: curl -s POST "$WEBHOOK_URL" -H "Content-Type:application/json" --data '{"issue":"${{github.event.comment.html_url}}", "body":"'${BODY//[\'\"]/&#39;}'"}'
+        run: echo $BODY | sed -e "s/[\'\"]/ /g" | xargs -I {} curl -s POST "$WEBHOOK_URL" -H "Content-Type:application/json" --data '{"issue":"${{github.event.comment.html_url}}", "body":"{}"}'
