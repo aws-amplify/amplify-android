@@ -346,8 +346,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         // When saving items via the DataStore API, compute a SerializedModel containing only the fields
                         // that differ from the model currently in the local storage.  This is not necessary when save
                         // is initiated by the sync engine, so skip it for optimization to avoid the extra SQL query.
-                        patchItem = SerializedModel.difference(item, query(item), modelSchema);
+                        LOG.info("SqliteStorageAdapter save item:" + item);
+                        patchItem = SerializedModel.create(item, modelSchema);
                     }
+                    LOG.info("SqliteStorageAdapter save patchitem:" + patchItem);
+
                 } else if (!QueryPredicates.all().equals(predicate)) {
                     // insert not permitted with a condition
                     throw new DataStoreException(

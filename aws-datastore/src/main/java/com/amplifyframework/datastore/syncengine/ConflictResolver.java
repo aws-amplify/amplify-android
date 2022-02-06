@@ -104,6 +104,7 @@ final class ConflictResolver {
         T local;
         if (pendingMutation.getMutatedItem() instanceof SerializedModel) {
             Gson gson = GsonFactory.instance();
+            LOG.info("conflict resolver getT: " + pendingMutation.getMutatedItem().toString());
             SerializedModel serializedModel = (SerializedModel) pendingMutation.getMutatedItem();
             String jsonString = gson.toJson(serializedModel.getSerializedData());
             local = gson.fromJson(jsonString, (Type) remote.getClass());
@@ -118,8 +119,8 @@ final class ConflictResolver {
             @NonNull ConflictData<T> conflictData,
             @NonNull ModelMetadata metadata,
             @NonNull ConflictResolutionDecision<T> decision) {
-        LOG.debug("conflict resolver: " + conflictData.toString());
-        LOG.debug("conflict resolver: " + decision.toString());
+        LOG.info("conflict resolver: " + conflictData.toString());
+        LOG.info("conflict resolver: " + decision.toString());
         switch (decision.getResolutionStrategy()) {
             case RETRY_LOCAL:
                 return publish(conflictData.getLocal(), metadata.getVersion());
@@ -139,7 +140,7 @@ final class ConflictResolver {
         return Single
             .<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
                 final ModelSchema schema = ModelSchema.fromModelClass(model.getClass());
-                LOG.debug("publish conflict resolver: " + model.toString());
+                LOG.info("publish conflict resolver: " + model.toString());
                 appSync.update(model, schema, version, emitter::onSuccess, emitter::onError);
             })
             .flatMap(response -> {
