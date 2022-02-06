@@ -34,6 +34,3 @@ include ':core-kotlin'
 include ':rxbindings'
 include ':aws-api-appsync'
 include ':maplibre-adapter'
-
-include ':sample-myConflictResolver'
-project(":sample-myConflictResolver").projectDir=new File(rootDir, "../../MyConflictResolver/app")
