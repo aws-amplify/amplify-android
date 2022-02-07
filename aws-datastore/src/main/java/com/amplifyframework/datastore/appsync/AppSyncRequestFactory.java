@@ -73,6 +73,8 @@ import java.util.Map;
  * and AppSync-specific field names (`_version`, `_deleted`, etc.)
  */
 final class AppSyncRequestFactory {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private AppSyncRequestFactory() {}
 
     /**
@@ -438,7 +440,6 @@ final class AppSyncRequestFactory {
         }
         return result;
     }
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private static Object extractAssociateId(ModelField modelField, Model instance, ModelSchema schema)
             throws AmplifyException {

@@ -84,7 +84,7 @@ final class StorageObserver {
             case CREATE:
                 return PendingMutation.creation(change.patchItem(), change.modelSchema());
             case UPDATE:
-                LOG.info("StorageObserver toPendingMutation change patchItem."+ change.patchItem());
+                LOG.info("StorageObserver toPendingMutation change patchItem." + change.patchItem());
 
                 return PendingMutation.update(change.patchItem(), change.modelSchema(), change.predicate());
             case DELETE:
