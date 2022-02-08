@@ -38,6 +38,9 @@ import com.amplifyframework.logging.Logger;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -125,7 +128,20 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             case DATE:
                 return value instanceof String ? value : ((Temporal.Date) value).format();
             case DATE_TIME:
-                return value instanceof String ? value : ((Temporal.DateTime) value).format();
+                if (value instanceof String) {
+                    // TODO : need format this too
+                    return value;
+                } else {
+                    // TODO : factor out this code and put it in a private method
+                    Temporal.DateTime newValue = (Temporal.DateTime) value;
+                    DateTimeFormatter dateTimeFormatter = DateTimeFormatter
+                            .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS");
+                    String formattedDateTime = OffsetDateTime.parse(newValue.format()).toInstant()
+                            .atOffset(ZoneOffset.UTC).format(dateTimeFormatter) + "Z";
+                    return formattedDateTime;
+                    // return new Temporal.DateTime(formattedDateTime);
+                }
+                // return value instanceof String ? value : ((Temporal.DateTime) value).format();
             case TIME:
                 return value instanceof String ? value : ((Temporal.Time) value).format();
             case TIMESTAMP:
@@ -219,6 +235,12 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 case DATE:
                     return new Temporal.Date(valueAsString);
                 case DATE_TIME:
+                    /*Temporal.DateTime newValue = new Temporal.DateTime(valueAsString);
+                    DateTimeFormatter dateTimeFormatter = DateTimeFormatter
+                            .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS");
+                    String formattedDateTime = OffsetDateTime.parse(newValue.format()).toInstant()
+                            .atOffset(ZoneOffset.UTC).format(dateTimeFormatter) + "Z";
+                    return new Temporal.DateTime(formattedDateTime);*/
                     return new Temporal.DateTime(valueAsString);
                 case TIME:
                     return new Temporal.Time(valueAsString);

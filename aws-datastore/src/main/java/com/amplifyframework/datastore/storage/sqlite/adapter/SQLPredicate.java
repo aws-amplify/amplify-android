@@ -30,6 +30,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteModelFieldTypeConverter;
@@ -39,6 +40,9 @@ import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -137,7 +141,7 @@ public final class SQLPredicate {
         final StringBuilder builder = new StringBuilder();
         final String model = Wrap.inBackticks(operation.modelName());
         final String field = Wrap.inBackticks(operation.field());
-        final String column = model == null ? operation.field() : model + "." + field;
+        String column = model == null ? operation.field() : model + "." + field;
         final QueryOperator<?> op = operation.operator();
         switch (op.type()) {
             case BETWEEN:
@@ -200,7 +204,19 @@ public final class SQLPredicate {
             case GREATER_THAN:
             case LESS_OR_EQUAL:
             case GREATER_OR_EQUAL:
-                addBinding(getOperatorValue(op));
+                // TODO : clean this up, make column final, and add this code to the other switch cases
+                Object opValue = getOperatorValue(op);
+                if (opValue instanceof Temporal.DateTime) {
+                    Temporal.DateTime newOpValue = (Temporal.DateTime) opValue;
+                    DateTimeFormatter dateTimeFormatter = DateTimeFormatter
+                            .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS");
+                    String formattedDateTime = OffsetDateTime.parse(newOpValue.format()).toInstant()
+                            .atOffset(ZoneOffset.UTC).format(dateTimeFormatter) + "Z";
+                    // addBinding(formattedDateTime);
+                    addBinding(new Temporal.DateTime(formattedDateTime));
+                } else {
+                    addBinding(opValue);
+                }
                 return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQueryOperator(op.type()))
