@@ -379,7 +379,8 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     * Could not perform the action because the password given is invalid.
+     * Could not perform the action because the user pool is not configured or
+     * is configured incorrectly.
      */
     public static class InvalidUserPoolConfigurationException extends AuthException {
         private static final long serialVersionUID = 1L;
