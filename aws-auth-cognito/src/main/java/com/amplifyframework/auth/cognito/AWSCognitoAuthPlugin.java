@@ -1115,10 +1115,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         awsMobileClient.deleteUser(new Callback<Void>() {
             @Override
             public void onResult(Void result) {
-                Amplify.Hub.publish(
-                        HubChannel.AUTH,
-                        HubEvent.create(AuthChannelEventName.SIGNED_OUT)
-                );
+                // Note: the SIGNED_OUT Auth event is also emitted
                 Amplify.Hub.publish(
                         HubChannel.AUTH,
                         HubEvent.create(AuthChannelEventName.USER_DELETED)
