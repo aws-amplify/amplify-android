@@ -857,4 +857,40 @@ class KotlinAuthFacadeTest {
         }
         auth.signOut()
     }
+
+    /**
+     * When deleteUser() coroutine is called, it should pass through to the
+     * delegate. If the delegate succeeds, so should the coroutine.
+     */
+    @Test
+    fun deleteUserSucceeds() = runBlocking {
+        every {
+            delegate.deleteUser(any(), any())
+        } answers {
+            val indexOfCompletionAction = 0
+            val onComplete = it.invocation.args[indexOfCompletionAction] as Action
+            onComplete.call()
+        }
+        auth.deleteUser()
+        verify {
+            delegate.deleteUser(any(), any())
+        }
+    }
+
+    /**
+     * When the deleteUser() delegate emits an error, it should
+     * be bubbled up through the coroutine API as well.
+     */
+    @Test(expected = AuthException::class)
+    fun deleteUserThrows(): Unit = runBlocking { 
+        val error = AuthException("uh", "oh")
+        every {
+            delegate.deleteUser(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 1
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onError.accept(error)
+        }
+        auth.deleteUser()
+    }
 }
