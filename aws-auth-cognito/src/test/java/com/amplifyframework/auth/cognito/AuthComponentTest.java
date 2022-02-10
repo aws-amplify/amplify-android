@@ -1320,7 +1320,7 @@ public final class AuthComponentTest {
 
     /**
      * Tests the deleteUser method of the Auth wrapper of AWSMobileClient (AMC) calls
-     * AMC.deleteUser
+     * AMC.deleteUser.
      * @throws AuthException test fails if this gets thrown since method should succeed
      */
     @Test

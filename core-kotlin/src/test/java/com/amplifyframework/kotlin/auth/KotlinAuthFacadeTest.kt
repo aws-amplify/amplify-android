@@ -882,7 +882,7 @@ class KotlinAuthFacadeTest {
      * be bubbled up through the coroutine API as well.
      */
     @Test(expected = AuthException::class)
-    fun deleteUserThrows(): Unit = runBlocking { 
+    fun deleteUserThrows(): Unit = runBlocking {
         val error = AuthException("uh", "oh")
         every {
             delegate.deleteUser(any(), any())
