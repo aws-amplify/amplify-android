@@ -45,6 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.functions.Action;
+import io.reactivex.rxjava3.functions.BooleanSupplier;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
@@ -52,8 +53,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long TIMEOUT_SECONDS_PER_MODEL = 20;
-    private static final long NETWORK_OP_TIMEOUT_SECONDS = 60;
     private static final long LOCAL_OP_TIMEOUT_SECONDS = 2;
 
     private final SubscriptionProcessor subscriptionProcessor;
@@ -65,7 +64,6 @@ public final class Orchestrator {
     private final AtomicReference<State> currentState;
     private final MutationOutbox mutationOutbox;
     private final CompositeDisposable disposables;
-    private final long adjustedTimeoutSeconds;
     private final Semaphore startStopSemaphore;
 
     /**
@@ -138,15 +136,6 @@ public final class Orchestrator {
         this.targetState = targetState;
         this.disposables = new CompositeDisposable();
 
-        // Operation times out after 60 seconds. If there are more than 5 models,
-        // then 20 seconds are added to the timer per additional model count.
-        this.adjustedTimeoutSeconds = Math.max(
-                NETWORK_OP_TIMEOUT_SECONDS,
-                TIMEOUT_SECONDS_PER_MODEL * Math.max(
-                        modelProvider.models().size(),
-                        modelProvider.modelSchemas().size()
-                )
-        );
         this.startStopSemaphore = new Semaphore(1);
 
     }
@@ -316,12 +305,9 @@ public final class Orchestrator {
                 long startTime = System.currentTimeMillis();
                 LOG.debug("About to hydrate...");
                 try {
-                    boolean subscribed = syncProcessor.hydrate()
-                            .blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
+                    syncProcessor.hydrate()
+                            .blockingAwait();
                     LOG.debug("Hydration complete in " + (System.currentTimeMillis() - startTime) + "ms");
-                    if (!subscribed) {
-                        throw new TimeoutException("Timed out while performing initial model sync.");
-                    }
                 } catch (Throwable failure) {
                     if (!emitter.isDisposed()) {
                         emitter.onError(new DataStoreException(
