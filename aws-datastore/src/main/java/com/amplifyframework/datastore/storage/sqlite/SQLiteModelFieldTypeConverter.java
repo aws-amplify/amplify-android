@@ -128,20 +128,16 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             case DATE:
                 return value instanceof String ? value : ((Temporal.Date) value).format();
             case DATE_TIME:
+                OffsetDateTime offsetDateTime;
                 if (value instanceof String) {
-                    // TODO : need format this too
-                    return value;
+                    offsetDateTime = OffsetDateTime.parse((String) value);
                 } else {
-                    // TODO : factor out this code and put it in a private method
                     Temporal.DateTime newValue = (Temporal.DateTime) value;
-                    DateTimeFormatter dateTimeFormatter = DateTimeFormatter
-                            .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS");
-                    String formattedDateTime = OffsetDateTime.parse(newValue.format()).toInstant()
-                            .atOffset(ZoneOffset.UTC).format(dateTimeFormatter) + "Z";
-                    return formattedDateTime;
-                    // return new Temporal.DateTime(formattedDateTime);
+                    offsetDateTime = OffsetDateTime.parse(newValue.format());
                 }
-                // return value instanceof String ? value : ((Temporal.DateTime) value).format();
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter
+                        .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS");
+                return offsetDateTime.toInstant().atOffset(ZoneOffset.UTC).format(dateTimeFormatter) + "Z";
             case TIME:
                 return value instanceof String ? value : ((Temporal.Time) value).format();
             case TIMESTAMP:
@@ -235,12 +231,6 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 case DATE:
                     return new Temporal.Date(valueAsString);
                 case DATE_TIME:
-                    /*Temporal.DateTime newValue = new Temporal.DateTime(valueAsString);
-                    DateTimeFormatter dateTimeFormatter = DateTimeFormatter
-                            .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS");
-                    String formattedDateTime = OffsetDateTime.parse(newValue.format()).toInstant()
-                            .atOffset(ZoneOffset.UTC).format(dateTimeFormatter) + "Z";
-                    return new Temporal.DateTime(formattedDateTime);*/
                     return new Temporal.DateTime(valueAsString);
                 case TIME:
                     return new Temporal.Time(valueAsString);

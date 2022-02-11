@@ -141,13 +141,13 @@ public final class SQLPredicate {
         final StringBuilder builder = new StringBuilder();
         final String model = Wrap.inBackticks(operation.modelName());
         final String field = Wrap.inBackticks(operation.field());
-        String column = model == null ? operation.field() : model + "." + field;
+        final String column = model == null ? operation.field() : model + "." + field;
         final QueryOperator<?> op = operation.operator();
         switch (op.type()) {
             case BETWEEN:
                 BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator<?>) op;
-                addBinding(betweenOp.start());
-                addBinding(betweenOp.end());
+                addBinding(formatIfTemporalDateTime(betweenOp.start()));
+                addBinding(formatIfTemporalDateTime(betweenOp.end()));
                 return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.BETWEEN)
@@ -204,19 +204,8 @@ public final class SQLPredicate {
             case GREATER_THAN:
             case LESS_OR_EQUAL:
             case GREATER_OR_EQUAL:
-                // TODO : clean this up, make column final, and add this code to the other switch cases
                 Object opValue = getOperatorValue(op);
-                if (opValue instanceof Temporal.DateTime) {
-                    Temporal.DateTime newOpValue = (Temporal.DateTime) opValue;
-                    DateTimeFormatter dateTimeFormatter = DateTimeFormatter
-                            .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS");
-                    String formattedDateTime = OffsetDateTime.parse(newOpValue.format()).toInstant()
-                            .atOffset(ZoneOffset.UTC).format(dateTimeFormatter) + "Z";
-                    // addBinding(formattedDateTime);
-                    addBinding(new Temporal.DateTime(formattedDateTime));
-                } else {
-                    addBinding(opValue);
-                }
+                addBinding(formatIfTemporalDateTime(opValue));
                 return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQueryOperator(op.type()))
@@ -229,6 +218,19 @@ public final class SQLPredicate {
                                 "QueryPredicateOperation.Type enum."
                 );
         }
+    }
+    
+    // Utility method to check if the given operator value is a Temporal.DateTime and if so,
+    // format it as yyyy-MM-ddTHH:mm:ss.SSSSSSSSSZ
+    private Object formatIfTemporalDateTime(Object opValue) {
+        if (opValue instanceof Temporal.DateTime) {
+            Temporal.DateTime newOpValue = (Temporal.DateTime) opValue;
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter
+                    .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS");
+            return OffsetDateTime.parse(newOpValue.format()).toInstant().atOffset(ZoneOffset.UTC)
+                    .format(dateTimeFormatter) + "Z";
+        }
+        return opValue;
     }
 
     // Utility method to recursively parse a given predicate group.

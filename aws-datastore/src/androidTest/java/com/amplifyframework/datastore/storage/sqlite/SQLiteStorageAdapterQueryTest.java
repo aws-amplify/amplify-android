@@ -366,9 +366,6 @@ public final class SQLiteStorageAdapterQueryTest {
      */
     @Test
     public void querySavedDataWithDateTimePredicates() throws DataStoreException {
-        
-        // TODO
-        
         final List<BlogOwner> savedModels = new ArrayList<>();
         final int numModels = 8;
         final List<Temporal.DateTime> createdAtTimes = Arrays.asList(
@@ -393,14 +390,16 @@ public final class SQLiteStorageAdapterQueryTest {
 
         // 0, 1, 3, 6
         QueryPredicate predicate = BlogOwner.CREATED_AT.le(new Temporal.DateTime("2020-01-01T19:30:45.100000000Z"));
-
+        
         assertEquals(
                 Observable.fromArray(0, 1, 3, 6)
                         .map(savedModels::get)
+                        .map(BlogOwner::getId)
                         .toList()
                         .map(HashSet::new)
                         .blockingGet(),
                 Observable.fromIterable(adapter.query(BlogOwner.class, Where.matches(predicate)))
+                        .map(BlogOwner::getId)
                         .toList()
                         .map(HashSet::new)
                         .blockingGet()
