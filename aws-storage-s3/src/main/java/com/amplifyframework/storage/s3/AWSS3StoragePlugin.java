@@ -94,25 +94,31 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         this(new AWSMobileClientAuthProvider());
     }
 
+    /**
+     * Constructs the AWS S3 Storage Plugin with the plugin configuration.
+     * @param awsS3StoragePluginConfiguration storage plugin configuration
+     */
+    @SuppressWarnings("unused") // This is a public API.
+    public AWSS3StoragePlugin(AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration) {
+        this(new AWSMobileClientAuthProvider(), awsS3StoragePluginConfiguration);
+    }
+
     @VisibleForTesting
     AWSS3StoragePlugin(CognitoAuthProvider cognitoAuthProvider) {
         this((context, region, bucket) ->
                         new AWSS3StorageService(context, region, bucket, cognitoAuthProvider, false),
-                cognitoAuthProvider);
+                cognitoAuthProvider, new AWSS3StoragePluginConfiguration(null));
     }
 
     @VisibleForTesting
-    AWSS3StoragePlugin(
-            StorageService.Factory storageServiceFactory,
-            CognitoAuthProvider cognitoAuthProvider
-    ) {
-        super();
-        this.storageServiceFactory = storageServiceFactory;
-        this.executorService = Executors.newCachedThreadPool();
-        this.cognitoAuthProvider = cognitoAuthProvider;
-        this.awsS3StoragePluginConfiguration = new AWSS3StoragePluginConfiguration(null);
+    AWSS3StoragePlugin(CognitoAuthProvider cognitoAuthProvider,
+                       AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration) {
+        this((context, region, bucket) ->
+                        new AWSS3StorageService(context, region, bucket, cognitoAuthProvider, false),
+                cognitoAuthProvider, awss3StoragePluginConfiguration);
     }
 
+    @VisibleForTesting
     AWSS3StoragePlugin(
             StorageService.Factory storageServiceFactory,
             CognitoAuthProvider cognitoAuthProvider,
