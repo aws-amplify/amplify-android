@@ -107,7 +107,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     AWSS3StoragePlugin(CognitoAuthProvider cognitoAuthProvider) {
         this((context, region, bucket) ->
                         new AWSS3StorageService(context, region, bucket, cognitoAuthProvider, false),
-                cognitoAuthProvider, new AWSS3StoragePluginConfiguration(null));
+                cognitoAuthProvider, new AWSS3StoragePluginConfiguration());
     }
 
     @VisibleForTesting

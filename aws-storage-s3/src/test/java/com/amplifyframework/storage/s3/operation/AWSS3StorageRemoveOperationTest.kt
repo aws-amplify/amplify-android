@@ -12,7 +12,6 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package com.amplifyframework.storage.s3.operation
 
 import com.amplifyframework.core.Consumer
@@ -21,16 +20,16 @@ import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.s3.CognitoAuthProvider
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
-import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest
+import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest
 import com.amplifyframework.storage.s3.service.StorageService
-import java.io.File
+import com.google.common.util.concurrent.MoreExecutors
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
 
-class AWSS3StorageDownloadFileOperationTest {
+class AWSS3StorageRemoveOperationTest {
 
-    private lateinit var awsS3StorageDownloadFileOperation: AWSS3StorageDownloadFileOperation
+    private lateinit var awsS3StorageRemoveOperation: AWSS3StorageRemoveOperation
     private lateinit var storageService: StorageService
     private lateinit var cognitoAuthProvider: CognitoAuthProvider
 
@@ -43,42 +42,31 @@ class AWSS3StorageDownloadFileOperationTest {
     @Test
     fun defaultPrefixResolverAWSS3PluginConfigTest() {
         val key = "123"
-        val tempFile = File.createTempFile("new", "file.tmp")
         val expectedKey = "public/123"
-        val request: AWSS3StorageDownloadFileRequest = AWSS3StorageDownloadFileRequest(
-            key,
-            tempFile,
-            StorageAccessLevel.PUBLIC,
-            null
-        )
+        val request = AWSS3StorageRemoveRequest(key, StorageAccessLevel.PUBLIC, "")
         Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
-        awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
+        awsS3StorageRemoveOperation = AWSS3StorageRemoveOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration(),
             {},
-            {},
             {}
         )
-        awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        awsS3StorageRemoveOperation.start()
+        Mockito.verify(storageService).deleteObject(expectedKey)
     }
 
     @Test
     fun customEmptyPrefixResolverAWSS3PluginConfigTest() {
         val key = "123"
-        val tempFile = File.createTempFile("new", "file.tmp")
         val expectedKey = "123"
-        val request: AWSS3StorageDownloadFileRequest = AWSS3StorageDownloadFileRequest(
-            key,
-            tempFile,
-            StorageAccessLevel.PUBLIC,
-            null
-        )
+        val request = AWSS3StorageRemoveRequest(key, StorageAccessLevel.PUBLIC, "")
         Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
-        awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
+        awsS3StorageRemoveOperation = AWSS3StorageRemoveOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration(
@@ -96,27 +84,21 @@ class AWSS3StorageDownloadFileOperationTest {
                 }
             ),
             {},
-            {},
             {}
         )
-        awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        awsS3StorageRemoveOperation.start()
+        Mockito.verify(storageService).deleteObject(expectedKey)
     }
 
     @Test
     fun customPrefixResolverAWSS3PluginConfigTest() {
         val key = "123"
-        val tempFile = File.createTempFile("new", "file.tmp")
-        val expectedKey = "customPublic/123"
-        val request: AWSS3StorageDownloadFileRequest = AWSS3StorageDownloadFileRequest(
-            key,
-            tempFile,
-            StorageAccessLevel.PUBLIC,
-            null
-        )
+        val expectedKey = "publicCustom/123"
+        val request = AWSS3StorageRemoveRequest(key, StorageAccessLevel.PUBLIC, "")
         Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
-        awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
+        awsS3StorageRemoveOperation = AWSS3StorageRemoveOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration(
@@ -128,16 +110,15 @@ class AWSS3StorageDownloadFileOperationTest {
                             onSuccess: Consumer<String>,
                             onError: Consumer<StorageException>
                         ) {
-                            onSuccess.accept("customPublic/")
+                            onSuccess.accept("publicCustom/")
                         }
                     }
                 }
             ),
             {},
-            {},
             {}
         )
-        awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        awsS3StorageRemoveOperation.start()
+        Mockito.verify(storageService).deleteObject(expectedKey)
     }
 }

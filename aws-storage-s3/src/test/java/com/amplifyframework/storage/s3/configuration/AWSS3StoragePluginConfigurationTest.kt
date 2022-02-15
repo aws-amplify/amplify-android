@@ -47,7 +47,7 @@ class AWSS3StoragePluginConfigurationTest : TestCase() {
     }
 
     fun testGetDefaultAWSS3PluginPrefixResolver() {
-        val awsS3StoragePluginConfiguration = AWSS3StoragePluginConfiguration(null)
+        val awsS3StoragePluginConfiguration = AWSS3StoragePluginConfiguration()
         val cognitoAuthProvider = Mockito.mock(CognitoAuthProvider::class.java)
         val awsS3PluginPrefixResolver =
             awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(cognitoAuthProvider)

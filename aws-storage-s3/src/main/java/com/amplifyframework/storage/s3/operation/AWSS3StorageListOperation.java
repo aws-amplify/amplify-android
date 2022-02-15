@@ -92,9 +92,6 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
                                     "See attached exception for more information and suggestions"
                             ));
                         }
-                        String serviceKey = prefix.concat(getRequest().getPath());
-                        List<StorageItem> listedItems = storageService.listFiles(serviceKey);
-                        onSuccess.accept(StorageListResult.fromItems(listedItems));
                     },
                     onError);
             }

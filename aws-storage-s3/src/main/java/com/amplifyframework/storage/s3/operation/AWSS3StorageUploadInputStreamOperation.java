@@ -32,7 +32,6 @@ import com.amplifyframework.storage.s3.ServerSideEncryption;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
@@ -94,23 +93,6 @@ public final class AWSS3StorageUploadInputStreamOperation
             return;
         }
 
-        String currentIdentityId;
-
-        try {
-            currentIdentityId = cognitoAuthProvider.getIdentityId();
-        } catch (StorageException exception) {
-            onError.accept(exception);
-            return;
-        }
-
-        String serviceKey = S3Keys.createServiceKey(
-                getRequest().getAccessLevel(),
-                getRequest().getTargetIdentityId() != null
-                        ? getRequest().getTargetIdentityId()
-                        : currentIdentityId,
-                getRequest().getKey()
-        );
-
         // Grab the inputStream to upload...
         InputStream inputStream = getRequest().getLocal();
 
@@ -129,7 +111,9 @@ public final class AWSS3StorageUploadInputStreamOperation
                 getRequest().getTargetIdentityId(),
                     prefix -> {
                         try {
-                            transferObserver = storageService.uploadInputStream(serviceKey,
+                            String serviceKey = prefix.concat(getRequest().getKey());
+                            transferObserver = storageService.uploadInputStream(
+                                    serviceKey,
                                     inputStream,
                                     objectMetadata);
                             transferObserver.setTransferListener(new UploadTransferListener());

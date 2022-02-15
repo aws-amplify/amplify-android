@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -12,25 +13,26 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package com.amplifyframework.storage.s3.operation
 
+import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.s3.CognitoAuthProvider
+import com.amplifyframework.storage.s3.ServerSideEncryption
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
-import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest
+import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import java.io.File
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
 
-class AWSS3StorageDownloadFileOperationTest {
+class AWSS3StorageUploadFileOperationTest {
 
-    private lateinit var awsS3StorageDownloadFileOperation: AWSS3StorageDownloadFileOperation
+    private lateinit var awsS3StorageUploadFileOperation: AWSS3StorageUploadFileOperation
     private lateinit var storageService: StorageService
     private lateinit var cognitoAuthProvider: CognitoAuthProvider
 
@@ -43,16 +45,18 @@ class AWSS3StorageDownloadFileOperationTest {
     @Test
     fun defaultPrefixResolverAWSS3PluginConfigTest() {
         val key = "123"
-        val tempFile = File.createTempFile("new", "file.tmp")
         val expectedKey = "public/123"
-        val request: AWSS3StorageDownloadFileRequest = AWSS3StorageDownloadFileRequest(
+        val tempFile = File.createTempFile("new", "file.tmp")
+        val request = AWSS3StorageUploadRequest<File>(
             key,
             tempFile,
             StorageAccessLevel.PUBLIC,
-            null
+            "",
+            "/image",
+            ServerSideEncryption.NONE,
+            mutableMapOf()
         )
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
-        awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
+        awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
             cognitoAuthProvider,
             request,
@@ -61,23 +65,29 @@ class AWSS3StorageDownloadFileOperationTest {
             {},
             {}
         )
-        awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        awsS3StorageUploadFileOperation.start()
+        Mockito.verify(storageService).uploadFile(
+            Mockito.eq(expectedKey),
+            Mockito.eq(tempFile),
+            Mockito.any(ObjectMetadata::class.java)
+        )
     }
 
     @Test
     fun customEmptyPrefixResolverAWSS3PluginConfigTest() {
         val key = "123"
-        val tempFile = File.createTempFile("new", "file.tmp")
         val expectedKey = "123"
-        val request: AWSS3StorageDownloadFileRequest = AWSS3StorageDownloadFileRequest(
+        val tempFile = File.createTempFile("new", "file.tmp")
+        val request = AWSS3StorageUploadRequest<File>(
             key,
             tempFile,
             StorageAccessLevel.PUBLIC,
-            null
+            "",
+            "/image",
+            ServerSideEncryption.NONE,
+            mutableMapOf()
         )
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
-        awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
+        awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
             cognitoAuthProvider,
             request,
@@ -99,23 +109,29 @@ class AWSS3StorageDownloadFileOperationTest {
             {},
             {}
         )
-        awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        awsS3StorageUploadFileOperation.start()
+        Mockito.verify(storageService).uploadFile(
+            Mockito.eq(expectedKey),
+            Mockito.eq(tempFile),
+            Mockito.any(ObjectMetadata::class.java)
+        )
     }
 
     @Test
     fun customPrefixResolverAWSS3PluginConfigTest() {
         val key = "123"
+        val expectedKey = "publicCustom/123"
         val tempFile = File.createTempFile("new", "file.tmp")
-        val expectedKey = "customPublic/123"
-        val request: AWSS3StorageDownloadFileRequest = AWSS3StorageDownloadFileRequest(
+        val request = AWSS3StorageUploadRequest<File>(
             key,
             tempFile,
             StorageAccessLevel.PUBLIC,
-            null
+            "",
+            "/image",
+            ServerSideEncryption.NONE,
+            mutableMapOf()
         )
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
-        awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
+        awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
             cognitoAuthProvider,
             request,
@@ -128,7 +144,7 @@ class AWSS3StorageDownloadFileOperationTest {
                             onSuccess: Consumer<String>,
                             onError: Consumer<StorageException>
                         ) {
-                            onSuccess.accept("customPublic/")
+                            onSuccess.accept("publicCustom/")
                         }
                     }
                 }
@@ -137,7 +153,11 @@ class AWSS3StorageDownloadFileOperationTest {
             {},
             {}
         )
-        awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        awsS3StorageUploadFileOperation.start()
+        Mockito.verify(storageService).uploadFile(
+            Mockito.eq(expectedKey),
+            Mockito.eq(tempFile),
+            Mockito.any(ObjectMetadata::class.java)
+        )
     }
 }

@@ -21,16 +21,16 @@ import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.s3.CognitoAuthProvider
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
-import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest
+import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest
 import com.amplifyframework.storage.s3.service.StorageService
-import java.io.File
+import com.google.common.util.concurrent.MoreExecutors
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
 
-class AWSS3StorageDownloadFileOperationTest {
+public class AWSS3StorageListOperationTest {
 
-    private lateinit var awsS3StorageDownloadFileOperation: AWSS3StorageDownloadFileOperation
+    private lateinit var awsS3StorageListOperation: AWSS3StorageListOperation
     private lateinit var storageService: StorageService
     private lateinit var cognitoAuthProvider: CognitoAuthProvider
 
@@ -42,43 +42,40 @@ class AWSS3StorageDownloadFileOperationTest {
 
     @Test
     fun defaultPrefixResolverAWSS3PluginConfigTest() {
-        val key = "123"
-        val tempFile = File.createTempFile("new", "file.tmp")
-        val expectedKey = "public/123"
-        val request: AWSS3StorageDownloadFileRequest = AWSS3StorageDownloadFileRequest(
-            key,
-            tempFile,
+        val path = ""
+        val expectedKey = "public/"
+        val request = AWSS3StorageListRequest(
+            path,
             StorageAccessLevel.PUBLIC,
-            null
+            "",
         )
         Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
-        awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
+        awsS3StorageListOperation = AWSS3StorageListOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration(),
             {},
-            {},
             {}
         )
-        awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        awsS3StorageListOperation.start()
+        Mockito.verify(storageService).listFiles(expectedKey)
     }
 
     @Test
-    fun customEmptyPrefixResolverAWSS3PluginConfigTest() {
-        val key = "123"
-        val tempFile = File.createTempFile("new", "file.tmp")
-        val expectedKey = "123"
-        val request: AWSS3StorageDownloadFileRequest = AWSS3StorageDownloadFileRequest(
-            key,
-            tempFile,
+    fun customEmptyResolverAWSS3PluginConfigTest() {
+        val path = ""
+        val expectedKey = ""
+        val request = AWSS3StorageListRequest(
+            path,
             StorageAccessLevel.PUBLIC,
-            null
+            "",
         )
         Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
-        awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
+        awsS3StorageListOperation = AWSS3StorageListOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration(
@@ -96,27 +93,25 @@ class AWSS3StorageDownloadFileOperationTest {
                 }
             ),
             {},
-            {},
             {}
         )
-        awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        awsS3StorageListOperation.start()
+        Mockito.verify(storageService).listFiles(expectedKey)
     }
 
     @Test
-    fun customPrefixResolverAWSS3PluginConfigTest() {
-        val key = "123"
-        val tempFile = File.createTempFile("new", "file.tmp")
-        val expectedKey = "customPublic/123"
-        val request: AWSS3StorageDownloadFileRequest = AWSS3StorageDownloadFileRequest(
-            key,
-            tempFile,
+    fun customResolverAWSS3PluginConfigTest() {
+        val path = ""
+        val expectedKey = "publicCustom/"
+        val request = AWSS3StorageListRequest(
+            path,
             StorageAccessLevel.PUBLIC,
-            null
+            "",
         )
         Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
-        awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
+        awsS3StorageListOperation = AWSS3StorageListOperation(
             storageService,
+            MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
             AWSS3StoragePluginConfiguration(
@@ -128,16 +123,15 @@ class AWSS3StorageDownloadFileOperationTest {
                             onSuccess: Consumer<String>,
                             onError: Consumer<StorageException>
                         ) {
-                            onSuccess.accept("customPublic/")
+                            onSuccess.accept("publicCustom/")
                         }
                     }
                 }
             ),
             {},
-            {},
             {}
         )
-        awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        awsS3StorageListOperation.start()
+        Mockito.verify(storageService).listFiles(expectedKey)
     }
 }
