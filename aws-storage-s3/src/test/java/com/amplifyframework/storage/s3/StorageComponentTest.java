@@ -89,8 +89,7 @@ public final class StorageComponentTest {
         CognitoAuthProvider cognitoAuthProvider = mock(CognitoAuthProvider.class);
         doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId();
         this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory,
-                cognitoAuthProvider,
-                new AWSS3StoragePluginConfiguration())
+                cognitoAuthProvider, new AWSS3StoragePluginConfiguration.Builder().build())
         );
         this.storage.configure(buildConfiguration(), getApplicationContext());
         this.storage.initialize(getApplicationContext());
