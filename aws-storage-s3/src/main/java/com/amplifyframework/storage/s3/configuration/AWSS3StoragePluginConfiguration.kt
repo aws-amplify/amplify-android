@@ -17,9 +17,16 @@ package com.amplifyframework.storage.s3.configuration
 
 import com.amplifyframework.storage.s3.CognitoAuthProvider
 
-class AWSS3StoragePluginConfiguration @JvmOverloads constructor(builder: Builder = Builder()) {
+class AWSS3StoragePluginConfiguration private constructor(builder: Builder) {
 
     private val awsS3PluginPrefixResolver = builder.awsS3PluginPrefixResolver
+
+    companion object {
+        operator fun invoke(block: Builder.() -> Unit): AWSS3StoragePluginConfiguration =
+            Builder()
+                .apply(block)
+                .build()
+    }
 
     fun getAWSS3PluginPrefixResolver(cognitoAuthProvider: CognitoAuthProvider):
         AWSS3PluginPrefixResolver {
@@ -30,5 +37,7 @@ class AWSS3StoragePluginConfiguration @JvmOverloads constructor(builder: Builder
 
     class Builder {
         var awsS3PluginPrefixResolver: AWSS3PluginPrefixResolver? = null
+
+        fun build(): AWSS3StoragePluginConfiguration = AWSS3StoragePluginConfiguration(this)
     }
 }

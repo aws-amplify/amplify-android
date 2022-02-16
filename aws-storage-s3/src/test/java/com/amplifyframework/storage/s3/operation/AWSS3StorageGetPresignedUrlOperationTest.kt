@@ -56,7 +56,7 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
-            AWSS3StoragePluginConfiguration(),
+            AWSS3StoragePluginConfiguration {},
             {},
             {}
         )
@@ -80,20 +80,18 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
-            AWSS3StoragePluginConfiguration(
-                AWSS3StoragePluginConfiguration.Builder().apply {
-                    awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
-                        override fun resolvePrefix(
-                            accessLevel: StorageAccessLevel,
-                            targetIdentity: String?,
-                            onSuccess: Consumer<String>,
-                            onError: Consumer<StorageException>
-                        ) {
-                            onSuccess.accept("")
-                        }
+            AWSS3StoragePluginConfiguration {
+                awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
+                    override fun resolvePrefix(
+                        accessLevel: StorageAccessLevel,
+                        targetIdentity: String?,
+                        onSuccess: Consumer<String>,
+                        onError: Consumer<StorageException>
+                    ) {
+                        onSuccess.accept("")
                     }
                 }
-            ),
+            },
             {},
             { Log.e("TAG", "$it") }
         )
@@ -117,20 +115,18 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
-            AWSS3StoragePluginConfiguration(
-                AWSS3StoragePluginConfiguration.Builder().apply {
-                    awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
-                        override fun resolvePrefix(
-                            accessLevel: StorageAccessLevel,
-                            targetIdentity: String?,
-                            onSuccess: Consumer<String>,
-                            onError: Consumer<StorageException>
-                        ) {
-                            onSuccess.accept("publicCustom/")
-                        }
+            AWSS3StoragePluginConfiguration {
+                awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
+                    override fun resolvePrefix(
+                        accessLevel: StorageAccessLevel,
+                        targetIdentity: String?,
+                        onSuccess: Consumer<String>,
+                        onError: Consumer<StorageException>
+                    ) {
+                        onSuccess.accept("publicCustom/")
                     }
                 }
-            ),
+            },
             {},
             { Log.e("TAG", "$it") }
         )

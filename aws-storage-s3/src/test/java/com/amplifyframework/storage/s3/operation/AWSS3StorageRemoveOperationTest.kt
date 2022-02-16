@@ -50,7 +50,7 @@ class AWSS3StorageRemoveOperationTest {
             MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
-            AWSS3StoragePluginConfiguration(),
+            AWSS3StoragePluginConfiguration {},
             {},
             {}
         )
@@ -69,20 +69,18 @@ class AWSS3StorageRemoveOperationTest {
             MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
-            AWSS3StoragePluginConfiguration(
-                AWSS3StoragePluginConfiguration.Builder().apply {
-                    awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
-                        override fun resolvePrefix(
-                            accessLevel: StorageAccessLevel,
-                            targetIdentity: String?,
-                            onSuccess: Consumer<String>,
-                            onError: Consumer<StorageException>
-                        ) {
-                            onSuccess.accept("")
-                        }
+            AWSS3StoragePluginConfiguration {
+                awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
+                    override fun resolvePrefix(
+                        accessLevel: StorageAccessLevel,
+                        targetIdentity: String?,
+                        onSuccess: Consumer<String>,
+                        onError: Consumer<StorageException>
+                    ) {
+                        onSuccess.accept("")
                     }
                 }
-            ),
+            },
             {},
             {}
         )
@@ -101,20 +99,18 @@ class AWSS3StorageRemoveOperationTest {
             MoreExecutors.newDirectExecutorService(),
             cognitoAuthProvider,
             request,
-            AWSS3StoragePluginConfiguration(
-                AWSS3StoragePluginConfiguration.Builder().apply {
-                    awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
-                        override fun resolvePrefix(
-                            accessLevel: StorageAccessLevel,
-                            targetIdentity: String?,
-                            onSuccess: Consumer<String>,
-                            onError: Consumer<StorageException>
-                        ) {
-                            onSuccess.accept("publicCustom/")
-                        }
+            AWSS3StoragePluginConfiguration {
+                awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
+                    override fun resolvePrefix(
+                        accessLevel: StorageAccessLevel,
+                        targetIdentity: String?,
+                        onSuccess: Consumer<String>,
+                        onError: Consumer<StorageException>
+                    ) {
+                        onSuccess.accept("publicCustom/")
                     }
                 }
-            ),
+            },
             {},
             {}
         )
