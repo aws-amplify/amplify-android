@@ -23,9 +23,9 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
+import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
@@ -40,22 +40,26 @@ public final class AWSS3StorageGetPresignedUrlOperation
     private final CognitoAuthProvider cognitoAuthProvider;
     private final Consumer<StorageGetUrlResult> onSuccess;
     private final Consumer<StorageException> onError;
+    private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
 
     /**
      * Constructs a new AWSS3StorageGetUrlOperation.
-     * @param storageService S3 client wrapper
-     * @param executorService Executor service used for running
-     *                        blocking operations on a separate thread
+     *
+     * @param storageService      S3 client wrapper
+     * @param executorService     Executor service used for running
+     *                            blocking operations on a separate thread
      * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
-     * @param request getUrl request parameters
-     * @param onSuccess Notified when URL is generated.
-     * @param onError Notified upon URL generation error
+     * @param request             getUrl request parameters
+     * @param awss3StoragePluginConfiguration s3Plugin configuration
+     * @param onSuccess           Notified when URL is generated.
+     * @param onError             Notified upon URL generation error
      */
     public AWSS3StorageGetPresignedUrlOperation(
             @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
             @NonNull CognitoAuthProvider cognitoAuthProvider,
             @NonNull AWSS3StorageGetPresignedUrlRequest request,
+            @NonNull AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration,
             @NonNull Consumer<StorageGetUrlResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
@@ -63,6 +67,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
         this.storageService = storageService;
         this.executorService = executorService;
         this.cognitoAuthProvider = cognitoAuthProvider;
+        this.awsS3StoragePluginConfiguration = awss3StoragePluginConfiguration;
         this.onSuccess = onSuccess;
         this.onError = onError;
     }
@@ -71,34 +76,25 @@ public final class AWSS3StorageGetPresignedUrlOperation
     @Override
     public void start() {
         executorService.submit(() -> {
-            // Obtain S3 service key for storage service
-            String currentIdentityId;
+            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(cognitoAuthProvider).
+                    resolvePrefix(getRequest().getAccessLevel(),
+                    getRequest().getTargetIdentityId(),
+                        prefix -> {
+                            try {
+                                String serviceKey = prefix.concat(getRequest().getKey());
+                                URL url = storageService.getPresignedUrl(serviceKey, getRequest().getExpires());
+                                onSuccess.accept(StorageGetUrlResult.fromUrl(url));
+                            } catch (Exception exception) {
+                                onError.accept(new StorageException(
+                                    "Encountered an issue while generating pre-signed URL",
+                                    exception,
+                                    "See included exception for more details and suggestions to fix."
+                                ));
+                            }
 
-            try {
-                currentIdentityId = cognitoAuthProvider.getIdentityId();
-            } catch (StorageException exception) {
-                onError.accept(exception);
-                return;
+                        },
+                    onError);
             }
-
-            String serviceKey = S3Keys.createServiceKey(
-                    getRequest().getAccessLevel(),
-                    getRequest().getTargetIdentityId() != null
-                            ? getRequest().getTargetIdentityId()
-                            : currentIdentityId,
-                    getRequest().getKey()
-            );
-
-            try {
-                URL url = storageService.getPresignedUrl(serviceKey, getRequest().getExpires());
-                onSuccess.accept(StorageGetUrlResult.fromUrl(url));
-            } catch (Exception exception) {
-                onError.accept(new StorageException(
-                        "Encountered an issue while generating pre-signed URL",
-                        exception,
-                        "See included exception for more details and suggestions to fix."
-                ));
-            }
-        });
+        );
     }
 }
