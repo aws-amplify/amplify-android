@@ -100,7 +100,7 @@ final class ConflictResolver {
     }
 
     @Nullable
-    private <T extends Model> T getMutatedModelFromSerializedModel(@NonNull PendingMutation<T> pendingMutation){
+    private <T extends Model> T getMutatedModelFromSerializedModel(@NonNull PendingMutation<T> pendingMutation) {
         T local;
         if (pendingMutation.getMutatedItem() instanceof SerializedModel) {
             Gson gson = GsonFactory.instance();
@@ -108,7 +108,7 @@ final class ConflictResolver {
             SerializedModel serializedModel = (SerializedModel) pendingMutation.getMutatedItem();
             String jsonString = gson.toJson(serializedModel.getSerializedData());
             Type modelType = pendingMutation.getModelSchema().getClass();
-                    LOG.info("conflict resolver getT modelType: " + modelType);
+            LOG.info("conflict resolver getT modelType: " + modelType);
             local = gson.fromJson(jsonString, modelType);
         } else {
             local = pendingMutation.getMutatedItem();
