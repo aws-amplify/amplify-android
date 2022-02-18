@@ -26,6 +26,7 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
+import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.random.RandomBytes;
@@ -87,7 +88,9 @@ public final class StorageComponentTest {
         StorageService.Factory storageServiceFactory = (context, region, bucket) -> storageService;
         CognitoAuthProvider cognitoAuthProvider = mock(CognitoAuthProvider.class);
         doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId();
-        this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory, cognitoAuthProvider));
+        this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory,
+                cognitoAuthProvider, new AWSS3StoragePluginConfiguration.Builder().build())
+        );
         this.storage.configure(buildConfiguration(), getApplicationContext());
         this.storage.initialize(getApplicationContext());
     }
