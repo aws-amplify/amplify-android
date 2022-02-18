@@ -136,8 +136,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     offsetDateTime = OffsetDateTime.parse(newValue.format());
                 }
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter
-                        .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS");
-                return offsetDateTime.toInstant().atOffset(ZoneOffset.UTC).format(dateTimeFormatter) + "Z";
+                        .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'");
+                return offsetDateTime.toInstant().atOffset(ZoneOffset.UTC).format(dateTimeFormatter);
             case TIME:
                 return value instanceof String ? value : ((Temporal.Time) value).format();
             case TIMESTAMP:

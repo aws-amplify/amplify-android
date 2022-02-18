@@ -226,9 +226,9 @@ public final class SQLPredicate {
         if (opValue instanceof Temporal.DateTime) {
             Temporal.DateTime newOpValue = (Temporal.DateTime) opValue;
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter
-                    .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS");
+                    .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'");
             return OffsetDateTime.parse(newOpValue.format()).toInstant().atOffset(ZoneOffset.UTC)
-                    .format(dateTimeFormatter) + "Z";
+                    .format(dateTimeFormatter);
         }
         return opValue;
     }
