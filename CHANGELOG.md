@@ -1,3 +1,13 @@
+## [Release 1.32.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.32.0)
+
+### Features
+- Add support for custom prefix resolver (#1659)
+
+### Miscellaneous
+- Update notify_comments.yml (#1654)
+
+[See all changes between 1.31.3 and 1.32.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.31.3...release_v1.32.0)
+
 ## [Release 1.31.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.31.3)
 
 ### Miscellaneous
