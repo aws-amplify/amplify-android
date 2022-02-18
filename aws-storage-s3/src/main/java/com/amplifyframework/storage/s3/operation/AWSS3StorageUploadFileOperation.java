@@ -29,9 +29,9 @@ import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
+import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
@@ -51,20 +51,24 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
     private final Consumer<StorageUploadFileResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
+    private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
 
     /**
      * Constructs a new AWSS3StorageUploadFileOperation.
-     * @param storageService S3 client wrapper
+     *
+     * @param storageService      S3 client wrapper
      * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
-     * @param request upload request parameters
-     * @param onProgress Notified upon advancements in upload progress
-     * @param onSuccess Will be notified when results of upload are available
-     * @param onError Notified when upload fails with an error
+     * @param request             upload request parameters
+     * @param awsS3StoragePluginConfiguration s3Plugin configuration
+     * @param onProgress          Notified upon advancements in upload progress
+     * @param onSuccess           Will be notified when results of upload are available
+     * @param onError             Notified when upload fails with an error
      */
     public AWSS3StorageUploadFileOperation(
             @NonNull StorageService storageService,
             @NonNull CognitoAuthProvider cognitoAuthProvider,
             @NonNull AWSS3StorageUploadRequest<File> request,
+            AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration,
             @NonNull Consumer<StorageTransferProgress> onProgress,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
@@ -76,6 +80,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         this.onSuccess = Objects.requireNonNull(onSuccess);
         this.onError = Objects.requireNonNull(onError);
         this.transferObserver = null;
+        this.awsS3StoragePluginConfiguration = awsS3StoragePluginConfiguration;
     }
 
     @SuppressLint("SyntheticAccessor")
@@ -85,24 +90,6 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         if (transferObserver != null) {
             return;
         }
-
-        String currentIdentityId;
-
-        try {
-            currentIdentityId = cognitoAuthProvider.getIdentityId();
-        } catch (StorageException exception) {
-            onError.accept(exception);
-            return;
-        }
-
-        String serviceKey = S3Keys.createServiceKey(
-                getRequest().getAccessLevel(),
-                getRequest().getTargetIdentityId() != null
-                        ? getRequest().getTargetIdentityId()
-                        : currentIdentityId,
-                getRequest().getKey()
-        );
-
         // Grab the file to upload...
         File file = getRequest().getLocal();
 
@@ -117,16 +104,25 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         }
 
         // Upload!
-        try {
-            transferObserver = storageService.uploadFile(serviceKey, file, objectMetadata);
-            transferObserver.setTransferListener(new UploadTransferListener());
-        } catch (Exception exception) {
-            onError.accept(new StorageException(
-                "Issue uploading file.",
-                exception,
-                "See included exception for more details and suggestions to fix."
-            ));
-        }
+        awsS3StoragePluginConfiguration.
+            getAWSS3PluginPrefixResolver(cognitoAuthProvider).
+            resolvePrefix(getRequest().getAccessLevel(),
+                getRequest().getTargetIdentityId(),
+                prefix -> {
+                    try {
+                        String serviceKey = prefix.concat(getRequest().getKey());
+                        transferObserver = storageService.uploadFile(serviceKey, file, objectMetadata);
+                        transferObserver.setTransferListener(new UploadTransferListener());
+                    } catch (Exception exception) {
+                        onError.accept(new StorageException(
+                                "Issue uploading file.",
+                                exception,
+                                "See included exception for more details and suggestions to fix."
+                        ));
+                    }
+                },
+                onError
+            );
     }
 
     @Override
@@ -136,9 +132,9 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 storageService.cancelTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                    "Something went wrong while attempting to cancel your AWS S3 Storage upload file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
+                        "Something went wrong while attempting to cancel your AWS S3 Storage upload file operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
                 ));
             }
         }
@@ -151,9 +147,9 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 storageService.pauseTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                    "Something went wrong while attempting to pause your AWS S3 Storage upload file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
+                        "Something went wrong while attempting to pause your AWS S3 Storage upload file operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
                 ));
             }
         }
@@ -166,9 +162,9 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 storageService.resumeTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                    "Something went wrong while attempting to resume your AWS S3 Storage upload file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
+                        "Something went wrong while attempting to resume your AWS S3 Storage upload file operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
                 ));
             }
         }

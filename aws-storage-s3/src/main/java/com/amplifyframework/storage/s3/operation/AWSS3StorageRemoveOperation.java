@@ -22,9 +22,9 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
+import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -38,21 +38,26 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
     private final CognitoAuthProvider cognitoAuthProvider;
     private final Consumer<StorageRemoveResult> onSuccess;
     private final Consumer<StorageException> onError;
+    private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
 
     /**
      * Constructs a new AWSS3StorageRemoveOperation.
-     * @param storageService S3 client wrapper
-     * @param executorService Executor service used for running blocking operations on a separate thread
+     *
+     * @param storageService      S3 client wrapper
+     * @param executorService     Executor service used for running blocking operations on a
+     *                            separate thread
      * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
-     * @param request remove request parameters
-     * @param onSuccess notified when remove operation results available
-     * @param onError notified when remove operation does not complete due to error
+     * @param request             remove request parameters
+     * @param awsS3StoragePluginConfiguration s3Plugin configuration
+     * @param onSuccess           notified when remove operation results available
+     * @param onError             notified when remove operation does not complete due to error
      */
     public AWSS3StorageRemoveOperation(
             @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
             @NonNull CognitoAuthProvider cognitoAuthProvider,
             @NonNull AWSS3StorageRemoveRequest request,
+            AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
@@ -62,40 +67,31 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
         this.cognitoAuthProvider = cognitoAuthProvider;
         this.onSuccess = Objects.requireNonNull(onSuccess);
         this.onError = Objects.requireNonNull(onError);
+        this.awsS3StoragePluginConfiguration = awsS3StoragePluginConfiguration;
     }
 
     @SuppressWarnings("SyntheticAccessor")
     @Override
     public void start() {
         executorService.submit(() -> {
-            try {
-                String currentIdentityId;
+            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(cognitoAuthProvider).
+                resolvePrefix(getRequest().getAccessLevel(),
+                    getRequest().getTargetIdentityId(),
+                    prefix -> {
+                        try {
+                            String serviceKey = prefix.concat(getRequest().getKey());
+                            storageService.deleteObject(serviceKey);
+                            onSuccess.accept(StorageRemoveResult.fromKey(getRequest().getKey()));
+                        } catch (Exception exception) {
+                            onError.accept(new StorageException(
+                                    "Something went wrong with your AWS S3 Storage remove operation",
+                                    exception,
+                                    "See attached exception for more information and suggestions"
+                            ));
+                        }
 
-                try {
-                    currentIdentityId = cognitoAuthProvider.getIdentityId();
-                } catch (StorageException exception) {
-                    onError.accept(exception);
-                    return;
-                }
-
-                String serviceKey = S3Keys.createServiceKey(
-                        getRequest().getAccessLevel(),
-                        getRequest().getTargetIdentityId() != null
-                                ? getRequest().getTargetIdentityId()
-                                : currentIdentityId,
-                        getRequest().getKey()
-                );
-
-                storageService.deleteObject(serviceKey);
-
-                onSuccess.accept(StorageRemoveResult.fromKey(getRequest().getKey()));
-            } catch (Exception exception) {
-                onError.accept(new StorageException(
-                    "Something went wrong with your AWS S3 Storage remove operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
-                ));
-            }
+                    },
+                    onError);
         });
     }
 }
