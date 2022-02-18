@@ -33,6 +33,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -347,6 +348,7 @@ final class MutationProcessor {
         AppSyncConflictUnhandledError<T> unhandledConflict =
             AppSyncConflictUnhandledError.findFirst(modelClazz, errors);
         if (unhandledConflict != null) {
+            LOG.info("Mutation processor handleResponseError: " + unhandledConflict);
             return conflictResolver.resolve(pendingMutation, unhandledConflict);
         }
 

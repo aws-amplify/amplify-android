@@ -84,7 +84,7 @@ final class ConflictResolver {
         ModelWithMetadata<T> serverData = conflictUnhandledError.getServerVersion();
         ModelMetadata metadata = serverData.getSyncMetadata();
         T remote = serverData.getModel();
-        T local = getT(pendingMutation, remote);
+        T local = getMutatedModelFromSerializedModel(pendingMutation);
 
         ConflictData<T> conflictData = ConflictData.create(local, remote);
 
@@ -100,14 +100,16 @@ final class ConflictResolver {
     }
 
     @Nullable
-    private <T extends Model> T getT(@NonNull PendingMutation<T> pendingMutation, T remote) {
+    private <T extends Model> T getMutatedModelFromSerializedModel(@NonNull PendingMutation<T> pendingMutation){
         T local;
         if (pendingMutation.getMutatedItem() instanceof SerializedModel) {
             Gson gson = GsonFactory.instance();
             LOG.info("conflict resolver getT: " + pendingMutation.getMutatedItem().toString());
             SerializedModel serializedModel = (SerializedModel) pendingMutation.getMutatedItem();
             String jsonString = gson.toJson(serializedModel.getSerializedData());
-            local = gson.fromJson(jsonString, (Type) remote.getClass());
+            Type modelType = pendingMutation.getModelSchema().getClass();
+                    LOG.info("conflict resolver getT modelType: " + modelType);
+            local = gson.fromJson(jsonString, modelType);
         } else {
             local = pendingMutation.getMutatedItem();
         }
