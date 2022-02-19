@@ -38,6 +38,7 @@ import com.amplifyframework.util.GsonFactory;
 import com.google.gson.Gson;
 
 import java.lang.reflect.Type;
+import java.util.Objects;
 
 import io.reactivex.rxjava3.core.Single;
 
@@ -107,7 +108,8 @@ final class ConflictResolver {
             LOG.info("conflict resolver getT: " + pendingMutation.getMutatedItem().toString());
             SerializedModel serializedModel = (SerializedModel) pendingMutation.getMutatedItem();
             String jsonString = gson.toJson(serializedModel.getSerializedData());
-            Type modelType = pendingMutation.getModelSchema().getClass();
+            Type modelType = Objects.requireNonNull(((SerializedModel) pendingMutation.getMutatedItem())
+                    .getModelSchema()).getModelClass();
             LOG.info("conflict resolver getT modelType: " + modelType);
             local = gson.fromJson(jsonString, modelType);
         } else {
