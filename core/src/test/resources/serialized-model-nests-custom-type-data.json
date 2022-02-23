@@ -15,6 +15,7 @@
       "line1": "444 Somewhere close"
     }
   ],
+  "requiredMailingAddresses": [],
   "contact": {
     "phone": {
       "areaCode": "415",
