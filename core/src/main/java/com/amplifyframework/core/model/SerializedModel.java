@@ -162,8 +162,8 @@ public final class SerializedModel implements Model {
                 if (field.isArray()) {
                     @SuppressWarnings("unchecked")
                     List<Map<String, Object>> fieldListData = (List<Map<String, Object>>) fieldValue;
+                    List<SerializedCustomType> fieldList = new ArrayList<>();
                     if (!fieldListData.isEmpty()) {
-                        List<SerializedCustomType> fieldList = new ArrayList<>();
                         for (Map<String, Object> item : fieldListData) {
                             Map<String, Object> customTypeSerializedData =
                                     SerializedCustomType.parseSerializedData(
@@ -174,8 +174,8 @@ public final class SerializedModel implements Model {
                                             schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType()))
                                     .build());
                         }
-                        result.put(key, fieldList);
                     }
+                    result.put(key, fieldList);
                 } else {
                     @SuppressWarnings("unchecked")
                     Map<String, Object> fieldData = (Map<String, Object>) fieldValue;

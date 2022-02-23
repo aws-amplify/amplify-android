@@ -71,6 +71,7 @@ public final class SerializedModeTest {
         assertEquals(serializedData.size(), parsedSerializedData.size());
         assertEquals(serializedData.get("name"), parsedSerializedData.get("name"));
         assertTrue(parsedSerializedData.get("mailingAddresses") instanceof List);
+        assertTrue(parsedSerializedData.get("requiredMailingAddresses") instanceof List);
 
         @SuppressWarnings("unchecked")
         List<Object> mailingAddresses = (List<Object>) parsedSerializedData.get("mailingAddresses");
@@ -204,6 +205,13 @@ public final class SerializedModeTest {
                 .isCustomType(true)
                 .isArray(true)
                 .build();
+        ModelField requiredPersonMailingAddressesField = ModelField.builder()
+                .name("requiredMailingAddresses")
+                .targetType("Address")
+                .isCustomType(true)
+                .isArray(true)
+                .isRequired(true)
+                .build();
         ModelField personIdField = ModelField.builder()
                 .name("id")
                 .targetType("String")
@@ -213,6 +221,7 @@ public final class SerializedModeTest {
         personFields.put("contact", personContactField);
         personFields.put("name", personNameField);
         personFields.put("mailingAddresses", personMailingAddressesField);
+        personFields.put("requiredMailingAddresses", requiredPersonMailingAddressesField);
         personFields.put("id", personIdField);
         ModelSchema personSchema = ModelSchema.builder()
                 .name("Person")
