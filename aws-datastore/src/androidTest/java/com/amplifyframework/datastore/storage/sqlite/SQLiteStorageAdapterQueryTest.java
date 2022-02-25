@@ -209,7 +209,7 @@ public final class SQLiteStorageAdapterQueryTest {
                 .build();
         
         final Call phoneCall = Call.builder()
-                .minutes(10)
+                .startTime(new Temporal.Time("10:35:22Z"))
                 .caller(phoneCalling)
                 .callee(phoneCalled)
                 .build();
@@ -360,7 +360,7 @@ public final class SQLiteStorageAdapterQueryTest {
     }
 
     /**
-     * Test querying the saved item in the SQLite database with
+     * Test querying the saved item in the SQLite database with DateTime
      * predicate conditions.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
@@ -373,7 +373,7 @@ public final class SQLiteStorageAdapterQueryTest {
                 new Temporal.DateTime("2020-01-01T19:30:45.100000000Z"),
                 new Temporal.DateTime("2020-01-01T19:30:45.100250000Z"),
                 new Temporal.DateTime("2020-01-01T19:30:45.1000Z"),
-                new Temporal.DateTime("2020-01-01T19:30:45.111Z"),
+                new Temporal.DateTime("2020-01-01T20:30:45.111Z"),
                 new Temporal.DateTime("2020-01-01T19:30:45.111+00:00"),
                 new Temporal.DateTime("2020-01-01T19:30:45.111+01:00"),
                 new Temporal.DateTime("2020-01-01T19:30:45.111222333Z")
@@ -400,6 +400,76 @@ public final class SQLiteStorageAdapterQueryTest {
                         .blockingGet(),
                 Observable.fromIterable(adapter.query(BlogOwner.class, Where.matches(predicate)))
                         .map(BlogOwner::getId)
+                        .toList()
+                        .map(HashSet::new)
+                        .blockingGet()
+        );
+    }
+
+    /**
+     * Test querying the saved item in the SQLite database with Time
+     * predicate conditions.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void querySavedDataWithTimePredicates() throws DataStoreException {
+        setupForCallModel();
+        final Person personCalling = Person.builder()
+                .name("Alan Turing")
+                .build();
+        final Person personCalled = Person.builder()
+                .name("Grace Hopper")
+                .build();
+
+        final Phone phoneCalling = Phone.builder()
+                .number("123-456-7890")
+                .ownedBy(personCalling)
+                .build();
+        final Phone phoneCalled = Phone.builder()
+                .number("567-890-1234")
+                .ownedBy(personCalled)
+                .build();
+
+        adapter.save(personCalling);
+        adapter.save(personCalled);
+        adapter.save(phoneCalling);
+        adapter.save(phoneCalled);
+
+        final List<Call> savedModels = new ArrayList<>();
+        final int numModels = 8;
+        final List<Temporal.Time> callStartTimes = Arrays.asList(
+                new Temporal.Time("19:30:45.000000000"),
+                new Temporal.Time("19:30:45.100000000Z"),
+                new Temporal.Time("19:30:45.100250000Z"),
+                new Temporal.Time("19:30:45.1000Z"),
+                new Temporal.Time("20:30:45.111Z"),
+                new Temporal.Time("19:30:45.111+00:00"),
+                new Temporal.Time("19:30:45.111+01:00"),
+                new Temporal.Time("19:30:45.111222333Z")
+        );
+
+        for (int counter = 0; counter < numModels; counter++) {
+            Call phoneCall = Call.builder()
+                    .startTime(callStartTimes.get(counter))
+                    .caller(phoneCalling)
+                    .callee(phoneCalled)
+                    .build();
+            adapter.save(phoneCall);
+            savedModels.add(phoneCall);
+        }
+
+        // 0, 1, 3, 6
+        QueryPredicate predicate = Call.STARTTIME.le(new Temporal.Time("19:30:45.100000000Z"));
+
+        assertEquals(
+                Observable.fromArray(0, 1, 3, 6)
+                        .map(savedModels::get)
+                        .map(Call::getId)
+                        .toList()
+                        .map(HashSet::new)
+                        .blockingGet(),
+                Observable.fromIterable(adapter.query(Call.class, Where.matches(predicate)))
+                        .map(Call::getId)
                         .toList()
                         .map(HashSet::new)
                         .blockingGet()
