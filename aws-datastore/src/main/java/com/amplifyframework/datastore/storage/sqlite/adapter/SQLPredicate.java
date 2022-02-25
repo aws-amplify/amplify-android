@@ -223,8 +223,8 @@ public final class SQLPredicate {
         }
     }
     
-    // Utility method to check if the given operator value is a Temporal.DateTime and if so,
-    // format it as yyyy-MM-ddTHH:mm:ss.SSSSSSSSSZ
+    // Utility method to check if the given operator value is a Temporal.DateTime or Temporal.Time
+    // and if so, format it as yyyy-MM-ddTHH:mm:ss.SSSSSSSSSZ or HH:mm:ss.SSSSSSSSSZ, respectively
     private Object formatIfTemporalDateTimeOrTime(Object opValue) {
         if (opValue instanceof Temporal.DateTime) {
             Temporal.DateTime newOpValue = (Temporal.DateTime) opValue;
