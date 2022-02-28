@@ -30,7 +30,6 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
-import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteModelFieldTypeConverter;
@@ -40,12 +39,6 @@ import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;
 
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -149,8 +142,8 @@ public final class SQLPredicate {
         switch (op.type()) {
             case BETWEEN:
                 BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator<?>) op;
-                addBinding(formatIfTemporalDateTimeOrTime(betweenOp.start()));
-                addBinding(formatIfTemporalDateTimeOrTime(betweenOp.end()));
+                addBinding(betweenOp.start());
+                addBinding(betweenOp.end());
                 return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.BETWEEN)
@@ -207,8 +200,7 @@ public final class SQLPredicate {
             case GREATER_THAN:
             case LESS_OR_EQUAL:
             case GREATER_OR_EQUAL:
-                Object opValue = getOperatorValue(op);
-                addBinding(formatIfTemporalDateTimeOrTime(opValue));
+                addBinding(getOperatorValue(op));
                 return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQueryOperator(op.type()))
@@ -221,34 +213,6 @@ public final class SQLPredicate {
                                 "QueryPredicateOperation.Type enum."
                 );
         }
-    }
-    
-    // Utility method to check if the given operator value is a Temporal.DateTime or Temporal.Time
-    // and if so, format it as yyyy-MM-ddTHH:mm:ss.SSSSSSSSSZ or HH:mm:ss.SSSSSSSSSZ, respectively
-    private Object formatIfTemporalDateTimeOrTime(Object opValue) {
-        if (opValue instanceof Temporal.DateTime) {
-            Temporal.DateTime newOpValue = (Temporal.DateTime) opValue;
-            DateTimeFormatter dateTimeFormatter = DateTimeFormatter
-                    .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'");
-            return OffsetDateTime.parse(newOpValue.format()).toInstant().atOffset(ZoneOffset.UTC)
-                    .format(dateTimeFormatter);
-        } else if (opValue instanceof Temporal.Time) {
-            String newOpValue = ((Temporal.Time) opValue).format();
-            LocalTime localTime;
-            ZoneOffset zoneOffset;
-            try {
-                OffsetTime offsetTime = OffsetTime.parse(newOpValue, DateTimeFormatter.ISO_OFFSET_TIME);
-                localTime = LocalTime.from(offsetTime);
-                zoneOffset = ZoneOffset.from(offsetTime);
-            } catch (DateTimeParseException exception) {
-                localTime = LocalTime.parse(newOpValue, DateTimeFormatter.ISO_LOCAL_TIME);
-                zoneOffset = ZoneOffset.UTC;
-            }
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSSSSS'Z'");
-            return OffsetTime.of(localTime, zoneOffset).withOffsetSameInstant(ZoneOffset.UTC)
-                    .format(timeFormatter);
-        }
-        return opValue;
     }
 
     // Utility method to recursively parse a given predicate group.
