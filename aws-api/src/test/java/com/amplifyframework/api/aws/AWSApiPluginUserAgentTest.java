@@ -23,6 +23,7 @@ import com.amplifyframework.core.NoOpConsumer;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -97,6 +98,7 @@ public final class AWSApiPluginUserAgentTest {
      *          waiting for request
      */
     @Test
+    @Ignore("minSDKVersion changed to 24 in favor of AWS Kotlin SDK dependency")
     @Config(sdk = 16)
     public void testUserAgentWithApi16() throws Exception {
         String userAgent = checkUserAgent();

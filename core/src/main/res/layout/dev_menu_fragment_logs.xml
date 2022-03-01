@@ -25,6 +25,7 @@
     android:focusable="true"
     android:focusableInTouchMode="true"
     android:clickable="true"
+    tools:ignore="RtlHardcoded"
     tools:context="com.amplifyframework.devmenu.DevMenuLogsFragment">
 
     <SearchView

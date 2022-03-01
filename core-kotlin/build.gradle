@@ -48,4 +48,7 @@ ktlint {
 
 afterEvaluate {
     it.android.kotlinOptions.jvmTarget = '1.8'
+    it.android.kotlinOptions.freeCompilerArgs += [
+        '-opt-in=kotlin.RequiresOptIn',
+    ]
 }

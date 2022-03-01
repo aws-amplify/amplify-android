@@ -99,7 +99,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         }
     }
 
-    @FlowPreview
+    @OptIn(FlowPreview::class)
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     override suspend fun observe(): Flow<DataStoreItemChange<out Model>> {
@@ -113,7 +113,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         return observation.waitForStart()
     }
 
-    @FlowPreview
+    @OptIn(FlowPreview::class)
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     override suspend fun <T : Model> observe(itemClass: KClass<T>, itemId: String):
@@ -130,7 +130,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
             return observation.waitForStart()
         }
 
-    @FlowPreview
+    @OptIn(FlowPreview::class)
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     override suspend fun <T : Model> observe(
@@ -149,7 +149,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         return observation.waitForStart()
     }
 
-    @FlowPreview
+    @OptIn(FlowPreview::class)
     @ExperimentalCoroutinesApi
     override suspend fun <T : Model> observeQuery(
         itemClass: KClass<T>,
