@@ -1,3 +1,23 @@
+## [Release 0.16.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.16.0)
+
+### Features
+- Add support for custom prefix resolver (#1659)
+
+### Miscellaneous
+- Update notify_comments.yml (#1654)
+- Updating the AWS SDK to 2.41.0 (#1662)
+
+[See all changes between 0.15.3 and 0.16.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.15.3...release-kotlin_v0.16.0)
+
+## [Release 0.15.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.15.3)
+
+### Miscellaneous
+- Update build.gradle (#1644)
+- Adding Dokka to the core-kotlin module (#1645)
+- Update build.gradle (#1652)
+
+[See all changes between 0.15.2 and 0.15.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.15.2...release-kotlin_v0.15.3)
+
 ## [Release 0.15.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.15.2)
 
 ### Bug Fixes
