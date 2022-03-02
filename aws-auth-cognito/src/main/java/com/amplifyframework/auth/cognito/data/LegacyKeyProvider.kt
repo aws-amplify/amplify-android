@@ -16,21 +16,23 @@ object LegacyKeyProvider {
         keyStore.load(null)
 
         if (keyStore.containsAlias(keyAlias)) {
-            return Result.Failure("Key already exists for the keyAlias: $keyAlias in $ANDROID_KEY_STORE_NAME", null)
+            return Result.failure(
+                    CredentialStoreError("Key already exists for the keyAlias: $keyAlias in $ANDROID_KEY_STORE_NAME")
+            )
         }
 
         val parameterSpec =
-            KeyGenParameterSpec.Builder(keyAlias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                .setKeySize(CIPHER_AES_GCM_NOPADDING_KEY_LENGTH_IN_BITS)
-                .setRandomizedEncryptionRequired(false)
-                .build()
+                KeyGenParameterSpec.Builder(keyAlias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                        .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                        .setKeySize(CIPHER_AES_GCM_NOPADDING_KEY_LENGTH_IN_BITS)
+                        .setRandomizedEncryptionRequired(false)
+                        .build()
 
         val generator = KeyGenerator.getInstance(AES_KEY_ALGORITHM, ANDROID_KEY_STORE_NAME)
         generator.init(parameterSpec)
 
-        return Result.Success(generator.generateKey())
+        return Result.success(generator.generateKey())
     }
 
     fun retrieveKey(keyAlias: String): Result<Key> {
@@ -38,15 +40,17 @@ object LegacyKeyProvider {
         keyStore.load(null)
 
         if (!keyStore.containsAlias(keyAlias)) {
-            return Result.Failure("Key does not exists for the keyAlias: $keyAlias in $ANDROID_KEY_STORE_NAME")
+            val message = "Key does not exists for the keyAlias: $keyAlias in $ANDROID_KEY_STORE_NAME"
+            return Result.failure(CredentialStoreError(message))
         }
 
         val key: Key? = keyStore.getKey(keyAlias, null)
         return if (key != null) {
-            Result.Success(key)
+            Result.success(key)
         } else {
-            Result.Failure("Key is null even though the keyAlias: " +
-                    keyAlias + " is present in " + ANDROID_KEY_STORE_NAME)
+            val message = "Key is null even though the keyAlias: " +
+                    keyAlias + " is present in " + ANDROID_KEY_STORE_NAME
+            Result.failure(CredentialStoreError(message))
         }
     }
 

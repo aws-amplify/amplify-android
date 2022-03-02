@@ -25,7 +25,7 @@ import com.amplifyframework.statemachine.EventDispatcher
 
 interface CredentialStoreAction: Action
 
-class MigrateLegacyCredentialStore: CredentialStoreAction {
+class MigrateLegacyCredentialStoreAction: CredentialStoreAction {
 
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
         val env = (environment as CredentialStoreEnvironment)
@@ -34,7 +34,10 @@ class MigrateLegacyCredentialStore: CredentialStoreAction {
 
         try {
             val credentials = legacyCredentialStore.retrieveCredential()
-            credentialStore.saveCredential(credentials)
+            credentials?.let {
+                credentialStore.saveCredential(it)
+                legacyCredentialStore.deleteCredential()
+            }
             val event = CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
             dispatcher.send(event)
         } catch (error: CredentialStoreError) {
@@ -44,7 +47,7 @@ class MigrateLegacyCredentialStore: CredentialStoreAction {
     }
 }
 
-class ClearCredentialStore: CredentialStoreAction {
+class ClearCredentialStoreAction: CredentialStoreAction {
 
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
         val env = (environment as CredentialStoreEnvironment)
@@ -61,7 +64,7 @@ class ClearCredentialStore: CredentialStoreAction {
     }
 }
 
-class LoadCredentialStore: CredentialStoreAction {
+class LoadCredentialStoreAction: CredentialStoreAction {
 
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
         val env = (environment as CredentialStoreEnvironment)
@@ -78,7 +81,7 @@ class LoadCredentialStore: CredentialStoreAction {
     }
 }
 
-class StoreCredentials(val credentials: AmplifyCredential): CredentialStoreAction {
+class StoreCredentialsAction(val credentials: AmplifyCredential): CredentialStoreAction {
 
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
         val env = (environment as CredentialStoreEnvironment)
@@ -92,5 +95,13 @@ class StoreCredentials(val credentials: AmplifyCredential): CredentialStoreActio
             val event = CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             dispatcher.send(event)
         }
+    }
+}
+
+class MoveToIdleStateAction : CredentialStoreAction {
+
+    override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
+        val event = CredentialStoreEvent(CredentialStoreEvent.EventType.MoveToIdleState())
+        dispatcher.send(event)
     }
 }

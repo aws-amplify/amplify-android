@@ -28,6 +28,7 @@ class CredentialStoreEvent(val eventType: EventType, override val time: Date? = 
         data class StoreCredentials(val credentials: AmplifyCredential) : EventType()
         data class ClearCredentialStore(val id: String = "") : EventType()
         data class CompletedOperation(val storedCredentials: AmplifyCredential?) : EventType()
+        data class MoveToIdleState(val id: String = "") : EventType()
         data class ThrowError(val error: CredentialStoreError) : EventType()
     }
 

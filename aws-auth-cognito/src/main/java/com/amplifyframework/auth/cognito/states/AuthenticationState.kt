@@ -34,7 +34,7 @@ sealed class AuthenticationState : State {
     data class SigningUp(override var signUpState: SignUpState?) : AuthenticationState()
     data class Error(val error: AuthenticationError) : AuthenticationState()
 
-    open var store: CredentialStoreState? = CredentialStoreState.NotIntialized()
+    open var store: CredentialStoreState? = CredentialStoreState.NotConfigured()
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
     open var signUpState: SignUpState? = SignUpState.NotStarted()
     open var signOutState: SignOutState? = SignOutState.NotStarted()

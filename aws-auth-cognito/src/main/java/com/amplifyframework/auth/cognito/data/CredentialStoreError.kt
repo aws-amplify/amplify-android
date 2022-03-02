@@ -1,8 +1,5 @@
 package com.amplifyframework.auth.cognito.data
 
-import com.amplifyframework.statemachine.State
-import java.lang.Error
-
-data class CredentialStoreError(val msg: String) : State, Error() {
-    override val type = "Unknown Error"
+data class CredentialStoreError(override val message: String, override val cause: Throwable? = null) : Error() {
+    val type = "Unknown Error"
 }

@@ -44,9 +44,9 @@ class LegacyKeyProviderTest {
     fun `retrieve key fails if key does not exist for key alias`() {
         val key = LegacyKeyProvider.retrieveKey(testKeyAlias)
 
-        assertTrue { key is Result.Failure }
-        assertEquals((key as Result.Failure).message,
-            "Key does not exists for the keyAlias: $testKeyAlias in $androidKeyStoreAlias")
+        assertTrue { key.isFailure}
+        assertEquals("Key does not exists for the keyAlias: $testKeyAlias in $androidKeyStoreAlias",
+            (key.exceptionOrNull()?.message))
     }
 
     @Test
@@ -55,10 +55,10 @@ class LegacyKeyProviderTest {
         Mockito.`when`(mockKeyStore.getKey(testKeyAlias, null)).thenReturn(null)
 
         val key = LegacyKeyProvider.retrieveKey(testKeyAlias)
-        assertTrue { key is Result.Failure }
-        assertEquals((key as Result.Failure).message,
-            "Key is null even though the keyAlias: " +
-                    testKeyAlias + " is present in " + androidKeyStoreAlias)
+        assertTrue { key.isFailure }
+        assertEquals( "Key is null even though the keyAlias: " +
+                    testKeyAlias + " is present in " + androidKeyStoreAlias,
+            key.exceptionOrNull()?.message)
     }
 
     @Test
@@ -67,8 +67,8 @@ class LegacyKeyProviderTest {
         Mockito.`when`(mockKeyStore.getKey(testKeyAlias, null)).thenReturn(mockKey)
 
         val key = LegacyKeyProvider.retrieveKey(testKeyAlias)
-        assertTrue { key is Result.Success }
-        assertEquals((key as Result.Success).value, mockKey)
+        assertTrue { key.isSuccess }
+        assertEquals(key.getOrNull(), mockKey)
     }
 
     private class FakeKeyStore(keyStoreSpi: KeyStoreSpi?, provider: Provider?, type: String?) :

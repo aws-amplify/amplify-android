@@ -21,9 +21,7 @@ import android.content.Intent
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.*
-import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
-import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
-import com.amplifyframework.auth.cognito.data.AuthConfiguration
+import com.amplifyframework.auth.cognito.data.*
 import com.amplifyframework.auth.cognito.events.AuthEvent
 import com.amplifyframework.auth.cognito.events.AuthEvent.EventType.ConfigureAuth
 import com.amplifyframework.auth.cognito.events.AuthenticationEvent
@@ -438,7 +436,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
                     authStateMachine.send(AuthEvent(ConfigureAuth(authConfiguration, null)))
                     token?.let(credentialStoreStateMachine::cancel)
                 }
-                is CredentialStoreState.Idle -> {
+                is CredentialStoreState.Success -> {
                     authStateMachine.send(AuthEvent(ConfigureAuth(authConfiguration, it.storedCredentials)))
                     token?.let(credentialStoreStateMachine::cancel)
                 }
