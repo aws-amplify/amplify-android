@@ -15,7 +15,6 @@
 
 package com.amplifyframework.core.model.temporal;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -55,9 +54,9 @@ public final class TemporalDateTimeTest {
     /**
      * Tests that {@link Temporal.DateTime} constructor throws when String input is invalid.
      */
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void parseInvalidFormat() {
-        new Temporal.DateTime("2001-02-03T01:30:15.444+05");
+        new Temporal.DateTime("2001-02-03T01:30:15.444++05");
     }
 
     /**

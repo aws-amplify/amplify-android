@@ -15,6 +15,8 @@
 
 package com.amplifyframework.auth.cognito.events
 
+import com.amplifyframework.auth.cognito.data.AmplifyCredential
+import com.amplifyframework.auth.cognito.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.StateMachineEvent
 import java.util.*
 
@@ -24,7 +26,7 @@ class FetchUserPoolTokensEvent(
     sealed class EventType {
         data class Refresh(val message: String = "Success") : EventType()
         data class Fetched(val id: String = "") : EventType()
-        data class ThrowError(val error: String) : EventType()
+        data class ThrowError(val error: String?) : EventType()
     }
 
     override val type = eventType.toString()

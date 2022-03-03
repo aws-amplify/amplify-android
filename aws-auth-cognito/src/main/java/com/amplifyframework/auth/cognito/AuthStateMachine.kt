@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.cognito.data.AuthConfiguration
 import com.amplifyframework.auth.cognito.actions.*
+import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -63,6 +64,7 @@ class AuthEnvironment : Environment {
     internal lateinit var srpHelper: SRPHelper
 
     val cognitoAuthService = AWSCognitoAuthService
+    lateinit var awsCognitoAuthCredentialStore: AWSCognitoAuthCredentialStore
 
     //TODO: temporary, needs to be in credential store
     var accessToken: String? = null

@@ -61,175 +61,175 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     private var credentialStoreStateMachine = CredentialStoreStateMachine(credentialStoreEnvironment)
 
 
-     override fun signUp(
-        username: String,
-        password: String,
-        options: AuthSignUpOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
+    override fun signUp(
+            username: String,
+            password: String,
+            options: AuthSignUpOptions,
+            onSuccess: Consumer<AuthSignUpResult>,
+            onError: Consumer<AuthException>
     ) {
         authStateMachine.listen({ authState ->
-            when(val signUpState = authState.authNState.let { it?.signUpState }){
+            when (val signUpState = authState.authNState.let { it?.signUpState }) {
                 is SignUpState.SigningUpInitiated -> {
-                val authSignUpResult = AuthSignUpResult(
-                    true,
-                    AuthNextSignUpStep(AuthSignUpStep.CONFIRM_SIGN_UP_STEP, mapOf(), null),
-                    null
-                )
-                onSuccess.accept(authSignUpResult)
-            }
+                    val authSignUpResult = AuthSignUpResult(
+                            true,
+                            AuthNextSignUpStep(AuthSignUpStep.CONFIRM_SIGN_UP_STEP, mapOf(), null),
+                            null
+                    )
+                    onSuccess.accept(authSignUpResult)
+                }
                 is SignUpState.Error -> onError.accept(CognitoAuthExceptionConverter.lookup(signUpState.exception, "Sign up failed."))
                 else -> {}
             }
         }, {
             val event =
-                AuthenticationEvent(
-                    AuthenticationEvent.EventType.SignUpRequested(username, password, options)
-                )
+                    AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignUpRequested(username, password, options)
+                    )
             authStateMachine.send(event)
         })
     }
 
     override fun confirmSignUp(
-        username: String,
-        confirmationCode: String,
-        options: AuthConfirmSignUpOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
+            username: String,
+            confirmationCode: String,
+            options: AuthConfirmSignUpOptions,
+            onSuccess: Consumer<AuthSignUpResult>,
+            onError: Consumer<AuthException>
     ) {
         authStateMachine.listen({ authState ->
-            when(val signUpState = authState.authNState.let { it?.signUpState }){
+            when (val signUpState = authState.authNState.let { it?.signUpState }) {
                 is SignUpState.SignedUp -> {
-                val authSignUpResult = AuthSignUpResult(
-                    true,
-                    AuthNextSignUpStep(AuthSignUpStep.DONE, mapOf(), null),
-                    null
-                )
-                onSuccess.accept(authSignUpResult)
+                    val authSignUpResult = AuthSignUpResult(
+                            true,
+                            AuthNextSignUpStep(AuthSignUpStep.DONE, mapOf(), null),
+                            null
+                    )
+                    onSuccess.accept(authSignUpResult)
                 }
                 is SignUpState.Error -> onError.accept(CognitoAuthExceptionConverter.lookup(signUpState.exception, "Confirm sign up failed."))
                 else -> {}
             }
         }, {
             val event =
-                AuthenticationEvent(
-                    AuthenticationEvent.EventType.ConfirmSignUpRequested(username, confirmationCode)
-                )
+                    AuthenticationEvent(
+                            AuthenticationEvent.EventType.ConfirmSignUpRequested(username, confirmationCode)
+                    )
             authStateMachine.send(event)
         })
     }
 
     override fun confirmSignUp(
-        username: String,
-        confirmationCode: String,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
+            username: String,
+            confirmationCode: String,
+            onSuccess: Consumer<AuthSignUpResult>,
+            onError: Consumer<AuthException>
     ) {
         confirmSignUp(username, confirmationCode, AuthConfirmSignUpOptions.defaults(), onSuccess, onError)
     }
 
     override fun resendSignUpCode(
-        username: String,
-        options: AuthResendSignUpCodeOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
+            username: String,
+            options: AuthResendSignUpCodeOptions,
+            onSuccess: Consumer<AuthSignUpResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun resendSignUpCode(
-        username: String,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
+            username: String,
+            onSuccess: Consumer<AuthSignUpResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun signIn(
-        username: String?,
-        password: String?,
-        options: AuthSignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
+            username: String?,
+            password: String?,
+            options: AuthSignInOptions,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
     ) {
         authStateMachine.listen({ authState ->
-            when(val srpSignInState = authState.authNState.let { it?.srpSignInState }){
+            when (val srpSignInState = authState.authNState.let { it?.srpSignInState }) {
                 is SRPSignInState.SignedIn -> {
-                val authSignInResult = AuthSignInResult(
-                    true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
-                )
-                onSuccess.accept(authSignInResult)
-            }
+                    val authSignInResult = AuthSignInResult(
+                            true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
+                    )
+                    onSuccess.accept(authSignInResult)
+                }
                 is SRPSignInState.Error -> onError.accept(CognitoAuthExceptionConverter.lookup(srpSignInState.exception, "Sign in failed."))
                 else -> {}
             }
         }, {
             val event =
-                AuthenticationEvent(
-                    AuthenticationEvent.EventType.SignInRequested(username, password, options)
-                )
+                    AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignInRequested(username, password, options)
+                    )
             authStateMachine.send(event)
         })
     }
 
     override fun signIn(
-        username: String?,
-        password: String?,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
+            username: String?,
+            password: String?,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
     ) {
         signIn(username, password, AuthSignInOptions.defaults(), onSuccess, onError)
     }
 
     override fun confirmSignIn(
-        confirmationCode: String,
-        options: AuthConfirmSignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
+            confirmationCode: String,
+            options: AuthConfirmSignInOptions,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun confirmSignIn(
-        confirmationCode: String,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
+            confirmationCode: String,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun signInWithSocialWebUI(
-        provider: AuthProvider,
-        callingActivity: Activity,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
+            provider: AuthProvider,
+            callingActivity: Activity,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun signInWithSocialWebUI(
-        provider: AuthProvider,
-        callingActivity: Activity,
-        options: AuthWebUISignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
+            provider: AuthProvider,
+            callingActivity: Activity,
+            options: AuthWebUISignInOptions,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun signInWithWebUI(
-        callingActivity: Activity,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
+            callingActivity: Activity,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun signInWithWebUI(
-        callingActivity: Activity,
-        options: AuthWebUISignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
+            callingActivity: Activity,
+            options: AuthWebUISignInOptions,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
@@ -239,8 +239,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun fetchAuthSession(
-        onSuccess: Consumer<AuthSession>,
-        onError: Consumer<AuthException>
+            onSuccess: Consumer<AuthSession>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
@@ -254,128 +254,128 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun forgetDevice(
-        device: AuthDevice,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
+            device: AuthDevice,
+            onSuccess: Action,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun fetchDevices(
-        onSuccess: Consumer<MutableList<AuthDevice>>,
-        onError: Consumer<AuthException>
+            onSuccess: Consumer<MutableList<AuthDevice>>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun resetPassword(
-        username: String,
-        options: AuthResetPasswordOptions,
-        onSuccess: Consumer<AuthResetPasswordResult>,
-        onError: Consumer<AuthException>
+            username: String,
+            options: AuthResetPasswordOptions,
+            onSuccess: Consumer<AuthResetPasswordResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun resetPassword(
-        username: String,
-        onSuccess: Consumer<AuthResetPasswordResult>,
-        onError: Consumer<AuthException>
+            username: String,
+            onSuccess: Consumer<AuthResetPasswordResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun confirmResetPassword(
-        newPassword: String,
-        confirmationCode: String,
-        options: AuthConfirmResetPasswordOptions,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
+            newPassword: String,
+            confirmationCode: String,
+            options: AuthConfirmResetPasswordOptions,
+            onSuccess: Action,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun confirmResetPassword(
-        newPassword: String,
-        confirmationCode: String,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
+            newPassword: String,
+            confirmationCode: String,
+            onSuccess: Action,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun updatePassword(
-        oldPassword: String,
-        newPassword: String,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
+            oldPassword: String,
+            newPassword: String,
+            onSuccess: Action,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun fetchUserAttributes(
-        onSuccess: Consumer<MutableList<AuthUserAttribute>>,
-        onError: Consumer<AuthException>
+            onSuccess: Consumer<MutableList<AuthUserAttribute>>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun updateUserAttribute(
-        attribute: AuthUserAttribute,
-        options: AuthUpdateUserAttributeOptions,
-        onSuccess: Consumer<AuthUpdateAttributeResult>,
-        onError: Consumer<AuthException>
+            attribute: AuthUserAttribute,
+            options: AuthUpdateUserAttributeOptions,
+            onSuccess: Consumer<AuthUpdateAttributeResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun updateUserAttribute(
-        attribute: AuthUserAttribute,
-        onSuccess: Consumer<AuthUpdateAttributeResult>,
-        onError: Consumer<AuthException>
+            attribute: AuthUserAttribute,
+            onSuccess: Consumer<AuthUpdateAttributeResult>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun updateUserAttributes(
-        attributes: MutableList<AuthUserAttribute>,
-        options: AuthUpdateUserAttributesOptions,
-        onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
-        onError: Consumer<AuthException>
+            attributes: MutableList<AuthUserAttribute>,
+            options: AuthUpdateUserAttributesOptions,
+            onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun updateUserAttributes(
-        attributes: MutableList<AuthUserAttribute>,
-        onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
-        onError: Consumer<AuthException>
+            attributes: MutableList<AuthUserAttribute>,
+            onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun resendUserAttributeConfirmationCode(
-        attributeKey: AuthUserAttributeKey,
-        options: AuthResendUserAttributeConfirmationCodeOptions,
-        onSuccess: Consumer<AuthCodeDeliveryDetails>,
-        onError: Consumer<AuthException>
+            attributeKey: AuthUserAttributeKey,
+            options: AuthResendUserAttributeConfirmationCodeOptions,
+            onSuccess: Consumer<AuthCodeDeliveryDetails>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun resendUserAttributeConfirmationCode(
-        attributeKey: AuthUserAttributeKey,
-        onSuccess: Consumer<AuthCodeDeliveryDetails>,
-        onError: Consumer<AuthException>
+            attributeKey: AuthUserAttributeKey,
+            onSuccess: Consumer<AuthCodeDeliveryDetails>,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
 
     override fun confirmUserAttribute(
-        attributeKey: AuthUserAttributeKey,
-        confirmationCode: String,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
+            attributeKey: AuthUserAttributeKey,
+            confirmationCode: String,
+            onSuccess: Action,
+            onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
     }
@@ -389,16 +389,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun signOut(
-        options: AuthSignOutOptions,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
+            options: AuthSignOutOptions,
+            onSuccess: Action,
+            onError: Consumer<AuthException>
     ) {
         authStateMachine.listen({ authState ->
             val authNSState = authState.authNState.takeIf { it is AuthenticationState.SignedOut }
             authNSState?.apply { onSuccess.call() }
         }, {
             val event =
-                AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
+                    AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
             authStateMachine.send(event)
         })
     }
@@ -408,15 +408,17 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         try {
             authConfiguration = AuthConfiguration.fromJson(pluginConfiguration).build()
             credentialStoreEnvironment.applicationContext = context.applicationContext
+            val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(credentialStoreEnvironment.applicationContext, authConfiguration)
+            authEnvironment.awsCognitoAuthCredentialStore = awsCognitoAuthCredentialStore
             credentialStoreEnvironment.credentialStore =
-                AWSCognitoAuthCredentialStore(credentialStoreEnvironment.applicationContext, authConfiguration)
+                    awsCognitoAuthCredentialStore
             credentialStoreEnvironment.legacyCredentialStore =
-                AWSCognitoLegacyCredentialStore(credentialStoreEnvironment.applicationContext, authConfiguration)
+                    AWSCognitoLegacyCredentialStore(credentialStoreEnvironment.applicationContext, authConfiguration)
         } catch (exception: JSONException) {
             throw AuthException(
-                "Failed to configure AWSCognitoAuthPlugin.",
-                exception,
-                "Make sure your amplifyconfiguration.json is valid."
+                    "Failed to configure AWSCognitoAuthPlugin.",
+                    exception,
+                    "Make sure your amplifyconfiguration.json is valid."
             )
         }
 
@@ -441,7 +443,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             }
         }, {
             credentialStoreStateMachine
-                .send(CredentialStoreEvent(CredentialStoreEvent.EventType.MigrateLegacyCredentialStore()))
+                    .send(CredentialStoreEvent(CredentialStoreEvent.EventType.MigrateLegacyCredentialStore()))
         })
     }
 

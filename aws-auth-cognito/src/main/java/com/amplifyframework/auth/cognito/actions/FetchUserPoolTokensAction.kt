@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.data.CognitoUserPoolTokens
 import com.amplifyframework.auth.cognito.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.Environment
@@ -24,23 +25,6 @@ import com.amplifyframework.statemachine.EventDispatcher
 import java.lang.Exception
 
 interface FetchUserPoolTokensAction : Action
-
-//TODO: This action will be called from FetchAuthSession SM
-class ConfigureFetchUserPoolTokensAction : FetchUserPoolTokensAction {
-    override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
-        val env = (environment as AuthEnvironment)
-        //TODO :Check the validity of credentials dropped into here from FetchAuthSession SM
-        //TODO: If not valid call Refresh
-        //TODO: Also check if the userPool is enabled(Basically check if userPool exists). If not then exit this SM with
-        //a Fetched state
-
-        val event =
-            FetchUserPoolTokensEvent(
-                FetchUserPoolTokensEvent.EventType.Fetched()
-            )
-        dispatcher.send(event)
-    }
-}
 
 class RefreshFetchUserPoolTokensAction : FetchUserPoolTokensAction {
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
@@ -53,11 +37,15 @@ class RefreshFetchUserPoolTokensAction : FetchUserPoolTokensAction {
                     "REFRESH_TOKEN" to "REFRESH_TOKEN_FROM_AmplifyCredential"
                 )
             }
-            refreshTokenResponse?.authenticationResult?.let {
-                //TODO: Once the credentialStorage and AmplifyCentral is implemented, initialize/replace those values here.
-                val refreshToken = it.refreshToken
-                val idToken = it.idToken
-            }
+            val cognitoUserPoolTokens = CognitoUserPoolTokens(
+                idToken = refreshTokenResponse?.authenticationResult?.idToken,
+                refreshToken = refreshTokenResponse?.authenticationResult?.refreshToken,
+                accessToken = refreshTokenResponse?.authenticationResult?.accessToken,
+                tokenExpiration = refreshTokenResponse?.authenticationResult?.expiresIn
+            )
+
+            env.awsCognitoAuthCredentialStore.savePartialCredential(cognitoUserPoolTokens = cognitoUserPoolTokens)
+
             val event =
                 FetchUserPoolTokensEvent(
                     FetchUserPoolTokensEvent.EventType.Fetched()

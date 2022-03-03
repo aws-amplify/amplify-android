@@ -17,28 +17,33 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.data.AWSCredentials
 import com.amplifyframework.auth.cognito.events.FetchAwsCredentialsEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.EventDispatcher
-import java.util.*
 
 interface FetchAwsCredentialsAction : Action
 
 class InitFetchAWSCredentialsAction : FetchAwsCredentialsAction {
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
         val env = (environment as AuthEnvironment)
-        //TODO: use the identityID fetched from the credential store
-        var mockedIdentityId = "MOCK_IDENTITY_ID"
         val getCredentialsForIdentityRequest = GetCredentialsForIdentityRequest.invoke {
-            this.identityId = mockedIdentityId
+            this.identityId = env.awsCognitoAuthCredentialStore.retrieveCredential()?.identityId
         }
         try {
             val getCredentialsForIdentityResponse =
                 env.cognitoAuthService.cognitoIdentityClient?.getCredentialsForIdentity(
                     getCredentialsForIdentityRequest
                 )
-            //TODO: Update the credential store with the identityID returned
+            val credentials = AWSCredentials(
+                accessKeyId = getCredentialsForIdentityResponse?.credentials?.accessKeyId,
+                secretAccessKey = getCredentialsForIdentityResponse?.credentials?.secretKey,
+                sessionToken = getCredentialsForIdentityResponse?.credentials?.sessionToken,
+                expiration = getCredentialsForIdentityResponse?.credentials?.expiration?.epochSeconds
+            )
+            env.awsCognitoAuthCredentialStore.savePartialCredential(awsCredentials = credentials)
+
             val event =
                 FetchAwsCredentialsEvent(
                     FetchAwsCredentialsEvent.EventType.Fetched()

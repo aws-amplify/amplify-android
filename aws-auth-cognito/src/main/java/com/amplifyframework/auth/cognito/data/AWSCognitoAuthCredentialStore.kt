@@ -6,7 +6,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-internal class AWSCognitoAuthCredentialStore(
+class AWSCognitoAuthCredentialStore(
     val context: Context,
     private val authConfiguration: AuthConfiguration,
     isPersistenceEnabled: Boolean = true,
@@ -20,7 +20,21 @@ internal class AWSCognitoAuthCredentialStore(
 
     override fun saveCredential(credential: AmplifyCredential) = keyValue.put(key, serializeCredential(credential))
 
-    override fun retrieveCredential(): AmplifyCredential? = deserializeCredential(keyValue.get(key))
+    override fun savePartialCredential(cognitoUserPoolTokens: CognitoUserPoolTokens?, identityId: String?, awsCredentials: AWSCredentials?) {
+        val amplifyCredential = retrieveCredential()
+        if (cognitoUserPoolTokens != null) {
+            amplifyCredential?.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)
+        }
+        if (identityId != null) {
+            amplifyCredential?.copy(identityId = identityId)
+        }
+
+        if (awsCredentials != null) {
+            amplifyCredential?.copy(awsCredentials = awsCredentials)
+        }
+    }
+
+    override fun retrieveCredential(): AmplifyCredential? = deserializeCredential(keyValue.get(key) as String?)
 
     override fun deleteCredential() = keyValue.remove(key)
 

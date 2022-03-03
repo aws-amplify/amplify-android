@@ -75,9 +75,9 @@ class LegacyKeyValueRepository(
      * @param dataKey key to the
      * @param value Value
      */
-    override fun put(dataKey: String, value: String?) {
+    override fun put(dataKey: Any, value: Any?) {
         // Irrespective of persistence is enabled or not, store in memory.
-        value?.also { cache[dataKey] = it }
+        value?.also { cache[dataKey.toString()] = it.toString() }
 
         if (!isPersistenceEnabled) {
             return
@@ -85,12 +85,12 @@ class LegacyKeyValueRepository(
 
         if (value == null) {
             // Null value -> Removing data, IV and version from Shared Prefs.
-            remove(dataKey)
+            remove(dataKey.toString())
             return
         }
 
         // dataKey becomes dataKey.encrypted
-        val dataKeyInPersistentStore: String = getDataKeyUsedInPersistentStore(dataKey)
+        val dataKeyInPersistentStore: String = getDataKeyUsedInPersistentStore(dataKey.toString())
 
         val encryptionKeyAlias: String = getEncryptionKeyAlias()
 
@@ -107,7 +107,7 @@ class LegacyKeyValueRepository(
             val base64EncodedEncryptedString: String? = encrypt(
                     encryptionKey.getOrThrow(),
                     GCMParameterSpec(CIPHER_AES_GCM_NOPADDING_TAG_LENGTH_LENGTH_IN_BITS, iv),
-                    value
+                    value.toString()
             )
 
             val base64EncodedIV: String = Base64.encodeToString(iv, Base64.DEFAULT)
@@ -128,12 +128,12 @@ class LegacyKeyValueRepository(
     }
 
     @Synchronized
-    override fun get(dataKey: String): String? {
+    override fun get(dataKey: Any): Any? {
         if (!isPersistenceEnabled) {
             return cache[dataKey]
         }
 
-        val dataKeyInPersistentStore = getDataKeyUsedInPersistentStore(dataKey)
+        val dataKeyInPersistentStore = getDataKeyUsedInPersistentStore(dataKey.toString())
 
         val encryptionKeyAlias = getEncryptionKeyAlias()
 
@@ -163,12 +163,12 @@ class LegacyKeyValueRepository(
                     encryptedData)
 
             // Update the in-memory cache after read from disk.
-            decryptedDataInString?.also { cache[dataKey] = it }
+            decryptedDataInString?.also { cache[dataKey.toString()] = it }
         } catch (ex: java.lang.Exception) {
             // TODO Log error in retrieval
 
             // Remove the dataKey and its associated value if there is an exception in decryption
-            remove(dataKey)
+            remove(dataKey.toString())
             null
         }
     }

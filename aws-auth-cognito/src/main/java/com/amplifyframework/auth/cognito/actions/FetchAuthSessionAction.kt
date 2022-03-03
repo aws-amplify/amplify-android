@@ -15,9 +15,6 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import aws.sdk.kotlin.services.cognitoidentity.model.Credentials
-import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityResponse
-import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.events.FetchAwsCredentialsEvent
 import com.amplifyframework.auth.cognito.events.FetchIdentityEvent
@@ -32,44 +29,48 @@ interface FetchAuthSessionAction : Action
 class ConfigureUserPoolTokensAction : FetchAuthSessionAction {
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
         val env = (environment as AuthEnvironment)
-        //TODO : Fetch the userPoolToken from the credential store
-        val TWO_MINUTES = 2 * 60 * 1000
-        val TEN_MINUTES = 2 * 60 * 1000
-        var userPoolToken = "MOCK_TOKEN"
-        val userPoolTokenExpiryTime = System.currentTimeMillis() + TEN_MINUTES
-        val expiryTimeOfToken = System.currentTimeMillis() + TWO_MINUTES
-        //TODO: Check the validity of the user pool token
-        if (userPoolTokenExpiryTime > expiryTimeOfToken) {
+
+        val userPoolTokens = env.awsCognitoAuthCredentialStore.retrieveCredential()?.cognitoUserPoolTokens
+        if (userPoolTokens == null) {
+            //Failure to fetch, Refresh
+            val event = FetchUserPoolTokensEvent(
+                    FetchUserPoolTokensEvent.EventType.Refresh()
+            )
+            dispatcher.send(event)
+        }
+        val userPoolTokenExpiryTime = userPoolTokens?.tokenExpiration as Int
+        val rightNow = Calendar.getInstance()
+        val offset = rightNow.get(Calendar.ZONE_OFFSET) + rightNow.get(Calendar.DST_OFFSET)
+        //The token must be valid for 2 minutes from now
+        if (userPoolTokenExpiryTime > ((rightNow.timeInMillis + offset) + 2 * 60 * 1000)) {
             //User Pool Token is still valid
             val event =
-                FetchUserPoolTokensEvent(
-                    FetchUserPoolTokensEvent.EventType.Fetched()
-                )
+                    FetchUserPoolTokensEvent(
+                            FetchUserPoolTokensEvent.EventType.Fetched()
+                    )
             dispatcher.send(event)
         } else {
             //Token has expired and we need a refresh
             val event = FetchUserPoolTokensEvent(
-                FetchUserPoolTokensEvent.EventType.Refresh()
+                    FetchUserPoolTokensEvent.EventType.Refresh()
             )
             dispatcher.send(event)
         }
-
     }
 }
 
 class ConfigureIdentityAction : FetchAuthSessionAction {
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
         val env = (environment as AuthEnvironment)
-        //TODO : Fetch identity ID from Credential store and initialize it here
-        var idenityID = null
-        if (idenityID != null) {
+        val identityID = env.awsCognitoAuthCredentialStore.retrieveCredential()?.identityId
+        if (identityID != null) {
             val event = FetchIdentityEvent(
-                FetchIdentityEvent.EventType.Fetched()
+                    FetchIdentityEvent.EventType.Fetched()
             )
             dispatcher.send(event)
         } else {
             val event = FetchIdentityEvent(
-                FetchIdentityEvent.EventType.Fetch()
+                    FetchIdentityEvent.EventType.Fetch()
             )
             dispatcher.send(event)
         }
@@ -79,33 +80,20 @@ class ConfigureIdentityAction : FetchAuthSessionAction {
 class ConfigureAWSCredentialsAction : FetchAuthSessionAction {
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
         val env = (environment as AuthEnvironment)
-        //TODO : Fetch AWS Credentials from Credential store and check the validity of the IdentityID
-        val TEN_MINUTES = 2 * 60 * 1000
-        val getCredentialsForIdentityResponse: GetCredentialsForIdentityResponse =
-            GetCredentialsForIdentityResponse.invoke {
-                credentials = Credentials.invoke {
-                    accessKeyId = ""
-                    expiration = Instant.now()
-                    secretKey = ""
-                    sessionToken = ""
-                }
-                identityId = "MOCK_IDENTITY_ID"
-            }
-
-        val userPoolTokenExpiryTime = System.currentTimeMillis() + TEN_MINUTES
-        //TODO: Check the validity of the user pool token by checking if it expires 10 minutes from now
-        if (getCredentialsForIdentityResponse.credentials?.expiration as Instant > Instant.now()) {
+        val credentials = env.awsCognitoAuthCredentialStore.retrieveCredential()
+        val awsCredentials = credentials?.awsCredentials
+        val rightNow = Calendar.getInstance()
+        val offset = rightNow.get(Calendar.ZONE_OFFSET) + rightNow.get(Calendar.DST_OFFSET)
+        //AWS Credentials should be valid for up to 10 minutes from now
+        if (awsCredentials?.expiration != null && awsCredentials.expiration > (rightNow.timeInMillis + offset) + 10 * 60 * 1000) {
             val event =
-                FetchAwsCredentialsEvent(
-                    FetchAwsCredentialsEvent.EventType.Fetched()
-                )
+                    FetchAwsCredentialsEvent(
+                            FetchAwsCredentialsEvent.EventType.Fetched())
             dispatcher.send(event)
         } else {
-            //if invalid
-            val event =
-                FetchAwsCredentialsEvent(
-                    FetchAwsCredentialsEvent.EventType.Fetch()
-                )
+            val event = FetchAwsCredentialsEvent(
+                    FetchAwsCredentialsEvent.EventType.Fetch(
+                            credentials?.identityId as String))
             dispatcher.send(event)
         }
     }

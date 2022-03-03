@@ -14,7 +14,7 @@ data class CognitoUserPoolTokens(
     val idToken: String?,
     val accessToken: String?,
     val refreshToken: String?,
-    val tokenExpiration: String?,
+    val tokenExpiration: Int?,
 )
 
 @Serializable
@@ -22,5 +22,5 @@ data class AWSCredentials(
     val accessKeyId: String?,
     val secretAccessKey: String?,
     val sessionToken: String?,
-    val expiration: String?,
+    val expiration: Long?,
 )

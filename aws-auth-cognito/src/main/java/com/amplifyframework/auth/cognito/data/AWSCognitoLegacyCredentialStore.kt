@@ -52,6 +52,20 @@ internal class AWSCognitoLegacyCredentialStore(
     }
 
     @Synchronized
+    override fun savePartialCredential(cognitoUserPoolTokens: CognitoUserPoolTokens?, identityId: String?, awsCredentials: AWSCredentials?) {
+        val amplifyCredential = retrieveCredential()
+        if (cognitoUserPoolTokens != null) {
+            amplifyCredential?.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)
+        }
+        if (identityId != null) {
+            amplifyCredential?.copy(identityId = identityId)
+        }
+
+        if (awsCredentials != null) {
+            amplifyCredential?.copy(awsCredentials = awsCredentials)
+        }
+    }
+
     override fun deleteCredential() {
         deleteAWSCredentials()
         deleteIdentityId()
@@ -90,10 +104,10 @@ internal class AWSCognitoLegacyCredentialStore(
     }
 
     private fun retrieveAWSCredentials(): AWSCredentials? {
-        val accessKey = idAndCredentialsKeyValue.get(namespace(AK_KEY))
-        val secretKey = idAndCredentialsKeyValue.get(namespace(SK_KEY))
-        val sessionToken = idAndCredentialsKeyValue.get(namespace(ST_KEY))
-        val expiration = idAndCredentialsKeyValue.get(namespace(EXP_KEY))
+        val accessKey = idAndCredentialsKeyValue.get(namespace(AK_KEY)) as String?
+        val secretKey = idAndCredentialsKeyValue.get(namespace(SK_KEY)) as String?
+        val sessionToken = idAndCredentialsKeyValue.get(namespace(ST_KEY)) as String?
+        val expiration = idAndCredentialsKeyValue.get(namespace(EXP_KEY)) as Long?
 
         return if (accessKey == null && secretKey == null && sessionToken == null) {
             null
@@ -102,16 +116,16 @@ internal class AWSCognitoLegacyCredentialStore(
     }
 
     private fun retrieveIdentityId(): String? {
-        return idAndCredentialsKeyValue.get(namespace(ID_KEY))
+        return idAndCredentialsKeyValue.get(namespace(ID_KEY)) as String?
     }
 
     private fun retrieveCognitoUserPoolTokens(): CognitoUserPoolTokens? {
         val keys = getTokenKeys()
 
-        val idToken = keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.get(it) }
-        val accessToken = keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.get(it) }
-        val refreshToken = keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.get(it) }
-        val expiration = keys[TOKEN_EXPIRATION]?.let { tokensKeyValue.get(it) }
+        val idToken = keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.get(it) } as String?
+        val accessToken = keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.get(it) } as String?
+        val refreshToken = keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.get(it) } as String?
+        val expiration = keys[TOKEN_EXPIRATION]?.let { tokensKeyValue.get(it) } as Int?
 
         return if (idToken == null && accessToken == null && refreshToken == null ) {
             return null

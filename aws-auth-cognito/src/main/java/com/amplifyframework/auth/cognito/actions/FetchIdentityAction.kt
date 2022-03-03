@@ -31,11 +31,9 @@ class InitFetchIdentityAction : FetchIdentityAction {
             accountId = env.configuration.userPool?.appClient
             identityPoolId = env.configuration.identityPool?.poolId
         }
-
         try {
             val getIDResponse = env.cognitoAuthService.cognitoIdentityClient?.getId(getIdRequest)
-            //TODO: Update the credential Store with the response identityID
-
+            env.awsCognitoAuthCredentialStore.savePartialCredential(identityId = getIDResponse?.identityId)
             val event =
                 FetchIdentityEvent(
                     FetchIdentityEvent.EventType.Fetched()

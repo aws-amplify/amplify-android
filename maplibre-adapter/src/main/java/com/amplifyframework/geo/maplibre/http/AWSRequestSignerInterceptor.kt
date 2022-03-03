@@ -84,7 +84,7 @@ internal class AWSRequestSignerInterceptor(
         awsRequest.setEncodedResourcePath(request.url.encodedPath)
         awsRequest.parameters = url.queryParameterNames.associateWith { url.queryParameter(it) }
         awsRequest.endpoint = URI.create("${url.scheme}://${url.host}")
-        awsRequest.httpMethod = HttpMethodName.valueOf(request.method.toUpperCase(Locale.ROOT))
+        awsRequest.httpMethod = HttpMethodName.valueOf(request.method.uppercase())
         awsRequest.content = ByteArrayInputStream(body)
         awsRequest.headers = request.headers.associate { (name, value) -> name to value }
 
