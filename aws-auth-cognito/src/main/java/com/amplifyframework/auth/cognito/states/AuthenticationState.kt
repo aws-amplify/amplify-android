@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.states
 
 import com.amplifyframework.auth.cognito.events.AuthenticationEvent
 import com.amplifyframework.statemachine.*
-import com.amplifyframework.auth.cognito.data.AuthenticationError
 import com.amplifyframework.auth.cognito.data.SignedInData
 import com.amplifyframework.auth.cognito.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
@@ -32,7 +31,7 @@ sealed class AuthenticationState : State {
     data class SigningOut(override var signOutState: SignOutState?) : AuthenticationState()
     data class SignedOut(val signedOutData: SignedOutData) : AuthenticationState()
     data class SigningUp(override var signUpState: SignUpState?) : AuthenticationState()
-    data class Error(val error: AuthenticationError) : AuthenticationState()
+    data class Error(val exception: Exception) : AuthenticationState()
 
     open var store: CredentialStoreState? = CredentialStoreState.NotConfigured()
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
@@ -126,6 +125,11 @@ sealed class AuthenticationState : State {
                     else -> defaultResolution
                 }
                 is SigningUp -> when (authenticationEvent) {
+                    is AuthenticationEvent.EventType.ConfirmSignUpRequested -> {
+                        val action =
+                            authenticationActions.initiateConfirmSignUpAction(authenticationEvent)
+                        StateResolution(SignedOut(SignedOutData()), listOf(action))
+                    }
                     is AuthenticationEvent.EventType.CancelSignUp -> StateResolution(
                         SignedOut(
                             SignedOutData()
@@ -136,7 +140,10 @@ sealed class AuthenticationState : State {
                 is SignedIn -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.SignOutRequested -> {
                         val action =
-                            authenticationActions.initiateSignOutAction(authenticationEvent, oldState.signedInData)
+                            authenticationActions.initiateSignOutAction(
+                                authenticationEvent,
+                                oldState.signedInData
+                            )
                         val newState = SigningOut(oldState.signOutState)
                         StateResolution(newState, listOf(action))
                     }
@@ -160,9 +167,14 @@ sealed class AuthenticationState : State {
                         val newState = SigningUp(oldState.signUpState)
                         StateResolution(newState, listOf(action))
                     }
+                    is AuthenticationEvent.EventType.ConfirmSignUpRequested -> {
+                        val action =
+                            authenticationActions.initiateConfirmSignUpAction(authenticationEvent)
+                        StateResolution(SignedOut(SignedOutData()), listOf(action))
+                    }
                     else -> defaultResolution
                 }
-                is Error -> throw AuthenticationError("Authentication event not found.")
+                else -> defaultResolution
             }
         }
     }

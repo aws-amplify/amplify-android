@@ -35,7 +35,7 @@ class InitFetchAWSCredentialsAction : FetchAwsCredentialsAction {
         }
         try {
             val getCredentialsForIdentityResponse =
-                env.cognitoIdentityClient.getCredentialsForIdentity(
+                env.cognitoAuthService.cognitoIdentityClient?.getCredentialsForIdentity(
                     getCredentialsForIdentityRequest
                 )
             //TODO: Update the credential store with the identityID returned

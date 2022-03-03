@@ -15,15 +15,12 @@
 
 package com.amplifyframework.auth.cognito
 
-import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
-import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.auth.cognito.data.AuthConfiguration
 import com.amplifyframework.auth.cognito.actions.*
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.auth.cognito.states.*
-import com.amplifyframework.statemachine.codegen.actions.*
 
 internal class AuthStateMachine(
     resolver: StateMachineResolver<AuthState>,
@@ -45,24 +42,17 @@ internal class AuthStateMachine(
     )
 
     companion object {
-        private object defaultAuthActions : AuthActions
-        private object defaultAuthenticationActions : AuthenticationActions
-        private object defaultAuthorizationActions : AuthorizationActions
-        private object defaultSRPActions : SRPActions
-        private object defaultSignUpActions : SignUpActions
-        private object defaultSignOutActions : SignOutActions
-
         fun logging() = AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
                     CredentialStoreState.Resolver().logging(),
-                    SignUpState.Resolver(defaultSignUpActions).logging(),
-                    SRPSignInState.Resolver(defaultSRPActions).logging(),
-                    SignOutState.Resolver(defaultSignOutActions).logging(),
-                    defaultAuthenticationActions
+                    SignUpState.Resolver(SignUpCognitoActions).logging(),
+                    SRPSignInState.Resolver(SRPCognitoActions).logging(),
+                    SignOutState.Resolver(SignOutCognitoActions).logging(),
+                    AuthenticationCognitoActions
                 ).logging(),
-                AuthorizationState.Resolver(defaultAuthorizationActions).logging(),
-                defaultAuthActions
+                AuthorizationState.Resolver(AuthorizationCognitoActions).logging(),
+                AuthCognitoActions
             ).logging(), AuthEnvironment.empty
         )
     }
@@ -71,8 +61,8 @@ internal class AuthStateMachine(
 class AuthEnvironment : Environment {
     lateinit var configuration: AuthConfiguration
     internal lateinit var srpHelper: SRPHelper
-    lateinit var cognitoIdentityProviderClient: CognitoIdentityProviderClient
-    lateinit var cognitoIdentityClient: CognitoIdentityClient
+
+    val cognitoAuthService = AWSCognitoAuthService
 
     //TODO: temporary, needs to be in credential store
     var accessToken: String? = null

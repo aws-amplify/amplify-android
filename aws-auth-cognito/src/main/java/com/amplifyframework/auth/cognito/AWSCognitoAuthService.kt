@@ -13,14 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth.cognito.actions
+package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.cognito.events.AuthEvent
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
+import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 
-object AuthorizationCognitoActions : AuthorizationActions {
-    override fun configureAuthorizationAction() = Action { dispatcher, environment ->
-        dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthorization))
-    }
+interface AWSCognitoAuthServiceBehavior {
+    var cognitoIdentityProviderClient: CognitoIdentityProviderClient?
+    var cognitoIdentityClient: CognitoIdentityClient?
+}
+
+object AWSCognitoAuthService: AWSCognitoAuthServiceBehavior {
+    override var cognitoIdentityProviderClient: CognitoIdentityProviderClient? = null
+    override var cognitoIdentityClient: CognitoIdentityClient? = null
 }

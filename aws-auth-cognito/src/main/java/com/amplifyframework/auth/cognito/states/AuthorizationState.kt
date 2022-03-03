@@ -15,8 +15,6 @@
 
 package com.amplifyframework.auth.cognito.states
 
-import com.amplifyframework.auth.cognito.data.AuthenticationError
-import com.amplifyframework.auth.cognito.data.AuthorizationError
 import com.amplifyframework.auth.cognito.events.AuthorizationEvent
 import com.amplifyframework.statemachine.*
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
@@ -26,7 +24,7 @@ sealed class AuthorizationState : State {
     data class Configured(val id: String = "") : AuthorizationState()
     data class FetchingAuthSession(val id: String = "") : AuthorizationState()
     data class SessionEstablished(val id: String = "") : AuthorizationState()
-    data class Error(val error: AuthorizationError) : AuthorizationState()
+    data class Error(val exception: Exception) : AuthorizationState()
 
     override val type = this.toString()
 
@@ -46,7 +44,7 @@ sealed class AuthorizationState : State {
                 is NotConfigured -> {
                     when (authorizationEvent) {
                         is AuthorizationEvent.EventType.Configure -> onConfigure()
-                        is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.error))
+                        is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
                         else -> StateResolution.from(oldState)
                     }
                 }
@@ -60,7 +58,7 @@ sealed class AuthorizationState : State {
                         is AuthorizationEvent.EventType.FetchedAuthSession -> onFetchedAuthSession(authorizationEvent.session)
                         else -> StateResolution.from(oldState)
                     }
-                is Error -> throw AuthorizationError("")
+                else -> StateResolution(oldState)
             }
         }
 

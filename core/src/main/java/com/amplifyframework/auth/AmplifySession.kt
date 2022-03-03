@@ -12,9 +12,22 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.auth
 
-package com.amplifyframework.auth.cognito.data
+import aws.sdk.kotlin.runtime.auth.credentials.Credentials
+import com.amplifyframework.auth.result.AuthSessionResult
 
-data class AuthenticationError(val msg: String) : Exception() {
-    val type = "Unknown Error."
+/**
+ * Internally represents AWS Cognito Auth Session.
+ */
+interface AmplifySession {
+    /**
+     * The id which comes from Identity Pools.
+     */
+    val identityId: AuthSessionResult<String>
+
+    /**
+     * The credentials which come from Identity Pool.
+     */
+    val awsCredentials: AuthSessionResult<Credentials>
 }

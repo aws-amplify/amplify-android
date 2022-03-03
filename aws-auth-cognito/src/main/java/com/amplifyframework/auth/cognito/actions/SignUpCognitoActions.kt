@@ -15,81 +15,77 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.*
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.events.SignUpEvent
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
-import com.amplifyframework.auth.cognito.data.AuthenticationError
 import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.Environment
-import com.amplifyframework.statemachine.EventDispatcher
 import com.amplifyframework.statemachine.codegen.actions.SignUpActions
 
 object SignUpCognitoActions : SignUpActions {
-    override fun startSignUpAction(event: SignUpEvent.EventType.InitiateSignUp) = object : Action {
-        override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
+    override fun startSignUpAction(event: SignUpEvent.EventType.InitiateSignUp) =
+        Action { dispatcher, environment ->
             val env = (environment as AuthEnvironment)
-            val options = SignUpRequest {
-                this.username = event.username
-                this.password = event.password
-                this.clientId = env.configuration.userPool?.appClient
-            }
-            var signupResponse: SignUpResponse? = null
-            try {
-                signupResponse = env.cognitoIdentityProviderClient.signUp(options)
-            } catch (e: Exception) {
+            runCatching {
+                val userAttributes = event.options.userAttributes.map {
+                    AttributeType {
+                        name = it.key.keyString
+                        value = it.value
+                    }
+                }
+                val options = SignUpRequest {
+                    this.username = event.username
+                    this.password = event.password
+                    this.userAttributes = userAttributes
+                    this.clientId = env.configuration.userPool?.appClient
+                }
+
+                env.cognitoAuthService.cognitoIdentityProviderClient?.signUp(options)
+            }.onSuccess {
+                it?.codeDeliveryDetails?.run {
+                    SignUpEvent(
+                        SignUpEvent.EventType.InitiateSignUpSuccess(event.username, it)
+                    )
+                }
+            }.onFailure {
                 dispatcher.send(
                     SignUpEvent(
-                        SignUpEvent.EventType.InitiateSignUpFailure(AuthenticationError("Signup error."))
+                        SignUpEvent.EventType.InitiateSignUpFailure(it as Exception)
                     )
                 )
             }
+        }
 
-            val signUpEvent = if (signupResponse?.codeDeliveryDetails != null) {
-                SignUpEvent(
-                    SignUpEvent.EventType.InitiateSignUpSuccess(event.username, signupResponse)
+    override fun confirmSignUpAction(event: SignUpEvent.EventType.ConfirmSignUp) =
+        Action { dispatcher, environment ->
+            val env = (environment as AuthEnvironment)
+            runCatching {
+                val options = ConfirmSignUpRequest {
+                    this.username = event.username
+                    this.confirmationCode = event.confirmationCode
+                    this.clientId = env.configuration.userPool?.appClient
+                }
+                env.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp(options)
+            }.onSuccess {
+                dispatcher.send(
+                    SignUpEvent(SignUpEvent.EventType.ConfirmSignUpSuccess(it))
                 )
-            } else {
-                SignUpEvent(
-                    SignUpEvent.EventType.InitiateSignUpFailure(AuthenticationError("Signup error."))
+            }.onFailure {
+                dispatcher.send(
+                    SignUpEvent(SignUpEvent.EventType.ConfirmSignUpFailure(it as Exception))
                 )
             }
-            dispatcher.send(signUpEvent)
         }
-    }
 
-    override fun confirmSignUpAction(event: SignUpEvent.EventType.ConfirmSignUp) = object : Action {
-        override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
-            val env = (environment as AuthEnvironment)
-            val options = ConfirmSignUpRequest {
-                this.username = event.username
-                this.confirmationCode = event.confirmationCode
-                this.clientId = env.configuration.userPool?.appClient
-            }
-            val confirmSignUpResponse = env.cognitoIdentityProviderClient.confirmSignUp(options)
-
-            dispatcher.send(
-                SignUpEvent(SignUpEvent.EventType.ConfirmSignUpSuccess(confirmSignUpResponse))
-            )
-        }
-    }
-
-    override fun resendConfirmationCodeAction() = object : Action {
-        override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
-            val env = (environment as AuthEnvironment)
+    override fun resendConfirmationCodeAction() = Action { dispatcher, environment ->
+        val env = (environment as AuthEnvironment)
+        runCatching {
             val options = ResendConfirmationCodeRequest {
                 clientId = env.configuration.userPool?.appClient
-//                    username = event.username
+//                username = event.username
             }
-
-//            val resendConfirmationCodeResponse =
-//                env.cognitoIdentityProviderClient.resendConfirmationCode(options)
-//            val event = SignUpEvent(
-//                SignUpEvent.EventType.ConfirmRetrySignUpSuccess(resendConfirmationCodeResponse)
-//            )
-//            dispatcher.send(event)
+            env.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode(options)
         }
     }
+
+    override fun cancelSignUpAction() = Action { _, _ -> }
 }

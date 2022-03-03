@@ -46,14 +46,14 @@ class RefreshFetchUserPoolTokensAction : FetchUserPoolTokensAction {
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
         val env = (environment as AuthEnvironment)
         try {
-            val refreshTokenResponse = env.cognitoIdentityProviderClient.initiateAuth {
+            val refreshTokenResponse = env.cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                 authFlow = AuthFlowType.RefreshToken
                 clientId = env.configuration.userPool?.appClient
                 authParameters = mapOf(
                     "REFRESH_TOKEN" to "REFRESH_TOKEN_FROM_AmplifyCredential"
                 )
             }
-            refreshTokenResponse.authenticationResult?.let {
+            refreshTokenResponse?.authenticationResult?.let {
                 //TODO: Once the credentialStorage and AmplifyCentral is implemented, initialize/replace those values here.
                 val refreshToken = it.refreshToken
                 val idToken = it.idToken

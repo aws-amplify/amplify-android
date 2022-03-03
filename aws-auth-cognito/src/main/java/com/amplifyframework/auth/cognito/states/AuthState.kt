@@ -15,7 +15,6 @@
 
 package com.amplifyframework.auth.cognito.states
 
-import com.amplifyframework.auth.cognito.data.AuthenticationError
 import com.amplifyframework.auth.cognito.events.AuthEvent
 import com.amplifyframework.statemachine.*
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
@@ -39,7 +38,7 @@ sealed class AuthState : State {
     ) :
         AuthState()
 
-    data class Error(val error: AuthenticationError) : AuthState()
+    data class Error(val exception: Exception) : AuthState()
 
     open var authNState: AuthenticationState? = AuthenticationState.NotConfigured()
     open var authZState: AuthorizationState? = AuthorizationState.NotConfigured()
@@ -124,8 +123,7 @@ sealed class AuthState : State {
                     )
                     else -> defaultResolution
                 }
-                is Configured -> defaultResolution
-                is Error -> throw AuthenticationError("Auth Error")
+                else -> defaultResolution
             }
         }
     }

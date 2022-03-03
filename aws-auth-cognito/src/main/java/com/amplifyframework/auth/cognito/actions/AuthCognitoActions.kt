@@ -22,67 +22,60 @@ import com.amplifyframework.auth.cognito.events.AuthEvent
 import com.amplifyframework.auth.cognito.events.AuthenticationEvent
 import com.amplifyframework.auth.cognito.events.AuthorizationEvent
 import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.Environment
-import com.amplifyframework.statemachine.EventDispatcher
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 
 object AuthCognitoActions : AuthActions {
     override fun initializeAuthConfigurationAction(event: AuthEvent.EventType.ConfigureAuth) =
-        object : Action {
-            override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
-                with(environment as AuthEnvironment) {
-                    configuration = event.configuration
-                    val configureEvent: AuthEvent = configuration.identityPool?.run {
-                        AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration))
-                    } ?: AuthEvent(
+        Action { dispatcher, environment ->
+            with(environment as AuthEnvironment) {
+                configuration = event.configuration
+                val configureEvent: AuthEvent = configuration.userPool?.run {
+                    AuthEvent(
                         AuthEvent.EventType.ConfigureAuthentication(
                             configuration,
                             event.storedCredentials
                         )
                     )
-                    dispatcher.send(configureEvent)
-                }
+                } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration))
+                dispatcher.send(configureEvent)
             }
         }
 
     override fun initializeAuthenticationConfigurationAction(event: AuthEvent.EventType.ConfigureAuthentication) =
-        object : Action {
-            override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
-                with(environment as AuthEnvironment) {
-                    configuration.userPool?.let {
-                        cognitoIdentityProviderClient = CognitoIdentityProviderClient {
+        Action { dispatcher, environment ->
+            with(environment as AuthEnvironment) {
+                configuration.userPool?.let {
+                    cognitoAuthService.cognitoIdentityProviderClient =
+                        CognitoIdentityProviderClient {
                             this.region = configuration.userPool?.region
                         }
-                    }
-                    dispatcher.send(
-                        AuthenticationEvent(
-                            AuthenticationEvent.EventType.Configure(
-                                event.configuration,
-                                event.storedCredentials
-                            )
+                }
+                dispatcher.send(
+                    AuthenticationEvent(
+                        AuthenticationEvent.EventType.Configure(
+                            event.configuration,
+                            event.storedCredentials
                         )
                     )
-                }
+                )
             }
         }
 
     override fun initializeAuthorizationConfigurationAction(event: AuthEvent.EventType) =
-        object : Action {
-            override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
-                with(environment as AuthEnvironment) {
-                    configuration.identityPool?.let {
-                        cognitoIdentityClient = CognitoIdentityClient {
-                            this.region = configuration.identityPool?.region
-                        }
+        Action { dispatcher, environment ->
+            with(environment as AuthEnvironment) {
+                configuration.identityPool?.let {
+                    cognitoAuthService.cognitoIdentityClient = CognitoIdentityClient {
+                        this.region = configuration.identityPool?.region
                     }
-                    dispatcher.send(
-                        AuthorizationEvent(
-                            AuthorizationEvent.EventType.Configure(
-                                configuration
-                            )
+                }
+                dispatcher.send(
+                    AuthorizationEvent(
+                        AuthorizationEvent.EventType.Configure(
+                            configuration
                         )
                     )
-                }
+                )
             }
         }
 }

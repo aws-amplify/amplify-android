@@ -15,7 +15,6 @@
 
 package com.amplifyframework.auth.cognito.states
 
-import com.amplifyframework.auth.cognito.data.AuthenticationError
 import com.amplifyframework.auth.cognito.events.SRPEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
@@ -30,7 +29,7 @@ sealed class SRPSignInState : State {
     data class SignedIn(val id: String = "") : SRPSignInState()
     data class NextAuthChallenge(val id: String = "") : SRPSignInState()
     data class Cancelling(val id: String = "") : SRPSignInState()
-    data class Error(val error: AuthenticationError) : SRPSignInState()
+    data class Error(val exception: Exception) : SRPSignInState()
 
     class Resolver(private val srpActions: SRPActions) : StateMachineResolver<SRPSignInState> {
         override val defaultState = NotStarted("")
@@ -60,13 +59,13 @@ sealed class SRPSignInState : State {
                         val newState = RespondingPasswordVerifier()
                         StateResolution(newState, listOf(action))
                     }
-                    is SRPEvent.EventType.ThrowAuthError -> StateResolution(Error(srpEvent.error))
+                    is SRPEvent.EventType.ThrowAuthError -> StateResolution(Error(srpEvent.exception))
                     is SRPEvent.EventType.CancelSRPSignIn -> StateResolution(Cancelling())
                     else -> defaultResolution
                 }
                 is RespondingPasswordVerifier -> when (srpEvent) {
                     is SRPEvent.EventType.RespondNextAuthChallenge -> StateResolution(NextAuthChallenge())
-                    is SRPEvent.EventType.ThrowPasswordVerifierError -> StateResolution(Error(srpEvent.error))
+                    is SRPEvent.EventType.ThrowPasswordVerifierError -> StateResolution(Error(srpEvent.exception))
                     is SRPEvent.EventType.FinalizeSRPSignIn -> StateResolution(SignedIn())
                     is SRPEvent.EventType.CancelSRPSignIn -> StateResolution(Cancelling())
                     else -> defaultResolution
@@ -76,7 +75,7 @@ sealed class SRPSignInState : State {
                     is SRPEvent.EventType.Reset -> StateResolution(NotStarted())
                     else -> defaultResolution
                 }
-                is Error -> throw AuthenticationError("")
+                else -> defaultResolution
             }
         }
     }

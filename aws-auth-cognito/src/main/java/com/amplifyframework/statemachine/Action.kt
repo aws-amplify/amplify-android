@@ -9,12 +9,23 @@ interface Action {
     suspend fun execute(dispatcher: EventDispatcher, environment: Environment)
 
     companion object {
-        fun basic(id: String, closure: ActionClosure) = BasicAction(id, closure)
+        fun basic(id: String, block: ActionClosure) = BasicAction(id, block)
+
+        inline operator fun invoke(crossinline block: suspend (EventDispatcher, Environment) -> Unit): Action {
+            return object : Action {
+                override suspend fun execute(
+                    dispatcher: EventDispatcher,
+                    environment: Environment
+                ) {
+                    block(dispatcher, environment)
+                }
+            }
+        }
     }
 }
 
-class BasicAction(override var id: String, val closure: ActionClosure) : Action {
+class BasicAction(override var id: String, val block: ActionClosure) : Action {
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
-        closure(dispatcher, environment)
+        block(dispatcher, environment)
     }
 }

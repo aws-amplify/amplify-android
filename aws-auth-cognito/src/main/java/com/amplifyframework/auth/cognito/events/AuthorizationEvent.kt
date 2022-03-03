@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.events
 
 import com.amplifyframework.auth.cognito.data.AmplifyCredential
 import com.amplifyframework.auth.cognito.data.AuthConfiguration
-import com.amplifyframework.auth.cognito.data.AuthorizationError
 import com.amplifyframework.statemachine.StateMachineEvent
 import java.util.*
 
@@ -28,7 +27,7 @@ class AuthorizationEvent(val eventType: EventType, override val time: Date? = nu
         data class FetchAuthSession(val credentials: AmplifyCredential) : EventType()
         // TODO change session to AWSAuthCognitoSession type
         data class FetchedAuthSession(val session: String) : EventType()
-        data class ThrowError(val error: AuthorizationError) : EventType()
+        data class ThrowError(val exception: Exception) : EventType()
     }
 
     override val type = eventType.toString()

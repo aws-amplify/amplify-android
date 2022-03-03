@@ -28,6 +28,7 @@ import com.amplifyframework.auth.cognito.events.AuthenticationEvent
 import com.amplifyframework.auth.cognito.events.CredentialStoreEvent
 import com.amplifyframework.auth.cognito.states.AuthenticationState
 import com.amplifyframework.auth.cognito.states.CredentialStoreState
+import com.amplifyframework.auth.cognito.states.SRPSignInState
 import com.amplifyframework.auth.cognito.states.SignUpState
 import com.amplifyframework.auth.options.*
 import com.amplifyframework.auth.result.AuthResetPasswordResult
@@ -47,7 +48,7 @@ import org.json.JSONObject
 /**
  * A Cognito implementation of the Auth Plugin.
  */
-class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
+class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     companion object {
         private const val AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
@@ -60,7 +61,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
     private var credentialStoreStateMachine = CredentialStoreStateMachine(credentialStoreEnvironment)
 
 
-    override fun signUp(
+     override fun signUp(
         username: String,
         password: String,
         options: AuthSignUpOptions,
@@ -68,11 +69,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
         onError: Consumer<AuthException>
     ) {
         authStateMachine.listen({ authState ->
-            val authNState = authState.authNState.takeIf { it is AuthenticationState.SigningUp }
-            val signUpState =
-                authNState?.signUpState.takeIf { it is SignUpState.SigningUpInitiated }
-
-            signUpState?.apply {
+            when(val signUpState = authState.authNState.let { it?.signUpState }){
+                is SignUpState.SigningUpInitiated -> {
                 val authSignUpResult = AuthSignUpResult(
                     true,
                     AuthNextSignUpStep(AuthSignUpStep.CONFIRM_SIGN_UP_STEP, mapOf(), null),
@@ -80,17 +78,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
                 )
                 onSuccess.accept(authSignUpResult)
             }
-        }, {})
-
-        val event =
-            AuthenticationEvent(
-                AuthenticationEvent.EventType.SignUpRequested(
-                    username,
-                    password,
-                    options
+                is SignUpState.Error -> onError.accept(CognitoAuthExceptionConverter.lookup(signUpState.exception, "Sign up failed."))
+                else -> {}
+            }
+        }, {
+            val event =
+                AuthenticationEvent(
+                    AuthenticationEvent.EventType.SignUpRequested(username, password, options)
                 )
-            )
-        authStateMachine.send(event)
+            authStateMachine.send(event)
+        })
     }
 
     override fun confirmSignUp(
@@ -101,27 +98,25 @@ class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
         onError: Consumer<AuthException>
     ) {
         authStateMachine.listen({ authState ->
-            val authNState = authState.authNState.takeIf { it is AuthenticationState.SigningUp }
-            val signUpState = authNState?.signUpState.takeIf { it is SignUpState.SignedUp }
-
-            signUpState?.apply {
+            when(val signUpState = authState.authNState.let { it?.signUpState }){
+                is SignUpState.SignedUp -> {
                 val authSignUpResult = AuthSignUpResult(
                     true,
                     AuthNextSignUpStep(AuthSignUpStep.DONE, mapOf(), null),
                     null
                 )
                 onSuccess.accept(authSignUpResult)
+                }
+                is SignUpState.Error -> onError.accept(CognitoAuthExceptionConverter.lookup(signUpState.exception, "Confirm sign up failed."))
+                else -> {}
             }
-        }, {})
-
-//        val event =
-//            AuthenticationEvent(
-//                AuthenticationEvent.EventType.AuthNConfirmSignUp(
-//                    username,
-//                    confirmationCode
-//                )
-//            )
-//        authStateMachine.send(event)
+        }, {
+            val event =
+                AuthenticationEvent(
+                    AuthenticationEvent.EventType.ConfirmSignUpRequested(username, confirmationCode)
+                )
+            authStateMachine.send(event)
+        })
     }
 
     override fun confirmSignUp(
@@ -130,7 +125,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        confirmSignUp(username, confirmationCode, AuthConfirmSignUpOptions.defaults(), onSuccess, onError)
     }
 
     override fun resendSignUpCode(
@@ -158,22 +153,23 @@ class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
         onError: Consumer<AuthException>
     ) {
         authStateMachine.listen({ authState ->
-            val authNState = authState.authNState.takeIf { it is AuthenticationState.SignedIn }
-            authNState?.apply {
+            when(val srpSignInState = authState.authNState.let { it?.srpSignInState }){
+                is SRPSignInState.SignedIn -> {
                 val authSignInResult = AuthSignInResult(
                     true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
                 )
                 onSuccess.accept(authSignInResult)
             }
+                is SRPSignInState.Error -> onError.accept(CognitoAuthExceptionConverter.lookup(srpSignInState.exception, "Sign in failed."))
+                else -> {}
+            }
         }, {
-            //TODO: auth plugin subscribed to signed in event
+            val event =
+                AuthenticationEvent(
+                    AuthenticationEvent.EventType.SignInRequested(username, password, options)
+                )
+            authStateMachine.send(event)
         })
-
-        val event =
-            AuthenticationEvent(
-                AuthenticationEvent.EventType.SignInRequested(username, password, options)
-            )
-        authStateMachine.send(event)
     }
 
     override fun signIn(
@@ -397,14 +393,14 @@ class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-                authStateMachine.listen({ authState ->
+        authStateMachine.listen({ authState ->
             val authNSState = authState.authNState.takeIf { it is AuthenticationState.SignedOut }
             authNSState?.apply { onSuccess.call() }
-        }, {})
-
-//        val event =
-//            AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
-//        authStateMachine.send(event)
+        }, {
+            val event =
+                AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
+            authStateMachine.send(event)
+        })
     }
 
     @Throws(AmplifyException::class)
@@ -424,7 +420,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
             )
         }
 
-        authStateMachine.send(AuthEvent(ConfigureAuth(authConfiguration, null)))
         sendCredentialStoreConfigure()
     }
 
@@ -444,12 +439,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<CognitoIdentityProviderClient>() {
                     // no - op
                 }
             }
-        }, {})
-        credentialStoreStateMachine
-            .send(CredentialStoreEvent(CredentialStoreEvent.EventType.MigrateLegacyCredentialStore()))
+        }, {
+            credentialStoreStateMachine
+                .send(CredentialStoreEvent(CredentialStoreEvent.EventType.MigrateLegacyCredentialStore()))
+        })
     }
 
-    override fun getEscapeHatch() = authEnvironment.cognitoIdentityProviderClient
+    override fun getEscapeHatch() = authEnvironment.cognitoAuthService
 
     override fun getPluginKey() = AUTH_PLUGIN_KEY
 

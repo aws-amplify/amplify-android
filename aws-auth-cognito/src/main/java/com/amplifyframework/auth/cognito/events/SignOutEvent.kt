@@ -15,7 +15,6 @@
 
 package com.amplifyframework.auth.cognito.events
 
-import com.amplifyframework.auth.cognito.data.AuthenticationError
 import com.amplifyframework.auth.cognito.data.SignedInData
 import com.amplifyframework.statemachine.StateMachineEvent
 import java.util.*
@@ -32,7 +31,7 @@ class SignOutEvent(
 
         data class SignOutGlobally(val signedInData: SignedInData) : EventType()
         data class SignedOutSuccess(val signedInData: SignedInData) : EventType()
-        data class SignedOutFailure(val error: AuthenticationError) : EventType()
+        data class SignedOutFailure(val exception: Exception) : EventType()
         data class RevokeToken(val signedInData: SignedInData) : EventType()
     }
 

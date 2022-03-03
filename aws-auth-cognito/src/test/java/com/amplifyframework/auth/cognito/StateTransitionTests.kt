@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
+import com.amplifyframework.auth.cognito.data.SignedOutData
 import com.amplifyframework.auth.cognito.events.*
 import com.amplifyframework.auth.cognito.states.*
 import com.amplifyframework.auth.options.AuthSignInOptions

@@ -15,7 +15,6 @@
 
 package com.amplifyframework.auth.cognito.states
 
-import com.amplifyframework.auth.cognito.data.AuthenticationError
 import com.amplifyframework.auth.cognito.events.SignUpEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
@@ -29,7 +28,7 @@ sealed class SignUpState : State {
     data class SigningUpInitiated(val id: String = "") : SignUpState()
     data class ConfirmingSignUp(val id: String = "") : SignUpState()
     data class SignedUp(val id: String = "") : SignUpState()
-    data class Error(val error: AuthenticationError) : SignUpState()
+    data class Error(val exception: Exception) : SignUpState()
 
     class Resolver(private val signUpActions: SignUpActions) : StateMachineResolver<SignUpState> {
         override val defaultState = NotStarted("")
@@ -64,7 +63,7 @@ sealed class SignUpState : State {
                     )
                     is SignUpEvent.EventType.InitiateSignUpFailure -> {
                         val action = signUpActions.cancelSignUpAction()
-                        StateResolution(Error(signUpEvent.error), listOf(action))
+                        StateResolution(Error(signUpEvent.exception), listOf(action))
                     }
                     else -> defaultResolution
                 }
@@ -72,11 +71,10 @@ sealed class SignUpState : State {
                     is SignUpEvent.EventType.ConfirmSignUpSuccess -> StateResolution(SignedUp())
                     is SignUpEvent.EventType.ConfirmSignUpFailure -> {
                         val action = signUpActions.cancelSignUpAction()
-                        StateResolution(Error(signUpEvent.error), listOf(action))
+                        StateResolution(Error(signUpEvent.exception), listOf(action))
                     }
                     else -> defaultResolution
                 }
-                is Error -> throw AuthenticationError("")
                 else -> defaultResolution
             }
         }

@@ -32,7 +32,7 @@ import kotlin.reflect.KClass
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
@@ -89,7 +89,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
                 options,
                 {
                     while (it.hasNext()) {
-                        sendBlocking(it.next())
+                        trySendBlocking(it.next())
                     }
                     close()
                 },

@@ -15,7 +15,6 @@
 
 package com.amplifyframework.auth.cognito.states
 
-import com.amplifyframework.auth.cognito.data.AuthenticationError
 import com.amplifyframework.auth.cognito.data.SignedInData
 import com.amplifyframework.auth.cognito.data.SignedOutData
 import com.amplifyframework.auth.cognito.events.SignOutEvent
@@ -31,7 +30,7 @@ sealed class SignOutState : State {
     data class SigningOutGlobally(val id: String = "") : SignOutState()
     data class RevokingToken(val id: String = "") : SignOutState()
     data class SignedOut(val signedOutData: SignedOutData) : SignOutState()
-    data class Error(val error: AuthenticationError) : SignOutState()
+    data class Error(val exception: Exception) : SignOutState()
 
     class Resolver(private val signOutActions: SignOutActions) :
         StateMachineResolver<SignOutState> {
@@ -73,7 +72,7 @@ sealed class SignOutState : State {
                         val newState = SignedOut(SignedOutData(signOutEvent.signedInData.username))
                         StateResolution(newState)
                     }
-                    is SignOutEvent.EventType.SignedOutFailure -> StateResolution(Error(signOutEvent.error))
+                    is SignOutEvent.EventType.SignedOutFailure -> StateResolution(Error(signOutEvent.exception))
                     else -> defaultResolution
                 }
                 is SigningOutGlobally -> when (signOutEvent) {
@@ -82,7 +81,6 @@ sealed class SignOutState : State {
                         val action = signOutActions.revokeTokenAction(signOutEvent)
                         StateResolution(newState, listOf(action))
                     }
-                    is SignOutEvent.EventType.SignedOutFailure -> StateResolution(Error(signOutEvent.error))
                     else -> defaultResolution
                 }
                 is RevokingToken -> when (signOutEvent) {
@@ -95,8 +93,7 @@ sealed class SignOutState : State {
                     }
                     else -> defaultResolution
                 }
-                is SignedOut -> defaultResolution
-                is Error -> throw AuthenticationError("")
+                else -> defaultResolution
             }
         }
     }

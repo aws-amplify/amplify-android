@@ -28,13 +28,17 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
             val configuration: AuthConfiguration,
             val storedCredentials: AmplifyCredential?
         ) : EventType()
-        data class Configured(val configuration: AuthConfiguration) : EventType()
         data class InitializedSignedIn(val signedInData: SignedInData) : EventType()
         data class InitializedSignedOut(val signedOutData: SignedOutData) : EventType()
         data class SignUpRequested(
             val username: String?,
             val password: String?,
             val options: AuthSignUpOptions
+        ) : EventType()
+
+        data class ConfirmSignUpRequested(
+            val username: String,
+            val confirmationCode: String,
         ) : EventType()
 
         data class SignInRequested(
@@ -48,9 +52,9 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
             val invalidateTokens: Boolean = true
         ) : EventType()
 
-        data class CancelSignIn(val id: String) : EventType()
+        data class CancelSignIn(val id: String = "") : EventType()
         data class CancelSignUp(val username: String) : EventType()
-        data class ThrowError(val error: AuthenticationError) : EventType()
+        data class ThrowError(val exception: Exception) : EventType()
     }
 
     override val type = eventType.toString()

@@ -26,6 +26,8 @@ dependencies {
     implementation dependency.androidx.nav.uiktx
     implementation dependency.androidx.nav.dynamicfeatures
 
+    implementation "aws.sdk.kotlin:aws-types:0.13.0-beta"
+
     testImplementation project(path: ':aws-api-appsync') // Used to reference Temporal types in tests.
     testImplementation project(path: ':testmodels')
     testImplementation(project(path: ':testutils')) {

@@ -33,7 +33,7 @@ class InitFetchIdentityAction : FetchIdentityAction {
         }
 
         try {
-            val getIDResponse = env.cognitoIdentityClient.getId(getIdRequest)
+            val getIDResponse = env.cognitoAuthService.cognitoIdentityClient?.getId(getIdRequest)
             //TODO: Update the credential Store with the response identityID
 
             val event =
