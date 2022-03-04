@@ -116,6 +116,38 @@ class AWSCognitoAuthCredentialStoreTest {
         assertEquals(null, store.retrieveCredential())
     }
 
+    @Test
+    fun testCognitoUserPoolTokensIsReturnedAsNullIfAllItsFieldsAreNull() {
+        val credential = getCredential().copy(
+            cognitoUserPoolTokens = CognitoUserPoolTokens(null, null, null, null)
+        )
+        setStoreCredentials(credential)
+
+        val actual = persistentStore.retrieveCredential()?.cognitoUserPoolTokens
+
+        Assert.assertEquals(null, actual)
+    }
+
+    @Test
+    fun testAWSCredentialsIsReturnedAsNullIfAllItsFieldsAreNull() {
+        val credential = getCredential().copy(
+            awsCredentials = AWSCredentials(null, null, null, null)
+        )
+        setStoreCredentials(credential)
+
+        val actual = persistentStore.retrieveCredential()?.awsCredentials
+
+        Assert.assertEquals(null, actual)
+    }
+
+    private fun setStoreCredentials(credential: AmplifyCredential) {
+        Mockito.`when`(mockKeyValue.get(Mockito.anyString())).thenReturn(serialized(credential))
+
+        setupUserPoolConfig()
+        setupIdentityPoolConfig()
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
+    }
+
     private fun setupIdentityPoolConfig() {
         Mockito.`when`(mockConfig.identityPool).thenReturn(IdentityPoolConfiguration {
             this.poolId = IDENTITY_POOL_ID
