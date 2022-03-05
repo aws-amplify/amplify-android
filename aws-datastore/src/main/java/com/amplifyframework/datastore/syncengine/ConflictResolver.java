@@ -22,6 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreConflictHandler;
@@ -84,9 +85,9 @@ final class ConflictResolver {
 
         ModelWithMetadata<T> serverData = conflictUnhandledError.getServerVersion();
         ModelMetadata metadata = serverData.getSyncMetadata();
-        T remote = serverData.getModel();
+        //T local = getMutatedModelFromSerializedModel(pendingMutation);
         T local = getMutatedModelFromSerializedModel(pendingMutation);
-
+        T remote = getServerModel(serverData, local);
         ConflictData<T> conflictData = ConflictData.create(local, remote);
 
         return Single
@@ -100,22 +101,39 @@ final class ConflictResolver {
             });
     }
 
+    @SuppressWarnings("unchecked")
     @Nullable
     private <T extends Model> T getMutatedModelFromSerializedModel(@NonNull PendingMutation<T> pendingMutation) {
-        T local;
+        T local = pendingMutation.getMutatedItem();;
+
+
         if (pendingMutation.getMutatedItem() instanceof SerializedModel) {
-            Gson gson = GsonFactory.instance();
-            LOG.info("conflict resolver getT: " + pendingMutation.getMutatedItem().toString());
-            SerializedModel serializedModel = (SerializedModel) pendingMutation.getMutatedItem();
-            String jsonString = gson.toJson(serializedModel.getSerializedData());
+            SerializedModel serializedModel = (SerializedModel) local;
             Type modelType = Objects.requireNonNull(((SerializedModel) pendingMutation.getMutatedItem())
-                    .getModelSchema()).getModelClass();
-            LOG.info("conflict resolver getT modelType: " + modelType);
-            local = gson.fromJson(jsonString, modelType);
-        } else {
-            local = pendingMutation.getMutatedItem();
+            .getModelSchema()).getModelClass();
+            if (modelType != SerializedModel.class ) {
+                Gson gson = GsonFactory.instance();
+                LOG.info("conflict resolver getT: " + pendingMutation.getMutatedItem().toString());
+                String jsonString = gson.toJson(serializedModel.getSerializedData());
+                LOG.info("conflict resolver getT modelType: " + modelType);
+                local = gson.fromJson(jsonString, modelType);
+            }
         }
         return local;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Model> T getServerModel(@NonNull ModelWithMetadata<T> serverData, T local) {
+        T serverModel = serverData.getModel();
+        if (serverModel instanceof SerializedModel) {
+            SerializedModel serverSerializedModel = (SerializedModel) serverModel;
+            return (T) SerializedModel.builder()
+                    .serializedData(serverSerializedModel.getSerializedData())
+                    .modelSchema(((SerializedModel) local).getModelSchema())
+                    .build();
+        } else {
+            return serverModel;
+        }
     }
 
     @NonNull
@@ -143,7 +161,7 @@ final class ConflictResolver {
     private <T extends Model> Single<ModelWithMetadata<T>> publish(@NonNull T model, int version) {
         return Single
             .<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
-                final ModelSchema schema = ModelSchema.fromModelClass(model.getClass());
+                final ModelSchema schema = SchemaRegistry.instance().getModelSchemaForModelClass(model.getModelName());
                 LOG.info("publish conflict resolver: " + model.toString());
                 appSync.update(model, schema, version, emitter::onSuccess, emitter::onError);
             })

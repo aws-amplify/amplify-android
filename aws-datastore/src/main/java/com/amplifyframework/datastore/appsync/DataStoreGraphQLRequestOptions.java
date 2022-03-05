@@ -33,6 +33,7 @@ public final class DataStoreGraphQLRequestOptions implements GraphQLRequestOptio
     private static final String DELETED_KEY = "_deleted";
     private static final String VERSION_KEY = "_version";
     private static final String LAST_CHANGED_AT_KEY = "_lastChangedAt";
+    private static final String TYPE_KEY = "__typename";
 
     @NonNull
     @Override
@@ -43,7 +44,8 @@ public final class DataStoreGraphQLRequestOptions implements GraphQLRequestOptio
     @NonNull
     @Override
     public List<String> modelMetaFields() {
-        return Arrays.asList(VERSION_KEY, DELETED_KEY, LAST_CHANGED_AT_KEY);
+        //return Arrays.asList(VERSION_KEY, DELETED_KEY, LAST_CHANGED_AT_KEY);
+        return Arrays.asList(VERSION_KEY, DELETED_KEY, LAST_CHANGED_AT_KEY, TYPE_KEY);
     }
 
     @NonNull

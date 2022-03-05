@@ -61,17 +61,21 @@ public final class ModelWithMetadataAdapter implements
         } else {
             throw new JsonParseException("Expected a parameterized type during ModelWithMetadata deserialization.");
         }
-
         final Model model;
+        ModelMetadata metadata = context.deserialize(json, ModelMetadata.class);
         if (modelClassType == SerializedModel.class) {
+            JsonObject jsonObject = (JsonObject) json;
+            jsonObject.remove("_deleted");
+            jsonObject.remove("_version");
+            jsonObject.remove("_lastChangedAt");
+            jsonObject.remove("__typename");
             model = SerializedModel.builder()
-                .serializedData(GsonObjectConverter.toMap((JsonObject) json))
+                .serializedData(GsonObjectConverter.toMap(jsonObject))
                 .modelSchema(null)
                 .build();
         } else {
             model = context.deserialize(json, modelClassType);
         }
-        ModelMetadata metadata = context.deserialize(json, ModelMetadata.class);
         return new ModelWithMetadata<>(model, metadata);
     }
 

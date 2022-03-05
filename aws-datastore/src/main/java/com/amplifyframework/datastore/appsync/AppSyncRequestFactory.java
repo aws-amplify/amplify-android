@@ -204,7 +204,11 @@ final class AppSyncRequestFactory {
             Map<String, Object> inputMap = new HashMap<>();
             inputMap.put("_version", version);
             inputMap.putAll(getMapOfFieldNameAndValues(schema, model));
-            return buildMutation(schema, inputMap, predicate, MutationType.UPDATE, strategyType);
+            AppSyncGraphQLRequest<ModelWithMetadata<M>> request = buildMutation(schema, inputMap, predicate,
+                    MutationType.UPDATE, strategyType);
+            LOG.info("AppSyncRequestFactory buildUpdateRequest request: " + request);
+
+            return request;
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
