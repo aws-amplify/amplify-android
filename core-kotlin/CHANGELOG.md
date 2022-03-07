@@ -2,6 +2,7 @@
 
 ### Bug Fixes
 - **datastore:** SerializedModel returns null for non-nullable list field (#1665)
+- **datastore:** Remove timeout for hydrating sync processor in orchestrator. (#1658)
 
 ### Miscellaneous
 - Update notify_comments.yml (#1671)
