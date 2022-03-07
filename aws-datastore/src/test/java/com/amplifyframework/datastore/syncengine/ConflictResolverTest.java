@@ -21,6 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
@@ -37,6 +38,8 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.any;
@@ -177,53 +180,53 @@ public final class ConflictResolverTest {
      *    intervene and modify the backend state somehow?)
      * @throws AmplifyException On failure to arrange metadata into storage
      */
-//    @Test
-//    public void conflictIsResolvedByRetryingLocalDataWithSerializedModel() throws AmplifyException {
-//        // Arrange for the user-provided conflict handler to always request local retry.
-//        when(configurationProvider.getConfiguration())
-//                .thenReturn(DataStoreConfiguration.builder()
-//                    .conflictHandler(DataStoreConflictHandler.alwaysRetryLocal())
-//                    .build());
-//
-//        // Arrange a pending mutation that includes the local data
-//        BlogOwner localModel = BlogOwner.builder()
-//                .name("Local Blogger")
-//                .build();
-//        Map<String, Object> ownerData = new HashMap<>();
-//        ownerData.put("id", localModel.getId());
-//        ownerData.put("name", localModel.getName());
-//        SerializedModel serializedOwner = SerializedModel.builder()
-//                .serializedData(ownerData)
-//                .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
-//                .build();
-//        PendingMutation<SerializedModel> mutation = PendingMutation.update(serializedOwner, schema);
-//
-//        // Arrange server state for the model, in conflict to local data
-//        BlogOwner serverModel = localModel.copyOfBuilder()
-//                .name("Server Blogger")
-//                .build();
-//        Temporal.Timestamp now = Temporal.Timestamp.now();
-//        ModelMetadata metadata = new ModelMetadata(serverModel.getId(), false, 4, now);
-//        ModelWithMetadata<SerializedModel> serverData = new ModelWithMetadata<>(serializedOwner, metadata);
-//
-//        // Arrange a hypothetical conflict error from AppSync
-//        AppSyncConflictUnhandledError<SerializedModel> unhandledConflictError =
-//                AppSyncConflictUnhandledErrorFactory.createUnhandledConflictError(serverData);
-//
-//        // Assume that the AppSync call succeeds this time.
-//        ModelWithMetadata<BlogOwner> versionFromAppSyncResponse =
-//                new ModelWithMetadata<>(localModel, metadata);
-//        AppSyncMocking.update(appSync)
-//                .mockSuccessResponse(localModel, metadata.getVersion(), versionFromAppSyncResponse);
-//
-//        // Act: when the resolver is invoked, we expect the resolved version
-//        // to include the server's metadata, but with the local data.
-//        resolver.resolve(mutation, unhandledConflictError)
-//                .test();
-//        // The handler should have called up to AppSync to update hte model
-//        verify(appSync)
-//                .update(eq(localModel), any(), eq(metadata.getVersion()), any(), any());
-//    }
+    @Test
+    public void conflictIsResolvedByRetryingLocalDataWithSerializedModel() throws AmplifyException {
+        // Arrange for the user-provided conflict handler to always request local retry.
+        when(configurationProvider.getConfiguration())
+                .thenReturn(DataStoreConfiguration.builder()
+                    .conflictHandler(DataStoreConflictHandler.alwaysRetryLocal())
+                    .build());
+
+        // Arrange a pending mutation that includes the local data
+        BlogOwner localModel = BlogOwner.builder()
+                .name("Local Blogger")
+                .build();
+        Map<String, Object> ownerData = new HashMap<>();
+        ownerData.put("id", localModel.getId());
+        ownerData.put("name", localModel.getName());
+        SerializedModel serializedOwner = SerializedModel.builder()
+                .serializedData(ownerData)
+                .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                .build();
+        PendingMutation<SerializedModel> mutation = PendingMutation.update(serializedOwner, schema);
+
+        // Arrange server state for the model, in conflict to local data
+        BlogOwner serverModel = localModel.copyOfBuilder()
+                .name("Server Blogger")
+                .build();
+        Temporal.Timestamp now = Temporal.Timestamp.now();
+        ModelMetadata metadata = new ModelMetadata(serverModel.getId(), false, 4, now);
+        ModelWithMetadata<SerializedModel> serverData = new ModelWithMetadata<>(serializedOwner, metadata);
+
+        // Arrange a hypothetical conflict error from AppSync
+        AppSyncConflictUnhandledError<SerializedModel> unhandledConflictError =
+                AppSyncConflictUnhandledErrorFactory.createUnhandledConflictError(serverData);
+
+        // Assume that the AppSync call succeeds this time.
+        ModelWithMetadata<BlogOwner> versionFromAppSyncResponse =
+                new ModelWithMetadata<>(localModel, metadata);
+        AppSyncMocking.update(appSync)
+                .mockSuccessResponse(localModel, metadata.getVersion(), versionFromAppSyncResponse);
+
+        // Act: when the resolver is invoked, we expect the resolved version
+        // to include the server's metadata, but with the local data.
+        resolver.resolve(mutation, unhandledConflictError)
+                .test();
+        // The handler should have called up to AppSync to update hte model
+        verify(appSync)
+                .update(eq(localModel), any(), eq(metadata.getVersion()), any(), any());
+    }
 
     /**
      * When the user elects to retry with a custom model, and that model

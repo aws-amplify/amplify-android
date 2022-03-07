@@ -85,9 +85,8 @@ final class ConflictResolver {
 
         ModelWithMetadata<T> serverData = conflictUnhandledError.getServerVersion();
         ModelMetadata metadata = serverData.getSyncMetadata();
-        //T local = getMutatedModelFromSerializedModel(pendingMutation);
         T local = getMutatedModelFromSerializedModel(pendingMutation);
-        T remote = getServerModel(serverData, local);
+        T remote = getServerModel(serverData, pendingMutation.getMutatedItem());
         ConflictData<T> conflictData = ConflictData.create(local, remote);
 
         return Single
@@ -101,13 +100,19 @@ final class ConflictResolver {
             });
     }
 
+    /**
+     * The local data representation coming from android app comes here as serialized model of the type user defined
+     * model. For appsync request this data has to be converted to the user defined model. The local data representation
+     * coming for flutter is a serialized model of type serialized model which needs to be passed as is. Also if the data
+     * is coming as user defined model it doesn't need to be converted.
+     * @param pendingMutation pending mutation coming from mutation outbox.
+     * @param <T> Type of the Pending mutation.
+     * @return Model
+     */
     @SuppressWarnings("unchecked")
-    @Nullable
     private <T extends Model> T getMutatedModelFromSerializedModel(@NonNull PendingMutation<T> pendingMutation) {
         T local = pendingMutation.getMutatedItem();;
-
-
-        if (pendingMutation.getMutatedItem() instanceof SerializedModel) {
+        if (local instanceof SerializedModel) {
             SerializedModel serializedModel = (SerializedModel) local;
             Type modelType = Objects.requireNonNull(((SerializedModel) pendingMutation.getMutatedItem())
             .getModelSchema()).getModelClass();
@@ -121,6 +126,16 @@ final class ConflictResolver {
         }
         return local;
     }
+
+    /***
+     * Server Model is deserialized from ConflictUnhandled error coming from appsync. For flutter it is a serialized
+     * model. The deserialization process doesn't have the knowledge of flutter schema so a new serialized model
+     * is created and schema is populated from local representation.
+     * @param serverData data deserialized from server conflict unhandled error response.
+     * @param local local representation of the conflicted model.
+     * @param <T> Type of the model
+     * @return Model
+     */
 
     @SuppressWarnings("unchecked")
     private <T extends Model> T getServerModel(@NonNull ModelWithMetadata<T> serverData, T local) {
@@ -161,6 +176,8 @@ final class ConflictResolver {
     private <T extends Model> Single<ModelWithMetadata<T>> publish(@NonNull T model, int version) {
         return Single
             .<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
+                //SchemaRegistry.instance().getModelSchemaForModelClass method supports schema generation for flutter
+                //models.
                 final ModelSchema schema = SchemaRegistry.instance().getModelSchemaForModelClass(model.getModelName());
                 LOG.info("publish conflict resolver: " + model.toString());
                 appSync.update(model, schema, version, emitter::onSuccess, emitter::onError);
