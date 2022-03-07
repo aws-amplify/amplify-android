@@ -1,3 +1,13 @@
+## [Release 0.16.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.16.1)
+
+### Bug Fixes
+- **datastore:** SerializedModel returns null for non-nullable list field (#1665)
+
+### Miscellaneous
+- Update notify_comments.yml (#1671)
+
+[See all changes between 0.16.0 and 0.16.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.16.0...release-kotlin_v0.16.1)
+
 ## [Release 0.16.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.16.0)
 
 ### Features
