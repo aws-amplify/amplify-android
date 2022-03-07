@@ -1,3 +1,14 @@
+## [Release 1.32.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.32.1)
+
+### Bug Fixes
+- **datastore:** SerializedModel returns null for non-nullable list field (#1665)
+- **datastore:** Remove timeout for hydrating sync processor in orchestrator. (#1658)
+
+### Miscellaneous
+- Update notify_comments.yml (#1671)
+
+[See all changes between 1.32.0 and 1.32.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.32.0...release_v1.32.1)
+
 ## [Release 1.32.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.32.0)
 
 ### Features
