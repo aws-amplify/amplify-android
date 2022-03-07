@@ -16,11 +16,16 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.cognito.events.AuthEvent
+import com.amplifyframework.auth.cognito.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 
 object AuthorizationCognitoActions : AuthorizationActions {
     override fun configureAuthorizationAction() = Action { dispatcher, environment ->
         dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthorization))
+    }
+
+    override fun initializeFetchAuthSession() = Action { dispatcher, _ ->
+        dispatcher.send(FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchUserPoolTokens()))
     }
 }

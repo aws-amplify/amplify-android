@@ -25,11 +25,9 @@ import com.amplifyframework.auth.cognito.data.*
 import com.amplifyframework.auth.cognito.events.AuthEvent
 import com.amplifyframework.auth.cognito.events.AuthEvent.EventType.ConfigureAuth
 import com.amplifyframework.auth.cognito.events.AuthenticationEvent
+import com.amplifyframework.auth.cognito.events.AuthorizationEvent
 import com.amplifyframework.auth.cognito.events.CredentialStoreEvent
-import com.amplifyframework.auth.cognito.states.AuthenticationState
-import com.amplifyframework.auth.cognito.states.CredentialStoreState
-import com.amplifyframework.auth.cognito.states.SRPSignInState
-import com.amplifyframework.auth.cognito.states.SignUpState
+import com.amplifyframework.auth.cognito.states.*
 import com.amplifyframework.auth.options.*
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -242,7 +240,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             onSuccess: Consumer<AuthSession>,
             onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.listen({ authState ->
+            val authNSState = authState.authZState.takeIf { it is AuthorizationState.FetchingAuthSession }
+            authNSState?.apply { onSuccess }
+        }, {
+            val event = AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession())
+            authStateMachine.send(event)
+        })
     }
 
     override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) {

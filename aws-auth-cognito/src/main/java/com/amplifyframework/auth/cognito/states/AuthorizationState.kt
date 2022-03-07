@@ -50,31 +50,27 @@ sealed class AuthorizationState : State {
                 }
                 is Configured, is SessionEstablished ->
                     when (authorizationEvent) {
-                        is AuthorizationEvent.EventType.FetchAuthSession -> onFetchAuthSession(authorizationEvent.credentials)
+                        is AuthorizationEvent.EventType.FetchAuthSession -> onFetchAuthSession()
                         else -> StateResolution.from(oldState)
                     }
                 is FetchingAuthSession ->
                     when (authorizationEvent) {
-                        is AuthorizationEvent.EventType.FetchedAuthSession -> onFetchedAuthSession(authorizationEvent.session)
+                        is AuthorizationEvent.EventType.FetchedAuthSession -> onFetchedAuthSession()
                         else -> StateResolution.from(oldState)
                     }
                 else -> StateResolution(oldState)
             }
         }
 
-        private fun onFetchedAuthSession(session: String): StateResolution<AuthorizationState> {
-            TODO("Implement FetchAuthSession, and FetchingAuthSession etc to call sub state machine" +
-                    "Then change state to SessionEstablished")
+        private fun onFetchedAuthSession(): StateResolution<AuthorizationState> {
+            val newState = SessionEstablished()
+            return StateResolution(newState)
         }
 
-        private fun onFetchAuthSession(credential: Any?): StateResolution<AuthorizationState> {
-            /**
-             * TODO Implement below
-            val action = InitializeFetchAuthSession(credential)
-            val newState = FetchAuthSessionState.InitializingFetchAuthSession
+        private fun onFetchAuthSession(): StateResolution<AuthorizationState> {
+            val action = authorizationActions.initializeFetchAuthSession()
+            val newState = FetchingAuthSession()
             return StateResolution(newState, listOf(action))
-             */
-            TODO("NOT Implemented yet")
         }
 
         private fun onConfigure(): StateResolution<AuthorizationState> {

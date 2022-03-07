@@ -8,9 +8,9 @@ import com.amplifyframework.auth.cognito.data.CognitoUserPoolTokens
 
 object CredentialStoreUtil {
     private val credential = AmplifyCredential(
-        CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", "tokenExpiration"),
+        CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 12111),
         "identityId",
-        AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", "expiration")
+        AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 12111)
     )
 
     fun getDefaultCredential() : AmplifyCredential {

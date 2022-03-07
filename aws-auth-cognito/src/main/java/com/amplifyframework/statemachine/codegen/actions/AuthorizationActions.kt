@@ -4,4 +4,5 @@ import com.amplifyframework.statemachine.Action
 
 interface AuthorizationActions {
     fun configureAuthorizationAction(): Action
+    fun initializeFetchAuthSession(): Action
 }

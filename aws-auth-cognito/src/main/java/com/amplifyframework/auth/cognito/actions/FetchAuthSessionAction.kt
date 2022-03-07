@@ -84,8 +84,8 @@ class ConfigureAWSCredentialsAction : FetchAuthSessionAction {
         val awsCredentials = credentials?.awsCredentials
         val rightNow = Calendar.getInstance()
         val offset = rightNow.get(Calendar.ZONE_OFFSET) + rightNow.get(Calendar.DST_OFFSET)
-        //AWS Credentials should be valid for up to 10 minutes from now
-        if (awsCredentials?.expiration != null && awsCredentials.expiration > (rightNow.timeInMillis + offset) + 10 * 60 * 1000) {
+        //AWS Credentials should be valid for up to 2 minutes from now
+        if (awsCredentials?.expiration != null && awsCredentials.expiration > (rightNow.timeInMillis + offset) + 2 * 60 * 1000) {
             val event =
                     FetchAwsCredentialsEvent(
                             FetchAwsCredentialsEvent.EventType.Fetched())
