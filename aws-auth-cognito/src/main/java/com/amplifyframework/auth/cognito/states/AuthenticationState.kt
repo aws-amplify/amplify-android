@@ -19,6 +19,7 @@ import com.amplifyframework.auth.cognito.events.AuthenticationEvent
 import com.amplifyframework.statemachine.*
 import com.amplifyframework.auth.cognito.data.SignedInData
 import com.amplifyframework.auth.cognito.data.SignedOutData
+import com.amplifyframework.auth.cognito.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 
 sealed class AuthenticationState : State {
@@ -88,6 +89,7 @@ sealed class AuthenticationState : State {
             event: StateMachineEvent
         ): StateResolution<AuthenticationState> {
             val authenticationEvent = asAuthenticationEvent(event)
+            val signUpEvent = (event as? SignUpEvent)?.eventType
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
                 is NotConfigured -> when (authenticationEvent) {
@@ -125,12 +127,7 @@ sealed class AuthenticationState : State {
                     else -> defaultResolution
                 }
                 is SigningUp -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.ConfirmSignUpRequested -> {
-                        val action =
-                            authenticationActions.initiateConfirmSignUpAction(authenticationEvent)
-                        StateResolution(SignedOut(SignedOutData()), listOf(action))
-                    }
-                    is AuthenticationEvent.EventType.CancelSignUp -> StateResolution(
+                    is AuthenticationEvent.EventType.resetSignUp -> StateResolution(
                         SignedOut(
                             SignedOutData()
                         )
@@ -155,23 +152,16 @@ sealed class AuthenticationState : State {
                     )
                     else -> defaultResolution
                 }
-                is SignedOut -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.SignInRequested -> {
+                is SignedOut -> when {
+                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
                         val action =
                             authenticationActions.initiateSRPSignInAction(authenticationEvent)
                         val newState = SigningIn(oldState.srpSignInState)
                         StateResolution(newState, listOf(action))
                     }
-                    is AuthenticationEvent.EventType.SignUpRequested -> {
-                        val action = authenticationActions.initiateSignUpAction(authenticationEvent)
-                        val newState = SigningUp(oldState.signUpState)
-                        StateResolution(newState, listOf(action))
-                    }
-                    is AuthenticationEvent.EventType.ConfirmSignUpRequested -> {
-                        val action =
-                            authenticationActions.initiateConfirmSignUpAction(authenticationEvent)
-                        StateResolution(SignedOut(SignedOutData()), listOf(action))
-                    }
+                    signUpEvent is SignUpEvent.EventType.InitiateSignUp || signUpEvent is SignUpEvent.EventType.ConfirmSignUp -> StateResolution(
+                        SigningUp(oldState.signUpState)
+                    )
                     else -> defaultResolution
                 }
                 else -> defaultResolution

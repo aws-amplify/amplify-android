@@ -22,10 +22,12 @@ class SRPEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {
     sealed class EventType {
         data class InitiateSRP(val username: String, val password: String) : EventType()
-        data class RespondPasswordVerifier(val challengeParameters: Map<String, String>?) : EventType()
+        data class RespondPasswordVerifier(val challengeParameters: Map<String, String>) :
+            EventType()
+
         data class ThrowAuthError(val exception: Exception) : EventType()
         data class CancelSRPSignIn(val id: String = "") : EventType()
-        data class FinalizeSRPSignIn(val authenticationResult: Map<String, String?>) : EventType()
+        data class FinalizeSRPSignIn(val id: String = "") : EventType()
         data class RespondNextAuthChallenge(val id: String = "") : EventType()
         data class ThrowPasswordVerifierError(val exception: Exception) : EventType()
         data class Reset(val id: String = "") : EventType()

@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.events
 
 import com.amplifyframework.auth.cognito.data.*
 import com.amplifyframework.auth.options.AuthSignInOptions
-import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.StateMachineEvent
 import java.util.*
 
@@ -28,19 +27,9 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
             val configuration: AuthConfiguration,
             val storedCredentials: AmplifyCredential?
         ) : EventType()
+
         data class InitializedSignedIn(val signedInData: SignedInData) : EventType()
         data class InitializedSignedOut(val signedOutData: SignedOutData) : EventType()
-        data class SignUpRequested(
-            val username: String?,
-            val password: String?,
-            val options: AuthSignUpOptions
-        ) : EventType()
-
-        data class ConfirmSignUpRequested(
-            val username: String,
-            val confirmationCode: String,
-        ) : EventType()
-
         data class SignInRequested(
             val username: String?,
             val password: String?,
@@ -53,7 +42,7 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
         ) : EventType()
 
         data class CancelSignIn(val id: String = "") : EventType()
-        data class CancelSignUp(val username: String) : EventType()
+        data class resetSignUp(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 

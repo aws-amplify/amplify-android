@@ -15,4 +15,8 @@
 
 package com.amplifyframework.auth.cognito.data
 
-class SignedUpData(var username: String)
+data class SignedUpData(
+    var userId: String?,
+    var username: String,
+    var codeDeliveryDetails: Map<String, String?>
+)

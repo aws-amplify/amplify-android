@@ -21,14 +21,11 @@ import com.amplifyframework.auth.cognito.states.*
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.Environment
-import com.amplifyframework.statemachine.EventDispatcher
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
@@ -76,22 +73,32 @@ class StateTransitionTests : StateTransitionTestBase() {
     private fun setupConfigureSignedIn() {
         Mockito.`when`(mockAuthenticationActions.configureAuthenticationAction(MockitoHelper.anyObject()))
             .thenReturn(
-                object : Action {
-                    override suspend fun execute(
-                        dispatcher: EventDispatcher,
-                        environment: Environment
-                    ) {
-                        stateMachine.send(
-                            AuthenticationEvent(
-                                AuthenticationEvent.EventType.InitializedSignedIn(signedInData)
-                            )
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.InitializedSignedIn(signedInData)
                         )
-                        stateMachine.send(
-                            AuthEvent(
-                                AuthEvent.EventType.ConfiguredAuthentication(configuration)
-                            )
+                    )
+                    dispatcher.send(
+                        AuthEvent(
+                            AuthEvent.EventType.ConfiguredAuthentication(configuration)
                         )
-                    }
+                    )
+                })
+    }
+
+    private fun setupConfigureSignedOut() {
+        Mockito.`when`(mockAuthenticationActions.configureAuthenticationAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData())
+                        )
+                    )
+                    dispatcher.send(
+                        AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(configuration))
+                    )
                 })
     }
 
@@ -102,21 +109,16 @@ class StateTransitionTests : StateTransitionTestBase() {
                 MockitoHelper.anyObject()
             )
         ).thenReturn(
-            object : Action {
-                override suspend fun execute(
-                    dispatcher: EventDispatcher,
-                    environment: Environment
-                ) {
-                    dispatcher.send(
-                        SignOutEvent(
-                            SignOutEvent.EventType.SignOutLocally(
-                                signedInData,
-                                isGlobalSignOut = false,
-                                invalidateTokens = false
-                            )
+            Action { dispatcher, _ ->
+                dispatcher.send(
+                    SignOutEvent(
+                        SignOutEvent.EventType.SignOutLocally(
+                            signedInData,
+                            isGlobalSignOut = false,
+                            invalidateTokens = false
                         )
                     )
-                }
+                )
             })
     }
 
@@ -139,6 +141,7 @@ class StateTransitionTests : StateTransitionTestBase() {
 
     @Test
     fun testConfigureSignedOut() {
+        setupConfigureSignedOut()
         val testLatch = CountDownLatch(1)
         val listenLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
@@ -191,6 +194,7 @@ class StateTransitionTests : StateTransitionTestBase() {
 
     @Test
     fun testSignIn() {
+        setupConfigureSignedOut()
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
@@ -308,6 +312,7 @@ class StateTransitionTests : StateTransitionTestBase() {
 
     @Test
     fun testSignUp() {
+        setupConfigureSignedOut()
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
@@ -317,8 +322,8 @@ class StateTransitionTests : StateTransitionTestBase() {
             authState?.run {
                 configureLatch.countDown()
                 stateMachine.send(
-                    AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignUpRequested(
+                    SignUpEvent(
+                        SignUpEvent.EventType.InitiateSignUp(
                             "username",
                             "password",
                             AuthSignUpOptions.builder().build()
@@ -347,8 +352,8 @@ class StateTransitionTests : StateTransitionTestBase() {
     }
 
     @Test
-    @Ignore("WIP")
     fun testConfirmSignUp() {
+        setupConfigureSignedOut()
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)

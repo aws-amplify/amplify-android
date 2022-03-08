@@ -15,8 +15,7 @@
 
 package com.amplifyframework.auth.cognito.events
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
+import com.amplifyframework.auth.cognito.data.SignedUpData
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.StateMachineEvent
 import java.util.*
@@ -30,9 +29,9 @@ class SignUpEvent(val eventType: EventType, override val time: Date? = null,
             val options: AuthSignUpOptions
         ) : EventType()
         data class ConfirmSignUp(val username: String, val confirmationCode: String) : EventType()
-        data class InitiateSignUpSuccess(val username: String, val signUpResponse: SignUpResponse?) : EventType()
+        data class InitiateSignUpSuccess(val signedUpData: SignedUpData) : EventType()
         data class InitiateSignUpFailure(val exception: Exception) : EventType()
-        data class ConfirmSignUpSuccess(val confirmSignupResponse: ConfirmSignUpResponse?) : EventType()
+        data class ConfirmSignUpSuccess(val id: String = "") : EventType()
         data class ConfirmSignUpFailure(val exception: Exception) : EventType()
     }
 

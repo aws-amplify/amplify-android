@@ -7,5 +7,5 @@ interface SignUpActions {
     fun startSignUpAction(event: SignUpEvent.EventType.InitiateSignUp): Action
     fun confirmSignUpAction(event: SignUpEvent.EventType.ConfirmSignUp): Action
     fun resendConfirmationCodeAction(): Action
-    fun cancelSignUpAction(): Action
+    fun resetSignUpAction(): Action
 }

@@ -29,18 +29,20 @@ class AuthCognitoCredentialsProvider : AuthCredentialsProvider {
      */
     override suspend fun getIdentityId(): String {
         return suspendCoroutine { continuation ->
-            Amplify.Auth.fetchAuthSession({ session ->
-                val identityId = (session as? AmplifySession)?.identityId
-                identityId?.value?.let {
-                    continuation.resume(it)
-                } ?: continuation.resumeWithException(
-                    AuthException(
-                        "Failed to get user's identity ID",
-                        "Please check that you are logged in and that Auth is setup to support identity pools."
+            Amplify.Auth.fetchAuthSession(
+                { session ->
+                    val identityId = (session as? AmplifySession)?.identityId
+                    identityId?.value?.let {
+                        continuation.resume(it)
+                    } ?: continuation.resumeWithException(
+                        AuthException(
+                            "Failed to get user's identity ID",
+                            "Please check that you are logged in and that Auth is setup to support identity pools."
+                        )
                     )
-                )
-            },
-                { continuation.resumeWithException(it) })
+                },
+                { continuation.resumeWithException(it) }
+            )
         }
     }
 
@@ -50,18 +52,20 @@ class AuthCognitoCredentialsProvider : AuthCredentialsProvider {
      */
     override suspend fun getCredentials(): Credentials {
         return suspendCoroutine { continuation ->
-            Amplify.Auth.fetchAuthSession({ session ->
-                val credentials = (session as? AmplifySession)?.awsCredentials
-                credentials?.value?.let {
-                    continuation.resume(it)
-                } ?: continuation.resumeWithException(
-                    AuthException(
-                        "Failed to get AWS credentials",
-                        "Please check that you are logged in or that Auth is setup to support identity pools."
+            Amplify.Auth.fetchAuthSession(
+                { session ->
+                    val credentials = (session as? AmplifySession)?.awsCredentials
+                    credentials?.value?.let {
+                        continuation.resume(it)
+                    } ?: continuation.resumeWithException(
+                        AuthException(
+                            "Failed to get AWS credentials",
+                            "Please check that you are logged in or that Auth is setup to support identity pools."
+                        )
                     )
-                )
-            },
-                { continuation.resumeWithException(it) })
+                },
+                { continuation.resumeWithException(it) }
+            )
         }
     }
 }

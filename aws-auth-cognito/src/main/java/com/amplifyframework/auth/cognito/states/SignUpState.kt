@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.states
 
+import com.amplifyframework.auth.cognito.data.SignedUpData
 import com.amplifyframework.auth.cognito.events.SignUpEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
@@ -25,7 +26,7 @@ import com.amplifyframework.statemachine.codegen.actions.SignUpActions
 sealed class SignUpState : State {
     data class NotStarted(val id: String = "") : SignUpState()
     data class InitiatingSigningUp(val id: String = "") : SignUpState()
-    data class SigningUpInitiated(val id: String = "") : SignUpState()
+    data class SigningUpInitiated(val signedUpData: SignedUpData) : SignUpState()
     data class ConfirmingSignUp(val id: String = "") : SignUpState()
     data class SignedUp(val id: String = "") : SignUpState()
     data class Error(val exception: Exception) : SignUpState()
@@ -59,18 +60,21 @@ sealed class SignUpState : State {
                 }
                 is InitiatingSigningUp -> when (signUpEvent) {
                     is SignUpEvent.EventType.InitiateSignUpSuccess -> StateResolution(
-                        SigningUpInitiated()
+                        SigningUpInitiated(signUpEvent.signedUpData)
                     )
                     is SignUpEvent.EventType.InitiateSignUpFailure -> {
-                        val action = signUpActions.cancelSignUpAction()
+                        val action = signUpActions.resetSignUpAction()
                         StateResolution(Error(signUpEvent.exception), listOf(action))
                     }
                     else -> defaultResolution
                 }
                 is ConfirmingSignUp -> when (signUpEvent) {
-                    is SignUpEvent.EventType.ConfirmSignUpSuccess -> StateResolution(SignedUp())
+                    is SignUpEvent.EventType.ConfirmSignUpSuccess -> {
+                        val action = signUpActions.resetSignUpAction()
+                        StateResolution(SignedUp(), listOf(action))
+                    }
                     is SignUpEvent.EventType.ConfirmSignUpFailure -> {
-                        val action = signUpActions.cancelSignUpAction()
+                        val action = signUpActions.resetSignUpAction()
                         StateResolution(Error(signUpEvent.exception), listOf(action))
                     }
                     else -> defaultResolution

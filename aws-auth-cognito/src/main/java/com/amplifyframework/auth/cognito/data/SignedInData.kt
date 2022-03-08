@@ -17,8 +17,7 @@ package com.amplifyframework.auth.cognito.data
 
 import java.util.*
 
-
-data class SignedInData constructor(
+data class SignedInData(
     val userId: String,
     val username: String,
     val signedInDate: Date,

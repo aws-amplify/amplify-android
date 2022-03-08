@@ -15,4 +15,4 @@
 
 package com.amplifyframework.auth.cognito.data
 
-data class SignedOutData constructor(var lastKnownUsername: String? = null)
+data class SignedOutData(var lastKnownUsername: String? = null)

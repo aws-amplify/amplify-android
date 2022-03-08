@@ -17,8 +17,6 @@ package com.amplifyframework.auth.cognito.events
 
 import com.amplifyframework.auth.cognito.data.AmplifyCredential
 import com.amplifyframework.auth.cognito.data.AuthConfiguration
-import com.amplifyframework.auth.cognito.data.AuthenticationError
-import com.amplifyframework.auth.cognito.states.CredentialStoreState
 import com.amplifyframework.statemachine.StateMachineEvent
 import java.util.*
 

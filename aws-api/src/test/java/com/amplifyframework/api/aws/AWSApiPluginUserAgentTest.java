@@ -98,7 +98,6 @@ public final class AWSApiPluginUserAgentTest {
      *          waiting for request
      */
     @Test
-    @Ignore("minSDKVersion changed to 24 in favor of AWS Kotlin SDK dependency")
     @Config(sdk = 16)
     @Ignore("minSDKVersion changed to 24 in favor of AWS Kotlin SDK dependency")
     public void testUserAgentWithApi16() throws Exception {

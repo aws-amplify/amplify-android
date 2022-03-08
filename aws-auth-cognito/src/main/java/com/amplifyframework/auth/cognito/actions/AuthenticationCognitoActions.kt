@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.cognito.data.AuthenticationError
 import com.amplifyframework.auth.cognito.data.SignInMethod
 import com.amplifyframework.auth.cognito.data.SignedInData
 import com.amplifyframework.auth.cognito.data.SignedOutData
@@ -75,27 +74,4 @@ object AuthenticationCognitoActions : AuthenticationActions {
             )
         }
     }
-
-    override fun initiateSignUpAction(event: AuthenticationEvent.EventType.SignUpRequested) =
-        Action { dispatcher, environment ->
-            with(event) {
-                val signUpEvent = username?.run {
-                    password?.run {
-                        SignUpEvent(SignUpEvent.EventType.InitiateSignUp(username, password, options))
-                    }
-                } ?: SignUpEvent(
-                    SignUpEvent.EventType.InitiateSignUpFailure(AuthException("", ""))
-                )
-                dispatcher.send(signUpEvent)
-            }
-        }
-
-    override fun initiateConfirmSignUpAction(event: AuthenticationEvent.EventType.ConfirmSignUpRequested) =
-        Action { dispatcher, environment ->
-            with(event) {
-                dispatcher.send(
-                    SignUpEvent(SignUpEvent.EventType.ConfirmSignUp(username, confirmationCode))
-                )
-            }
-        }
 }

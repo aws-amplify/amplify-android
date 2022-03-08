@@ -43,7 +43,7 @@ object SignOutCognitoActions : SignOutActions {
             runCatching {
                 env.cognitoAuthService.cognitoIdentityProviderClient?.globalSignOut(
                     GlobalSignOutRequest {
-                        this.accessToken = env.accessToken as String
+                        this.accessToken = event.signedInData.cognitoUserPoolTokens.accessToken
                     }
                 )
             }.onSuccess {

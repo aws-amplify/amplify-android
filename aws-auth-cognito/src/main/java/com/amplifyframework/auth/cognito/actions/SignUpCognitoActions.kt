@@ -17,6 +17,8 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.*
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.data.SignedUpData
+import com.amplifyframework.auth.cognito.events.AuthenticationEvent
 import com.amplifyframework.auth.cognito.events.SignUpEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignUpActions
@@ -41,16 +43,22 @@ object SignUpCognitoActions : SignUpActions {
 
                 env.cognitoAuthService.cognitoIdentityProviderClient?.signUp(options)
             }.onSuccess {
-                it?.codeDeliveryDetails?.run {
-                    SignUpEvent(
-                        SignUpEvent.EventType.InitiateSignUpSuccess(event.username, it)
+                val deliveryDetails = it?.codeDeliveryDetails?.let { details ->
+                    mapOf(
+                        "DESTINATION" to details.destination,
+                        "MEDIUM" to details.deliveryMedium?.value,
+                        "ATTRIBUTE" to details.attributeName
                     )
-                }
+                } ?: mapOf()
+
+                SignUpEvent(
+                    SignUpEvent.EventType.InitiateSignUpSuccess(
+                        SignedUpData(it?.userSub, event.username, deliveryDetails)
+                    )
+                )
             }.onFailure {
                 dispatcher.send(
-                    SignUpEvent(
-                        SignUpEvent.EventType.InitiateSignUpFailure(it as Exception)
-                    )
+                    SignUpEvent(SignUpEvent.EventType.InitiateSignUpFailure(it as Exception))
                 )
             }
         }
@@ -67,7 +75,7 @@ object SignUpCognitoActions : SignUpActions {
                 env.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp(options)
             }.onSuccess {
                 dispatcher.send(
-                    SignUpEvent(SignUpEvent.EventType.ConfirmSignUpSuccess(it))
+                    SignUpEvent(SignUpEvent.EventType.ConfirmSignUpSuccess())
                 )
             }.onFailure {
                 dispatcher.send(
@@ -87,5 +95,7 @@ object SignUpCognitoActions : SignUpActions {
         }
     }
 
-    override fun cancelSignUpAction() = Action { _, _ -> }
+    override fun resetSignUpAction() = Action { dispatcher, environment ->
+        dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.resetSignUp()))
+    }
 }

@@ -11,9 +11,6 @@ interface AuthenticationActions {
         event: AuthenticationEvent.EventType.SignOutRequested,
         signedInData: SignedInData
     ): Action
-
-    fun initiateSignUpAction(event: AuthenticationEvent.EventType.SignUpRequested): Action
-    fun initiateConfirmSignUpAction(event: AuthenticationEvent.EventType.ConfirmSignUpRequested): Action
 }
 
 
