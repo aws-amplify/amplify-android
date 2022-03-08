@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
@@ -103,7 +102,8 @@ final class ConflictResolver {
     /**
      * The local data representation coming from android app comes here as serialized model of the type user defined
      * model. For appsync request this data has to be converted to the user defined model. The local data representation
-     * coming for flutter is a serialized model of type serialized model which needs to be passed as is. Also if the data
+     * coming for flutter is a serialized model of type serialized model which needs to be passed as is.
+     * Also if the data
      * is coming as user defined model it doesn't need to be converted.
      * @param pendingMutation pending mutation coming from mutation outbox.
      * @param <T> Type of the Pending mutation.
@@ -111,12 +111,12 @@ final class ConflictResolver {
      */
     @SuppressWarnings("unchecked")
     private <T extends Model> T getMutatedModelFromSerializedModel(@NonNull PendingMutation<T> pendingMutation) {
-        T local = pendingMutation.getMutatedItem();;
+        T local = pendingMutation.getMutatedItem();
         if (local instanceof SerializedModel) {
             SerializedModel serializedModel = (SerializedModel) local;
             Type modelType = Objects.requireNonNull(((SerializedModel) pendingMutation.getMutatedItem())
-            .getModelSchema()).getModelClass();
-            if (modelType != SerializedModel.class ) {
+                                                                    .getModelSchema()).getModelClass();
+            if (modelType != SerializedModel.class) {
                 Gson gson = GsonFactory.instance();
                 LOG.info("conflict resolver getT: " + pendingMutation.getMutatedItem().toString());
                 String jsonString = gson.toJson(serializedModel.getSerializedData());

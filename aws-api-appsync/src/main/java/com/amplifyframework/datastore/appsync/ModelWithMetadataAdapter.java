@@ -42,8 +42,19 @@ public final class ModelWithMetadataAdapter implements
         JsonDeserializer<ModelWithMetadata<? extends Model>>,
         JsonSerializer<ModelWithMetadata<? extends Model>> {
 
+    /***
+     * Deleted key for the server response.
+     */
     public static final String DELETED_KEY = "_deleted";
+
+    /***
+     * Version key for the server response.
+     */
     public static final String VERSION_KEY = "_version";
+
+    /***
+     * Last changed at key for the server response.
+     */
     public static final String LAST_CHANGED_AT_KEY = "_lastChangedAt";
 
     /**
