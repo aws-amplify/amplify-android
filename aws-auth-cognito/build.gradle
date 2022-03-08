@@ -28,7 +28,9 @@ dependencies {
     implementation dependency.kotlin.serializationJson
     implementation dependency.androidx.appcompat
     implementation dependency.androidx.security
-    implementation dependency.aws.cognitoidentity
+    implementation (dependency.aws.cognitoidentity) {
+        exclude group:'xmlpull', module:'xmlpull'
+    }
     implementation dependency.aws.cognitoidentityprovider
 
     testImplementation project(path: ':testutils')

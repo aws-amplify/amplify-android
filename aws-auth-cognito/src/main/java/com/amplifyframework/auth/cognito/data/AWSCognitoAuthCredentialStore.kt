@@ -13,7 +13,10 @@ class AWSCognitoAuthCredentialStore(
     keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory(),
 ) : AuthCredentialStore {
 
-    private val awsKeyValueStoreIdentifier = "com.amplify.credentialStore"
+    companion object {
+        const val awsKeyValueStoreIdentifier = "com.amplify.credentialStore"
+    }
+
     private val key = generateKey()
     private var keyValue: KeyValueRepository =
         keyValueRepoFactory.create(context, awsKeyValueStoreIdentifier, isPersistenceEnabled)
@@ -34,7 +37,7 @@ class AWSCognitoAuthCredentialStore(
         )
     }
 
-    override fun retrieveCredential(): AmplifyCredential? = deserializeCredential(keyValue.get(key) as String?)?.minimize()
+    override fun retrieveCredential(): AmplifyCredential? = deserializeCredential(keyValue.get(key))?.minimize()
 
     override fun deleteCredential() = keyValue.remove(key)
 

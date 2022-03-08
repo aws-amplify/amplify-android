@@ -6,10 +6,13 @@ import java.util.*
 internal class AWSCognitoLegacyCredentialStore(
     val context: Context,
     private val authConfiguration: AuthConfiguration,
+    keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()
 ) : AuthCredentialStore {
 
     companion object {
-        private const val AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER: String = "com.amazonaws.android.auth"
+        const val AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER: String = "com.amazonaws.android.auth"
+        const val APP_LOCAL_CACHE = "CognitoIdentityProviderCache"
+
         private const val ID_KEY: String = "identityId"
         private const val AK_KEY: String = "accessKey"
         private const val SK_KEY: String = "secretKey"
@@ -17,7 +20,6 @@ internal class AWSCognitoLegacyCredentialStore(
         private const val EXP_KEY: String = "expirationDate"
 
         private const val APP_LAST_AUTH_USER = "LastAuthUser"
-        private const val APP_LOCAL_CACHE = "CognitoIdentityProviderCache"
         private const val APP_LOCAL_CACHE_KEY_PREFIX = "CognitoIdentityProvider"
 
         private const val TOKEN_TYPE_ID = "idToken"
@@ -29,9 +31,9 @@ internal class AWSCognitoLegacyCredentialStore(
     }
 
     private val idAndCredentialsKeyValue: KeyValueRepository =
-        LegacyKeyValueRepository(context, AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER)
+        keyValueRepoFactory.create(context, AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER)
 
-    private val tokensKeyValue: KeyValueRepository = LegacyKeyValueRepository(context, APP_LOCAL_CACHE)
+    private val tokensKeyValue: KeyValueRepository = keyValueRepoFactory.create(context, APP_LOCAL_CACHE)
 
     @Synchronized
     override fun saveCredential(credential: AmplifyCredential) {
@@ -53,17 +55,14 @@ internal class AWSCognitoLegacyCredentialStore(
 
     @Synchronized
     override fun savePartialCredential(cognitoUserPoolTokens: CognitoUserPoolTokens?, identityId: String?, awsCredentials: AWSCredentials?) {
-        val amplifyCredential = retrieveCredential()
-        if (cognitoUserPoolTokens != null) {
-            amplifyCredential?.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)
-        }
-        if (identityId != null) {
-            amplifyCredential?.copy(identityId = identityId)
-        }
+        val currentCredentials = retrieveCredential()
 
-        if (awsCredentials != null) {
-            amplifyCredential?.copy(awsCredentials = awsCredentials)
-        }
+        saveCredential(
+            AmplifyCredential(cognitoUserPoolTokens ?: currentCredentials?.cognitoUserPoolTokens,
+                identityId ?: currentCredentials?.identityId,
+                awsCredentials ?: currentCredentials?.awsCredentials
+            )
+        )
     }
 
     override fun deleteCredential() {
@@ -99,35 +98,34 @@ internal class AWSCognitoLegacyCredentialStore(
             put(namespace(AK_KEY), awsCredentials?.accessKeyId)
             put(namespace(SK_KEY), awsCredentials?.secretAccessKey)
             put(namespace(ST_KEY), awsCredentials?.sessionToken)
-            put(namespace(EXP_KEY), awsCredentials?.expiration)
+            put(namespace(EXP_KEY), awsCredentials?.expiration.toString())
         }
     }
 
     private fun retrieveAWSCredentials(): AWSCredentials? {
-        val accessKey = idAndCredentialsKeyValue.get(namespace(AK_KEY)) as String?
-        val secretKey = idAndCredentialsKeyValue.get(namespace(SK_KEY)) as String?
-        val sessionToken = idAndCredentialsKeyValue.get(namespace(ST_KEY)) as String?
-        val expiration = idAndCredentialsKeyValue.get(namespace(EXP_KEY)) as Long?
+        val accessKey = idAndCredentialsKeyValue.get(namespace(AK_KEY))
+        val secretKey = idAndCredentialsKeyValue.get(namespace(SK_KEY))
+        val sessionToken = idAndCredentialsKeyValue.get(namespace(ST_KEY))
+        val expiration = idAndCredentialsKeyValue.get(namespace(EXP_KEY))?.toLongOrNull()
 
         return if (accessKey == null && secretKey == null && sessionToken == null) {
             null
-        }
-        else AWSCredentials(accessKey, secretKey, sessionToken, expiration)
+        } else AWSCredentials(accessKey, secretKey, sessionToken, expiration)
     }
 
     private fun retrieveIdentityId(): String? {
-        return idAndCredentialsKeyValue.get(namespace(ID_KEY)) as String?
+        return idAndCredentialsKeyValue.get(namespace(ID_KEY))
     }
 
     private fun retrieveCognitoUserPoolTokens(): CognitoUserPoolTokens? {
         val keys = getTokenKeys()
 
-        val idToken = keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.get(it) } as String?
-        val accessToken = keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.get(it) } as String?
-        val refreshToken = keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.get(it) } as String?
-        val expiration = keys[TOKEN_EXPIRATION]?.let { tokensKeyValue.get(it) } as Int?
+        val idToken = keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.get(it) }
+        val accessToken = keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.get(it) }
+        val refreshToken = keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.get(it) }
+        val expiration = keys[TOKEN_EXPIRATION]?.let { tokensKeyValue.get(it) }?.toIntOrNull()
 
-        return if (idToken == null && accessToken == null && refreshToken == null ) {
+        return if (idToken == null && accessToken == null && refreshToken == null) {
             return null
         } else CognitoUserPoolTokens(idToken, accessToken, refreshToken, expiration)
     }

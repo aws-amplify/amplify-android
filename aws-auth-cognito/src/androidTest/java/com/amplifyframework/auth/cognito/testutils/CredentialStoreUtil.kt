@@ -8,9 +8,9 @@ import com.amplifyframework.auth.cognito.data.CognitoUserPoolTokens
 
 object CredentialStoreUtil {
     private val credential = AmplifyCredential(
-        CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 12111),
+        CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 1212),
         "identityId",
-        AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 12111)
+        AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 1212)
     )
 
     fun getDefaultCredential() : AmplifyCredential {
@@ -22,7 +22,7 @@ object CredentialStoreUtil {
             put("CognitoIdentityProvider.$appClientId.testuser.idToken", "idToken")
             put("CognitoIdentityProvider.$appClientId.testuser.accessToken", "accessToken")
             put("CognitoIdentityProvider.$appClientId.testuser.refreshToken", "refreshToken")
-            put("CognitoIdentityProvider.$appClientId.testuser.tokenExpiration", "tokenExpiration")
+            put("CognitoIdentityProvider.$appClientId.testuser.tokenExpiration", "1212")
             put("CognitoIdentityProvider.$appClientId.LastAuthUser", "testuser")
         }
 
@@ -30,7 +30,7 @@ object CredentialStoreUtil {
             put("$identityPoolId.accessKey", "accessKeyId")
             put("$identityPoolId.secretKey", "secretAccessKey")
             put("$identityPoolId.sessionToken", "sessionToken")
-            put("$identityPoolId.expirationDate", "expiration")
+            put("$identityPoolId.expirationDate", "1212")
             put("$identityPoolId.identityId", "identityId")
         }
     }

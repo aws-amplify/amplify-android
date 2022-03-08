@@ -13,14 +13,14 @@ class EncryptedKeyValueRepository(
     private val sharedPreferencesName: String,
 ) : KeyValueRepository {
 
-    override fun put(dataKey: Any, value: Any?) {
+    override fun put(dataKey: String, value: String?) {
         with(getSharedPreferences().edit()) {
-            putString(dataKey.toString(), value.toString())
+            putString(dataKey, value)
             apply()
         }
     }
 
-    override fun get(dataKey: Any): Any? = getSharedPreferences().getString(dataKey.toString(), null)
+    override fun get(dataKey: String): String? = getSharedPreferences().getString(dataKey, null)
 
     override fun remove(dataKey: String) {
         with(getSharedPreferences().edit()) {
