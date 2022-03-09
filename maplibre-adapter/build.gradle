@@ -32,7 +32,7 @@ android {
 }
 
 dependencies {
-    def lifecycleVersion = "2.4.0"
+    def lifecycleVersion = "2.4.1"
 
     implementation project(":aws-auth-cognito")
     implementation project(":aws-geo-location")
@@ -43,8 +43,11 @@ dependencies {
     implementation dependency.okhttp
     implementation dependency.kotlin.coroutines
 
+    //noinspection GradleDependency
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion"
+    //noinspection GradleDependency
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"
+    //noinspection GradleDependency
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
     //noinspection GradleDependency
     implementation "com.google.android.material:material:1.4.0"

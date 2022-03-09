@@ -1,3 +1,25 @@
+## [Release 0.16.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.16.1)
+
+### Bug Fixes
+- **datastore:** SerializedModel returns null for non-nullable list field (#1665)
+- **datastore:** Remove timeout for hydrating sync processor in orchestrator. (#1658)
+
+### Miscellaneous
+- Update notify_comments.yml (#1671)
+
+[See all changes between 0.16.0 and 0.16.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.16.0...release-kotlin_v0.16.1)
+
+## [Release 0.16.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.16.0)
+
+### Features
+- Add support for custom prefix resolver (#1659)
+
+### Miscellaneous
+- Update notify_comments.yml (#1654)
+- Updating the AWS SDK to 2.41.0 (#1662)
+
+[See all changes between 0.15.3 and 0.16.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.15.3...release-kotlin_v0.16.0)
+
 ## [Release 0.15.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.15.3)
 
 ### Miscellaneous
