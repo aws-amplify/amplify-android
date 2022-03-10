@@ -36,7 +36,6 @@ import aws.sdk.kotlin.services.s3.model.StorageClass
 import aws.smithy.kotlin.runtime.content.ByteStream
 import aws.smithy.kotlin.runtime.content.fromFile
 import aws.smithy.kotlin.runtime.time.Instant
-import com.amazonaws.util.VersionInfoUtils
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
@@ -60,10 +59,6 @@ internal abstract class BaseTransferWorker(
 
     internal lateinit var transferRecord: TransferRecord
     internal lateinit var outputData: Data
-    internal val transferServiceMultiPartUserAgent =
-        "TransferService_multipart/${VersionInfoUtils.getVersion()}"
-    internal val transferServiceUserAgent =
-        "TransferService/${VersionInfoUtils.getVersion()}"
     internal val logger =
         Amplify.Logging.forNamespace(AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName))
 

@@ -22,8 +22,6 @@ import com.amplifyframework.storage.ObjectMetadata;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
 
-import com.amazonaws.regions.Region;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -136,7 +134,7 @@ public interface StorageService {
          * @return An instantiated storage service instance
          */
         StorageService create(@NonNull Context context,
-                              @NonNull Region region,
+                              @NonNull String region,
                               @NonNull String bucketName);
     }
 }

@@ -22,10 +22,10 @@ import android.database.Cursor
 import android.net.Uri
 import aws.sdk.kotlin.services.s3.model.CompletedPart
 import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
-import com.amazonaws.util.json.JsonUtils
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
+import com.amplifyframework.storage.s3.utils.JsonUtils
 import java.io.File
 
 /**

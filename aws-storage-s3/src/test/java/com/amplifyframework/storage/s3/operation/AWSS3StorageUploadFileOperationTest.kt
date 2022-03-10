@@ -14,11 +14,11 @@
  */
 package com.amplifyframework.storage.s3.operation
 
+import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.s3.CognitoAuthProvider
 import com.amplifyframework.storage.s3.ServerSideEncryption
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
@@ -34,12 +34,12 @@ class AWSS3StorageUploadFileOperationTest {
 
     private lateinit var awsS3StorageUploadFileOperation: AWSS3StorageUploadFileOperation
     private lateinit var storageService: StorageService
-    private lateinit var cognitoAuthProvider: CognitoAuthProvider
+    private lateinit var authCredentialsProvider: AuthCredentialsProvider
 
     @Before
     fun setup() {
         storageService = Mockito.spy(StorageService::class.java)
-        cognitoAuthProvider = Mockito.mock(CognitoAuthProvider::class.java)
+        authCredentialsProvider = Mockito.mock(AuthCredentialsProvider::class.java)
     }
 
     @Test
@@ -59,7 +59,7 @@ class AWSS3StorageUploadFileOperationTest {
         awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
             MoreExecutors.newDirectExecutorService(),
-            cognitoAuthProvider,
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {},
             {},
@@ -91,7 +91,7 @@ class AWSS3StorageUploadFileOperationTest {
         awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
             MoreExecutors.newDirectExecutorService(),
-            cognitoAuthProvider,
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
@@ -134,7 +134,7 @@ class AWSS3StorageUploadFileOperationTest {
         awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
             MoreExecutors.newDirectExecutorService(),
-            cognitoAuthProvider,
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {

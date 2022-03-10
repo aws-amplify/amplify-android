@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.storage.ObjectMetadata;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
@@ -86,8 +87,8 @@ public final class StorageComponentTest {
         this.storage = new StorageCategory();
         this.storageService = mock(StorageService.class);
         StorageService.Factory storageServiceFactory = (context, region, bucket) -> storageService;
-        CognitoAuthProvider cognitoAuthProvider = mock(CognitoAuthProvider.class);
-        doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId();
+        AuthCredentialsProvider cognitoAuthProvider = mock(AuthCredentialsProvider.class);
+        doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId(null);
         this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory,
                 cognitoAuthProvider, new AWSS3StoragePluginConfiguration.Builder().build())
         );

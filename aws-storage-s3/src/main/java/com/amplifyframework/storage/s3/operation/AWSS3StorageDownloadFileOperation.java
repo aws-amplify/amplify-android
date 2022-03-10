@@ -18,6 +18,7 @@ package com.amplifyframework.storage.s3.operation;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
@@ -27,7 +28,6 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
-import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
@@ -44,7 +44,7 @@ import java.util.concurrent.ExecutorService;
 public final class AWSS3StorageDownloadFileOperation
     extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
     private final StorageService storageService;
-    private final CognitoAuthProvider cognitoAuthProvider;
+    private final AuthCredentialsProvider authCredentialsProvider;
     private final Consumer<StorageTransferProgress> onProgress;
     private final Consumer<StorageDownloadFileResult> onSuccess;
     private final Consumer<StorageException> onError;
@@ -58,7 +58,7 @@ public final class AWSS3StorageDownloadFileOperation
      *
      * @param storageService                  S3 client wrapper
      * @param executorService                 Executor service used for running blocking operations
-     * @param cognitoAuthProvider             Interface to retrieve AWS specific auth information
+     * @param authCredentialsProvider         Interface to retrieve AWS specific auth information
      * @param request                         download request parameters
      * @param awss3StoragePluginConfiguration Storage plugin configuration
      * @param onProgress                      Notified upon advancements in download progress
@@ -68,7 +68,7 @@ public final class AWSS3StorageDownloadFileOperation
     public AWSS3StorageDownloadFileOperation(
         @NonNull StorageService storageService,
         @NonNull ExecutorService executorService,
-        @NonNull CognitoAuthProvider cognitoAuthProvider,
+        @NonNull AuthCredentialsProvider authCredentialsProvider,
         @NonNull AWSS3StorageDownloadFileRequest request,
         @NonNull AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration,
         @NonNull Consumer<StorageTransferProgress> onProgress,
@@ -78,7 +78,7 @@ public final class AWSS3StorageDownloadFileOperation
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
-        this.cognitoAuthProvider = cognitoAuthProvider;
+        this.authCredentialsProvider = authCredentialsProvider;
         this.onProgress = onProgress;
         this.onSuccess = onSuccess;
         this.onError = onError;
@@ -96,7 +96,7 @@ public final class AWSS3StorageDownloadFileOperation
         }
         executorService.submit(() -> {
             awsS3StoragePluginConfiguration.
-                getAWSS3PluginPrefixResolver(cognitoAuthProvider).
+                getAWSS3PluginPrefixResolver(authCredentialsProvider).
                 resolvePrefix(
                     getRequest().getAccessLevel(),
                     getRequest().getTargetIdentityId(),

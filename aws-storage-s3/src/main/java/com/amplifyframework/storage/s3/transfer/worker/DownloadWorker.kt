@@ -20,10 +20,7 @@ import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.smithy.kotlin.runtime.content.writeToFile
-import com.amazonaws.event.ProgressEvent
-import com.amazonaws.event.ProgressListener
 import com.amplifyframework.storage.s3.transfer.TransferDB
-import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.File
 
@@ -38,10 +35,10 @@ internal class DownloadWorker(
     workerParameters: WorkerParameters
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
-    private lateinit var transferProgressListener: DownloadProgressListener
+    //private lateinit var transferProgressListener: DownloadProgressListener
 
     override suspend fun performWork(): Result {
-        transferProgressListener = DownloadProgressListener(transferRecord)
+        //transferProgressListener = DownloadProgressListener(transferRecord)
         val file = File(transferRecord.file)
         val downloadedBytes = file.length()
         val getObjectRequest = GetObjectRequest {
@@ -67,7 +64,8 @@ internal class DownloadWorker(
         }
     }
 
-    inner class DownloadProgressListener(private val transferRecord: TransferRecord) :
+    //TODO("Progress listener support is missing in kotlin sdk")
+    /*inner class DownloadProgressListener(private val transferRecord: TransferRecord) :
         ProgressListener {
         private var bytesTransferredSoFar = 0L
         private var resetProgress = false
@@ -98,5 +96,5 @@ internal class DownloadWorker(
                 )
             }
         }
-    }
+    }*/
 }

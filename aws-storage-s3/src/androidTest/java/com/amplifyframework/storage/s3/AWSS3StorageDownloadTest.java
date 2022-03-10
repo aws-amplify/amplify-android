@@ -30,12 +30,12 @@ import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.test.R;
+import com.amplifyframework.storage.s3.transfer.TransferState;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;

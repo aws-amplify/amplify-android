@@ -6,10 +6,9 @@ import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
 import aws.sdk.kotlin.services.s3.presigners.presign
-import com.amazonaws.regions.Region
+import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageItem
-import com.amplifyframework.storage.s3.CognitoAuthProvider
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.UploadOptions
@@ -28,16 +27,15 @@ import kotlin.time.ExperimentalTime
  */
 internal class AWSS3StorageService(
     private val context: Context,
-    private val awsRegion: Region,
+    private val awsRegion: String,
     private val s3BucketName: String,
-    private val cognitoAuthProvider: CognitoAuthProvider,
+    private val authCredentialsProvider: AuthCredentialsProvider,
     private val awsS3StoragePluginKey: String
 ) : StorageService {
 
     private var s3Client: S3Client = S3Client {
-        region = awsRegion.name
-        // TODO(replace with credentials provider from core)
-        credentialsProvider = StaticCredentialsProvider {}
+        region = awsRegion
+        authCredentialsProvider
     }
 
     private val transferManager: TransferManager =

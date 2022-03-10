@@ -18,6 +18,7 @@ package com.amplifyframework.storage.s3.operation;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
@@ -28,7 +29,6 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
-import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
@@ -49,7 +49,7 @@ public final class AWSS3StorageUploadInputStreamOperation
     extends StorageUploadInputStreamOperation<AWSS3StorageUploadRequest<InputStream>> {
     private final StorageService storageService;
     private final ExecutorService executorService;
-    private final CognitoAuthProvider cognitoAuthProvider;
+    private final AuthCredentialsProvider authCredentialsProvider;
     private final Consumer<StorageTransferProgress> onProgress;
     private final Consumer<StorageUploadInputStreamResult> onSuccess;
     private final Consumer<StorageException> onError;
@@ -61,7 +61,7 @@ public final class AWSS3StorageUploadInputStreamOperation
      *
      * @param storageService                  S3 client wrapper
      * @param executorService                 Executor service used for blocking operations on a separate thread
-     * @param cognitoAuthProvider             Interface to retrieve AWS specific auth information
+     * @param authCredentialsProvider             Interface to retrieve AWS specific auth information
      * @param request                         upload request parameters
      * @param awsS3StoragePluginConfiguration Storage plugin config
      * @param onProgress                      Notified upon advancements in upload progress
@@ -71,7 +71,7 @@ public final class AWSS3StorageUploadInputStreamOperation
     public AWSS3StorageUploadInputStreamOperation(
         @NonNull StorageService storageService,
         @NonNull ExecutorService executorService,
-        @NonNull CognitoAuthProvider cognitoAuthProvider,
+        @NonNull AuthCredentialsProvider authCredentialsProvider,
         @NonNull AWSS3StorageUploadRequest<InputStream> request,
         @NonNull AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration,
         @NonNull Consumer<StorageTransferProgress> onProgress,
@@ -81,7 +81,7 @@ public final class AWSS3StorageUploadInputStreamOperation
         super(Objects.requireNonNull(request));
         this.storageService = Objects.requireNonNull(storageService);
         this.executorService = executorService;
-        this.cognitoAuthProvider = cognitoAuthProvider;
+        this.authCredentialsProvider = authCredentialsProvider;
         this.onProgress = Objects.requireNonNull(onProgress);
         this.onSuccess = Objects.requireNonNull(onSuccess);
         this.onError = Objects.requireNonNull(onError);
@@ -97,7 +97,7 @@ public final class AWSS3StorageUploadInputStreamOperation
             return;
         }
         executorService.submit(() -> {
-            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(cognitoAuthProvider).
+            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).
                 resolvePrefix(
                     getRequest().getAccessLevel(),
                     getRequest().getTargetIdentityId(),

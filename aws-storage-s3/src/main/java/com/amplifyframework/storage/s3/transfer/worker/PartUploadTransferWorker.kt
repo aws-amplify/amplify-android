@@ -21,10 +21,7 @@ import aws.smithy.kotlin.runtime.content.ByteStream
 import aws.smithy.kotlin.runtime.io.SdkByteReadChannel
 import aws.smithy.kotlin.runtime.io.readChannel
 import aws.smithy.kotlin.runtime.util.InternalApi
-import com.amazonaws.event.ProgressEvent
-import com.amazonaws.event.ProgressListener
 import com.amplifyframework.storage.s3.transfer.TransferDB
-import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.TransferState
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.File
@@ -42,7 +39,7 @@ internal class PartUploadTransferWorker(
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     private lateinit var multiPartUploadId: String
-    private var transferProgressListener: TransferProgressListener? = null
+    //private var transferProgressListener: TransferProgressListener? = null
     private var transferRecordId by Delegates.notNull<Int>()
     override var maxRetryCount = 3
 
@@ -95,7 +92,8 @@ internal class PartUploadTransferWorker(
         )
     }
 
-    inner class TransferProgressListener(private val transferRecord: TransferRecord) :
+    //TODO("Progress listener support is missing in kotlin sdk")
+    /*inner class TransferProgressListener(private val transferRecord: TransferRecord) :
         ProgressListener {
 
         private var resetProgress = false
@@ -103,20 +101,20 @@ internal class PartUploadTransferWorker(
         override fun progressChanged(progressEvent: ProgressEvent) {
             if (!resetProgress) {
                 transferRecord.bytesCurrent += progressEvent.bytesTransferred
-                /*transferStatusUpdater.getMultiPartTransferListener(transferRecord.mainUploadId)
-                    ?.progressChanged(progressEvent)*/
+                *//*transferStatusUpdater.getMultiPartTransferListener(transferRecord.mainUploadId)
+                    ?.progressChanged(progressEvent)*//*
             }
         }
 
         fun resetProgress() {
             resetProgress = true
-            /*transferStatusUpdater.getMultiPartTransferListener(transferRecord.mainUploadId)
+            *//*transferStatusUpdater.getMultiPartTransferListener(transferRecord.mainUploadId)
                 ?.progressChanged(
                     ProgressEvent(
                         ProgressEvent.RESET_EVENT_CODE,
                         transferRecord.bytesCurrent
                     )
-                )*/
+                )*//*
         }
-    }
+    }*/
 }

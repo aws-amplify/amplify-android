@@ -22,7 +22,6 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.amazonaws.util.json.JsonUtils
 import com.amplifyframework.storage.s3.transfer.worker.AbortMultiPartUploadWorker
 import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker
 import com.amplifyframework.storage.s3.transfer.worker.CompleteMultiPartUploadWorker
@@ -31,6 +30,7 @@ import com.amplifyframework.storage.s3.transfer.worker.InitiateMultiPartUploadTr
 import com.amplifyframework.storage.s3.transfer.worker.PartUploadTransferWorker
 import com.amplifyframework.storage.s3.transfer.worker.RouterWorker
 import com.amplifyframework.storage.s3.transfer.worker.SinglePartUploadWorker
+import com.amplifyframework.storage.s3.utils.JsonUtils
 
 data class TransferRecord(
     var id: Int,
@@ -126,8 +126,7 @@ data class TransferRecord(
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_CACHE_CONTROL))
                 this.headerExpire =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_EXPIRE))
-                this.userMetadata =
-                    JsonUtils.jsonToMap(c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_USER_METADATA)))
+                (JsonUtils.jsonToMap(c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_USER_METADATA)))).also { this.userMetadata = it as Map<String, String> }
                 this.expirationTimeRuleId =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_EXPIRATION_TIME_RULE_ID))
                 this.httpExpires =
