@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -63,6 +64,9 @@ public final class AppSyncConflictUnhandledError<T extends Model> {
     public static <T extends Model> AppSyncConflictUnhandledError<T> findFirst(
             @NonNull Class<T> typeOfConflictingData,
             @Nullable List<GraphQLResponse.Error> errors) {
+        Log.d("ConflictUnhandledErr","typeOfConflictingData: "+ typeOfConflictingData);
+        Log.d("ConflictUnhandledErr","errors: "+ errors);
+
         if (Empty.check(errors)) {
             return null;
         }
