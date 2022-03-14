@@ -81,6 +81,13 @@ sealed class SignOutState : State {
                         val action = signOutActions.revokeTokenAction(signOutEvent)
                         StateResolution(newState, listOf(action))
                     }
+                    is SignOutEvent.EventType.SignOutLocally -> {
+                        val action = signOutActions.localSignOutAction(signOutEvent)
+                        StateResolution(
+                            SigningOutLocally(signOutEvent.signedInData),
+                            listOf(action)
+                        )
+                    }
                     else -> defaultResolution
                 }
                 is RevokingToken -> when (signOutEvent) {

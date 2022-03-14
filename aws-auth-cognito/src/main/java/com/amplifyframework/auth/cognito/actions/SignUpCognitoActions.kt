@@ -51,11 +51,11 @@ object SignUpCognitoActions : SignUpActions {
                     )
                 } ?: mapOf()
 
-                SignUpEvent(
+                dispatcher.send(SignUpEvent(
                     SignUpEvent.EventType.InitiateSignUpSuccess(
                         SignedUpData(it?.userSub, event.username, deliveryDetails)
                     )
-                )
+                ))
             }.onFailure {
                 dispatcher.send(
                     SignUpEvent(SignUpEvent.EventType.InitiateSignUpFailure(it as Exception))
@@ -84,18 +84,36 @@ object SignUpCognitoActions : SignUpActions {
             }
         }
 
-    override fun resendConfirmationCodeAction() = Action { dispatcher, environment ->
+    override fun resendConfirmationCodeAction(event: SignUpEvent.EventType.ResendSignUpCode) = Action { dispatcher, environment ->
         val env = (environment as AuthEnvironment)
         runCatching {
             val options = ResendConfirmationCodeRequest {
                 clientId = env.configuration.userPool?.appClient
-//                username = event.username
+                username = event.username
             }
             env.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode(options)
+        }.onSuccess {
+            val deliveryDetails = it?.codeDeliveryDetails?.let { details ->
+                mapOf(
+                    "DESTINATION" to details.destination,
+                    "MEDIUM" to details.deliveryMedium?.value,
+                    "ATTRIBUTE" to details.attributeName
+                )
+            } ?: mapOf()
+
+            SignUpEvent(
+                SignUpEvent.EventType.ResendSignUpCodeSuccess(
+                    SignedUpData("", event.username, deliveryDetails)
+                )
+            )
+        }.onFailure {
+            dispatcher.send(
+                SignUpEvent(SignUpEvent.EventType.ResendSignUpCodeFailure(it as Exception))
+            )
         }
     }
 
     override fun resetSignUpAction() = Action { dispatcher, environment ->
-        dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.resetSignUp()))
+        dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp()))
     }
 }

@@ -24,12 +24,8 @@ import aws.smithy.kotlin.runtime.time.fromEpochMilliseconds
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.*
 import com.amplifyframework.auth.cognito.data.*
-import com.amplifyframework.auth.cognito.events.AuthEvent
+import com.amplifyframework.auth.cognito.events.*
 import com.amplifyframework.auth.cognito.events.AuthEvent.EventType.ConfigureAuth
-import com.amplifyframework.auth.cognito.events.AuthenticationEvent
-import com.amplifyframework.auth.cognito.events.AuthorizationEvent
-import com.amplifyframework.auth.cognito.events.CredentialStoreEvent
-import com.amplifyframework.auth.cognito.events.SignUpEvent
 import com.amplifyframework.auth.cognito.states.*
 import com.amplifyframework.auth.options.*
 import com.amplifyframework.auth.result.*
@@ -38,7 +34,10 @@ import com.amplifyframework.auth.result.step.AuthNextSignUpStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.auth.result.step.AuthSignUpStep
 import com.amplifyframework.core.Action
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import org.json.JSONException
 import org.json.JSONObject
@@ -67,9 +66,37 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
     ) {
-        authStateMachine.listen({ authState ->
-            when (val signUpState = authState.authNState.let { it?.signUpState }) {
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedOut -> {
+                    // Continue sign up
+                    _signUp(username, password, options, onSuccess, onError)
+                }
+                is AuthenticationState.SigningUp -> {
+                    // Clean up from signing up state
+                    authStateMachine.send(
+                        AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp())
+                    )
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
+    }
+
+    private fun _signUp(
+        username: String,
+        password: String,
+        options: AuthSignUpOptions,
+        onSuccess: Consumer<AuthSignUpResult>,
+        onError: Consumer<AuthException>
+    ) {
+        var token: StateChangeListenerToken? = null
+        token = authStateMachine.listen({ authState ->
+            val signUpState =
+                authState.authNState.takeIf { it is AuthenticationState.SigningUp }?.signUpState
+            when (signUpState) {
                 is SignUpState.SigningUpInitiated -> {
+                    token?.let { authStateMachine::cancel }
                     val user = AuthUser(
                         signUpState.signedUpData.userId ?: "", signUpState.signedUpData.username
                     )
@@ -88,18 +115,22 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                     )
                     onSuccess.accept(authSignUpResult)
                 }
-                is SignUpState.Error -> onError.accept(
-                    CognitoAuthExceptionConverter.lookup(signUpState.exception, "Sign up failed.")
-                )
+                is SignUpState.Error -> {
+                    token?.let { authStateMachine::cancel }
+                    onError.accept(
+                        CognitoAuthExceptionConverter.lookup(
+                            signUpState.exception,
+                            "Sign up failed."
+                        )
+                    )
+                }
                 else -> {
-                    //TODO: log failure
+                    // no-op
                 }
             }
         }, {
             val event =
-                SignUpEvent(
-                    SignUpEvent.EventType.InitiateSignUp(username, password, options)
-                )
+                SignUpEvent(SignUpEvent.EventType.InitiateSignUp(username, password, options))
             authStateMachine.send(event)
         })
     }
@@ -111,33 +142,15 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
     ) {
-        authStateMachine.listen({ authState ->
-            when (val signUpState = authState.authNState.let { it?.signUpState }) {
-                is SignUpState.SignedUp -> {
-                    val authSignUpResult = AuthSignUpResult(
-                        true,
-                        AuthNextSignUpStep(AuthSignUpStep.DONE, mapOf(), null),
-                        null
-                    )
-                    onSuccess.accept(authSignUpResult)
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedOut, is AuthenticationState.SigningUp -> {
+                    // Continue confirm sign up
+                    _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
                 }
-                is SignUpState.Error -> onError.accept(
-                    CognitoAuthExceptionConverter.lookup(
-                        signUpState.exception,
-                        "Confirm sign up failed."
-                    )
-                )
-                else -> {
-                    //TODO: log failure
-                }
+                else -> onError.accept(AuthException.InvalidStateException())
             }
-        }, {
-            val event =
-                SignUpEvent(
-                    SignUpEvent.EventType.ConfirmSignUp(username, confirmationCode)
-                )
-            authStateMachine.send(event)
-        })
+        }
     }
 
     override fun confirmSignUp(
@@ -155,13 +168,62 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         )
     }
 
+    private fun _confirmSignUp(
+        username: String,
+        confirmationCode: String,
+        options: AuthConfirmSignUpOptions,
+        onSuccess: Consumer<AuthSignUpResult>,
+        onError: Consumer<AuthException>
+    ) {
+        var token: StateChangeListenerToken? = null
+        token = authStateMachine.listen({ authState ->
+            val signUpState =
+                authState.authNState.takeIf { it is AuthenticationState.SigningUp }?.signUpState
+            when (signUpState) {
+                is SignUpState.SignedUp -> {
+                    token?.let { authStateMachine::cancel }
+                    val authSignUpResult = AuthSignUpResult(
+                        true,
+                        AuthNextSignUpStep(AuthSignUpStep.DONE, mapOf(), null),
+                        null
+                    )
+                    onSuccess.accept(authSignUpResult)
+                }
+                is SignUpState.Error -> {
+                    token?.let { authStateMachine::cancel }
+                    onError.accept(
+                        CognitoAuthExceptionConverter.lookup(
+                            signUpState.exception,
+                            "Confirm sign up failed."
+                        )
+                    )
+                }
+                else -> {
+                    // no-op
+                }
+            }
+        }, {
+            val event =
+                SignUpEvent(SignUpEvent.EventType.ConfirmSignUp(username, confirmationCode))
+            authStateMachine.send(event)
+        })
+    }
+
     override fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedOut, is AuthenticationState.SigningUp -> {
+                    // Continue resend signup code
+                    TODO("Not yet implemented")
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
     }
 
     override fun resendSignUpCode(
@@ -169,7 +231,39 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), onSuccess, onError)
+    }
+
+    private fun _resendSignUpCode(
+        username: String,
+        options: AuthResendSignUpCodeOptions,
+        onSuccess: Consumer<AuthSignUpResult>,
+        onError: Consumer<AuthException>
+    ) {
+        var token: StateChangeListenerToken? = null
+        token = authStateMachine.listen({ authState ->
+            val signUpState =
+                authState.authNState.takeIf { it is AuthenticationState.SigningUp }?.signUpState
+            when (signUpState) {
+                // TODO("Not yet implemented")
+                is SignUpState.Error -> {
+                    token?.let { authStateMachine::cancel }
+                    onError.accept(
+                        CognitoAuthExceptionConverter.lookup(
+                            signUpState.exception,
+                            "Sign up failed."
+                        )
+                    )
+                }
+                else -> {
+                    // no-op
+                }
+            }
+        }, {
+            val event =
+                SignUpEvent(SignUpEvent.EventType.ResendSignUpCode(username, options))
+            authStateMachine.send(event)
+        })
     }
 
     override fun signIn(
@@ -179,22 +273,63 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        authStateMachine.listen({ authState ->
-            when (val srpSignInState = authState.authNState.let { it?.srpSignInState }) {
-                is SRPSignInState.SignedIn -> {
-                    val authSignInResult = AuthSignInResult(
-                        true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
-                    )
-                    onSuccess.accept(authSignInResult)
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedOut -> {
+                    // Continue sign in
+                    _signIn(username, password, options, onSuccess, onError)
                 }
-                is SRPSignInState.Error -> onError.accept(
-                    CognitoAuthExceptionConverter.lookup(
-                        srpSignInState.exception,
-                        "Sign in failed."
+                is AuthenticationState.SigningUp -> {
+                    // Clean up from signing up state
+                    authStateMachine.send(
+                        AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp())
                     )
-                )
+                }
+                is AuthenticationState.SignedIn -> onError.accept(AuthException.SignedInException())
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
+    }
+
+    override fun signIn(
+        username: String?,
+        password: String?,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        signIn(username, password, AuthSignInOptions.defaults(), onSuccess, onError)
+    }
+
+    private fun _signIn(
+        username: String?,
+        password: String?,
+        options: AuthSignInOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        var token: StateChangeListenerToken? = null
+        token = authStateMachine.listen({ authState ->
+            when (val authNState = authState.authNState) {
+                is AuthenticationState.SigningIn -> {
+                    val srpSignInState = authNState.srpSignInState
+                    if (srpSignInState is SRPSignInState.Error) {
+                        token?.let { authStateMachine::cancel }
+                        onError.accept(
+                            CognitoAuthExceptionConverter.lookup(
+                                srpSignInState.exception,
+                                "Sign in failed."
+                            )
+                        )
+                    }
+                }
+                is AuthenticationState.SignedIn -> {
+                    token?.let { authStateMachine::cancel }
+                    val cognitoUserPoolTokens = authNState.signedInData.cognitoUserPoolTokens
+                    // Store tokens to credential store
+                    waitForSignInCompletion(cognitoUserPoolTokens, onSuccess, onError)
+                }
                 else -> {
-                    //TODO: log failure
+                    // no-op
                 }
             }
         }, {
@@ -206,13 +341,39 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         })
     }
 
-    override fun signIn(
-        username: String?,
-        password: String?,
+    private fun waitForSignInCompletion(
+        tokens: CognitoUserPoolTokens,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        signIn(username, password, AuthSignInOptions.defaults(), onSuccess, onError)
+        var token: StateChangeListenerToken? = null
+        token = credentialStoreStateMachine.listen({
+            when {
+                it is CredentialStoreState.Success -> {
+                    token?.let { credentialStoreStateMachine::cancel }
+                    val authSignInResult = AuthSignInResult(
+                        true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
+                    )
+                    onSuccess.accept(authSignInResult)
+                    Amplify.Hub.publish(
+                        HubChannel.AUTH,
+                        HubEvent.create(AuthChannelEventName.SIGNED_IN)
+                    )
+                }
+                it is CredentialStoreState.Error -> {
+                    token?.let { credentialStoreStateMachine::cancel }
+                    onError.accept(AuthException(it.error.message, "Try signing in again."))
+                }
+            }
+        }, {
+            credentialStoreStateMachine.send(
+                CredentialStoreEvent(
+                    CredentialStoreEvent.EventType.StoreCredentials(
+                        AmplifyCredential(tokens, null, null)
+                    )
+                )
+            )
+        })
     }
 
     override fun confirmSignIn(
@@ -308,6 +469,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                             )
                         )
                     )
+                    // TODO: send hub events - session expired
+        //            Amplify.Hub.publish(
+        //                HubChannel.AUTH,
+        //                HubEvent.create(AuthChannelEventName.SESSION_EXPIRED)
+        //            )
                     onSuccess.accept(awsCognitoAuthSession)
                 }
             }
@@ -467,23 +633,90 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        authStateMachine.listen({ authState ->
-            when (val signOutState = authState.authNState.let { it?.signOutState }) {
-                is SignOutState.SignedOut -> onSuccess.call()
-                is SignOutState.Error -> onError.accept(
-                    CognitoAuthExceptionConverter.lookup(
-                        signOutState.exception,
-                        "Sign out failed."
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    // Continue sign out
+                    _signOut(options, onSuccess, onError)
+                }
+                is AuthenticationState.SignedOut -> onError.accept(AuthException.SignedOutException())
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
+    }
+
+    private fun _signOut(
+        options: AuthSignOutOptions,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        var token: StateChangeListenerToken? = null
+        token = authStateMachine.listen({ authState ->
+            when (val authNState = authState.authNState) {
+                is AuthenticationState.SignedOut -> {
+                    token?.let { authStateMachine::cancel }
+                    onSuccess.call()
+                    Amplify.Hub.publish(
+                        HubChannel.AUTH,
+                        HubEvent.create(AuthChannelEventName.SIGNED_OUT)
                     )
-                )
+                }
+                is AuthenticationState.SigningOut -> {
+                    val signOutState = authNState.signOutState
+                    when {
+                        signOutState is SignOutState.SigningOutLocally -> {
+                            // Clear stored credentials
+                            waitForSignOut(signOutState.signedInData.username)
+                        }
+                        signOutState is SignOutState.Error -> {
+                            token?.let { authStateMachine::cancel }
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    signOutState.exception,
+                                    "Sign out failed."
+                                )
+                            )
+                        }
+                    }
+                }
                 else -> {
-                    //Todo: log failure
+                    // no-op
                 }
             }
         }, {
             val event =
                 AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
             authStateMachine.send(event)
+        })
+    }
+
+    private fun waitForSignOut(username: String) {
+        var token: StateChangeListenerToken? = null
+        token = credentialStoreStateMachine.listen({
+            when {
+                it is CredentialStoreState.Success -> {
+                    token?.let { credentialStoreStateMachine::cancel }
+                    authStateMachine.send(
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.InitializedSignedOut(
+                                SignedOutData(username)
+                            )
+                        )
+                    )
+                }
+                it is CredentialStoreState.Error -> {
+                    token?.let { credentialStoreStateMachine::cancel }
+                    authStateMachine.send(
+                        SignOutEvent(
+                            SignOutEvent.EventType.SignedOutFailure(
+                                AuthException(it.error.message, "")
+                            )
+                        )
+                    )
+                }
+            }
+        }, {
+            credentialStoreStateMachine.send(CredentialStoreEvent(CredentialStoreEvent.EventType.ClearCredentialStore()))
         })
     }
 

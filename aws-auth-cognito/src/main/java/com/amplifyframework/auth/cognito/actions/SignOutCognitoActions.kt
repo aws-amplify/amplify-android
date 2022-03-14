@@ -17,8 +17,6 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.*
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.data.SignedOutData
-import com.amplifyframework.auth.cognito.events.AuthenticationEvent
 import com.amplifyframework.auth.cognito.events.SignOutEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
@@ -27,14 +25,6 @@ object SignOutCognitoActions : SignOutActions {
     override fun localSignOutAction(event: SignOutEvent.EventType.SignOutLocally) =
         Action { dispatcher, environment ->
             dispatcher.send(SignOutEvent(SignOutEvent.EventType.SignedOutSuccess(event.signedInData)))
-            dispatcher.send(
-                AuthenticationEvent(
-                    AuthenticationEvent.EventType.InitializedSignedOut(
-                        SignedOutData(event.signedInData.username)
-                    )
-                )
-            )
-            //TODO: handle failure - SignedOutFailure
         }
 
     override fun globalSignOutAction(event: SignOutEvent.EventType.SignOutGlobally) =

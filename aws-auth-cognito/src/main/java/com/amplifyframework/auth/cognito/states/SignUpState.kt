@@ -56,6 +56,10 @@ sealed class SignUpState : State {
                         val newState = ConfirmingSignUp()
                         return StateResolution(newState, listOf(action))
                     }
+                    is SignUpEvent.EventType.ResendSignUpCode -> {
+                        val action = signUpActions.resendConfirmationCodeAction(signUpEvent)
+                        StateResolution(oldState, listOf(action))
+                    }
                     else -> defaultResolution
                 }
                 is InitiatingSigningUp -> when (signUpEvent) {

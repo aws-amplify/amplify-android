@@ -42,7 +42,7 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
         ) : EventType()
 
         data class CancelSignIn(val id: String = "") : EventType()
-        data class resetSignUp(val id: String = "") : EventType()
+        data class ResetSignUp(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 

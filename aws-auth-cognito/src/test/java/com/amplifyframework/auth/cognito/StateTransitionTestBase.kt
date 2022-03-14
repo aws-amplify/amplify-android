@@ -230,7 +230,7 @@ open class StateTransitionTestBase {
         Mockito.`when`(mockSignUpActions.resetSignUpAction())
             .thenReturn(
                 Action { dispatcher, _ ->
-                    dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.resetSignUp()))
+                    dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp()))
                 })
     }
 

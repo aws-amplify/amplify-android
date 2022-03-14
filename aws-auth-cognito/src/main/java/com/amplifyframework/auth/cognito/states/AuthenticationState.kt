@@ -127,7 +127,7 @@ sealed class AuthenticationState : State {
                     else -> defaultResolution
                 }
                 is SigningUp -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.resetSignUp -> StateResolution(
+                    is AuthenticationEvent.EventType.ResetSignUp -> StateResolution(
                         SignedOut(
                             SignedOutData()
                         )
@@ -159,9 +159,13 @@ sealed class AuthenticationState : State {
                         val newState = SigningIn(oldState.srpSignInState)
                         StateResolution(newState, listOf(action))
                     }
-                    signUpEvent is SignUpEvent.EventType.InitiateSignUp || signUpEvent is SignUpEvent.EventType.ConfirmSignUp -> StateResolution(
-                        SigningUp(oldState.signUpState)
-                    )
+                    // TODO: find better way to handle other events
+                    signUpEvent is SignUpEvent.EventType.InitiateSignUp
+                            || signUpEvent is SignUpEvent.EventType.ConfirmSignUp
+                            || signUpEvent is SignUpEvent.EventType.ResendSignUpCode ->
+                        StateResolution(
+                            SigningUp(oldState.signUpState)
+                        )
                     else -> defaultResolution
                 }
                 else -> defaultResolution
