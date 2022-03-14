@@ -24,8 +24,8 @@ class FetchUserPoolTokensEvent(
     val eventType: EventType, override val time: Date? = null,
 ) : StateMachineEvent {
     sealed class EventType {
-        data class Refresh(val message: String = "Success") : EventType()
-        data class Fetched(val id: String = "") : EventType()
+        data class Refresh(val amplifyCredential: AmplifyCredential?) : EventType()
+        data class Fetched(val amplifyCredential: AmplifyCredential?) : EventType()
         data class ThrowError(val error: String?) : EventType()
     }
 

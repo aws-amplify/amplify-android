@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import com.amplifyframework.auth.cognito.data.AmplifyCredential
 import com.amplifyframework.auth.cognito.events.AuthEvent
 import com.amplifyframework.auth.cognito.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.Action
@@ -25,7 +26,7 @@ object AuthorizationCognitoActions : AuthorizationActions {
         dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthorization))
     }
 
-    override fun initializeFetchAuthSession() = Action { dispatcher, _ ->
-        dispatcher.send(FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchUserPoolTokens()))
+    override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential?) = Action { dispatcher, _ ->
+        dispatcher.send(FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential)))
     }
 }

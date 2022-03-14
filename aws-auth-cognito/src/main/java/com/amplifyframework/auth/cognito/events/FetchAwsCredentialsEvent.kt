@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.events
 
 import com.amplifyframework.auth.cognito.data.AWSCredentials
+import com.amplifyframework.auth.cognito.data.AmplifyCredential
 import com.amplifyframework.statemachine.StateMachineEvent
 import java.util.*
 
@@ -23,8 +24,8 @@ class FetchAwsCredentialsEvent(
     val eventType: EventType, override val time: Date? = null,
 ) : StateMachineEvent {
     sealed class EventType {
-        data class Fetch(val identityID: String) : EventType()
-        data class Fetched(val id: String = "") : EventType()
+        data class Fetch(val amplifyCredential: AmplifyCredential?) : EventType()
+        data class Fetched(val amplifyCredential: AmplifyCredential?) : EventType()
         data class ThrowError(val error: Exception) : EventType()
     }
 

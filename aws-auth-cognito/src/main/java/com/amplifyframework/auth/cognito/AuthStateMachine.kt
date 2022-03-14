@@ -37,7 +37,15 @@ internal class AuthStateMachine(
                 SignOutState.Resolver(SignOutCognitoActions),
                 AuthenticationCognitoActions
             ),
-            AuthorizationState.Resolver(AuthorizationCognitoActions),
+            AuthorizationState.Resolver(
+                FetchAuthSessionState.Resolver(
+                    FetchAwsCredentialsState.Resolver(FetchAwsCredentialsActions),
+                    FetchIdentityState.Resolver(FetchIdentityActions),
+                    FetchUserPoolTokensState.Resolver(FetchUserPoolTokensActions),
+                    FetchAuthSessionActions
+                ),
+                AuthorizationCognitoActions
+            ),
             AuthCognitoActions
         ), environment
     )
@@ -52,7 +60,15 @@ internal class AuthStateMachine(
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
                     AuthenticationCognitoActions
                 ).logging(),
-                AuthorizationState.Resolver(AuthorizationCognitoActions).logging(),
+                AuthorizationState.Resolver(
+                    FetchAuthSessionState.Resolver(
+                        FetchAwsCredentialsState.Resolver(FetchAwsCredentialsActions).logging(),
+                        FetchIdentityState.Resolver(FetchIdentityActions).logging(),
+                        FetchUserPoolTokensState.Resolver(FetchUserPoolTokensActions).logging(),
+                        FetchAuthSessionActions
+                    ).logging(),
+                    AuthorizationCognitoActions
+                ).logging(),
                 AuthCognitoActions
             ).logging(), AuthEnvironment.empty
         )
@@ -64,7 +80,6 @@ class AuthEnvironment : Environment {
     internal lateinit var srpHelper: SRPHelper
 
     val cognitoAuthService = AWSCognitoAuthService
-    lateinit var awsCognitoAuthCredentialStore: AWSCognitoAuthCredentialStore
 
     //TODO: temporary, needs to be in credential store
     var accessToken: String? = null

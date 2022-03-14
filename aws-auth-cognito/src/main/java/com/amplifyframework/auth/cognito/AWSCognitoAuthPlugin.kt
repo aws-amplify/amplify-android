@@ -18,6 +18,9 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import aws.sdk.kotlin.runtime.auth.credentials.Credentials
+import aws.smithy.kotlin.runtime.time.Instant
+import aws.smithy.kotlin.runtime.time.fromEpochMilliseconds
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.*
 import com.amplifyframework.auth.cognito.data.*
@@ -29,10 +32,7 @@ import com.amplifyframework.auth.cognito.events.CredentialStoreEvent
 import com.amplifyframework.auth.cognito.events.SignUpEvent
 import com.amplifyframework.auth.cognito.states.*
 import com.amplifyframework.auth.options.*
-import com.amplifyframework.auth.result.AuthResetPasswordResult
-import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.auth.result.AuthSignUpResult
-import com.amplifyframework.auth.result.AuthUpdateAttributeResult
+import com.amplifyframework.auth.result.*
 import com.amplifyframework.auth.result.step.AuthNextSignInStep
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
@@ -276,11 +276,45 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
     ) {
+        val amplifyCredential = loadCredentialStore()
         authStateMachine.listen({ authState ->
-            val authNSState = authState.authZState.takeIf { it is AuthorizationState.FetchingAuthSession }
-            authNSState?.apply { onSuccess }
+            val authNSState =
+                authState.authZState.takeIf { it is AuthorizationState.SessionEstablished }
+            authNSState?.apply {
+                if (authNSState.fetchAuthSessionState is FetchAuthSessionState.SessionEstablished) {
+                    val updatedAmplifyCredential =
+                        (authNSState.fetchAuthSessionState as FetchAuthSessionState.SessionEstablished).amplifyCredential
+                    val isSignedIn = updatedAmplifyCredential?.cognitoUserPoolTokens != null
+                    val identityID =
+                        AuthSessionResult.success(amplifyCredential?.identityId as String)
+                    val awsCredentials = updatedAmplifyCredential?.awsCredentials
+                    val awsCognitoAuthSession = AWSCognitoAuthSession(
+                        signedIn = isSignedIn,
+                        identityId = identityID,
+                        awsCredentials = AuthSessionResult.success(
+                            Credentials(
+                                accessKeyId = awsCredentials?.accessKeyId as String,
+                                secretAccessKey = awsCredentials.secretAccessKey as String,
+                                sessionToken = awsCredentials.sessionToken,
+                                expiration = Instant.fromEpochMilliseconds(awsCredentials.expiration as Long)
+                            )
+                        ),
+                        userSub = AuthSessionResult.success(updatedAmplifyCredential.cognitoUserPoolTokens?.idToken),
+                        userPoolTokens = AuthSessionResult.success(
+                            AWSCognitoUserPoolTokens(
+                                accessToken = updatedAmplifyCredential.cognitoUserPoolTokens?.accessToken as String,
+                                idToken = updatedAmplifyCredential.cognitoUserPoolTokens.idToken as String,
+                                refreshToken = updatedAmplifyCredential.cognitoUserPoolTokens.refreshToken as String
+                            )
+                        )
+                    )
+                    onSuccess.accept(awsCognitoAuthSession)
+                }
+            }
+
         }, {
-            val event = AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession())
+            val event =
+                AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession(amplifyCredential))
             authStateMachine.send(event)
         })
     }
@@ -462,7 +496,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 credentialStoreEnvironment.applicationContext,
                 authConfiguration
             )
-            authEnvironment.awsCognitoAuthCredentialStore = awsCognitoAuthCredentialStore
             credentialStoreEnvironment.credentialStore = awsCognitoAuthCredentialStore
 
             credentialStoreEnvironment.legacyCredentialStore =
@@ -500,6 +533,21 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             credentialStoreStateMachine
                 .send(CredentialStoreEvent(CredentialStoreEvent.EventType.MigrateLegacyCredentialStore()))
         })
+    }
+
+    private fun loadCredentialStore(): AmplifyCredential? {
+        credentialStoreStateMachine.listen({
+            when (it) {
+                is CredentialStoreState.Success -> {
+                    it.storedCredentials
+                }
+                else -> {}
+            }
+        }, {
+            credentialStoreStateMachine
+                .send(CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore()))
+        })
+        return null
     }
 
     override fun getEscapeHatch() = authEnvironment.cognitoAuthService

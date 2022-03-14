@@ -15,21 +15,23 @@
 
 package com.amplifyframework.auth.cognito.states
 
-import com.amplifyframework.auth.cognito.actions.RefreshFetchUserPoolTokensAction
+import com.amplifyframework.auth.cognito.data.AmplifyCredential
 import com.amplifyframework.auth.cognito.data.AuthenticationError
 import com.amplifyframework.auth.cognito.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
+import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
 
 sealed class FetchUserPoolTokensState : State {
     data class Configuring(val id: String = "") : FetchUserPoolTokensState()
     data class Refreshing(val id: String = "") : FetchUserPoolTokensState()
-    data class Fetched(val id: String = "") : FetchUserPoolTokensState()
+    data class Fetched(val amplifyCredential: AmplifyCredential?) : FetchUserPoolTokensState()
     data class Error(val id: String = "") : FetchUserPoolTokensState()
 
-    class Resolver : StateMachineResolver<FetchUserPoolTokensState> {
+    class Resolver(private val fetchUserPoolTokensActions: FetchUserPoolTokensActions) :
+        StateMachineResolver<FetchUserPoolTokensState> {
         override val defaultState = Configuring()
         private fun asFetchUserPoolTokensEvent(event: StateMachineEvent): FetchUserPoolTokensEvent.EventType? {
             return (event as? FetchUserPoolTokensEvent)?.eventType
@@ -43,15 +45,26 @@ sealed class FetchUserPoolTokensState : State {
             return when (oldState) {
                 is Configuring -> {
                     when (fetchUserPoolTokensEvent) {
-                        is FetchUserPoolTokensEvent.EventType.Fetched -> onFetchUserPoolTokensSuccess()
-                        is FetchUserPoolTokensEvent.EventType.Refresh -> onRefreshFetchUserPoolTokens()
+                        is FetchUserPoolTokensEvent.EventType.Fetched -> {
+                            val newState = Fetched(fetchUserPoolTokensEvent.amplifyCredential)
+                             StateResolution(newState)
+                        }
+                        is FetchUserPoolTokensEvent.EventType.Refresh -> {
+                            val newState = Refreshing()
+                            val action =
+                                fetchUserPoolTokensActions.refreshFetchUserPoolTokensAction(fetchUserPoolTokensEvent.amplifyCredential)
+                            StateResolution(newState, listOf(action))
+                        }
                         is FetchUserPoolTokensEvent.EventType.ThrowError -> onFetchUserPoolTokensFailure()
                         else -> StateResolution(oldState)
                     }
                 }
                 is Refreshing -> {
                     when (fetchUserPoolTokensEvent) {
-                        is FetchUserPoolTokensEvent.EventType.Fetched -> onFetchUserPoolTokensSuccess()
+                        is FetchUserPoolTokensEvent.EventType.Fetched -> {
+                            val newState = Fetched(fetchUserPoolTokensEvent.amplifyCredential)
+                            StateResolution(newState)
+                        }
                         is FetchUserPoolTokensEvent.EventType.ThrowError -> onFetchUserPoolTokensFailure()
                         else -> StateResolution(oldState)
                     }
@@ -64,20 +77,9 @@ sealed class FetchUserPoolTokensState : State {
             }
         }
 
-        private fun onFetchUserPoolTokensSuccess(): StateResolution<FetchUserPoolTokensState> {
-            val newState = Fetched()
-            return StateResolution(newState)
-        }
-
         private fun onFetchUserPoolTokensFailure(): StateResolution<FetchUserPoolTokensState> {
             val newState = Error()
             return StateResolution(newState)
-        }
-
-        private fun onRefreshFetchUserPoolTokens(): StateResolution<FetchUserPoolTokensState> {
-            val newState = Refreshing()
-            val action = RefreshFetchUserPoolTokensAction()
-            return StateResolution(newState, listOf(action))
         }
     }
 }

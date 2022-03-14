@@ -61,6 +61,18 @@ open class StateTransitionTestBase {
     @Mock
     internal lateinit var mockSignOutActions: SignOutActions
 
+    @Mock
+    internal lateinit var mockFetchAuthSessionActions: FetchAuthSessionActions
+
+    @Mock
+    internal lateinit var mockFetchIdentityActions: FetchIdentityActions
+
+    @Mock
+    internal lateinit var mockFetchUserPoolTokensActions: FetchUserPoolTokensActions
+
+    @Mock
+    internal lateinit var mockFetchAwsCredentialsActions: FetchAWSCredentialsActions
+
     internal fun setupAuthActions() {
         Mockito.`when`(mockAuthActions.initializeAuthConfigurationAction(MockitoHelper.anyObject()))
             .thenReturn(
@@ -127,6 +139,12 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthorization))
+                })
+
+        Mockito.`when`(mockAuthorizationActions.initializeFetchAuthSession(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchUserPoolTokens(credentials)))
                 })
     }
 
@@ -213,6 +231,50 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.resetSignUp()))
+                })
+    }
+
+
+    internal fun setupFetchAuthActions() {
+//        Mockito.`when`(mockFetchAwsCredentialsActions.initFetchAWSCredentialsAction(MockitoHelper.anyObject()))
+//            .thenReturn(
+//                Action { dispatcher, _ ->
+//                    dispatcher.send(FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.Fetched(credentials)))
+//                })
+
+        Mockito.`when`(mockFetchUserPoolTokensActions.refreshFetchUserPoolTokensAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.Fetched(credentials)))
+                })
+
+//        Mockito.`when`(mockFetchIdentityActions.initFetchIdentityAction(MockitoHelper.anyObject()))
+//            .thenReturn(
+//                Action { dispatcher, _ ->
+//                    dispatcher.send(FetchIdentityEvent(FetchIdentityEvent.EventType.Fetched(credentials)))
+//                })
+
+        Mockito.`when`(mockFetchAuthSessionActions.configureUserPoolTokensAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(credentials)))
+                })
+
+        Mockito.`when`(mockFetchAuthSessionActions.configureIdentityAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchAwsCredentials(credentials))
+                    )
+                })
+
+        Mockito.`when`(mockFetchAuthSessionActions.configureAWSCredentialsAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(credentials))
+                    )
+                    dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchedAuthSession(credentials)))
                 })
     }
 }

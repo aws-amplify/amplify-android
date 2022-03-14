@@ -15,23 +15,25 @@
 
 package com.amplifyframework.auth.cognito.states
 
-import com.amplifyframework.auth.cognito.actions.InitFetchAWSCredentialsAction
+import com.amplifyframework.auth.cognito.data.AmplifyCredential
 import com.amplifyframework.auth.cognito.data.AuthenticationError
 import com.amplifyframework.auth.cognito.events.FetchAwsCredentialsEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
+import com.amplifyframework.statemachine.codegen.actions.FetchAWSCredentialsActions
 
 sealed class FetchAwsCredentialsState : State {
     data class Configuring(val id: String = "") : FetchAwsCredentialsState()
     data class Fetching(val id: String = "") : FetchAwsCredentialsState()
-    data class Fetched(val id: String = "") : FetchAwsCredentialsState()
+    data class Fetched(val amplifyCredential: AmplifyCredential?) : FetchAwsCredentialsState()
     data class Error(val id: String = "") : FetchAwsCredentialsState()
 
-    class Resolver : StateMachineResolver<FetchAwsCredentialsState> {
+    class Resolver(private val fetchAWSCredentialsActions: FetchAWSCredentialsActions) :
+        StateMachineResolver<FetchAwsCredentialsState> {
         override val defaultState = Configuring()
-        private fun asFetchIdentityEvent(event: StateMachineEvent): FetchAwsCredentialsEvent.EventType? {
+        private fun asFetchAwsCredentialsEvent(event: StateMachineEvent): FetchAwsCredentialsEvent.EventType? {
             return (event as? FetchAwsCredentialsEvent)?.eventType
         }
 
@@ -39,18 +41,28 @@ sealed class FetchAwsCredentialsState : State {
             oldState: FetchAwsCredentialsState,
             event: StateMachineEvent
         ): StateResolution<FetchAwsCredentialsState> {
-            val fetchIdentityEvent = asFetchIdentityEvent(event)
+            val fetchAwsCredentialsEvent = asFetchAwsCredentialsEvent(event)
             return when (oldState) {
                 is Configuring -> {
-                    when (fetchIdentityEvent) {
-                        is FetchAwsCredentialsEvent.EventType.Fetch -> onFetchAWSCredentials()
+                    when (fetchAwsCredentialsEvent) {
+                        is FetchAwsCredentialsEvent.EventType.Fetch -> {
+                            val newState = Fetching()
+                            val action = fetchAWSCredentialsActions.initFetchAWSCredentialsAction(fetchAwsCredentialsEvent.amplifyCredential)
+                            StateResolution(newState, listOf(action))
+                        }
                         else -> StateResolution(oldState)
                     }
                 }
                 is Fetching -> {
-                    when (fetchIdentityEvent) {
-                        is FetchAwsCredentialsEvent.EventType.Fetched -> onFetchAWSCredentialsSuccess()
-                        is FetchAwsCredentialsEvent.EventType.ThrowError -> onFetchAWSCredentialsFailure()
+                    when (fetchAwsCredentialsEvent) {
+                        is FetchAwsCredentialsEvent.EventType.Fetched -> {
+                            val newState = Fetched(fetchAwsCredentialsEvent.amplifyCredential)
+                            StateResolution(newState)
+                        }
+                        is FetchAwsCredentialsEvent.EventType.ThrowError -> {
+                            val newState = Error()
+                            StateResolution(newState)
+                        }
                         else -> StateResolution(oldState)
                     }
                 }
@@ -60,22 +72,6 @@ sealed class FetchAwsCredentialsState : State {
 
                 is Error -> throw AuthenticationError("Fetch user AWS Credentials error")
             }
-        }
-
-        private fun onFetchAWSCredentialsSuccess(): StateResolution<FetchAwsCredentialsState> {
-            val newState = Fetched()
-            return StateResolution(newState)
-        }
-
-        private fun onFetchAWSCredentialsFailure(): StateResolution<FetchAwsCredentialsState> {
-            val newState = Error()
-            return StateResolution(newState)
-        }
-
-        private fun onFetchAWSCredentials(): StateResolution<FetchAwsCredentialsState> {
-            val newState = Fetching()
-            val action = InitFetchAWSCredentialsAction()
-            return StateResolution(newState, listOf(action))
         }
     }
 }
