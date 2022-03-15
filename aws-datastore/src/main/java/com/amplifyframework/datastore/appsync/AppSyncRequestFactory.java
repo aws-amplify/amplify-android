@@ -50,7 +50,6 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
 
@@ -73,8 +72,6 @@ import java.util.Map;
  * and AppSync-specific field names (`_version`, `_deleted`, etc.)
  */
 final class AppSyncRequestFactory {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-
     private AppSyncRequestFactory() {}
 
     /**
@@ -204,11 +201,7 @@ final class AppSyncRequestFactory {
             Map<String, Object> inputMap = new HashMap<>();
             inputMap.put("_version", version);
             inputMap.putAll(getMapOfFieldNameAndValues(schema, model));
-            AppSyncGraphQLRequest<ModelWithMetadata<M>> request = buildMutation(schema, inputMap, predicate,
-                    MutationType.UPDATE, strategyType);
-            LOG.info("AppSyncRequestFactory buildUpdateRequest request: " + request);
-
-            return request;
+            return buildMutation(schema, inputMap, predicate, MutationType.UPDATE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
@@ -448,42 +441,29 @@ final class AppSyncRequestFactory {
     private static Object extractAssociateId(ModelField modelField, Model instance, ModelSchema schema)
             throws AmplifyException {
         final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
-
         if (modelField.isModel() && fieldValue instanceof Model) {
             return ((Model) fieldValue).getId();
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else {
-            LOG.info("AppSyncRequestFactory extractAssociatedId field value: " + fieldValue);
-            LOG.info("AppSyncRequestFactory extractAssociatedId Model field: " + modelField);
-            LOG.info("AppSyncRequestFactory extractAssociatedId instance: " + instance);
-            LOG.info("AppSyncRequestFactory extractAssociatedId instance: " + schema);
             throw new IllegalStateException("Associated data is not Model or Map.");
         }
     }
 
     private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema)
             throws AmplifyException {
-        LOG.info("AppSyncRequestFactory extractFieldValue fieldname: " + fieldName);
-        LOG.info("AppSyncRequestFactory extractFieldValue instance: " + instance);
-        LOG.info("AppSyncRequestFactory extractFieldValue schema: " + schema);
         if (instance instanceof SerializedModel) {
             SerializedModel serializedModel = (SerializedModel) instance;
-            LOG.info("AppSyncRequestFactory extractFieldValue serializedModel: " + serializedModel);
             Map<String, Object> serializedData = serializedModel.getSerializedData();
-            LOG.info("AppSyncRequestFactory extractFieldValue serializedData: " + serializedData);
             ModelField field = schema.getFields().get(fieldName);
-            LOG.info("AppSyncRequestFactory extractFieldValue field: " + field);
             Object fieldValue = serializedData.get(fieldName);
             if (fieldValue != null && field != null && field.isCustomType()) {
                 return extractCustomTypeFieldValue(fieldName, serializedData.get(fieldName));
             }
-            LOG.info("AppSyncRequestFactory extractFieldValue fieldValue: " + fieldValue);
             return fieldValue;
         }
         try {
             Field privateField = instance.getClass().getDeclaredField(fieldName);
-            LOG.info("AppSyncRequestFactory extractFieldValue privateField: " + privateField);
             privateField.setAccessible(true);
             return privateField.get(instance);
         } catch (Exception exception) {

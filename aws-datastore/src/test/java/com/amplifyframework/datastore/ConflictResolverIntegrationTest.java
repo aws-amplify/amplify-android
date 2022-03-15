@@ -147,6 +147,7 @@ public final class ConflictResolverIntegrationTest {
     @SuppressWarnings("unchecked")
     private Person setupApiMock(CountDownLatch latch, ApiCategory mockApiCategory) {
         Person person1 = createPerson("Test", "Dummy I");
+        //Mock success on subscription.
         doAnswer(invocation -> {
             int indexOfStartConsumer = 1;
             Consumer<String> onStart = invocation.getArgument(indexOfStartConsumer);
@@ -166,7 +167,7 @@ public final class ConflictResolverIntegrationTest {
                 any(Action.class)
         );
 
-
+        //When mutate is called on the appsync for the first time unhandled conflict error is returned.
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
@@ -193,9 +194,11 @@ public final class ConflictResolverIntegrationTest {
                                                             path,
                                                         extensions));
             onResponse.accept(new GraphQLResponse<>(null, errorList));
+            // latch makes sure conflict unhandled response is returned.
             latch.countDown();
             return mock(GraphQLOperation.class);
         }).doAnswer(invocation -> {
+            //When mutate is called on the appsync for the second time success response is returned
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
@@ -203,11 +206,13 @@ public final class ConflictResolverIntegrationTest {
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
                     verify(mockApiCategory, atLeast(2)).mutate(argThat(getMatcherFor(person1)), any(), any());
-                    latch.countDown();
+            // latch makes sure success response is returned.
+            latch.countDown();
             return mock(GraphQLOperation.class);
 
         }).when(mockApiCategory).mutate(any(), any(), any());
 
+        // Setup to mimic successful sync
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
             ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now());
@@ -257,51 +262,6 @@ public final class ConflictResolverIntegrationTest {
 
 
 
-    /**
-     * Almost the same as mockApiCategoryWithGraphQlApi, but it calls the onError callback instead.
-     *
-     * @return A mock version of the API Category.
-     * @throws AmplifyException Throw if an error happens when adding the plugin.
-     */
-    @SuppressWarnings("unchecked")
-    private static ApiCategory mockApiPluginWithExceptions() throws AmplifyException {
-        ApiCategory mockApiCategory = spy(ApiCategory.class);
-        ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
-        when(mockApiPlugin.getPluginKey()).thenReturn(MOCK_API_PLUGIN_NAME);
-        when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
-
-        doAnswer(invocation -> {
-            int indexOfErrorConsumer = 2;
-            Consumer<ApiException> onError = invocation.getArgument(indexOfErrorConsumer);
-            onError.accept(new ApiException("Fake exception thrown from the API.query method", "Just retry"));
-            return null;
-        }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
-
-        doAnswer(invocation -> {
-            int indexOfErrorConsumer = 2;
-            Consumer<ApiException> onError = invocation.getArgument(indexOfErrorConsumer);
-            onError.accept(new ApiException("Fake exception thrown from the API.mutate method", "Just retry"));
-            return null;
-        }).when(mockApiPlugin).mutate(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
-
-        doAnswer(invocation -> {
-            int indexOfErrorConsumer = 3;
-            Consumer<ApiException> onError = invocation.getArgument(indexOfErrorConsumer);
-            ApiException apiException =
-                    new ApiException("Fake exception thrown from the API.subscribe method", "Just retry");
-            onError.accept(apiException);
-            return null;
-        }).when(mockApiPlugin).subscribe(
-                any(GraphQLRequest.class),
-                any(Consumer.class),
-                any(Consumer.class),
-                any(Consumer.class),
-                any(Action.class)
-        );
-        mockApiCategory.addPlugin(mockApiPlugin);
-        return mockApiCategory;
-    }
-
     @SuppressWarnings("unchecked")
     private ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
@@ -327,27 +287,6 @@ public final class ConflictResolverIntegrationTest {
             return null;
         }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
 
-//        // Make believe that subscriptions return response immediately
-//        doAnswer(invocation -> {
-//            int indexOfStartConsumer = 1;
-//            Consumer<String> onStart = invocation.getArgument(indexOfStartConsumer);
-//            GraphQLOperation<?> mockOperation = mock(GraphQLOperation.class);
-//            doAnswer(opAnswer -> {
-//                this.subscriptionCancelledCounter.incrementAndGet();
-//                return null;
-//            }).when(mockOperation).cancel();
-//
-//            this.subscriptionStartedCounter.incrementAndGet();
-//            // Trigger the subscription start event.
-//            onStart.accept(RandomString.string());
-//            return mockOperation;
-//        }).when(mockApiPlugin).subscribe(
-//                any(GraphQLRequest.class),
-//                any(Consumer.class),
-//                any(Consumer.class),
-//                any(Consumer.class),
-//                any(Action.class)
-//        );
         mockApiCategory.addPlugin(mockApiPlugin);
         mockApiCategory.configure(new ApiCategoryConfiguration(), getApplicationContext());
         mockApiCategory.initialize(getApplicationContext());

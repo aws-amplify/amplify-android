@@ -33,7 +33,6 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -295,9 +294,8 @@ public final class SQLiteStorageAdapterSaveTest {
      * @throws AmplifyException On failure to obtain ModelSchema from model class.
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
-    @Ignore("Fix the test")
     @Test
-    public void patchItemOnlyHasChangedFields() throws AmplifyException, InterruptedException {
+    public void patchItemOnlyHasAllFields() throws AmplifyException, InterruptedException {
         // Create a BlogOwner.
         final BlogOwner johnSmith = BlogOwner.builder()
                 .name("John Smith")
@@ -317,6 +315,10 @@ public final class SQLiteStorageAdapterSaveTest {
         Map<String, Object> serializedData = new HashMap<>();
         serializedData.put("id", johnAdams.getId());
         serializedData.put("name", "John Adams");
+        serializedData.put("wea", johnAdams.getWea());
+        serializedData.put("createdAt", johnAdams.getCreatedAt());
+        serializedData.put("updatedAt", johnAdams.getUpdatedAt());
+
         SerializedModel expectedItem = SerializedModel.builder()
                 .serializedData(serializedData)
                 .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))

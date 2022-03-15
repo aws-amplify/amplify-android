@@ -110,9 +110,7 @@ public final class ModelWithMetadataAdapterTest {
     public void adapterCanDeserializeJsonOfSerializedModelIntoMwm() {
         // Arrange expected value
         Map<String, Object> postSerializedData = new HashMap<>();
-        //postSerializedData.put("_deleted", null);
         postSerializedData.put("comments", null);
-        //postSerializedData.put("_lastChangedAt", 1.646372186654E12);
         postSerializedData.put("created", "2022-02-19T00:05:26.607465000");
         postSerializedData.put("rating", 12);
         postSerializedData.put("blog", null);
@@ -120,7 +118,6 @@ public final class ModelWithMetadataAdapterTest {
         postSerializedData.put("tags", null);
         postSerializedData.put("createdAt", "2022-02-19T00:05:33.564Z");
         postSerializedData.put("id", "21ee0180-60a4-45d9-b68e-018c260cc742");
-        //postSerializedData.put("_version", 165);
         postSerializedData.put("updatedAt", "2022-03-04T05:36:26.629Z");
 
         SerializedModel model = SerializedModel.builder()

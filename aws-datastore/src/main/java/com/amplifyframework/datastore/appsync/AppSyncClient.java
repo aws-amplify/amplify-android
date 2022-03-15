@@ -190,9 +190,6 @@ public final class AppSyncClient implements AppSync {
                                                          version,
                                                          predicate,
                                                          authModeStrategyType);
-            LOG.info("AppSyncClient request: " + request.toString());
-            LOG.info("AppSyncClient query: " + request.getQuery());
-            LOG.info("AppSyncClient variables: " + request.getVariables().toString());
             return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(

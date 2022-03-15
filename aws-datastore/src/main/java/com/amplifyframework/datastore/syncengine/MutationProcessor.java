@@ -347,7 +347,6 @@ final class MutationProcessor {
         AppSyncConflictUnhandledError<T> unhandledConflict =
             AppSyncConflictUnhandledError.findFirst(modelClazz, errors);
         if (unhandledConflict != null) {
-            LOG.info("Mutation processor handleResponseError: " + unhandledConflict);
             return conflictResolver.resolve(pendingMutation, unhandledConflict);
         }
 

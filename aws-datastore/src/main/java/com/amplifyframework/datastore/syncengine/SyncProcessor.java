@@ -277,7 +277,6 @@ final class SyncProcessor {
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
         return Single.create(emitter -> {
-            LOG.debug("sync page sync processor: " + request.toString());
             Cancelable cancelable = appSync.sync(request, result -> {
                 if (result.hasErrors()) {
                     emitter.onError(new DataStoreException(

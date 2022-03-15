@@ -92,7 +92,6 @@ final class PersistentMutationOutbox implements MutationOutbox {
         return Completable.defer(() -> {
             // If there is no existing mutation for the model, then just apply the incoming
             // mutation, and be done with this.
-            LOG.info("PersistentMutationOutBox enqueue:  " + incomingMutation);
             String modelId = incomingMutation.getMutatedItem().getId();
             @SuppressWarnings("unchecked")
             PendingMutation<T> existingMutation = (PendingMutation<T>) mutationQueue.nextMutationForModelId(modelId);
@@ -116,7 +115,6 @@ final class PersistentMutationOutbox implements MutationOutbox {
 
     private <T extends Model> Completable save(PendingMutation<T> pendingMutation) {
         PendingMutation.PersistentRecord item = converter.toRecord(pendingMutation);
-        LOG.info("PersistentMutationOutBox save:  " + pendingMutation);
         return Completable.create(emitter -> storage.save(
                 item,
             StorageItemChange.Initiator.SYNC_ENGINE,
@@ -191,7 +189,6 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     while (results.hasNext()) {
                         try {
                             PendingMutation.PersistentRecord persistentRecord = results.next();
-                            LOG.info("PersistentMutationOutbox result: " + persistentRecord.toString());
                             mutationQueue.add(converter.fromRecord(persistentRecord));
                         } catch (DataStoreException conversionFailure) {
                             emitter.onError(conversionFailure);

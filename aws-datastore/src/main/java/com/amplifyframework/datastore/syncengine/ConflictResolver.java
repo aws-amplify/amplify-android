@@ -32,7 +32,6 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
 
 import com.google.gson.Gson;
@@ -62,7 +61,6 @@ import io.reactivex.rxjava3.core.Single;
  * {@link ModelWithMetadata} into the local store, unconditionally.
  */
 final class ConflictResolver {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final DataStoreConfigurationProvider configurationProvider;
     private final AppSync appSync;
 
@@ -118,9 +116,7 @@ final class ConflictResolver {
                                                                     .getModelSchema()).getModelClass();
             if (modelType != SerializedModel.class) {
                 Gson gson = GsonFactory.instance();
-                LOG.info("conflict resolver getT: " + pendingMutation.getMutatedItem().toString());
                 String jsonString = gson.toJson(serializedModel.getSerializedData());
-                LOG.info("conflict resolver getT modelType: " + modelType);
                 local = gson.fromJson(jsonString, modelType);
             }
         }
@@ -156,8 +152,7 @@ final class ConflictResolver {
             @NonNull ConflictData<T> conflictData,
             @NonNull ModelMetadata metadata,
             @NonNull ConflictResolutionDecision<T> decision) {
-        LOG.info("conflict resolver: " + conflictData.toString());
-        LOG.info("conflict resolver: " + decision.toString());
+
         switch (decision.getResolutionStrategy()) {
             case RETRY_LOCAL:
                 return publish(conflictData.getLocal(), metadata.getVersion());
@@ -179,7 +174,6 @@ final class ConflictResolver {
                 //SchemaRegistry.instance().getModelSchemaForModelClass method supports schema generation for flutter
                 //models.
                 final ModelSchema schema = SchemaRegistry.instance().getModelSchemaForModelClass(model.getModelName());
-                LOG.info("publish conflict resolver: " + model.toString());
                 appSync.update(model, schema, version, emitter::onSuccess, emitter::onError);
             })
             .flatMap(response -> {
