@@ -16,11 +16,10 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.cognito.data.AmplifyCredential
-import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.events.*
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
-import java.util.*
+import java.time.ZonedDateTime
 
 object FetchAuthSessionActions : FetchAuthSessionActions {
     override fun configureUserPoolTokensAction(amplifyCredential: AmplifyCredential?): Action =
@@ -34,11 +33,13 @@ object FetchAuthSessionActions : FetchAuthSessionActions {
                 dispatcher.send(event)
             }
             val userPoolTokenExpiryTime = userPoolTokens?.tokenExpiration
-            val rightNow = Calendar.getInstance()
-            val offset = rightNow.get(Calendar.ZONE_OFFSET) + rightNow.get(Calendar.DST_OFFSET)
+            val rightNow = ZonedDateTime.now()
+
+
+
             //The token must be valid for 2 minutes from now
             if (userPoolTokenExpiryTime != null) {
-                if (userPoolTokenExpiryTime > ((rightNow.timeInMillis + offset) + 2 * 60 * 1000)) {
+                if (userPoolTokenExpiryTime > (rightNow.toEpochSecond() + (2 * 60))) {
                     //User Pool Token is still valid
                     val event =
                         FetchUserPoolTokensEvent(
@@ -76,10 +77,8 @@ object FetchAuthSessionActions : FetchAuthSessionActions {
     override fun configureAWSCredentialsAction(amplifyCredential: AmplifyCredential?): Action =
         Action { dispatcher, _ ->
             val awsCredentials = amplifyCredential?.awsCredentials
-            val rightNow = Calendar.getInstance()
-            val offset = rightNow.get(Calendar.ZONE_OFFSET) + rightNow.get(Calendar.DST_OFFSET)
             //AWS Credentials should be valid for up to 2 minutes from now
-            if (awsCredentials?.expiration != null && awsCredentials.expiration > (rightNow.timeInMillis + offset) + 2 * 60 * 1000) {
+            if (awsCredentials?.expiration != null && awsCredentials.expiration > (ZonedDateTime.now().toEpochSecond() + 2 * 60)) {
                 val event =
                     FetchAwsCredentialsEvent(
                         FetchAwsCredentialsEvent.EventType.Fetched(amplifyCredential)

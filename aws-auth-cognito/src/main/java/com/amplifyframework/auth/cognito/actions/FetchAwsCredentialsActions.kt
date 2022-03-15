@@ -29,8 +29,13 @@ object FetchAwsCredentialsActions : FetchAWSCredentialsActions {
     override fun initFetchAWSCredentialsAction(amplifyCredential: AmplifyCredential?): Action =
         Action { dispatcher, environment ->
             val env = (environment as AuthEnvironment)
+            val idToken = amplifyCredential?.cognitoUserPoolTokens?.idToken ?: ""
+            val loginsMap: Map<String, String>? =
+                env.configuration.userPool?.identityProviderName?.let { mapOf(it to idToken) }
+
             val getCredentialsForIdentityRequest = GetCredentialsForIdentityRequest.invoke {
-                this.identityId = amplifyCredential?.identityId
+                identityId = amplifyCredential?.identityId
+                logins = loginsMap
             }
             try {
                 val getCredentialsForIdentityResponse =
@@ -51,9 +56,9 @@ object FetchAwsCredentialsActions : FetchAWSCredentialsActions {
                     )
                 dispatcher.send(event)
                 dispatcher.send(
-                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(amplifyCredential))
+                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(updatedAmplifyCredential))
                 )
-                dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchedAuthSession(amplifyCredential)))
+                dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchedAuthSession(updatedAmplifyCredential)))
             } catch (e: Exception) {
                 val event =
                     FetchAwsCredentialsEvent(

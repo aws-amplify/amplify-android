@@ -123,11 +123,13 @@ internal class AWSCognitoLegacyCredentialStore(
         val idToken = keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.get(it) }
         val accessToken = keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.get(it) }
         val refreshToken = keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.get(it) }
-        val expiration = keys[TOKEN_EXPIRATION]?.let { tokensKeyValue.get(it) }?.toIntOrNull()
+        val expiration = keys[TOKEN_EXPIRATION]?.let { tokensKeyValue.get(it) }?.toLongOrNull()
 
         return if (idToken == null && accessToken == null && refreshToken == null) {
             return null
-        } else CognitoUserPoolTokens(idToken, accessToken, refreshToken, expiration)
+        } else {
+            CognitoUserPoolTokens(idToken, accessToken, refreshToken, expiration)
+        }
     }
 
     private fun getTokenKeys(): Map<String, String> {

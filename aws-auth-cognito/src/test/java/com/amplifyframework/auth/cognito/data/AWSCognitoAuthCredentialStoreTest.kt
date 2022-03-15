@@ -1,6 +1,7 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import aws.smithy.kotlin.runtime.time.Instant
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert
@@ -13,6 +14,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(MockitoJUnitRunner::class)
 class AWSCognitoAuthCredentialStoreTest {
@@ -163,9 +165,9 @@ class AWSCognitoAuthCredentialStoreTest {
 
     private fun getCredential(): AmplifyCredential {
         return AmplifyCredential(
-            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123),
+            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", Instant.now().plus(123123.seconds).epochSeconds),
             "identityPool",
-            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 123123)
+            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", Instant.now().plus(123123.seconds).epochSeconds)
         )
     }
 

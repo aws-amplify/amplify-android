@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
+import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.data.AmplifyCredential
 import com.amplifyframework.auth.cognito.data.CognitoUserPoolTokens
@@ -24,6 +25,7 @@ import com.amplifyframework.auth.cognito.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
 import java.lang.Exception
+import kotlin.time.Duration.Companion.seconds
 
 object FetchUserPoolTokensActions : FetchUserPoolTokensActions {
     override fun refreshFetchUserPoolTokensAction(amplifyCredential: AmplifyCredential?): Action =
@@ -38,11 +40,12 @@ object FetchUserPoolTokensActions : FetchUserPoolTokensActions {
                             "REFRESH_TOKEN" to amplifyCredential?.cognitoUserPoolTokens?.refreshToken as String
                         )
                     }
+                val expiresIn = refreshTokenResponse?.authenticationResult?.expiresIn?.toLong() ?: 0
                 val cognitoUserPoolTokens = CognitoUserPoolTokens(
                     idToken = refreshTokenResponse?.authenticationResult?.idToken,
-                    refreshToken = refreshTokenResponse?.authenticationResult?.refreshToken,
                     accessToken = refreshTokenResponse?.authenticationResult?.accessToken,
-                    tokenExpiration = refreshTokenResponse?.authenticationResult?.expiresIn
+                    refreshToken = refreshTokenResponse?.authenticationResult?.refreshToken,
+                    tokenExpiration = Instant.now().plus(expiresIn.seconds).epochSeconds
                 )
 
                 val updatedCredentials = amplifyCredential?.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)

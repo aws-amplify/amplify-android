@@ -20,13 +20,17 @@ import com.amplifyframework.auth.cognito.SRPHelper
 import com.amplifyframework.auth.cognito.events.SRPEvent
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.data.CognitoUserPoolTokens
 import com.amplifyframework.auth.cognito.data.SignInMethod
 import com.amplifyframework.auth.cognito.data.SignedInData
 import com.amplifyframework.auth.cognito.events.AuthenticationEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 object SRPCognitoActions : SRPActions {
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
@@ -87,9 +91,10 @@ object SRPCognitoActions : SRPActions {
                     }
                 }.onSuccess {
                     it?.authenticationResult?.run {
+
                         val signedInData = SignedInData(
                             userId, username, Date(), SignInMethod.SRP, CognitoUserPoolTokens(
-                                idToken, accessToken, refreshToken, expiresIn
+                                idToken, accessToken, refreshToken, Instant.now().plus(expiresIn.seconds).epochSeconds,
                             )
                         )
                         dispatcher.send(SRPEvent(SRPEvent.EventType.FinalizeSRPSignIn()))

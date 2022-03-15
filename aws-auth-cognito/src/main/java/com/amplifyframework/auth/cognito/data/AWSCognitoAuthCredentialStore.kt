@@ -24,20 +24,24 @@ class AWSCognitoAuthCredentialStore(
     override fun saveCredential(credential: AmplifyCredential) =
         keyValue.put(key, serializeCredential(credential.minimize()))
 
-    override fun savePartialCredential(cognitoUserPoolTokens: CognitoUserPoolTokens?,
-                                       identityId: String?,
-                                       awsCredentials: AWSCredentials?) {
+    override fun savePartialCredential(
+        cognitoUserPoolTokens: CognitoUserPoolTokens?,
+        identityId: String?,
+        awsCredentials: AWSCredentials?
+    ) {
         val currentCredentials = retrieveCredential()
 
         saveCredential(
-            AmplifyCredential(cognitoUserPoolTokens ?: currentCredentials?.cognitoUserPoolTokens,
+            AmplifyCredential(
+                cognitoUserPoolTokens ?: currentCredentials?.cognitoUserPoolTokens,
                 identityId ?: currentCredentials?.identityId,
                 awsCredentials ?: currentCredentials?.awsCredentials
             )
         )
     }
 
-    override fun retrieveCredential(): AmplifyCredential? = deserializeCredential(keyValue.get(key))?.minimize()
+    override fun retrieveCredential(): AmplifyCredential? =
+        deserializeCredential(keyValue.get(key))?.minimize()
 
     override fun deleteCredential() = keyValue.remove(key)
 

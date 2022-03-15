@@ -14,7 +14,7 @@ data class CognitoUserPoolTokens(
     val idToken: String?,
     val accessToken: String?,
     val refreshToken: String?,
-    val tokenExpiration: Int?,
+    val tokenExpiration: Long?,
 )
 
 @Serializable
