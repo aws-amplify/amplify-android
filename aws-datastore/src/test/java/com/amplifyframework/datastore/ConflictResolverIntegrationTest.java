@@ -20,7 +20,6 @@ import android.content.Context;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryConfiguration;
-import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
@@ -37,11 +36,8 @@ import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.temporal.Temporal;
-
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-
-
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
@@ -54,14 +50,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.Collections;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,16 +65,13 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.rxjava3.core.Completable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
-
 import static org.junit.Assert.assertEquals;
-
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -88,10 +79,10 @@ import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class ConflictResolverIntegrationTest {
-    private Context context;
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
-
+    private Context context;
     private ModelProvider modelProvider;
+
     /**
      * Wire up dependencies for the SyncProcessor, and build one for testing.
      * @throws AmplifyException On failure to load models into registry
@@ -101,7 +92,6 @@ public final class ConflictResolverIntegrationTest {
         this.context = getApplicationContext();
         modelProvider = spy(AmplifyCliGeneratedModelProvider.singletonInstance());
         this.modelProvider = spy(AmplifyCliGeneratedModelProvider.singletonInstance());
-
     }
 
     /**
@@ -109,6 +99,7 @@ public final class ConflictResolverIntegrationTest {
      * then the local storage adapter should have all of the remote model state.
      * @throws AmplifyException On failure interacting with storage adapter
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws JSONException If unable to parse the JSON.
      */
     @SuppressWarnings("unchecked") // Varied types in Observable.fromArray(...).
     @Test
@@ -130,20 +121,18 @@ public final class ConflictResolverIntegrationTest {
         SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
-        awsDataStorePlugin.start(()->{},(onError)->{});
+        awsDataStorePlugin.start(() -> { }, (onError) -> { });
 
         // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
-
 
         // Save person 1
         synchronousDataStore.save(person1);
         Person result1 = synchronousDataStore.get(Person.class, person1.getId());
         assertTrue(latch.await(2, TimeUnit.SECONDS));
         assertEquals(person1, result1);
-
-
     }
+
     @SuppressWarnings("unchecked")
     private Person setupApiMock(CountDownLatch latch, ApiCategory mockApiCategory) {
         Person person1 = createPerson("Test", "Dummy I");
@@ -172,10 +161,10 @@ public final class ConflictResolverIntegrationTest {
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            List< GraphQLLocation > locations = new ArrayList<>();
-            locations.add(new GraphQLLocation(2,3));
-            List< GraphQLPathSegment > path = new ArrayList<>();
-            path.add( new GraphQLPathSegment("updatePost"));
+            List<GraphQLLocation> locations = new ArrayList<>();
+            locations.add(new GraphQLLocation(2, 3));
+            List<GraphQLPathSegment> path = new ArrayList<>();
+            path.add(new GraphQLPathSegment("updatePost"));
             Map<String, Object> serverModelData = new HashMap<>();
             serverModelData.put("id", "5c895eae-88ef-4ce8-9d58-e27d0c7cbe99");
             serverModelData.put("createdAt", "2022-02-04T19:41:05.973Z");
@@ -205,22 +194,25 @@ public final class ConflictResolverIntegrationTest {
             ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now());
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
-                    verify(mockApiCategory, atLeast(2)).mutate(argThat(getMatcherFor(person1)), any(), any());
+            verify(mockApiCategory, atLeast(2)).mutate(argThat(getMatcherFor(person1)),
+                    any(),
+                    any());
             // latch makes sure success response is returned.
             latch.countDown();
             return mock(GraphQLOperation.class);
-
         }).when(mockApiCategory).mutate(any(), any(), any());
 
         // Setup to mimic successful sync
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
-            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now());
+            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1,
+                    Temporal.Timestamp.now());
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
             // Mock the API emitting an ApiEndpointStatusChangeEvent event.
             Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Person>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            PaginatedResult<ModelWithMetadata<Person>> data = new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
+            PaginatedResult<ModelWithMetadata<Person>> data =
+                    new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             latch.countDown();
             return mock(GraphQLOperation.class);
@@ -232,7 +224,8 @@ public final class ConflictResolverIntegrationTest {
             ModelWithMetadata<Car> modelWithMetadata = new ModelWithMetadata<>(car, modelMetadata);
             Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Car>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            PaginatedResult<ModelWithMetadata<Car>> data = new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
+            PaginatedResult<ModelWithMetadata<Car>> data =
+                    new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             latch.countDown();
             return mock(GraphQLOperation.class);
@@ -260,21 +253,17 @@ public final class ConflictResolverIntegrationTest {
                 .build();
     }
 
-
-
     @SuppressWarnings("unchecked")
     private ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
         ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
         when(mockApiPlugin.getPluginKey()).thenReturn(MOCK_API_PLUGIN_NAME);
         when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
-
         ApiEndpointStatusChangeEvent eventData =
                 new ApiEndpointStatusChangeEvent(ApiEndpointStatusChangeEvent.ApiEndpointStatus.REACHABLE,
                         ApiEndpointStatusChangeEvent.ApiEndpointStatus.UNKOWN);
         HubEvent<ApiEndpointStatusChangeEvent> hubEvent =
                 HubEvent.create(ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED, eventData);
-
         // Make believe that queries return response immediately
         doAnswer(invocation -> {
             // Mock the API emitting an ApiEndpointStatusChangeEvent event.
@@ -286,13 +275,9 @@ public final class ConflictResolverIntegrationTest {
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             return null;
         }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
-
         mockApiCategory.addPlugin(mockApiPlugin);
         mockApiCategory.configure(new ApiCategoryConfiguration(), getApplicationContext());
         mockApiCategory.initialize(getApplicationContext());
         return mockApiCategory;
     }
-
-
-
 }
