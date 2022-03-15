@@ -490,7 +490,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             PendingMutation.PersistentRecord build() {
                 return new PendingMutation.PersistentRecord(
                     Objects.requireNonNull(mutationId).toString(),
-                    Objects.requireNonNull(containedModelId).toString(),
+                    Objects.requireNonNull(containedModelId),
                     Objects.requireNonNull(serializedMutationData),
                     Objects.requireNonNull(containedModelClassName)
                 );
