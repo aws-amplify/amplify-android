@@ -1,6 +1,6 @@
 package com.amplifyframework.statemachine.codegen.actions
 
-import com.amplifyframework.auth.cognito.events.SignUpEvent
+import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.Action
 
 interface SignUpActions {

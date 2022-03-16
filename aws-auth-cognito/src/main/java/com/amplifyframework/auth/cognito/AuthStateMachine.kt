@@ -15,13 +15,12 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.cognito.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.auth.cognito.actions.*
-import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver
-import com.amplifyframework.auth.cognito.states.*
+import com.amplifyframework.statemachine.codegen.states.*
 
 internal class AuthStateMachine(
     resolver: StateMachineResolver<AuthState>,

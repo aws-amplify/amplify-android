@@ -3,7 +3,7 @@ package com.amplifyframework.auth.cognito
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
-import com.amplifyframework.auth.cognito.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.auth.cognito.testutils.AuthConfigurationProvider
 import com.amplifyframework.auth.cognito.testutils.CredentialStoreUtil
 import com.google.gson.Gson

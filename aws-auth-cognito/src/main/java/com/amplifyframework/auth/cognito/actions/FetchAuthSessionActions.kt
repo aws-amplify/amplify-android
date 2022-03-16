@@ -15,10 +15,10 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import com.amplifyframework.auth.cognito.data.AmplifyCredential
-import com.amplifyframework.auth.cognito.events.*
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
+import com.amplifyframework.statemachine.codegen.events.*
 import java.time.ZonedDateTime
 
 object FetchAuthSessionActions : FetchAuthSessionActions {

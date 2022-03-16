@@ -2,6 +2,7 @@ package com.amplifyframework.auth.cognito.data
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import java.security.Key
 import java.security.KeyStore
 import javax.crypto.KeyGenerator

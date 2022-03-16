@@ -17,9 +17,9 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.*
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.data.SignedUpData
-import com.amplifyframework.auth.cognito.events.AuthenticationEvent
-import com.amplifyframework.auth.cognito.events.SignUpEvent
+import com.amplifyframework.statemachine.codegen.data.SignedUpData
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignUpActions
 
@@ -51,11 +51,13 @@ object SignUpCognitoActions : SignUpActions {
                     )
                 } ?: mapOf()
 
-                dispatcher.send(SignUpEvent(
+                dispatcher.send(
+                    SignUpEvent(
                     SignUpEvent.EventType.InitiateSignUpSuccess(
                         SignedUpData(it?.userSub, event.username, deliveryDetails)
                     )
-                ))
+                )
+                )
             }.onFailure {
                 dispatcher.send(
                     SignUpEvent(SignUpEvent.EventType.InitiateSignUpFailure(it as Exception))

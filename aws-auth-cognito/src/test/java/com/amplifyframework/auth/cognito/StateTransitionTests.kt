@@ -15,17 +15,13 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.cognito.actions.FetchAuthSessionActions
-import com.amplifyframework.auth.cognito.actions.FetchAwsCredentialsActions
-import com.amplifyframework.auth.cognito.actions.FetchIdentityActions
-import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensActions
-import com.amplifyframework.auth.cognito.data.SignedOutData
-import com.amplifyframework.auth.cognito.events.*
-import com.amplifyframework.auth.cognito.states.*
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
+import com.amplifyframework.statemachine.codegen.events.*
+import com.amplifyframework.statemachine.codegen.states.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -443,9 +439,11 @@ class StateTransitionTests : StateTransitionTestBase() {
         Mockito.`when`(mockFetchAuthSessionActions.configureUserPoolTokensAction(credentials))
             .thenReturn(
                 Action { dispatcher, _ ->
-                    dispatcher.send(FetchUserPoolTokensEvent(
-                        FetchUserPoolTokensEvent.EventType.Refresh(credentials)
-                    ))
+                    dispatcher.send(
+                        FetchUserPoolTokensEvent(
+                            FetchUserPoolTokensEvent.EventType.Refresh(credentials)
+                        )
+                    )
                 })
     }
 

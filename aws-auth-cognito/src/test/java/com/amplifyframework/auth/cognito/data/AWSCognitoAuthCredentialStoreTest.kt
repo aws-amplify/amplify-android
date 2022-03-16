@@ -2,6 +2,7 @@ package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
 import aws.smithy.kotlin.runtime.time.Instant
+import com.amplifyframework.statemachine.codegen.data.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert

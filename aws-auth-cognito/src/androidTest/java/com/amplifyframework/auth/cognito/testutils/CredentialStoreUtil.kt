@@ -2,9 +2,9 @@ package com.amplifyframework.auth.cognito.testutils
 
 import android.content.Context
 import com.amazonaws.internal.keyvaluestore.AWSKeyValueStore
-import com.amplifyframework.auth.cognito.data.AWSCredentials
-import com.amplifyframework.auth.cognito.data.AmplifyCredential
-import com.amplifyframework.auth.cognito.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 
 object CredentialStoreUtil {
     private val credential = AmplifyCredential(

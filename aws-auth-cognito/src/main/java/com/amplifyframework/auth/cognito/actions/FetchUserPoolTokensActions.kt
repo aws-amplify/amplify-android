@@ -18,10 +18,10 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.data.AmplifyCredential
-import com.amplifyframework.auth.cognito.data.CognitoUserPoolTokens
-import com.amplifyframework.auth.cognito.events.FetchAuthSessionEvent
-import com.amplifyframework.auth.cognito.events.FetchUserPoolTokensEvent
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
+import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
 import java.lang.Exception

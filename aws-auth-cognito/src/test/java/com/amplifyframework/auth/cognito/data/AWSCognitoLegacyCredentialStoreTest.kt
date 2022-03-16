@@ -1,6 +1,7 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.statemachine.codegen.data.*
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test

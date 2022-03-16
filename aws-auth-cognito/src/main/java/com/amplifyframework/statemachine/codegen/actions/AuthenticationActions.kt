@@ -1,7 +1,7 @@
 package com.amplifyframework.statemachine.codegen.actions
 
-import com.amplifyframework.auth.cognito.data.SignedInData
-import com.amplifyframework.auth.cognito.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.Action
 
 interface AuthenticationActions {

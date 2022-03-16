@@ -15,9 +15,9 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import com.amplifyframework.auth.cognito.data.AmplifyCredential
-import com.amplifyframework.auth.cognito.events.AuthEvent
-import com.amplifyframework.auth.cognito.events.FetchAuthSessionEvent
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 

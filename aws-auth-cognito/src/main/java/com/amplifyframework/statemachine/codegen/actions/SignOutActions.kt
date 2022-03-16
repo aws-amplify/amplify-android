@@ -1,6 +1,6 @@
 package com.amplifyframework.statemachine.codegen.actions
 
-import com.amplifyframework.auth.cognito.events.SignOutEvent
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.Action
 
 interface SignOutActions {

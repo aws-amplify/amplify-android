@@ -18,9 +18,9 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.events.AuthEvent
-import com.amplifyframework.auth.cognito.events.AuthenticationEvent
-import com.amplifyframework.auth.cognito.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 

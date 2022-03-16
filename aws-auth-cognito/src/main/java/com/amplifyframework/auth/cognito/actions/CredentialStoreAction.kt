@@ -16,9 +16,9 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.cognito.CredentialStoreEnvironment
-import com.amplifyframework.auth.cognito.data.AmplifyCredential
-import com.amplifyframework.auth.cognito.data.CredentialStoreError
-import com.amplifyframework.auth.cognito.events.CredentialStoreEvent
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
+import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.EventDispatcher

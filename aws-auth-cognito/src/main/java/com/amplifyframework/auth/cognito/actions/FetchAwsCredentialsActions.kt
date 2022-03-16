@@ -17,11 +17,11 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.data.AWSCredentials
-import com.amplifyframework.auth.cognito.data.AmplifyCredential
-import com.amplifyframework.auth.cognito.events.AuthorizationEvent
-import com.amplifyframework.auth.cognito.events.FetchAuthSessionEvent
-import com.amplifyframework.auth.cognito.events.FetchAwsCredentialsEvent
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
+import com.amplifyframework.statemachine.codegen.events.FetchAwsCredentialsEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAWSCredentialsActions
 

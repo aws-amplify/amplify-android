@@ -15,10 +15,10 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.cognito.data.*
-import com.amplifyframework.auth.cognito.events.*
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.*
+import com.amplifyframework.statemachine.codegen.data.*
+import com.amplifyframework.statemachine.codegen.events.*
 import org.mockito.Mock
 import org.mockito.Mockito
 

@@ -1,6 +1,7 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.statemachine.codegen.data.*
 
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString

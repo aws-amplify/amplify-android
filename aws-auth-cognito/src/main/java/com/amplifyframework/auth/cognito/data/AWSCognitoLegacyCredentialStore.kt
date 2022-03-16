@@ -1,6 +1,7 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.statemachine.codegen.data.*
 import java.util.*
 
 internal class AWSCognitoLegacyCredentialStore(

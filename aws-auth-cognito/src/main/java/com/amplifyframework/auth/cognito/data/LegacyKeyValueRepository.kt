@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Base64
 import android.util.Log
+import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import java.nio.charset.Charset
 import java.security.Key
 import java.security.SecureRandom
@@ -237,8 +238,10 @@ class LegacyKeyValueRepository(
                 .retrieveKey(encryptionKeyAlias)
                 .onFailure {
                     LegacyKeyProvider.deleteKey(encryptionKeyAlias)
-                    Result.failure<Key>(CredentialStoreError("Key cannot be retrieved. " +
-                            "Deleting the encryption key identified by the keyAlias: $encryptionKeyAlias"))
+                    Result.failure<Key>(
+                        CredentialStoreError("Key cannot be retrieved. " +
+                            "Deleting the encryption key identified by the keyAlias: $encryptionKeyAlias")
+                    )
                 }
     }
 

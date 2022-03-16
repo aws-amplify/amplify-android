@@ -17,18 +17,16 @@ package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.SRPHelper
-import com.amplifyframework.auth.cognito.events.SRPEvent
+import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.smithy.kotlin.runtime.time.Instant
-import com.amplifyframework.auth.cognito.data.CognitoUserPoolTokens
-import com.amplifyframework.auth.cognito.data.SignInMethod
-import com.amplifyframework.auth.cognito.data.SignedInData
-import com.amplifyframework.auth.cognito.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
-import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 

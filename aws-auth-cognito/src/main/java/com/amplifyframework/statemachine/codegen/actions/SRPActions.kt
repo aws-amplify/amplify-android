@@ -1,6 +1,6 @@
 package com.amplifyframework.statemachine.codegen.actions
 
-import com.amplifyframework.auth.cognito.events.SRPEvent
+import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.Action
 
 interface SRPActions {

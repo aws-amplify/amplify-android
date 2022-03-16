@@ -16,12 +16,15 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.cognito.data.SignInMethod
-import com.amplifyframework.auth.cognito.data.SignedInData
-import com.amplifyframework.auth.cognito.data.SignedOutData
-import com.amplifyframework.auth.cognito.events.*
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
+import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.SRPEvent
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import java.util.*
 
 object AuthenticationCognitoActions : AuthenticationActions {
@@ -47,7 +50,8 @@ object AuthenticationCognitoActions : AuthenticationActions {
                     password?.run {
                         SRPEvent(SRPEvent.EventType.InitiateSRP(username, password))
                     }
-                } ?: AuthenticationEvent(AuthenticationEvent.EventType.ThrowError(
+                } ?: AuthenticationEvent(
+                    AuthenticationEvent.EventType.ThrowError(
                     AuthException("Sign in failed.", "username or password empty"))
                 )
                 dispatcher.send(srpEvent)

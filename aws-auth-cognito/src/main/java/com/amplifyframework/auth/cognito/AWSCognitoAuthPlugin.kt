@@ -20,13 +20,9 @@ import android.content.Context
 import android.content.Intent
 import aws.sdk.kotlin.runtime.auth.credentials.Credentials
 import aws.smithy.kotlin.runtime.time.Instant
-import aws.smithy.kotlin.runtime.time.fromEpochMilliseconds
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.*
 import com.amplifyframework.auth.cognito.data.*
-import com.amplifyframework.auth.cognito.events.*
-import com.amplifyframework.auth.cognito.events.AuthEvent.EventType.ConfigureAuth
-import com.amplifyframework.auth.cognito.states.*
 import com.amplifyframework.auth.options.*
 import com.amplifyframework.auth.result.*
 import com.amplifyframework.auth.result.step.AuthNextSignInStep
@@ -39,6 +35,12 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.statemachine.StateChangeListenerToken
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
+import com.amplifyframework.statemachine.codegen.events.*
+import com.amplifyframework.statemachine.codegen.states.*
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -785,12 +787,22 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         token = credentialStoreStateMachine.listen({
             when {
                 it is CredentialStoreState.Error -> {
-                    authStateMachine.send(AuthEvent(ConfigureAuth(authConfiguration, null)))
+                    authStateMachine.send(AuthEvent(
+                        AuthEvent.EventType.ConfigureAuth(
+                            authConfiguration,
+                            null
+                        )
+                    ))
                     token?.let(credentialStoreStateMachine::cancel)
                 }
                 it is CredentialStoreState.Success -> {
                     authStateMachine.send(
-                        AuthEvent(ConfigureAuth(authConfiguration, it.storedCredentials))
+                        AuthEvent(
+                            AuthEvent.EventType.ConfigureAuth(
+                                authConfiguration,
+                                it.storedCredentials
+                            )
+                        )
                     )
                     token?.let(credentialStoreStateMachine::cancel)
                 }
