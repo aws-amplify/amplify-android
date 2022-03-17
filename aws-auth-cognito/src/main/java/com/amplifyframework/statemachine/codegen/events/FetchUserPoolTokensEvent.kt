@@ -17,6 +17,7 @@ package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.StateMachineEvent
+import java.lang.Exception
 import java.util.*
 
 class FetchUserPoolTokensEvent(
@@ -25,7 +26,7 @@ class FetchUserPoolTokensEvent(
     sealed class EventType {
         data class Refresh(val amplifyCredential: AmplifyCredential?) : EventType()
         data class Fetched(val amplifyCredential: AmplifyCredential?) : EventType()
-        data class ThrowError(val error: String?) : EventType()
+        data class ThrowError(val exception: Exception) : EventType()
     }
 
     override val type = eventType.toString()

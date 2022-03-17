@@ -24,7 +24,7 @@ class FetchAuthSessionEvent (val eventType: EventType, override val time: Date? 
     sealed class EventType {
         data class FetchUserPoolTokens(val amplifyCredential: AmplifyCredential?) : EventType()
         data class FetchIdentity(val amplifyCredential: AmplifyCredential?) : EventType()
-        data class ThrowError(val error: String) : EventType()
+        data class ThrowError(val error: String, var amplifyCredential: AmplifyCredential? = null) : EventType()
         data class FetchAwsCredentials(val amplifyCredential: AmplifyCredential?) : EventType()
         data class FetchedAuthSession(val amplifyCredential: AmplifyCredential?) : EventType()
     }

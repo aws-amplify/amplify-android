@@ -34,8 +34,10 @@ sealed class FetchAuthSessionState : State {
     data class FetchingAWSCredentials(override var fetchAwsCredentialsState: FetchAwsCredentialsState?) :
         FetchAuthSessionState()
 
-    data class SessionEstablished(val amplifyCredential: AmplifyCredential?) : FetchAuthSessionState()
-    data class Error(val id: String = "") : FetchAuthSessionState()
+    data class SessionEstablished(val amplifyCredential: AmplifyCredential?) :
+        FetchAuthSessionState()
+
+    data class Error(val exception: Exception) : FetchAuthSessionState()
 
     open var fetchAwsCredentialsState: FetchAwsCredentialsState? =
         FetchAwsCredentialsState.Configuring()
@@ -70,9 +72,9 @@ sealed class FetchAuthSessionState : State {
                     event
                 )
             }?.let {
-                    builder.fetchAwsCredentialsState = it.newState
-                    actions += it.actions
-                }
+                builder.fetchAwsCredentialsState = it.newState
+                actions += it.actions
+            }
 
             oldState.fetchIdentityState?.let { fetchIdentityResolver.resolve(it, event) }
                 ?.let {
@@ -103,26 +105,35 @@ sealed class FetchAuthSessionState : State {
                     when (fetchAuthSessionEvent) {
                         is FetchAuthSessionEvent.EventType.FetchUserPoolTokens -> {
                             val newState = FetchingUserPoolTokens(oldState.fetchUserPoolTokensState)
-                            val action = fetchAuthSessionActions.configureUserPoolTokensAction(fetchAuthSessionEvent.amplifyCredential)
+                            val action = fetchAuthSessionActions.configureUserPoolTokensAction(
+                                fetchAuthSessionEvent.amplifyCredential
+                            )
                             StateResolution(newState, listOf(action))
                         }
                         is FetchAuthSessionEvent.EventType.FetchIdentity -> {
                             val newState = FetchingIdentity(oldState.fetchIdentityState)
-                            val action = fetchAuthSessionActions.configureIdentityAction(fetchAuthSessionEvent.amplifyCredential)
+                            val action = fetchAuthSessionActions.configureIdentityAction(
+                                fetchAuthSessionEvent.amplifyCredential
+                            )
                             StateResolution(newState, listOf(action))
                         }
-                        is FetchAuthSessionEvent.EventType.ThrowError -> throw AuthenticationError("Fetch user auth session error")
+                        is FetchAuthSessionEvent.EventType.ThrowError -> fetchAuthSessionFailure(
+                            AuthenticationError("Fetch user auth session error")
+                        )
                         else -> StateResolution(oldState)
                     }
                 }
                 is FetchingUserPoolTokens -> {
                     when (fetchAuthSessionEvent) {
-                        is FetchAuthSessionEvent.EventType.FetchIdentity -> {
-                            val newState = FetchingIdentity(oldState.fetchIdentityState)
-                            val action = fetchAuthSessionActions.configureIdentityAction(fetchAuthSessionEvent.amplifyCredential)
-                            StateResolution(newState, listOf(action))
-                        }
-                        is FetchAuthSessionEvent.EventType.ThrowError -> throw AuthenticationError("Fetch user auth session error")
+                        is FetchAuthSessionEvent.EventType.FetchIdentity -> fetchIdentity(
+                            oldState,
+                            fetchAuthSessionEvent.amplifyCredential
+                        )
+
+                        is FetchAuthSessionEvent.EventType.ThrowError -> fetchAuthSessionFailure(
+                            AuthenticationError("Fetch user auth session error")
+                        )
+
                         else -> StateResolution(oldState)
                     }
                 }
@@ -130,20 +141,25 @@ sealed class FetchAuthSessionState : State {
                     when (fetchAuthSessionEvent) {
                         is FetchAuthSessionEvent.EventType.FetchAwsCredentials -> {
                             val newState = FetchingAWSCredentials(oldState.fetchAwsCredentialsState)
-                            val action = fetchAuthSessionActions.configureAWSCredentialsAction(fetchAuthSessionEvent.amplifyCredential)
+                            val action = fetchAuthSessionActions.configureAWSCredentialsAction(
+                                fetchAuthSessionEvent.amplifyCredential
+                            )
                             StateResolution(newState, listOf(action))
                         }
-                        is FetchAuthSessionEvent.EventType.ThrowError -> throw AuthenticationError("Fetch user auth session error")
+                        is FetchAuthSessionEvent.EventType.ThrowError -> fetchAuthSessionFailure(
+                            AuthenticationError("Fetch user auth session error")
+                        )
                         else -> StateResolution(oldState)
                     }
                 }
                 is FetchingAWSCredentials -> {
                     when (fetchAuthSessionEvent) {
-                        is FetchAuthSessionEvent.EventType.FetchedAuthSession -> {
-                            val newState = SessionEstablished(fetchAuthSessionEvent.amplifyCredential)
-                            StateResolution(newState)
-                        }
-                        is FetchAuthSessionEvent.EventType.ThrowError -> throw AuthenticationError("Fetch user auth session error")
+                        is FetchAuthSessionEvent.EventType.FetchedAuthSession -> StateResolution(
+                            SessionEstablished(fetchAuthSessionEvent.amplifyCredential)
+                        )
+                        is FetchAuthSessionEvent.EventType.ThrowError -> fetchAuthSessionFailure(
+                            AuthenticationError("Fetch user auth session error")
+                        )
                         else -> StateResolution(oldState)
                     }
                 }
@@ -151,10 +167,23 @@ sealed class FetchAuthSessionState : State {
                     StateResolution(oldState)
                 }
 
-                is Error -> throw AuthenticationError("Fetch user auth session error")
+                else -> {
+                    StateResolution(oldState)
+                }
             }
-
         }
+
+        private fun fetchIdentity(
+            oldState: FetchAuthSessionState,
+            amplifyCredential: AmplifyCredential?
+        ): StateResolution<FetchAuthSessionState> {
+            val newState = FetchingIdentity(oldState.fetchIdentityState)
+            val action = fetchAuthSessionActions.configureIdentityAction(amplifyCredential)
+            return StateResolution(newState, listOf(action))
+        }
+
+        private fun fetchAuthSessionFailure(exception: Exception): StateResolution<FetchAuthSessionState> =
+            StateResolution(Error(exception))
     }
 
     class Builder(private val authSessionState: FetchAuthSessionState) :

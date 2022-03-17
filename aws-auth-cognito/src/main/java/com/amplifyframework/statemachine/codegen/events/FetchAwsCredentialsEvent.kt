@@ -25,7 +25,7 @@ class FetchAwsCredentialsEvent(
     sealed class EventType {
         data class Fetch(val amplifyCredential: AmplifyCredential?) : EventType()
         data class Fetched(val amplifyCredential: AmplifyCredential?) : EventType()
-        data class ThrowError(val error: Exception) : EventType()
+        data class ThrowError(val exception: Exception) : EventType()
     }
 
     override val type = eventType.toString()

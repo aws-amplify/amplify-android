@@ -16,19 +16,19 @@
 package com.amplifyframework.statemachine.codegen.states
 
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.errors.AuthenticationError
 import com.amplifyframework.statemachine.codegen.events.FetchIdentityEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
+import java.lang.Exception
 
 sealed class FetchIdentityState : State {
     data class Configuring(val id: String = "") : FetchIdentityState()
     data class Fetching(val id: String = "") : FetchIdentityState()
     data class Fetched(val amplifyCredential: AmplifyCredential?) : FetchIdentityState()
-    data class Error(val id: String = "") : FetchIdentityState()
+    data class Error(val exception: Exception) : FetchIdentityState()
 
     class Resolver(private val fetchIdentityActions: FetchIdentityActions) :
         StateMachineResolver<FetchIdentityState> {
@@ -60,22 +60,17 @@ sealed class FetchIdentityState : State {
                 }
                 is Fetching -> {
                     when (fetchIdentityEvent) {
-                        is FetchIdentityEvent.EventType.Fetched -> {
-                            val newState = Fetched(fetchIdentityEvent.amplifyCredential)
-                            StateResolution(newState)
-                        }
-                        is FetchIdentityEvent.EventType.ThrowError -> {
-                            val newState = Error()
-                            StateResolution(newState)
-                        }
+                        is FetchIdentityEvent.EventType.Fetched -> StateResolution(Fetched(fetchIdentityEvent.amplifyCredential))
+                        is FetchIdentityEvent.EventType.ThrowError -> StateResolution(Error(fetchIdentityEvent.exception))
                         else -> StateResolution(oldState)
                     }
                 }
                 is Fetched -> {
                     StateResolution(oldState)
                 }
-
-                is Error -> throw AuthenticationError("Fetch user identity error")
+                else -> {
+                    StateResolution(oldState)
+                }
             }
         }
     }

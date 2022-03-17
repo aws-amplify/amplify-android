@@ -16,19 +16,19 @@
 package com.amplifyframework.statemachine.codegen.states
 
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.errors.AuthenticationError
 import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
+import java.lang.Exception
 
 sealed class FetchUserPoolTokensState : State {
     data class Configuring(val id: String = "") : FetchUserPoolTokensState()
     data class Refreshing(val id: String = "") : FetchUserPoolTokensState()
     data class Fetched(val amplifyCredential: AmplifyCredential?) : FetchUserPoolTokensState()
-    data class Error(val id: String = "") : FetchUserPoolTokensState()
+    data class Error(val exception: Exception) : FetchUserPoolTokensState()
 
     class Resolver(private val fetchUserPoolTokensActions: FetchUserPoolTokensActions) :
         StateMachineResolver<FetchUserPoolTokensState> {
@@ -47,15 +47,19 @@ sealed class FetchUserPoolTokensState : State {
                     when (fetchUserPoolTokensEvent) {
                         is FetchUserPoolTokensEvent.EventType.Fetched -> {
                             val newState = Fetched(fetchUserPoolTokensEvent.amplifyCredential)
-                             StateResolution(newState)
+                            StateResolution(newState)
                         }
                         is FetchUserPoolTokensEvent.EventType.Refresh -> {
                             val newState = Refreshing()
                             val action =
-                                fetchUserPoolTokensActions.refreshFetchUserPoolTokensAction(fetchUserPoolTokensEvent.amplifyCredential)
+                                fetchUserPoolTokensActions.refreshFetchUserPoolTokensAction(
+                                    fetchUserPoolTokensEvent.amplifyCredential
+                                )
                             StateResolution(newState, listOf(action))
                         }
-                        is FetchUserPoolTokensEvent.EventType.ThrowError -> onFetchUserPoolTokensFailure()
+                        is FetchUserPoolTokensEvent.EventType.ThrowError -> onFetchUserPoolTokensFailure(
+                            fetchUserPoolTokensEvent.exception
+                        )
                         else -> StateResolution(oldState)
                     }
                 }
@@ -65,21 +69,22 @@ sealed class FetchUserPoolTokensState : State {
                             val newState = Fetched(fetchUserPoolTokensEvent.amplifyCredential)
                             StateResolution(newState)
                         }
-                        is FetchUserPoolTokensEvent.EventType.ThrowError -> onFetchUserPoolTokensFailure()
+                        is FetchUserPoolTokensEvent.EventType.ThrowError -> onFetchUserPoolTokensFailure(
+                            fetchUserPoolTokensEvent.exception
+                        )
                         else -> StateResolution(oldState)
                     }
                 }
                 is Fetched -> {
                     StateResolution(oldState)
                 }
-
-                is Error -> throw AuthenticationError("Fetch user pool tokens error")
+                else -> {
+                    StateResolution(oldState)
+                }
             }
         }
 
-        private fun onFetchUserPoolTokensFailure(): StateResolution<FetchUserPoolTokensState> {
-            val newState = Error()
-            return StateResolution(newState)
-        }
+        private fun onFetchUserPoolTokensFailure(exception: Exception): StateResolution<FetchUserPoolTokensState> =
+            StateResolution(Error(exception))
     }
 }

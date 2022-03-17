@@ -450,6 +450,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                     token?.let(credentialStoreStateMachine::cancel)
                     onError.accept(AuthException("failed.", "failed."))
                 }
+                else -> { // no-op
+                }
             }
         }, {
             credentialStoreStateMachine
@@ -464,52 +466,103 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     ) {
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen({ authState ->
-            when (val authZState = authState.authZState) {
-                is AuthorizationState.SessionEstablished -> {
-                    val fetchAuthSessionState = authZState.fetchAuthSessionState
-                    if (fetchAuthSessionState is FetchAuthSessionState.SessionEstablished) {
+            if (authState.authNState is AuthenticationState.SignedOut) {
+                token?.let(authStateMachine::cancel)
+                onSuccess.accept(AuthSession(false))
+            } else {
+                when (val authZState = authState.authZState) {
+                    is AuthorizationState.SessionEstablished -> {
+                        val fetchAuthSessionState = authZState.fetchAuthSessionState
+                        if (fetchAuthSessionState is FetchAuthSessionState.SessionEstablished) {
+                            token?.let(authStateMachine::cancel)
+                            val newCredentials = fetchAuthSessionState.amplifyCredential
+                            val userPoolTokens = AWSCognitoUserPoolTokens(
+                                newCredentials?.cognitoUserPoolTokens?.accessToken ?: "",
+                                newCredentials?.cognitoUserPoolTokens?.idToken ?: "",
+                                newCredentials?.cognitoUserPoolTokens?.refreshToken ?: ""
+                            )
+                            val awsCredentials = Credentials(
+                                newCredentials?.awsCredentials?.accessKeyId ?: "",
+                                newCredentials?.awsCredentials?.secretAccessKey ?: "",
+                                newCredentials?.awsCredentials?.sessionToken,
+                                Instant.fromEpochSeconds(
+                                    newCredentials?.awsCredentials?.expiration ?: 0
+                                )
+                            )
+                            val awsCognitoAuthSession = AWSCognitoAuthSession(
+                                true,
+                                AuthSessionResult.success(newCredentials?.identityId),
+                                AuthSessionResult.success(awsCredentials),
+                                AuthSessionResult.success("usersub"),
+                                AuthSessionResult.success(userPoolTokens)
+                            )
+                            onSuccess.accept(awsCognitoAuthSession)
+                        }
+                    }
+                    is AuthorizationState.FetchingAuthSession -> {
+                        val fetchAuthSessionState = authZState.fetchAuthSessionState
+                        val fetchUserPoolTokensState =
+                            fetchAuthSessionState?.fetchUserPoolTokensState
+                        val fetchIdentityState = fetchAuthSessionState?.fetchIdentityState
+                        val fetchAwsCredentialsState =
+                            fetchAuthSessionState?.fetchAwsCredentialsState
+                        if (fetchUserPoolTokensState is FetchUserPoolTokensState.Error) {
+                            if (fetchUserPoolTokensState.exception.message == AuthException.GuestAccess.GUEST_ACCESS_POSSIBLE.name) {
+                                // If user pool tokens fail we need to call identity
+                                val event =
+                                    FetchAuthSessionEvent(
+                                        FetchAuthSessionEvent.EventType.FetchIdentity(
+                                            credentials
+                                        )
+                                    )
+                                authStateMachine.send(event)
+                            } else {
+                                token?.let(authStateMachine::cancel)
+                                onError.accept(
+                                    CognitoAuthExceptionConverter.lookup(
+                                        fetchUserPoolTokensState.exception,
+                                        "Fetch auth session failed."
+                                    )
+                                )
+                            }
+                        } else if (fetchIdentityState is FetchIdentityState.Error) {
+                            token?.let(authStateMachine::cancel)
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    fetchIdentityState.exception,
+                                    "Fetch auth session failed."
+                                )
+                            )
+                        } else if (fetchAwsCredentialsState is FetchAwsCredentialsState.Error) {
+                            token?.let(authStateMachine::cancel)
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    fetchAwsCredentialsState.exception,
+                                    "Fetch auth session failed."
+                                )
+                            )
+                        } else if (fetchAuthSessionState is FetchAuthSessionState.Error) {
+                            token?.let(authStateMachine::cancel)
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    fetchAuthSessionState.exception,
+                                    "Fetch auth session failed."
+                                )
+                            )
+                        }
+                    }
+                    is AuthorizationState.Error -> {
                         token?.let(authStateMachine::cancel)
-
-                        val newCredentials = fetchAuthSessionState.amplifyCredential
-                        val userPoolTokens = AWSCognitoUserPoolTokens(
-                            newCredentials?.cognitoUserPoolTokens?.accessToken ?: "",
-                            newCredentials?.cognitoUserPoolTokens?.idToken ?: "",
-                            newCredentials?.cognitoUserPoolTokens?.refreshToken ?: ""
-                        )
-                        val awsCredentials = Credentials(
-                            newCredentials?.awsCredentials?.accessKeyId ?: "",
-                            newCredentials?.awsCredentials?.secretAccessKey ?: "",
-                            newCredentials?.awsCredentials?.sessionToken,
-                            Instant.fromEpochSeconds(
-                                newCredentials?.awsCredentials?.expiration ?: 0
+                        onError.accept(
+                            CognitoAuthExceptionConverter.lookup(
+                                authZState.exception,
+                                "Fetch auth session failed."
                             )
                         )
-                        val awsCognitoAuthSession = AWSCognitoAuthSession(
-                            true,
-                            AuthSessionResult.success(newCredentials?.identityId),
-                            AuthSessionResult.success(awsCredentials),
-                            AuthSessionResult.success("usersub"),
-                            AuthSessionResult.success(userPoolTokens)
-                        )
-                        // TODO: send hub events - session expired
-                        //            Amplify.Hub.publish(
-                        //                HubChannel.AUTH,
-                        //                HubEvent.create(AuthChannelEventName.SESSION_EXPIRED)
-                        //            )
-                        onSuccess.accept(awsCognitoAuthSession)
                     }
-                }
-                is AuthorizationState.Error -> {
-                    token?.let(authStateMachine::cancel)
-                    onError.accept(
-                        CognitoAuthExceptionConverter.lookup(
-                            authZState.exception,
-                            "Fetch auth session failed."
-                        )
-                    )
-                }
-                else -> {
-                    // no-op
+                    else -> {
+                        //no-op
+                    }
                 }
             }
         }, {
@@ -787,12 +840,14 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         token = credentialStoreStateMachine.listen({
             when {
                 it is CredentialStoreState.Error -> {
-                    authStateMachine.send(AuthEvent(
-                        AuthEvent.EventType.ConfigureAuth(
-                            authConfiguration,
-                            null
+                    authStateMachine.send(
+                        AuthEvent(
+                            AuthEvent.EventType.ConfigureAuth(
+                                authConfiguration,
+                                null
+                            )
                         )
-                    ))
+                    )
                     token?.let(credentialStoreStateMachine::cancel)
                 }
                 it is CredentialStoreState.Success -> {
