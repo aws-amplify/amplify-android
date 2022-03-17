@@ -295,7 +295,7 @@ public final class SQLiteStorageAdapterSaveTest {
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void patchItemOnlyHasChangedFields() throws AmplifyException, InterruptedException {
+    public void patchItemOnlyHasAllFields() throws AmplifyException, InterruptedException {
         // Create a BlogOwner.
         final BlogOwner johnSmith = BlogOwner.builder()
                 .name("John Smith")
@@ -315,6 +315,10 @@ public final class SQLiteStorageAdapterSaveTest {
         Map<String, Object> serializedData = new HashMap<>();
         serializedData.put("id", johnAdams.getId());
         serializedData.put("name", "John Adams");
+        serializedData.put("wea", johnAdams.getWea());
+        serializedData.put("createdAt", johnAdams.getCreatedAt());
+        serializedData.put("updatedAt", johnAdams.getUpdatedAt());
+
         SerializedModel expectedItem = SerializedModel.builder()
                 .serializedData(serializedData)
                 .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
