@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ public final class ConflictResolverIntegrationTest {
     }
 
     /**
-     * When 's {@link Completable} completes,
+     * When {@link Completable} completes,
      * then the local storage adapter should have all of the remote model state.
      * @throws AmplifyException On failure interacting with storage adapter
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer

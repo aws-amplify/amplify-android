@@ -51,7 +51,6 @@ import com.amplifyframework.logging.Logger;
  * assumptions about the structure of data types (unique IDs, versioning information), etc.
  */
 public final class AppSyncClient implements AppSync {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final GraphQLBehavior api;
     private final AuthModeStrategyType authModeStrategyType;
 
