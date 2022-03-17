@@ -287,7 +287,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                         AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp())
                     )
                 }
-                is AuthenticationState.SignedIn -> onError.accept(AuthException.SignedInException())
+                is AuthenticationState.SignedIn -> onSuccess.accept(
+                    AuthSignInResult(
+                        true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
+                    )
+                )
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
