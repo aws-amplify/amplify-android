@@ -59,4 +59,17 @@ public @interface ModelConfig {
      * @return list of {@link AuthRule} annotations.
      */
     AuthRule[] authRules() default {};
+
+    /**
+     * Model Type SYSTEM or USER
+     * @return
+     */
+    Model.Type type() default Model.Type.USER;
+
+
+    /**
+     * Model Version
+     * @return
+     */
+    String version() default "V1";
 }

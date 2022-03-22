@@ -33,7 +33,7 @@ import java.util.UUID;
  * {@link LastSyncMetadata#getLastSyncTime()} to decide whether or not it should
  * perform a "Base Sync" or a "Delta Sync".
  */
-@ModelConfig
+@ModelConfig(type = Model.Type.SYSTEM)
 public final class LastSyncMetadata implements Model {
     private final @ModelField(targetType = "ID", isRequired = true) String id;
     private final @ModelField(targetType = "String", isRequired = true) String modelClassName;
@@ -106,6 +106,16 @@ public final class LastSyncMetadata implements Model {
     @Override
     public String resolveIdentifier() {
         return this.id;
+    }
+
+    /**
+     * Gets the Type of the Model.
+     * @return The Type of the model.
+     */
+    @NonNull
+    @Override
+    public Type getType(){
+        return Type.SYSTEM;
     }
 
     public String getId() {

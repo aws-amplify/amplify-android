@@ -15,9 +15,9 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
@@ -36,7 +36,6 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
-import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;
@@ -57,7 +56,6 @@ import java.util.Set;
  * {@link Model} and {@link ModelSchema}.
  */
 final class SQLiteCommandFactory implements SQLCommandFactory {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final SchemaRegistry schemaRegistry;
     private final Gson gson;
@@ -428,9 +426,22 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 new SQLiteModelFieldTypeConverter(schema, schemaRegistry, gson);
         final Map<String, ModelField> modelFields = schema.getFields();
         final List<Object> bindings = new ArrayList<>();
+        Object fieldValue;
         for (SQLiteColumn column : table.getSortedColumns()) {
-            final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getFieldName()));
-            final Object fieldValue = converter.convertValueFromTarget(model, modelField);
+            if (column.getName().equals(SQLiteTable.primaryKeyFieldName)){
+                fieldValue = model.getPrimaryKeyString();
+            } else if (column.isForeignKey()) {
+                Log.d("amplify", "sqliteCommandFactory column.getFieldname" + column.getFieldName());
+                Log.d("amplify", "sqliteCommandFactory modelFields" + modelFields);
+                Log.d("amplify", "sqliteCommandFactory owned fields" + column.getOwnedField());
+                final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getOwnedField()));
+                fieldValue = converter.convertValueFromTarget(model, modelField);
+            }else {
+                Log.d("amplify", "sqliteCommandFactory column.getFieldname" + column.getFieldName());
+                Log.d("amplify", "sqliteCommandFactory modelFields" + modelFields);
+                final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getFieldName()));
+                fieldValue = converter.convertValueFromTarget(model, modelField);
+            }
             bindings.add(fieldValue);
         }
         return bindings;
@@ -479,7 +490,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             }
 
             // Reference the foreign key and primary key using the corresponding table's alias.
-            String foreignKeyName = foreignKey.getQuotedColumnName().replace(table.getName(), tableAlias);
+            //String foreignKeyName = foreignKey.getQuotedColumnName().replace(table.getName(), tableAlias);
+            String foreignKeyName = Wrap.inBackticks(tableAlias) + "." + Wrap.inBackticks(SQLiteTable.primaryKeyFieldName);
             String ownedTablePrimaryKeyName = ownedTable.getPrimaryKeyColumnName().replace(ownedTableName,
                     ownedTableAlias);
             joinStatement.append(SqlKeyword.ON)
@@ -528,7 +540,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final SQLiteColumn foreignKey = foreignKeyIterator.next();
             String connectedName = foreignKey.getName();
             String connectedType = foreignKey.getOwnedType();
-            String connectedId = PrimaryKey.fieldName();
+            String connectedId = table.getType()== Model.Type.USER ? SQLiteTable.primaryKeyFieldName
+                    :  PrimaryKey.fieldName();
 
             builder.append("FOREIGN KEY")
                     .append(SqlKeyword.DELIMITER)
@@ -557,12 +570,17 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append(SqlKeyword.DELIMITER)
                     .append("(");
             int numIndexFieldsAdded = 0;
-            for (String field : indexFields) {
-                numIndexFieldsAdded++;
+            if (modelSchema.getModelType() == Model.Type.USER){
                 builder.append(SqlKeyword.DELIMITER)
-                        .append(field);
-                if (numIndexFieldsAdded != indexFields.size()) {
-                    builder.append(",");
+                        .append("'"+SQLiteTable.primaryKeyFieldName+"'");
+            } else {
+                for (String field : indexFields) {
+                    numIndexFieldsAdded++;
+                    builder.append(SqlKeyword.DELIMITER)
+                            .append(field);
+                    if (numIndexFieldsAdded != indexFields.size()) {
+                        builder.append(",");
+                    }
                 }
             }
             builder.append(")");

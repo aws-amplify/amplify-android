@@ -59,6 +59,8 @@ public final class ModelSchema {
 
     private final String listPluralName;
 
+    private final Model.Type modelType;
+
     // Denotes whether this model has owner based authorization which changes the parameters for subscriptions
     // e.g. @auth(rules: [{allow: owner}]) on the model in the GraphQL Schema
     private final List<AuthRule> authRules;
@@ -88,6 +90,7 @@ public final class ModelSchema {
         this.associations = builder.associations;
         this.indexes = builder.indexes;
         this.modelClass = builder.modelClass;
+        this.modelType = builder.type;
     }
 
     /**
@@ -170,6 +173,7 @@ public final class ModelSchema {
                     .associations(associations)
                     .indexes(indexes)
                     .modelClass(clazz)
+                    .modelType(modelConfig.type())
                     .build();
         } catch (Exception exception) {
             throw new AmplifyException(
@@ -224,6 +228,7 @@ public final class ModelSchema {
                     .name(BelongsTo.class.getSimpleName())
                     .targetName(association.targetName())
                     .associatedType(association.type().getSimpleName())
+                    .associatedName(field.getName())
                     .build();
         }
         if (field.isAnnotationPresent(HasOne.class)) {
@@ -425,6 +430,10 @@ public final class ModelSchema {
             '}';
     }
 
+    public Model.Type getModelType() {
+        return modelType;
+    }
+
     /**
      * The Builder to build the {@link ModelSchema} object.
      */
@@ -439,6 +448,7 @@ public final class ModelSchema {
         private String listPluralName;
         private String syncPluralName;
         private final List<AuthRule> authRules;
+        private Model.Type type;
 
         Builder() {
             this.authRules = new ArrayList<>();
@@ -560,6 +570,17 @@ public final class ModelSchema {
         }
 
         /**
+         * The type of the Model this schema represents.
+         * @param type the class of the model.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder modelType(@NonNull Model.Type type) {
+            this.type = type;
+            return this;
+        }
+
+        /**
          * Return the ModelSchema object.
          * @return the ModelSchema object.
          */
@@ -569,5 +590,6 @@ public final class ModelSchema {
             Objects.requireNonNull(name);
             return new ModelSchema(Builder.this);
         }
+
     }
 }

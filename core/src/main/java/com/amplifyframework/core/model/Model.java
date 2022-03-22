@@ -48,9 +48,11 @@ public interface Model {
             return (Serializable) Objects.requireNonNull(method.invoke(this));
         } catch (IllegalAccessException exception) {
             throw (new IllegalStateException(exceptionMessage));
-        } catch (NoSuchMethodException e) {
+        }
+        catch (NoSuchMethodException exception) {
             throw (new IllegalStateException(exceptionMessage));
-        } catch (InvocationTargetException e) {
+        }
+        catch (InvocationTargetException exception) {
             throw (new IllegalStateException(exceptionMessage));
         }
     }
@@ -75,7 +77,20 @@ public interface Model {
            }
            catch (Exception ex){
                throw (new IllegalStateException("Invalid Primary Key, It should either be of type String or composite Primary Key."));
-        }
+           }
+    }
 
+    /**
+     * Gets the Type of the Model.
+     * @return The Type of the model.
+     */
+    @NonNull
+    default Type getType(){
+        return Type.USER;
+    }
+
+    public enum Type {
+        USER,
+        SYSTEM
     }
 }
