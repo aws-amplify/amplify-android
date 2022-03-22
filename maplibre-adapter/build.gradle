@@ -32,7 +32,7 @@ android {
 }
 
 dependencies {
-    def lifecycleVersion = "2.4.0"
+    def lifecycleVersion = "2.4.1"
 
     implementation project(":aws-auth-cognito")
     implementation project(":aws-geo-location")

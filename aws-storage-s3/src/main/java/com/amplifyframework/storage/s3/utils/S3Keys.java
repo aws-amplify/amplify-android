@@ -55,18 +55,28 @@ public final class S3Keys {
             @NonNull String identityId,
             @NonNull String amplifyKey
     ) {
-        return getAccessLevelPrefix(accessLevel, identityId) + BUCKET_SEPARATOR + amplifyKey;
+        return getAccessLevelPrefix(accessLevel, identityId) + amplifyKey;
     }
 
+    /**
+     * Amplify Storage implementation with S3 integrates access level.
+     *
+     * This method helps construct a correctly formatted access level prefix to give
+     * user the correct level of access into the bucket.
+     *
+     * @param accessLevel Storage access level of the request
+     * @param identityId Identity ID of the user
+     * @return Formatted key to be used internally by S3 plugin
+     */
     @NonNull
-    private static String getAccessLevelPrefix(
+    public static String getAccessLevelPrefix(
             @NonNull StorageAccessLevel accessLevel,
             @NonNull String identityId
     ) {
         if (StorageAccessLevel.PRIVATE.equals(accessLevel) || StorageAccessLevel.PROTECTED.equals(accessLevel)) {
-            return accessLevel.name().toLowerCase(Locale.US) + BUCKET_SEPARATOR + identityId;
+            return accessLevel.name().toLowerCase(Locale.US) + BUCKET_SEPARATOR + identityId + BUCKET_SEPARATOR;
         } else {
-            return accessLevel.name().toLowerCase(Locale.US);
+            return accessLevel.name().toLowerCase(Locale.US) + BUCKET_SEPARATOR;
         }
     }
 

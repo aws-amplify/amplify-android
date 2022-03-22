@@ -1,3 +1,34 @@
+## [Release 1.32.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.32.2)
+
+### Miscellaneous
+- Update notify_comments.yml (#1675)
+- Remove the UUID restriction from persistentRecord (#1678)
+- conflict resolver retry local fix (#1634)
+
+[See all changes between 1.32.1 and 1.32.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.32.1...release_v1.32.2)
+
+## [Release 1.32.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.32.1)
+
+### Bug Fixes
+- **datastore:** SerializedModel returns null for non-nullable list field (#1665)
+- **datastore:** Remove timeout for hydrating sync processor in orchestrator. (#1658)
+
+### Miscellaneous
+- Update notify_comments.yml (#1671)
+
+[See all changes between 1.32.0 and 1.32.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.32.0...release_v1.32.1)
+
+## [Release 1.32.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.32.0)
+
+### Features
+- Add support for custom prefix resolver (#1659)
+
+### Miscellaneous
+- Update notify_comments.yml (#1654)
+- Updating the AWS SDK to 2.41.0 (#1662)
+
+[See all changes between 1.31.3 and 1.32.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.31.3...release_v1.32.0)
+
 ## [Release 1.31.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.31.3)
 
 ### Miscellaneous

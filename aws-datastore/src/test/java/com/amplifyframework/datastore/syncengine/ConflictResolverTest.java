@@ -21,6 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
@@ -33,10 +34,13 @@ import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.util.GsonFactory;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.any;
@@ -169,6 +173,123 @@ public final class ConflictResolverTest {
     }
 
     /**
+     * When the user elects to retry the mutation using the local copy of the data,
+     * the following is expected:
+     * 1. The AppSync API is invoked, with the local mutation data
+     * 2. We assume that the AppSync API will respond differently
+     *    upon retry (TODO: why? Will the user be expected to manually
+     *    intervene and modify the backend state somehow?)
+     * @throws AmplifyException On failure to arrange metadata into storage
+     */
+    @Test
+    public void conflictIsResolvedByRetryingLocalDataWithSerializedModel() throws AmplifyException {
+        // Arrange for the user-provided conflict handler to always request local retry.
+        when(configurationProvider.getConfiguration())
+                .thenReturn(DataStoreConfiguration.builder()
+                    .conflictHandler(DataStoreConflictHandler.alwaysRetryLocal())
+                    .build());
+
+        // Arrange a pending mutation that includes the local data
+        BlogOwner localModel = BlogOwner.builder()
+                .name("Local Blogger")
+                .build();
+        Map<String, Object> ownerData = new HashMap<>();
+        ownerData.put("id", localModel.getId());
+        ownerData.put("name", localModel.getName());
+        SerializedModel serializedOwner = SerializedModel.builder()
+                .serializedData(ownerData)
+                .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                .build();
+        PendingMutation<SerializedModel> mutation = PendingMutation.update(serializedOwner, schema);
+
+        // Arrange server state for the model, in conflict to local data
+        BlogOwner serverModel = localModel.copyOfBuilder()
+                .name("Server Blogger")
+                .build();
+        Temporal.Timestamp now = Temporal.Timestamp.now();
+        ModelMetadata metadata = new ModelMetadata(serverModel.getId(), false, 4, now);
+        ModelWithMetadata<SerializedModel> serverData = new ModelWithMetadata<>(serializedOwner, metadata);
+
+        // Arrange a hypothetical conflict error from AppSync
+        AppSyncConflictUnhandledError<SerializedModel> unhandledConflictError =
+                AppSyncConflictUnhandledErrorFactory.createUnhandledConflictError(serverData);
+
+        // Assume that the AppSync call succeeds this time.
+        ModelWithMetadata<BlogOwner> versionFromAppSyncResponse =
+                new ModelWithMetadata<>(localModel, metadata);
+        AppSyncMocking.update(appSync)
+                .mockSuccessResponse(localModel, metadata.getVersion(), versionFromAppSyncResponse);
+
+        // Act: when the resolver is invoked, we expect the resolved version
+        // to include the server's metadata, but with the local data.
+        resolver.resolve(mutation, unhandledConflictError)
+                .test();
+        // The handler should have called up to AppSync to update hte model
+        verify(appSync)
+                .update(eq(localModel), any(), eq(metadata.getVersion()), any(), any());
+    }
+
+    /**
+     * When the user elects to retry the mutation using the local copy of the data,
+     * the following is expected:
+     * 1. The AppSync API is invoked, with the local mutation data
+     * 2. We assume that the AppSync API will respond differently
+     *    upon retry (TODO: why? Will the user be expected to manually
+     *    intervene and modify the backend state somehow?)
+     * @throws AmplifyException On failure to arrange metadata into storage
+     */
+    @Test
+    public void conflictIsResolvedByRetryingLocalDataWithFlutterSerializedModel() throws AmplifyException {
+        // Arrange for the user-provided conflict handler to always request local retry.
+        when(configurationProvider.getConfiguration())
+                .thenReturn(DataStoreConfiguration.builder()
+                        .conflictHandler(DataStoreConflictHandler.alwaysRetryLocal())
+                        .build());
+
+        // Arrange a pending mutation that includes the local data
+        Map<String, Object> blogOwnerData = new HashMap<>();
+        blogOwnerData.put("name", "A seasoned writer");
+        blogOwnerData.put("id", "e50ffa8f-783b-4780-89b4-27043ffc35be");
+
+        SerializedModel serializedOwner = SerializedModel.builder()
+                .serializedData(blogOwnerData)
+                .modelSchema(schemaFrom())
+                .build();
+        PendingMutation<SerializedModel> mutation = PendingMutation.update(serializedOwner, schema);
+
+        // Arrange server state for the model, in conflict to local data
+        Map<String, Object> serverBlogOwnerData = new HashMap<>();
+        serverBlogOwnerData.put("name", "A seasoned writer");
+        serverBlogOwnerData.put("id", "e50ffa8f-783b-4780-89b4-27043ffc35be");
+        SerializedModel serverModel = SerializedModel.builder()
+                .serializedData(serverBlogOwnerData)
+                .modelSchema(null)
+                .build();
+
+        Temporal.Timestamp now = Temporal.Timestamp.now();
+        ModelMetadata metadata = new ModelMetadata(serverModel.getId(), false, 4, now);
+        ModelWithMetadata<SerializedModel> serverData = new ModelWithMetadata<>(serializedOwner, metadata);
+
+        // Arrange a hypothetical conflict error from AppSync
+        AppSyncConflictUnhandledError<SerializedModel> unhandledConflictError =
+                AppSyncConflictUnhandledErrorFactory.createUnhandledConflictError(serverData);
+
+        // Assume that the AppSync call succeeds this time.
+        ModelWithMetadata<SerializedModel> versionFromAppSyncResponse =
+                new ModelWithMetadata<>(serializedOwner, metadata);
+        AppSyncMocking.update(appSync)
+                .mockSuccessResponse(serializedOwner, metadata.getVersion(), versionFromAppSyncResponse);
+
+        // Act: when the resolver is invoked, we expect the resolved version
+        // to include the server's metadata, but with the local data.
+        resolver.resolve(mutation, unhandledConflictError)
+                .test();
+        // The handler should have called up to AppSync to update hte model
+        verify(appSync)
+                .update(eq(serializedOwner), any(), eq(metadata.getVersion()), any(), any());
+    }
+
+    /**
      * When the user elects to retry with a custom model, and that model
      * is not null, it means to try an update mutation against AppSync.
      * We expect:
@@ -220,6 +341,66 @@ public final class ConflictResolverTest {
         // Verify that the update API was invoked
         verify(appSync)
             .update(eq(customModel), any(), eq(remoteMetadata.getVersion()), any(), any());
+    }
+
+    private static ModelSchema schemaFrom() {
+        String serializedForm = "{\n" +
+                "    \"associations\": {\n" +
+                "        \"blog\": {\n" +
+                "            \"associatedName\": \"owner\",\n" +
+                "            \"associatedType\": \"Blog\",\n" +
+                "            \"name\": \"HasOne\"\n" +
+                "        }\n" +
+                "    },\n" +
+                "    \"authRules\": [],\n" +
+                "    \"fields\": {\n" +
+                "        \"blog\": {\n" +
+                "            \"authRules\": [],\n" +
+                "            \"isArray\": false,\n" +
+                "            \"isEnum\": false,\n" +
+                "            \"isModel\": true,\n" +
+                "            \"isRequired\": false,\n" +
+                "            \"javaClassForValue\": \"com.amplifyframework.core.model.SerializedModel\",\n" +
+                "            \"name\": \"blog\",\n" +
+                "            \"targetType\": \"Blog\"\n" +
+                "        },\n" +
+                "        \"id\": {\n" +
+                "            \"authRules\": [],\n" +
+                "            \"isArray\": false,\n" +
+                "            \"isEnum\": false,\n" +
+                "            \"isModel\": false,\n" +
+                "            \"isRequired\": true,\n" +
+                "            \"javaClassForValue\": \"java.lang.String\",\n" +
+                "            \"name\": \"id\",\n" +
+                "            \"targetType\": \"ID\"\n" +
+                "        },\n" +
+                "        \"name\": {\n" +
+                "            \"authRules\": [],\n" +
+                "            \"isArray\": false,\n" +
+                "            \"isEnum\": false,\n" +
+                "            \"isModel\": false,\n" +
+                "            \"isRequired\": true,\n" +
+                "            \"javaClassForValue\": \"java.lang.String\",\n" +
+                "            \"name\": \"name\",\n" +
+                "            \"targetType\": \"String\"\n" +
+                "        },\n" +
+                "        \"wea\": {\n" +
+                "            \"authRules\": [],\n" +
+                "            \"isArray\": false,\n" +
+                "            \"isEnum\": false,\n" +
+                "            \"isModel\": false,\n" +
+                "            \"isRequired\": false,\n" +
+                "            \"javaClassForValue\": \"java.lang.String\",\n" +
+                "            \"name\": \"wea\",\n" +
+                "            \"targetType\": \"String\"\n" +
+                "        }\n" +
+                "    },\n" +
+                "    \"indexes\": {},\n" +
+                "    \"modelClass\": \"com.amplifyframework.core.model.SerializedModel\",\n" +
+                "    \"name\": \"BlogOwner\",\n" +
+                "    \"pluralName\": \"BlogOwners\"\n" +
+                "}\n";
+        return GsonFactory.instance().fromJson(serializedForm, ModelSchema.class);
     }
 
     /**

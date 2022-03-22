@@ -29,9 +29,9 @@ import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
+import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
@@ -53,20 +53,24 @@ public final class AWSS3StorageUploadInputStreamOperation
     private final Consumer<StorageUploadInputStreamResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
+    private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
 
     /**
      * Constructs a new AWSS3StorageUploadInputStreamOperation.
-     * @param storageService S3 client wrapper
+     *
+     * @param storageService      S3 client wrapper
      * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
-     * @param request upload request parameters
-     * @param onProgress Notified upon advancements in upload progress
-     * @param onSuccess Will be notified when results of upload are available
-     * @param onError Notified when upload fails with an error
+     * @param request             upload request parameters
+     * @param awsS3StoragePluginConfiguration s3Plugin configuration
+     * @param onProgress          Notified upon advancements in upload progress
+     * @param onSuccess           Will be notified when results of upload are available
+     * @param onError             Notified when upload fails with an error
      */
     public AWSS3StorageUploadInputStreamOperation(
             @NonNull StorageService storageService,
             @NonNull CognitoAuthProvider cognitoAuthProvider,
             @NonNull AWSS3StorageUploadRequest<InputStream> request,
+            @NonNull AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration,
             @NonNull Consumer<StorageTransferProgress> onProgress,
             @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
@@ -78,6 +82,7 @@ public final class AWSS3StorageUploadInputStreamOperation
         this.onSuccess = Objects.requireNonNull(onSuccess);
         this.onError = Objects.requireNonNull(onError);
         this.transferObserver = null;
+        this.awsS3StoragePluginConfiguration = awsS3StoragePluginConfiguration;
     }
 
     @SuppressLint("SyntheticAccessor")
@@ -87,23 +92,6 @@ public final class AWSS3StorageUploadInputStreamOperation
         if (transferObserver != null) {
             return;
         }
-
-        String currentIdentityId;
-
-        try {
-            currentIdentityId = cognitoAuthProvider.getIdentityId();
-        } catch (StorageException exception) {
-            onError.accept(exception);
-            return;
-        }
-
-        String serviceKey = S3Keys.createServiceKey(
-                getRequest().getAccessLevel(),
-                getRequest().getTargetIdentityId() != null
-                        ? getRequest().getTargetIdentityId()
-                        : currentIdentityId,
-                getRequest().getKey()
-        );
 
         // Grab the inputStream to upload...
         InputStream inputStream = getRequest().getLocal();
@@ -118,17 +106,26 @@ public final class AWSS3StorageUploadInputStreamOperation
             objectMetadata.setSSEAlgorithm(storageServerSideEncryption.getName());
         }
 
-        // Upload!
-        try {
-            transferObserver = storageService.uploadInputStream(serviceKey, inputStream, objectMetadata);
-            transferObserver.setTransferListener(new UploadTransferListener());
-        } catch (IOException ioException) {
-            onError.accept(new StorageException(
-                    "Issue uploading inputStream.",
-                    ioException,
-                    "See included exception for more details and suggestions to fix."
-            ));
-        }
+        awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(cognitoAuthProvider).
+                resolvePrefix(getRequest().getAccessLevel(),
+                getRequest().getTargetIdentityId(),
+                    prefix -> {
+                        try {
+                            String serviceKey = prefix.concat(getRequest().getKey());
+                            transferObserver = storageService.uploadInputStream(
+                                    serviceKey,
+                                    inputStream,
+                                    objectMetadata);
+                            transferObserver.setTransferListener(new UploadTransferListener());
+                        } catch (IOException ioException) {
+                            onError.accept(new StorageException(
+                                    "Issue uploading inputStream.",
+                                    ioException,
+                                    "See included exception for more details and suggestions to fix."
+                            ));
+                        }
+                    },
+                onError);
     }
 
     @Override

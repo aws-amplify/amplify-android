@@ -114,8 +114,9 @@ final class PersistentMutationOutbox implements MutationOutbox {
     }
 
     private <T extends Model> Completable save(PendingMutation<T> pendingMutation) {
+        PendingMutation.PersistentRecord item = converter.toRecord(pendingMutation);
         return Completable.create(emitter -> storage.save(
-            converter.toRecord(pendingMutation),
+                item,
             StorageItemChange.Initiator.SYNC_ENGINE,
             QueryPredicates.all(),
             saved -> {
@@ -187,7 +188,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 results -> {
                     while (results.hasNext()) {
                         try {
-                            mutationQueue.add(converter.fromRecord(results.next()));
+                            PendingMutation.PersistentRecord persistentRecord = results.next();
+                            mutationQueue.add(converter.fromRecord(persistentRecord));
                         } catch (DataStoreException conversionFailure) {
                             emitter.onError(conversionFailure);
                             return;

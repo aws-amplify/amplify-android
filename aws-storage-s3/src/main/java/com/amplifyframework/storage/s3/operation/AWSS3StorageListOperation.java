@@ -23,9 +23,9 @@ import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
+import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -40,21 +40,26 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
     private final CognitoAuthProvider cognitoAuthProvider;
     private final Consumer<StorageListResult> onSuccess;
     private final Consumer<StorageException> onError;
+    private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
 
     /**
      * Constructs a new AWSS3StorageListOperation.
-     * @param storageService S3 client wrapper
-     * @param executorService Executor service used for running blocking operations on a separate thread
+     *
+     * @param storageService      S3 client wrapper
+     * @param executorService     Executor service used for running blocking operations on a
+     *                            separate thread
      * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
-     * @param request list request parameters
-     * @param onSuccess notified when list operation results are available
-     * @param onError notified when list results cannot be obtained due to error
+     * @param request             list request parameters
+     * @param awss3StoragePluginConfiguration s3Plugin configuration
+     * @param onSuccess           notified when list operation results are available
+     * @param onError             notified when list results cannot be obtained due to error
      */
     public AWSS3StorageListOperation(
             @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
             @NonNull CognitoAuthProvider cognitoAuthProvider,
             @NonNull AWSS3StorageListRequest request,
+            @NonNull AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration,
             @NonNull Consumer<StorageListResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
@@ -64,40 +69,32 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
         this.cognitoAuthProvider = cognitoAuthProvider;
         this.onSuccess = onSuccess;
         this.onError = onError;
+        this.awsS3StoragePluginConfiguration = awss3StoragePluginConfiguration;
     }
 
     @SuppressWarnings("SyntheticAccessor")
     @Override
     public void start() {
         executorService.submit(() -> {
-            try {
-                String currentIdentityId;
-
-                try {
-                    currentIdentityId = cognitoAuthProvider.getIdentityId();
-                } catch (StorageException exception) {
-                    onError.accept(exception);
-                    return;
-                }
-
-                String serviceKey = S3Keys.createServiceKey(
-                        getRequest().getAccessLevel(),
-                        getRequest().getTargetIdentityId() != null
-                                ? getRequest().getTargetIdentityId()
-                                : currentIdentityId,
-                        getRequest().getPath()
-                );
-
-                List<StorageItem> listedItems = storageService.listFiles(serviceKey);
-
-                onSuccess.accept(StorageListResult.fromItems(listedItems));
-            } catch (Exception exception) {
-                onError.accept(new StorageException(
-                    "Something went wrong with your AWS S3 Storage list operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
-                ));
+            awsS3StoragePluginConfiguration.
+                getAWSS3PluginPrefixResolver(cognitoAuthProvider).
+                resolvePrefix(getRequest().getAccessLevel(),
+                    getRequest().getTargetIdentityId(),
+                    prefix -> {
+                        try {
+                            String serviceKey = prefix.concat(getRequest().getPath());
+                            List<StorageItem> listedItems = storageService.listFiles(serviceKey);
+                            onSuccess.accept(StorageListResult.fromItems(listedItems));
+                        } catch (Exception exception) {
+                            onError.accept(new StorageException(
+                                    "Something went wrong with your AWS S3 Storage list operation",
+                                    exception,
+                                    "See attached exception for more information and suggestions"
+                            ));
+                        }
+                    },
+                    onError);
             }
-        });
+        );
     }
 }
