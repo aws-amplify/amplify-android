@@ -247,6 +247,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 this.sqlCommandFactory = new SQLiteCommandFactory(schemaRegistry, gson);
                 CreateSqlCommands createSqlCommands = getCreateCommands(modelsProvider.modelNames());
+                LOG.debug("sqlAdapter create commands"+ createSqlCommands.getCreateTableCommands().toString());
                 sqliteStorageHelper = SQLiteStorageHelper.getInstance(
                         context,
                         databaseName,

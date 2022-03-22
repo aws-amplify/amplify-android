@@ -42,7 +42,7 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
     public static class Helper {
         public static QueryPredicate getQueryPredicate(Model model, String tableName, List<String> primaryKeyList) {
             QueryPredicate matchId = null;
-            if(primaryKeyList.size() == 1 && !(model.resolveIdentifier() instanceof ModelPrimaryKey)){
+            if(!(model.resolveIdentifier() instanceof ModelPrimaryKey)){
                 matchId = QueryField.field(tableName, primaryKeyList.get(0)).eq(model.resolveIdentifier());
             } else{
                 ModelPrimaryKey<?> primaryKey = (ModelPrimaryKey<?>) model.resolveIdentifier();
@@ -59,13 +59,14 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
         }
 
         public static String getUniqueKey(Serializable uniqueId) {
-
             String uniqueStringId;
-            if (uniqueId instanceof String) {
-                uniqueStringId = (String) uniqueId;
-            } else if (uniqueId instanceof ModelPrimaryKey) {
-                uniqueStringId = ((ModelPrimaryKey<?>) uniqueId).getIdentifier();
-            } else {
+            try {
+                if (uniqueId instanceof ModelPrimaryKey) {
+                    uniqueStringId = ((ModelPrimaryKey<?>) uniqueId).getIdentifier();
+                } else {
+                    uniqueStringId = uniqueId.toString();
+                }
+            } catch (Exception ex){
                 throw (new IllegalStateException("Invalid Primary Key, It should either be of type String or composite Primary Key."));
             }
             return uniqueStringId;

@@ -20,6 +20,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
@@ -37,6 +38,7 @@ import io.reactivex.rxjava3.core.Single;
  * stored will be checked with the version available through the
  * {@link ModelProvider#version()} for detecting version changes.
  */
+@ModelConfig(type = Model.Type.SYSTEM)
 public final class PersistentModelVersion implements Model {
     // A static identifier that is used to store the version of model. Currently there can be
     // only ONE version of ONE ModelProvider be stored in the local storage at any time. This
@@ -105,6 +107,13 @@ public final class PersistentModelVersion implements Model {
     @Override
     public String resolveIdentifier() {
         return this.id;
+    }
+
+    /** {@inheritDoc}. */
+    @NonNull
+    @Override
+    public Type getType(){
+        return Type.SYSTEM;
     }
 
     /**

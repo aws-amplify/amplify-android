@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
@@ -44,14 +45,18 @@ import java.util.TreeMap;
  */
 @SuppressWarnings("WeakerAccess")
 public final class SQLiteTable {
+
+    public static final String primaryKeyFieldName = "@@primaryKey";
     private final String name;
     private final Map<String, SQLiteColumn> columns;
     private final List<String> primaryKeyColumns;
     private final List<SQLiteColumn> sortedColumns;
+    private final Model.Type type;
 
-    private SQLiteTable(String name, Map<String, SQLiteColumn> columns,  List<String> primaryKeyColumns) {
+    private SQLiteTable(String name, Map<String, SQLiteColumn> columns, List<String> primaryKeyColumns, Model.Type type) {
         this.name = name;
         this.columns = columns;
+        this.type = type;
         this.sortedColumns = sortedColumns();
         this.primaryKeyColumns = primaryKeyColumns;
     }
@@ -83,6 +88,17 @@ public final class SQLiteTable {
         Objects.requireNonNull(modelSchema);
         Map<String, ModelAssociation> associations = modelSchema.getAssociations();
         Map<String, SQLiteColumn> sqlColumns = new TreeMap<>();
+        if (modelSchema.getModelType() == Model.Type.USER) {
+            SQLiteColumn primaryKeyColumn = SQLiteColumn.builder()
+                    .name(primaryKeyFieldName)
+                    .fieldName(primaryKeyFieldName)
+                    .tableName(modelSchema.getName())
+                    .ownerOf(null)
+                    .isNonNull(true)
+                    .dataType(SQLiteDataType.TEXT)
+                    .build();
+            sqlColumns.put(primaryKeyFieldName, primaryKeyColumn);
+        }
         for (ModelField modelField : modelSchema.getFields().values()) {
             final ModelAssociation association = associations.get(modelField.getName());
             final boolean isAssociated = association != null;
@@ -91,25 +107,48 @@ public final class SQLiteTable {
             if (isAssociated && !association.isOwner()) {
                 continue;
             }
+            if (isAssociated) {
+                    // All associated fields are also foreign keys at this point
+                    SQLiteColumn column = SQLiteColumn.builder()
+                            .name(association.getTargetName())
+                            .fieldName(modelField.getName())
+                            .tableName(modelSchema.getName())
+                            .ownerOf( association.getAssociatedType())
+                            .ownerField(association.getAssociatedName())
+                            .isNonNull(modelField.isRequired())
+                            .dataType(sqlTypeFromModelField(modelField))
+                            .build();
+                    sqlColumns.put(modelField.getName(), column);
 
-            // All associated fields are also foreign keys at this point
-            SQLiteColumn column = SQLiteColumn.builder()
-                    .name(isAssociated
-                            ? association.getTargetName()
-                            : modelField.getName())
-                    .fieldName(modelField.getName())
-                    .tableName(modelSchema.getName())
-                    .ownerOf(isAssociated
-                            ? association.getAssociatedType()
-                            : null)
-                    .isNonNull(modelField.isRequired())
-                    .dataType(sqlTypeFromModelField(modelField))
-                    .build();
-            sqlColumns.put(modelField.getName(), column);
+                    // All associated fields are also foreign keys at this point
+//                String targetKey = association.getName() +modelSchema.getName()+ "Id";
+//                    SQLiteColumn column = SQLiteColumn.builder()
+//                            .name(targetKey)
+//                            .fieldName(targetKey)
+//                            .tableName(modelSchema.getName())
+//                            .ownerOf( association.getAssociatedType())
+//                            .isNonNull(modelField.isRequired())
+//                            .dataType(sqlTypeFromModelField(modelField))
+//                            .build();
+//                    sqlColumns.put(targetKey, column);
+
+            }else{
+                SQLiteColumn column = SQLiteColumn.builder()
+                        .name( modelField.getName())
+                        .fieldName(modelField.getName())
+                        .tableName(modelSchema.getName())
+                        .ownerOf( null)
+                        .ownerField(null)
+                        .isNonNull(modelField.isRequired())
+                        .dataType(sqlTypeFromModelField(modelField))
+                        .build();
+                sqlColumns.put(modelField.getName(), column);
+            }
         }
 
         return SQLiteTable.builder()
                 .name(modelSchema.getName())
+                .type(modelSchema.getModelType())
                 .columns(sqlColumns)
                 .primaryKeyColumns(modelSchema.getPrimaryIndexFields())
                 .build();
@@ -144,11 +183,27 @@ public final class SQLiteTable {
     @Nullable
     public SQLiteColumn getPrimaryKey() {
         for (SQLiteColumn column : sortedColumns) {
+            if (type == Model.Type.USER) {
+                if (column.getName().equals(primaryKeyFieldName)) {
+                    return column;
+                }
+            }
+        }
+        for (SQLiteColumn column : sortedColumns) {
             if (column.isPrimaryKey()) {
                 return column;
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the type of this table.
+     * @return the type of this table
+     */
+    @NonNull
+    public Model.Type getType() {
+        return type;
     }
 
     /**
@@ -292,6 +347,7 @@ public final class SQLiteTable {
         private final Map<String, SQLiteColumn> columns;
         private  List<String> primaryKeyColumns;
         private String name;
+        private Model.Type type;
 
         Builder() {
             this.columns = new HashMap<>();
@@ -305,6 +361,17 @@ public final class SQLiteTable {
         @NonNull
         public Builder name(@NonNull String name) {
             this.name = Objects.requireNonNull(name);
+            return this;
+        }
+
+        /**
+         * Sets the name of the table.
+         * @param type the name of the table
+         * @return builder instance with given name
+         */
+        @NonNull
+        public Builder type(@NonNull Model.Type type) {
+            this.type = Objects.requireNonNull(type);
             return this;
         }
 
@@ -339,7 +406,7 @@ public final class SQLiteTable {
         @SuppressLint("SyntheticAccessor")
         @NonNull
         public SQLiteTable build() {
-            return new SQLiteTable(this.name, Immutable.of(this.columns), primaryKeyColumns);
+            return new SQLiteTable(this.name, Immutable.of(this.columns), primaryKeyColumns, type);
         }
     }
 }

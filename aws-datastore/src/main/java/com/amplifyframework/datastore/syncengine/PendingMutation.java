@@ -275,7 +275,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * The mutation ID, model ID and model class are stored alongside the serialized mutation,
      * to facilitate record search/retrieval.
      */
-    @ModelConfig(pluralName = "PersistentRecords")
+    @ModelConfig(pluralName = "PersistentRecords", type = Model.Type.SYSTEM)
     @Index(fields = "containedModelClassName", name = "containedModelClassNameBasedIndex")
     public static final class PersistentRecord implements Model, Comparable<PersistentRecord> {
         @ModelField(targetType = "ID", isRequired = true)
@@ -321,6 +321,16 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
         @Override
         public String resolveIdentifier() {
             return this.id;
+        }
+
+        /**
+         * Gets the Type of the Model.
+         * @return The Type of the model.
+         */
+        @NonNull
+        @Override
+        public Type getType(){
+            return Type.SYSTEM;
         }
 
         /**

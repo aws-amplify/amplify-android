@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -218,8 +219,9 @@ public final class AppSyncGraphQLRequestFactory {
                         "ConditionInput";
                 builder.variable("condition", conditionType, parsePredicate(predicate));
             }
-
-            return builder.build();
+            GraphQLRequest<R> request = builder.build();
+            Log.d("AppSyncGraphQlRequest", "AppSyncGraphQlRequestFactory mutation request: "+request.toString());
+            return request;
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
@@ -382,7 +384,20 @@ public final class AppSyncGraphQLRequestFactory {
                 result.put(fieldName, fieldValue);
             } else if (association.isOwner()) {
                 Model target = (Model) Objects.requireNonNull(fieldValue);
-                result.put(association.getTargetName(), target.resolveIdentifier());
+                result.put(association.getTargetName(), target.getPrimaryKeyString());
+
+//                Serializable targetPrimaryKey = target.resolveIdentifier();
+//                if (targetPrimaryKey instanceof ModelPrimaryKey){
+//                    ModelPrimaryKey<?> modelPrimaryKey = (ModelPrimaryKey<?>) targetPrimaryKey;
+//                    Iterator<String> targetKeyIterator = Arrays.stream(association.getTargetKeyArray()).iterator();
+//                    result.put(targetKeyIterator.next(), modelPrimaryKey.key());
+//                    while (targetKeyIterator.hasNext()){
+//                        Iterator<? extends Serializable> sortKeyIterator = modelPrimaryKey.sortedKeys().iterator();
+//                        result.put(targetKeyIterator.next(),sortKeyIterator.next());
+//                    }
+//                }else{
+//                    result.put(association.getTargetName(), target.resolveIdentifier());
+//                }
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
         }
