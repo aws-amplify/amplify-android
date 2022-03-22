@@ -1042,4 +1042,53 @@ public final class RxAuthBindingTest {
         observer.assertNotComplete()
                 .assertError(failure);
     }
+
+    /**
+     * Tests that a successful request to delete the currently signed in user will
+     * propagate a completion back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testDeleteUser() throws InterruptedException {
+        // Arrange an invocation of the success Action
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            Action onCompletion = invocation.getArgument(0);
+            onCompletion.call();
+            return null;
+        }).when(delegate).deleteUser(anyAction(), anyConsumer());
+        
+        // Act: call the binding
+        TestObserver<Void> observer = auth.deleteUser().test();
+        
+        // Assert: Completable completes with success
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNoErrors()
+                .assertComplete();
+    }
+
+    /**
+     * Validate that a delete user failure is propagated up through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testDeleteUserFails() throws InterruptedException {
+        // Arrange a callback on the failure consumer
+        AuthException failure = new AuthException("Delete user", "has failed");
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            int positionOfFailureConsumer = 1;
+            Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
+            onFailure.accept(failure);
+            return null;
+        }).when(delegate).deleteUser(anyAction(), anyConsumer());
+        
+        // Act: call the binding
+        TestObserver<Void> observer = auth.deleteUser().test();
+        
+        // Assert: failure is furnished via Rx Completable.
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNotComplete()
+                .assertError(failure);
+    }
 }

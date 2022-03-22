@@ -1319,6 +1319,40 @@ public final class AuthComponentTest {
     }
 
     /**
+     * Tests the deleteUser method of the Auth wrapper of AWSMobileClient (AMC) calls
+     * AMC.deleteUser.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void deleteUser() throws AuthException {
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(0);
+            callback.onResult(null);
+            return null;
+        }).when(mobileClient).deleteUser(Mockito.any());
+        
+        synchronousAuth.deleteUser();
+        verify(mobileClient).deleteUser(Mockito.any());
+    }
+
+    /**
+     * Tests that if delete user fails, the returned Exception gets wrapped in an AuthException.
+     * @throws AuthException expected exception
+     */
+    @Test(expected = AuthException.class)
+    public void deleteUserFails() throws AuthException {
+        Exception exception = new Exception("Test exception");
+        
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(0);
+            callback.onError(exception);
+            return null;
+        }).when(mobileClient).deleteUser(Mockito.any());
+        
+        synchronousAuth.deleteUser();
+    }
+
+    /**
      * Test that a signed in account with user and identity pool support returns all proper success results.
      * @throws AuthException test fails if this gets thrown since method should succeed
      */

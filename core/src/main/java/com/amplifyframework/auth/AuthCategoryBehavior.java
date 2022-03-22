@@ -483,4 +483,13 @@ public interface AuthCategoryBehavior {
             @NonNull AuthSignOutOptions options,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Delete the account of the currently signed in user.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void deleteUser(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError);
 }
