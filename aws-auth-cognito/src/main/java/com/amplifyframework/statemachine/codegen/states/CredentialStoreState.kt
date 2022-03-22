@@ -15,7 +15,6 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.auth.cognito.actions.*
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
@@ -23,6 +22,7 @@ import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
+import com.amplifyframework.statemachine.codegen.actions.StoreActions
 
 sealed class CredentialStoreState : State {
     data class NotConfigured(val id: String = "") : CredentialStoreState()
@@ -36,20 +36,23 @@ sealed class CredentialStoreState : State {
 
     override val type = this.toString()
 
-    class Resolver : StateMachineResolver<CredentialStoreState> {
+    class Resolver(val storeActions: StoreActions) : StateMachineResolver<CredentialStoreState> {
         override val defaultState = NotConfigured()
 
         private fun asCredentialStoreEvent(event: StateMachineEvent): CredentialStoreEvent.EventType? {
             return (event as? CredentialStoreEvent)?.eventType
         }
 
-        override fun resolve(oldState: CredentialStoreState, event: StateMachineEvent): StateResolution<CredentialStoreState> {
+        override fun resolve(
+            oldState: CredentialStoreState,
+            event: StateMachineEvent
+        ): StateResolution<CredentialStoreState> {
             val storeEvent = asCredentialStoreEvent(event)
             return when (oldState) {
                 is NotConfigured -> {
                     when (storeEvent) {
                         is CredentialStoreEvent.EventType.MigrateLegacyCredentialStore -> {
-                            val action = MigrateLegacyCredentialStoreAction()
+                            val action = storeActions.migrateLegacyCredentialStoreAction()
                             StateResolution(MigratingLegacyStore(), listOf(action))
                         }
                         else -> StateResolution(oldState)
@@ -58,7 +61,7 @@ sealed class CredentialStoreState : State {
                 is MigratingLegacyStore -> {
                     when (storeEvent) {
                         is CredentialStoreEvent.EventType.LoadCredentialStore -> {
-                            val action = LoadCredentialStoreAction()
+                            val action = storeActions.loadCredentialStoreAction()
                             StateResolution(LoadingStoredCredentials(), listOf(action))
                         }
                         is CredentialStoreEvent.EventType.ThrowError -> {
@@ -70,7 +73,7 @@ sealed class CredentialStoreState : State {
                 is LoadingStoredCredentials, is StoringCredentials, is ClearingCredentials -> {
                     when (storeEvent) {
                         is CredentialStoreEvent.EventType.CompletedOperation -> {
-                            val action = MoveToIdleStateAction()
+                            val action = storeActions.moveToIdleStateAction()
                             val newState = Success(storeEvent.storedCredentials)
                             StateResolution(newState, listOf(action))
                         }
@@ -83,24 +86,24 @@ sealed class CredentialStoreState : State {
                 is Idle -> {
                     when (storeEvent) {
                         is CredentialStoreEvent.EventType.ClearCredentialStore -> {
-                            val action = ClearCredentialStoreAction()
+                            val action = storeActions.clearCredentialStoreAction()
                             StateResolution(ClearingCredentials(), listOf(action))
                         }
                         is CredentialStoreEvent.EventType.LoadCredentialStore -> {
-                            val action = LoadCredentialStoreAction()
+                            val action = storeActions.loadCredentialStoreAction()
                             StateResolution(LoadingStoredCredentials(), listOf(action))
                         }
                         is CredentialStoreEvent.EventType.StoreCredentials -> {
-                            val action = StoreCredentialsAction(storeEvent.credentials)
+                            val action = storeActions.storeCredentialsAction(storeEvent.credentials)
                             StateResolution(StoringCredentials(), listOf(action))
                         }
                         else -> StateResolution(oldState)
                     }
                 }
                 is Success, is Error -> {
-                    when(storeEvent) {
+                    when (storeEvent) {
                         is CredentialStoreEvent.EventType.MoveToIdleState -> {
-                            val action = MoveToIdleStateAction()
+                            val action = storeActions.moveToIdleStateAction()
                             StateResolution(Idle(), listOf(action))
                         }
                         else -> StateResolution(oldState)

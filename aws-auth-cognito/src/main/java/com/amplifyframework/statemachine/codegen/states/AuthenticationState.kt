@@ -24,9 +24,7 @@ import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 
 sealed class AuthenticationState : State {
     data class NotConfigured(val id: String = "") : AuthenticationState()
-    data class Configured(override var store: CredentialStoreState?) :
-        AuthenticationState()
-
+    data class Configured(val id: String = "") : AuthenticationState()
     data class SigningIn(override var srpSignInState: SRPSignInState?) : AuthenticationState()
     data class SignedIn(val signedInData: SignedInData) : AuthenticationState()
     data class SigningOut(override var signOutState: SignOutState?) : AuthenticationState()
@@ -34,13 +32,11 @@ sealed class AuthenticationState : State {
     data class SigningUp(override var signUpState: SignUpState?) : AuthenticationState()
     data class Error(val exception: Exception) : AuthenticationState()
 
-    open var store: CredentialStoreState? = CredentialStoreState.NotConfigured()
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
     open var signUpState: SignUpState? = SignUpState.NotStarted()
     open var signOutState: SignOutState? = SignOutState.NotStarted()
 
     class Resolver(
-        private val storeResolver: StateMachineResolver<CredentialStoreState>,
         private val signUpResolver: StateMachineResolver<SignUpState>,
         private val srpSignInResolver: StateMachineResolver<SRPSignInState>,
         private val signOutResolver: StateMachineResolver<SignOutState>,
@@ -60,11 +56,6 @@ sealed class AuthenticationState : State {
             val resolution = resolveAuthNEvent(oldState, event)
             val actions = resolution.actions.toMutableList()
             val builder = Builder(resolution.newState)
-
-            oldState.store?.let { storeResolver.resolve(it, event) }?.let {
-                builder.storeState = it.newState
-                actions += it.actions
-            }
 
             oldState.signUpState?.let { signUpResolver.resolve(it, event) }?.let {
                 builder.signUpState = it.newState
@@ -97,7 +88,7 @@ sealed class AuthenticationState : State {
                         val action = authenticationActions.configureAuthenticationAction(
                             authenticationEvent
                         )
-                        val newState = Configured(oldState.store)
+                        val newState = Configured()
                         StateResolution(newState, listOf(action))
                     }
                     else -> defaultResolution
@@ -175,14 +166,13 @@ sealed class AuthenticationState : State {
 
     class Builder(private val authNState: AuthenticationState) :
         com.amplifyframework.statemachine.Builder<AuthenticationState> {
-        var storeState: CredentialStoreState? = null
         var srpSignInState: SRPSignInState? = null
         var signUpState: SignUpState? = null
         var signOutState: SignOutState? = null
 
         override fun build(): AuthenticationState = when (authNState) {
             is NotConfigured -> NotConfigured()
-            is Configured -> Configured(storeState)
+            is Configured -> Configured()
             is SignedIn -> SignedIn(authNState.signedInData)
             is SignedOut -> SignedOut(authNState.signedOutData)
             is SigningIn -> SigningIn(srpSignInState)

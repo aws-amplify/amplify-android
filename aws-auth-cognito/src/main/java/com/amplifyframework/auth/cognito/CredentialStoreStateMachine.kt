@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito;
 
 import android.content.Context
+import com.amplifyframework.auth.cognito.actions.CredentialStoreActions
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
@@ -28,12 +29,12 @@ internal class CredentialStoreStateMachine(
     environment: Environment,
 ) : StateMachine<CredentialStoreState, Environment>(resolver, environment) {
     constructor(environment: Environment) : this(
-        CredentialStoreState.Resolver(), environment
+        CredentialStoreState.Resolver(CredentialStoreActions), environment
     )
 
     companion object {
         fun logging() = CredentialStoreStateMachine(
-            CredentialStoreState.Resolver().logging(), CredentialStoreEnvironment.empty
+            CredentialStoreState.Resolver(CredentialStoreActions).logging(), CredentialStoreEnvironment.empty
         )
     }
 }

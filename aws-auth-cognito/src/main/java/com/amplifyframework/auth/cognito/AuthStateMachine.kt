@@ -30,7 +30,6 @@ internal class AuthStateMachine(
     constructor(environment: Environment) : this(
         AuthState.Resolver(
             AuthenticationState.Resolver(
-                CredentialStoreState.Resolver(),
                 SignUpState.Resolver(SignUpCognitoActions),
                 SRPSignInState.Resolver(SRPCognitoActions),
                 SignOutState.Resolver(SignOutCognitoActions),
@@ -53,7 +52,6 @@ internal class AuthStateMachine(
         fun logging() = AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
-                    CredentialStoreState.Resolver().logging(),
                     SignUpState.Resolver(SignUpCognitoActions).logging(),
                     SRPSignInState.Resolver(SRPCognitoActions).logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
@@ -79,9 +77,6 @@ class AuthEnvironment : Environment {
     internal lateinit var srpHelper: SRPHelper
 
     val cognitoAuthService = AWSCognitoAuthService
-
-    //TODO: temporary, needs to be in credential store
-    var accessToken: String? = null
 
     companion object {
         val empty = AuthEnvironment()

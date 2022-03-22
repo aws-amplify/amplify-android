@@ -1,5 +1,3 @@
 package com.amplifyframework.statemachine.codegen.errors
 
-data class CredentialStoreError(override val message: String, override val cause: Throwable? = null) : Error() {
-    val type = "Unknown Error"
-}
+data class CredentialStoreError(override val message: String, override val cause: Throwable? = null) : Exception()

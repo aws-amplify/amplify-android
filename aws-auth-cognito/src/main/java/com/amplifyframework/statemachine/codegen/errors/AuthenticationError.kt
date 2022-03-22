@@ -15,6 +15,4 @@
 
 package com.amplifyframework.statemachine.codegen.errors
 
-data class AuthenticationError(val msg: String) : Exception() {
-    val type = "Unknown Error."
-}
+data class AuthenticationError(val msg: String) : Exception()

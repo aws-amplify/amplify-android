@@ -61,7 +61,6 @@ class StateTransitionTests : StateTransitionTestBase() {
         stateMachine = AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
-                    CredentialStoreState.Resolver(),
                     SignUpState.Resolver(mockSignUpActions),
                     SRPSignInState.Resolver(mockSRPActions),
                     SignOutState.Resolver(mockSignOutActions),
