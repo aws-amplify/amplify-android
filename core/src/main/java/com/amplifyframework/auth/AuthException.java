@@ -379,6 +379,24 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     * Could not perform the action because the user pool is not configured or
+     * is configured incorrectly.
+     */
+    public static class InvalidUserPoolConfigurationException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "The user pool configuration is missing or invalid.";
+        private static final String RECOVERY_SUGGESTION = "Please check your user pool configuration.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public InvalidUserPoolConfigurationException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Could not perform the action because number of allowed operation has exceeded.
      */
     public static class LimitExceededException extends AuthException {
