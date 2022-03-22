@@ -41,6 +41,22 @@ import java.util.Objects;
 public final class ModelWithMetadataAdapter implements
         JsonDeserializer<ModelWithMetadata<? extends Model>>,
         JsonSerializer<ModelWithMetadata<? extends Model>> {
+
+    /***
+     * Deleted key for the server response.
+     */
+    public static final String DELETED_KEY = "_deleted";
+
+    /***
+     * Version key for the server response.
+     */
+    public static final String VERSION_KEY = "_version";
+
+    /***
+     * Last changed at key for the server response.
+     */
+    public static final String LAST_CHANGED_AT_KEY = "_lastChangedAt";
+
     /**
      * Register this deserializer into a {@link GsonBuilder}.
      * @param builder A {@link GsonBuilder}
@@ -61,18 +77,26 @@ public final class ModelWithMetadataAdapter implements
         } else {
             throw new JsonParseException("Expected a parameterized type during ModelWithMetadata deserialization.");
         }
-
         final Model model;
+        ModelMetadata metadata = context.deserialize(json, ModelMetadata.class);
         if (modelClassType == SerializedModel.class) {
+            JsonObject jsonObject = (JsonObject) json;
+            // remove metadata fields from the serialized model so it matches the schema
+            removeMetadataFields(jsonObject);
             model = SerializedModel.builder()
-                .serializedData(GsonObjectConverter.toMap((JsonObject) json))
+                .serializedData(GsonObjectConverter.toMap(jsonObject))
                 .modelSchema(null)
                 .build();
         } else {
             model = context.deserialize(json, modelClassType);
         }
-        ModelMetadata metadata = context.deserialize(json, ModelMetadata.class);
         return new ModelWithMetadata<>(model, metadata);
+    }
+
+    private void removeMetadataFields(JsonObject jsonObject) {
+        jsonObject.remove(DELETED_KEY);
+        jsonObject.remove(VERSION_KEY);
+        jsonObject.remove(LAST_CHANGED_AT_KEY);
     }
 
     @Override
