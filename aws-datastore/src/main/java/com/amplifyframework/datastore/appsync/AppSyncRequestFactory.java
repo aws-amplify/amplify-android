@@ -510,7 +510,7 @@ final class AppSyncRequestFactory {
         if (customTypeData instanceof List) {
             ArrayList<Object> result = new ArrayList<>();
             @SuppressWarnings("unchecked")
-            ArrayList<Object> customTypeList = (ArrayList<Object>) customTypeData;
+            List<Object> customTypeList = (List<Object>) customTypeData;
             for (Object item : customTypeList) {
                 if (item instanceof SerializedCustomType) {
                     result.add(extractCustomTypeFieldValue(fieldName, item));
