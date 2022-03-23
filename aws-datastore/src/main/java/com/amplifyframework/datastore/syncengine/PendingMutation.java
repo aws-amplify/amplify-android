@@ -30,7 +30,6 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Models a change that is waiting to be uploaded to a remote system.
@@ -434,7 +433,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          */
         static final class Builder<T extends Model> {
             private TimeBasedUuid mutationId;
-            private UUID containedModelId;
+            private String containedModelId;
             private String serializedMutationData;
             private String containedModelClassName;
 
@@ -463,7 +462,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             PersistentRecord.Builder<T> containedModelId(@NonNull String containedModelId) {
                 Objects.requireNonNull(containedModelId);
                 // This is stored this way for the purpose of validating hte input.
-                this.containedModelId = UUID.fromString(containedModelId);
+                this.containedModelId = containedModelId;
                 return this;
             }
 
@@ -501,7 +500,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             PendingMutation.PersistentRecord build() {
                 return new PendingMutation.PersistentRecord(
                     Objects.requireNonNull(mutationId).toString(),
-                    Objects.requireNonNull(containedModelId).toString(),
+                    Objects.requireNonNull(containedModelId),
                     Objects.requireNonNull(serializedMutationData),
                     Objects.requireNonNull(containedModelClassName)
                 );

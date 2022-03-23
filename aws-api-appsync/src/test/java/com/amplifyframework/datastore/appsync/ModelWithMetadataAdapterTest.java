@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.GsonTemporalAdapters;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -31,6 +32,8 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -95,6 +98,40 @@ public final class ModelWithMetadataAdapterTest {
         String json = Resources.readAsString("blog-owner-with-metadata.json");
         Type type = TypeMaker.getParameterizedType(ModelWithMetadata.class, BlogOwner.class);
         ModelWithMetadata<BlogOwner> actual = gson.fromJson(json, type);
+
+        // Assert that the deserialized output matches out expected value
+        Assert.assertEquals(expected, actual);
+    }
+
+    /**
+     * The Gson adapter can be used to deserialize JSON into a ModelWithMetadata object.
+     */
+    @Test
+    public void adapterCanDeserializeJsonOfSerializedModelIntoMwm() {
+        // Arrange expected value
+        Map<String, Object> postSerializedData = new HashMap<>();
+        postSerializedData.put("comments", null);
+        postSerializedData.put("created", "2022-02-19T00:05:26.607465000");
+        postSerializedData.put("rating", 12);
+        postSerializedData.put("blog", null);
+        postSerializedData.put("title", "52 TITLE");
+        postSerializedData.put("tags", null);
+        postSerializedData.put("createdAt", "2022-02-19T00:05:33.564Z");
+        postSerializedData.put("id", "21ee0180-60a4-45d9-b68e-018c260cc742");
+        postSerializedData.put("updatedAt", "2022-03-04T05:36:26.629Z");
+
+        SerializedModel model = SerializedModel.builder()
+                .serializedData(postSerializedData)
+                .modelSchema(null)
+                .build();
+        Temporal.Timestamp lastChangedAt = new Temporal.Timestamp(1594858827, TimeUnit.SECONDS);
+        ModelMetadata metadata = new ModelMetadata(model.getId(), false, 3, lastChangedAt);
+        ModelWithMetadata<SerializedModel> expected = new ModelWithMetadata<>(model, metadata);
+
+        // Arrange some JSON, and then try to deserialize it
+        String json = Resources.readAsString("serialized-model-with-metadata.json");
+        Type type = TypeMaker.getParameterizedType(ModelWithMetadata.class, SerializedModel.class);
+        ModelWithMetadata<SerializedModel> actual = gson.fromJson(json, type);
 
         // Assert that the deserialized output matches out expected value
         Assert.assertEquals(expected, actual);
