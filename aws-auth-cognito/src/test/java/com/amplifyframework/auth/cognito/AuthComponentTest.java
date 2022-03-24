@@ -41,6 +41,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
+import com.amplifyframework.auth.options.AuthFlowType;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSessionResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -397,10 +398,10 @@ public final class AuthComponentTest {
         }).when(mobileClient).getTokens(any());
 
         doAnswer(invocation -> {
-            Callback<SignInResult> callback = invocation.getArgument(3);
+            Callback<SignInResult> callback = invocation.getArgument(5);
             callback.onResult(amcResult);
             return null;
-        }).when(mobileClient).signIn(any(), any(), any(), (Callback<SignInResult>) any());
+        }).when(mobileClient).signIn(any(), any(), any(), any(), any(), (Callback<SignInResult>) any());
 
         AuthSignInResult result = synchronousAuth.signIn(
                 USERNAME,
@@ -414,7 +415,71 @@ public final class AuthComponentTest {
                 AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
         );
 
-        verify(mobileClient).signIn(eq(USERNAME), eq(PASSWORD), eq(CLIENTMETADATA), (Callback<SignInResult>) any());
+        verify(mobileClient).
+            signIn(eq(USERNAME),
+                eq(PASSWORD),
+                eq(CLIENTMETADATA),
+                eq(Collections.emptyMap()),
+                eq(null),
+                (Callback<SignInResult>) any()
+            );
+    }
+
+    /**
+     * Tests that the signIn method of the Auth wrapper of AWSMobileClient (AMC) calls AMC.signIn with
+     * the username, password it received, authFLowType it received, and, if included,
+     * the metadata sent in the options object.
+     * Also ensures that in the onResult case, the success callback receives a valid AuthSignInResult.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    @SuppressWarnings("unchecked") // Casts final parameter to Callback to differentiate methods
+    public void signInWithAuthFlow() throws AuthException {
+        SignInResult amcResult = new SignInResult(
+            SignInState.SMS_MFA,
+            new UserCodeDeliveryDetails(
+                DESTINATION,
+                DELIVERY_MEDIUM,
+                ATTRIBUTE_NAME
+            )
+        );
+
+        Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
+        doAnswer(invocation -> {
+            Callback<Tokens> callback = invocation.getArgument(0);
+            callback.onResult(tokensResult);
+            return null;
+        }).when(mobileClient).getTokens(any());
+
+        doAnswer(invocation -> {
+            Callback<SignInResult> callback = invocation.getArgument(5);
+            callback.onResult(amcResult);
+            return null;
+        }).when(mobileClient).signIn(any(), any(), any(), any(), any(), (Callback<SignInResult>) any());
+
+        AuthSignInResult result = synchronousAuth.signIn(
+            USERNAME,
+            PASSWORD,
+            AWSCognitoAuthSignInOptions.builder().
+                metadata(CLIENTMETADATA).
+                authFlowType(AuthFlowType.CUSTOM_AUTH).
+                build()
+        );
+
+        validateSignInResult(
+            result,
+            false,
+            AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
+        );
+
+        verify(mobileClient).
+            signIn(eq(USERNAME),
+                eq(PASSWORD),
+                eq(CLIENTMETADATA),
+                eq(Collections.emptyMap()),
+                eq(com.amazonaws.services.cognitoidentityprovider.model.AuthFlowType.CUSTOM_AUTH),
+                (Callback<SignInResult>) any()
+            );
     }
 
     /**
@@ -1330,7 +1395,7 @@ public final class AuthComponentTest {
             callback.onResult(null);
             return null;
         }).when(mobileClient).deleteUser(Mockito.any());
-        
+
         synchronousAuth.deleteUser();
         verify(mobileClient).deleteUser(Mockito.any());
     }
@@ -1342,13 +1407,13 @@ public final class AuthComponentTest {
     @Test(expected = AuthException.class)
     public void deleteUserFails() throws AuthException {
         Exception exception = new Exception("Test exception");
-        
+
         doAnswer(invocation -> {
             Callback<Void> callback = invocation.getArgument(0);
             callback.onError(exception);
             return null;
         }).when(mobileClient).deleteUser(Mockito.any());
-        
+
         synchronousAuth.deleteUser();
     }
 
