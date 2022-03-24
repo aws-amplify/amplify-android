@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth.options;
+package com.amplifyframework.auth.cognito.options;
 
 /**
  * Enum to represent AuthFlowType in AWS SDK.

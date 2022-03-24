@@ -41,7 +41,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
-import com.amplifyframework.auth.options.AuthFlowType;
+import com.amplifyframework.auth.cognito.options.AuthFlowType;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSessionResult;
 import com.amplifyframework.auth.result.AuthSignInResult;

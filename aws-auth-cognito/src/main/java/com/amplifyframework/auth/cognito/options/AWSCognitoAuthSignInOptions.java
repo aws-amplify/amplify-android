@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito.options;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.auth.options.AuthFlowType;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.util.Immutable;
 

@@ -51,7 +51,7 @@ import com.amplifyframework.auth.cognito.util.SignInStateConverter;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
-import com.amplifyframework.auth.options.AuthFlowType;
+import com.amplifyframework.auth.cognito.options.AuthFlowType;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
