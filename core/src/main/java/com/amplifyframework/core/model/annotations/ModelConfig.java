@@ -64,7 +64,7 @@ public @interface ModelConfig {
      * Model Type SYSTEM or USER
      * @return
      */
-    Model.Type type() default Model.Type.USER;
+    Model.Type type() default Model.Type.SYSTEM;
 
 
     /**

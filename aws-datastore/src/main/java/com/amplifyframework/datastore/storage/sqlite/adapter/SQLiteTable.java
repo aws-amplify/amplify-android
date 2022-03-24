@@ -107,43 +107,23 @@ public final class SQLiteTable {
             if (isAssociated && !association.isOwner()) {
                 continue;
             }
-            if (isAssociated) {
-                    // All associated fields are also foreign keys at this point
-                    SQLiteColumn column = SQLiteColumn.builder()
-                            .name(association.getTargetName())
-                            .fieldName(modelField.getName())
-                            .tableName(modelSchema.getName())
-                            .ownerOf( association.getAssociatedType())
-                            .ownerField(association.getAssociatedName())
-                            .isNonNull(modelField.isRequired())
-                            .dataType(sqlTypeFromModelField(modelField))
-                            .build();
-                    sqlColumns.put(modelField.getName(), column);
-
-                    // All associated fields are also foreign keys at this point
-//                String targetKey = association.getName() +modelSchema.getName()+ "Id";
-//                    SQLiteColumn column = SQLiteColumn.builder()
-//                            .name(targetKey)
-//                            .fieldName(targetKey)
-//                            .tableName(modelSchema.getName())
-//                            .ownerOf( association.getAssociatedType())
-//                            .isNonNull(modelField.isRequired())
-//                            .dataType(sqlTypeFromModelField(modelField))
-//                            .build();
-//                    sqlColumns.put(targetKey, column);
-
-            }else{
-                SQLiteColumn column = SQLiteColumn.builder()
-                        .name( modelField.getName())
-                        .fieldName(modelField.getName())
-                        .tableName(modelSchema.getName())
-                        .ownerOf( null)
-                        .ownerField(null)
-                        .isNonNull(modelField.isRequired())
-                        .dataType(sqlTypeFromModelField(modelField))
-                        .build();
-                sqlColumns.put(modelField.getName(), column);
-            }
+            // All associated fields are also foreign keys at this point
+            SQLiteColumn column = SQLiteColumn.builder()
+                    .name(isAssociated
+                            ? association.getTargetName()
+                            : modelField.getName())
+                    .fieldName(modelField.getName())
+                    .tableName(modelSchema.getName())
+                    .ownerOf(isAssociated
+                            ? association.getAssociatedType()
+                            : null)
+                    .ownerField(isAssociated
+                            ? association.getAssociatedName()
+                            : null)
+                    .isNonNull(modelField.isRequired())
+                    .dataType(sqlTypeFromModelField(modelField))
+                    .build();
+            sqlColumns.put(modelField.getName(), column);
         }
 
         return SQLiteTable.builder()
@@ -188,8 +168,6 @@ public final class SQLiteTable {
                     return column;
                 }
             }
-        }
-        for (SQLiteColumn column : sortedColumns) {
             if (column.isPrimaryKey()) {
                 return column;
             }
