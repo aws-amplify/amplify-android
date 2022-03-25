@@ -45,6 +45,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
+import com.amplifyframework.auth.cognito.options.AuthFlowType;
 import com.amplifyframework.auth.cognito.util.AuthProviderConverter;
 import com.amplifyframework.auth.cognito.util.CognitoAuthExceptionConverter;
 import com.amplifyframework.auth.cognito.util.SignInStateConverter;
@@ -406,28 +407,42 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         @NonNull final Consumer<AuthException> onException
     ) {
         final Map<String, String> metadata = new HashMap<>();
+        AuthFlowType authFlowType = null;
         if (options instanceof AWSCognitoAuthSignInOptions) {
             metadata.putAll(((AWSCognitoAuthSignInOptions) options).getMetadata());
+            authFlowType = ((AWSCognitoAuthSignInOptions) options).getAuthFlowType();
         }
 
-        awsMobileClient.signIn(username, password, metadata, new Callback<SignInResult>() {
-            @Override
-            public void onResult(SignInResult result) {
-                try {
-                    AuthSignInResult newResult = convertSignInResult(result);
-                    fetchAndSetUserId(() -> onSuccess.accept(newResult));
-                } catch (AuthException exception) {
-                    onException.accept(exception);
+        com.amazonaws.services.cognitoidentityprovider.model.AuthFlowType sdkAuthFlowType = null;
+        if (authFlowType != null) {
+            sdkAuthFlowType = com.amazonaws.services.cognitoidentityprovider.model.AuthFlowType.
+                valueOf(authFlowType.name());
+        }
+
+        awsMobileClient.signIn(username,
+            password,
+            metadata,
+            Collections.emptyMap(),
+            sdkAuthFlowType,
+            new Callback<SignInResult>() {
+                @Override
+                public void onResult(SignInResult result) {
+                    try {
+                        AuthSignInResult newResult = convertSignInResult(result);
+                        fetchAndSetUserId(() -> onSuccess.accept(newResult));
+                    } catch (AuthException exception) {
+                        onException.accept(exception);
+                    }
+                }
+
+                @Override
+                public void onError(Exception error) {
+                    onException.accept(
+                            CognitoAuthExceptionConverter.lookup(error, "Sign in failed")
+                    );
                 }
             }
-
-            @Override
-            public void onError(Exception error) {
-                onException.accept(
-                        CognitoAuthExceptionConverter.lookup(error, "Sign in failed")
-                );
-            }
-        });
+        );
     }
 
     @Override
@@ -1109,7 +1124,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             signOutLocally(options, onSuccess, onError);
         }
     }
-    
+
     @Override
     public void deleteUser(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
         awsMobileClient.deleteUser(new Callback<Void>() {
