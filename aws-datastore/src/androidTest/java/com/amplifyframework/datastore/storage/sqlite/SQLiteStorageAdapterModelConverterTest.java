@@ -44,7 +44,7 @@ import static org.junit.Assert.assertNotNull;
  */
 public final class SQLiteStorageAdapterModelConverterTest {
     private static final Temporal.DateTime MAY_THE_FOURTH =
-            new Temporal.DateTime("2020-05-04T14:20:00-07:00");
+            new Temporal.DateTime("2020-05-04T14:20:00Z");
 
     private SynchronousStorageAdapter adapter;
 
