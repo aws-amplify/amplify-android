@@ -316,7 +316,11 @@ final class MutationProcessor {
             @NonNull PublicationStrategy<T> publicationStrategy) {
         return Single
             .<GraphQLResponse<ModelWithMetadata<T>>>create(subscriber ->
-                publicationStrategy.publish(mutation.getMutatedItem(), subscriber::onSuccess, subscriber::onError)
+                publicationStrategy.publish(mutation.getMutatedItem(), subscriber::onSuccess, (exception)->{
+                    if(!subscriber.isDisposed()){
+                        subscriber.onError(exception);
+                    }
+                })
             )
             .flatMap(response -> {
                 // If there are no errors, and the response has data, just return.
