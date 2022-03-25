@@ -1109,6 +1109,27 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             signOutLocally(options, onSuccess, onError);
         }
     }
+    
+    @Override
+    public void deleteUser(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
+        awsMobileClient.deleteUser(new Callback<Void>() {
+            @Override
+            public void onResult(Void result) {
+                // Note: the SIGNED_OUT Auth event is also emitted
+                Amplify.Hub.publish(
+                        HubChannel.AUTH,
+                        HubEvent.create(AuthChannelEventName.USER_DELETED)
+                );
+                onSuccess.call();
+            }
+
+            @Override
+            public void onError(Exception exception) {
+                onError.accept(CognitoAuthExceptionConverter.lookup(
+                        exception, "Delete user failed."));
+            }
+        });
+    }
 
     @NonNull
     @Override
