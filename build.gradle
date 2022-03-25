@@ -123,7 +123,7 @@ ext {
 
         junit: 'junit:junit:4.13.2',
         mockito: 'org.mockito:mockito-core:3.1.0',
-        mockk: 'io.mockk:mockk:1.12.3',
+        mockk: 'io.mockk:mockk:1.10.6',
         mockwebserver: 'com.squareup.okhttp3:mockwebserver:4.9.1',
         robolectric: 'org.robolectric:robolectric:4.5.1',
         jsonassert: 'org.skyscreamer:jsonassert:1.5.0'
