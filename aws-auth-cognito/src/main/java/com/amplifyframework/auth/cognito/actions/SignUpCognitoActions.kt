@@ -15,13 +15,16 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.*
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.actions.SignUpActions
 import com.amplifyframework.statemachine.codegen.data.SignedUpData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.SignUpActions
 
 object SignUpCognitoActions : SignUpActions {
     override fun startSignUpAction(event: SignUpEvent.EventType.InitiateSignUp) =
@@ -53,10 +56,10 @@ object SignUpCognitoActions : SignUpActions {
 
                 dispatcher.send(
                     SignUpEvent(
-                    SignUpEvent.EventType.InitiateSignUpSuccess(
-                        SignedUpData(it?.userSub, event.username, deliveryDetails)
+                        SignUpEvent.EventType.InitiateSignUpSuccess(
+                            SignedUpData(it?.userSub, event.username, deliveryDetails)
+                        )
                     )
-                )
                 )
             }.onFailure {
                 dispatcher.send(
@@ -86,7 +89,8 @@ object SignUpCognitoActions : SignUpActions {
             }
         }
 
-    override fun resendConfirmationCodeAction(event: SignUpEvent.EventType.ResendSignUpCode) = Action { dispatcher, environment ->
+    override fun resendConfirmationCodeAction(event: SignUpEvent.EventType.ResendSignUpCode) = Action {
+        dispatcher, environment ->
         val env = (environment as AuthEnvironment)
         runCatching {
             val options = ResendConfirmationCodeRequest {

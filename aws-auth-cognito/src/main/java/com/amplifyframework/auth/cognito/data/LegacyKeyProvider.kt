@@ -18,17 +18,22 @@ object LegacyKeyProvider {
 
         if (keyStore.containsAlias(keyAlias)) {
             return Result.failure(
-                    CredentialStoreError("Key already exists for the keyAlias: $keyAlias in $ANDROID_KEY_STORE_NAME")
+                CredentialStoreError(
+                    "Key already exists for the keyAlias: $keyAlias in $ANDROID_KEY_STORE_NAME"
+                )
             )
         }
 
         val parameterSpec =
-                KeyGenParameterSpec.Builder(keyAlias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                        .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                        .setKeySize(CIPHER_AES_GCM_NOPADDING_KEY_LENGTH_IN_BITS)
-                        .setRandomizedEncryptionRequired(false)
-                        .build()
+            KeyGenParameterSpec.Builder(
+                keyAlias,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(CIPHER_AES_GCM_NOPADDING_KEY_LENGTH_IN_BITS)
+                .setRandomizedEncryptionRequired(false)
+                .build()
 
         val generator = KeyGenerator.getInstance(AES_KEY_ALGORITHM, ANDROID_KEY_STORE_NAME)
         generator.init(parameterSpec)
@@ -50,11 +55,10 @@ object LegacyKeyProvider {
             Result.success(key)
         } else {
             val message = "Key is null even though the keyAlias: " +
-                    keyAlias + " is present in " + ANDROID_KEY_STORE_NAME
+                keyAlias + " is present in " + ANDROID_KEY_STORE_NAME
             Result.failure(CredentialStoreError(message))
         }
     }
-
 
     fun deleteKey(keyAlias: String) {
         val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_NAME)
@@ -62,6 +66,4 @@ object LegacyKeyProvider {
 
         keyStore.deleteEntry(keyAlias)
     }
-
 }
-

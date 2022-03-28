@@ -15,12 +15,13 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.StateMachineEvent
-import java.util.*
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import java.util.Date
 
 class FetchAwsCredentialsEvent(
-    val eventType: EventType, override val time: Date? = null,
+    val eventType: EventType,
+    override val time: Date? = null,
 ) : StateMachineEvent {
     sealed class EventType {
         data class Fetch(val amplifyCredential: AmplifyCredential?) : EventType()

@@ -35,10 +35,10 @@ internal class DownloadWorker(
     workerParameters: WorkerParameters
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
-    //private lateinit var transferProgressListener: DownloadProgressListener
+    // private lateinit var transferProgressListener: DownloadProgressListener
 
     override suspend fun performWork(): Result {
-        //transferProgressListener = DownloadProgressListener(transferRecord)
+        // transferProgressListener = DownloadProgressListener(transferRecord)
         val file = File(transferRecord.file)
         val downloadedBytes = file.length()
         val getObjectRequest = GetObjectRequest {
@@ -64,7 +64,7 @@ internal class DownloadWorker(
         }
     }
 
-    //TODO("Progress listener support is missing in kotlin sdk")
+    // TODO("Progress listener support is missing in kotlin sdk")
     /*inner class DownloadProgressListener(private val transferRecord: TransferRecord) :
         ProgressListener {
         private var bytesTransferredSoFar = 0L

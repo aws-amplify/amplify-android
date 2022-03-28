@@ -15,16 +15,22 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
+import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.statemachine.StateMachineEvent
-import java.util.*
+import java.util.Date
 
 class AuthEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {
     sealed class EventType {
-        data class ConfigureAuth(val configuration: AuthConfiguration, val storedCredentials: AmplifyCredential?) : EventType()
-        data class ConfigureAuthentication(val configuration: AuthConfiguration, val storedCredentials: AmplifyCredential?) : EventType()
+        data class ConfigureAuth(
+            val configuration: AuthConfiguration,
+            val storedCredentials: AmplifyCredential?
+        ) : EventType()
+        data class ConfigureAuthentication(
+            val configuration: AuthConfiguration,
+            val storedCredentials: AmplifyCredential?
+        ) : EventType()
         data class ConfigureAuthorization(val configuration: AuthConfiguration) : EventType()
         data class ConfiguredAuthentication(val configuration: AuthConfiguration) : EventType()
         object ConfiguredAuthorization : EventType()

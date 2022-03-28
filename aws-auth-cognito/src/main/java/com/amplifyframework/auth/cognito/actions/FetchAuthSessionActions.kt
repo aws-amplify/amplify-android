@@ -19,10 +19,14 @@ import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
-import com.amplifyframework.statemachine.codegen.events.*
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
+import com.amplifyframework.statemachine.codegen.events.FetchAwsCredentialsEvent
+import com.amplifyframework.statemachine.codegen.events.FetchIdentityEvent
+import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
 import java.time.ZonedDateTime
 
 object FetchAuthSessionActions : FetchAuthSessionActions {
@@ -30,7 +34,7 @@ object FetchAuthSessionActions : FetchAuthSessionActions {
         Action { dispatcher, _ ->
             val userPoolTokens = amplifyCredential?.cognitoUserPoolTokens
             if (userPoolTokens == null) {
-                //Failure to fetch, Refresh
+                // Failure to fetch, Refresh
                 val event = FetchUserPoolTokensEvent(
                     FetchUserPoolTokensEvent.EventType.Refresh(amplifyCredential)
                 )
@@ -39,11 +43,10 @@ object FetchAuthSessionActions : FetchAuthSessionActions {
             val userPoolTokenExpiryTime = userPoolTokens?.tokenExpiration
             val rightNow = ZonedDateTime.now()
 
-
-            //The token must be valid for 2 minutes from now
+            // The token must be valid for 2 minutes from now
             if (userPoolTokenExpiryTime != null) {
                 if (userPoolTokenExpiryTime > (rightNow.toEpochSecond() + (2 * 60))) {
-                    //User Pool Token is still valid
+                    // User Pool Token is still valid
                     val event =
                         FetchUserPoolTokensEvent(
                             FetchUserPoolTokensEvent.EventType.Fetched(amplifyCredential)
@@ -57,7 +60,7 @@ object FetchAuthSessionActions : FetchAuthSessionActions {
                         )
                     )
                 } else {
-                    //Token has expired and we need a refresh
+                    // Token has expired and we need a refresh
                     val event = FetchUserPoolTokensEvent(
                         FetchUserPoolTokensEvent.EventType.Refresh(amplifyCredential)
                     )
@@ -96,9 +99,11 @@ object FetchAuthSessionActions : FetchAuthSessionActions {
     override fun configureAWSCredentialsAction(amplifyCredential: AmplifyCredential?): Action =
         Action { dispatcher, _ ->
             val awsCredentials = amplifyCredential?.awsCredentials
-            //AWS Credentials should be valid for up to 2 minutes from now
-            if (awsCredentials?.expiration != null && awsCredentials.expiration > (ZonedDateTime.now()
-                    .toEpochSecond() + 2 * 60)
+            // AWS Credentials should be valid for up to 2 minutes from now
+            if (awsCredentials?.expiration != null && awsCredentials.expiration > (
+                ZonedDateTime.now()
+                    .toEpochSecond() + 2 * 60
+                )
             ) {
                 val event =
                     FetchAwsCredentialsEvent(

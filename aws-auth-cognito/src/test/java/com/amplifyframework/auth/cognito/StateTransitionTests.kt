@@ -15,14 +15,34 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
-import com.amplifyframework.statemachine.codegen.events.*
-import com.amplifyframework.statemachine.codegen.states.*
-import kotlinx.coroutines.*
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
+import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.FetchIdentityEvent
+import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import com.amplifyframework.statemachine.codegen.events.SignUpEvent
+import com.amplifyframework.statemachine.codegen.states.AuthState
+import com.amplifyframework.statemachine.codegen.states.AuthenticationState
+import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
+import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
+import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
+import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
+import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SignOutState
+import com.amplifyframework.statemachine.codegen.states.SignUpState
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -32,10 +52,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 @RunWith(MockitoJUnitRunner::class)
 class StateTransitionTests : StateTransitionTestBase() {
@@ -76,12 +92,15 @@ class StateTransitionTests : StateTransitionTestBase() {
                     mockAuthorizationActions
                 ),
                 mockAuthActions
-            ), AuthEnvironment.empty
+            ),
+            AuthEnvironment.empty
         )
     }
 
     private fun setupConfigureSignedIn() {
-        Mockito.`when`(mockAuthenticationActions.configureAuthenticationAction(MockitoHelper.anyObject()))
+        Mockito.`when`(
+            mockAuthenticationActions.configureAuthenticationAction(MockitoHelper.anyObject())
+        )
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
@@ -94,11 +113,14 @@ class StateTransitionTests : StateTransitionTestBase() {
                             AuthEvent.EventType.ConfiguredAuthentication(configuration)
                         )
                     )
-                })
+                }
+            )
     }
 
     private fun setupConfigureSignedOut() {
-        Mockito.`when`(mockAuthenticationActions.configureAuthenticationAction(MockitoHelper.anyObject()))
+        Mockito.`when`(
+            mockAuthenticationActions.configureAuthenticationAction(MockitoHelper.anyObject())
+        )
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
@@ -109,7 +131,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                     dispatcher.send(
                         AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(configuration))
                     )
-                })
+                }
+            )
     }
 
     private fun setupLocalSignOut() {
@@ -129,7 +152,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                         )
                     )
                 )
-            })
+            }
+        )
     }
 
     @After
@@ -155,13 +179,16 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val listenLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        stateMachine.listen({
-            if (it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut) {
-                listenLatch.countDown()
+        stateMachine.listen(
+            {
+                if (it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut) {
+                    listenLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         val configure =
@@ -182,13 +209,16 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val listenLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        stateMachine.listen({
-            if (it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn) {
-                listenLatch.countDown()
+        stateMachine.listen(
+            {
+                if (it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn) {
+                    listenLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         val configure =
@@ -208,30 +238,33 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        stateMachine.listen({
-            val authState =
-                it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
-            authState?.run {
-                configureLatch.countDown()
-                stateMachine.send(
-                    AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignInRequested(
-                            "username",
-                            "password",
-                            AuthSignInOptions.defaults()
+        stateMachine.listen(
+            {
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignInRequested(
+                                "username",
+                                "password",
+                                AuthSignInOptions.defaults()
+                            )
                         )
                     )
-                )
-            }
+                }
 
-            val authNState =
-                it.authNState.takeIf { itN -> itN is AuthenticationState.SignedIn }
-            authNState?.apply {
-                testLatch.countDown()
+                val authNState =
+                    it.authNState.takeIf { itN -> itN is AuthenticationState.SignedIn }
+                authNState?.apply {
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
 
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
@@ -251,26 +284,29 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        stateMachine.listen({
-            val authState =
-                it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
-            authState?.run {
-                configureLatch.countDown()
-                stateMachine.send(
-                    AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignOutRequested()
+        stateMachine.listen(
+            {
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignOutRequested()
+                        )
                     )
-                )
-            }
+                }
 
-            val authNState =
-                it.authNState.takeIf { itN -> itN is AuthenticationState.SignedOut }
-            authNState?.apply {
-                testLatch.countDown()
+                val authNState =
+                    it.authNState.takeIf { itN -> itN is AuthenticationState.SignedOut }
+                authNState?.apply {
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
 
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
@@ -289,26 +325,29 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        stateMachine.listen({
-            val authState =
-                it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
-            authState?.run {
-                configureLatch.countDown()
-                stateMachine.send(
-                    AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignOutRequested()
+        stateMachine.listen(
+            {
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignOutRequested()
+                        )
                     )
-                )
-            }
+                }
 
-            val authNState =
-                it.authNState.takeIf { itN -> itN is AuthenticationState.SignedOut }
-            authNState?.apply {
-                testLatch.countDown()
+                val authNState =
+                    it.authNState.takeIf { itN -> itN is AuthenticationState.SignedOut }
+                authNState?.apply {
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
 
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
@@ -326,30 +365,38 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        stateMachine.listen({
-            val authState =
-                it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
-            authState?.run {
-                configureLatch.countDown()
-                stateMachine.send(
-                    SignUpEvent(
-                        SignUpEvent.EventType.InitiateSignUp(
-                            "username",
-                            "password",
-                            AuthSignUpOptions.builder().build()
+        stateMachine.listen(
+            {
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        SignUpEvent(
+                            SignUpEvent.EventType.InitiateSignUp(
+                                "username",
+                                "password",
+                                AuthSignUpOptions.builder().build()
+                            )
                         )
                     )
-                )
-            }
+                }
 
-            val authNState =
-                it.authNState.takeIf { itN -> itN is AuthenticationState.SigningUp && itN.signUpState is SignUpState.SigningUpInitiated }
-            authNState?.apply {
-                testLatch.countDown()
+                val authNState =
+                    it.authNState.takeIf {
+                        itN ->
+                        itN is AuthenticationState.SigningUp &&
+                            itN.signUpState is SignUpState.SigningUpInitiated
+                    }
+
+                authNState?.apply {
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
 
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
@@ -367,24 +414,31 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        stateMachine.listen({
-            val authState =
-                it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
-            authState?.run {
-                configureLatch.countDown()
-                stateMachine.send(
-                    SignUpEvent(SignUpEvent.EventType.ConfirmSignUp("username", "code"))
-                )
-            }
+        stateMachine.listen(
+            {
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        SignUpEvent(SignUpEvent.EventType.ConfirmSignUp("username", "code"))
+                    )
+                }
 
-            val authNState =
-                it.authNState.takeIf { itN -> itN is AuthenticationState.SigningUp && itN.signUpState is SignUpState.SignedUp }
-            authNState?.apply {
-                testLatch.countDown()
+                val authNState =
+                    it.authNState.takeIf {
+                        itN ->
+                        itN is AuthenticationState.SigningUp &&
+                            itN.signUpState is SignUpState.SignedUp
+                    }
+                authNState?.apply {
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
 
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
@@ -404,25 +458,30 @@ class StateTransitionTests : StateTransitionTestBase() {
         val subscribeLatch = CountDownLatch(1)
         configureLatch.countDown()
         var token: StateChangeListenerToken? = null
-        token = stateMachine.listen({ it ->
-            val authState =
-                it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
-            authState?.run {
-                configureLatch.countDown()
-                stateMachine.send(
-                    AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession(credentials))
-                )
-            }
+        token = stateMachine.listen(
+            { it ->
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        AuthorizationEvent(
+                            AuthorizationEvent.EventType.FetchAuthSession(credentials)
+                        )
+                    )
+                }
 
-            val authZState =
-                it.authZState.takeIf { itZ -> itZ is AuthorizationState.SessionEstablished }
-            authZState?.run {
-                token.let { stateMachine::cancel }
-                testLatch.countDown()
+                val authZState =
+                    it.authZState.takeIf { itZ -> itZ is AuthorizationState.SessionEstablished }
+                authZState?.run {
+                    token.let { stateMachine::cancel }
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
 
         assertTrue { subscribeLatch.await(5, TimeUnit.HOURS) }
 
@@ -443,7 +502,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                             FetchUserPoolTokensEvent.EventType.Refresh(credentials)
                         )
                     )
-                })
+                }
+            )
     }
 
     @Test
@@ -454,29 +514,34 @@ class StateTransitionTests : StateTransitionTestBase() {
         val subscribeLatch = CountDownLatch(1)
         val testLatch = CountDownLatch(1)
         var token: StateChangeListenerToken? = null
-        token = stateMachine.listen({ it ->
-            val authState =
-                it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
-            authState?.run {
-                configureLatch.countDown()
-                stateMachine.send(
-                    AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession(credentials))
-                )
-            }
+        token = stateMachine.listen(
+            { it ->
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        AuthorizationEvent(
+                            AuthorizationEvent.EventType.FetchAuthSession(credentials)
+                        )
+                    )
+                }
 
-            val authZState =
-                it.authZState.takeIf { itZ -> itZ is AuthorizationState.FetchingAuthSession }
-            authZState?.run {
-                if (fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens) {
-                    if (fetchAuthSessionState?.fetchUserPoolTokensState is FetchUserPoolTokensState.Fetched) {
-                        token.let { stateMachine::cancel }
-                        testLatch.countDown()
+                val authZState =
+                    it.authZState.takeIf { itZ -> itZ is AuthorizationState.FetchingAuthSession }
+                authZState?.run {
+                    if (fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens) {
+                        if (fetchAuthSessionState?.fetchUserPoolTokensState is FetchUserPoolTokensState.Fetched) {
+                            token.let { stateMachine::cancel }
+                            testLatch.countDown()
+                        }
                     }
                 }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
 
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
@@ -494,17 +559,24 @@ class StateTransitionTests : StateTransitionTestBase() {
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         setupConfigureSignedIn()
-        stateMachine.listen({
-            if (it is AuthState.Configured && it.authZState is AuthorizationState.FetchingAuthSession) {
-                if ((it.authZState as AuthorizationState).fetchAuthSessionState is FetchAuthSessionState.FetchingIdentity) {
-                    if ((it.authZState as AuthorizationState).fetchAuthSessionState?.fetchIdentityState is FetchIdentityState.Fetched) {
-                        configureLatch.countDown()
+        stateMachine.listen(
+            {
+                if (it is AuthState.Configured && it.authZState is AuthorizationState.FetchingAuthSession) {
+                    if ((it.authZState as AuthorizationState).fetchAuthSessionState is
+                        FetchAuthSessionState.FetchingIdentity
+                    ) {
+                        if ((it.authZState as AuthorizationState).fetchAuthSessionState?.fetchIdentityState is
+                            FetchIdentityState.Fetched
+                        ) {
+                            configureLatch.countDown()
+                        }
                     }
                 }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
 
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
         stateMachine.send(
@@ -519,17 +591,24 @@ class StateTransitionTests : StateTransitionTestBase() {
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         setupConfigureSignedIn()
-        stateMachine.listen({
-            if (it is AuthState.Configured && it.authZState is AuthorizationState.FetchingAuthSession) {
-                if ((it.authZState as AuthorizationState).fetchAuthSessionState is FetchAuthSessionState.FetchingAWSCredentials) {
-                    if ((it.authZState as AuthorizationState).fetchAuthSessionState?.fetchAwsCredentialsState is FetchAwsCredentialsState.Fetched) {
-                        configureLatch.countDown()
+        stateMachine.listen(
+            {
+                if (it is AuthState.Configured && it.authZState is AuthorizationState.FetchingAuthSession) {
+                    if ((it.authZState as AuthorizationState).fetchAuthSessionState is
+                        FetchAuthSessionState.FetchingAWSCredentials
+                    ) {
+                        if ((it.authZState as AuthorizationState).fetchAuthSessionState?.fetchAwsCredentialsState is
+                            FetchAwsCredentialsState.Fetched
+                        ) {
+                            configureLatch.countDown()
+                        }
                     }
                 }
+            },
+            {
+                subscribeLatch.countDown()
             }
-        }, {
-            subscribeLatch.countDown()
-        })
+        )
 
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
         stateMachine.send(
@@ -537,6 +616,4 @@ class StateTransitionTests : StateTransitionTestBase() {
         )
         assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
     }
-
-
 }

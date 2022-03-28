@@ -15,11 +15,11 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 
 object AuthorizationCognitoActions : AuthorizationActions {
     override fun configureAuthorizationAction() = Action { dispatcher, environment ->
@@ -27,6 +27,10 @@ object AuthorizationCognitoActions : AuthorizationActions {
     }
 
     override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential?) = Action { dispatcher, _ ->
-        dispatcher.send(FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential)))
+        dispatcher.send(
+            FetchAuthSessionEvent(
+                FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential)
+            )
+        )
     }
 }

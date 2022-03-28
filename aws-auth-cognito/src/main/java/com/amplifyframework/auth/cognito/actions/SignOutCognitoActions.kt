@@ -15,16 +15,19 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.*
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GlobalSignOutRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 object SignOutCognitoActions : SignOutActions {
     override fun localSignOutAction(event: SignOutEvent.EventType.SignOutLocally) =
         Action { dispatcher, environment ->
-            dispatcher.send(SignOutEvent(SignOutEvent.EventType.SignedOutSuccess(event.signedInData)))
+            dispatcher.send(
+                SignOutEvent(SignOutEvent.EventType.SignedOutSuccess(event.signedInData))
+            )
         }
 
     override fun globalSignOutAction(event: SignOutEvent.EventType.SignOutGlobally) =
@@ -57,11 +60,13 @@ object SignOutCognitoActions : SignOutActions {
         Action { dispatcher, environment ->
             val env = (environment as AuthEnvironment)
             env.configuration.runCatching {
-                env.cognitoAuthService.cognitoIdentityProviderClient?.revokeToken(RevokeTokenRequest {
-                    clientId = userPool?.appClient
-                    clientSecret = userPool?.appClientSecret
-                    token = event.signedInData.cognitoUserPoolTokens.refreshToken
-                })
+                env.cognitoAuthService.cognitoIdentityProviderClient?.revokeToken(
+                    RevokeTokenRequest {
+                        clientId = userPool?.appClient
+                        clientSecret = userPool?.appClientSecret
+                        token = event.signedInData.cognitoUserPoolTokens.refreshToken
+                    }
+                )
             }.also {
                 dispatcher.send(
                     SignOutEvent(

@@ -19,12 +19,12 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
 import java.lang.Exception
 import kotlin.time.Duration.Companion.seconds
 

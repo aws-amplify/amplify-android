@@ -39,7 +39,7 @@ internal class PartUploadTransferWorker(
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     private lateinit var multiPartUploadId: String
-    //private var transferProgressListener: TransferProgressListener? = null
+    // private var transferProgressListener: TransferProgressListener? = null
     private var transferRecordId by Delegates.notNull<Int>()
     override var maxRetryCount = 3
 
@@ -54,7 +54,11 @@ internal class PartUploadTransferWorker(
             bucket = transferRecord.bucketName
             key = transferRecord.key
             uploadId = multiPartUploadId
-            body = ByteStream.chunk(File(transferRecord.file), transferRecord.fileOffset, transferRecord.bytesTotal)
+            body = ByteStream.chunk(
+                File(transferRecord.file),
+                transferRecord.fileOffset,
+                transferRecord.bytesTotal
+            )
             partNumber = transferRecord.partNumber
         }.let { response ->
             response.eTag?.let { tag ->
@@ -92,7 +96,7 @@ internal class PartUploadTransferWorker(
         )
     }
 
-    //TODO("Progress listener support is missing in kotlin sdk")
+    // TODO("Progress listener support is missing in kotlin sdk")
     /*inner class TransferProgressListener(private val transferRecord: TransferRecord) :
         ProgressListener {
 

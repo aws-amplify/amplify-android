@@ -8,7 +8,7 @@ interface State {
     val type: String
         get() = this.toString()
 
-    override fun equals(other: Any?):Boolean
-    override fun toString():String
-    override fun hashCode():Int
+    override fun equals(other: Any?): Boolean
+    override fun toString(): String
+    override fun hashCode(): Int
 }

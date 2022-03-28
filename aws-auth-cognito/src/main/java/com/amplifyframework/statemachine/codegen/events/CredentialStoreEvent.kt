@@ -15,10 +15,10 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
+import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
-import com.amplifyframework.statemachine.StateMachineEvent
-import java.util.*
+import java.util.Date
 
 class CredentialStoreEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {

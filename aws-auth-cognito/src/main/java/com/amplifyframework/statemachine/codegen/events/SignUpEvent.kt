@@ -15,14 +15,15 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
-import com.amplifyframework.statemachine.codegen.data.SignedUpData
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.StateMachineEvent
-import java.util.*
+import com.amplifyframework.statemachine.codegen.data.SignedUpData
+import java.util.Date
 
 class SignUpEvent(
-    val eventType: EventType, override val time: Date? = null,
+    val eventType: EventType,
+    override val time: Date? = null,
 ) : StateMachineEvent {
     sealed class EventType {
         data class InitiateSignUp(

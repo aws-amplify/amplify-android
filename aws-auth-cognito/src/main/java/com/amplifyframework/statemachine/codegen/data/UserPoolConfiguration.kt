@@ -104,4 +104,3 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
         APP_CLIENT_SECRET("AppClientSecret"),
     }
 }
-

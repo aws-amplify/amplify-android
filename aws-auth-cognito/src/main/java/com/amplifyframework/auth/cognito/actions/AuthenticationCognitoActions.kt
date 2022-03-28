@@ -16,16 +16,16 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import java.util.*
+import java.util.Date
 
 object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
@@ -40,7 +40,9 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData())
             )
             dispatcher.send(authenticationEvent)
-            dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(event.configuration)))
+            dispatcher.send(
+                AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(event.configuration))
+            )
         }
 
     override fun initiateSRPSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
@@ -52,7 +54,8 @@ object AuthenticationCognitoActions : AuthenticationActions {
                     }
                 } ?: AuthenticationEvent(
                     AuthenticationEvent.EventType.ThrowError(
-                    AuthException("Sign in failed.", "username or password empty"))
+                        AuthException("Sign in failed.", "username or password empty")
+                    )
                 )
                 dispatcher.send(srpEvent)
             }

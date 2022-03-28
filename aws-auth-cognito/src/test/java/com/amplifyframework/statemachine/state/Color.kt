@@ -1,6 +1,6 @@
 package com.amplifyframework.statemachine.state
 
-import java.util.*
+import java.util.Date
 
 enum class Color : com.amplifyframework.statemachine.State {
     red, green, blue, yellow;
@@ -23,7 +23,10 @@ enum class Color : com.amplifyframework.statemachine.State {
     class Resolver : com.amplifyframework.statemachine.StateMachineResolver<Color> {
         override val defaultState = red
 
-        override fun resolve(oldState: Color, event: com.amplifyframework.statemachine.StateMachineEvent): com.amplifyframework.statemachine.StateResolution<Color> {
+        override fun resolve(
+            oldState: Color,
+            event: com.amplifyframework.statemachine.StateMachineEvent
+        ): com.amplifyframework.statemachine.StateResolution<Color> {
             val index = Color.values().indexOf(oldState)
             val newIndex = (index + 1) % Color.values().size
             val newState = Color.values()[newIndex]

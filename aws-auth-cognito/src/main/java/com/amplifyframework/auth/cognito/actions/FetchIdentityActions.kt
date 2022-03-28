@@ -17,11 +17,11 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchIdentityEvent
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
 
 object FetchIdentityActions : FetchIdentityActions {
     override fun initFetchIdentityAction(amplifyCredential: AmplifyCredential?): Action =
@@ -48,7 +48,9 @@ object FetchIdentityActions : FetchIdentityActions {
                 dispatcher.send(event)
                 dispatcher.send(
                     FetchAuthSessionEvent(
-                        FetchAuthSessionEvent.EventType.FetchAwsCredentials(updatedAmplifyCredential)
+                        FetchAuthSessionEvent.EventType.FetchAwsCredentials(
+                            updatedAmplifyCredential
+                        )
                     )
                 )
             } catch (e: Exception) {

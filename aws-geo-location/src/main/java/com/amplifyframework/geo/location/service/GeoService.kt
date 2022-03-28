@@ -39,16 +39,20 @@ internal interface GeoService<T> {
     /**
      * Searches index for the location details given a string query.
      */
-    fun geocode(index: String,
-                query: String,
-                limit: Int,
-                area: SearchArea? = null,
-                countries: List<CountryCode> = emptyList()): List<Place>
+    fun geocode(
+        index: String,
+        query: String,
+        limit: Int,
+        area: SearchArea? = null,
+        countries: List<CountryCode> = emptyList()
+    ): List<Place>
 
     /**
      * Searches index for the location details given a set of coordinates.
      */
-    fun reverseGeocode(index: String,
-                       position: Coordinates,
-                       limit: Int): List<Place>
+    fun reverseGeocode(
+        index: String,
+        position: Coordinates,
+        limit: Int
+    ): List<Place>
 }

@@ -52,7 +52,9 @@ internal class TransferManager @JvmOverloads constructor(
     private val transferStatusUpdater: TransferStatusUpdater =
         TransferStatusUpdater.getInstance(context)
     private val logger =
-        Amplify.Logging.forNamespace(AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName))
+        Amplify.Logging.forNamespace(
+            AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
+        )
     private val transferWorkerObserver =
         TransferWorkerObserver.getInstance(
             context,

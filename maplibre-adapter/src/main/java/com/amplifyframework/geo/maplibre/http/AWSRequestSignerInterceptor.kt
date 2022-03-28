@@ -19,14 +19,13 @@ import com.amazonaws.DefaultRequest
 import com.amazonaws.http.HttpMethodName
 import com.amazonaws.util.IOUtils
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
+import java.io.ByteArrayInputStream
+import java.net.URI
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import okio.Buffer
-import java.io.ByteArrayInputStream
-import java.net.URI
-import java.util.*
 
 private typealias AWSRequest = com.amazonaws.Request<Any>
 
@@ -93,5 +92,4 @@ internal class AWSRequestSignerInterceptor(
         signer.sign(awsRequest, plugin.credentialsProvider.credentials)
         return awsRequest
     }
-
 }

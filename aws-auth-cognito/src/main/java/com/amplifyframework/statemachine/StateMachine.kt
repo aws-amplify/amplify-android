@@ -1,7 +1,13 @@
 package com.amplifyframework.statemachine
 
-import kotlinx.coroutines.*
-import java.util.*
+import java.util.UUID
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newFixedThreadPoolContext
 
 typealias StateChangeListenerToken = UUID
 typealias OnSubscribedCallback = () -> Unit

@@ -1,9 +1,18 @@
 package com.amplifyframework.statemachine.state
 
-import com.amplifyframework.statemachine.*
-import java.util.*
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.Environment
+import com.amplifyframework.statemachine.State
+import com.amplifyframework.statemachine.StateMachine
+import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.StateMachineResolver
+import com.amplifyframework.statemachine.StateResolution
+import java.util.Date
 
-internal class CounterStateMachine(resolver: StateMachineResolver<Counter>, environment: CounterEnvironment) :
+internal class CounterStateMachine(
+    resolver: StateMachineResolver<Counter>,
+    environment: CounterEnvironment
+) :
     StateMachine<Counter, CounterEnvironment>(resolver, environment) {
     constructor() : this(Counter.Resolver(), CounterEnvironment.empty)
 
@@ -23,13 +32,12 @@ data class Counter(val value: Int) : State {
     ) : StateMachineEvent {
 
         sealed class EventType {
-            object Increment: EventType()
+            object Increment : EventType()
             object Decrement : EventType()
             data class AdjustBy(val value: Int) : EventType()
             data class Set(val value: Int) : EventType()
             data class IncrementAndDoActions(val actions: List<Action>) : EventType()
         }
-
 
         override val type = when (eventType) {
             EventType.Increment -> "increment"

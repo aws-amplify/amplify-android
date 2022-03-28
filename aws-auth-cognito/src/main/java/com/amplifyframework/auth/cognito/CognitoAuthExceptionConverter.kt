@@ -15,10 +15,26 @@
 
 package com.amplifyframework.auth.cognito
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.*
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AliasExistsException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryFailureException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ExpiredCodeException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidParameterException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidPasswordException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.LimitExceededException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.MfaMethodNotFoundException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.PasswordResetRequiredException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaNotFoundException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.TooManyFailedAttemptsException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.TooManyRequestsException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotConfirmedException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UsernameExistsException
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.AuthException.SoftwareTokenMFANotFoundException
 import com.amplifyframework.auth.AuthException.FailedAttemptsLimitExceededException
+import com.amplifyframework.auth.AuthException.SoftwareTokenMFANotFoundException
 
 /**
  * Convert AWS Cognito Exceptions to AuthExceptions.
@@ -51,7 +67,9 @@ class CognitoAuthExceptionConverter {
                 is SoftwareTokenMfaNotFoundException -> SoftwareTokenMFANotFoundException(error)
                 is TooManyFailedAttemptsException -> FailedAttemptsLimitExceededException(error)
                 is TooManyRequestsException -> AuthException.TooManyRequestsException(error)
-                is PasswordResetRequiredException -> AuthException.PasswordResetRequiredException(error)
+                is PasswordResetRequiredException -> AuthException.PasswordResetRequiredException(
+                    error
+                )
                 else -> AuthException(fallbackMessage, error, defaultRecoveryMessage)
             }
         }

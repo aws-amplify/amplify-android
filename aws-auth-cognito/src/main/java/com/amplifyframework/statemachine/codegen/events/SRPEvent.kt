@@ -16,7 +16,7 @@
 package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
-import java.util.*
+import java.util.Date
 
 class SRPEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {

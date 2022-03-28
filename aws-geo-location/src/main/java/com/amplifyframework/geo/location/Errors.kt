@@ -19,7 +19,6 @@ import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.geo.GeoException
-
 import java.io.IOException
 import java.lang.NullPointerException
 
@@ -32,17 +31,23 @@ internal object Errors {
             return error
         }
         val (message, suggestion) = when (error) {
-            is UninitializedPropertyAccessException -> "AWSLocationGeoPlugin is not configured." to
+            is UninitializedPropertyAccessException ->
+                "AWSLocationGeoPlugin is not configured." to
                     "Please verify that Geo plugin has been properly configured."
-            is NullPointerException -> "Plugin configuration is missing \"maps\" configuration." to
+            is NullPointerException ->
+                "Plugin configuration is missing \"maps\" configuration." to
                     "Please verify that Geo plugin has been properly configured."
-            is AmazonServiceException -> "There was a problem with the data in the request." to
+            is AmazonServiceException ->
+                "There was a problem with the data in the request." to
                     "Please verify that a valid map resource exists."
-            is AmazonClientException -> "Amplify failed to send a request to Amazon Location Service." to
+            is AmazonClientException ->
+                "Amplify failed to send a request to Amazon Location Service." to
                     "Please ensure that you have a stable internet connection."
-            is IOException -> "Failed to read map style from the server response." to
+            is IOException ->
+                "Failed to read map style from the server response." to
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-            else -> "Unexpected error. Failed to get available maps." to
+            else ->
+                "Unexpected error. Failed to get available maps." to
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
         }
         return GeoException(message, error, suggestion)
@@ -53,15 +58,20 @@ internal object Errors {
             return error
         }
         val (message, suggestion) = when (error) {
-            is UninitializedPropertyAccessException -> "AWSLocationGeoPlugin is not configured." to
+            is UninitializedPropertyAccessException ->
+                "AWSLocationGeoPlugin is not configured." to
                     "Please verify that Geo plugin has been properly configured."
-            is NullPointerException -> "Plugin configuration is missing \"searchIndices\" configuration." to
+            is NullPointerException ->
+                "Plugin configuration is missing \"searchIndices\" configuration." to
                     "Please verify that Geo plugin has been properly configured."
-            is AmazonServiceException -> "There was a problem with the data in the request." to
+            is AmazonServiceException ->
+                "There was a problem with the data in the request." to
                     "Please verify that a valid place index resource exists."
-            is AmazonClientException -> "Amplify failed to send a request to Amazon Location Service." to
+            is AmazonClientException ->
+                "Amplify failed to send a request to Amazon Location Service." to
                     "Please ensure that you have a stable internet connection."
-            else -> "Unexpected error. Failed to get search place index." to
+            else ->
+                "Unexpected error. Failed to get search place index." to
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
         }
         return GeoException(message, error, suggestion)

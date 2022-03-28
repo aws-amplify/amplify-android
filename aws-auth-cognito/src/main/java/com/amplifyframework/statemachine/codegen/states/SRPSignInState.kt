@@ -15,12 +15,12 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
+import com.amplifyframework.statemachine.codegen.events.SRPEvent
 
 sealed class SRPSignInState : State {
     data class NotStarted(val id: String = "") : SRPSignInState()
@@ -59,7 +59,9 @@ sealed class SRPSignInState : State {
                         val newState = RespondingPasswordVerifier()
                         StateResolution(newState, listOf(action))
                     }
-                    is SRPEvent.EventType.ThrowAuthError -> StateResolution(Error(srpEvent.exception))
+                    is SRPEvent.EventType.ThrowAuthError -> StateResolution(
+                        Error(srpEvent.exception)
+                    )
                     is SRPEvent.EventType.CancelSRPSignIn -> StateResolution(Cancelling())
                     else -> defaultResolution
                 }
@@ -67,7 +69,9 @@ sealed class SRPSignInState : State {
                     is SRPEvent.EventType.RespondNextAuthChallenge -> StateResolution(
                         NextAuthChallenge()
                     )
-                    is SRPEvent.EventType.ThrowPasswordVerifierError -> StateResolution(Error(srpEvent.exception))
+                    is SRPEvent.EventType.ThrowPasswordVerifierError -> StateResolution(
+                        Error(srpEvent.exception)
+                    )
                     is SRPEvent.EventType.FinalizeSRPSignIn -> StateResolution(SignedIn())
                     is SRPEvent.EventType.CancelSRPSignIn -> StateResolution(Cancelling())
                     else -> defaultResolution

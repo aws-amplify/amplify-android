@@ -1,8 +1,11 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
-import com.amplifyframework.statemachine.codegen.data.*
-
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -79,6 +82,4 @@ class AWSCognitoAuthCredentialStore(
     private fun AWSCredentials.trim(): AWSCredentials? {
         return if (accessKeyId != null || secretAccessKey != null || sessionToken != null) this else null
     }
-
 }
-

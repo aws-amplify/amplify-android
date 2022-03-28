@@ -39,7 +39,9 @@ internal class TransferDB private constructor(context: Context) {
     }
 
     private val logger =
-        Amplify.Logging.forNamespace(AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName))
+        Amplify.Logging.forNamespace(
+            AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
+        )
 
     companion object {
         private const val QUERY_PLACE_HOLDER_STRING = ",?"
@@ -716,9 +718,11 @@ internal class TransferDB private constructor(context: Context) {
                 TransferTable.COLUMN_HEADER_CONTENT_ENCODING to it.metaData[ObjectMetadata.CONTENT_ENCODING].toString()
                 TransferTable.COLUMN_HEADER_CACHE_CONTROL to it.metaData[ObjectMetadata.CACHE_CONTROL].toString()
                 TransferTable.COLUMN_CONTENT_MD5 to it.metaData[ObjectMetadata.CONTENT_MD5].toString()
-                TransferTable.COLUMN_HEADER_CONTENT_DISPOSITION to it.metaData[ObjectMetadata.CONTENT_DISPOSITION].toString()
+                TransferTable.COLUMN_HEADER_CONTENT_DISPOSITION to
+                    it.metaData[ObjectMetadata.CONTENT_DISPOSITION].toString()
                 TransferTable.COLUMN_SSE_ALGORITHM to it.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION].toString()
-                TransferTable.COLUMN_SSE_KMS_KEY to it.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION_KMS_KEY_ID].toString()
+                TransferTable.COLUMN_SSE_KMS_KEY to
+                    it.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION_KMS_KEY_ID].toString()
                 TransferTable.COLUMN_EXPIRATION_TIME_RULE_ID to it.expirationTimeRuleId
                 TransferTable.COLUMN_HTTP_EXPIRES_DATE to it.httpExpiresDate?.time.toString()
                 TransferTable.COLUMN_HEADER_STORAGE_CLASS to it.metaData[ObjectMetadata.STORAGE_CLASS].toString()

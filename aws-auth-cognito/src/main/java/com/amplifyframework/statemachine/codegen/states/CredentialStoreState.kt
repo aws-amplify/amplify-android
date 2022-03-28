@@ -15,14 +15,14 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.StoreActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
+import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 
 sealed class CredentialStoreState : State {
     data class NotConfigured(val id: String = "") : CredentialStoreState()

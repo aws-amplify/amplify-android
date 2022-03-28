@@ -1,7 +1,6 @@
 package com.amplifyframework.storage.s3.service
 
 import android.content.Context
-import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
@@ -12,7 +11,6 @@ import com.amplifyframework.storage.StorageItem
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.UploadOptions
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -21,6 +19,7 @@ import java.time.Instant
 import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.runBlocking
 
 /**
  * A representation of an S3 backend service endpoint.

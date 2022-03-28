@@ -15,7 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-import java.util.*
+import java.util.Date
 
 data class SignedInData(
     val userId: String,

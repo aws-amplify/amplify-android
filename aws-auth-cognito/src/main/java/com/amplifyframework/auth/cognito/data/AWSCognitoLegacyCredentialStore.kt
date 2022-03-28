@@ -1,8 +1,12 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
-import com.amplifyframework.statemachine.codegen.data.*
-import java.util.*
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import java.util.Locale
 
 internal class AWSCognitoLegacyCredentialStore(
     val context: Context,
@@ -34,7 +38,10 @@ internal class AWSCognitoLegacyCredentialStore(
     private val idAndCredentialsKeyValue: KeyValueRepository =
         keyValueRepoFactory.create(context, AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER)
 
-    private val tokensKeyValue: KeyValueRepository = keyValueRepoFactory.create(context, APP_LOCAL_CACHE)
+    private val tokensKeyValue: KeyValueRepository = keyValueRepoFactory.create(
+        context,
+        APP_LOCAL_CACHE
+    )
 
     @Synchronized
     override fun saveCredential(credential: AmplifyCredential) {
@@ -55,11 +62,16 @@ internal class AWSCognitoLegacyCredentialStore(
     }
 
     @Synchronized
-    override fun savePartialCredential(cognitoUserPoolTokens: CognitoUserPoolTokens?, identityId: String?, awsCredentials: AWSCredentials?) {
+    override fun savePartialCredential(
+        cognitoUserPoolTokens: CognitoUserPoolTokens?,
+        identityId: String?,
+        awsCredentials: AWSCredentials?
+    ) {
         val currentCredentials = retrieveCredential()
 
         saveCredential(
-            AmplifyCredential(cognitoUserPoolTokens ?: currentCredentials?.cognitoUserPoolTokens,
+            AmplifyCredential(
+                cognitoUserPoolTokens ?: currentCredentials?.cognitoUserPoolTokens,
                 identityId ?: currentCredentials?.identityId,
                 awsCredentials ?: currentCredentials?.awsCredentials
             )
@@ -137,27 +149,47 @@ internal class AWSCognitoLegacyCredentialStore(
         val appClient = authConfiguration.userPool?.appClient
 
         val userIdTokenKey = String.format(
-            Locale.US, "%s.%s.%s", APP_LOCAL_CACHE_KEY_PREFIX, appClient, APP_LAST_AUTH_USER
+            Locale.US,
+            "%s.%s.%s",
+            APP_LOCAL_CACHE_KEY_PREFIX,
+            appClient,
+            APP_LAST_AUTH_USER
         )
 
         val userId = tokensKeyValue.get(userIdTokenKey)
 
         val cachedIdTokenKey = String.format(
-            Locale.US, "%s.%s.%s.%s",
-            APP_LOCAL_CACHE_KEY_PREFIX, appClient, userId, TOKEN_TYPE_ID
+            Locale.US,
+            "%s.%s.%s.%s",
+            APP_LOCAL_CACHE_KEY_PREFIX,
+            appClient,
+            userId,
+            TOKEN_TYPE_ID
         )
         val cachedAccessTokenKey = String.format(
-            Locale.US, "%s.%s.%s.%s",
-            APP_LOCAL_CACHE_KEY_PREFIX, appClient, userId, TOKEN_TYPE_ACCESS
+            Locale.US,
+            "%s.%s.%s.%s",
+            APP_LOCAL_CACHE_KEY_PREFIX,
+            appClient,
+            userId,
+            TOKEN_TYPE_ACCESS
         )
         val cachedRefreshTokenKey = String.format(
-            Locale.US, "%s.%s.%s.%s",
-            APP_LOCAL_CACHE_KEY_PREFIX, appClient, userId, TOKEN_TYPE_REFRESH
+            Locale.US,
+            "%s.%s.%s.%s",
+            APP_LOCAL_CACHE_KEY_PREFIX,
+            appClient,
+            userId,
+            TOKEN_TYPE_REFRESH
         )
 
         val cachedTokenExpirationKey = String.format(
-            Locale.US, "%s.%s.%s.%s",
-            APP_LOCAL_CACHE_KEY_PREFIX, appClient, userId, TOKEN_EXPIRATION
+            Locale.US,
+            "%s.%s.%s.%s",
+            APP_LOCAL_CACHE_KEY_PREFIX,
+            appClient,
+            userId,
+            TOKEN_EXPIRATION
         )
 
         return mapOf(

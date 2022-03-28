@@ -25,10 +25,10 @@ import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfigura
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.google.common.util.concurrent.MoreExecutors
+import java.io.File
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
-import java.io.File
 
 class AWSS3StorageUploadFileOperationTest {
 

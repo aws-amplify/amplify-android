@@ -22,7 +22,6 @@ import android.content.Context
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import com.amplifyframework.storage.s3.transfer.TransferDB
-import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 
 internal class SinglePartUploadWorker(
@@ -33,7 +32,7 @@ internal class SinglePartUploadWorker(
     workerParameters: WorkerParameters
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
-    //private lateinit var transferProgressListener: TransferProgressListener
+    // private lateinit var transferProgressListener: TransferProgressListener
 
     override suspend fun performWork(): Result {
         val putObjectRequest = createPutObjectRequest(transferRecord)

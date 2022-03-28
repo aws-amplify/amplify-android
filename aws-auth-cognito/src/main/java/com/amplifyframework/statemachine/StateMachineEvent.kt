@@ -1,6 +1,7 @@
 package com.amplifyframework.statemachine
 
-import java.util.*
+import java.util.Date
+import java.util.UUID
 
 interface StateMachineEvent {
     val id: String

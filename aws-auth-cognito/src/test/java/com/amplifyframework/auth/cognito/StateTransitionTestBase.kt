@@ -16,9 +16,29 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.*
-import com.amplifyframework.statemachine.codegen.data.*
-import com.amplifyframework.statemachine.codegen.events.*
+import com.amplifyframework.statemachine.codegen.actions.AuthActions
+import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
+import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
+import com.amplifyframework.statemachine.codegen.actions.FetchAWSCredentialsActions
+import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
+import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
+import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
+import com.amplifyframework.statemachine.codegen.actions.SRPActions
+import com.amplifyframework.statemachine.codegen.actions.SignOutActions
+import com.amplifyframework.statemachine.codegen.actions.SignUpActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
+import com.amplifyframework.statemachine.codegen.data.SignedUpData
+import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
+import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
+import com.amplifyframework.statemachine.codegen.events.SRPEvent
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import org.mockito.Mock
 import org.mockito.Mockito
 
@@ -119,7 +139,8 @@ open class StateTransitionTestBase {
                             SRPEvent.EventType.InitiateSRP("username", "password")
                         )
                     )
-                })
+                }
+            )
 
         Mockito.`when`(
             mockAuthenticationActions.initiateSignOutAction(
@@ -131,7 +152,8 @@ open class StateTransitionTestBase {
                 dispatcher.send(
                     SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData))
                 )
-            })
+            }
+        )
     }
 
     internal fun setupAuthZActions() {
@@ -139,13 +161,21 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthorization))
-                })
+                }
+            )
 
-        Mockito.`when`(mockAuthorizationActions.initializeFetchAuthSession(MockitoHelper.anyObject()))
+        Mockito.`when`(
+            mockAuthorizationActions.initializeFetchAuthSession(MockitoHelper.anyObject())
+        )
             .thenReturn(
                 Action { dispatcher, _ ->
-                    dispatcher.send(FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchUserPoolTokens(credentials)))
-                })
+                    dispatcher.send(
+                        FetchAuthSessionEvent(
+                            FetchAuthSessionEvent.EventType.FetchUserPoolTokens(credentials)
+                        )
+                    )
+                }
+            )
     }
 
     internal fun setupSRPActions() {
@@ -153,7 +183,8 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf())))
-                })
+                }
+            )
 
         Mockito.`when`(mockSRPActions.verifyPasswordSRPAction(MockitoHelper.anyObject()))
             .thenReturn(
@@ -164,7 +195,8 @@ open class StateTransitionTestBase {
                             AuthenticationEvent.EventType.InitializedSignedIn(signedInData)
                         )
                     )
-                })
+                }
+            )
     }
 
     internal fun setupSignOutActions() {
@@ -181,7 +213,8 @@ open class StateTransitionTestBase {
                             )
                         )
                     )
-                })
+                }
+            )
 
         Mockito.`when`(mockSignOutActions.globalSignOutAction(MockitoHelper.anyObject()))
             .thenReturn(
@@ -189,7 +222,8 @@ open class StateTransitionTestBase {
                     dispatcher.send(
                         SignOutEvent(SignOutEvent.EventType.RevokeToken(signedInData))
                     )
-                })
+                }
+            )
 
         Mockito.`when`(mockSignOutActions.revokeTokenAction(MockitoHelper.anyObject()))
             .thenReturn(
@@ -203,7 +237,8 @@ open class StateTransitionTestBase {
                             )
                         )
                     )
-                })
+                }
+            )
     }
 
     internal fun setupSignUpActions() {
@@ -217,7 +252,8 @@ open class StateTransitionTestBase {
                             )
                         )
                     )
-                })
+                }
+            )
 
         Mockito.`when`(mockSignUpActions.confirmSignUpAction(MockitoHelper.anyObject()))
             .thenReturn(
@@ -225,15 +261,18 @@ open class StateTransitionTestBase {
                     dispatcher.send(
                         SignUpEvent(SignUpEvent.EventType.ConfirmSignUpSuccess())
                     )
-                })
+                }
+            )
 
         Mockito.`when`(mockSignUpActions.resetSignUpAction())
             .thenReturn(
                 Action { dispatcher, _ ->
-                    dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp()))
-                })
+                    dispatcher.send(
+                        AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp())
+                    )
+                }
+            )
     }
-
 
     internal fun setupFetchAuthActions() {
 //        Mockito.`when`(mockFetchAwsCredentialsActions.initFetchAWSCredentialsAction(MockitoHelper.anyObject()))
@@ -242,11 +281,20 @@ open class StateTransitionTestBase {
 //                    dispatcher.send(FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.Fetched(credentials)))
 //                })
 
-        Mockito.`when`(mockFetchUserPoolTokensActions.refreshFetchUserPoolTokensAction(MockitoHelper.anyObject()))
+        Mockito.`when`(
+            mockFetchUserPoolTokensActions.refreshFetchUserPoolTokensAction(
+                MockitoHelper.anyObject()
+            )
+        )
             .thenReturn(
                 Action { dispatcher, _ ->
-                    dispatcher.send(FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.Fetched(credentials)))
-                })
+                    dispatcher.send(
+                        FetchUserPoolTokensEvent(
+                            FetchUserPoolTokensEvent.EventType.Fetched(credentials)
+                        )
+                    )
+                }
+            )
 
 //        Mockito.`when`(mockFetchIdentityActions.initFetchIdentityAction(MockitoHelper.anyObject()))
 //            .thenReturn(
@@ -254,27 +302,48 @@ open class StateTransitionTestBase {
 //                    dispatcher.send(FetchIdentityEvent(FetchIdentityEvent.EventType.Fetched(credentials)))
 //                })
 
-        Mockito.`when`(mockFetchAuthSessionActions.configureUserPoolTokensAction(MockitoHelper.anyObject()))
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(credentials)))
-                })
-
-        Mockito.`when`(mockFetchAuthSessionActions.configureIdentityAction(MockitoHelper.anyObject()))
+        Mockito.`when`(
+            mockFetchAuthSessionActions.configureUserPoolTokensAction(MockitoHelper.anyObject())
+        )
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchAwsCredentials(credentials))
+                        FetchAuthSessionEvent(
+                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
+                        )
                     )
-                })
+                }
+            )
 
-        Mockito.`when`(mockFetchAuthSessionActions.configureAWSCredentialsAction(MockitoHelper.anyObject()))
+        Mockito.`when`(
+            mockFetchAuthSessionActions.configureIdentityAction(MockitoHelper.anyObject())
+        )
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(credentials))
+                        FetchAuthSessionEvent(
+                            FetchAuthSessionEvent.EventType.FetchAwsCredentials(credentials)
+                        )
                     )
-                    dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchedAuthSession(credentials)))
-                })
+                }
+            )
+
+        Mockito.`when`(
+            mockFetchAuthSessionActions.configureAWSCredentialsAction(MockitoHelper.anyObject())
+        )
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        FetchAuthSessionEvent(
+                            FetchAuthSessionEvent.EventType.FetchedAuthSession(credentials)
+                        )
+                    )
+                    dispatcher.send(
+                        AuthorizationEvent(
+                            AuthorizationEvent.EventType.FetchedAuthSession(credentials)
+                        )
+                    )
+                }
+            )
     }
 }

@@ -1,6 +1,10 @@
 package com.amplifyframework.statemachine.state
 
-import com.amplifyframework.statemachine.*
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.State
+import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.StateMachineResolver
+import com.amplifyframework.statemachine.StateResolution
 
 data class ColorCounter(val color: Color, val counter: Counter, val hasTriggered: Boolean) :
     State {

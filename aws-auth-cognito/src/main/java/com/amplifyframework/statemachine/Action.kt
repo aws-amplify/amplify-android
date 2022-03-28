@@ -11,7 +11,9 @@ interface Action {
     companion object {
         fun basic(id: String, block: ActionClosure) = BasicAction(id, block)
 
-        inline operator fun invoke(crossinline block: suspend (EventDispatcher, Environment) -> Unit): Action {
+        inline operator fun invoke(
+            crossinline block: suspend (EventDispatcher, Environment) -> Unit
+        ): Action {
             return object : Action {
                 override suspend fun execute(
                     dispatcher: EventDispatcher,

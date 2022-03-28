@@ -1,7 +1,7 @@
 package com.amplifyframework.statemachine.codegen.actions
 
-import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 interface SignOutActions {
     fun localSignOutAction(event: SignOutEvent.EventType.SignOutLocally): Action

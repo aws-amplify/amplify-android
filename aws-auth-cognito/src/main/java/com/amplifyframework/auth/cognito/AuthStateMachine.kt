@@ -15,12 +15,30 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.auth.cognito.actions.*
+import com.amplifyframework.auth.cognito.actions.AuthCognitoActions
+import com.amplifyframework.auth.cognito.actions.AuthenticationCognitoActions
+import com.amplifyframework.auth.cognito.actions.AuthorizationCognitoActions
+import com.amplifyframework.auth.cognito.actions.FetchAuthSessionActions
+import com.amplifyframework.auth.cognito.actions.FetchAwsCredentialsActions
+import com.amplifyframework.auth.cognito.actions.FetchIdentityActions
+import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensActions
+import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
+import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
+import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver
-import com.amplifyframework.statemachine.codegen.states.*
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.states.AuthState
+import com.amplifyframework.statemachine.codegen.states.AuthenticationState
+import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
+import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
+import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
+import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
+import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SignOutState
+import com.amplifyframework.statemachine.codegen.states.SignUpState
 
 internal class AuthStateMachine(
     resolver: StateMachineResolver<AuthState>,
@@ -45,7 +63,8 @@ internal class AuthStateMachine(
                 AuthorizationCognitoActions
             ),
             AuthCognitoActions
-        ), environment
+        ),
+        environment
     )
 
     companion object {
@@ -67,7 +86,8 @@ internal class AuthStateMachine(
                     AuthorizationCognitoActions
                 ).logging(),
                 AuthCognitoActions
-            ).logging(), AuthEnvironment.empty
+            ).logging(),
+            AuthEnvironment.empty
         )
     }
 }

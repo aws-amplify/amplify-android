@@ -17,13 +17,13 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.actions.FetchAWSCredentialsActions
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAwsCredentialsEvent
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.FetchAWSCredentialsActions
 
 object FetchAwsCredentialsActions : FetchAWSCredentialsActions {
     override fun initFetchAWSCredentialsAction(amplifyCredential: AmplifyCredential?): Action =
@@ -56,9 +56,15 @@ object FetchAwsCredentialsActions : FetchAWSCredentialsActions {
                     )
                 dispatcher.send(event)
                 dispatcher.send(
-                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(updatedAmplifyCredential))
+                    FetchAuthSessionEvent(
+                        FetchAuthSessionEvent.EventType.FetchedAuthSession(updatedAmplifyCredential)
+                    )
                 )
-                dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchedAuthSession(updatedAmplifyCredential)))
+                dispatcher.send(
+                    AuthorizationEvent(
+                        AuthorizationEvent.EventType.FetchedAuthSession(updatedAmplifyCredential)
+                    )
+                )
             } catch (e: Exception) {
                 val event =
                     FetchAwsCredentialsEvent(

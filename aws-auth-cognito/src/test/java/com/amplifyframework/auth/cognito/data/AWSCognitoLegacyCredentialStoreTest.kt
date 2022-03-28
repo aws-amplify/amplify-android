@@ -1,7 +1,14 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
-import com.amplifyframework.statemachine.codegen.data.*
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
+import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
+import java.util.Locale
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -9,7 +16,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnitRunner
-import java.util.*
 
 @RunWith(MockitoJUnitRunner::class)
 class AWSCognitoLegacyCredentialStoreTest {
@@ -21,11 +27,45 @@ class AWSCognitoLegacyCredentialStoreTest {
         private const val prefix = "CognitoIdentityProvider"
         private const val appClient = "appClientId"
         private const val userId = "userId"
-        private val userIdTokenKey = String.format(Locale.US, "%s.%s.%s", prefix, appClient, "LastAuthUser")
-        private val cachedIdTokenKey = String.format(Locale.US, "%s.%s.%s.%s", prefix, appClient, userId, "idToken")
-        private val cachedAccessTokenKey = String.format(Locale.US, "%s.%s.%s.%s", prefix, appClient, userId, "accessToken")
-        private val cachedRefreshTokenKey = String.format(Locale.US, "%s.%s.%s.%s", prefix, appClient, userId, "refreshToken")
-        private val cachedTokenExpirationKey = String.format(Locale.US, "%s.%s.%s.%s", prefix, appClient, userId, "tokenExpiration")
+        private val userIdTokenKey = String.format(
+            Locale.US,
+            "%s.%s.%s",
+            prefix,
+            appClient,
+            "LastAuthUser"
+        )
+        private val cachedIdTokenKey = String.format(
+            Locale.US,
+            "%s.%s.%s.%s",
+            prefix,
+            appClient,
+            userId,
+            "idToken"
+        )
+        private val cachedAccessTokenKey = String.format(
+            Locale.US,
+            "%s.%s.%s.%s",
+            prefix,
+            appClient,
+            userId,
+            "accessToken"
+        )
+        private val cachedRefreshTokenKey = String.format(
+            Locale.US,
+            "%s.%s.%s.%s",
+            prefix,
+            appClient,
+            userId,
+            "refreshToken"
+        )
+        private val cachedTokenExpirationKey = String.format(
+            Locale.US,
+            "%s.%s.%s.%s",
+            prefix,
+            appClient,
+            userId,
+            "tokenExpiration"
+        )
     }
 
     @Mock
@@ -44,17 +84,21 @@ class AWSCognitoLegacyCredentialStoreTest {
 
     @Before
     fun setup() {
-        `when`(mockFactory.create(
+        `when`(
+            mockFactory.create(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER,
                 true,
-        )).thenReturn(mockKeyValue)
+            )
+        ).thenReturn(mockKeyValue)
 
-        `when`(mockFactory.create(
+        `when`(
+            mockFactory.create(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.APP_LOCAL_CACHE,
                 true,
-        )).thenReturn(mockKeyValue)
+            )
+        ).thenReturn(mockKeyValue)
     }
 
     @Test
@@ -85,28 +129,30 @@ class AWSCognitoLegacyCredentialStoreTest {
 
         // Identity ID
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"identityId"}")).thenReturn("identityPool")
-
     }
 
     private fun setupIdentityPoolConfig() {
-        `when`(mockConfig.identityPool).thenReturn(IdentityPoolConfiguration {
-            this.poolId = IDENTITY_POOL_ID
-        })
+        `when`(mockConfig.identityPool).thenReturn(
+            IdentityPoolConfiguration {
+                this.poolId = IDENTITY_POOL_ID
+            }
+        )
     }
 
     private fun setupUserPoolConfig() {
-        `when`(mockConfig.userPool).thenReturn(UserPoolConfiguration {
-            this.poolId = USER_POOL_ID
-            this.appClientId = appClient
-        })
+        `when`(mockConfig.userPool).thenReturn(
+            UserPoolConfiguration {
+                this.poolId = USER_POOL_ID
+                this.appClientId = appClient
+            }
+        )
     }
 
     private fun getCredential(): AmplifyCredential {
         return AmplifyCredential(
-                CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123),
-                "identityPool",
-                AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 123123)
+            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123),
+            "identityPool",
+            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 123123)
         )
     }
 }
-

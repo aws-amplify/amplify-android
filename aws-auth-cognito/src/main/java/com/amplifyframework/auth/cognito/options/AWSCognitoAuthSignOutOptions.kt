@@ -29,7 +29,8 @@ class AWSCognitoAuthSignOutOptions
  * @param browserPackage Specify which browser package should be used for signing out of an account which was signed
  * into with a web UI experience (example value: "org.mozilla.firefox").
  * Defaults to the Chrome package if not specified.
- */ protected constructor(
+ */
+protected constructor(
     globalSignOut: Boolean,
     val invalidateTokens: Boolean,
     val browserPackage: String?
@@ -51,17 +52,17 @@ class AWSCognitoAuthSignOutOptions
         } else {
             val authSignOutOptions = obj as AWSCognitoAuthSignOutOptions
             ObjectsCompat.equals(isGlobalSignOut, authSignOutOptions.isGlobalSignOut) &&
-                    ObjectsCompat.equals(browserPackage, authSignOutOptions.browserPackage) &&
-                    ObjectsCompat.equals(invalidateTokens, authSignOutOptions.invalidateTokens)
+                ObjectsCompat.equals(browserPackage, authSignOutOptions.browserPackage) &&
+                ObjectsCompat.equals(invalidateTokens, authSignOutOptions.invalidateTokens)
         }
     }
 
     override fun toString(): String {
         return "AWSCognitoAuthSignOutOptions{" +
-                "isGlobalSignOut=" + isGlobalSignOut +
-                "invalidateTokens=" + invalidateTokens +
-                ", browserPackage=" + browserPackage +
-                '}'
+            "isGlobalSignOut=" + isGlobalSignOut +
+            "invalidateTokens=" + invalidateTokens +
+            ", browserPackage=" + browserPackage +
+            '}'
     }
 
     /**

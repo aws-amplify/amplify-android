@@ -15,14 +15,14 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.statemachine.codegen.data.SignedInData
-import com.amplifyframework.statemachine.codegen.data.SignedOutData
-import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 sealed class SignOutState : State {
     data class NotStarted(val id: String = "") : SignOutState()
@@ -72,7 +72,9 @@ sealed class SignOutState : State {
                         val newState = SignedOut(SignedOutData(signOutEvent.signedInData.username))
                         StateResolution(newState)
                     }
-                    is SignOutEvent.EventType.SignedOutFailure -> StateResolution(Error(signOutEvent.exception))
+                    is SignOutEvent.EventType.SignedOutFailure -> StateResolution(
+                        Error(signOutEvent.exception)
+                    )
                     else -> defaultResolution
                 }
                 is SigningOutGlobally -> when (signOutEvent) {

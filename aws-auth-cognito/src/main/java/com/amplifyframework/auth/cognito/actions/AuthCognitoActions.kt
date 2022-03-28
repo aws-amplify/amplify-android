@@ -18,11 +18,11 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.AuthActions
 
 object AuthCognitoActions : AuthActions {
     override fun initializeAuthConfigurationAction(event: AuthEvent.EventType.ConfigureAuth) =
@@ -41,7 +41,9 @@ object AuthCognitoActions : AuthActions {
             }
         }
 
-    override fun initializeAuthenticationConfigurationAction(event: AuthEvent.EventType.ConfigureAuthentication) =
+    override fun initializeAuthenticationConfigurationAction(
+        event: AuthEvent.EventType.ConfigureAuthentication
+    ) =
         Action { dispatcher, environment ->
             with(environment as AuthEnvironment) {
                 configuration.userPool?.let {

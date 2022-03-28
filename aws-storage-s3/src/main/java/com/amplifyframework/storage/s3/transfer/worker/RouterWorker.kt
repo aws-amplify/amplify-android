@@ -35,7 +35,9 @@ internal open class RouterWorker constructor(
 ) : ListenableWorker(appContext, parameter) {
 
     private val logger =
-        Amplify.Logging.forNamespace(AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName))
+        Amplify.Logging.forNamespace(
+            AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
+        )
     private val workerClassName =
         parameter.inputData.getString(WORKER_CLASS_NAME)
             ?: throw IllegalArgumentException("Worker class name is missing")
@@ -55,13 +57,18 @@ internal open class RouterWorker constructor(
                 return backingWorkerMap.put(key, value)
             }
 
-            override val entries: MutableSet<MutableMap.MutableEntry<String, TransferWorkerFactory>> get() = backingWorkerMap.entries
+            override val entries: MutableSet<MutableMap.MutableEntry<String, TransferWorkerFactory>> get() =
+                backingWorkerMap.entries
         }
     }
 
     override fun startWork(): ListenableFuture<Result> {
         val delegateWorkerFactory: TransferWorkerFactory? = workerFactories[workerId]
-        delegateWorker = delegateWorkerFactory?.createWorker(applicationContext, workerClassName, parameter)
+        delegateWorker = delegateWorkerFactory?.createWorker(
+            applicationContext,
+            workerClassName,
+            parameter
+        )
         delegateWorker?.let {
             return it.startWork()
         } ?: run {

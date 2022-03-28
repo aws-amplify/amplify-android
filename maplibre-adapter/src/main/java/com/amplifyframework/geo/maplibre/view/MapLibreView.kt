@@ -41,7 +41,6 @@ import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 
-
 typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
 
 /**
@@ -142,11 +141,13 @@ class MapLibreView
      * @param callback the onLoad lambda
      */
     fun getStyle(callback: (MapboxMap, Style) -> Unit) {
-        getStyle(object : OnStyleLoaded {
-            override fun onLoad(map: MapboxMap, style: Style) {
-                callback(map, style)
+        getStyle(
+            object : OnStyleLoaded {
+                override fun onLoad(map: MapboxMap, style: Style) {
+                    callback(map, style)
+                }
             }
-        })
+        )
     }
 
     /**
@@ -329,5 +330,4 @@ class MapLibreView
     interface OnStyleLoaded {
         fun onLoad(map: MapboxMap, style: Style)
     }
-
 }

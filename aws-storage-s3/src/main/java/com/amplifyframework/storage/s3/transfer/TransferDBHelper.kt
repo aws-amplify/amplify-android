@@ -35,7 +35,9 @@ internal class TransferDBHelper(private val context: Context) :
     internal val contentUri: Uri
     private val uriMatcher: UriMatcher
     private var database: SQLiteDatabase
-    private val logger = Amplify.Logging.forNamespace(AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName))
+    private val logger = Amplify.Logging.forNamespace(
+        AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
+    )
 
     companion object {
         private const val DATABASE_NAME = "awss3transfertable.db"
@@ -125,8 +127,12 @@ internal class TransferDBHelper(private val context: Context) :
 
         when (uriMatcher.match(uri)) {
             TRANSFERS -> queryBuilder.appendWhere("${TransferTable.COLUMN_PART_NUM}=0")
-            TRANSFER_ID -> queryBuilder.appendWhere("${TransferTable.COLUMN_ID}=${uri.lastPathSegment}")
-            TRANSFER_PART -> queryBuilder.appendWhere("${TransferTable.COLUMN_MAIN_UPLOAD_ID}=${uri.lastPathSegment}")
+            TRANSFER_ID -> queryBuilder.appendWhere(
+                "${TransferTable.COLUMN_ID}=${uri.lastPathSegment}"
+            )
+            TRANSFER_PART -> queryBuilder.appendWhere(
+                "${TransferTable.COLUMN_MAIN_UPLOAD_ID}=${uri.lastPathSegment}"
+            )
             TRANSFER_STATE -> {
                 queryBuilder.appendWhere(TransferTable.COLUMN_STATE + "=")
                 queryBuilder.appendWhereEscapeString(uri.lastPathSegment!!)

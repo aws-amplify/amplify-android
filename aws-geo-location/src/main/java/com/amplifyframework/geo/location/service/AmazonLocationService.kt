@@ -28,7 +28,6 @@ import com.amplifyframework.geo.models.CountryCode
 import com.amplifyframework.geo.models.Place
 import com.amplifyframework.geo.models.SearchArea
 import com.amplifyframework.util.UserAgent
-
 import java.nio.ByteBuffer
 
 /**
@@ -71,15 +70,19 @@ internal class AmazonLocationService(
             .withFilterCountries(countries.map { it.name })
         area?.biasPosition?.let { request.setBiasPosition(listOf(it.longitude, it.latitude)) }
         area?.boundingBox?.let {
-            request.setFilterBBox(listOf(it.longitudeSW, it.latitudeSW, it.longitudeNE, it.latitudeNE))
+            request.setFilterBBox(
+                listOf(it.longitudeSW, it.latitudeSW, it.longitudeNE, it.latitudeNE)
+            )
         }
         val response = provider.searchPlaceIndexForText(request)
         return response.results.map { AmazonLocationPlace(it.place) }
     }
 
-    override fun reverseGeocode(index: String,
-                                position: Coordinates,
-                                limit: Int): List<Place> {
+    override fun reverseGeocode(
+        index: String,
+        position: Coordinates,
+        limit: Int
+    ): List<Place> {
         val request = SearchPlaceIndexForPositionRequest()
             .withIndexName(index)
             .withPosition(listOf(position.longitude, position.latitude))

@@ -15,12 +15,15 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
-import com.amplifyframework.statemachine.*
+import com.amplifyframework.statemachine.State
+import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.StateMachineResolver
+import com.amplifyframework.statemachine.StateResolution
+import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
-import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 
 sealed class AuthenticationState : State {
     data class NotConfigured(val id: String = "") : AuthenticationState()
@@ -151,9 +154,9 @@ sealed class AuthenticationState : State {
                         StateResolution(newState, listOf(action))
                     }
                     // TODO: find better way to handle other events
-                    signUpEvent is SignUpEvent.EventType.InitiateSignUp
-                            || signUpEvent is SignUpEvent.EventType.ConfirmSignUp
-                            || signUpEvent is SignUpEvent.EventType.ResendSignUpCode ->
+                    signUpEvent is SignUpEvent.EventType.InitiateSignUp ||
+                        signUpEvent is SignUpEvent.EventType.ConfirmSignUp
+                        || signUpEvent is SignUpEvent.EventType.ResendSignUpCode ->
                         StateResolution(
                             SigningUp(oldState.signUpState)
                         )

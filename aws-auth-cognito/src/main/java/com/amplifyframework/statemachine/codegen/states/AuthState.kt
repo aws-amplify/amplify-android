@@ -15,9 +15,12 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.statemachine.codegen.events.AuthEvent
-import com.amplifyframework.statemachine.*
+import com.amplifyframework.statemachine.State
+import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.StateMachineResolver
+import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
+import com.amplifyframework.statemachine.codegen.events.AuthEvent
 
 sealed class AuthState : State {
     data class NotConfigured(val id: String = "") : AuthState()

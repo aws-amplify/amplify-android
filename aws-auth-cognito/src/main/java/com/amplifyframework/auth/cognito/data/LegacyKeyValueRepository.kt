@@ -13,9 +13,9 @@ import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 
 class LegacyKeyValueRepository(
-        private val context: Context,
-        private val sharedPreferencesName: String,
-        private var isPersistenceEnabled: Boolean = true,
+    private val context: Context,
+    private val sharedPreferencesName: String,
+    private var isPersistenceEnabled: Boolean = true,
 ) : KeyValueRepository {
 
     // TODO
@@ -62,8 +62,8 @@ class LegacyKeyValueRepository(
     init {
         cache = getCacheForKey(sharedPreferencesName)
         this.sharedPreferencesForData = context.getSharedPreferences(
-                sharedPreferencesName,
-                Context.MODE_PRIVATE
+            sharedPreferencesName,
+            Context.MODE_PRIVATE
         )
     }
 
@@ -101,26 +101,30 @@ class LegacyKeyValueRepository(
             return
         }
 
-
         try {
             // Encrypt
             val iv: ByteArray = generateInitializationVector()
             val base64EncodedEncryptedString: String? = encrypt(
-                    encryptionKey.getOrThrow(),
-                    GCMParameterSpec(CIPHER_AES_GCM_NOPADDING_TAG_LENGTH_LENGTH_IN_BITS, iv),
-                    value
+                encryptionKey.getOrThrow(),
+                GCMParameterSpec(CIPHER_AES_GCM_NOPADDING_TAG_LENGTH_LENGTH_IN_BITS, iv),
+                value
             )
 
             val base64EncodedIV: String = Base64.encodeToString(iv, Base64.DEFAULT)
-                    ?: throw Exception("Error in Base64 encoding the IV for dataKey = $dataKey")
+                ?: throw Exception("Error in Base64 encoding the IV for dataKey = $dataKey")
 
             // Persist
             sharedPreferencesForData.edit()
-                    .putString(dataKeyInPersistentStore, base64EncodedEncryptedString) // data
-                    .putString("$dataKeyInPersistentStore${SHARED_PREFERENCES_IV_SUFFIX}", base64EncodedIV) // IV
-                    .putInt("$dataKeyInPersistentStore${SHARED_PREFERENCES_STORE_VERSION_SUFFIX}",
-                            AWS_KEY_VALUE_STORE_VERSION) // KeyValueStore Version
-                    .apply()
+                .putString(dataKeyInPersistentStore, base64EncodedEncryptedString) // data
+                .putString(
+                    "$dataKeyInPersistentStore$SHARED_PREFERENCES_IV_SUFFIX",
+                    base64EncodedIV
+                ) // IV
+                .putInt(
+                    "$dataKeyInPersistentStore$SHARED_PREFERENCES_STORE_VERSION_SUFFIX",
+                    AWS_KEY_VALUE_STORE_VERSION
+                ) // KeyValueStore Version
+                .apply()
         } catch (ex: Exception) {
             // TODO Log  Error
             //    ("Error in storing value for dataKey = " + dataKey +
@@ -150,8 +154,10 @@ class LegacyKeyValueRepository(
             // If the version of data stored mismatches with the version of the store,
             // return null.
             val keyValueStoreVersion =
-                    sharedPreferencesForData.getString(dataKeyInPersistentStore + SHARED_PREFERENCES_STORE_VERSION_SUFFIX,
-                            "-1")?.toInt()
+                sharedPreferencesForData.getString(
+                    dataKeyInPersistentStore + SHARED_PREFERENCES_STORE_VERSION_SUFFIX,
+                    "-1"
+                )?.toInt()
             if (keyValueStoreVersion != AWS_KEY_VALUE_STORE_VERSION) {
                 // TODO : Log ("The version of the data read from SharedPreferences for " + dataKey + " does not match the version of the store.")
                 return null
@@ -159,9 +165,11 @@ class LegacyKeyValueRepository(
 
             // Read from the SharedPreferences and decrypt
             val encryptedData = sharedPreferencesForData.getString(dataKeyInPersistentStore, null)
-            val decryptedDataInString: String? = decrypt(decryptionKey.getOrThrow(),
-                    getInitializationVector(dataKeyInPersistentStore),
-                    encryptedData)
+            val decryptedDataInString: String? = decrypt(
+                decryptionKey.getOrThrow(),
+                getInitializationVector(dataKeyInPersistentStore),
+                encryptedData
+            )
 
             // Update the in-memory cache after read from disk.
             decryptedDataInString?.also { cache[dataKey] = it }
@@ -178,21 +186,28 @@ class LegacyKeyValueRepository(
     private fun getInitializationVector(keyOfDataInSharedPreferences: String): AlgorithmParameterSpec {
         val keyOfIV = keyOfDataInSharedPreferences + SHARED_PREFERENCES_IV_SUFFIX
         if (!sharedPreferencesForData.contains(keyOfIV)) {
-            throw java.lang.Exception("Initialization vector for $keyOfDataInSharedPreferences is missing from the SharedPreferences.")
+            throw java.lang.Exception(
+                "Initialization vector for $keyOfDataInSharedPreferences is missing from the SharedPreferences."
+            )
         }
         val initializationVectorInString = sharedPreferencesForData.getString(keyOfIV, null)
-                ?: throw java.lang.Exception("Cannot read the initialization vector for $keyOfDataInSharedPreferences from SharedPreferences.")
+            ?: throw java.lang.Exception(
+                "Cannot read the initialization vector for $keyOfDataInSharedPreferences from SharedPreferences."
+            )
         val base64DecodedIV: ByteArray = Base64.decode(initializationVectorInString, Base64.DEFAULT)
         if (base64DecodedIV.isEmpty()) {
-            throw java.lang.Exception("Cannot base64 decode the initialization vector for $keyOfDataInSharedPreferences read from SharedPreferences.")
+            throw java.lang.Exception(
+                "Cannot base64 decode the initialization vector for " +
+                    "$keyOfDataInSharedPreferences read from SharedPreferences."
+            )
         }
         return GCMParameterSpec(CIPHER_AES_GCM_NOPADDING_TAG_LENGTH_LENGTH_IN_BITS, base64DecodedIV)
     }
 
     private fun decrypt(
-            decryptionKey: Key,
-            ivSpec: AlgorithmParameterSpec,
-            encryptedData: String?,
+        decryptionKey: Key,
+        ivSpec: AlgorithmParameterSpec,
+        encryptedData: String?,
     ): String? {
         return try {
             val encryptedDecodedData: ByteArray = Base64.decode(encryptedData, Base64.DEFAULT)
@@ -213,7 +228,7 @@ class LegacyKeyValueRepository(
     }
 
     private fun getEncryptionKeyAlias() =
-            sharedPreferencesName + AWS_KEY_VALUE_STORE_VERSION_1_KEY_STORE_ALIAS_FOR_AES_SUFFIX
+        sharedPreferencesName + AWS_KEY_VALUE_STORE_VERSION_1_KEY_STORE_ALIAS_FOR_AES_SUFFIX
 
     @Synchronized
     override fun remove(dataKey: String) {
@@ -222,32 +237,34 @@ class LegacyKeyValueRepository(
         if (isPersistenceEnabled) {
             val keyUsedInPersistentStore: String = getDataKeyUsedInPersistentStore(dataKey)
             sharedPreferencesForData.edit()
-                    .remove(keyUsedInPersistentStore)
-                    .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_IV_SUFFIX)
-                    .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_STORE_VERSION_SUFFIX)
-                    .apply()
+                .remove(keyUsedInPersistentStore)
+                .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_IV_SUFFIX)
+                .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_STORE_VERSION_SUFFIX)
+                .apply()
         }
     }
 
     private fun getDataKeyUsedInPersistentStore(key: String): String =
-            "$key${SHARED_PREFERENCES_DATA_IDENTIFIER_SUFFIX}"
+        "$key$SHARED_PREFERENCES_DATA_IDENTIFIER_SUFFIX"
 
     @Synchronized
     private fun retrieveEncryptionKey(encryptionKeyAlias: String): Result<Key> {
         return LegacyKeyProvider
-                .retrieveKey(encryptionKeyAlias)
-                .onFailure {
-                    LegacyKeyProvider.deleteKey(encryptionKeyAlias)
-                    Result.failure<Key>(
-                        CredentialStoreError("Key cannot be retrieved. " +
-                            "Deleting the encryption key identified by the keyAlias: $encryptionKeyAlias")
+            .retrieveKey(encryptionKeyAlias)
+            .onFailure {
+                LegacyKeyProvider.deleteKey(encryptionKeyAlias)
+                Result.failure<Key>(
+                    CredentialStoreError(
+                        "Key cannot be retrieved. " +
+                            "Deleting the encryption key identified by the keyAlias: $encryptionKeyAlias"
                     )
-                }
+                )
+            }
     }
 
     @Synchronized
     private fun generateEncryptionKey(encryptionKeyAlias: String): Result<Key> =
-            LegacyKeyProvider.generateKey(encryptionKeyAlias)
+        LegacyKeyProvider.generateKey(encryptionKeyAlias)
 
     private fun encrypt(encryptionKey: Key, ivSpec: AlgorithmParameterSpec, data: String): String? {
         return try {
@@ -256,7 +273,7 @@ class LegacyKeyValueRepository(
 
             val encryptedData = cipher.doFinal(data.toByteArray(charset(CHARSET_NAME)))
 
-            //TODO : Check the correct flags
+            // TODO : Check the correct flags
             Base64.encodeToString(encryptedData, Base64.DEFAULT)
         } catch (ex: Exception) {
             Log.e("Error in encrypting data. ", ex.toString())

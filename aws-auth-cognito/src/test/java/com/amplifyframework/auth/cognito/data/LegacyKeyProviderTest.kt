@@ -1,5 +1,11 @@
 package com.amplifyframework.auth.cognito.data
 
+import java.security.Key
+import java.security.KeyStore
+import java.security.KeyStoreSpi
+import java.security.Provider
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -8,12 +14,6 @@ import org.mockito.Mock
 import org.mockito.MockedStatic
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
-import java.security.Key
-import java.security.KeyStore
-import java.security.KeyStoreSpi
-import java.security.Provider
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 @RunWith(MockitoJUnitRunner::class)
 class LegacyKeyProviderTest {
@@ -22,7 +22,9 @@ class LegacyKeyProviderTest {
     private val testKeyAlias = "Test Key"
 
     // This is mocked using MockStatic and needs to be closed
-    private val mockedStaticKeyStore: MockedStatic<KeyStore> = Mockito.mockStatic(KeyStore::class.java)
+    private val mockedStaticKeyStore: MockedStatic<KeyStore> = Mockito.mockStatic(
+        KeyStore::class.java
+    )
 
     @Mock
     private lateinit var mockKeyStore: FakeKeyStore
@@ -32,7 +34,9 @@ class LegacyKeyProviderTest {
 
     @Before
     fun setUp() {
-        mockedStaticKeyStore.`when`<KeyStore> { KeyStore.getInstance(Mockito.anyString()) }.thenReturn(mockKeyStore)
+        mockedStaticKeyStore.`when`<KeyStore> { KeyStore.getInstance(Mockito.anyString()) }.thenReturn(
+            mockKeyStore
+        )
     }
 
     @After
@@ -44,9 +48,11 @@ class LegacyKeyProviderTest {
     fun `retrieve key fails if key does not exist for key alias`() {
         val key = LegacyKeyProvider.retrieveKey(testKeyAlias)
 
-        assertTrue { key.isFailure}
-        assertEquals("Key does not exists for the keyAlias: $testKeyAlias in $androidKeyStoreAlias",
-            (key.exceptionOrNull()?.message))
+        assertTrue { key.isFailure }
+        assertEquals(
+            "Key does not exists for the keyAlias: $testKeyAlias in $androidKeyStoreAlias",
+            (key.exceptionOrNull()?.message)
+        )
     }
 
     @Test
@@ -56,9 +62,11 @@ class LegacyKeyProviderTest {
 
         val key = LegacyKeyProvider.retrieveKey(testKeyAlias)
         assertTrue { key.isFailure }
-        assertEquals( "Key is null even though the keyAlias: " +
-                    testKeyAlias + " is present in " + androidKeyStoreAlias,
-            key.exceptionOrNull()?.message)
+        assertEquals(
+            "Key is null even though the keyAlias: " +
+                testKeyAlias + " is present in " + androidKeyStoreAlias,
+            key.exceptionOrNull()?.message
+        )
     }
 
     @Test

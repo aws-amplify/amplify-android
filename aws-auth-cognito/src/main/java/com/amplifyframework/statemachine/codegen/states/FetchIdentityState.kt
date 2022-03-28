@@ -15,13 +15,13 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.events.FetchIdentityEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.events.FetchIdentityEvent
 import java.lang.Exception
 
 sealed class FetchIdentityState : State {
@@ -48,7 +48,9 @@ sealed class FetchIdentityState : State {
                         is FetchIdentityEvent.EventType.Fetch -> {
                             val newState = Fetching()
                             val action =
-                                fetchIdentityActions.initFetchIdentityAction(fetchIdentityEvent.amplifyCredential)
+                                fetchIdentityActions.initFetchIdentityAction(
+                                    fetchIdentityEvent.amplifyCredential
+                                )
                             StateResolution(newState, listOf(action))
                         }
                         is FetchIdentityEvent.EventType.Fetched -> {
@@ -60,8 +62,12 @@ sealed class FetchIdentityState : State {
                 }
                 is Fetching -> {
                     when (fetchIdentityEvent) {
-                        is FetchIdentityEvent.EventType.Fetched -> StateResolution(Fetched(fetchIdentityEvent.amplifyCredential))
-                        is FetchIdentityEvent.EventType.ThrowError -> StateResolution(Error(fetchIdentityEvent.exception))
+                        is FetchIdentityEvent.EventType.Fetched -> StateResolution(
+                            Fetched(fetchIdentityEvent.amplifyCredential)
+                        )
+                        is FetchIdentityEvent.EventType.ThrowError -> StateResolution(
+                            Error(fetchIdentityEvent.exception)
+                        )
                         else -> StateResolution(oldState)
                     }
                 }

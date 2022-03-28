@@ -15,9 +15,12 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
-import com.amplifyframework.statemachine.*
+import com.amplifyframework.statemachine.State
+import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.StateMachineResolver
+import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 
 sealed class AuthorizationState : State {
     data class NotConfigured(val id: String = "") : AuthorizationState()
@@ -79,7 +82,9 @@ sealed class AuthorizationState : State {
                 is Configured, is SessionEstablished ->
                     when (authorizationEvent) {
                         is AuthorizationEvent.EventType.FetchAuthSession -> {
-                            val action = authorizationActions.initializeFetchAuthSession(authorizationEvent.amplifyCredential)
+                            val action = authorizationActions.initializeFetchAuthSession(
+                                authorizationEvent.amplifyCredential
+                            )
                             val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
                             StateResolution(newState, listOf(action))
                         }
@@ -89,15 +94,13 @@ sealed class AuthorizationState : State {
                     when (authorizationEvent) {
                         is AuthorizationEvent.EventType.FetchedAuthSession -> {
                             val newState = SessionEstablished(oldState.fetchAuthSessionState)
-                             StateResolution(newState)
+                            StateResolution(newState)
                         }
                         else -> StateResolution.from(oldState)
                     }
                 else -> StateResolution(oldState)
             }
-
         }
-
 
         private fun onConfigure(): StateResolution<AuthorizationState> {
             val action = authorizationActions.configureAuthorizationAction()

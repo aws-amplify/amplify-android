@@ -17,7 +17,6 @@ package com.amplifyframework.geo.location
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
@@ -29,12 +28,11 @@ import com.amplifyframework.geo.result.GeoSearchResult
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
-import org.junit.Assert.*
-
+import java.util.UUID
+import kotlin.random.Random.Default.nextDouble
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import java.util.*
-import kotlin.random.Random.Default.nextDouble
 
 /**
  * Tests various functionalities related to Search API in [AWSLocationGeoPlugin].
@@ -102,8 +100,8 @@ class SearchApiTest {
         signInWithCognito()
         val query = UUID.randomUUID().toString()
         val result = geo?.searchByText(query, GeoSearchByTextOptions.defaults())
-        assertNotNull(result)
-        assertNotNull(result!!.places)
+        Assert.assertNotNull(result)
+        Assert.assertNotNull(result!!.places)
     }
 
     /**
@@ -121,15 +119,15 @@ class SearchApiTest {
             nextDouble(-180.0, 180.0)
         )
         val result = geo?.searchByCoordinates(coordinates, GeoSearchByCoordinatesOptions.defaults())
-        assertNotNull(result)
-        assertNotNull(result!!.places)
+        Assert.assertNotNull(result)
+        Assert.assertNotNull(result!!.places)
 
         // Reverse lookup will always return at least one result
-        assertFalse(result.places.isEmpty())
+        Assert.assertFalse(result.places.isEmpty())
 
         // First entry is on top of originally queried coordinates (within 1km)
         val queried = result.places[0].geometry as Coordinates
-        assertTrue(coordinates.centralAngle(queried) < 0.00001)
+        Assert.assertTrue(coordinates.centralAngle(queried) < 0.00001)
     }
 
     private fun signInWithCognito() {

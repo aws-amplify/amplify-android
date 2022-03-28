@@ -26,10 +26,10 @@ import com.amplifyframework.storage.s3.service.StorageService
 import com.google.common.util.concurrent.MoreExecutors
 import io.mockk.coEvery
 import io.mockk.mockk
+import java.io.File
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
-import java.io.File
 
 class AWSS3StorageDownloadFileOperationTest {
 

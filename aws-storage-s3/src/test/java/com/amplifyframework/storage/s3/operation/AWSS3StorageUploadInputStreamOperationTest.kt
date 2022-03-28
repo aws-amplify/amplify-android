@@ -28,11 +28,11 @@ import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.google.common.util.concurrent.MoreExecutors
 import io.mockk.coEvery
 import io.mockk.mockk
+import java.io.File
+import java.io.InputStream
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
-import java.io.File
-import java.io.InputStream
 
 class AWSS3StorageUploadInputStreamOperationTest {
 

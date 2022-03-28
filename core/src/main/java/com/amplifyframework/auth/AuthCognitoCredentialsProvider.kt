@@ -37,7 +37,8 @@ class AuthCognitoCredentialsProvider : AuthCredentialsProvider {
                     } ?: continuation.resumeWithException(
                         AuthException(
                             "Failed to get user's identity ID",
-                            "Please check that you are logged in and that Auth is setup to support identity pools."
+                            "Please check that you are logged in and " +
+                                "that Auth is setup to support identity pools."
                         )
                     )
                 },
@@ -60,7 +61,8 @@ class AuthCognitoCredentialsProvider : AuthCredentialsProvider {
                     } ?: continuation.resumeWithException(
                         AuthException(
                             "Failed to get AWS credentials",
-                            "Please check that you are logged in or that Auth is setup to support identity pools."
+                            "Please check that you are logged in or " +
+                                "that Auth is setup to support identity pools."
                         )
                     )
                 },

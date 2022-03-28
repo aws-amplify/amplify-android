@@ -3,9 +3,9 @@ package com.amplifyframework.auth.cognito
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.auth.cognito.testutils.AuthConfigurationProvider
 import com.amplifyframework.auth.cognito.testutils.CredentialStoreUtil
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.google.gson.Gson
 import junit.framework.Assert.assertTrue
 import org.json.JSONObject
@@ -23,7 +23,6 @@ class CredentialStoreStateMachineInstrumentationTest {
 
     private val credential = CredentialStoreUtil.getDefaultCredential()
 
-
     @Before
     fun setup() {
         CredentialStoreUtil.setupLegacyStore(context, userPoolAppClientId, identityPoolId)
@@ -35,7 +34,10 @@ class CredentialStoreStateMachineInstrumentationTest {
     fun test_CredentialStore_Migration_Succeeds_On_Plugin_Configuration() {
         AWSCognitoAuthPlugin().configure(authConfigJson, context)
 
-        val credentialStore = AWSCognitoAuthCredentialStore(context, AuthConfiguration.fromJson(authConfigJson).build())
+        val credentialStore = AWSCognitoAuthCredentialStore(
+            context,
+            AuthConfiguration.fromJson(authConfigJson).build()
+        )
         val creds = credentialStore.retrieveCredential()
 
         assertTrue(creds == credential)

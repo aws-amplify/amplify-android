@@ -134,7 +134,6 @@ internal class MapControls(
                 icon.animate()
                     .setInterpolator(AccelerateDecelerateInterpolator())
                     .rotationBy(angle)
-
             } else {
                 icon.rotation = target
             }

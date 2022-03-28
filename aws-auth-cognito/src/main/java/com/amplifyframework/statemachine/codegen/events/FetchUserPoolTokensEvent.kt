@@ -15,13 +15,14 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import java.lang.Exception
-import java.util.*
+import java.util.Date
 
 class FetchUserPoolTokensEvent(
-    val eventType: EventType, override val time: Date? = null,
+    val eventType: EventType,
+    override val time: Date? = null,
 ) : StateMachineEvent {
     sealed class EventType {
         data class Refresh(val amplifyCredential: AmplifyCredential?) : EventType()

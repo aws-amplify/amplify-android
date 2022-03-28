@@ -15,12 +15,13 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
-import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.StateMachineEvent
-import java.util.*
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import java.util.Date
 
 class SignOutEvent(
-    val eventType: EventType, override val time: Date? = null,
+    val eventType: EventType,
+    override val time: Date? = null,
 ) : StateMachineEvent {
     sealed class EventType {
         data class SignOutLocally(

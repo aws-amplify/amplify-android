@@ -19,12 +19,12 @@ import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
+import java.io.File
+import java.util.UUID
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import java.io.File
-import java.util.UUID
 
 open class TransferDBTest {
     private val bucketName = "bucket_name"

@@ -82,9 +82,13 @@ data class TransferRecord(
                 this.mainUploadId =
                     c.getInt(c.getColumnIndexOrThrow(TransferTable.COLUMN_MAIN_UPLOAD_ID))
                 this.type =
-                    TransferType.valueOf(c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_TYPE)))
+                    TransferType.valueOf(
+                        c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_TYPE))
+                    )
                 this.state =
-                    TransferState.getState(c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_STATE)))
+                    TransferState.getState(
+                        c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_STATE))
+                    )
                 this.bucketName =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_BUCKET_NAME))
                 this.key = c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_KEY))
@@ -117,18 +121,30 @@ data class TransferRecord(
                 this.headerContentType =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_CONTENT_TYPE))
                 this.headerContentLanguage =
-                    c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_CONTENT_LANGUAGE))
+                    c.getString(
+                        c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_CONTENT_LANGUAGE)
+                    )
                 this.headerContentDisposition =
-                    c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_CONTENT_DISPOSITION))
+                    c.getString(
+                        c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_CONTENT_DISPOSITION)
+                    )
                 this.headerContentEncoding =
-                    c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_CONTENT_ENCODING))
+                    c.getString(
+                        c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_CONTENT_ENCODING)
+                    )
                 this.headerCacheControl =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_CACHE_CONTROL))
                 this.headerExpire =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_EXPIRE))
-                (JsonUtils.jsonToMap(c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_USER_METADATA)))).also { this.userMetadata = it as Map<String, String> }
+                (
+                    JsonUtils.jsonToMap(
+                        c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_USER_METADATA))
+                    )
+                    ).also { this.userMetadata = it as Map<String, String> }
                 this.expirationTimeRuleId =
-                    c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_EXPIRATION_TIME_RULE_ID))
+                    c.getString(
+                        c.getColumnIndexOrThrow(TransferTable.COLUMN_EXPIRATION_TIME_RULE_ID)
+                    )
                 this.httpExpires =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HTTP_EXPIRES_DATE))
                 this.sseAlgorithm =
@@ -244,7 +260,9 @@ data class TransferRecord(
     ) {
         val type = type ?: throw IllegalStateException("Transfer type missing")
         val workerClassName =
-            if (type == TransferType.UPLOAD) SinglePartUploadWorker::class.java.name else DownloadWorker::class.java.name
+            if (type == TransferType.UPLOAD)
+                SinglePartUploadWorker::class.java.name else
+                DownloadWorker::class.java.name
 
         val transferRequest = getOneTimeWorkRequest(
             workDataOf(

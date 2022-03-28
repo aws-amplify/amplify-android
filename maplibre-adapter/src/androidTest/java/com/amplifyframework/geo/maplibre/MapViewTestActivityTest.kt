@@ -37,6 +37,9 @@ import org.junit.Test
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertNotNull
+import org.junit.Test
 
 class MapViewTestActivityTest {
 

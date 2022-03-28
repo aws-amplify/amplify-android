@@ -19,7 +19,9 @@ interface StateMachineResolver<StateType : State> {
     }
 }
 
-class AnyResolver<StateType : State, ResolverType : StateMachineResolver<StateType>>(val resolver: ResolverType) :
+class AnyResolver<StateType : State, ResolverType : StateMachineResolver<StateType>>(
+    val resolver: ResolverType
+) :
     StateMachineResolver<StateType> {
 
     override var defaultState: StateType = resolver.defaultState

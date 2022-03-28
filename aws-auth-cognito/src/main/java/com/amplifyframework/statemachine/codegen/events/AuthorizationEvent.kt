@@ -15,13 +15,13 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
+import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.statemachine.StateMachineEvent
-import java.util.*
+import java.util.Date
 
 class AuthorizationEvent(val eventType: EventType, override val time: Date? = null) :
-        StateMachineEvent {
+    StateMachineEvent {
     sealed class EventType {
         data class Configure(val configuration: AuthConfiguration) : EventType()
         data class FetchAuthSession(val amplifyCredential: AmplifyCredential?) : EventType()

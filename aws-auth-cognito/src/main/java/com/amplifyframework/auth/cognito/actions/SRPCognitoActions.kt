@@ -15,19 +15,19 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.SRPHelper
-import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.smithy.kotlin.runtime.time.Instant
+import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.SRPHelper
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.SRPActions
-import java.util.*
+import com.amplifyframework.statemachine.codegen.events.SRPEvent
+import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 
 object SRPCognitoActions : SRPActions {
@@ -91,8 +91,15 @@ object SRPCognitoActions : SRPActions {
                     it?.authenticationResult?.run {
 
                         val signedInData = SignedInData(
-                            userId, username, Date(), SignInMethod.SRP, CognitoUserPoolTokens(
-                                idToken, accessToken, refreshToken, Instant.now().plus(expiresIn.seconds).epochSeconds,
+                            userId,
+                            username,
+                            Date(),
+                            SignInMethod.SRP,
+                            CognitoUserPoolTokens(
+                                idToken,
+                                accessToken,
+                                refreshToken,
+                                Instant.now().plus(expiresIn.seconds).epochSeconds,
                             )
                         )
                         dispatcher.send(SRPEvent(SRPEvent.EventType.FinalizeSRPSignIn()))

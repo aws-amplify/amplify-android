@@ -20,6 +20,9 @@ import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.AuthCategoryConfiguration
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertTrue
 import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Before
@@ -27,10 +30,6 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.test.assertTrue
-import kotlin.test.fail
 
 @RunWith(RobolectricTestRunner::class)
 class AWSCognitoAuthPluginTest {
@@ -48,12 +47,12 @@ class AWSCognitoAuthPluginTest {
         val context = getApplicationContext<Context>()
         val userPoolJSON = JSONObject(
             "{\n" +
-                    "   \"Default\": {\n" +
-                    "       \"PoolId\": \"us-east-2_xxxxxxxxx\",\n" +
-                    "       \"AppClientId\": \"xxxxxxxxxxxxxxxxxxxxxxxxxx\",\n" +
-                    "       \"Region\": \"us-east-2\"\n" +
-                    "   }\n" +
-                    "}"
+                "   \"Default\": {\n" +
+                "       \"PoolId\": \"us-east-2_xxxxxxxxx\",\n" +
+                "       \"AppClientId\": \"xxxxxxxxxxxxxxxxxxxxxxxxxx\",\n" +
+                "       \"Region\": \"us-east-2\"\n" +
+                "   }\n" +
+                "}"
         )
         val pluginConfig = JSONObject().put("CognitoUserPool", userPoolJSON)
         val json = JSONObject().put(
@@ -71,8 +70,12 @@ class AWSCognitoAuthPluginTest {
     @Ignore("fails, unable to load CRT")
     fun signIn() {
         val testLatch = CountDownLatch(1)
-        authCategory.signIn("username", "Password123",
-            { testLatch.countDown() }, {})
+        authCategory.signIn(
+            "username",
+            "Password123",
+            { testLatch.countDown() },
+            {}
+        )
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
     }
 }

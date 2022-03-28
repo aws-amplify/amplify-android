@@ -15,12 +15,17 @@ object AuthConfigurationProvider {
                 )
             ),
             CognitoUserPool(
-                UserPoolData("userPoolPoolId", "userPoolRegion", "userPoolAppClientId", "AppClientSecret")
+                UserPoolData(
+                    "userPoolPoolId",
+                    "userPoolRegion",
+                    "userPoolAppClientId",
+                    "AppClientSecret"
+                )
             )
         )
     }
 
-    internal fun getAuthConfiguration() : AuthConfiguration {
+    internal fun getAuthConfiguration(): AuthConfiguration {
         return AuthConfiguration.fromJson(
             JSONObject(Gson().toJson(getAuthConfigurationObject()))
         ).build()
@@ -36,16 +41,25 @@ internal data class Configuration(
 )
 
 @Serializable
-internal data class CredentialsProvider(@SerializedName("CognitoIdentity") val cognitoIdentity: CognitoIdentity)
+internal data class CredentialsProvider(
+    @SerializedName("CognitoIdentity") val cognitoIdentity: CognitoIdentity
+)
 
 @Serializable
 internal data class CognitoUserPool(@SerializedName("Default") val userPool: UserPoolData)
 
 @Serializable
-internal data class CognitoIdentity(@SerializedName("Default") val identityData: CognitoIdentityData)
+internal data class CognitoIdentity(
+    @SerializedName("Default") val identityData: CognitoIdentityData
+)
 
 @Serializable
-internal data class UserPoolData(val PoolId: String, val Region: String, val AppClientId: String, val AppClientSecret: String)
+internal data class UserPoolData(
+    val PoolId: String,
+    val Region: String,
+    val AppClientId: String,
+    val AppClientSecret: String
+)
 
 @Serializable
 internal data class CognitoIdentityData(val PoolId: String, val Region: String)

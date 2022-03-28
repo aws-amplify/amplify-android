@@ -14,7 +14,7 @@ object CredentialStoreUtil {
         AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 1212)
     )
 
-    fun getDefaultCredential() : AmplifyCredential {
+    fun getDefaultCredential(): AmplifyCredential {
         return credential
     }
 

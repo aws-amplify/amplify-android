@@ -31,9 +31,12 @@ internal class TransferStatusUpdater private constructor(
     private val transferDB: TransferDB
 ) {
     private val logger =
-        Amplify.Logging.forNamespace(AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName))
+        Amplify.Logging.forNamespace(
+            AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
+        )
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val transferStatusListenerMap: MutableMap<Int, MutableList<WeakReference<TransferListener>>> by lazy { ConcurrentHashMap() }
+    private val transferStatusListenerMap:
+        MutableMap<Int, MutableList<WeakReference<TransferListener>>> by lazy { ConcurrentHashMap() }
     private val transferWorkInfoIdMap: MutableMap<String, Int> by lazy { ConcurrentHashMap() }
     // private val multiPartTransferStatusListener: MutableMap<Int, MultiPartUploadTaskListener> by lazy { ConcurrentHashMap() }
     val activeTransferMap = object : AbstractMutableMap<Int, TransferRecord>() {

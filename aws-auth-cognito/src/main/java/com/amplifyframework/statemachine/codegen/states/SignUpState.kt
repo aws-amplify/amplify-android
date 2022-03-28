@@ -15,13 +15,13 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.statemachine.codegen.data.SignedUpData
-import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SignUpActions
+import com.amplifyframework.statemachine.codegen.data.SignedUpData
+import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 
 sealed class SignUpState : State {
     data class NotStarted(val id: String = "") : SignUpState()

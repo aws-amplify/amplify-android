@@ -22,12 +22,12 @@ import androidx.work.WorkManager
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker
+import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.concurrent.Executors
 
 internal class TransferWorkerObserver private constructor(
     context: Context,
@@ -53,7 +53,9 @@ internal class TransferWorkerObserver private constructor(
     }
 
     private val logger =
-        Amplify.Logging.forNamespace(AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName))
+        Amplify.Logging.forNamespace(
+            AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
+        )
 
     companion object {
         private val INSTANCE: TransferWorkerObserver? = null

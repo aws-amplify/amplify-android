@@ -17,7 +17,6 @@ apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 apply plugin: 'kotlin-android'
-//apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
 dependencies {
     implementation project(path: ':core')
@@ -41,8 +40,4 @@ dependencies {
     androidTestImplementation dependency.androidx.test.junit
     androidTestImplementation dependency.androidx.test.workmanager
 }
-
-//ktlint {
-//    android.set(true)
-//}
 

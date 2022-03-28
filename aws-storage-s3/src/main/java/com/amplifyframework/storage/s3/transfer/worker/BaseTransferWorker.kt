@@ -60,7 +60,9 @@ internal abstract class BaseTransferWorker(
     internal lateinit var transferRecord: TransferRecord
     internal lateinit var outputData: Data
     internal val logger =
-        Amplify.Logging.forNamespace(AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName))
+        Amplify.Logging.forNamespace(
+            AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
+        )
 
     companion object {
         internal const val PART_RECORD_ID = "PART_RECORD_ID"
@@ -100,7 +102,10 @@ internal abstract class BaseTransferWorker(
                     Result.retry()
                 } else {
                     transferStatusUpdater.updateOnError(transferRecord.id, Exception(ex))
-                    transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.FAILED)
+                    transferStatusUpdater.updateTransferState(
+                        transferRecord.id,
+                        TransferState.FAILED
+                    )
                     Result.failure(outputData)
                 }
             }
@@ -195,7 +200,9 @@ internal abstract class BaseTransferWorker(
             metadata = transferRecord.userMetadata
             contentMd5 = transferRecord.md5
             storageClass = transferRecord.headerStorageClass?.let { StorageClass.fromValue(it) }
-            websiteRedirectLocation = transferRecord.userMetadata?.get(ObjectMetadata.REDIRECT_LOCATION)
+            websiteRedirectLocation = transferRecord.userMetadata?.get(
+                ObjectMetadata.REDIRECT_LOCATION
+            )
             acl = transferRecord.cannedAcl?.let { CANNED_ACL_MAP[it] }
             requestPayer = transferRecord.userMetadata?.get(ObjectMetadata.REQUESTER_PAYS_HEADER)
                 ?.let { RequestPayer.fromValue(it) }

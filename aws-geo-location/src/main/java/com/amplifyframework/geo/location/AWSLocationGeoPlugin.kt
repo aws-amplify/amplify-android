@@ -16,7 +16,6 @@
 package com.amplifyframework.geo.location
 
 import android.content.Context
-
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.geo.AmazonLocationClient
 import com.amplifyframework.AmplifyException
@@ -37,15 +36,15 @@ import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
-
-import org.json.JSONObject
 import java.util.concurrent.Executors
+import org.json.JSONObject
 
 /**
  * A plugin for the Geo category to interact with Amazon Location Service.
  */
 class AWSLocationGeoPlugin(
-    private val userConfiguration: GeoConfiguration? = null, // for programmatically overriding amplifyconfiguration.json
+    // for programmatically overriding amplifyconfiguration.json
+    private val userConfiguration: GeoConfiguration? = null,
     private val authProvider: AuthCategory = Amplify.Auth
 ) : GeoCategoryPlugin<AmazonLocationClient?>() {
     companion object {
@@ -81,7 +80,8 @@ class AWSLocationGeoPlugin(
             this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
         } catch (error: Exception) {
             throw GeoException(
-                "Failed to configure AWSLocationGeoPlugin.", error,
+                "Failed to configure AWSLocationGeoPlugin.",
+                error,
                 "Make sure your amplifyconfiguration.json is valid."
             )
         }

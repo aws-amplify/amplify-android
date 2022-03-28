@@ -3,8 +3,12 @@ package com.amplifyframework.statemachine
 import com.amplifyframework.statemachine.state.Color
 import com.amplifyframework.statemachine.state.ColorCounter
 import com.amplifyframework.statemachine.state.Counter
-import com.amplifyframework.statemachine.state.Counter.Event.EventType.*
 import com.amplifyframework.statemachine.state.CounterStateMachine
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.test.Ignore
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -14,11 +18,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.test.Ignore
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class StateMachineTests {
 
@@ -51,7 +50,7 @@ class StateMachineTests {
     fun testBasicReceive() {
         val testLatch = CountDownLatch(1)
         val testMachine = CounterStateMachine.logging()
-        val increment = Counter.Event("1", Increment)
+        val increment = Counter.Event("1", Counter.Event.EventType.Increment)
         testMachine.send(increment)
         testMachine.getCurrentState {
             assertEquals(1, it.value)
@@ -64,8 +63,8 @@ class StateMachineTests {
     @Ignore("Fails randomly, needs fixing")
     fun testConcurrentReceive() {
         val testMachine = CounterStateMachine()
-        val increment = Counter.Event("increment", Increment)
-        val decrement = Counter.Event("decrement", Decrement)
+        val increment = Counter.Event("increment", Counter.Event.EventType.Increment)
+        val decrement = Counter.Event("decrement", Counter.Event.EventType.Decrement)
         (1..1000)
             .map { i ->
                 GlobalScope.launch {
@@ -85,7 +84,7 @@ class StateMachineTests {
     fun testConcurrentReceiveAndRead() {
         val testLatch = CountDownLatch(10)
         val testMachine = CounterStateMachine()
-        val increment = Counter.Event("1", Increment)
+        val increment = Counter.Event("1", Counter.Event.EventType.Increment)
         (1..10)
             .map { i ->
                 testMachine.send(increment)
@@ -108,7 +107,7 @@ class StateMachineTests {
             action2Latch.countDown()
         }
         val testMachine = CounterStateMachine.logging()
-        val event = Counter.Event("1", IncrementAndDoActions(listOf(action1, action2)))
+        val event = Counter.Event("1", Counter.Event.EventType.IncrementAndDoActions(listOf(action1, action2)))
         testMachine.send(event)
         assertTrue { action1Latch.await(5, TimeUnit.SECONDS) }
         assertTrue { action2Latch.await(5, TimeUnit.SECONDS) }
@@ -123,11 +122,11 @@ class StateMachineTests {
             val action2 = com.amplifyframework.statemachine.BasicAction("basic") { _, _ ->
                 action2Latch.countDown()
             }
-            val event = Counter.Event("2", IncrementAndDoActions(listOf(action2)))
+            val event = Counter.Event("2", Counter.Event.EventType.IncrementAndDoActions(listOf(action2)))
             dispatcher.send(event)
         }
         val testMachine = CounterStateMachine.logging()
-        val event = Counter.Event("1", IncrementAndDoActions(listOf(action1)))
+        val event = Counter.Event("1", Counter.Event.EventType.IncrementAndDoActions(listOf(action1)))
         testMachine.send(event)
 
         assertTrue { action1Latch.await(5, TimeUnit.SECONDS) }

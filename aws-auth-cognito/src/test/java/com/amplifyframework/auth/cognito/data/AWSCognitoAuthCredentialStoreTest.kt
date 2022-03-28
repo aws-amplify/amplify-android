@@ -2,7 +2,14 @@ package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
 import aws.smithy.kotlin.runtime.time.Instant
-import com.amplifyframework.statemachine.codegen.data.*
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
+import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
+import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert
@@ -14,8 +21,6 @@ import org.mockito.Mockito
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
-import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.seconds
 
 @RunWith(MockitoJUnitRunner::class)
 class AWSCognitoAuthCredentialStoreTest {
@@ -46,13 +51,17 @@ class AWSCognitoAuthCredentialStoreTest {
 
     @Before
     fun setup() {
-        Mockito.`when`(mockFactory.create(
-            mockContext,
-            keyValueRepoID,
-            true,
-        )).thenReturn(mockKeyValue)
+        Mockito.`when`(
+            mockFactory.create(
+                mockContext,
+                keyValueRepoID,
+                true,
+            )
+        ).thenReturn(mockKeyValue)
 
-        Mockito.`when`(mockKeyValue.get(Mockito.anyString())).thenReturn(serialized(getCredential()))
+        Mockito.`when`(mockKeyValue.get(Mockito.anyString())).thenReturn(
+            serialized(getCredential())
+        )
     }
 
     @Test
@@ -68,9 +77,9 @@ class AWSCognitoAuthCredentialStoreTest {
     fun testSaveCredentialWithIdentityPool() {
         setupIdentityPoolConfig()
         persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
-        
+
         persistentStore.saveCredential(getCredential())
-        
+
         verify(mockKeyValue, times(1))
             .put(KEY_WITH_IDENTITY_POOL, serialized(getCredential()))
     }
@@ -92,9 +101,9 @@ class AWSCognitoAuthCredentialStoreTest {
         setupUserPoolConfig()
         setupIdentityPoolConfig()
         persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
-        
+
         val actual = persistentStore.retrieveCredential()
-        
+
         Assert.assertEquals(actual, getCredential())
     }
 
@@ -102,9 +111,9 @@ class AWSCognitoAuthCredentialStoreTest {
     fun testDeleteCredential() {
         setupUserPoolConfig()
         persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
-        
+
         persistentStore.deleteCredential()
-        
+
         verify(mockKeyValue, times(1)).remove(KEY_WITH_USER_POOL)
     }
 
@@ -152,23 +161,37 @@ class AWSCognitoAuthCredentialStoreTest {
     }
 
     private fun setupIdentityPoolConfig() {
-        Mockito.`when`(mockConfig.identityPool).thenReturn(IdentityPoolConfiguration {
-            this.poolId = IDENTITY_POOL_ID
-        })
+        Mockito.`when`(mockConfig.identityPool).thenReturn(
+            IdentityPoolConfiguration {
+                this.poolId = IDENTITY_POOL_ID
+            }
+        )
     }
 
     private fun setupUserPoolConfig() {
-        Mockito.`when`(mockConfig.userPool).thenReturn(UserPoolConfiguration {
-            this.poolId = USER_POOL_ID
-            this.appClientId = ""
-        })
+        Mockito.`when`(mockConfig.userPool).thenReturn(
+            UserPoolConfiguration {
+                this.poolId = USER_POOL_ID
+                this.appClientId = ""
+            }
+        )
     }
 
     private fun getCredential(): AmplifyCredential {
         return AmplifyCredential(
-            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", Instant.now().plus(123123.seconds).epochSeconds),
+            CognitoUserPoolTokens(
+                "idToken",
+                "accessToken",
+                "refreshToken",
+                Instant.now().plus(123123.seconds).epochSeconds
+            ),
             "identityPool",
-            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", Instant.now().plus(123123.seconds).epochSeconds)
+            AWSCredentials(
+                "accessKeyId",
+                "secretAccessKey",
+                "sessionToken",
+                Instant.now().plus(123123.seconds).epochSeconds
+            )
         )
     }
 
@@ -176,4 +199,3 @@ class AWSCognitoAuthCredentialStoreTest {
         return Json.encodeToString(credential)
     }
 }
-

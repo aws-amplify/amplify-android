@@ -14,24 +14,28 @@
  */
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.errors.AuthenticationError
-import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.errors.AuthenticationError
+import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 
 sealed class FetchAuthSessionState : State {
     data class InitializingFetchAuthSession(val id: String = "") : FetchAuthSessionState()
-    data class FetchingUserPoolTokens(override var fetchUserPoolTokensState: FetchUserPoolTokensState?) :
+    data class FetchingUserPoolTokens(
+        override var fetchUserPoolTokensState: FetchUserPoolTokensState?
+    ) :
         FetchAuthSessionState()
 
     data class FetchingIdentity(override var fetchIdentityState: FetchIdentityState?) :
         FetchAuthSessionState()
 
-    data class FetchingAWSCredentials(override var fetchAwsCredentialsState: FetchAwsCredentialsState?) :
+    data class FetchingAWSCredentials(
+        override var fetchAwsCredentialsState: FetchAwsCredentialsState?
+    ) :
         FetchAuthSessionState()
 
     data class SessionEstablished(val amplifyCredential: AmplifyCredential?) :
