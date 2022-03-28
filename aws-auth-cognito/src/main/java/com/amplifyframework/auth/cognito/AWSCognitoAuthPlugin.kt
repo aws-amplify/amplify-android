@@ -43,6 +43,7 @@ import com.amplifyframework.statemachine.codegen.events.*
 import com.amplifyframework.statemachine.codegen.states.*
 import org.json.JSONException
 import org.json.JSONObject
+import java.util.concurrent.Semaphore
 
 /**
  * A Cognito implementation of the Auth Plugin.
@@ -711,8 +712,26 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         TODO("Not yet implemented")
     }
 
-    override fun getCurrentUser(): AuthUser {
-        TODO("Not yet implemented")
+    override fun getCurrentUser() : AuthUser? {
+        var authUser: AuthUser? = null
+        val semaphore = Semaphore(0)
+        authStateMachine.getCurrentState { authState ->
+            when (val authorizationState = authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    authUser = AuthUser(
+                        authorizationState.signedInData.userId,
+                        authorizationState.signedInData.username
+                    )
+                }
+            }
+            semaphore.release()
+        }
+        try {
+            semaphore.acquire()
+        } catch (ex: InterruptedException) {
+            throw Exception("Interrupted while waiting for current user", ex)
+        }
+        return authUser
     }
 
     override fun signOut(onSuccess: Action, onError: Consumer<AuthException>) {
