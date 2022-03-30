@@ -16,16 +16,10 @@
 package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.logging.Logger;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -48,11 +42,9 @@ public interface Model {
             return (Serializable) Objects.requireNonNull(method.invoke(this));
         } catch (IllegalAccessException exception) {
             throw (new IllegalStateException(exceptionMessage));
-        }
-        catch (NoSuchMethodException exception) {
+        } catch (NoSuchMethodException exception) {
             throw (new IllegalStateException(exceptionMessage));
-        }
-        catch (InvocationTargetException exception) {
+        } catch (InvocationTargetException exception) {
             throw (new IllegalStateException(exceptionMessage));
         }
     }
@@ -66,18 +58,22 @@ public interface Model {
         return getClass().getSimpleName();
     }
 
+    /**
+     * Gets concatenated partitionkey#sortKey.
+     * @return concatenated partitionkey#sortKey...
+     */
     @NonNull
     default String getPrimaryKeyString() {
-           try {
-               if (resolveIdentifier() instanceof ModelPrimaryKey  ) {
-                   return ((ModelPrimaryKey<?>) resolveIdentifier()).getIdentifier();
-               } else {
-                   return (String) resolveIdentifier();
-               }
-           }
-           catch (Exception ex){
-               throw (new IllegalStateException("Invalid Primary Key, It should either be of type String or composite Primary Key."));
-           }
+        try {
+            if (resolveIdentifier() instanceof ModelPrimaryKey) {
+                return ((ModelPrimaryKey<?>) resolveIdentifier()).getIdentifier();
+            } else {
+                return (String) resolveIdentifier();
+            }
+        } catch (Exception exception) {
+            throw (new IllegalStateException("Invalid Primary Key, " +
+                   "It should either be of type String or composite Primary Key." + exception));
+        }
     }
 
     /**
@@ -85,11 +81,14 @@ public interface Model {
      * @return The Type of the model.
      */
     @NonNull
-    default Type getType(){
+    default Type getType() {
         return Type.USER;
     }
 
-    public enum Type {
+    /**
+     * This enum represents the types of Model.
+     */
+    enum Type {
         USER,
         SYSTEM
     }

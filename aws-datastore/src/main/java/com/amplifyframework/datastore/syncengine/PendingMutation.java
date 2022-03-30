@@ -328,7 +328,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          */
         @NonNull
         @Override
-        public Type getType(){
+        public Type getType() {
             return Type.SYSTEM;
         }
 

@@ -41,7 +41,6 @@ import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testmodels.commentsblog.BlogOwnerWithCustomPK;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostAuthorJoin;

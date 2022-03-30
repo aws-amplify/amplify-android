@@ -61,15 +61,14 @@ public @interface ModelConfig {
     AuthRule[] authRules() default {};
 
     /**
-     * Model Type SYSTEM or USER
-     * @return
+     * Model Type SYSTEM or USER.
+     * @return Type of Model.
      */
     Model.Type type() default Model.Type.SYSTEM;
 
-
     /**
-     * Model Version
-     * @return
+     * Model Version.
+     * @return Version of Model.
      */
     String version() default "V1";
 }

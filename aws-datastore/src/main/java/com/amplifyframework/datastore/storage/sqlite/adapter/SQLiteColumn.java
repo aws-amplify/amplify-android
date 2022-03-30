@@ -187,7 +187,7 @@ public final class SQLiteColumn {
      * of SQLite column.
      */
     public static final class Builder {
-        public String ownedField;
+        private String ownedField;
         private String name;
         private String fieldName;
         private String tableName;

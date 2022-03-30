@@ -21,8 +21,6 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 
-import java.io.Serializable;
-
 @ModelConfig(listPluralName = "Todos", syncPluralName = "Todos")
 final class Todo implements Model {
     private final String id;

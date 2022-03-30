@@ -75,22 +75,24 @@ public final class Where {
      *
      * @param itemClass model class.
      * @param modelPrimaryKey model identifier.
+     * @param <T> Extends Model.
      * @return options with proper predicate and pagination to match a model by its id.
+     * @throws AmplifyException Throws AmplifyException.
      */
-    public static <T extends Model>QueryOptions identifier ( @NonNull Class<T> itemClass,
-                                                           @NonNull final Serializable modelPrimaryKey )
+    public static <T extends Model> QueryOptions identifier(@NonNull Class<T> itemClass,
+                                                           @NonNull final Serializable modelPrimaryKey)
             throws AmplifyException {
         final ModelSchema schema = ModelSchema.fromModelClass(itemClass);
         final List<String> primaryKeyList = schema.getPrimaryIndexFields();
         QueryOptions queryOptions = null;
         Iterator<String> pkField = primaryKeyList.listIterator();
         final QueryField idField = QueryField.field(pkField.next());
-        if(primaryKeyList.size() == 1 && !( modelPrimaryKey instanceof ModelPrimaryKey)){
-            queryOptions =  matches(idField.eq(Objects.requireNonNull((String) modelPrimaryKey)));
-        } else{
+        if (primaryKeyList.size() == 1 && !(modelPrimaryKey instanceof ModelPrimaryKey)) {
+            queryOptions = matches(idField.eq(Objects.requireNonNull((String) modelPrimaryKey)));
+        } else {
             ModelPrimaryKey<?> primaryKey = (ModelPrimaryKey<?>) modelPrimaryKey;
             Iterator<?> sortKeyIterator = primaryKey.sortedKeys().listIterator();
-            if (queryOptions == null){
+            if (queryOptions == null) {
                 queryOptions = matches(idField.eq(Objects.requireNonNull(primaryKey.key())));
             } else {
                 queryOptions.matches(QueryField.field(pkField.next()).eq(Objects.requireNonNull(sortKeyIterator)));
@@ -98,7 +100,6 @@ public final class Where {
         }
         return queryOptions.paginated(Page.firstResult());
     }
-
 
     /**
      * Factory method that builds the options with the given {@link QueryPaginationInput}.

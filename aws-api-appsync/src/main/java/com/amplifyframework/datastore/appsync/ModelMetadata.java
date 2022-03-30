@@ -70,7 +70,7 @@ public final class ModelMetadata implements Model {
     /** {@inheritDoc}. */
     @NonNull
     @Override
-    public Type getType(){
+    public Type getType() {
         return Type.SYSTEM;
     }
 

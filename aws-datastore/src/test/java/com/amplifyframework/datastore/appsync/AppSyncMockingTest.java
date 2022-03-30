@@ -169,7 +169,8 @@ public final class AppSyncMockingTest {
     @Test
     public void mockSuccessResponseForUpdate() {
         ModelMetadata updatedMetadata =
-            new ModelMetadata(StrawMen.TONY_MODEL.getPrimaryKeyString(), false, 2, StrawMen.JOE_METADATA.getLastChangedAt());
+            new ModelMetadata(StrawMen.TONY_MODEL.getPrimaryKeyString(), false, 2, StrawMen.JOE_METADATA
+                    .getLastChangedAt());
         ModelWithMetadata<BlogOwner> tonyWithUpdatedMetadata =
             new ModelWithMetadata<>(StrawMen.TONY_MODEL, updatedMetadata);
         AppSyncMocking.update(appSync)
@@ -216,7 +217,8 @@ public final class AppSyncMockingTest {
     @Test
     public void mockSuccessResponseForDelete() {
         ModelMetadata deletedMetadata =
-            new ModelMetadata(StrawMen.TONY_MODEL.getPrimaryKeyString(), true, 2, StrawMen.JOE_METADATA.getLastChangedAt());
+            new ModelMetadata(StrawMen.TONY_MODEL.getPrimaryKeyString(), true, 2,
+                    StrawMen.JOE_METADATA.getLastChangedAt());
         ModelWithMetadata<BlogOwner> tonyWithDeleteMetadata =
             new ModelWithMetadata<>(StrawMen.TONY_MODEL, deletedMetadata);
         AppSyncMocking.delete(appSync)

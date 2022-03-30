@@ -187,10 +187,11 @@ final class SQLiteModelTree {
                 SqlKeyword.DELIMITER;
         filterByIdsBuilder.append(queryString);
 
-        for(Iterator<Map.Entry<String, Collection<Serializable>>> parentIdKeyValueIterator = parentIdMap.entrySet().iterator();
+        for (Iterator<Map.Entry<String, Collection<Serializable>>> parentIdKeyValueIterator = parentIdMap.entrySet()
+                .iterator();
             parentIdKeyValueIterator.hasNext();) {
             Map.Entry<String, Collection<Serializable>> parentIdKeyValue = parentIdKeyValueIterator.next();
-            for (Iterator<Serializable> ids = parentIdKeyValue.getValue().iterator(); ids.hasNext(); ) {
+            for (Iterator<Serializable> ids = parentIdKeyValue.getValue().iterator(); ids.hasNext();) {
                 quotedIds.append(Wrap.inSingleQuotes(ids.next().toString()));
                 if (ids.hasNext()) {
                     quotedIds.append(SqlKeyword.SEPARATOR);
@@ -201,19 +202,17 @@ final class SQLiteModelTree {
                     SqlKeyword.DELIMITER +
                     SqlKeyword.IN +
                     SqlKeyword.DELIMITER +
-                    Wrap.inParentheses(quotedIds.toString())) ;
-            if(parentIdKeyValueIterator.hasNext()){
+                    Wrap.inParentheses(quotedIds.toString()));
+            if (parentIdKeyValueIterator.hasNext()) {
                 filterByIdsBuilder.append(SqlKeyword.DELIMITER);
                 filterByIdsBuilder.append(SqlKeyword.AND);
                 filterByIdsBuilder.append(SqlKeyword.DELIMITER);
             }
         }
 
-
         filterByIdsBuilder.append(";");
         return database.rawQuery(filterByIdsBuilder.toString(), new String[0]);
     }
-
 
     private Cursor queryChildren(
             @NonNull String childTable,

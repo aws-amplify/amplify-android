@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.appsync;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -31,7 +30,6 @@ import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
-import com.amplifyframework.core.model.ModelPrimaryKey;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
@@ -168,7 +166,6 @@ final class AppSyncRequestFactory {
                     .requestAuthorizationStrategyType(strategyType)
                     .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, modelSchema.getModelClass()))
                     .build();
-            Log.d("AppSyncRequestFactory","buildsubscription request" + request);
             return request;
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",

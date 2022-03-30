@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 import android.os.Build;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
@@ -120,6 +121,7 @@ public class SqlCommandTest {
         final ModelSchema modelSchema = ModelSchema.builder()
                 .fields(Collections.emptyMap())
                 .name("Guitar")
+                .modelType(Model.Type.SYSTEM)
                 .build();
 
         final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(modelSchema);
@@ -141,6 +143,7 @@ public class SqlCommandTest {
         final ModelSchema modelSchema = ModelSchema.builder()
                 .name("Person")
                 .indexes(Collections.singletonMap("idBasedIndex", index))
+                .modelType(Model.Type.SYSTEM)
                 .build();
 
         final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
@@ -287,6 +290,7 @@ public class SqlCommandTest {
         return ModelSchema.builder()
                 .name("Person")
                 .fields(fields)
+                .modelType(Model.Type.SYSTEM)
                 .build();
     }
 
@@ -340,6 +344,7 @@ public class SqlCommandTest {
                 .name("Person")
                 .fields(fields)
                 .indexes(Collections.singletonMap("undefined", index))
+                .modelType(Model.Type.SYSTEM)
                 .build();
     }
 }

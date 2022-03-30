@@ -46,14 +46,18 @@ import java.util.TreeMap;
 @SuppressWarnings("WeakerAccess")
 public final class SQLiteTable {
 
-    public static final String primaryKeyFieldName = "@@primaryKey";
+    /**
+     * Primary key field name for custom primary key support.
+     */
+    public static final String PRIMARY_KEY_FIELD_NAME = "@@primaryKey";
     private final String name;
     private final Map<String, SQLiteColumn> columns;
     private final List<String> primaryKeyColumns;
     private final List<SQLiteColumn> sortedColumns;
     private final Model.Type type;
 
-    private SQLiteTable(String name, Map<String, SQLiteColumn> columns, List<String> primaryKeyColumns, Model.Type type) {
+    private SQLiteTable(String name, Map<String, SQLiteColumn> columns,
+                        List<String> primaryKeyColumns, Model.Type type) {
         this.name = name;
         this.columns = columns;
         this.type = type;
@@ -90,14 +94,14 @@ public final class SQLiteTable {
         Map<String, SQLiteColumn> sqlColumns = new TreeMap<>();
         if (modelSchema.getModelType() == Model.Type.USER) {
             SQLiteColumn primaryKeyColumn = SQLiteColumn.builder()
-                    .name(primaryKeyFieldName)
-                    .fieldName(primaryKeyFieldName)
+                    .name(PRIMARY_KEY_FIELD_NAME)
+                    .fieldName(PRIMARY_KEY_FIELD_NAME)
                     .tableName(modelSchema.getName())
                     .ownerOf(null)
                     .isNonNull(true)
                     .dataType(SQLiteDataType.TEXT)
                     .build();
-            sqlColumns.put(primaryKeyFieldName, primaryKeyColumn);
+            sqlColumns.put(PRIMARY_KEY_FIELD_NAME, primaryKeyColumn);
         }
         for (ModelField modelField : modelSchema.getFields().values()) {
             final ModelAssociation association = associations.get(modelField.getName());
@@ -164,7 +168,7 @@ public final class SQLiteTable {
     public SQLiteColumn getPrimaryKey() {
         for (SQLiteColumn column : sortedColumns) {
             if (type == Model.Type.USER) {
-                if (column.getName().equals(primaryKeyFieldName)) {
+                if (column.getName().equals(PRIMARY_KEY_FIELD_NAME)) {
                     return column;
                 }
             }
@@ -323,7 +327,7 @@ public final class SQLiteTable {
      */
     public static final class Builder {
         private final Map<String, SQLiteColumn> columns;
-        private  List<String> primaryKeyColumns;
+        private List<String> primaryKeyColumns;
         private String name;
         private Model.Type type;
 

@@ -87,8 +87,8 @@ final class VersionRepository {
         // There should be only one metadata for the model....
         if (results.size() != 1) {
             throw new DataStoreException(
-                "Wanted 1 metadata for item with id = " + model.getPrimaryKeyString() + ", but had " + results.size() + ".",
-                "This is likely a bug. please report to AWS."
+                "Wanted 1 metadata for item with id = " + model.getPrimaryKeyString() + ", but had " + results.size()
+                        + ".", "This is likely a bug. please report to AWS."
             );
         }
         final Integer version = results.get(0).getVersion();
