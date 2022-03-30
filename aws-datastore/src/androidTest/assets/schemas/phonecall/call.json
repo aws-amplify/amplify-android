@@ -23,10 +23,10 @@
             "name": "id",
             "targetType": "ID"
         },
-        "minutes": {
+        "startTime": {
             "authRules": [],
-            "javaClassForValue": "Integer",
-            "targetType": "Int",
+            "javaClassForValue": "com.amplifyframework.core.model.temporal.Temporal$Time",
+            "targetType": "AWSTime",
             "isRequired": true,
             "isArray": false,
             "isEnum": false,

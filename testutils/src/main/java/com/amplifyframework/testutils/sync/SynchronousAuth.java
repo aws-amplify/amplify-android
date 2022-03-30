@@ -560,4 +560,14 @@ public final class SynchronousAuth {
                 )
         );
     }
+
+    /**
+     * Delete the account of the currently signed in user.
+     * @throws AuthException exception
+     */
+    public void deleteUser() throws AuthException {
+        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.deleteUser(() -> onResult.accept(VoidResult.instance()), onError)
+        );
+    }
 }
