@@ -125,6 +125,10 @@ public final class ModelSchema {
                     ? modelConfig.pluralName()
                     : null;
 
+            final Model.Type type = modelConfig != null
+                    ? modelConfig.type()
+                    : Model.Type.SYSTEM;
+
             final String listPluralName = modelConfig != null && !modelConfig.listPluralName().isEmpty()
                     ? modelConfig.listPluralName()
                     : null;
@@ -173,7 +177,7 @@ public final class ModelSchema {
                     .associations(associations)
                     .indexes(indexes)
                     .modelClass(clazz)
-                    .modelType(modelConfig.type())
+                    .modelType(type)
                     .build();
         } catch (Exception exception) {
             throw new AmplifyException(
@@ -430,6 +434,10 @@ public final class ModelSchema {
             '}';
     }
 
+    /**
+     * Returns the type of the model.
+     * @return type of the model.
+     */
     public Model.Type getModelType() {
         return modelType;
     }

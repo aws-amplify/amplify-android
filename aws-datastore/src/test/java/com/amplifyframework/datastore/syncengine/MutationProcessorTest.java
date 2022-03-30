@@ -196,7 +196,8 @@ public final class MutationProcessorTest {
             .name("Exceptional Blogger")
             .build();
         ModelMetadata metadata =
-            new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now());
+            new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(), false, 1,
+                    Temporal.Timestamp.now());
         ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(schema.getName(), 1_000L);
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata);
@@ -247,7 +248,8 @@ public final class MutationProcessorTest {
                 .name("Average Joe")
                 .build();
         ModelMetadata metadata =
-                new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now());
+                new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(), false, 1,
+                        Temporal.Timestamp.now());
         ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         synchronousStorageAdapter.save(model, metadata);
 

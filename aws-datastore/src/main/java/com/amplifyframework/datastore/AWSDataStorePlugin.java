@@ -597,7 +597,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             itemChange -> {
                 try {
                     if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName()) &&
-                            itemChange.item().getPrimaryKeyString().equals(ModelPrimaryKey.Helper.getUniqueKey(uniqueId))) {
+                            itemChange.item().getPrimaryKeyString().equals(ModelPrimaryKey.Helper
+                                    .getUniqueKey(uniqueId))) {
                         @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
                         onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));

@@ -247,7 +247,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 this.sqlCommandFactory = new SQLiteCommandFactory(schemaRegistry, gson);
                 CreateSqlCommands createSqlCommands = getCreateCommands(modelsProvider.modelNames());
-                LOG.debug("sqlAdapter create commands"+ createSqlCommands.getCreateTableCommands().toString());
+                LOG.debug("sqlAdapter create commands" + createSqlCommands.getCreateTableCommands().toString());
                 sqliteStorageHelper = SQLiteStorageHelper.getInstance(
                         context,
                         databaseName,
@@ -757,18 +757,20 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         // Generate SQL command for given action
         switch (writeType) {
             case CREATE:
-                LOG.verbose("Creating item in " + sqliteTable.getName() + " identified by ID: " + item.getPrimaryKeyString());
+                LOG.verbose("Creating item in " + sqliteTable.getName() + " identified by ID: " + item
+                        .getPrimaryKeyString());
                 sqlCommandProcessor.execute(sqlCommandFactory.insertFor(modelSchema, item));
                 break;
             case UPDATE:
-                LOG.verbose("Updating item in " + sqliteTable.getName() + " identified by ID: " + item.getPrimaryKeyString());
+                LOG.verbose("Updating item in " + sqliteTable.getName() + " identified by ID: " + item
+                        .getPrimaryKeyString());
                 sqlCommandProcessor.execute(sqlCommandFactory.updateFor(modelSchema, item));
                 break;
             case DELETE:
-                LOG.verbose("Deleting item in " + sqliteTable.getName() + " identified by ID: " + item.getPrimaryKeyString());
-                //final String primaryKeyName = sqliteTable.getPrimaryKey().getName();
-                //final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName).eq(item.resolveIdentifier());
-                final QueryPredicate matchId = ModelPrimaryKey.Helper.getQueryPredicate(item, sqliteTable.getName(), sqliteTable.getPrimaryKeyColumns());
+                LOG.verbose("Deleting item in " + sqliteTable.getName() + " identified by ID: " + item
+                        .getPrimaryKeyString());
+                final QueryPredicate matchId = ModelPrimaryKey.Helper.getQueryPredicate(item, sqliteTable.getName(),
+                        sqliteTable.getPrimaryKeyColumns());
                 sqlCommandProcessor.execute(sqlCommandFactory.deleteFor(modelSchema, matchId));
                 break;
             default:

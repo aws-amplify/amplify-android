@@ -137,7 +137,8 @@ public final class HybridTemporalSyncInstrumentationTest {
             .modelSchema(modelSchema)
             .build();
         HubAccumulator publicationAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelSchema.getName(), sentModel.resolveIdentifier()), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelSchema.getName(),
+                    sentModel.resolveIdentifier()), 1)
                 .start();
         hybridBehaviors.save(sentModel);
         publicationAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
