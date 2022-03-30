@@ -290,7 +290,7 @@ open class StateTransitionTestBase {
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         FetchUserPoolTokensEvent(
-                            FetchUserPoolTokensEvent.EventType.Fetched(credentials)
+                            FetchUserPoolTokensEvent.EventType.Fetched()
                         )
                     )
                 }

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth.cognito
+package com.amplifyframework.auth.cognito.helpers
 
 import java.math.BigInteger
 import java.util.Base64

@@ -25,6 +25,7 @@ import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
+import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver

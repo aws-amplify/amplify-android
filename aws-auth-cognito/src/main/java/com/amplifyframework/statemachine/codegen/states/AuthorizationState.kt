@@ -20,6 +20,7 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 
 sealed class AuthorizationState : State {
@@ -28,7 +29,9 @@ sealed class AuthorizationState : State {
     data class FetchingAuthSession(override var fetchAuthSessionState: FetchAuthSessionState?) :
         AuthorizationState()
 
-    data class SessionEstablished(override var fetchAuthSessionState: FetchAuthSessionState?) : AuthorizationState()
+    data class SessionEstablished(val amplifyCredential: AmplifyCredential?) :
+        AuthorizationState()
+
     data class Error(val exception: Exception) : AuthorizationState()
 
     open var fetchAuthSessionState: FetchAuthSessionState? =
@@ -54,11 +57,12 @@ sealed class AuthorizationState : State {
             val actions = resolution.actions.toMutableList()
             val builder = Builder(resolution.newState)
 
-            oldState.fetchAuthSessionState?.let { fetchAuthSessionResolver.resolve(it, event) }
-                ?.let {
-                    builder.fetchAuthSessionState = it.newState
-                    actions += it.actions
-                }
+            oldState.fetchAuthSessionState?.let {
+                fetchAuthSessionResolver.resolve(it, event)
+            }?.let {
+                builder.fetchAuthSessionState = it.newState
+                actions += it.actions
+            }
             return StateResolution(builder.build(), actions)
         }
 
@@ -67,45 +71,40 @@ sealed class AuthorizationState : State {
             event: StateMachineEvent
         ): StateResolution<AuthorizationState> {
             val authorizationEvent = asAuthorizationEvent(event)
+            val defaultResolution = StateResolution(oldState)
             return when (oldState) {
                 is NotConfigured -> {
                     when (authorizationEvent) {
-                        is AuthorizationEvent.EventType.Configure -> onConfigure()
+                        is AuthorizationEvent.EventType.Configure -> {
+                            val action = authorizationActions.configureAuthorizationAction()
+                            StateResolution(Configured(), listOf(action))
+                        }
                         is AuthorizationEvent.EventType.ThrowError -> StateResolution(
-                            Error(
-                                authorizationEvent.exception
-                            )
+                            Error(authorizationEvent.exception)
                         )
-                        else -> StateResolution.from(oldState)
+                        else -> defaultResolution
                     }
                 }
                 is Configured, is SessionEstablished ->
                     when (authorizationEvent) {
                         is AuthorizationEvent.EventType.FetchAuthSession -> {
-                            val action = authorizationActions.initializeFetchAuthSession(
-                                authorizationEvent.amplifyCredential
-                            )
+                            val action =
+                                authorizationActions.initializeFetchAuthSession(authorizationEvent.amplifyCredential)
                             val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
                             StateResolution(newState, listOf(action))
                         }
-                        else -> StateResolution.from(oldState)
+                        else -> defaultResolution
                     }
                 is FetchingAuthSession ->
                     when (authorizationEvent) {
                         is AuthorizationEvent.EventType.FetchedAuthSession -> {
-                            val newState = SessionEstablished(oldState.fetchAuthSessionState)
+                            val newState = SessionEstablished(authorizationEvent.amplifyCredential)
                             StateResolution(newState)
                         }
-                        else -> StateResolution.from(oldState)
+                        else -> defaultResolution
                     }
-                else -> StateResolution(oldState)
+                else -> defaultResolution
             }
-        }
-
-        private fun onConfigure(): StateResolution<AuthorizationState> {
-            val action = authorizationActions.configureAuthorizationAction()
-            val newState = Configured()
-            return StateResolution(newState, listOf(action))
         }
     }
 
@@ -114,11 +113,9 @@ sealed class AuthorizationState : State {
         var fetchAuthSessionState: FetchAuthSessionState? = null
 
         override fun build(): AuthorizationState = when (authZState) {
-            is NotConfigured -> NotConfigured()
             is FetchingAuthSession -> FetchingAuthSession(fetchAuthSessionState)
-            is Configured -> Configured()
-            is Error -> authZState
-            is SessionEstablished -> SessionEstablished(fetchAuthSessionState)
+            is SessionEstablished -> SessionEstablished(authZState.amplifyCredential)
+            else -> authZState
         }
     }
 }

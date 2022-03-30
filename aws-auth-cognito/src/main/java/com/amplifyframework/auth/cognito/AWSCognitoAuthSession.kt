@@ -16,8 +16,10 @@
 package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.runtime.auth.credentials.Credentials
+import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.result.AuthSessionResult
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 
 /**
  * Cognito extension of AuthSession containing AWS Cognito specific tokens.
@@ -51,4 +53,29 @@ data class AWSCognitoAuthSession(
      * @return the tokens which come from User Pools (access, id, refresh tokens)
      */
     val userPoolTokens: AuthSessionResult<AWSCognitoUserPoolTokens>
-) : AuthSession(signedIn)
+) : AuthSession(signedIn) {
+    companion object {
+        fun fromAmplifyCredential(credentials: AmplifyCredential): AWSCognitoAuthSession {
+            val userPoolTokens = AWSCognitoUserPoolTokens(
+                accessToken = credentials.cognitoUserPoolTokens?.accessToken ?: "",
+                idToken = credentials.cognitoUserPoolTokens?.idToken ?: "",
+                refreshToken = credentials.cognitoUserPoolTokens?.refreshToken ?: ""
+            )
+            val awsCredentials = Credentials(
+                accessKeyId = credentials.awsCredentials?.accessKeyId ?: "",
+                secretAccessKey = credentials.awsCredentials?.secretAccessKey ?: "",
+                sessionToken = credentials.awsCredentials?.sessionToken,
+                expiration = Instant.fromEpochSeconds(
+                    credentials.awsCredentials?.expiration ?: 0
+                )
+            )
+            return AWSCognitoAuthSession(
+                signedIn = true,
+                identityId = AuthSessionResult.success(credentials.identityId),
+                awsCredentials = AuthSessionResult.success(awsCredentials),
+                userSub = AuthSessionResult.success("usersub"),
+                userPoolTokens = AuthSessionResult.success(userPoolTokens)
+            )
+        }
+    }
+}

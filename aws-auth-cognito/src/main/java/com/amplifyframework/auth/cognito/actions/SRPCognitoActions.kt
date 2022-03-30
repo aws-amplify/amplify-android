@@ -19,7 +19,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.SRPHelper
+import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens

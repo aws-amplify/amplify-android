@@ -20,14 +20,13 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchAWSCredentialsActions
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.FetchAwsCredentialsEvent
 import java.lang.Exception
 
 sealed class FetchAwsCredentialsState : State {
     data class Configuring(val id: String = "") : FetchAwsCredentialsState()
     data class Fetching(val id: String = "") : FetchAwsCredentialsState()
-    data class Fetched(val amplifyCredential: AmplifyCredential?) : FetchAwsCredentialsState()
+    data class Fetched(val id: String = "") : FetchAwsCredentialsState()
     data class Error(val exception: Exception) : FetchAwsCredentialsState()
 
     class Resolver(private val fetchAWSCredentialsActions: FetchAWSCredentialsActions) :
@@ -46,30 +45,24 @@ sealed class FetchAwsCredentialsState : State {
                 is Configuring -> {
                     when (fetchAwsCredentialsEvent) {
                         is FetchAwsCredentialsEvent.EventType.Fetch -> {
-                            val newState = Fetching()
                             val action = fetchAWSCredentialsActions.initFetchAWSCredentialsAction(
                                 fetchAwsCredentialsEvent.amplifyCredential
                             )
-                            StateResolution(newState, listOf(action))
+                            StateResolution(Fetching(), listOf(action))
                         }
+                        is FetchAwsCredentialsEvent.EventType.Fetched -> StateResolution(Fetched())
                         else -> StateResolution(oldState)
                     }
                 }
                 is Fetching -> {
                     when (fetchAwsCredentialsEvent) {
-                        is FetchAwsCredentialsEvent.EventType.Fetched -> {
-                            StateResolution(Fetched(fetchAwsCredentialsEvent.amplifyCredential))
-                        }
+                        is FetchAwsCredentialsEvent.EventType.Fetched -> StateResolution(Fetched())
                         is FetchAwsCredentialsEvent.EventType.ThrowError -> {
                             StateResolution(Error(fetchAwsCredentialsEvent.exception))
                         }
                         else -> StateResolution(oldState)
                     }
                 }
-                is Fetched -> {
-                    StateResolution(oldState)
-                }
-
                 else -> StateResolution(oldState)
             }
         }

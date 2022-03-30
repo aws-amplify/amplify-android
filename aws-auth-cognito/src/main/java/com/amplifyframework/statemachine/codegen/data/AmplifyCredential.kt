@@ -26,11 +26,34 @@ data class AmplifyCredential(
 
 @Serializable
 data class CognitoUserPoolTokens(
+    /**
+     * User Pool id token
+     */
     val idToken: String?,
+
+    /**
+     * User Pool access token
+     */
     val accessToken: String?,
+
+    /**
+     * User Pool refresh token
+     */
     val refreshToken: String?,
-    val tokenExpiration: Long?,
-)
+
+    /**
+     * Auth result expiration but not token expiration
+     */
+    val expiration: Long?,
+) {
+    override fun toString(): String {
+        return "CognitoUserPoolTokens(" +
+            "idToken = ${idToken?.substring(0..4)}***, " +
+            "accessToken = ${accessToken?.substring(0..4)}***, " +
+            "refreshToken = ${refreshToken?.substring(0..4)}***" +
+            ")"
+    }
+}
 
 @Serializable
 data class AWSCredentials(
@@ -38,4 +61,13 @@ data class AWSCredentials(
     val secretAccessKey: String?,
     val sessionToken: String?,
     val expiration: Long?,
-)
+) {
+    override fun toString(): String {
+        return "AWSCredentials(" +
+            "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
+            "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
+            "sessionToken = ${sessionToken?.substring(0..4)}***, " +
+            "expiration = $expiration" +
+            ")"
+    }
+}

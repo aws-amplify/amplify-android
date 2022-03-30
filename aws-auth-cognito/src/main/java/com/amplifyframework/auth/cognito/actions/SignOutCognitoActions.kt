@@ -60,6 +60,7 @@ object SignOutCognitoActions : SignOutActions {
         Action { dispatcher, environment ->
             val env = (environment as AuthEnvironment)
             env.configuration.runCatching {
+                // TODO: check for "origin_jti" claim in access token, else skip revoking
                 env.cognitoAuthService.cognitoIdentityProviderClient?.revokeToken(
                     RevokeTokenRequest {
                         clientId = userPool?.appClient

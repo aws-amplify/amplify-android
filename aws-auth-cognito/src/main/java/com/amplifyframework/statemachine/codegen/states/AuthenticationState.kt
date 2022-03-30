@@ -174,14 +174,12 @@ sealed class AuthenticationState : State {
         var signOutState: SignOutState? = null
 
         override fun build(): AuthenticationState = when (authNState) {
-            is NotConfigured -> NotConfigured()
-            is Configured -> Configured()
             is SignedIn -> SignedIn(authNState.signedInData)
             is SignedOut -> SignedOut(authNState.signedOutData)
             is SigningIn -> SigningIn(srpSignInState)
             is SigningOut -> SigningOut(signOutState)
             is SigningUp -> SigningUp(signUpState)
-            is Error -> authNState
+            else -> authNState
         }
     }
 }

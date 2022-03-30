@@ -26,11 +26,15 @@ object AuthorizationCognitoActions : AuthorizationActions {
         dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthorization))
     }
 
-    override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential?) = Action { dispatcher, _ ->
-        dispatcher.send(
-            FetchAuthSessionEvent(
-                FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential)
+    override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential?) =
+        Action { dispatcher, _ ->
+            val event = amplifyCredential?.cognitoUserPoolTokens?.let {
+                FetchAuthSessionEvent(
+                    FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential)
+                )
+            } ?: FetchAuthSessionEvent(
+                FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential)
             )
-        )
-    }
+            dispatcher.send(event)
+        }
 }

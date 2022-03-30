@@ -20,14 +20,13 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
 import java.lang.Exception
 
 sealed class FetchUserPoolTokensState : State {
     data class Configuring(val id: String = "") : FetchUserPoolTokensState()
     data class Refreshing(val id: String = "") : FetchUserPoolTokensState()
-    data class Fetched(val amplifyCredential: AmplifyCredential?) : FetchUserPoolTokensState()
+    data class Fetched(val id: String = "") : FetchUserPoolTokensState()
     data class Error(val exception: Exception) : FetchUserPoolTokensState()
 
     class Resolver(private val fetchUserPoolTokensActions: FetchUserPoolTokensActions) :
@@ -42,49 +41,32 @@ sealed class FetchUserPoolTokensState : State {
             event: StateMachineEvent
         ): StateResolution<FetchUserPoolTokensState> {
             val fetchUserPoolTokensEvent = asFetchUserPoolTokensEvent(event)
+            val defaultResolution = StateResolution(oldState)
             return when (oldState) {
                 is Configuring -> {
                     when (fetchUserPoolTokensEvent) {
-                        is FetchUserPoolTokensEvent.EventType.Fetched -> {
-                            val newState = Fetched(fetchUserPoolTokensEvent.amplifyCredential)
-                            StateResolution(newState)
-                        }
+                        is FetchUserPoolTokensEvent.EventType.Fetched -> StateResolution(Fetched())
                         is FetchUserPoolTokensEvent.EventType.Refresh -> {
-                            val newState = Refreshing()
                             val action =
                                 fetchUserPoolTokensActions.refreshFetchUserPoolTokensAction(
                                     fetchUserPoolTokensEvent.amplifyCredential
                                 )
-                            StateResolution(newState, listOf(action))
+                            StateResolution(Refreshing(), listOf(action))
                         }
-                        is FetchUserPoolTokensEvent.EventType.ThrowError -> onFetchUserPoolTokensFailure(
-                            fetchUserPoolTokensEvent.exception
-                        )
-                        else -> StateResolution(oldState)
+                        else -> defaultResolution
                     }
                 }
                 is Refreshing -> {
                     when (fetchUserPoolTokensEvent) {
-                        is FetchUserPoolTokensEvent.EventType.Fetched -> {
-                            val newState = Fetched(fetchUserPoolTokensEvent.amplifyCredential)
-                            StateResolution(newState)
-                        }
-                        is FetchUserPoolTokensEvent.EventType.ThrowError -> onFetchUserPoolTokensFailure(
-                            fetchUserPoolTokensEvent.exception
+                        is FetchUserPoolTokensEvent.EventType.Fetched -> StateResolution(Fetched())
+                        is FetchUserPoolTokensEvent.EventType.ThrowError -> StateResolution(
+                            Error(fetchUserPoolTokensEvent.exception)
                         )
-                        else -> StateResolution(oldState)
+                        else -> defaultResolution
                     }
                 }
-                is Fetched -> {
-                    StateResolution(oldState)
-                }
-                else -> {
-                    StateResolution(oldState)
-                }
+                else -> defaultResolution
             }
         }
-
-        private fun onFetchUserPoolTokensFailure(exception: Exception): StateResolution<FetchUserPoolTokensState> =
-            StateResolution(Error(exception))
     }
 }

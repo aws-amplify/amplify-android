@@ -22,4 +22,5 @@ interface FetchAuthSessionActions {
     fun configureUserPoolTokensAction(amplifyCredential: AmplifyCredential?): Action
     fun configureIdentityAction(amplifyCredential: AmplifyCredential?): Action
     fun configureAWSCredentialsAction(amplifyCredential: AmplifyCredential?): Action
+    fun authorizationSessionEstablished(amplifyCredential: AmplifyCredential?): Action
 }

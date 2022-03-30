@@ -137,12 +137,10 @@ sealed class AuthState : State {
         var authZState: AuthorizationState? = null
 
         override fun build() = when (authState) {
-            is NotConfigured -> NotConfigured()
-            is ConfiguringAuth -> ConfiguringAuth()
             is ConfiguringAuthentication -> ConfiguringAuthentication(authNState)
             is ConfiguringAuthorization -> ConfiguringAuthorization(authNState, authZState)
             is Configured -> Configured(authNState, authZState)
-            is Error -> authState
+            else -> authState
         }
     }
 }

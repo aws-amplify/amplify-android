@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
@@ -32,57 +31,46 @@ object FetchUserPoolTokensActions : FetchUserPoolTokensActions {
     override fun refreshFetchUserPoolTokensAction(amplifyCredential: AmplifyCredential?): Action =
         Action { dispatcher, environment ->
             val env = (environment as AuthEnvironment)
-            if (amplifyCredential?.cognitoUserPoolTokens == null) {
-                val event = FetchUserPoolTokensEvent(
-                    FetchUserPoolTokensEvent.EventType.ThrowError(
-                        AuthException(
-                            AuthException.GuestAccess.GUEST_ACCESS_POSSIBLE.name,
-                            AuthException.TODO_RECOVERY_SUGGESTION
+            try {
+                val refreshTokenResponse =
+                    env.cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
+                        authFlow = AuthFlowType.RefreshToken
+                        clientId = env.configuration.userPool?.appClient
+                        authParameters = mapOf(
+                            "REFRESH_TOKEN" to (
+                                amplifyCredential?.cognitoUserPoolTokens?.refreshToken
+                                    ?: ""
+                                )
                         )
+                    }
+                val expiresIn =
+                    refreshTokenResponse?.authenticationResult?.expiresIn?.toLong() ?: 0
+                val cognitoUserPoolTokens = CognitoUserPoolTokens(
+                    idToken = refreshTokenResponse?.authenticationResult?.idToken,
+                    accessToken = refreshTokenResponse?.authenticationResult?.accessToken,
+                    refreshToken = refreshTokenResponse?.authenticationResult?.refreshToken,
+                    expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
+                )
+
+                val updatedCredentials =
+                    amplifyCredential?.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)
+
+                dispatcher.send(FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.Fetched()))
+                dispatcher.send(
+                    FetchAuthSessionEvent(
+                        FetchAuthSessionEvent.EventType.FetchIdentity(updatedCredentials)
                     )
                 )
+            } catch (e: Exception) {
+                val event =
+                    FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.ThrowError(e))
                 dispatcher.send(event)
-            } else {
-                try {
-                    val refreshTokenResponse =
-                        env.cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
-                            authFlow = AuthFlowType.RefreshToken
-                            clientId = env.configuration.userPool?.appClient
-                            authParameters = mapOf(
-                                "REFRESH_TOKEN" to amplifyCredential.cognitoUserPoolTokens.refreshToken as String
-                            )
-                        }
-                    val expiresIn =
-                        refreshTokenResponse?.authenticationResult?.expiresIn?.toLong() ?: 0
-                    val cognitoUserPoolTokens = CognitoUserPoolTokens(
-                        idToken = refreshTokenResponse?.authenticationResult?.idToken,
-                        accessToken = refreshTokenResponse?.authenticationResult?.accessToken,
-                        refreshToken = refreshTokenResponse?.authenticationResult?.refreshToken,
-                        tokenExpiration = Instant.now().plus(expiresIn.seconds).epochSeconds
-                    )
 
-                    val updatedCredentials =
-                        amplifyCredential.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)
-
-                    val event =
-                        FetchUserPoolTokensEvent(
-                            FetchUserPoolTokensEvent.EventType.Fetched(updatedCredentials)
-                        )
-                    dispatcher.send(event)
-                    dispatcher.send(
-                        FetchAuthSessionEvent(
-                            FetchAuthSessionEvent.EventType.FetchIdentity(
-                                amplifyCredential
-                            )
-                        )
+                dispatcher.send(
+                    FetchAuthSessionEvent(
+                        FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential)
                     )
-                } catch (e: Exception) {
-                    val event =
-                        FetchUserPoolTokensEvent(
-                            FetchUserPoolTokensEvent.EventType.ThrowError(e)
-                        )
-                    dispatcher.send(event)
-                }
+                )
             }
         }
 }

@@ -20,14 +20,13 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.FetchIdentityEvent
 import java.lang.Exception
 
 sealed class FetchIdentityState : State {
     data class Configuring(val id: String = "") : FetchIdentityState()
     data class Fetching(val id: String = "") : FetchIdentityState()
-    data class Fetched(val amplifyCredential: AmplifyCredential?) : FetchIdentityState()
+    data class Fetched(val id: String = "") : FetchIdentityState()
     data class Error(val exception: Exception) : FetchIdentityState()
 
     class Resolver(private val fetchIdentityActions: FetchIdentityActions) :
@@ -42,41 +41,29 @@ sealed class FetchIdentityState : State {
             event: StateMachineEvent
         ): StateResolution<FetchIdentityState> {
             val fetchIdentityEvent = asFetchIdentityEvent(event)
+            val defaultResolution = StateResolution(oldState)
             return when (oldState) {
                 is Configuring -> {
                     when (fetchIdentityEvent) {
                         is FetchIdentityEvent.EventType.Fetch -> {
-                            val newState = Fetching()
                             val action =
-                                fetchIdentityActions.initFetchIdentityAction(
-                                    fetchIdentityEvent.amplifyCredential
-                                )
-                            StateResolution(newState, listOf(action))
+                                fetchIdentityActions.initFetchIdentityAction(fetchIdentityEvent.amplifyCredential)
+                            StateResolution(Fetching(), listOf(action))
                         }
-                        is FetchIdentityEvent.EventType.Fetched -> {
-                            val newState = Fetched(fetchIdentityEvent.amplifyCredential)
-                            StateResolution(newState)
-                        }
-                        else -> StateResolution(oldState)
+                        is FetchIdentityEvent.EventType.Fetched -> StateResolution(Fetched())
+                        else -> defaultResolution
                     }
                 }
                 is Fetching -> {
                     when (fetchIdentityEvent) {
-                        is FetchIdentityEvent.EventType.Fetched -> StateResolution(
-                            Fetched(fetchIdentityEvent.amplifyCredential)
-                        )
+                        is FetchIdentityEvent.EventType.Fetched -> StateResolution(Fetched())
                         is FetchIdentityEvent.EventType.ThrowError -> StateResolution(
                             Error(fetchIdentityEvent.exception)
                         )
-                        else -> StateResolution(oldState)
+                        else -> defaultResolution
                     }
                 }
-                is Fetched -> {
-                    StateResolution(oldState)
-                }
-                else -> {
-                    StateResolution(oldState)
-                }
+                else -> defaultResolution
             }
         }
     }

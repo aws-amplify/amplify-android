@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.AuthChannelEventName
+import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
@@ -27,49 +28,41 @@ import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAwsCredentialsEvent
 import com.amplifyframework.statemachine.codegen.events.FetchIdentityEvent
 import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
-import java.time.ZonedDateTime
 
 object FetchAuthSessionActions : FetchAuthSessionActions {
     override fun configureUserPoolTokensAction(amplifyCredential: AmplifyCredential?): Action =
         Action { dispatcher, _ ->
             val userPoolTokens = amplifyCredential?.cognitoUserPoolTokens
-            if (userPoolTokens == null) {
-                // Failure to fetch, Refresh
-                val event = FetchUserPoolTokensEvent(
-                    FetchUserPoolTokensEvent.EventType.Refresh(amplifyCredential)
-                )
-                dispatcher.send(event)
-            }
-            val userPoolTokenExpiryTime = userPoolTokens?.tokenExpiration
-            val rightNow = ZonedDateTime.now()
-
-            // The token must be valid for 2 minutes from now
-            if (userPoolTokenExpiryTime != null) {
-                if (userPoolTokenExpiryTime > (rightNow.toEpochSecond() + (2 * 60))) {
-                    // User Pool Token is still valid
-                    val event =
-                        FetchUserPoolTokensEvent(
-                            FetchUserPoolTokensEvent.EventType.Fetched(amplifyCredential)
-                        )
-                    dispatcher.send(event)
+            if (userPoolTokens != null) {
+                if (SessionHelper.isValid(userPoolTokens)) {
+                    // User Pool Tokens (id Token and access Token) are valid
+                    dispatcher.send(
+                        FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.Fetched())
+                    )
                     dispatcher.send(
                         FetchAuthSessionEvent(
-                            FetchAuthSessionEvent.EventType.FetchIdentity(
-                                amplifyCredential
-                            )
+                            FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential)
                         )
                     )
                 } else {
-                    // Token has expired and we need a refresh
-                    val event = FetchUserPoolTokensEvent(
-                        FetchUserPoolTokensEvent.EventType.Refresh(amplifyCredential)
+                    // Tokens have expired and we need a refresh
+                    dispatcher.send(
+                        FetchUserPoolTokensEvent(
+                            FetchUserPoolTokensEvent.EventType.Refresh(amplifyCredential)
+                        )
                     )
-                    dispatcher.send(event)
                     Amplify.Hub.publish(
                         HubChannel.AUTH,
                         HubEvent.create(AuthChannelEventName.SESSION_EXPIRED)
                     )
                 }
+            } else {
+                // Failure to fetch token, fetch guest identity
+                dispatcher.send(
+                    FetchAuthSessionEvent(
+                        FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential)
+                    )
+                )
             }
         }
 
@@ -77,15 +70,10 @@ object FetchAuthSessionActions : FetchAuthSessionActions {
         Action { dispatcher, _ ->
             val identityID = amplifyCredential?.identityId
             if (identityID != null) {
-                val event = FetchIdentityEvent(
-                    FetchIdentityEvent.EventType.Fetched(amplifyCredential)
-                )
-                dispatcher.send(event)
+                dispatcher.send(FetchIdentityEvent(FetchIdentityEvent.EventType.Fetched()))
                 dispatcher.send(
                     FetchAuthSessionEvent(
-                        FetchAuthSessionEvent.EventType.FetchAwsCredentials(
-                            amplifyCredential
-                        )
+                        FetchAuthSessionEvent.EventType.FetchAwsCredentials(amplifyCredential)
                     )
                 )
             } else {
@@ -99,42 +87,29 @@ object FetchAuthSessionActions : FetchAuthSessionActions {
     override fun configureAWSCredentialsAction(amplifyCredential: AmplifyCredential?): Action =
         Action { dispatcher, _ ->
             val awsCredentials = amplifyCredential?.awsCredentials
-            // AWS Credentials should be valid for up to 2 minutes from now
-            if (awsCredentials?.expiration != null && awsCredentials.expiration > (
-                ZonedDateTime.now()
-                    .toEpochSecond() + 2 * 60
+            if (awsCredentials != null) {
+                // TODO: fix expiry
+                dispatcher.send(
+                    FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.Fetched())
                 )
-            ) {
-                val event =
-                    FetchAwsCredentialsEvent(
-                        FetchAwsCredentialsEvent.EventType.Fetched(amplifyCredential)
-                    )
-                dispatcher.send(event)
                 dispatcher.send(
                     FetchAuthSessionEvent(
-                        FetchAuthSessionEvent.EventType.FetchedAuthSession(
-                            amplifyCredential
-                        )
-                    )
-                )
-                dispatcher.send(
-                    AuthorizationEvent(
-                        AuthorizationEvent.EventType.FetchedAuthSession(
-                            amplifyCredential
-                        )
+                        FetchAuthSessionEvent.EventType.FetchedAuthSession(amplifyCredential)
                     )
                 )
             } else {
-                val event = FetchAwsCredentialsEvent(
-                    FetchAwsCredentialsEvent.EventType.Fetch(
-                        amplifyCredential
+                dispatcher.send(
+                    FetchAwsCredentialsEvent(
+                        FetchAwsCredentialsEvent.EventType.Fetch(amplifyCredential)
                     )
                 )
-                dispatcher.send(event)
-                Amplify.Hub.publish(
-                    HubChannel.AUTH,
-                    HubEvent.create(AuthChannelEventName.SESSION_EXPIRED)
-                )
             }
+        }
+
+    override fun authorizationSessionEstablished(amplifyCredential: AmplifyCredential?): Action =
+        Action { dispatcher, _ ->
+            dispatcher.send(
+                AuthorizationEvent(AuthorizationEvent.EventType.FetchedAuthSession(amplifyCredential))
+            )
         }
 }

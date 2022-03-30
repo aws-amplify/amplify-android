@@ -25,7 +25,7 @@ class FetchIdentityEvent(
 ) : StateMachineEvent {
     sealed class EventType {
         data class Fetch(val amplifyCredential: AmplifyCredential?) : EventType()
-        data class Fetched(val amplifyCredential: AmplifyCredential?) : EventType()
+        data class Fetched(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 
