@@ -321,4 +321,13 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
             )
         }
     }
+
+    override suspend fun deleteUser() {
+        return suspendCoroutine { continuation ->
+            delegate.deleteUser(
+                { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
 }

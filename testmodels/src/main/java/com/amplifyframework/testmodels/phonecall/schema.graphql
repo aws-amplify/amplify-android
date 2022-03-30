@@ -13,7 +13,7 @@ type Phone @model {
 
 type Call @model {
     id: ID!
-    minutes: Int!
+    startTime: AWSTime!
     callerId: ID!
     calleeId: ID!
     caller: Phone! @connection(fields: ["callerId"])

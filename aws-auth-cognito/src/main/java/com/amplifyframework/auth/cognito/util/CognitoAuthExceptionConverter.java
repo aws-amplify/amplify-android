@@ -25,6 +25,7 @@ import com.amazonaws.services.cognitoidentityprovider.model.CodeMismatchExceptio
 import com.amazonaws.services.cognitoidentityprovider.model.ExpiredCodeException;
 import com.amazonaws.services.cognitoidentityprovider.model.InvalidParameterException;
 import com.amazonaws.services.cognitoidentityprovider.model.InvalidPasswordException;
+import com.amazonaws.services.cognitoidentityprovider.model.InvalidUserPoolConfigurationException;
 import com.amazonaws.services.cognitoidentityprovider.model.LimitExceededException;
 import com.amazonaws.services.cognitoidentityprovider.model.MFAMethodNotFoundException;
 import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException;
@@ -77,6 +78,10 @@ public final class CognitoAuthExceptionConverter {
 
         if (error instanceof InvalidParameterException) {
             return new AuthException.InvalidParameterException(error);
+        }
+        
+        if (error instanceof InvalidUserPoolConfigurationException) {
+            return new AuthException.InvalidUserPoolConfigurationException(error);
         }
 
         if (error instanceof ExpiredCodeException) {

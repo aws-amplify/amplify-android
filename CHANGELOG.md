@@ -1,3 +1,10 @@
+## [Release 1.33.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.33.0)
+
+### Features
+- **auth:** Add deleteUser API (#1656)
+
+[See all changes between 1.32.2 and 1.33.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.32.2...release_v1.33.0)
+
 ## [Release 1.32.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.32.2)
 
 ### Miscellaneous
