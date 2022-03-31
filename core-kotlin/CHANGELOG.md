@@ -1,3 +1,10 @@
+## [Release 0.17.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.17.0)
+
+### Features
+- **auth:** Add deleteUser API (#1656)
+
+[See all changes between 0.16.2 and 0.17.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.16.2...release-kotlin_v0.17.0)
+
 ## [Release 0.16.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.16.2)
 
 ### Miscellaneous

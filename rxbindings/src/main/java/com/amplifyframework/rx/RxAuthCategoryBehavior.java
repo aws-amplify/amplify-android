@@ -414,4 +414,11 @@ public interface RxAuthCategoryBehavior {
      *         emits an {@link AuthException} otherwise
      */
     Completable signOut(@NonNull AuthSignOutOptions options);
+
+    /**
+     * Delete the account of the currently signed in user.
+     * @return An Rx {@link Completable} which completes upon successfully deleting the user;
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable deleteUser();
 }
