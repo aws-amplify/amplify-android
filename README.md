@@ -24,7 +24,7 @@ Guide](https://docs.amplify.aws/start/q/integration/android).
 
 | Category                                                                                        | AWS Provider | Description                                |
 |-------------------------------------------------------------------------------------------------|--------------|--------------------------------------------|
-| **[Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)**      | Cognito      | Building blocks to create auth experiences <br> *Note: Authentication category only supports **Sign Up**, **Sign In**, **Sign Out**, **Fetch Auth Session** and **getCurrentUser** API's.* |
+| **[Authentication](https://docs.amplify.aws/lib/devpreview/getting-started/q/platform/android/)**      | Cognito      | Building blocks to create auth experiences <br> *Note: Authentication category only supports **Sign Up**, **Sign In**, **Sign Out**, **Fetch Auth Session** and **getCurrentUser** API's.* |
 | **[Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android)**          | S3           | Manages content in public, protected, private storage buckets |
 | **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**      | AppSync      | Programming model for shared and distributed data, with simple online/offline synchronization |
 | **[API (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)** | AppSync      | Interact with your GraphQL or AppSync endpoint |
