@@ -18,7 +18,6 @@ package com.amplifyframework.geo.maplibre.view
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.util.AttributeSet
 import android.view.Gravity
 import androidx.annotation.UiThread
@@ -30,7 +29,6 @@ import com.amplifyframework.geo.maplibre.AmplifyMapLibreAdapter
 import com.amplifyframework.geo.maplibre.R
 import com.amplifyframework.geo.maplibre.view.support.AttributionInfoView
 import com.amplifyframework.geo.models.MapStyle
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
@@ -41,7 +39,6 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
-import java.lang.Double.min
 
 
 typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
@@ -89,6 +86,7 @@ class MapLibreView
     var defaultPlaceActiveIcon = R.drawable.place_active
 
     private var shouldCluster = true
+    private var clusteringOptions = ClusteringOptions.defaults()
     private var mapStyle: MapStyle? = null
 
     init {
@@ -191,43 +189,62 @@ class MapLibreView
         }
     }
 
-    // TODO : add a Javadoc comment here
-    fun setClusterBehavior(shouldCluster: Boolean, callback: () -> Unit) {
+    /**
+     * Set whether the map features should cluster and the style for those clusters. Clustering is
+     * enabled by default with the default ClusteringOptions.
+     * @param shouldCluster true if clustering should be enabled, false if clustering should be disabled.
+     * @param options the ClusteringOptions. If set to null and shouldCluster is true, uses
+     *      the default ClusteringOptions.
+     * @param callback the callback invoked after clustering has been enabled or disabled.
+     */
+    fun setClusterBehavior(shouldCluster: Boolean, options: ClusteringOptions?, callback: () -> Unit) {
         this.shouldCluster = shouldCluster
+        this.clusteringOptions = options ?: ClusteringOptions.defaults()
         setStyle(mapStyle) {
             callback()
         }
     }
 
     private fun removeClusterLayers(style: Style) {
-        style.removeLayer(CLUSTER_CIRCLE_LAYER_ID)
-        style.removeLayer(CLUSTER_NUMBER_LAYER_ID)
+        style.apply {
+            removeLayer(CLUSTER_CIRCLE_LAYER_ID)
+            removeLayer(CLUSTER_NUMBER_LAYER_ID)
+        }
     }
 
     private fun enableClustering(map: MapboxMap, style: Style) {
-        val clusterMaxZoom = 13
-        val geoJsonClusterOptions = GeoJsonOptions().withCluster(true).withClusterMaxZoom(clusterMaxZoom).withClusterRadius(75)
+        val geoJsonClusterOptions = GeoJsonOptions().withCluster(true)
+                                        .withClusterMaxZoom(clusteringOptions.maxClusterZoomLevel)
+                                        .withClusterRadius(clusteringOptions.clusterRadius)
         this.symbolManager = SymbolManager(this, map, style, null, geoJsonClusterOptions).apply {
             iconAllowOverlap = true
             iconIgnorePlacement = true
         }
 
         val geoJsonSources = style.sources.filterIsInstance<GeoJsonSource>()
-        var geoJsonSourceId = geoJsonSources[0].id
-        if (geoJsonSources.size > 1) {
-            geoJsonSourceId = geoJsonSources[1].id
-        }
+        val geoJsonSourceId = geoJsonSources[0].id
 
         // Create a circle layer for cluster circles
         val clusterCircleLayer = CircleLayer(CLUSTER_CIRCLE_LAYER_ID, geoJsonSourceId)
-        val circleRadiusExpression = Expression.interpolate(Expression.exponential(1.75), Expression.zoom(),
-            Expression.stop(map.minZoomLevel, 60), Expression.stop(clusterMaxZoom, 20))
-        val circleColorStops = arrayOf(Expression.stop(15, Expression.rgb(0, 255, 0)),
-            Expression.stop(30, Expression.rgb(255, 0, 0)))
-        val circleColorExpression = Expression.step(Expression.get("point_count"),
-            Expression.rgb(0, 0, 255), *circleColorStops)
+        val circleColorProperty = if (clusteringOptions.clusterColorSteps.isEmpty()) {
+            PropertyFactory.circleColor(clusteringOptions.clusterColor)
+        } else {
+            val circleColorStops = clusteringOptions.clusterColorSteps.toSortedMap().flatMap { (pointCount, clusterColor) ->
+                mutableListOf(Expression.stop(pointCount, Expression.color(clusterColor)))
+            }.toTypedArray()
+            PropertyFactory.circleColor(Expression.step(Expression.get("point_count"),
+                Expression.color(clusteringOptions.clusterColor), *circleColorStops))
+        }
+
+        // Change the circle radius based on zoom level
+        val circleRadiusExpression = Expression.interpolate(
+            Expression.exponential(1.75),
+            Expression.zoom(),
+            Expression.stop(map.minZoomLevel, 60),
+            Expression.stop(clusteringOptions.maxClusterZoomLevel, 20))
+        
         clusterCircleLayer.setProperties(
-            PropertyFactory.circleColor(circleColorExpression),
+            circleColorProperty,
             PropertyFactory.circleRadius(circleRadiusExpression)
         )
         clusterCircleLayer.setFilter(Expression.has("point_count"))
@@ -237,7 +254,7 @@ class MapLibreView
         clusterNumberLayer.setProperties(
             PropertyFactory.textField(Expression.toString(Expression.get("point_count"))),
             PropertyFactory.textFont(arrayOf("Arial Bold")),
-            PropertyFactory.textColor(Color.WHITE),
+            PropertyFactory.textColor(clusteringOptions.clusterNumberColor),
             PropertyFactory.textIgnorePlacement(true),
             PropertyFactory.textAllowOverlap(true)
         )
@@ -252,9 +269,7 @@ class MapLibreView
             val pointClicked = map.projection.toScreenLocation(latLngPoint)
             val features = map.queryRenderedFeatures(pointClicked, "cluster-circles")
             if (features.isNotEmpty()) {
-                // Center the cluster that was clicked within the map view and zoom in
-                val zoomLevel = min(map.maxZoomLevel, map.cameraPosition.zoom + 1)
-                map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLngPoint, zoomLevel))
+                clusteringOptions.onClusterClicked(this, features[0])
             }
             true
         }
