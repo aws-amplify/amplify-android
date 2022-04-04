@@ -66,8 +66,9 @@ class MapLibreView
     companion object {
         private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
 
-        private const val CLUSTER_CIRCLE_LAYER_ID = "cluster-circles"
-        private const val CLUSTER_NUMBER_LAYER_ID = "cluster-numbers"
+        // Marked as internal for testing purposes
+        internal const val CLUSTER_CIRCLE_LAYER_ID = "cluster-circles"
+        internal const val CLUSTER_NUMBER_LAYER_ID = "cluster-numbers"
 
         const val PLACE_ICON_NAME = "place"
         const val PLACE_ACTIVE_ICON_NAME = "place-active"
