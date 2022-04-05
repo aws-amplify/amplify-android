@@ -486,20 +486,24 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
     ) {
-        var userPoolTokens: AuthSessionResult<AWSCognitoUserPoolTokens>? = null
-        var identityId: AuthSessionResult<String>? = null
-        var awsCredentials: AuthSessionResult<Credentials>? = null
+        var userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>? = null
+        var identityIdResult: AuthSessionResult<String>? = null
+        var awsCredentialsResult: AuthSessionResult<Credentials>? = null
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->
                 when (val authZState = authState.authZState) {
+                    // TODO: handle if already in SessionEstablished
                     is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
-                        var authSession = AWSCognitoAuthSession.fromAmplifyCredential(authZState.amplifyCredential)
-                        authSession = userPoolTokens?.let { authSession.copy(userPoolTokens = it) } ?: authSession
-                        authSession = identityId?.let { authSession.copy(identityId = it) } ?: authSession
-                        authSession = awsCredentials?.let { authSession.copy(awsCredentials = it) } ?: authSession
+                        val authSession = AWSCognitoAuthSession.fromAmplifyCredential(
+                            authZState.amplifyCredential,
+                            userPoolTokensResult,
+                            identityIdResult,
+                            awsCredentialsResult
+                        )
                         authZState.amplifyCredential?.let { storeAuthSession(authSession, it, onSuccess, onError) }
+                            ?: onSuccess.accept(authSession)
                     }
                     is AuthorizationState.FetchingAuthSession -> {
                         val fetchUserPoolTokensState = authZState.fetchAuthSessionState?.fetchUserPoolTokensState
@@ -507,33 +511,39 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                         val fetchAwsCredentialsState = authZState.fetchAuthSessionState?.fetchAwsCredentialsState
                         when {
                             fetchUserPoolTokensState is FetchUserPoolTokensState.Error -> {
-                                userPoolTokens = AuthSessionResult.failure(
+                                // invalid account type or unknown error - Ref #AWSCognitoAuthSession.SignedOutOrUnknown
+                                // if no tokens found and no error -> signed out exception - Ref #AWSCognitoAuthSession.SignedOutOrUnknown
+                                userPoolTokensResult = AuthSessionResult.failure(
                                     AuthException(
                                         "Signed out or refresh token expired.",
                                         fetchUserPoolTokensState.exception,
-                                        "Sign in and try again."
+                                        "Sign in and try again. See the attached exception for more details."
                                     )
                                 )
                             }
                             fetchIdentityState is FetchIdentityState.Error -> {
-                                identityId =
-                                    AuthSessionResult.failure(
-                                        AuthException.UnknownException(fetchIdentityState.exception)
+                                // if aws creds but no id -> should never happen - Ref #AWSCognitoAuthSession.UnreachableCase
+                                // if no tokens and no id but has aws creds -> should never happen - Ref #AWSCognitoAuthSession.UnreachableCase
+                                identityIdResult = when (authEnvironment.configuration.identityPool) {
+                                    null -> AuthSessionResult.failure(AuthException.InvalidAccountTypeException())
+                                    else -> AuthSessionResult.failure(
+                                        AuthException(
+                                            "Failed to fetch identity.",
+                                            fetchIdentityState.exception,
+                                            "Sign in or enable guest access. See the attached exception for more" +
+                                                " details."
+                                        )
                                     )
-                                awsCredentials = AuthSessionResult.failure(
-                                    AuthException(
-                                        "Failed to fetch identity and aws credentials.",
-                                        fetchIdentityState.exception,
-                                        "Sign in or enable guest access."
-                                    )
-                                )
+                                }
                             }
                             fetchAwsCredentialsState is FetchAwsCredentialsState.Error -> {
-                                awsCredentials = AuthSessionResult.failure(
+                                // invalid account type or unknown error
+                                // if cognito identity configured -> guest access possible - Ref #AWSCognitoAuthSession.GuestAccessPossible, else -> invalid account type - Ref #AWSCognitoAuthSession.NoAWSCredentials
+                                awsCredentialsResult = AuthSessionResult.failure(
                                     AuthException(
                                         "Failed to fetch AWS Credentials.",
                                         fetchAwsCredentialsState.exception,
-                                        "Sign in or enable guest access."
+                                        "Sign in or enable guest access. See the attached exception for more details."
                                     )
                                 )
                             }

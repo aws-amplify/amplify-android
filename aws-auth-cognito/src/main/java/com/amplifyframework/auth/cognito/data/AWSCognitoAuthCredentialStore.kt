@@ -95,6 +95,6 @@ class AWSCognitoAuthCredentialStore(
     }
 
     private fun AWSCredentials.trim(): AWSCredentials? {
-        return if (accessKeyId != null || secretAccessKey != null || sessionToken != null) this else null
+        return if (accessKeyId != null || secretAccessKey != null) this else null
     }
 }

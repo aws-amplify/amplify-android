@@ -22,6 +22,7 @@ import com.amplifyframework.auth.AuthException.SignedOutException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.result.AuthSessionResult
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 
@@ -32,7 +33,8 @@ data class AWSCognitoAuthSession(
     /**
      * Are you currently in a signed in state (an AuthN indicator to be technical)
      */
-    val signedIn: Boolean,
+    @get:JvmName("getSignedIn")
+    val isSignedIn: Boolean,
 
     /**
      * The id which comes from Identity Pools.
@@ -57,45 +59,43 @@ data class AWSCognitoAuthSession(
      * @return the tokens which come from User Pools (access, id, refresh tokens)
      */
     val userPoolTokens: AuthSessionResult<AWSCognitoUserPoolTokens>
-) : AuthSession(signedIn) {
+) : AuthSession(isSignedIn) {
     companion object {
-        fun fromAmplifyCredential(credentials: AmplifyCredential?): AWSCognitoAuthSession {
-            // TODO: fix empty credentials
-            val awsCredentials = Credentials(
-                accessKeyId = credentials?.awsCredentials?.accessKeyId ?: "",
-                secretAccessKey = credentials?.awsCredentials?.secretAccessKey ?: "",
-                sessionToken = credentials?.awsCredentials?.sessionToken,
-                expiration = Instant.fromEpochSeconds(credentials?.awsCredentials?.expiration ?: 0)
-            )
-
-            val isSignedIn = credentials?.cognitoUserPoolTokens?.accessToken != null
+        fun fromAmplifyCredential(
+            credentials: AmplifyCredential?,
+            userPoolTokensError: AuthSessionResult<AWSCognitoUserPoolTokens>?,
+            identityIdError: AuthSessionResult<String>?,
+            awsCredentialsError: AuthSessionResult<Credentials>?
+        ): AWSCognitoAuthSession {
             val userSubResult: AuthSessionResult<String>
             val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>
             val identityIdResult: AuthSessionResult<String>
             val awsCredentialsResult: AuthSessionResult<Credentials>
-            if (isSignedIn) {
-                val userPoolTokens = AWSCognitoUserPoolTokens(
-                    accessToken = credentials?.cognitoUserPoolTokens?.accessToken ?: "",
-                    idToken = credentials?.cognitoUserPoolTokens?.idToken ?: "",
-                    refreshToken = credentials?.cognitoUserPoolTokens?.refreshToken ?: ""
-                )
-                userSubResult = getUserSub(credentials?.cognitoUserPoolTokens)
+
+            val isSignedIn = credentials?.cognitoUserPoolTokens != null
+            if (credentials?.cognitoUserPoolTokens != null) {
+                val userPoolTokens = getUserPoolTokens(credentials.cognitoUserPoolTokens)
+                userSubResult = getUserSub(credentials.cognitoUserPoolTokens)
                 userPoolTokensResult = AuthSessionResult.success(userPoolTokens)
-                if (credentials?.awsCredentials != null) {
+                if (credentials.awsCredentials != null) {
                     identityIdResult = getIdentityId(credentials.identityId)
-                    awsCredentialsResult = AuthSessionResult.success(awsCredentials)
+                    awsCredentialsResult = AuthSessionResult.success(getCredentials(credentials.awsCredentials))
                 } else {
-                    val error = AuthException("Could not fetch AWS Cognito credentials", "This is a bug")
-                    identityIdResult = AuthSessionResult.failure(error)
-                    awsCredentialsResult = AuthSessionResult.failure(error)
+                    // #NoAWSCredentials
+                    // TODO: differentiate between no idp and GUEST_ACCESS_POSSIBLE vs GUEST_ACCESS_DISABLED
+                    val error = AuthException("Could not fetch AWS Cognito credentials", "no idp")
+                    identityIdResult = identityIdError ?: AuthSessionResult.failure(error)
+                    awsCredentialsResult = awsCredentialsError ?: AuthSessionResult.failure(error)
                 }
             } else {
                 userSubResult = AuthSessionResult.failure(SignedOutException())
-                userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
+                // #SignedOutOrUnknown
+                userPoolTokensResult = userPoolTokensError ?: AuthSessionResult.failure(SignedOutException())
                 if (credentials?.awsCredentials != null) {
                     identityIdResult = getIdentityId(credentials.identityId)
-                    awsCredentialsResult = AuthSessionResult.success(awsCredentials)
+                    awsCredentialsResult = AuthSessionResult.success(getCredentials(credentials.awsCredentials))
                 } else {
+                    // #GuestAccessPossible
                     identityIdResult =
                         AuthSessionResult.failure(SignedOutException(AuthException.GuestAccess.GUEST_ACCESS_POSSIBLE))
                     awsCredentialsResult =
@@ -104,7 +104,7 @@ data class AWSCognitoAuthSession(
             }
 
             return AWSCognitoAuthSession(
-                signedIn = isSignedIn,
+                isSignedIn = isSignedIn,
                 identityId = identityIdResult,
                 awsCredentials = awsCredentialsResult,
                 userSub = userSubResult,
@@ -112,10 +112,25 @@ data class AWSCognitoAuthSession(
             )
         }
 
+        private fun getUserPoolTokens(cognitoUserPoolTokens: CognitoUserPoolTokens) = AWSCognitoUserPoolTokens(
+            accessToken = cognitoUserPoolTokens.accessToken,
+            idToken = cognitoUserPoolTokens.idToken,
+            refreshToken = cognitoUserPoolTokens.refreshToken
+        )
+
+        private fun getCredentials(awsCredentials: AWSCredentials) = Credentials(
+            // access key and secret will never be null, because credential store trims individual null values to null AWSCredentials object.
+            accessKeyId = awsCredentials.accessKeyId!!,
+            secretAccessKey = awsCredentials.secretAccessKey!!,
+            sessionToken = awsCredentials.sessionToken,
+            expiration = awsCredentials.expiration?.let { Instant.fromEpochSeconds(it) }
+        )
+
         private fun getIdentityId(identityId: String?): AuthSessionResult<String> {
             return if (identityId != null) AuthSessionResult.success(identityId) else AuthSessionResult.failure(
+                // #UnreachableCase
                 AuthException(
-                    "Failed to retrieve Identity ID",
+                    "Retrieved AWS credentials but failed to retrieve Identity ID",
                     "This should never happen. See the attached exception for more details."
                 )
             )

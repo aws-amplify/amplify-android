@@ -25,11 +25,9 @@ import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
-import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
@@ -90,16 +88,5 @@ internal class AuthStateMachine(
             ).logging(),
             AuthEnvironment.empty
         )
-    }
-}
-
-class AuthEnvironment : Environment {
-    lateinit var configuration: AuthConfiguration
-    internal lateinit var srpHelper: SRPHelper
-
-    val cognitoAuthService = AWSCognitoAuthService
-
-    companion object {
-        val empty = AuthEnvironment()
     }
 }

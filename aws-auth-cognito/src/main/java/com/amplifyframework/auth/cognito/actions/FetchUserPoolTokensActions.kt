@@ -36,12 +36,9 @@ object FetchUserPoolTokensActions : FetchUserPoolTokensActions {
                     env.cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                         authFlow = AuthFlowType.RefreshToken
                         clientId = env.configuration.userPool?.appClient
-                        authParameters = mapOf(
-                            "REFRESH_TOKEN" to (
-                                amplifyCredential?.cognitoUserPoolTokens?.refreshToken
-                                    ?: ""
-                                )
-                        )
+                        authParameters = amplifyCredential?.cognitoUserPoolTokens?.refreshToken?.let {
+                            mapOf("REFRESH_TOKEN" to it)
+                        }
                     }
                 val expiresIn =
                     refreshTokenResponse?.authenticationResult?.expiresIn?.toLong() ?: 0
