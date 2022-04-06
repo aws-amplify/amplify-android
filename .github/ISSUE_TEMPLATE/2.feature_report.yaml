@@ -130,7 +130,7 @@ body:
       placeholder: |
         1. Install '...'
         2. Configure '...'
-        3. initialize at '...'
+        3. Initialize '...'
         4. Output
   - type: textarea
     attributes:
