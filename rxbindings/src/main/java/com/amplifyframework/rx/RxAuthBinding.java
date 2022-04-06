@@ -287,6 +287,11 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
         return toCompletable((onComplete, onError) ->
             delegate.signOut(options, onComplete, onError));
     }
+    
+    @Override
+    public Completable deleteUser() {
+        return toCompletable(delegate::deleteUser);
+    }
 
     private <T> Single<T> toSingle(VoidBehaviors.ResultEmitter<T, AuthException> behavior) {
         return VoidBehaviors.toSingle(behavior);

@@ -30,19 +30,25 @@ import java.util.Objects;
  */
 public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
     private final Map<String, String> metadata;
+    private final AuthFlowType authFlowType;
 
     /**
      * Advanced options for signing in.
+     *
      * @param metadata Additional custom attributes to be sent to the service such as information about the client
+     * @param authFlowType AuthFlowType to be used by signIn API
      */
     protected AWSCognitoAuthSignInOptions(
-            Map<String, String> metadata
+        Map<String, String> metadata,
+        AuthFlowType authFlowType
     ) {
         this.metadata = metadata;
+        this.authFlowType = authFlowType;
     }
 
     /**
      * Get custom attributes to be sent to the service such as information about the client.
+     *
      * @return custom attributes to be sent to the service such as information about the client
      */
     @NonNull
@@ -51,7 +57,18 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
     }
 
     /**
+     * Get authFlowType to be sent to the service.
+     *
+     * @return authFlowType to be sent to the signIn api
+     */
+    @NonNull
+    public AuthFlowType getAuthFlowType() {
+        return authFlowType;
+    }
+
+    /**
      * Get a builder object.
+     *
      * @return a builder object.
      */
     @NonNull
@@ -62,7 +79,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                getMetadata()
+            getMetadata()
         );
     }
 
@@ -81,8 +98,8 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
     @Override
     public String toString() {
         return "AWSCognitoAuthSignInOptions{" +
-                "metadata=" + metadata +
-                '}';
+            "metadata=" + metadata +
+            '}';
     }
 
     /**
@@ -90,6 +107,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
      */
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private Map<String, String> metadata;
+        private AuthFlowType authFlowType;
 
         /**
          * Constructor for the builder.
@@ -101,6 +119,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
+         *
          * @return the type of builder this is to support proper flow with it being an extended class.
          */
         @Override
@@ -110,6 +129,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
 
         /**
          * Set the metadata field for the object being built.
+         *
          * @param metadata Custom user metadata to be sent with the sign in request.
          * @return The builder object to continue building.
          */
@@ -122,13 +142,28 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
         }
 
         /**
+         * Set the authFlowType for the object being built.
+         *
+         * @param authFlowType authFlowType to be sent to sign in request.
+         * @return The builder object to continue building.
+         */
+        @NonNull
+        public CognitoBuilder authFlowType(@NonNull AuthFlowType authFlowType) {
+            this.authFlowType = authFlowType;
+            return getThis();
+        }
+
+        /**
          * Construct and return the object with the values set in the builder.
+         *
          * @return a new instance of AWSCognitoAuthSignInOptions with the values specified in the builder.
          */
         @NonNull
         public AWSCognitoAuthSignInOptions build() {
             return new AWSCognitoAuthSignInOptions(
-                    Immutable.of(metadata));
+                Immutable.of(metadata),
+                authFlowType
+            );
         }
     }
 }

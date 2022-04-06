@@ -1,3 +1,33 @@
+## [Release 0.18.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.18.0)
+
+### Features
+- Add authFlow type in signInOptions (#1686)
+
+### Bug Fixes
+- **datastore:** compare datetime values in consistent format when querying (#1670)
+
+### Miscellaneous
+- Connectivity crash fix (#1688)
+- [aws-api] Fix DELETE rest calls not working with IamRequestDecorator (#1684)
+
+[See all changes between 0.17.0 and 0.18.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.17.0...release-kotlin_v0.18.0)
+
+## [Release 0.17.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.17.0)
+
+### Features
+- **auth:** Add deleteUser API (#1656)
+
+[See all changes between 0.16.2 and 0.17.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.16.2...release-kotlin_v0.17.0)
+
+## [Release 0.16.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.16.2)
+
+### Miscellaneous
+- Update notify_comments.yml (#1675)
+- Remove the UUID restriction from persistentRecord (#1678)
+- conflict resolver retry local fix (#1634)
+
+[See all changes between 0.16.1 and 0.16.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.16.1...release-kotlin_v0.16.2)
+
 ## [Release 0.16.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.16.1)
 
 ### Bug Fixes
