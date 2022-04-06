@@ -20,6 +20,8 @@ apply plugin: 'kotlin-android'
 
 dependencies {
     implementation project(path: ':core')
+    implementation project(path: ':aws-auth-cognito')
+
     implementation dependency.androidx.appcompat
     implementation dependency.aws.s3Kotlin
     implementation dependency.androidx.workmanager

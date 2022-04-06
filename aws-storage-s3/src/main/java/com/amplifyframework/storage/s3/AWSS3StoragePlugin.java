@@ -19,7 +19,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
-import com.amplifyframework.auth.AuthCognitoCredentialsProvider;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
@@ -46,6 +45,7 @@ import com.amplifyframework.storage.result.StorageTransferProgress;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
+import com.amplifyframework.storage.s3.credentials.CognitoCredentialsProvider;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
@@ -98,7 +98,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
      */
     @SuppressWarnings("unused") // This is a public API.
     public AWSS3StoragePlugin() {
-        this(new AuthCognitoCredentialsProvider());
+        this(new CognitoCredentialsProvider());
     }
 
     /**
@@ -108,7 +108,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
      */
     @SuppressWarnings("unused") // This is a public API.
     public AWSS3StoragePlugin(AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration) {
-        this(new AuthCognitoCredentialsProvider(), awsS3StoragePluginConfiguration);
+        this(new CognitoCredentialsProvider(), awsS3StoragePluginConfiguration);
     }
 
     @VisibleForTesting
