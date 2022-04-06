@@ -14,6 +14,7 @@
  */
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
@@ -22,10 +23,12 @@ dependencies {
     implementation project(':aws-api-appsync')
 
     implementation dependency.androidx.appcompat
-    implementation dependency.aws.authcore
-    implementation dependency.aws.mobileclient
+    implementation(dependency.aws.signing) {
+        exclude group: 'xmlpull', module: 'xmlpull'
+    }
     implementation dependency.gson
     implementation dependency.okhttp
+    implementation project(':aws-auth-cognito')
 
     testImplementation project(path: ':testutils')
     testImplementation project(path: ':testmodels')
@@ -36,6 +39,7 @@ dependencies {
     testImplementation dependency.mockwebserver
     testImplementation dependency.rxjava
     testImplementation dependency.robolectric
+    testImplementation('software.amazon.awssdk.crt:aws-crt:0.15.21')
 
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation project(path: ':testmodels')

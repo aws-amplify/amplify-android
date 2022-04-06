@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.auth.AuthCategory;
+import com.amplifyframework.auth.AuthCognitoCredentialsProvider;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -789,11 +790,11 @@ public final class MultiAuthSyncEngineInstrumentationTest {
 
         // Setup an API
         DefaultCognitoUserPoolsAuthProvider cognitoProvider =
-            new DefaultCognitoUserPoolsAuthProvider(authPlugin.getEscapeHatch());
+            new DefaultCognitoUserPoolsAuthProvider();
         CategoryConfiguration apiCategoryConfiguration = amplifyConfiguration.forCategoryType(CategoryType.API);
         ApiAuthProviders apiAuthProviders = ApiAuthProviders.builder()
                                                             .cognitoUserPoolsAuthProvider(cognitoProvider)
-                                                            .awsCredentialsProvider(authPlugin.getEscapeHatch())
+                                                            .awsCredentialsProvider(new AuthCognitoCredentialsProvider())
                                                             .oidcAuthProvider(token::get)
                                                             .build();
         ApiCategory apiCategory = new ApiCategory();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.EndpointType;
+import com.amplifyframework.api.aws.sigv4.AWS4Signer;
 import com.amplifyframework.api.aws.sigv4.ApiGatewayIamSigner;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
@@ -32,12 +33,9 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
-import com.amazonaws.auth.AWS4Signer;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.mobile.client.AWSMobileClient;
-
 import java.util.Objects;
 
+import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
 import okhttp3.Request;
 
 /**
@@ -47,7 +45,7 @@ public final class ApiRequestDecoratorFactory {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final String APP_SYNC_SERVICE_NAME = "appsync";
-    private static final String API_GATEWAY_SERVICE_NAME = "apigateway";
+    private static final String API_GATEWAY_SERVICE_NAME = "execute-api";
 
     private static final RequestDecorator NO_OP_REQUEST_DECORATOR = new RequestDecorator() {
         @Override
@@ -173,9 +171,9 @@ public final class ApiRequestDecoratorFactory {
                                                 "plugin initialization.");
                 }
             case AWS_IAM:
-                AWSCredentialsProvider credentialsProvider = apiAuthProviders.getAWSCredentialsProvider() != null
+                CredentialsProvider credentialsProvider = apiAuthProviders.getAWSCredentialsProvider() != null
                         ? apiAuthProviders.getAWSCredentialsProvider()
-                        : getDefaultCredentialsProvider();
+                        : new CognitoCredentialsProvider();
 
                 final AWS4Signer signer;
                 final String serviceName;
@@ -191,19 +189,6 @@ public final class ApiRequestDecoratorFactory {
             case NONE:
             default:
                 return NO_OP_REQUEST_DECORATOR;
-        }
-    }
-
-    private AWSCredentialsProvider getDefaultCredentialsProvider() throws ApiAuthException {
-        // Obtains AWSMobileClient from Auth Category.
-        // Throw if AWSCognitoAuthPlugin not configured.
-        try {
-            return (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
-        } catch (IllegalStateException exception) {
-            throw new ApiAuthException("Attempting to use AWS_IAM authorization without " +
-                    "an AWS credentials provider.",
-                    "Configure an AWSCredentialsProvider when initializing the API plugin or register" +
-                            "an instance of AWSCognitoAuthPlugin to Amplify.");
         }
     }
 }
