@@ -59,11 +59,11 @@ class ClusteringOptions private constructor(
      * Builder class for constructing a ClusteringOptions instance.
      */
     class Builder {
-        var clusterColor: Int = Color.BLUE
+        var clusterColor: Int = Color.parseColor("#1E88E5")
             private set
-        var clusterColorSteps: Map<Int, Int> = emptyMap()
+        var clusterColorSteps: Map<Int, Int> = mapOf(20 to Color.parseColor("#EF5350"), 50 to Color.parseColor("#FFEB3B"))
             private set
-        var clusterNumberColor: Int = Color.WHITE
+        var clusterNumberColor: Int = Color.BLACK
             private set
         var onClusterClicked: (MapLibreView, Feature) -> Unit = { mapLibreView, feature ->
             mapLibreView.getMapAsync { map ->
