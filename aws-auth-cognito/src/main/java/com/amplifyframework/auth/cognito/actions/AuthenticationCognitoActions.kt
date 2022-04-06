@@ -33,25 +33,17 @@ object AuthenticationCognitoActions : AuthenticationActions {
             val userPoolTokens = event.storedCredentials?.cognitoUserPoolTokens
             val authenticationEvent = userPoolTokens?.let {
                 val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, it)
-                AuthenticationEvent(
-                    AuthenticationEvent.EventType.InitializedSignedIn(signedInData)
-                )
-            } ?: AuthenticationEvent(
-                AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData())
-            )
+                AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
+            } ?: AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             dispatcher.send(authenticationEvent)
-            dispatcher.send(
-                AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(event.configuration))
-            )
+            dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(event.configuration)))
         }
 
     override fun initiateSRPSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
         Action { dispatcher, environment ->
             with(event) {
                 val srpEvent = username?.run {
-                    password?.run {
-                        SRPEvent(SRPEvent.EventType.InitiateSRP(username, password))
-                    }
+                    password?.run { SRPEvent(SRPEvent.EventType.InitiateSRP(username, password)) }
                 } ?: AuthenticationEvent(
                     AuthenticationEvent.EventType.ThrowError(
                         AuthException("Sign in failed.", "username or password empty")
@@ -66,9 +58,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
         signedInData: SignedInData
     ) = Action { dispatcher, environment ->
         if (event.isGlobalSignOut) {
-            dispatcher.send(
-                SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData))
-            )
+            dispatcher.send(SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData)))
         } else {
             dispatcher.send(
                 SignOutEvent(

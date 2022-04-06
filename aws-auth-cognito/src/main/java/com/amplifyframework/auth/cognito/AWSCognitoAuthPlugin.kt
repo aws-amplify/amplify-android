@@ -143,11 +143,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                 AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
                                 mapOf(),
                                 AuthCodeDeliveryDetails(
-                                    deliveryDetails.getValue("DESTINATION") ?: "",
+                                    deliveryDetails?.getValue("DESTINATION") ?: "",
                                     AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                                        deliveryDetails.getValue("MEDIUM")
+                                        deliveryDetails?.getValue("MEDIUM")
                                     ),
-                                    deliveryDetails.getValue("ATTRIBUTE")
+                                    deliveryDetails?.getValue("ATTRIBUTE")
                                 )
                             ),
                             user

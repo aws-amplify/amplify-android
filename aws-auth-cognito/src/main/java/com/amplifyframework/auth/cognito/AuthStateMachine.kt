@@ -18,10 +18,10 @@ package com.amplifyframework.auth.cognito
 import com.amplifyframework.auth.cognito.actions.AuthCognitoActions
 import com.amplifyframework.auth.cognito.actions.AuthenticationCognitoActions
 import com.amplifyframework.auth.cognito.actions.AuthorizationCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchAuthSessionActions
-import com.amplifyframework.auth.cognito.actions.FetchAwsCredentialsActions
-import com.amplifyframework.auth.cognito.actions.FetchIdentityActions
-import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensActions
+import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
+import com.amplifyframework.auth.cognito.actions.FetchAwsCredentialsCognitoActions
+import com.amplifyframework.auth.cognito.actions.FetchIdentityCognitoActions
+import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensCognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
@@ -54,10 +54,10 @@ internal class AuthStateMachine(
             ),
             AuthorizationState.Resolver(
                 FetchAuthSessionState.Resolver(
-                    FetchAwsCredentialsState.Resolver(FetchAwsCredentialsActions),
-                    FetchIdentityState.Resolver(FetchIdentityActions),
-                    FetchUserPoolTokensState.Resolver(FetchUserPoolTokensActions),
-                    FetchAuthSessionActions
+                    FetchAwsCredentialsState.Resolver(FetchAwsCredentialsCognitoActions),
+                    FetchIdentityState.Resolver(FetchIdentityCognitoActions),
+                    FetchUserPoolTokensState.Resolver(FetchUserPoolTokensCognitoActions),
+                    FetchAuthSessionCognitoActions
                 ),
                 AuthorizationCognitoActions
             ),
@@ -77,10 +77,10 @@ internal class AuthStateMachine(
                 ).logging(),
                 AuthorizationState.Resolver(
                     FetchAuthSessionState.Resolver(
-                        FetchAwsCredentialsState.Resolver(FetchAwsCredentialsActions).logging(),
-                        FetchIdentityState.Resolver(FetchIdentityActions).logging(),
-                        FetchUserPoolTokensState.Resolver(FetchUserPoolTokensActions).logging(),
-                        FetchAuthSessionActions
+                        FetchAwsCredentialsState.Resolver(FetchAwsCredentialsCognitoActions).logging(),
+                        FetchIdentityState.Resolver(FetchIdentityCognitoActions).logging(),
+                        FetchUserPoolTokensState.Resolver(FetchUserPoolTokensCognitoActions).logging(),
+                        FetchAuthSessionCognitoActions
                     ).logging(),
                     AuthorizationCognitoActions
                 ).logging(),

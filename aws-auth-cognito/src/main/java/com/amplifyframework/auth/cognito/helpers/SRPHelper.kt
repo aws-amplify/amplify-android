@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.helpers
 
 import androidx.annotation.VisibleForTesting
+import com.amplifyframework.auth.AuthException
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -36,7 +37,37 @@ import org.jetbrains.annotations.TestOnly
  */
 class SRPHelper(private val username: String, private val password: String) {
 
-    private val EPHEMERAL_KEY_LENGTH = 1024
+    companion object {
+        private val HMAC_SHA_256 = "HmacSHA256"
+        private val EPHEMERAL_KEY_LENGTH = 1024
+
+        /**
+         * Generates secret hash. Uses HMAC SHA256.
+         *
+         * @param userId User ID
+         * @param clientId Client ID
+         * @param clientSecret Client secret
+         * @return secret hash as a `String`, `null ` if `clientSecret` is `null`
+         */
+        fun getSecretHash(userId: String?, clientId: String?, clientSecret: String?): String? {
+            return when {
+                userId == null -> throw AuthException.InvalidParameterException(Exception("user ID cannot be null"))
+                clientId == null -> throw AuthException.InvalidParameterException(Exception("client ID cannot be null"))
+                clientSecret.isNullOrEmpty() -> null
+                else ->
+                    try {
+                        val mac = Mac.getInstance(HMAC_SHA_256)
+                        val keySpec = SecretKeySpec(clientSecret.toByteArray(), HMAC_SHA_256)
+                        mac.init(keySpec)
+                        mac.update(userId.toByteArray())
+                        val raw = mac.doFinal(clientId.toByteArray())
+                        String(android.util.Base64.encode(raw, android.util.Base64.NO_WRAP))
+                    } catch (e: Exception) {
+                        throw AuthException.UnknownException(Exception("errors in HMAC calculation"))
+                    }
+            }
+        }
+    }
 
     // Generator 'g' parameter.
     private val g = BigInteger.valueOf(2)
@@ -139,13 +170,13 @@ class SRPHelper(private val username: String, private val password: String) {
 
     // p = MAC("Caldera Derived Key" | 1, MAC(s, u))[0:16]
     internal fun computePasswordAuthenticationKey(ikm: BigInteger, salt: BigInteger): ByteArray {
-        val mac = Mac.getInstance("HmacSHA256")
-        var keySpec = SecretKeySpec(salt.toByteArray(), "HmacSHA256")
+        val mac = Mac.getInstance(HMAC_SHA_256)
+        var keySpec = SecretKeySpec(salt.toByteArray(), HMAC_SHA_256)
         mac.init(keySpec)
         val prk = mac.doFinal(ikm.toByteArray())
 
         mac.reset()
-        keySpec = SecretKeySpec(prk, "HmacSHA256")
+        keySpec = SecretKeySpec(prk, HMAC_SHA_256)
         mac.init(keySpec)
         mac.update(DERIVED_KEY_INFO.toByteArray())
         val hkdf = mac.doFinal(Char(1).toString().toByteArray())
@@ -155,8 +186,8 @@ class SRPHelper(private val username: String, private val password: String) {
     // M1 = MAC(poolId | userId | secret | timestamp, key)
     @VisibleForTesting
     internal fun generateM1Signature(key: ByteArray, secretBlock: String): ByteArray {
-        val mac = Mac.getInstance("HmacSHA256")
-        val keySpec = SecretKeySpec(key, "HmacSHA256")
+        val mac = Mac.getInstance(HMAC_SHA_256)
+        val keySpec = SecretKeySpec(key, HMAC_SHA_256)
         mac.init(keySpec)
         mac.update(userPoolName.toByteArray())
         mac.update(userId.toByteArray())

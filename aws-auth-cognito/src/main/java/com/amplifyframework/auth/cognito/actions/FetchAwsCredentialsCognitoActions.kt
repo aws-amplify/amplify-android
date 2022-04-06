@@ -24,15 +24,14 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAwsCredentialsEvent
 
-object FetchAwsCredentialsActions : FetchAWSCredentialsActions {
+object FetchAwsCredentialsCognitoActions : FetchAWSCredentialsActions {
     override fun initFetchAWSCredentialsAction(amplifyCredential: AmplifyCredential?): Action =
         Action { dispatcher, environment ->
             val env = (environment as AuthEnvironment)
             val idToken = amplifyCredential?.cognitoUserPoolTokens?.idToken
-            val loginsMap: Map<String, String>? =
-                env.configuration.userPool?.identityProviderName?.let { provider ->
-                    idToken?.let { mapOf(provider to idToken) }
-                }
+            val loginsMap: Map<String, String>? = env.configuration.userPool?.identityProviderName?.let { provider ->
+                idToken?.let { mapOf(provider to idToken) }
+            }
 
             val getCredentialsForIdentityRequest = GetCredentialsForIdentityRequest {
                 identityId = amplifyCredential?.identityId
@@ -54,19 +53,12 @@ object FetchAwsCredentialsActions : FetchAWSCredentialsActions {
 
                 dispatcher.send(FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.Fetched()))
                 dispatcher.send(
-                    FetchAuthSessionEvent(
-                        FetchAuthSessionEvent.EventType.FetchedAuthSession(updatedAmplifyCredential)
-                    )
+                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(updatedAmplifyCredential))
                 )
             } catch (e: Exception) {
-                val event =
-                    FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.ThrowError(e))
-                dispatcher.send(event)
-
+                dispatcher.send(FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.ThrowError(e)))
                 dispatcher.send(
-                    FetchAuthSessionEvent(
-                        FetchAuthSessionEvent.EventType.FetchedAuthSession(amplifyCredential)
-                    )
+                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(amplifyCredential))
                 )
             }
         }

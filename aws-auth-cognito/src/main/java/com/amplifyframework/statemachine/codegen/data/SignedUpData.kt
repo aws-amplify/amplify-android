@@ -18,5 +18,5 @@ package com.amplifyframework.statemachine.codegen.data
 data class SignedUpData(
     var userId: String?,
     var username: String,
-    var codeDeliveryDetails: Map<String, String?>
+    var codeDeliveryDetails: Map<String, String?>?
 )

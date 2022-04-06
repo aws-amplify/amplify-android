@@ -79,13 +79,14 @@ sealed class AuthorizationState : State {
                             val action = authorizationActions.configureAuthorizationAction()
                             StateResolution(Configured(), listOf(action))
                         }
-                        is AuthorizationEvent.EventType.ThrowError -> StateResolution(
-                            Error(authorizationEvent.exception)
-                        )
+                        is AuthorizationEvent.EventType.ThrowError -> {
+                            val action = authorizationActions.resetAuthorizationAction()
+                            StateResolution(Error(authorizationEvent.exception), listOf(action))
+                        }
                         else -> defaultResolution
                     }
                 }
-                is Configured, is SessionEstablished ->
+                is Configured ->
                     when (authorizationEvent) {
                         is AuthorizationEvent.EventType.FetchAuthSession -> {
                             val action =
@@ -98,12 +99,16 @@ sealed class AuthorizationState : State {
                 is FetchingAuthSession ->
                     when (authorizationEvent) {
                         is AuthorizationEvent.EventType.FetchedAuthSession -> {
+                            val action = authorizationActions.resetAuthorizationAction()
                             val newState = SessionEstablished(authorizationEvent.amplifyCredential)
-                            StateResolution(newState)
+                            StateResolution(newState, listOf(action))
                         }
                         else -> defaultResolution
                     }
-                else -> defaultResolution
+                is SessionEstablished, is Error -> when (authorizationEvent) {
+                    is AuthorizationEvent.EventType.Configure -> StateResolution(Configured())
+                    else -> defaultResolution
+                }
             }
         }
     }

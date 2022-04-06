@@ -15,13 +15,20 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 
 object AuthorizationCognitoActions : AuthorizationActions {
+    override fun resetAuthorizationAction() = Action { dispatcher, environment ->
+        val env = environment as AuthEnvironment
+        dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.Configure(env.configuration)))
+    }
+
     override fun configureAuthorizationAction() = Action { dispatcher, environment ->
         dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthorization))
     }
@@ -29,12 +36,8 @@ object AuthorizationCognitoActions : AuthorizationActions {
     override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential?) =
         Action { dispatcher, _ ->
             val event = amplifyCredential?.cognitoUserPoolTokens?.let {
-                FetchAuthSessionEvent(
-                    FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential)
-                )
-            } ?: FetchAuthSessionEvent(
-                FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential)
-            )
+                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential))
+            } ?: FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
             dispatcher.send(event)
         }
 }

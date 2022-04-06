@@ -30,20 +30,13 @@ object AuthCognitoActions : AuthActions {
             with(environment as AuthEnvironment) {
                 configuration = event.configuration
                 val configureEvent: AuthEvent = configuration.userPool?.run {
-                    AuthEvent(
-                        AuthEvent.EventType.ConfigureAuthentication(
-                            configuration,
-                            event.storedCredentials
-                        )
-                    )
+                    AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, event.storedCredentials))
                 } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration))
                 dispatcher.send(configureEvent)
             }
         }
 
-    override fun initializeAuthenticationConfigurationAction(
-        event: AuthEvent.EventType.ConfigureAuthentication
-    ) =
+    override fun initializeAuthenticationConfigurationAction(event: AuthEvent.EventType.ConfigureAuthentication) =
         Action { dispatcher, environment ->
             with(environment as AuthEnvironment) {
                 configuration.userPool?.let {
@@ -54,10 +47,7 @@ object AuthCognitoActions : AuthActions {
                 }
                 dispatcher.send(
                     AuthenticationEvent(
-                        AuthenticationEvent.EventType.Configure(
-                            event.configuration,
-                            event.storedCredentials
-                        )
+                        AuthenticationEvent.EventType.Configure(event.configuration, event.storedCredentials)
                     )
                 )
             }
@@ -71,13 +61,7 @@ object AuthCognitoActions : AuthActions {
                         this.region = configuration.identityPool?.region
                     }
                 }
-                dispatcher.send(
-                    AuthorizationEvent(
-                        AuthorizationEvent.EventType.Configure(
-                            configuration
-                        )
-                    )
-                )
+                dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration)))
             }
         }
 }

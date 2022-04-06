@@ -37,28 +37,28 @@ object SRPCognitoActions : SRPActions {
                 srpHelper = SRPHelper(event.username, event.password)
 
                 try {
-                    val initiateAuthResponse =
-                        cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
-                            authFlow = AuthFlowType.UserSrpAuth
-                            clientId = configuration.userPool?.appClient
-                            authParameters = mapOf(
-                                "USERNAME" to event.username,
-                                "SRP_A" to srpHelper.getPublicA()
-                            )
-                        }
+                    val secretHash = SRPHelper.getSecretHash(
+                        event.username,
+                        configuration.userPool?.appClient,
+                        configuration.userPool?.appClientSecret
+                    )
+
+                    var authParams = mapOf("USERNAME" to event.username, "SRP_A" to srpHelper.getPublicA())
+                    secretHash?.also { authParams = authParams.plus("SECRET_HASH" to secretHash) }
+                    val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
+                        authFlow = AuthFlowType.UserSrpAuth
+                        clientId = configuration.userPool?.appClient
+                        authParameters = authParams
+                    }
 
                     if (initiateAuthResponse?.challengeName == ChallengeNameType.PasswordVerifier) {
                         initiateAuthResponse.challengeParameters?.let {
-                            dispatcher.send(
-                                SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(it))
-                            )
+                            dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(it)))
                         } ?: throw Exception("Auth challenge parameters are empty.")
                     }
                 } catch (exception: Exception) {
                     dispatcher.send(SRPEvent(SRPEvent.EventType.ThrowAuthError(exception)))
-                    dispatcher.send(
-                        AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
-                    )
+                    dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
                 }
             }
         }
@@ -76,16 +76,22 @@ object SRPCognitoActions : SRPActions {
                 runCatching {
                     srpHelper.setUserPoolParams(userId, configuration.userPool?.poolId!!)
                     val m1Signature = srpHelper.getSignature(salt, srpB, secretBlock)
-
+                    val secretHash = SRPHelper.getSecretHash(
+                        username,
+                        configuration.userPool?.appClient,
+                        configuration.userPool?.appClientSecret
+                    )
+                    var challengeParams = mapOf(
+                        "USERNAME" to username,
+                        "PASSWORD_CLAIM_SECRET_BLOCK" to secretBlock,
+                        "PASSWORD_CLAIM_SIGNATURE" to m1Signature,
+                        "TIMESTAMP" to srpHelper.dateString,
+                    )
+                    secretHash?.also { challengeParams = challengeParams.plus("SECRET_HASH" to secretHash) }
                     cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                         challengeName = ChallengeNameType.PasswordVerifier
                         clientId = configuration.userPool?.appClient
-                        challengeResponses = mapOf(
-                            "USERNAME" to username,
-                            "PASSWORD_CLAIM_SECRET_BLOCK" to secretBlock,
-                            "PASSWORD_CLAIM_SIGNATURE" to m1Signature,
-                            "TIMESTAMP" to srpHelper.dateString
-                        )
+                        challengeResponses = challengeParams
                     }
                 }.onSuccess {
                     it?.authenticationResult?.run {
@@ -104,20 +110,12 @@ object SRPCognitoActions : SRPActions {
                         )
                         dispatcher.send(SRPEvent(SRPEvent.EventType.FinalizeSRPSignIn()))
                         dispatcher.send(
-                            AuthenticationEvent(
-                                AuthenticationEvent.EventType.InitializedSignedIn(signedInData)
-                            )
+                            AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
                         )
                     }
                 }.onFailure {
-                    dispatcher.send(
-                        SRPEvent(
-                            SRPEvent.EventType.ThrowPasswordVerifierError(it as Exception)
-                        )
-                    )
-                    dispatcher.send(
-                        AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
-                    )
+                    dispatcher.send(SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(it as Exception)))
+                    dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
                 }
             }
         }

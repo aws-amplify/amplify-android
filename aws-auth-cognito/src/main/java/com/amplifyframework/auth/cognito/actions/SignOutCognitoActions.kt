@@ -25,9 +25,7 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 object SignOutCognitoActions : SignOutActions {
     override fun localSignOutAction(event: SignOutEvent.EventType.SignOutLocally) =
         Action { dispatcher, environment ->
-            dispatcher.send(
-                SignOutEvent(SignOutEvent.EventType.SignedOutSuccess(event.signedInData))
-            )
+            dispatcher.send(SignOutEvent(SignOutEvent.EventType.SignedOutSuccess(event.signedInData)))
         }
 
     override fun globalSignOutAction(event: SignOutEvent.EventType.SignOutGlobally) =
@@ -40,9 +38,7 @@ object SignOutCognitoActions : SignOutActions {
                     }
                 )
             }.onSuccess {
-                dispatcher.send(
-                    SignOutEvent(SignOutEvent.EventType.RevokeToken(event.signedInData))
-                )
+                dispatcher.send(SignOutEvent(SignOutEvent.EventType.RevokeToken(event.signedInData)))
             }.onFailure {
                 dispatcher.send(
                     SignOutEvent(

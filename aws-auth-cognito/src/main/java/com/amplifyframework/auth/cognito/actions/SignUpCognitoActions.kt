@@ -20,6 +20,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpReques
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignUpActions
 import com.amplifyframework.statemachine.codegen.data.SignedUpData
@@ -42,6 +43,11 @@ object SignUpCognitoActions : SignUpActions {
                     this.password = event.password
                     this.userAttributes = userAttributes
                     this.clientId = env.configuration.userPool?.appClient
+                    this.secretHash = SRPHelper.getSecretHash(
+                        event.username,
+                        env.configuration.userPool?.appClient,
+                        env.configuration.userPool?.appClientSecret
+                    )
                 }
 
                 env.cognitoAuthService.cognitoIdentityProviderClient?.signUp(options)
@@ -52,7 +58,7 @@ object SignUpCognitoActions : SignUpActions {
                         "MEDIUM" to details.deliveryMedium?.value,
                         "ATTRIBUTE" to details.attributeName
                     )
-                } ?: mapOf()
+                }
 
                 dispatcher.send(
                     SignUpEvent(
@@ -62,9 +68,7 @@ object SignUpCognitoActions : SignUpActions {
                     )
                 )
             }.onFailure {
-                dispatcher.send(
-                    SignUpEvent(SignUpEvent.EventType.InitiateSignUpFailure(it as Exception))
-                )
+                dispatcher.send(SignUpEvent(SignUpEvent.EventType.InitiateSignUpFailure(it as Exception)))
             }
         }
 
@@ -76,48 +80,47 @@ object SignUpCognitoActions : SignUpActions {
                     this.username = event.username
                     this.confirmationCode = event.confirmationCode
                     this.clientId = env.configuration.userPool?.appClient
+                    this.secretHash = SRPHelper.getSecretHash(
+                        event.username,
+                        env.configuration.userPool?.appClient,
+                        env.configuration.userPool?.appClientSecret
+                    )
                 }
                 env.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp(options)
             }.onSuccess {
-                dispatcher.send(
-                    SignUpEvent(SignUpEvent.EventType.ConfirmSignUpSuccess())
+                dispatcher.send(SignUpEvent(SignUpEvent.EventType.ConfirmSignUpSuccess()))
+            }.onFailure {
+                dispatcher.send(SignUpEvent(SignUpEvent.EventType.ConfirmSignUpFailure(it as Exception)))
+            }
+        }
+
+    override fun resendConfirmationCodeAction(event: SignUpEvent.EventType.ResendSignUpCode) =
+        Action { dispatcher, environment ->
+            val env = (environment as AuthEnvironment)
+            runCatching {
+                val options = ResendConfirmationCodeRequest {
+                    clientId = env.configuration.userPool?.appClient
+                    username = event.username
+                }
+                env.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode(options)
+            }.onSuccess {
+                val deliveryDetails = it?.codeDeliveryDetails?.let { details ->
+                    mapOf(
+                        "DESTINATION" to details.destination,
+                        "MEDIUM" to details.deliveryMedium?.value,
+                        "ATTRIBUTE" to details.attributeName
+                    )
+                } ?: mapOf()
+
+                SignUpEvent(
+                    SignUpEvent.EventType.ResendSignUpCodeSuccess(
+                        SignedUpData("", event.username, deliveryDetails)
+                    )
                 )
             }.onFailure {
-                dispatcher.send(
-                    SignUpEvent(SignUpEvent.EventType.ConfirmSignUpFailure(it as Exception))
-                )
+                dispatcher.send(SignUpEvent(SignUpEvent.EventType.ResendSignUpCodeFailure(it as Exception)))
             }
         }
-
-    override fun resendConfirmationCodeAction(event: SignUpEvent.EventType.ResendSignUpCode) = Action {
-        dispatcher, environment ->
-        val env = (environment as AuthEnvironment)
-        runCatching {
-            val options = ResendConfirmationCodeRequest {
-                clientId = env.configuration.userPool?.appClient
-                username = event.username
-            }
-            env.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode(options)
-        }.onSuccess {
-            val deliveryDetails = it?.codeDeliveryDetails?.let { details ->
-                mapOf(
-                    "DESTINATION" to details.destination,
-                    "MEDIUM" to details.deliveryMedium?.value,
-                    "ATTRIBUTE" to details.attributeName
-                )
-            } ?: mapOf()
-
-            SignUpEvent(
-                SignUpEvent.EventType.ResendSignUpCodeSuccess(
-                    SignedUpData("", event.username, deliveryDetails)
-                )
-            )
-        }.onFailure {
-            dispatcher.send(
-                SignUpEvent(SignUpEvent.EventType.ResendSignUpCodeFailure(it as Exception))
-            )
-        }
-    }
 
     override fun resetSignUpAction() = Action { dispatcher, environment ->
         dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp()))
