@@ -3,9 +3,11 @@
 *Description of changes:*
 
 *How did you test these changes?*
-- [ ] Added Unit Tests 
-- [ ] Screenshots
-- [ ] Successful logs
+(Please add a line here how the changes were tested)
+
+- [ ] Added Unit Tests
+- [ ] Tested on frontend (Add Screenshots)
+- [ ] Successful logs (Attach them to the PR)
 
 *Documentation update required?*
 - [ ] No
