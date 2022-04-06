@@ -151,7 +151,7 @@ body:
   - type: textarea
     attributes:
       label: amplifyconfiguration.json
-      description: If applicable to the new feature, please provide your `amplifyconfiguration.json` file.
+      description: If applicable to the new feature, please provide your `amplifyconfiguration.json` file with sensitive information removed.
       placeholder: |
         ```json
           {
