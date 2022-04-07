@@ -88,19 +88,14 @@ sealed class AuthenticationState : State {
             return when (oldState) {
                 is NotConfigured -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.Configure -> {
-                        val action = authenticationActions.configureAuthenticationAction(
-                            authenticationEvent
-                        )
-                        val newState = Configured()
-                        StateResolution(newState, listOf(action))
+                        val action = authenticationActions.configureAuthenticationAction(authenticationEvent)
+                        StateResolution(Configured(), listOf(action))
                     }
                     else -> defaultResolution
                 }
                 is Configured -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.InitializedSignedIn -> StateResolution(
-                        SignedIn(
-                            authenticationEvent.signedInData
-                        )
+                        SignedIn(authenticationEvent.signedInData)
                     )
                     is AuthenticationEvent.EventType.InitializedSignedOut -> StateResolution(
                         SignedOut(authenticationEvent.signedOutData)
@@ -109,34 +104,20 @@ sealed class AuthenticationState : State {
                 }
                 is SigningIn -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.InitializedSignedIn -> StateResolution(
-                        SignedIn(
-                            authenticationEvent.signedInData
+                        SignedIn(authenticationEvent.signedInData)
                         )
-                    )
-                    is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(
-                        SignedOut(
-                            SignedOutData()
-                        )
-                    )
+                    is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(SignedOut(SignedOutData()))
                     else -> defaultResolution
                 }
                 is SigningUp -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.ResetSignUp -> StateResolution(
-                        SignedOut(
-                            SignedOutData()
-                        )
-                    )
+                    is AuthenticationEvent.EventType.ResetSignUp -> StateResolution(SignedOut(SignedOutData()))
                     else -> defaultResolution
                 }
                 is SignedIn -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.SignOutRequested -> {
                         val action =
-                            authenticationActions.initiateSignOutAction(
-                                authenticationEvent,
-                                oldState.signedInData
-                            )
-                        val newState = SigningOut(oldState.signOutState)
-                        StateResolution(newState, listOf(action))
+                            authenticationActions.initiateSignOutAction(authenticationEvent, oldState.signedInData)
+                        StateResolution(SigningOut(oldState.signOutState), listOf(action))
                     }
                     else -> defaultResolution
                 }
@@ -148,18 +129,14 @@ sealed class AuthenticationState : State {
                 }
                 is SignedOut -> when {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
-                        val action =
-                            authenticationActions.initiateSRPSignInAction(authenticationEvent)
-                        val newState = SigningIn(oldState.srpSignInState)
-                        StateResolution(newState, listOf(action))
+                        val action = authenticationActions.initiateSRPSignInAction(authenticationEvent)
+                        StateResolution(SigningIn(oldState.srpSignInState), listOf(action))
                     }
                     // TODO: find better way to handle other events
                     signUpEvent is SignUpEvent.EventType.InitiateSignUp ||
-                        signUpEvent is SignUpEvent.EventType.ConfirmSignUp
-                        || signUpEvent is SignUpEvent.EventType.ResendSignUpCode ->
-                        StateResolution(
-                            SigningUp(oldState.signUpState)
-                        )
+                        signUpEvent is SignUpEvent.EventType.ConfirmSignUp ||
+                        signUpEvent is SignUpEvent.EventType.ResendSignUpCode ->
+                        StateResolution(SigningUp(oldState.signUpState))
                     else -> defaultResolution
                 }
                 else -> defaultResolution

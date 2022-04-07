@@ -38,8 +38,7 @@ sealed class AuthState : State {
     data class Configured(
         override var authNState: AuthenticationState?,
         override var authZState: AuthorizationState?
-    ) :
-        AuthState()
+    ) : AuthState()
 
     data class Error(val exception: Exception) : AuthState()
 
@@ -58,10 +57,7 @@ sealed class AuthState : State {
             return (event as? AuthEvent)?.eventType
         }
 
-        override fun resolve(
-            oldState: AuthState,
-            event: StateMachineEvent
-        ): StateResolution<AuthState> {
+        override fun resolve(oldState: AuthState, event: StateMachineEvent): StateResolution<AuthState> {
             val resolution = resolveAuthEvent(oldState, event)
             val actions = resolution.actions.toMutableList()
             val builder = Builder(resolution.newState)
@@ -79,10 +75,7 @@ sealed class AuthState : State {
             return StateResolution(builder.build(), actions)
         }
 
-        private fun resolveAuthEvent(
-            oldState: AuthState,
-            event: StateMachineEvent
-        ): StateResolution<AuthState> {
+        private fun resolveAuthEvent(oldState: AuthState, event: StateMachineEvent): StateResolution<AuthState> {
             val authEvent = asAuthEvent(event)
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
@@ -119,10 +112,7 @@ sealed class AuthState : State {
                 }
                 is ConfiguringAuthorization -> when (authEvent) {
                     is AuthEvent.EventType.ConfiguredAuthorization -> StateResolution(
-                        Configured(
-                            oldState.authNState,
-                            oldState.authZState
-                        )
+                        Configured(oldState.authNState, oldState.authZState)
                     )
                     else -> defaultResolution
                 }

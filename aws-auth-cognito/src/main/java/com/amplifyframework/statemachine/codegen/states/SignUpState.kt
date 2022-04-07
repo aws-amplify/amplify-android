@@ -38,23 +38,18 @@ sealed class SignUpState : State {
             return (event as? SignUpEvent)?.eventType
         }
 
-        override fun resolve(
-            oldState: SignUpState,
-            event: StateMachineEvent
-        ): StateResolution<SignUpState> {
+        override fun resolve(oldState: SignUpState, event: StateMachineEvent): StateResolution<SignUpState> {
             val defaultResolution = StateResolution(oldState)
             val signUpEvent = asSignUpEvent(event)
             return when (oldState) {
                 is NotStarted, is SigningUpInitiated -> when (signUpEvent) {
                     is SignUpEvent.EventType.InitiateSignUp -> {
                         val action = signUpActions.startSignUpAction(signUpEvent)
-                        val newState = InitiatingSigningUp()
-                        return StateResolution(newState, listOf(action))
+                        StateResolution(InitiatingSigningUp(), listOf(action))
                     }
                     is SignUpEvent.EventType.ConfirmSignUp -> {
                         val action = signUpActions.confirmSignUpAction(signUpEvent)
-                        val newState = ConfirmingSignUp()
-                        return StateResolution(newState, listOf(action))
+                        StateResolution(ConfirmingSignUp(), listOf(action))
                     }
                     is SignUpEvent.EventType.ResendSignUpCode -> {
                         val action = signUpActions.resendConfirmationCodeAction(signUpEvent)

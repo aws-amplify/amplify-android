@@ -57,9 +57,7 @@ sealed class AuthorizationState : State {
             val actions = resolution.actions.toMutableList()
             val builder = Builder(resolution.newState)
 
-            oldState.fetchAuthSessionState?.let {
-                fetchAuthSessionResolver.resolve(it, event)
-            }?.let {
+            oldState.fetchAuthSessionState?.let { fetchAuthSessionResolver.resolve(it, event) }?.let {
                 builder.fetchAuthSessionState = it.newState
                 actions += it.actions
             }

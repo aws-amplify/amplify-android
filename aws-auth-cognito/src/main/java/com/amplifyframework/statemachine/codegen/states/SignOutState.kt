@@ -40,30 +40,22 @@ sealed class SignOutState : State {
             return (event as? SignOutEvent)?.eventType
         }
 
-        override fun resolve(
-            oldState: SignOutState,
-            event: StateMachineEvent
-        ): StateResolution<SignOutState> {
+        override fun resolve(oldState: SignOutState, event: StateMachineEvent): StateResolution<SignOutState> {
             val defaultResolution = StateResolution(oldState)
             val signOutEvent = asSignOutEvent(event)
             return when (oldState) {
                 is NotStarted -> when (signOutEvent) {
                     is SignOutEvent.EventType.SignOutLocally -> {
                         val action = signOutActions.localSignOutAction(signOutEvent)
-                        StateResolution(
-                            SigningOutLocally(signOutEvent.signedInData),
-                            listOf(action)
-                        )
+                        StateResolution(SigningOutLocally(signOutEvent.signedInData), listOf(action))
                     }
                     is SignOutEvent.EventType.SignOutGlobally -> {
                         val action = signOutActions.globalSignOutAction(signOutEvent)
-                        val newState = SigningOutGlobally()
-                        StateResolution(newState, listOf(action))
+                        StateResolution(SigningOutGlobally(), listOf(action))
                     }
                     is SignOutEvent.EventType.RevokeToken -> {
-                        val newState = RevokingToken()
                         val action = signOutActions.revokeTokenAction(signOutEvent)
-                        StateResolution(newState, listOf(action))
+                        StateResolution(RevokingToken(), listOf(action))
                     }
                     else -> defaultResolution
                 }
@@ -72,33 +64,24 @@ sealed class SignOutState : State {
                         val newState = SignedOut(SignedOutData(signOutEvent.signedInData.username))
                         StateResolution(newState)
                     }
-                    is SignOutEvent.EventType.SignedOutFailure -> StateResolution(
-                        Error(signOutEvent.exception)
-                    )
+                    is SignOutEvent.EventType.SignedOutFailure -> StateResolution(Error(signOutEvent.exception))
                     else -> defaultResolution
                 }
                 is SigningOutGlobally -> when (signOutEvent) {
                     is SignOutEvent.EventType.RevokeToken -> {
-                        val newState = RevokingToken()
                         val action = signOutActions.revokeTokenAction(signOutEvent)
-                        StateResolution(newState, listOf(action))
+                        StateResolution(RevokingToken(), listOf(action))
                     }
                     is SignOutEvent.EventType.SignOutLocally -> {
                         val action = signOutActions.localSignOutAction(signOutEvent)
-                        StateResolution(
-                            SigningOutLocally(signOutEvent.signedInData),
-                            listOf(action)
-                        )
+                        StateResolution(SigningOutLocally(signOutEvent.signedInData), listOf(action))
                     }
                     else -> defaultResolution
                 }
                 is RevokingToken -> when (signOutEvent) {
                     is SignOutEvent.EventType.SignOutLocally -> {
                         val action = signOutActions.localSignOutAction(signOutEvent)
-                        StateResolution(
-                            SigningOutLocally(signOutEvent.signedInData),
-                            listOf(action)
-                        )
+                        StateResolution(SigningOutLocally(signOutEvent.signedInData), listOf(action))
                     }
                     else -> defaultResolution
                 }

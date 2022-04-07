@@ -38,45 +38,33 @@ sealed class SRPSignInState : State {
             return (event as? SRPEvent)?.eventType
         }
 
-        override fun resolve(
-            oldState: SRPSignInState,
-            event: StateMachineEvent
-        ): StateResolution<SRPSignInState> {
+        override fun resolve(oldState: SRPSignInState, event: StateMachineEvent): StateResolution<SRPSignInState> {
             val srpEvent = asSRPEvent(event)
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
                 is NotStarted -> when (srpEvent) {
                     is SRPEvent.EventType.InitiateSRP -> {
                         val action = srpActions.initiateSRPAuthAction(srpEvent)
-                        val newState = InitiatingSRPA()
-                        StateResolution(newState, listOf(action))
+                        StateResolution(InitiatingSRPA(), listOf(action))
                     }
                     else -> defaultResolution
                 }
                 is InitiatingSRPA -> when (srpEvent) {
                     is SRPEvent.EventType.RespondPasswordVerifier -> {
                         val action = srpActions.verifyPasswordSRPAction(srpEvent)
-                        val newState = RespondingPasswordVerifier()
-                        StateResolution(newState, listOf(action))
+                        StateResolution(RespondingPasswordVerifier(), listOf(action))
                     }
-                    is SRPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(srpEvent.exception)
-                    )
+                    is SRPEvent.EventType.ThrowAuthError -> StateResolution(Error(srpEvent.exception))
                     is SRPEvent.EventType.CancelSRPSignIn -> StateResolution(Cancelling())
                     else -> defaultResolution
                 }
                 is RespondingPasswordVerifier -> when (srpEvent) {
-                    is SRPEvent.EventType.RespondNextAuthChallenge -> StateResolution(
-                        NextAuthChallenge()
-                    )
-                    is SRPEvent.EventType.ThrowPasswordVerifierError -> StateResolution(
-                        Error(srpEvent.exception)
-                    )
+                    is SRPEvent.EventType.RespondNextAuthChallenge -> StateResolution(NextAuthChallenge())
+                    is SRPEvent.EventType.ThrowPasswordVerifierError -> StateResolution(Error(srpEvent.exception))
                     is SRPEvent.EventType.FinalizeSRPSignIn -> StateResolution(SignedIn())
                     is SRPEvent.EventType.CancelSRPSignIn -> StateResolution(Cancelling())
                     else -> defaultResolution
                 }
-                is NextAuthChallenge, is SignedIn -> defaultResolution
                 is Cancelling -> when (srpEvent) {
                     is SRPEvent.EventType.Reset -> StateResolution(NotStarted())
                     else -> defaultResolution
