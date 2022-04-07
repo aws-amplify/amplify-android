@@ -88,15 +88,15 @@ public final class SerializedModelAdapter
                 SchemaRegistry schemaRegistry = SchemaRegistry.instance();
                 ModelSchema nestedModelSchema = schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
                 serializedData.put(field.getName(), SerializedModel.builder()
-                    .serializedData(Collections.singletonMap("id", item.getValue().getAsString()))
                     .modelSchema(nestedModelSchema)
+                        .serializedData(Collections.singletonMap("id", item.getValue().getAsString()))
                     .build());
             }
         }
 
         return SerializedModel.builder()
-            .serializedData(serializedData)
             .modelSchema(modelSchema)
+                .serializedData(serializedData)
             .build();
     }
 }

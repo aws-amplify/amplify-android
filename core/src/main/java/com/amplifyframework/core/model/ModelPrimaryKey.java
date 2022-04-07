@@ -22,6 +22,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 
 /**
  * This class is a representation of the custom primary key.
@@ -122,6 +124,29 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
             }
             return uniqueStringId;
         }
-    }
 
+        /**
+         * Returns string representation of the unique key from schema and Serialized Data.
+         * @param modelSchema Schema of the model.
+         * @param serializedData key value representation of the data.
+         * @return String representation of the unique key.
+         */
+        public static String getUniqueKey(ModelSchema modelSchema, Map<String, Object> serializedData) {
+            StringBuilder id = new StringBuilder();
+            try {
+                final ListIterator<String> primaryKeyListIterator = modelSchema.getPrimaryIndexFields().listIterator();
+                if (primaryKeyListIterator.hasNext()){
+                    id.append(serializedData.get(primaryKeyListIterator.next()));
+                    if (primaryKeyListIterator.hasNext()){
+                        id.append("#");
+                    }
+                }
+            } catch (Exception exception) {
+                throw (new IllegalStateException("Invalid Primary Key," +
+                        " It should either be of type String or composite" +
+                        " Primary Key." + exception));
+            }
+            return id.toString();
+        }
+    }
 }
