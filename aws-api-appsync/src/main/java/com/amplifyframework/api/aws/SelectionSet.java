@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -259,16 +260,19 @@ public final class SelectionSet {
             }
 
             Set<SelectionSet> result = new HashSet<>();
+            ModelSchema schema = ModelSchema.fromModelClass(clazz);
 
             if (depth == 0
                     && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
                     && operation != QueryType.SYNC
             ) {
-                result.add(new SelectionSet("id"));
+                Iterator<String> primaryKeyIterator = schema.getPrimaryIndexFields().listIterator();
+                if(primaryKeyIterator.hasNext()){
+                    result.add(new SelectionSet(primaryKeyIterator.next()));
+                }
                 return result;
             }
 
-            ModelSchema schema = ModelSchema.fromModelClass(clazz);
             for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
@@ -367,8 +371,10 @@ public final class SelectionSet {
                     && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
                     && operation != QueryType.SYNC
             ) {
-                result.add(new SelectionSet("id"));
-                return result;
+                Iterator<String> primaryKeyIterator = modelSchema.getPrimaryIndexFields().listIterator();
+                if(primaryKeyIterator.hasNext()){
+                    result.add(new SelectionSet(primaryKeyIterator.next()));
+                }
             }
 
             SchemaRegistry modelSchemas = SchemaRegistry.instance();
