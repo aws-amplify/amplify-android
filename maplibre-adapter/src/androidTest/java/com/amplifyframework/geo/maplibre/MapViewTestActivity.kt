@@ -23,15 +23,18 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import com.amplifyframework.geo.maplibre.view.MapLibreView
+import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.TestCategory
 
 /**
  * Activity that initializes MapLibre SDK with adapter on create.
  */
 class MapViewTestActivity : AppCompatActivity() {
+    internal var auth: SynchronousAuth? = null
 
     private val geo: GeoCategory by lazy {
         val authCategory = TestCategory.forPlugin(AWSCognitoAuthPlugin()) as AuthCategory
+        auth = SynchronousAuth.delegatingTo(authCategory)
         TestCategory.forPlugin(AWSLocationGeoPlugin(authProvider = authCategory)) as GeoCategory
     }
 
