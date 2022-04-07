@@ -84,8 +84,8 @@ public final class ModelWithMetadataAdapter implements
             // remove metadata fields from the serialized model so it matches the schema
             removeMetadataFields(jsonObject);
             model = SerializedModel.builder()
-                .serializedData(GsonObjectConverter.toMap(jsonObject))
                 .modelSchema(null)
+                    .serializedData(GsonObjectConverter.toMap(jsonObject))
                 .build();
         } else {
             model = context.deserialize(json, modelClassType);

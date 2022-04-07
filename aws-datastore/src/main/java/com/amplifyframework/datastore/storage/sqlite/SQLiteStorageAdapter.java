@@ -886,8 +886,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             }
         }
         return SerializedModel.builder()
-                .serializedData(serializedData)
                 .modelSchema(modelSchema)
+                .serializedData(serializedData)
                 .build();
     }
 

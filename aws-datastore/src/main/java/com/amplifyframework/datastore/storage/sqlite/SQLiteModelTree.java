@@ -94,8 +94,8 @@ final class SQLiteModelTree {
             for (String id : entry.getValue()) {
                 if (rootModel.getClass() == SerializedModel.class) {
                     SerializedModel dummyItem = SerializedModel.builder()
-                            .serializedData(Collections.singletonMap("id", id))
                             .modelSchema(schema)
+                            .serializedData(Collections.singletonMap("id", id))
                             .build();
                     descendants.add(dummyItem);
                 } else {
