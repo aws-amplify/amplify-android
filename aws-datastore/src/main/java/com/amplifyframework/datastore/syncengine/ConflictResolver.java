@@ -131,7 +131,6 @@ final class ConflictResolver {
      * @param <T> Type of the model
      * @return Model
      */
-
     @SuppressWarnings("unchecked")
     private <T extends Model> T getServerModel(@NonNull ModelWithMetadata<T> serverData, T local) {
         T serverModel = serverData.getModel();
