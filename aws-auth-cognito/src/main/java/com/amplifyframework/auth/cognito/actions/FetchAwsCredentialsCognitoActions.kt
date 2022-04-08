@@ -43,12 +43,9 @@ object FetchAwsCredentialsCognitoActions : FetchAWSCredentialsActions {
                     env.cognitoAuthService.cognitoIdentityClient?.getCredentialsForIdentity(
                         getCredentialsForIdentityRequest
                     )
-                val credentials = AWSCredentials(
-                    accessKeyId = getCredentialsForIdentityResponse?.credentials?.accessKeyId,
-                    secretAccessKey = getCredentialsForIdentityResponse?.credentials?.secretKey,
-                    sessionToken = getCredentialsForIdentityResponse?.credentials?.sessionToken,
-                    expiration = getCredentialsForIdentityResponse?.credentials?.expiration?.epochSeconds
-                )
+                val credentials = getCredentialsForIdentityResponse?.credentials?.let {
+                    AWSCredentials(it.accessKeyId, it.secretKey, it.sessionToken, it.expiration?.epochSeconds)
+                }
                 val updatedAmplifyCredential = amplifyCredential?.copy(awsCredentials = credentials)
 
                 dispatcher.send(FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.Fetched()))

@@ -82,8 +82,10 @@ data class AWSCognitoAuthSession(
                     awsCredentialsResult = AuthSessionResult.success(getCredentials(credentials.awsCredentials))
                 } else {
                     // #NoAWSCredentials
-                    // TODO: differentiate between no idp and GUEST_ACCESS_POSSIBLE vs GUEST_ACCESS_DISABLED
-                    val error = AuthException("Could not fetch AWS Cognito credentials", "no idp")
+                    val error = AuthException(
+                        "Could not fetch AWS Cognito credentials",
+                        "Cognito Identity not configured. Please check amplifyconfiguration.json file."
+                    )
                     identityIdResult = identityIdError ?: AuthSessionResult.failure(error)
                     awsCredentialsResult = awsCredentialsError ?: AuthSessionResult.failure(error)
                 }

@@ -107,6 +107,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     ) {
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AuthException(
+                        "Sign up failed.",
+                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
+                    )
+                )
                 // Continue sign up
                 is AuthenticationState.SignedOut -> _signUp(username, password, options, onSuccess, onError)
                 // Clean up from signing up state
@@ -179,6 +185,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     ) {
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AuthException(
+                        "Confirm sign up failed.",
+                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
+                    )
+                )
                 is AuthenticationState.SignedOut, is AuthenticationState.SigningUp -> {
                     // Continue confirm sign up
                     _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
@@ -298,6 +310,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     ) {
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AuthException(
+                        "Sign in failed.",
+                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
+                    )
+                )
                 // Continue sign in
                 is AuthenticationState.SignedOut -> _signIn(username, password, options, onSuccess, onError)
                 // Clean up from signing up state
@@ -493,7 +511,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         token = authStateMachine.listen(
             { authState ->
                 when (val authZState = authState.authZState) {
-                    // TODO: handle if already in SessionEstablished
                     is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSession = AWSCognitoAuthSession.fromAmplifyCredential(
@@ -766,9 +783,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     ) {
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onSuccess.call() // TODO: clear store
                 // Continue sign out
-                is AuthenticationState.SignedIn -> _signOut(options, onSuccess, onError)
-                is AuthenticationState.SignedOut -> onError.accept(AuthException.SignedOutException())
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut ->
+                    _signOut(options, onSuccess, onError)
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
@@ -831,7 +849,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                     it is CredentialStoreState.Error -> {
                         token?.let(credentialStoreStateMachine::cancel)
                         authStateMachine.send(
-                            SignOutEvent(SignOutEvent.EventType.SignedOutFailure(AuthException(it.error.message, "")))
+                            SignOutEvent(
+                                SignOutEvent.EventType.SignedOutFailure(AuthException.UnknownException(it.error))
+                            )
                         )
                     }
                 }

@@ -43,7 +43,7 @@ object FetchIdentityCognitoActions : FetchIdentityActions {
                 val updatedAmplifyCredential = AmplifyCredential(
                     cognitoUserPoolTokens = amplifyCredential?.cognitoUserPoolTokens,
                     identityId = getIDResponse?.identityId,
-                    null
+                    awsCredentials = amplifyCredential?.awsCredentials
                 )
 
                 dispatcher.send(FetchIdentityEvent(FetchIdentityEvent.EventType.Fetched()))
