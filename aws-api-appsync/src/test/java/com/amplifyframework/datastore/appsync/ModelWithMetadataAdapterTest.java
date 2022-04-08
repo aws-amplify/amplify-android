@@ -63,7 +63,7 @@ public final class ModelWithMetadataAdapterTest {
     public void adapterCanSerializeMwm() throws JSONException {
         Temporal.Timestamp lastChangedAt = Temporal.Timestamp.now();
         String modelId = UUID.randomUUID().toString();
-        ModelMetadata metadata = new ModelMetadata(modelId, false, 4, lastChangedAt);
+        ModelMetadata metadata = new ModelMetadata(modelId, false, 4, lastChangedAt, "BlogOwner");
         BlogOwner model = BlogOwner.builder()
             .name("Blog Owner")
             .build();
@@ -91,7 +91,7 @@ public final class ModelWithMetadataAdapterTest {
             .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
             .build();
         Temporal.Timestamp lastChangedAt = new Temporal.Timestamp(1594858827, TimeUnit.SECONDS);
-        ModelMetadata metadata = new ModelMetadata(model.getId(), false, 3, lastChangedAt);
+        ModelMetadata metadata = new ModelMetadata(model.getId(), false, 3, lastChangedAt, model.getModelName());
         ModelWithMetadata<BlogOwner> expected = new ModelWithMetadata<>(model, metadata);
 
         // Arrange some JSON, and then try to deserialize it
@@ -121,11 +121,12 @@ public final class ModelWithMetadataAdapterTest {
         postSerializedData.put("updatedAt", "2022-03-04T05:36:26.629Z");
 
         SerializedModel model = SerializedModel.builder()
-                .serializedData(postSerializedData)
                 .modelSchema(null)
+                .serializedData(postSerializedData)
                 .build();
         Temporal.Timestamp lastChangedAt = new Temporal.Timestamp(1594858827, TimeUnit.SECONDS);
-        ModelMetadata metadata = new ModelMetadata(model.getId(), false, 3, lastChangedAt);
+        ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), false, 3, lastChangedAt,
+                model.getModelName());
         ModelWithMetadata<SerializedModel> expected = new ModelWithMetadata<>(model, metadata);
 
         // Arrange some JSON, and then try to deserialize it

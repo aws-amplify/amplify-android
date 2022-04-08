@@ -143,7 +143,7 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
                 }
             } catch (Exception exception) {
                 throw (new IllegalStateException("Invalid Primary Key," +
-                        " It should either be of type String or composite" +
+                        " It should either be single field or of type composite primary key" +
                         " Primary Key." + exception));
             }
             return id.toString();

@@ -2,6 +2,7 @@
   "query": "query SyncParents {
   syncParents {
     items {
+      __typename
       _deleted
       _lastChangedAt
       _version

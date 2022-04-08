@@ -2,10 +2,12 @@
   "query": "query SyncBlogOwners($filter: ModelBlogOwnerFilterInput, $lastSync: AWSTimestamp, $limit: Int) {
   syncBlogOwners(filter: $filter, lastSync: $lastSync, limit: $limit) {
     items {
+      __typename
       _deleted
       _lastChangedAt
       _version
       blog {
+        __typename
         _deleted
         _lastChangedAt
         _version

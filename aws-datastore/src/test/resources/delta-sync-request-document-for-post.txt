@@ -2,11 +2,13 @@
   "query": "query SyncPosts($lastSync: AWSTimestamp) {
   syncPosts(lastSync: $lastSync) {
     items {
+      __typename
       _deleted
       _lastChangedAt
       _version
       authors {
         items {
+          __typename
           _deleted
           _lastChangedAt
           _version
@@ -17,6 +19,7 @@
         startedAt
       }
       blog {
+        __typename
         _deleted
         _lastChangedAt
         _version
@@ -26,6 +29,7 @@
       }
       comments {
         items {
+          __typename
           _deleted
           _lastChangedAt
           _version
