@@ -15,15 +15,14 @@
 
 package com.amplifyframework.api.aws.utils;
 
+import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.rest.HttpMethod;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.Map;
 import java.util.Objects;
 
@@ -75,8 +74,9 @@ public final class RestRequestFactory {
         }
 
         try {
-            return new URL(URLDecoder.decode(builder.build().url().toString(), "UTF-8"));
-        } catch (UnsupportedEncodingException error) {
+            String encodedUrl = builder.build().url().toString();
+            return new URL(Uri.decode(encodedUrl));
+        } catch (MalformedURLException error) {
             throw new MalformedURLException(error.getMessage());
         }
     }
