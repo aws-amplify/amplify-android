@@ -42,7 +42,8 @@ public final class DataStoreGraphQLRequestOptions implements GraphQLRequestOptio
     public List<String> modelMetaFields() {
         return Arrays.asList(ModelWithMetadataAdapter.VERSION_KEY,
                 ModelWithMetadataAdapter.DELETED_KEY,
-                ModelWithMetadataAdapter.LAST_CHANGED_AT_KEY);
+                ModelWithMetadataAdapter.LAST_CHANGED_AT_KEY,
+                ModelWithMetadataAdapter.TYPE_NAME);
     }
 
     @NonNull

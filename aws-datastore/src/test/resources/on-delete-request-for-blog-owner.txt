@@ -1,6 +1,7 @@
 {
   "query": "subscription OnDeleteBlogOwner {
   onDeleteBlogOwner {
+    __typename
     _deleted
     _lastChangedAt
     _version

@@ -902,9 +902,9 @@ public final class MultiAuthSyncEngineInstrumentationTest {
             modelMap.put("id", modelId);
             modelMap.put("name", recordDetail);
             return SerializedModel.builder()
-                                   .serializedData(modelMap)
                                    .modelSchema(ModelSchema.fromModelClass(modelType))
-                                   .build();
+                                    .serializedData(modelMap)
+                                    .build();
         } catch (AmplifyException exception) {
             Log.e(modelType.getSimpleName(), "Unable to create an instance of model " + modelType.getSimpleName(),
                   exception);

@@ -39,6 +39,7 @@ public final class ModelMetadata implements Model {
     private final @ModelField(targetType = "Boolean") Boolean _deleted;
     private final @ModelField(targetType = "Int") Integer _version;
     private final @ModelField(targetType = "AWSTimestamp") Temporal.Timestamp _lastChangedAt;
+    private final @ModelField(targetType = "String") String __typename;
 
     /**
      * Constructor for this metadata model.
@@ -46,16 +47,18 @@ public final class ModelMetadata implements Model {
      * @param deleted Whether this object was deleted since the last sync time specified
      * @param version What version this object was last seen at
      * @param lastChangedAt When was this object last changed
+     * @param typename The type name of the model.
      */
     public ModelMetadata(
             @NonNull String id,
             @Nullable Boolean deleted,
             @Nullable Integer version,
-            @Nullable Temporal.Timestamp lastChangedAt) {
+            @Nullable Temporal.Timestamp lastChangedAt, String typename) {
         this.id = Objects.requireNonNull(id);
         this._deleted = deleted;
         this._version = version;
         this._lastChangedAt = lastChangedAt;
+        __typename = typename;
     }
 
     /**
@@ -90,6 +93,15 @@ public final class ModelMetadata implements Model {
     @Nullable
     public Integer getVersion() {
         return _version;
+    }
+
+    /**
+     * Gets the type of the model.
+     * @return Type of the Model.
+     */
+    @Nullable
+    public String getTypename() {
+        return __typename;
     }
 
     /**

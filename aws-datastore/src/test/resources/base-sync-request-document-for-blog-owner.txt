@@ -2,10 +2,12 @@
   "query": "query SyncBlogOwners {
   syncBlogOwners {
     items {
+      __typename
       _deleted
       _lastChangedAt
       _version
       blog {
+        __typename
         _deleted
         _lastChangedAt
         _version

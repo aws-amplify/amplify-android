@@ -451,8 +451,8 @@ public final class AppSyncRequestFactoryTest {
         serializedData.put("name", "John Smith");
 
         SerializedModel blogOwner = SerializedModel.builder()
-                .serializedData(serializedData)
                 .modelSchema(modelSchema)
+                .serializedData(serializedData)
                 .build();
 
         // Assert
@@ -523,8 +523,8 @@ public final class AppSyncRequestFactoryTest {
         personSerializedData.put("mailingAddresses", addressesList);
 
         SerializedModel person = SerializedModel.builder()
-                .serializedData(personSerializedData)
                 .modelSchema(schemaRegistry.getModelSchemaForModelClass("Person"))
+                .serializedData(personSerializedData)
                 .build();
 
         String actual = AppSyncRequestFactory.buildCreationRequest(
@@ -574,8 +574,8 @@ public final class AppSyncRequestFactoryTest {
         personSerializedData.put("bio", bio);
 
         SerializedModel person = SerializedModel.builder()
-                .serializedData(personSerializedData)
                 .modelSchema(schemaRegistry.getModelSchemaForModelClass("Person"))
+                .serializedData(personSerializedData)
                 .build();
 
         String actual = AppSyncRequestFactory.buildUpdateRequest(
