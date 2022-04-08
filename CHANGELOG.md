@@ -1,3 +1,56 @@
+## [Release 1.35.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.0)
+
+### Features
+- **maplibre-adapter:** add clustering to map view (#1692)
+
+### Miscellaneous
+- updated the pull request template to include information about tests and documentation update (#1695)
+- Adding a new feature request template to our repo (#1696)
+- Updating version of aws sdk (#1698)
+
+[See all changes between 1.34.0 and 1.35.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.34.0...release_v1.35.0)
+
+## [Release 1.34.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.34.0)
+
+### Features
+- Add authFlow type in signInOptions (#1686)
+
+### Bug Fixes
+- **datastore:** compare datetime values in consistent format when querying (#1670)
+
+### Miscellaneous
+- Connectivity crash fix (#1688)
+- [aws-api] Fix DELETE rest calls not working with IamRequestDecorator (#1684)
+
+[See all changes between 1.33.0 and 1.34.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.33.0...release_v1.34.0)
+
+## [Release 1.33.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.33.0)
+
+### Features
+- **auth:** Add deleteUser API (#1656)
+
+[See all changes between 1.32.2 and 1.33.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.32.2...release_v1.33.0)
+
+## [Release 1.32.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.32.2)
+
+### Miscellaneous
+- Update notify_comments.yml (#1675)
+- Remove the UUID restriction from persistentRecord (#1678)
+- conflict resolver retry local fix (#1634)
+
+[See all changes between 1.32.1 and 1.32.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.32.1...release_v1.32.2)
+
+## [Release 1.32.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.32.1)
+
+### Bug Fixes
+- **datastore:** SerializedModel returns null for non-nullable list field (#1665)
+- **datastore:** Remove timeout for hydrating sync processor in orchestrator. (#1658)
+
+### Miscellaneous
+- Update notify_comments.yml (#1671)
+
+[See all changes between 1.32.0 and 1.32.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.32.0...release_v1.32.1)
+
 ## [Release 1.32.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.32.0)
 
 ### Features

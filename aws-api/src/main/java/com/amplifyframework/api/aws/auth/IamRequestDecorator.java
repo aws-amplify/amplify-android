@@ -84,7 +84,7 @@ public class IamRequestDecorator implements RequestDecorator {
         RequestBody body = req.body();
         boolean isEmptyRequestBody = false;
         try {
-            if (body != null) {
+            if (body != null && body.contentLength() > 0) {
                 //write the body to a byte array.
                 final Buffer buffer = new Buffer();
                 body.writeTo(buffer);

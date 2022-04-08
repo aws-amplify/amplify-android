@@ -35,7 +35,7 @@ dependencies {
     testImplementation dependency.mockito
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
-    testImplementation 'io.mockk:mockk:1.11.0'
+    testImplementation dependency.mockk
 
     androidTestImplementation dependency.mockito
     androidTestImplementation project(path: ':testmodels')

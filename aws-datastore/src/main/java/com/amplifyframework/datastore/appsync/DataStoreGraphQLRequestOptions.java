@@ -30,9 +30,6 @@ public final class DataStoreGraphQLRequestOptions implements GraphQLRequestOptio
     private static final String ITEMS_KEY = "items";
     private static final String NEXT_TOKEN_KEY = "nextToken";
     private static final String STARTED_AT_KEY = "startedAt";
-    private static final String DELETED_KEY = "_deleted";
-    private static final String VERSION_KEY = "_version";
-    private static final String LAST_CHANGED_AT_KEY = "_lastChangedAt";
 
     @NonNull
     @Override
@@ -43,7 +40,9 @@ public final class DataStoreGraphQLRequestOptions implements GraphQLRequestOptio
     @NonNull
     @Override
     public List<String> modelMetaFields() {
-        return Arrays.asList(VERSION_KEY, DELETED_KEY, LAST_CHANGED_AT_KEY);
+        return Arrays.asList(ModelWithMetadataAdapter.VERSION_KEY,
+                ModelWithMetadataAdapter.DELETED_KEY,
+                ModelWithMetadataAdapter.LAST_CHANGED_AT_KEY);
     }
 
     @NonNull
