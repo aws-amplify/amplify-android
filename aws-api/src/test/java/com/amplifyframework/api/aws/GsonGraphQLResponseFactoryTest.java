@@ -319,6 +319,16 @@ public final class GsonGraphQLResponseFactoryTest {
         assertEquals(expectedResponse, response);
     }
 
+    /**
+     * If an {@link GraphQLResponse} contains a non-null {@link GraphQLResponse.Error},
+     * and if that error object "message" as a null, the response factory
+     * should be resilient to this, and continue to render a response, anyway, without
+     * throwing an exception over the issue but adding a default message notifying that the
+     * message was null or missing.
+     * @throws ApiException On failure to build a response, perhaps because the null
+     *                      valued items inside of the {@link GraphQLResponse.Error}
+     *                      could not be parsed
+     */
     @Test
     public void errorWithNullMessageCanBeParsed() throws ApiException {
         // Arrange some JSON string from a "server"
