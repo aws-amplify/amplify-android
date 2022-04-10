@@ -2,6 +2,7 @@
     "associations": {
         "owner": {
             "associatedType": "BlogOwner",
+            "associatedName": "owner",
             "name": "BelongsTo",
             "targetName": "blogOwnerId"
         },
@@ -57,5 +58,6 @@
     "indexes": {},
     "modelClass": "com.amplifyframework.core.model.SerializedModel",
     "name": "Blog",
-    "pluralName": "Blogs"
+    "pluralName": "Blogs",
+    "modelType": "SYSTEM"
 }

@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
@@ -431,14 +430,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             if (column.getName().equals(SQLiteTable.PRIMARY_KEY_FIELD_NAME)) {
                 fieldValue = model.getPrimaryKeyString();
             } else if (column.isForeignKey()) {
-                Log.d("amplify", "sqliteCommandFactory column.getFieldname" + column.getFieldName());
-                Log.d("amplify", "sqliteCommandFactory modelFields" + modelFields);
-                Log.d("amplify", "sqliteCommandFactory owned fields" + column.getOwnedField());
                 final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getOwnedField()));
                 fieldValue = converter.convertValueFromTarget(model, modelField);
             } else {
-                Log.d("amplify", "sqliteCommandFactory column.getFieldname" + column.getFieldName());
-                Log.d("amplify", "sqliteCommandFactory modelFields" + modelFields);
                 final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getFieldName()));
                 fieldValue = converter.convertValueFromTarget(model, modelField);
             }
