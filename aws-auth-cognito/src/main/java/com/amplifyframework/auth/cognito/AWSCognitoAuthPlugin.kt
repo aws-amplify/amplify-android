@@ -792,6 +792,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         }
     }
 
+    override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
+        TODO("Not yet implemented")
+    }
+
     private fun _signOut(
         options: AuthSignOutOptions,
         onSuccess: Action,

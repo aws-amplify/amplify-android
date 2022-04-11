@@ -793,10 +793,10 @@ public final class MultiAuthSyncEngineInstrumentationTest {
             new DefaultCognitoUserPoolsAuthProvider();
         CategoryConfiguration apiCategoryConfiguration = amplifyConfiguration.forCategoryType(CategoryType.API);
         ApiAuthProviders apiAuthProviders = ApiAuthProviders.builder()
-                                                            .cognitoUserPoolsAuthProvider(cognitoProvider)
-                                                            .awsCredentialsProvider(new AuthCognitoCredentialsProvider())
-                                                            .oidcAuthProvider(token::get)
-                                                            .build();
+            .cognitoUserPoolsAuthProvider(cognitoProvider)
+            .awsCredentialsProvider(new AuthCognitoCredentialsProvider())
+            .oidcAuthProvider(token::get)
+            .build();
         ApiCategory apiCategory = new ApiCategory();
         requestInterceptor = new HttpRequestInterceptor(expectedAuthType);
         apiCategory.addPlugin(AWSApiPlugin.builder()
