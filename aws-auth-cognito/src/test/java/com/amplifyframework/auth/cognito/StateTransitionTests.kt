@@ -483,14 +483,14 @@ class StateTransitionTests : StateTransitionTestBase() {
             }
         )
 
-        assertTrue { subscribeLatch.await(5, TimeUnit.HOURS) }
+        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
             AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
         )
 
         assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
-        assertTrue { testLatch.await(5, TimeUnit.HOURS) }
+        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
     }
 
     private fun setupRefreshTokens() {
