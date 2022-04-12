@@ -17,12 +17,14 @@ package com.amplifyframework.core.model;
 
 import androidx.core.util.ObjectsCompat;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
  * Attributes of a {@link Model}.
  */
 public final class ModelIndex {
+    public static final String UNDEFINED = "undefined";
     // name of the Index that will be used to create indexes
     // in the persistence layer. For example: the Android SQLite
     // tables when created will have an index identified by this
@@ -60,6 +62,18 @@ public final class ModelIndex {
      *         name.
      */
     public String getIndexName() {
+        if (indexName.equals(UNDEFINED)){
+            StringBuilder indexNameBuilder = new StringBuilder();
+            indexNameBuilder.append(UNDEFINED + "_");
+            Iterator<String> indexFieldIterator = indexFieldNames.listIterator();
+            while (indexFieldIterator.hasNext()){
+                indexNameBuilder.append(indexFieldIterator.next());
+                if (indexFieldIterator.hasNext()){
+                    indexNameBuilder.append("_");
+                }
+            }
+            return indexNameBuilder.toString();
+        }
         return indexName;
     }
 
