@@ -11,6 +11,7 @@ import com.amplifyframework.storage.StorageItem
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.UploadOptions
+import com.amplifyframework.storage.s3.utils.S3Keys
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -34,7 +35,7 @@ internal class AWSS3StorageService(
 
     private var s3Client: S3Client = S3Client {
         region = awsRegion
-        authCredentialsProvider
+        credentialsProvider = authCredentialsProvider
     }
 
     private val transferManager: TransferManager =
@@ -117,7 +118,7 @@ internal class AWSS3StorageService(
                     val lastModified = value.lastModified
                     val eTag = value.eTag
                     if (key != null && lastModified != null && eTag != null) items += StorageItem(
-                        key,
+                        S3Keys.extractAmplifyKey(key),
                         value.size,
                         Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
                         eTag,

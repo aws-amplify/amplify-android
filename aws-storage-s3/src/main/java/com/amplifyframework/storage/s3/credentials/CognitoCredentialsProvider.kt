@@ -77,7 +77,7 @@ internal class CognitoCredentialsProvider : AuthCredentialsProvider {
 }
 
 private fun AuthSession.toAWSCognitoAuthSession(): AWSCognitoAuthSession? {
-    if (isSignedIn && this is AWSCognitoAuthSession) {
+    if (this is AWSCognitoAuthSession) {
         return this
     }
 

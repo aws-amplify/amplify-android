@@ -120,7 +120,9 @@ internal abstract class BaseTransferWorker(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createChannel()
         }
-        val appIcon = applicationContext.applicationInfo.icon
+        val appIcon = takeIf { applicationContext.applicationInfo.icon > 0 }?.let {
+            applicationContext.applicationInfo.icon
+        } ?: R.drawable.ic_notification_test
         return ForegroundInfo(
             1,
             NotificationCompat.Builder(
@@ -187,7 +189,6 @@ internal abstract class BaseTransferWorker(
             bucket = transferRecord.bucketName
             key = transferRecord.key
             body = ByteStream.fromFile(file)
-            contentLength = file.length()
             cacheControl = transferRecord.headerCacheControl
             contentDisposition = transferRecord.headerContentDisposition
             serverSideEncryption = transferRecord.sseAlgorithm?.let {

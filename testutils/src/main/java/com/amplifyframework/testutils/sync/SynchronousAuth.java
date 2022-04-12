@@ -16,13 +16,18 @@
 package com.amplifyframework.testutils.sync;
 
 import android.app.Activity;
+import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RawRes;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUserAttribute;
@@ -44,7 +49,12 @@ import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.VoidResult;
 
 import java.util.List;
@@ -59,7 +69,7 @@ import java.util.concurrent.TimeUnit;
  * performing various operations.
  */
 public final class SynchronousAuth {
-    private static final long AUTH_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long AUTH_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
     private final AuthCategoryBehavior asyncDelegate;
 
     private SynchronousAuth(AuthCategoryBehavior asyncDelegate) {
@@ -87,6 +97,30 @@ public final class SynchronousAuth {
     @NonNull
     public static SynchronousAuth delegatingToAmplify() {
         return new SynchronousAuth(Amplify.Auth);
+    }
+
+    /**
+     * Creates a synchronous auth wrapper which delegates to the AWSCognitoPlugin.
+     *
+     * @param context Application context
+     * @param authPlugin to delegate auth
+     * @return A synchronous auth wrapper
+     * @throws AmplifyException exception during configuring Amplify
+     * @throws InterruptedException exception during thread interruption
+     */
+    public static SynchronousAuth delegatingToCognito(Context context, Plugin<?> authPlugin)
+        throws AmplifyException, InterruptedException {
+        @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfiguration");
+        AmplifyConfiguration amplifyConfiguration = AmplifyConfiguration.fromConfigFile(context, configResourceId);
+        CategoryConfiguration authCategoryConfiguration = amplifyConfiguration.forCategoryType(CategoryType.AUTH);
+        AuthCategory authCategory = new AuthCategory();
+        authCategory.addPlugin((AuthPlugin<?>) authPlugin);
+        authCategory.configure(authCategoryConfiguration, context);
+        Amplify.Auth.addPlugin((AuthPlugin<?>) authPlugin);
+        Amplify.configure(context);
+        //TODO: make authCategory confiuration synchronous
+        Thread.sleep(AUTH_OPERATION_TIMEOUT_MS);
+        return SynchronousAuth.delegatingTo(authCategory);
     }
 
     /**

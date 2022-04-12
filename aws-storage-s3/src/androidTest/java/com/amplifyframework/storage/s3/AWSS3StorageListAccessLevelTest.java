@@ -17,6 +17,8 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 
+import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageException;
@@ -26,8 +28,9 @@ import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
 import com.amplifyframework.storage.s3.test.R;
+import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.random.RandomTempFile;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
 import org.junit.Before;
@@ -54,7 +57,7 @@ public final class AWSS3StorageListAccessLevelTest {
     private static String uploadKey;
 
     private static SynchronousStorage storage;
-    private static SynchronousMobileClient mobileClient;
+    private static SynchronousAuth synchronousAuth;
     private static Credential userOne;
     private static Credential userTwo;
 
@@ -68,19 +71,16 @@ public final class AWSS3StorageListAccessLevelTest {
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
 
-        // Init auth stuff
-        mobileClient = SynchronousMobileClient.instance();
-        mobileClient.initialize();
-        IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(mobileClient);
+        WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
+        synchronousAuth = SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
+        IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth);
         UserCredentials credentials = UserCredentials.create(context, identityIdSource);
         Iterator<Credential> users = credentials.iterator();
         userOne = users.next();
         userTwo = users.next();
-
         // Get a handle to storage
         StorageCategory asyncDelegate = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
         storage = SynchronousStorage.delegatingTo(asyncDelegate);
-
         // Upload test file in S3 ahead of time
         uploadTestFiles();
     }
@@ -92,7 +92,9 @@ public final class AWSS3StorageListAccessLevelTest {
     @Before
     public void setUp() throws Exception {
         // Start as a GUEST user
-        mobileClient.signOut();
+        if (synchronousAuth.fetchAuthSession().isSignedIn()) {
+            synchronousAuth.signOut();
+        }
     }
 
     private void assertListContainsUploadedFile(StorageListResult result) {
@@ -164,7 +166,7 @@ public final class AWSS3StorageListAccessLevelTest {
      */
     @Test
     public void testListAuthenticatedProtectedAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         listOptions = StorageListOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userOne.getIdentityId())
@@ -180,7 +182,7 @@ public final class AWSS3StorageListAccessLevelTest {
      */
     @Test
     public void testListAuthenticatedPrivateAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         listOptions = StorageListOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userOne.getIdentityId())
@@ -200,7 +202,7 @@ public final class AWSS3StorageListAccessLevelTest {
      */
     @Test
     public void testListDifferentUsersProtectedAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         listOptions = StorageListOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userTwo.getIdentityId())
@@ -220,7 +222,7 @@ public final class AWSS3StorageListAccessLevelTest {
      */
     @Test(expected = StorageException.class)
     public void testListDifferentUsersPrivateAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userTwo.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userTwo.getPassword());
         listOptions = StorageListOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userTwo.getIdentityId())
@@ -238,15 +240,15 @@ public final class AWSS3StorageListAccessLevelTest {
         StorageUploadFileOptions options;
 
         // Upload as GUEST
-        mobileClient.signOut();
+        //synchronousAuth.signOut();
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PUBLIC)
                 .build();
         storage.uploadFile(uploadKey, uploadFile, options);
 
         // Upload as user one
-        mobileClient.signOut();
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signOut();
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .build();
@@ -257,8 +259,8 @@ public final class AWSS3StorageListAccessLevelTest {
         storage.uploadFile(uploadKey, uploadFile, options);
 
         // Upload as user two
-        mobileClient.signOut();
-        mobileClient.signIn(userTwo.getUsername(), userTwo.getPassword());
+        synchronousAuth.signOut();
+        synchronousAuth.signIn(userTwo.getUsername(), userTwo.getPassword());
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .build();

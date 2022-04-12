@@ -17,6 +17,8 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 
+import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.Resumable;
@@ -31,9 +33,10 @@ import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.storage.s3.transfer.TransferState;
+import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.random.RandomTempFile;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
 import org.junit.After;
@@ -84,9 +87,8 @@ public final class AWSS3StorageDownloadTest {
     @BeforeClass
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
-
-        // Init auth stuff
-        SynchronousMobileClient.instance().initialize();
+        WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
+        SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
 
         // Get a handle to storage
         storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration);

@@ -66,7 +66,7 @@ internal class StorageAccessLevelAwarePrefixResolver(
                 onSuccess.accept(S3Keys.getAccessLevelPrefix(accessLevel, resultIdentityId))
             }
             else -> {
-                onError.accept(identityId.exceptionOrNull() as StorageException)
+                onError.accept(StorageException("Failed to fetch identity ID", identityId.exceptionOrNull().toString()))
             }
         }
     }

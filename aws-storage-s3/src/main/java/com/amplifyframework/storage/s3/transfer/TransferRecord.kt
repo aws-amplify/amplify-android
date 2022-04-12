@@ -136,11 +136,11 @@ data class TransferRecord(
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_CACHE_CONTROL))
                 this.headerExpire =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_EXPIRE))
-                (
-                    JsonUtils.jsonToMap(
-                        c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_USER_METADATA))
-                    )
-                    ).also { this.userMetadata = it as Map<String, String> }
+                c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_USER_METADATA))?.let {
+                    JsonUtils.jsonToMap(it)
+                }.also {
+                    this.userMetadata = it as? Map<String, String>
+                }
                 this.expirationTimeRuleId =
                     c.getString(
                         c.getColumnIndexOrThrow(TransferTable.COLUMN_EXPIRATION_TIME_RULE_ID)
