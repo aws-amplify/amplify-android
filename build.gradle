@@ -111,6 +111,7 @@ ext {
             s3Kotlin: "aws.sdk.kotlin:s3:$awsKoltinSdkVersion",
             ktor: "aws.smithy.kotlin:http-client-engine-ktor:0.7.7",
             signing: "aws.sdk.kotlin:aws-signing:$awsKoltinSdkVersion",
+            awstypes: "aws.sdk.kotlin:aws-types:$awsKoltinSdkVersion"
         ],
         kotlin: [
             stdlib: 'org.jetbrains.kotlin:kotlin-stdlib:1.6.10',

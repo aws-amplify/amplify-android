@@ -21,8 +21,9 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.testutils.sync.SynchronousApi;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,6 +33,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -46,14 +48,14 @@ public final class RestApiInstrumentationTest {
     /**
      * Configure the Amplify framework and auth.
      * @throws AmplifyException if configuration fails
-     * @throws SynchronousMobileClient.MobileClientException If AWS Mobile Client initialization fails
+     * @throws InterruptedException If {@link SynchronousAuth} initialization fails
      */
     @Before
-    public void setUp() throws AmplifyException, SynchronousMobileClient.MobileClientException {
+    public void setUp() throws AmplifyException, InterruptedException {
         ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
         api = SynchronousApi.delegatingTo(asyncDelegate);
-        SynchronousMobileClient mobileClient = SynchronousMobileClient.instance();
-        mobileClient.initialize();
+        SynchronousAuth.delegatingToCognito(getApplicationContext(), new AWSCognitoAuthPlugin());
+
     }
 
     /**

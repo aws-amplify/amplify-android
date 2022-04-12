@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.api.aws.auth.CognitoCredentialsProvider;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
@@ -109,7 +110,7 @@ public final class ApiAuthProviders {
      */
     public static final class Builder {
         private ApiKeyAuthProvider apiKeyAuthProvider;
-        private CredentialsProvider awsCredentialsProvider;
+        private CredentialsProvider awsCredentialsProvider = new CognitoCredentialsProvider();
         private CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
         private OidcAuthProvider oidcAuthProvider;
         private FunctionAuthProvider functionAuthProvider;

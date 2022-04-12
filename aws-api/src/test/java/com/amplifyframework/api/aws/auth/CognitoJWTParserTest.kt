@@ -29,9 +29,13 @@ class CognitoJWTParserTest {
     private val COGNITO_GROUPS_KEY = "cognito:groups"
     private val COGNITO_GROUPS = JSONArray(arrayOf("Admins"))
 
+    private val CLAIM_KEY = "iss"
+    private val CLAIM_VAL = "cognito"
+
     private val fakeJWTToken: FakeJWTToken = FakeJWTToken.builder()
         .putPayload(USERNAME_KEY, USERNAME)
         .putPayload(COGNITO_GROUPS_KEY, COGNITO_GROUPS)
+        .putPayload(CLAIM_KEY, CLAIM_VAL)
         .build()
 
     @Test
@@ -40,5 +44,12 @@ class CognitoJWTParserTest {
 
         assertEquals(USERNAME, payload.get(USERNAME_KEY))
         assertEquals(COGNITO_GROUPS, payload.get(COGNITO_GROUPS_KEY))
+    }
+
+    @Test
+    fun `getClaim retrieves correct claim`() {
+        val claim = CognitoJWTParser.getClaim(fakeJWTToken.asString(), CLAIM_KEY)
+
+        assertEquals(CLAIM_VAL, claim)
     }
 }

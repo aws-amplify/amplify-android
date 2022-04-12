@@ -18,7 +18,6 @@ package com.amplifyframework.api.aws.auth
 import aws.sdk.kotlin.runtime.auth.credentials.Credentials
 import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import com.amplifyframework.api.ApiException
-import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -51,7 +50,7 @@ internal open class CognitoCredentialsProvider : CredentialsProvider {
         return suspendCoroutine { continuation ->
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
-                    authSession.toAWSCognitoAuthSession()?.awsCredentials?.value?.let {
+                    (authSession as? AWSCognitoAuthSession)?.awsCredentials?.value?.let {
                         continuation.resume(it)
                     } ?: continuation.resumeWithException(
                         Exception(
@@ -70,7 +69,7 @@ internal open class CognitoCredentialsProvider : CredentialsProvider {
     fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>) {
         Amplify.Auth.fetchAuthSession(
             { session ->
-                val tokens = session.toAWSCognitoAuthSession()?.userPoolTokens?.value?.accessToken
+                val tokens = (session as? AWSCognitoAuthSession)?.userPoolTokens?.value?.accessToken
                 tokens?.let { onResult.accept(it) }
                     ?: onFailure.accept(
                         ApiException.ApiAuthException(
@@ -84,10 +83,4 @@ internal open class CognitoCredentialsProvider : CredentialsProvider {
             }
         )
     }
-}
-
-private fun AuthSession.toAWSCognitoAuthSession(): AWSCognitoAuthSession? {
-    if (this !is AWSCognitoAuthSession || !isSignedIn) return null
-
-    return this
 }

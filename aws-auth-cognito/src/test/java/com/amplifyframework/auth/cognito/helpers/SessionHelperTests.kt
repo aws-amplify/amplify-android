@@ -36,7 +36,7 @@ class SessionHelperTests {
     @Test
     fun testGetExpiration() {
         val expiry = SessionHelper.getExpiration(dummyToken)
-        val expected = Instant.parse("2018-01-17T17:30:22-08:00")
+        val expected = Instant.parse("2018-01-18T01:30:22Z")
         assertEquals(expected, expiry)
     }
 

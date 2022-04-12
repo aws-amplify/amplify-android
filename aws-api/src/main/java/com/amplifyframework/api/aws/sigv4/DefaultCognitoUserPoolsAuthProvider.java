@@ -36,9 +36,8 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
     private String lastTokenRetrievalFailureMessage;
 
     /**
-     * Creates the object with the instance of AWSMobileClient pulled over from the Auth plugin.
-     * TODO: Once we come up with a proper interface, we will remove the use of AWSMobileClient directly in favor
-     * of using the AuthSession from Auth.
+     * Creates the object with the instance of {@link CognitoCredentialsProvider}.
+     * used to provide implementation to fetch auth token.
      *
      * @throws ApiAuthException Thrown if the AWSCognitoAuth plugin is not added.
      */

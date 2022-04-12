@@ -38,13 +38,12 @@ dependencies {
     testImplementation dependency.androidx.test.core
     testImplementation dependency.mockk
 
-    androidTestImplementation('aws.sdk.kotlin:aws-types:0.13.0-beta')
+    androidTestImplementation dependency.aws.awstypes
     androidTestImplementation dependency.mockito
     androidTestImplementation project(path: ':testmodels')
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation project(path: ':aws-api')
     androidTestImplementation project(path: ':aws-auth-cognito')
-    androidTestImplementation dependency.aws.mobileclient
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner

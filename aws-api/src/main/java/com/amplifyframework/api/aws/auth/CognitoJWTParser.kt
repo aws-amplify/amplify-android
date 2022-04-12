@@ -62,8 +62,23 @@ class CognitoJWTParser {
             }
         }
 
-        private val PAYLOAD = 1
-        private val JWT_PARTS = 3
+        /**
+         * Returns a claim, from the `JWT`s' payload, as a String.
+         *
+         * @param jwt       valid JSON Web Token as String.
+         * @param claim     claim name as String.
+         * @return claim from the JWT as a String.
+         */
+        fun getClaim(jwt: String, claim: String): String? {
+            return try {
+                getPayload(jwt)[claim].toString()
+            } catch (exception: Exception) {
+                throw CognitoParameterInvalidException("invalid token")
+            }
+        }
+
+        private const val PAYLOAD = 1
+        private const val JWT_PARTS = 3
     }
 }
 

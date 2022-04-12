@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
-import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
@@ -24,7 +23,6 @@ import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert
@@ -193,19 +191,20 @@ class AWSCognitoAuthCredentialStoreTest {
     }
 
     private fun getCredential(): AmplifyCredential {
+        val expiration = 123123L
         return AmplifyCredential(
             CognitoUserPoolTokens(
                 "idToken",
                 "accessToken",
                 "refreshToken",
-                Instant.now().plus(123123.seconds).epochSeconds
+                expiration
             ),
             "identityPool",
             AWSCredentials(
                 "accessKeyId",
                 "secretAccessKey",
                 "sessionToken",
-                Instant.now().plus(123123.seconds).epochSeconds
+                expiration
             )
         )
     }
