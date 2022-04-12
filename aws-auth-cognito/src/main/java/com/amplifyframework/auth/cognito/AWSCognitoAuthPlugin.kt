@@ -78,6 +78,7 @@ import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import com.amplifyframework.util.UserAgent
 import java.util.concurrent.Semaphore
 import org.json.JSONException
 import org.json.JSONObject
@@ -872,6 +873,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
             authConfiguration = AuthConfiguration.fromJson(pluginConfiguration).build()
+            System.setProperty("aws.frameworkMetadata", UserAgent.string())
             credentialStoreEnvironment.applicationContext = context.applicationContext
             val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(
                 credentialStoreEnvironment.applicationContext,

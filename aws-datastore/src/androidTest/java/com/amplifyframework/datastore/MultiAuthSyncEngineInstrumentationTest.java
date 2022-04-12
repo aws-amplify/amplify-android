@@ -797,6 +797,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
             .awsCredentialsProvider(new AuthCognitoCredentialsProvider())
             .oidcAuthProvider(token::get)
             .build();
+
         ApiCategory apiCategory = new ApiCategory();
         requestInterceptor = new HttpRequestInterceptor(expectedAuthType);
         apiCategory.addPlugin(AWSApiPlugin.builder()

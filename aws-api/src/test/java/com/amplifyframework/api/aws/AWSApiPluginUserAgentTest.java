@@ -50,10 +50,9 @@ import static org.junit.Assert.assertTrue;
 public final class AWSApiPluginUserAgentTest {
     // This was previously 200ms, but resulted in flaky tests because server.takeRequest would sometimes return null.
     private static final long REQUEST_TIMEOUT_SECONDS = 5;
-    private static final String USER_AGENT_REGEX = "^(?<libraryName>.*?)\\/(?<libraryVersion>.*?) " +
-            "\\((?<systemName>.*?) (?<systemVersion>.*?); " +
-            "(?<deviceManufacturer>.*?) (?<deviceName>.*?); " +
-            "(?<userLanguage>.*?)_(?<userRegion>.*?)\\)$";
+    private static final String USER_AGENT_REGEX = "^(?<libraryName>.*?):(?<libraryVersion>.*?) " +
+            "md/(?<deviceManufacturer>.*?)/(?<deviceName>.*?) " +
+            "md/locale/(?<userLanguage>.*?)_(?<userRegion>.*?)$";
     private static final Pattern USER_AGENT_PATTERN = Pattern.compile(USER_AGENT_REGEX);
 
     private MockWebServer server;
@@ -114,8 +113,8 @@ public final class AWSApiPluginUserAgentTest {
 
     /**
      * Make an API request to the mock server and check the user agent
-     * header format on the request. Verify that the Android version is
-     * accurately reflected on the user agent.
+     * header format on the request. systemName and systemVersion not
+     * required, as it is part of sdk user-agent string.
      * @throws Exception if API call fails or thread is interrupted while
      *          waiting for request
      */
@@ -129,8 +128,6 @@ public final class AWSApiPluginUserAgentTest {
         Matcher regexMatcher = USER_AGENT_PATTERN.matcher(userAgent);
         assertTrue(regexMatcher.matches());
         assertEquals("amplify-android", regexMatcher.group("libraryName"));
-        assertEquals("Android", regexMatcher.group("systemName"));
-        assertEquals("9", regexMatcher.group("systemVersion"));
     }
 
     private String checkUserAgent() throws Exception {
