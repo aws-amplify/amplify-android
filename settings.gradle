@@ -34,3 +34,9 @@ include ':core-kotlin'
 include ':rxbindings'
 include ':aws-api-appsync'
 include ':maplibre-adapter'
+
+include ':sample-cpkApp'
+project(":sample-cpkApp").projectDir=new File(rootDir, "../../CPKApplication/app")
+
+include ':sample-myDatastoreApp'
+project(":sample-myDatastoreApp").projectDir=new File(rootDir, "../../MyDatastoreApp/app")
