@@ -73,7 +73,14 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
      * Helper class for functions related to primary key.
      */
     public static class Helper {
+        /**
+         * Character which is used to encapsulate a primary key field while concatenating primary key fields.
+         */
         public static final String PRIMARY_KEY_ENCAPSULATE_CHAR = "\"";
+
+        /**
+         * Character which is used as delimiter while concatenating primary key fields.
+         */
         public static final String PRIMARY_KEY_DELIMITER = "#";
 
         /**
@@ -132,9 +139,9 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
             StringBuilder id = new StringBuilder();
             try {
                 final ListIterator<String> primaryKeyListIterator = modelSchema.getPrimaryIndexFields().listIterator();
-                if (primaryKeyListIterator.hasNext()){
+                if (primaryKeyListIterator.hasNext()) {
                     id.append(serializedData.get(primaryKeyListIterator.next()));
-                    if (primaryKeyListIterator.hasNext()){
+                    if (primaryKeyListIterator.hasNext()) {
                         id.append("#");
                     }
                 }
@@ -146,13 +153,25 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
             return id.toString();
         }
 
-        public static String escapeAndEncapsulateString(String key){
-            return  PRIMARY_KEY_ENCAPSULATE_CHAR +
-                    key.replaceAll(PRIMARY_KEY_ENCAPSULATE_CHAR,PRIMARY_KEY_ENCAPSULATE_CHAR
+        /**
+         * Takes in a key value and escapes " with "" and encapsulates with ".
+         * @param key string value of primary key field which need needs to be encapsulated and escaped.
+         * @return encapsulated and escaped string.
+         */
+        public static String escapeAndEncapsulateString(String key) {
+            return PRIMARY_KEY_ENCAPSULATE_CHAR +
+                    key.replaceAll(PRIMARY_KEY_ENCAPSULATE_CHAR, PRIMARY_KEY_ENCAPSULATE_CHAR
                             + PRIMARY_KEY_ENCAPSULATE_CHAR) + PRIMARY_KEY_ENCAPSULATE_CHAR;
         }
 
-        public static String getIdentifier(Serializable key, List<? extends Serializable> sortedKeys ) {
+        /**
+         * Concatenates primary key and sort keys after encapsulating them with '"', escaping the '"' with '""' and
+         * delimited by '#'.
+         * @param key Primary key.
+         * @param sortedKeys List of sort keys.
+         * @return Concatenated key.
+         */
+        public static String getIdentifier(Serializable key, List<? extends Serializable> sortedKeys) {
             StringBuilder builder = new StringBuilder();
             builder.append(key);
             for (Serializable sortKey : sortedKeys) {
