@@ -138,13 +138,13 @@ public final class HybridTemporalSyncInstrumentationTest {
             .build();
         HubAccumulator publicationAccumulator =
             HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelSchema.getName(),
-                    sentModel.resolveIdentifier()), 1)
+                    sentModel.getPrimaryKeyString()), 1)
                 .start();
         hybridBehaviors.save(sentModel);
         publicationAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Retrieve the model from AppSync.
-        Meeting remoteMeeting = api.get(Meeting.class, sentModel.resolveIdentifier());
+        Meeting remoteMeeting = api.get(Meeting.class, sentModel.getPrimaryKeyString());
 
         // Inspect the fields of the data in AppSync, and prepare it into a map
         // that we can compare with what we sent. Are they the same? They should be.
