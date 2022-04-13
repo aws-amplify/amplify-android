@@ -173,7 +173,7 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
          */
         public static String getIdentifier(Serializable key, List<? extends Serializable> sortedKeys) {
             StringBuilder builder = new StringBuilder();
-            builder.append(key);
+            builder.append(Helper.escapeAndEncapsulateString(key.toString()));
             for (Serializable sortKey : sortedKeys) {
                 builder.append(PRIMARY_KEY_DELIMITER);
                 builder.append(Helper.escapeAndEncapsulateString(sortKey.toString()));
