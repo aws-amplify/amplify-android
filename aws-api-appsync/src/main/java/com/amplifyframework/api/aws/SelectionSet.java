@@ -267,7 +267,7 @@ public final class SelectionSet {
                     && operation != QueryType.SYNC
             ) {
                 Iterator<String> primaryKeyIterator = schema.getPrimaryIndexFields().listIterator();
-                if(primaryKeyIterator.hasNext()){
+                if (primaryKeyIterator.hasNext()) {
                     result.add(new SelectionSet(primaryKeyIterator.next()));
                 }
                 return result;
@@ -372,7 +372,7 @@ public final class SelectionSet {
                     && operation != QueryType.SYNC
             ) {
                 Iterator<String> primaryKeyIterator = modelSchema.getPrimaryIndexFields().listIterator();
-                if(primaryKeyIterator.hasNext()){
+                if (primaryKeyIterator.hasNext()) {
                     result.add(new SelectionSet(primaryKeyIterator.next()));
                 }
             }

@@ -58,7 +58,7 @@ public final class ModelMetadata implements Model {
         this._deleted = deleted;
         this._version = version;
         this._lastChangedAt = lastChangedAt;
-        __typename = typename;
+        this.__typename = typename;
     }
 
     /**
@@ -142,6 +142,7 @@ public final class ModelMetadata implements Model {
         result = 31 * result + (_deleted != null ? _deleted.hashCode() : 0);
         result = 31 * result + (_version != null ? _version.hashCode() : 0);
         result = 31 * result + (_lastChangedAt != null ? _lastChangedAt.hashCode() : 0);
+        result = 31 * result + (__typename != null ? __typename.hashCode() : 0);
         return result;
     }
 
@@ -152,6 +153,7 @@ public final class ModelMetadata implements Model {
             ", _deleted=" + _deleted +
             ", _version=" + _version +
             ", _lastChangedAt=" + _lastChangedAt +
+                ",  __typename=" + __typename +
             '}';
     }
 }
