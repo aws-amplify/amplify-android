@@ -82,6 +82,8 @@ public class ModelTest {
 
     public class TestModelPrimaryKey extends ModelPrimaryKey<TestModel> {
 
+        private static final long serialVersionUID = 1L;
+
         /**
          * Test model primary key.
          * @param first partition key.
