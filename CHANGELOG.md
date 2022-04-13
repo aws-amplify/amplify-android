@@ -1,3 +1,29 @@
+## [Release 1.35.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.0)
+
+### Features
+- **maplibre-adapter:** add clustering to map view (#1692)
+
+### Miscellaneous
+- updated the pull request template to include information about tests and documentation update (#1695)
+- Adding a new feature request template to our repo (#1696)
+- Updating version of aws sdk (#1698)
+
+[See all changes between 1.34.0 and 1.35.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.34.0...release_v1.35.0)
+
+## [Release 1.34.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.34.0)
+
+### Features
+- Add authFlow type in signInOptions (#1686)
+
+### Bug Fixes
+- **datastore:** compare datetime values in consistent format when querying (#1670)
+
+### Miscellaneous
+- Connectivity crash fix (#1688)
+- [aws-api] Fix DELETE rest calls not working with IamRequestDecorator (#1684)
+
+[See all changes between 1.33.0 and 1.34.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.33.0...release_v1.34.0)
+
 ## [Release 1.33.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.33.0)
 
 ### Features
