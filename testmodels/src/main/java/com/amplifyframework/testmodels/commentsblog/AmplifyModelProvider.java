@@ -34,7 +34,9 @@ public final class AmplifyModelProvider implements ModelProvider {
   @Override
    public Set<Class<? extends Model>> models() {
     final Set<Class<? extends Model>> modifiableSet = new HashSet<>(
-          Arrays.<Class<? extends Model>>asList(Blog.class, Post.class, Comment.class, PostAuthorJoin.class, Author.class, BlogOwner.class, BlogOwnerWithCustomPK.class)
+            Arrays.<Class<? extends Model>>asList(Blog.class, Post.class, Comment.class, PostAuthorJoin.class, Author.class, BlogOwner.class)
+            //Arrays.<Class<? extends Model>>asList(Blog.class, Post.class, Comment.class, PostAuthorJoin.class,
+            // Author.class, BlogOwner.class, BlogOwnerWithCustomPK.class)
         );
     
         return Immutable.of(modifiableSet);
