@@ -55,6 +55,7 @@ import java.util.Set;
  * {@link Model} and {@link ModelSchema}.
  */
 final class SQLiteCommandFactory implements SQLCommandFactory {
+    public static final String UNDEFINED = "undefined";
 
     private final SchemaRegistry schemaRegistry;
     private final Gson gson;
@@ -107,7 +108,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("CREATE INDEX IF NOT EXISTS")
                     .append(SqlKeyword.DELIMITER)
-                    .append(Wrap.inBackticks(modelIndex.getIndexName()))
+                    .append(Wrap.inBackticks(getIndexName(modelIndex.getIndexName(), modelIndex.getIndexFieldNames())))
                     .append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.ON)
                     .append(SqlKeyword.DELIMITER)
@@ -414,6 +415,22 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 preparedDeleteStatement,
                 sqlPredicate.getBindings() // WHERE clause
         );
+    }
+
+    private String getIndexName(String indexName, List<String> indexFieldNames) {
+        if (indexName.equals(UNDEFINED)) {
+            StringBuilder indexNameBuilder = new StringBuilder();
+            indexNameBuilder.append(UNDEFINED + "_");
+            Iterator<String> indexFieldIterator = indexFieldNames.listIterator();
+            while (indexFieldIterator.hasNext()) {
+                indexNameBuilder.append(indexFieldIterator.next());
+                if (indexFieldIterator.hasNext()) {
+                    indexNameBuilder.append("_");
+                }
+            }
+            return indexNameBuilder.toString();
+        }
+        return indexName;
     }
 
     // extract model field values to save in database

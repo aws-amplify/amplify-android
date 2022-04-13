@@ -220,7 +220,8 @@ public final class AppSyncGraphQLRequestFactory {
                 builder.variable("condition", conditionType, parsePredicate(predicate));
             }
             GraphQLRequest<R> request = builder.build();
-            Log.d("AppSyncGraphQlRequest", "AppSyncGraphQlRequestFactory mutation request: "+request.toString());
+            Log.d("AppSyncGraphQlRequest", "AppSyncGraphQlRequestFactory mutation request: "
+                    + request.toString());
             return request;
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
@@ -385,19 +386,6 @@ public final class AppSyncGraphQLRequestFactory {
             } else if (association.isOwner()) {
                 Model target = (Model) Objects.requireNonNull(fieldValue);
                 result.put(association.getTargetName(), target.getPrimaryKeyString());
-
-//                Serializable targetPrimaryKey = target.resolveIdentifier();
-//                if (targetPrimaryKey instanceof ModelPrimaryKey){
-//                    ModelPrimaryKey<?> modelPrimaryKey = (ModelPrimaryKey<?>) targetPrimaryKey;
-//                    Iterator<String> targetKeyIterator = Arrays.stream(association.getTargetKeyArray()).iterator();
-//                    result.put(targetKeyIterator.next(), modelPrimaryKey.key());
-//                    while (targetKeyIterator.hasNext()){
-//                        Iterator<? extends Serializable> sortKeyIterator = modelPrimaryKey.sortedKeys().iterator();
-//                        result.put(targetKeyIterator.next(),sortKeyIterator.next());
-//                    }
-//                }else{
-//                    result.put(association.getTargetName(), target.resolveIdentifier());
-//                }
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
         }

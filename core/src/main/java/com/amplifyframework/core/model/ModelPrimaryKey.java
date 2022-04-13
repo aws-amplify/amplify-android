@@ -66,19 +66,16 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
      * @return string representation of unique identifier
      */
     public String getIdentifier() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(key);
-        for (Serializable sortKey : sortedKeys) {
-            builder.append("#");
-            builder.append(sortKey);
-        }
-        return builder.toString();
+        return Helper.getIdentifier(key, sortedKeys);
     }
 
     /**
      * Helper class for functions related to primary key.
      */
     public static class Helper {
+        public static final String PRIMARY_KEY_ENCAPSULATE_CHAR = "\"";
+        public static final String PRIMARY_KEY_DELIMITER = "#";
+
         /**
          * Helper function which creates a query predicate which returns.
          * @param model Model to create the predicate rom.
@@ -147,6 +144,22 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
                         " Primary Key." + exception));
             }
             return id.toString();
+        }
+
+        public static String escapeAndEncapsulateString(String key){
+            return  PRIMARY_KEY_ENCAPSULATE_CHAR +
+                    key.replaceAll(PRIMARY_KEY_ENCAPSULATE_CHAR,PRIMARY_KEY_ENCAPSULATE_CHAR
+                            + PRIMARY_KEY_ENCAPSULATE_CHAR) + PRIMARY_KEY_ENCAPSULATE_CHAR;
+        }
+
+        public static String getIdentifier(Serializable key, List<? extends Serializable> sortedKeys ) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(key);
+            for (Serializable sortKey : sortedKeys) {
+                builder.append(PRIMARY_KEY_DELIMITER);
+                builder.append(Helper.escapeAndEncapsulateString(sortKey.toString()));
+            }
+            return builder.toString();
         }
     }
 }

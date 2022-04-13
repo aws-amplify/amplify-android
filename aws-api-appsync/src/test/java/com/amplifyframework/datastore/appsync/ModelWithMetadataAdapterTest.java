@@ -15,10 +15,13 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.GsonTemporalAdapters;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.util.TypeMaker;
 
@@ -32,7 +35,9 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -75,6 +80,7 @@ public final class ModelWithMetadataAdapterTest {
             .put("_lastChangedAt", metadata.getLastChangedAt().getSecondsSinceEpoch())
             .put("_deleted", metadata.isDeleted())
             .put("_version", metadata.getVersion())
+                .put("__typename", metadata.getTypename())
             .toString();
         String actual = gson.toJson(mwm);
         JSONAssert.assertEquals(expected, actual, true);
@@ -105,9 +111,10 @@ public final class ModelWithMetadataAdapterTest {
 
     /**
      * The Gson adapter can be used to deserialize JSON into a ModelWithMetadata object.
+     * @throws AmplifyException On unable to parse schema
      */
     @Test
-    public void adapterCanDeserializeJsonOfSerializedModelIntoMwm() {
+    public void adapterCanDeserializeJsonOfSerializedModelIntoMwm() throws AmplifyException {
         // Arrange expected value
         Map<String, Object> postSerializedData = new HashMap<>();
         postSerializedData.put("comments", null);
@@ -119,9 +126,10 @@ public final class ModelWithMetadataAdapterTest {
         postSerializedData.put("createdAt", "2022-02-19T00:05:33.564Z");
         postSerializedData.put("id", "21ee0180-60a4-45d9-b68e-018c260cc742");
         postSerializedData.put("updatedAt", "2022-03-04T05:36:26.629Z");
-
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(new HashSet<>(Arrays.asList(Post.class)));
         SerializedModel model = SerializedModel.builder()
-                .modelSchema(null)
+                .modelSchema(schemaRegistry.getModelSchemaForModelClass(Post.class))
                 .serializedData(postSerializedData)
                 .build();
         Temporal.Timestamp lastChangedAt = new Temporal.Timestamp(1594858827, TimeUnit.SECONDS);

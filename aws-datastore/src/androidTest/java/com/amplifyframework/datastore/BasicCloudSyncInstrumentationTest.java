@@ -217,15 +217,15 @@ public final class BasicCloudSyncInstrumentationTest {
         assertEquals(jameson.getId(), owner.getId());
     }
 
-//    /**
-//     * The sync engine should receive mutations for its managed models, through its
-//     * subscriptions. When we create a model remotely, the sync engine should respond
-//     * by processing the subscription event and saving the model locally.
-//     * @throws DataStoreException On failure to query the local data store for
-//     *                            local presence of arranged data (second step)
-//     * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
-//     *                          {@link DataStoreCategoryConfigurator}
-//     */
+    /**
+     * The sync engine should receive mutations for its managed models, through its
+     * subscriptions. When we create a model remotely, the sync engine should respond
+     * by processing the subscription event and saving the model locally.
+     * @throws DataStoreException On failure to query the local data store for
+     *                            local presence of arranged data (second step)
+     * @throws AmplifyException On failure to arrange a {@link DataStoreCategory} via the
+     *                          {@link DataStoreCategoryConfigurator}
+     */
     @Test
     @Ignore("Update cloud environment")
     public void syncDownFromCloudIsWorkingWithCustomPrimaryKey() throws AmplifyException {

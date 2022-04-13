@@ -15,13 +15,17 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.GsonTemporalAdapters;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.types.GsonJavaTypeAdapters;
+import com.amplifyframework.testmodels.commentsblog.Blog;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Resources;
 
 import com.google.gson.Gson;
@@ -33,8 +37,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -72,9 +78,9 @@ public final class SerializedModelAdapterTest {
 
         // Now, the real stuff. Build a serialized model, that we can serialize.
         SerializedModel serializedModel = SerializedModel.builder()
-            .serializedData(serializedData)
-            .modelSchema(modelSchemaForMeeting())
-            .build();
+                .modelSchema(modelSchemaForMeeting())
+                .serializedData(serializedData)
+                .build();
 
         String expectedResourcePath = "serde-for-meeting-in-serialized-model.json";
         String expectedJson = Resources.readAsJson(expectedResourcePath).toString(2);
@@ -89,25 +95,27 @@ public final class SerializedModelAdapterTest {
      * Tests serialization and deserialization of a model that contains an association to another
      * model.
      * @throws JSONException On illegal json found by JSONAssert
+     * @throws AmplifyException On unable to parse schema
      */
     @Test
-    public void serdeForNestedSerializedModels() throws JSONException {
+    public void serdeForNestedSerializedModels() throws JSONException, AmplifyException {
         Map<String, Object> blogOwnerSerializedData = new HashMap<>();
         blogOwnerSerializedData.put("name", "A responsible blogger");
         blogOwnerSerializedData.put("id", "2cb080ce-bc93-44c6-aa77-f985af311afa");
-
+        SchemaRegistry.instance().register(new HashSet<>(Arrays.asList(BlogOwner.class, Blog.class)));
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(new HashSet<>(Arrays.asList(BlogOwner.class)));
         Map<String, Object> blogSerializedData = new HashMap<>();
         blogSerializedData.put("name", "A fine blog");
         blogSerializedData.put("owner", SerializedModel.builder()
-            .serializedData(Collections.singletonMap("id", blogOwnerSerializedData.get("id")))
-            .modelSchema(null)
-            .build());
+                .modelSchema(schemaRegistry.getModelSchemaForModelClass(BlogOwner.class))
+                .serializedData(Collections.singletonMap("id", blogOwnerSerializedData.get("id")))
+                .build());
         blogSerializedData.put("id", "3d128fdd-17a8-45ea-a166-44f6712b86f4");
-
         SerializedModel blogAsSerializedModel = SerializedModel.builder()
-            .serializedData(blogSerializedData)
-            .modelSchema(modelSchemaForBlog())
-            .build();
+                .modelSchema(modelSchemaForBlog())
+                .serializedData(blogSerializedData)
+                .build();
 
         String resourcePath = "serde-for-blog-in-serialized-model.json";
         String expectedJson = new JSONObject(Resources.readAsString(resourcePath)).toString(2);

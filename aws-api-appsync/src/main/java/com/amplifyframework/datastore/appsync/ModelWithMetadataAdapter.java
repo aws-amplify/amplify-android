@@ -62,7 +62,7 @@ public final class ModelWithMetadataAdapter implements
     /***
      * Type of model for the server response.
      */
-    public static final String TYPE_NAME= "__typename";
+    public static final String TYPE_NAME = "__typename";
 
     /**
      * Register this deserializer into a {@link GsonBuilder}.

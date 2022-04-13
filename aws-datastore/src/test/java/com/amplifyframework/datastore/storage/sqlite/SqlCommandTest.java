@@ -116,6 +116,7 @@ public class SqlCommandTest {
     /**
      * Test if a valid {@link ModelSchema} returns an expected
      * CREATE TABLE SQL command.
+     * @throws AmplifyException On unable to parse schema
      */
     @Test
     public void validModelSchemaReturnsExpectedInsertSqlCommandWhenCustomPrimaryKeyIsDefined() throws AmplifyException {
@@ -205,13 +206,13 @@ public class SqlCommandTest {
     @Test
     public void expectedCreateIndexCommandForModelPrimaryKey() {
         final ModelIndex index = ModelIndex.builder()
-                .indexName(ModelIndex.UNDEFINED)
+                .indexName(SQLiteCommandFactory.UNDEFINED)
                 .indexFieldNames(Collections.singletonList("id"))
                 .build();
 
         final ModelSchema modelSchema = ModelSchema.builder()
                 .name("Person")
-                .indexes(Collections.singletonMap(ModelIndex.UNDEFINED, index))
+                .indexes(Collections.singletonMap(SQLiteCommandFactory.UNDEFINED, index))
                 .modelType(Model.Type.SYSTEM)
                 .build();
 
@@ -236,13 +237,13 @@ public class SqlCommandTest {
         keyList.add("name");
         keyList.add("age");
         final ModelIndex index = ModelIndex.builder()
-                .indexName(ModelIndex.UNDEFINED)
+                .indexName(SQLiteCommandFactory.UNDEFINED)
                 .indexFieldNames(keyList)
                 .build();
 
         final ModelSchema modelSchema = ModelSchema.builder()
                 .name("Person")
-                .indexes(Collections.singletonMap(ModelIndex.UNDEFINED, index))
+                .indexes(Collections.singletonMap(SQLiteCommandFactory.UNDEFINED, index))
                 .modelType(Model.Type.SYSTEM)
                 .build();
 

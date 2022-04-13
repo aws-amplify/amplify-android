@@ -48,8 +48,8 @@ public class ModelTest {
     @Test
     public void testGetPrimaryKeyStringReturnsCustomPrimarygKeyWhenCustomPrimaryKey() {
         // Arrange
-        String testId = "first#last";
-        Model blog = new TestModel("first", "last");
+        String testId = "\"first\"\"is\"#\"last\"";
+        Model blog = new TestModel("first\"is", "last");
         //Act
         String pk = blog.getPrimaryKeyString();
         //Assert
