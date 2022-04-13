@@ -33,7 +33,7 @@ public final class Blog implements Model {
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
 
 
-    public String getId() {
+  public String getId() {
         return id;
     }
 
