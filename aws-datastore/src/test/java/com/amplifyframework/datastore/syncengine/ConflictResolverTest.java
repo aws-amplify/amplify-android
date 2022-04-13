@@ -181,8 +181,7 @@ public final class ConflictResolverTest {
      * the following is expected:
      * 1. The AppSync API is invoked, with the local mutation data
      * 2. We assume that the AppSync API will respond differently
-     *    upon retry (TODO: why? Will the user be expected to manually
-     *    intervene and modify the backend state somehow?)
+     *    upon retry
      * @throws AmplifyException On failure to arrange metadata into storage
      */
     @Test
@@ -230,7 +229,7 @@ public final class ConflictResolverTest {
         // to include the server's metadata, but with the local data.
         resolver.resolve(mutation, unhandledConflictError)
                 .test();
-        // The handler should have called up to AppSync to update hte model
+        // The handler should have called AppSync to update the model
         verify(appSync)
                 .update(eq(localModel), any(), eq(metadata.getVersion()), any(), any());
     }
@@ -240,8 +239,7 @@ public final class ConflictResolverTest {
      * the following is expected:
      * 1. The AppSync API is invoked, with the local mutation data
      * 2. We assume that the AppSync API will respond differently
-     *    upon retry (TODO: why? Will the user be expected to manually
-     *    intervene and modify the backend state somehow?)
+     *    upon retry.
      * @throws AmplifyException On failure to arrange metadata into storage
      */
     @Test
@@ -289,7 +287,7 @@ public final class ConflictResolverTest {
         // to include the server's metadata, but with the local data.
         resolver.resolve(mutation, unhandledConflictError)
                 .test();
-        // The handler should have called up to AppSync to update hte model
+        // The handler should have called up to AppSync to update the model
         verify(appSync)
                 .update(eq(serializedOwner), any(), eq(metadata.getVersion()), any(), any());
     }
