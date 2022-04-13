@@ -22,6 +22,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.util.Immutable;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,12 +36,12 @@ import java.util.Set;
  * Needs to be paired with an {@link ModelSchema} to understand the structure.
  */
 public final class SerializedModel implements Model {
-    private final String modelId;
+    private final Serializable modelId;
     private final Map<String, Object> serializedData;
     private final ModelSchema modelSchema;
 
     private SerializedModel(
-            String modelId, Map<String, Object> serializedData, ModelSchema modelSchema) {
+            Serializable modelId, Map<String, Object> serializedData, ModelSchema modelSchema) {
         this.modelId = modelId;
         this.serializedData = serializedData;
         this.modelSchema = modelSchema;
@@ -207,7 +208,7 @@ public final class SerializedModel implements Model {
 
     @NonNull
     @Override
-    public String resolveIdentifier() {
+    public Serializable resolveIdentifier() {
         return modelId;
     }
 
