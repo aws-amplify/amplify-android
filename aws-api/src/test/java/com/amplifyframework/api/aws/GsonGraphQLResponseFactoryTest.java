@@ -320,6 +320,44 @@ public final class GsonGraphQLResponseFactoryTest {
     }
 
     /**
+     * If an {@link GraphQLResponse} contains a non-null {@link GraphQLResponse.Error},
+     * and if that error object "message" as a null, the response factory
+     * should be resilient to this, and continue to render a response, anyway, without
+     * throwing an exception over the issue but adding a default message notifying that the
+     * message was null or missing.
+     * @throws ApiException On failure to build a response, perhaps because the null
+     *                      valued items inside of the {@link GraphQLResponse.Error}
+     *                      could not be parsed
+     */
+    @Test
+    public void errorWithNullMessageCanBeParsed() throws ApiException {
+        // Arrange some JSON string from a "server"
+        final String responseJson = Resources.readAsString("error-null-message.json");
+
+        // Act! Parse it into a model.
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
+        final GraphQLResponse<PaginatedResult<Todo>> response =
+                responseFactory.buildResponse(request, responseJson);
+
+        // Build the expected response.
+        Map<String, Object> extensions = new HashMap<>();
+        extensions.put("errorType", null);
+        extensions.put("errorInfo", null);
+        extensions.put("data", null);
+
+        final String defaultMessage = "Message was null or missing while deserializing error";
+
+        GraphQLResponse.Error expectedError =
+                new GraphQLResponse.Error(defaultMessage, null, null, extensions);
+        GraphQLResponse<PaginatedResult<Todo>> expectedResponse =
+                new GraphQLResponse<>(null, Collections.singletonList(expectedError));
+
+        // Assert that the response is expected
+        assertEquals(expectedResponse, response);
+    }
+
+    /**
      * It is possible to cast the response data as a string, instead of as the strongly
      * modeled type, if you choose to do so.
      * @throws JSONException Shouldn't, but might while arranging test input
