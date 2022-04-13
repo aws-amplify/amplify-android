@@ -17,7 +17,6 @@ package com.amplifyframework.core.model;
 
 import androidx.core.util.ObjectsCompat;
 
-import java.util.Iterator;
 import java.util.List;
 
 /**
