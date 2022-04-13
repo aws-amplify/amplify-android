@@ -266,7 +266,10 @@ class AmplifyMapView
                 updateSearchBounds(map.projection.visibleRegion.latLngBounds)
                 updatePlaceInfoViewPosition()
             }
-            mapView.symbolManager.addClickListener(this::handlePlaceMarkerClick)
+            mapView.symbolOnClickListener = { symbol ->
+                handlePlaceMarkerClick(symbol, true)
+            }
+            mapView.symbolManager.addClickListener(mapView.symbolOnClickListener)
         }
     }
 
