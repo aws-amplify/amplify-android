@@ -21,8 +21,10 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -55,6 +57,8 @@ public class ModelConverterTest {
      * @throws AmplifyException On failure to derive ModelSchema
      */
     @Test public void toMapForModelWithChildrenReturnsExpectedMap() throws AmplifyException {
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(new HashSet<>(Arrays.asList(BlogOwner.class)));
         Blog blog = Blog.builder()
                 .name("A neat blog")
                 .owner(BlogOwner.builder()
@@ -69,7 +73,7 @@ public class ModelConverterTest {
         expected.put("name", "A neat blog");
         expected.put("createdAt", null);
         expected.put("owner", SerializedModel.builder()
-                .modelSchema(schema)
+                .modelSchema(schemaRegistry.getModelSchemaForModelClass(BlogOwner.class))
                 .serializedData(Collections.singletonMap("id", blog.getOwner().getId()))
                 .build());
         assertEquals(expected, actual);
