@@ -1,3 +1,14 @@
+## [Release 1.35.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.1)
+
+### Bug Fixes
+- **aws-api:** double-encode plus in url path segments (#1252)
+
+### Miscellaneous
+- Conflict resolver fixes in comments. (#1681)
+- Provide default message for GraphQLResponse.Error when null/missing (#1700)
+
+[See all changes between 1.35.0 and 1.35.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.0...release_v1.35.1)
+
 ## [Release 1.35.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.0)
 
 ### Features
