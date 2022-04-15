@@ -92,7 +92,7 @@ public class SqlCommandTest {
                 "`age` INTEGER, " +
                 "`firstName` TEXT NOT NULL, " +
                 "`lastName` TEXT NOT NULL, " +
-                "PRIMARY KEY ( id));", sqlCommand.sqlStatement());
+                "PRIMARY KEY ( 'id'));", sqlCommand.sqlStatement());
     }
 
     /**
@@ -106,11 +106,11 @@ public class SqlCommandTest {
         final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(personSchema);
         assertEquals("Person", sqlCommand.tableName());
         assertEquals("CREATE TABLE IF NOT EXISTS `Person` (" +
-                "`@@primaryKey` TEXT NOT NULL, `age` INTEGER, " +
+                "`age` INTEGER, " +
                 "`firstName` TEXT NOT NULL, " +
                 "`hobbies` TEXT NOT NULL, " +
                 "`lastName` TEXT NOT NULL, " +
-                "PRIMARY KEY ( '@@primaryKey'));", sqlCommand.sqlStatement());
+                "PRIMARY KEY ( 'firstName'));", sqlCommand.sqlStatement());
     }
 
     /**
@@ -432,7 +432,7 @@ public class SqlCommandTest {
                 .targetType("String")
                 .javaClassForValue(String.class)
                 .build());
-        final List<String> indexFieldNames = new ArrayList<String>();
+        final List<String> indexFieldNames = new ArrayList<>();
         indexFieldNames.add("firstName");
         indexFieldNames.add("lastName");
         indexFieldNames.add("age");
@@ -458,7 +458,7 @@ public class SqlCommandTest {
                 .targetType("String")
                 .javaClassForValue(String.class)
                 .build());
-        final List<String> indexFieldNames = new ArrayList<String>();
+        final List<String> indexFieldNames = new ArrayList<>();
         indexFieldNames.add("firstName");
         final ModelIndex index = ModelIndex.builder()
                 .indexName("undefined")

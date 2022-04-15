@@ -552,8 +552,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final SQLiteColumn foreignKey = foreignKeyIterator.next();
             String connectedName = foreignKey.getName();
             String connectedType = foreignKey.getOwnedType();
-            String connectedId = table.getType() == Model.Type.USER ? SQLiteTable.PRIMARY_KEY_FIELD_NAME
-                    : PrimaryKey.fieldName();
+            ModelSchema connectedSchema = schemaRegistry.getModelSchemaForModelClass(connectedType);
+            String connectedId = getIdField(connectedSchema.getPrimaryIndexFields(),
+                    connectedSchema.getModelType());
 
             builder.append("FOREIGN KEY")
                     .append(SqlKeyword.DELIMITER)
@@ -573,6 +574,14 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         return builder;
     }
 
+    private String getIdField(List<String> indexFields, Model.Type type) {
+        if (type == Model.Type.USER && indexFields.size() > 1) {
+            return SQLiteTable.PRIMARY_KEY_FIELD_NAME;
+        } else {
+            return indexFields.get(0);
+        }
+    }
+
     // Utility method to create SQL for Primary key on table
     private StringBuilder createPrimaryKey(@NonNull ModelSchema modelSchema) {
         final StringBuilder builder = new StringBuilder();
@@ -580,23 +589,16 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         if (indexFields.size() > 0) {
             builder.append("PRIMARY KEY")
                     .append(SqlKeyword.DELIMITER)
-                    .append("(");
-            int numIndexFieldsAdded = 0;
-            if (modelSchema.getModelType() == Model.Type.USER) {
-                builder.append(SqlKeyword.DELIMITER)
-                        .append("'" + SQLiteTable.PRIMARY_KEY_FIELD_NAME + "'");
-            } else {
-                for (String field : indexFields) {
-                    numIndexFieldsAdded++;
-                    builder.append(SqlKeyword.DELIMITER)
-                            .append(field);
-                    if (numIndexFieldsAdded != indexFields.size()) {
-                        builder.append(",");
-                    }
-                }
-            }
-            builder.append(")");
+                    .append("(")
+                    .append(SqlKeyword.DELIMITER).append("'")
+                    .append(getIdField(indexFields, modelSchema.getModelType()))
+                    .append("'");
+        } else {
+            builder.append(SqlKeyword.DELIMITER).append("'")
+                    .append(indexFields.get(0))
+                    .append("'");
         }
+        builder.append(")");
         return builder;
     }
 }
