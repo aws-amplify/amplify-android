@@ -5,7 +5,6 @@ import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.UUID;
 
-import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -27,14 +26,9 @@ public final class Comment implements Model {
   private final @ModelField(targetType="String") String content;
   private final @ModelField(targetType="Post") @BelongsTo(targetName = "commentPostId", type = Post.class) Post post;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
-  @NonNull
-  public String resolveIdentifier() {
+  public String getId() {
       return id;
   }
-
-    public String getId() {
-        return id;
-    }
   
   public String getContent() {
       return content;

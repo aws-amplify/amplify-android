@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
-import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -37,11 +36,6 @@ public final class Post implements Model {
   private final @ModelField(targetType="Int", isRequired = true) Integer rating;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   public String getId() {
-      return id;
-  }
-
-  @NonNull
-  public String resolveIdentifier() {
       return id;
   }
 

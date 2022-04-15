@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -189,12 +188,7 @@ public final class SQLiteStorageReservedWordTest {
             return id;
         }
 
-        @NonNull
-        public String resolveIdentifier() {
-            return id;
-        }
-
-            public String getAbort() {
+        public String getAbort() {
             return abort;
         }
 
@@ -349,11 +343,6 @@ public final class SQLiteStorageReservedWordTest {
         private final @ModelField(targetType="String", isRequired = true) String index;
         private final @ModelField(targetType="Group") @BelongsTo(targetName = "groupID", type = Group.class) Group group;
         public String getId() {
-            return id;
-        }
-
-        @NonNull
-        public String resolveIdentifier() {
             return id;
         }
 
