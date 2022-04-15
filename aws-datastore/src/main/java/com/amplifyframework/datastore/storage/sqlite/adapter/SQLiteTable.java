@@ -92,7 +92,7 @@ public final class SQLiteTable {
         Objects.requireNonNull(modelSchema);
         Map<String, ModelAssociation> associations = modelSchema.getAssociations();
         Map<String, SQLiteColumn> sqlColumns = new TreeMap<>();
-        if (modelSchema.getModelType() == Model.Type.USER) {
+        if (modelSchema.getModelType() == Model.Type.USER && modelSchema.getPrimaryIndexFields().size() > 1) {
             SQLiteColumn primaryKeyColumn = SQLiteColumn.builder()
                     .name(PRIMARY_KEY_FIELD_NAME)
                     .fieldName(PRIMARY_KEY_FIELD_NAME)
@@ -168,7 +168,11 @@ public final class SQLiteTable {
     public SQLiteColumn getPrimaryKey() {
         for (SQLiteColumn column : sortedColumns) {
             if (type == Model.Type.USER) {
-                if (column.getName().equals(PRIMARY_KEY_FIELD_NAME)) {
+                if (primaryKeyColumns.size() > 1) {
+                    if (column.getName().equals(PRIMARY_KEY_FIELD_NAME)) {
+                        return column;
+                    }
+                } else if (primaryKeyColumns.size() == 1 && primaryKeyColumns.contains(column)) {
                     return column;
                 }
             }
