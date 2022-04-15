@@ -15,7 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -219,10 +218,8 @@ public final class AppSyncGraphQLRequestFactory {
                         "ConditionInput";
                 builder.variable("condition", conditionType, parsePredicate(predicate));
             }
-            GraphQLRequest<R> request = builder.build();
-            Log.d("AppSyncGraphQlRequest", "AppSyncGraphQlRequestFactory mutation request: "
-                    + request.toString());
-            return request;
+
+            return builder.build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
