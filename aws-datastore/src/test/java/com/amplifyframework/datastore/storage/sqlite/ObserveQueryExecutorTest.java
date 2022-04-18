@@ -443,7 +443,7 @@ public class ObserveQueryExecutorTest {
                 .type(StorageItemChange.Type.CREATE)
                 .build());
         }
-        Assert.assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
+        Assert.assertTrue(changeLatch.await(7, TimeUnit.SECONDS));
     }
 
     /***
