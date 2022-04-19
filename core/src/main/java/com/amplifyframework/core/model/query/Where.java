@@ -86,16 +86,16 @@ public final class Where {
         final List<String> primaryKeyList = schema.getPrimaryIndexFields();
         QueryOptions queryOptions = null;
         Iterator<String> pkField = primaryKeyList.listIterator();
-        final QueryField idField = QueryField.field(pkField.next());
+        final QueryField idField = QueryField.field(itemClass.getSimpleName(), pkField.next());
         if (primaryKeyList.size() == 1 && !(modelPrimaryKey instanceof ModelPrimaryKey)) {
-            queryOptions = matches(idField.eq(Objects.requireNonNull((String) modelPrimaryKey)));
+            queryOptions = matches(idField.eq(Objects.requireNonNull(modelPrimaryKey.toString())));
         } else {
             ModelPrimaryKey<?> primaryKey = (ModelPrimaryKey<?>) modelPrimaryKey;
             Iterator<?> sortKeyIterator = primaryKey.sortedKeys().listIterator();
-            if (queryOptions == null) {
-                queryOptions = matches(idField.eq(Objects.requireNonNull(primaryKey.key())));
-            } else {
-                queryOptions.matches(QueryField.field(pkField.next()).eq(Objects.requireNonNull(sortKeyIterator)));
+            queryOptions = matches(idField.eq(Objects.requireNonNull(primaryKey.key())));
+            while (sortKeyIterator.hasNext()) {
+                queryOptions.matches(QueryField.field(itemClass.getSimpleName(), pkField.next())
+                        .eq(Objects.requireNonNull(sortKeyIterator.next())));
             }
         }
         return queryOptions.paginated(Page.firstResult());
