@@ -85,7 +85,7 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
 
         /**
          * Helper function which creates a query predicate which returns.
-         * @param model Model to create the predicate rom.
+         * @param model Model to create the predicate from.
          * @param tableName Table name for which predicate needs to be created.
          * @param primaryKeyList List of primary key field value list.
          * @return Query Predicate to query with a unique identifier.
