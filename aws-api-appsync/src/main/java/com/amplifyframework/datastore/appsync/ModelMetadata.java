@@ -43,7 +43,7 @@ public final class ModelMetadata implements Model {
 
     /**
      * Constructor for this metadata model.
-     * @param id The ID of the object this is holding the metadata for (also this object's own ID)
+     * @param id The identifier of the object this is holding the metadata for (also this object's own identifier)
      * @param deleted Whether this object was deleted since the last sync time specified
      * @param version What version this object was last seen at
      * @param lastChangedAt When was this object last changed
@@ -63,8 +63,8 @@ public final class ModelMetadata implements Model {
     }
 
     /**
-     * Gets ID.
-     * @return ID
+     * Gets identifier.
+     * @return identifier
      */
     @NonNull
     public String resolveIdentifier() {
