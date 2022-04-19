@@ -49,5 +49,5 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
         data class ThrowError(val exception: Exception) : EventType()
     }
 
-    override val type = eventType.toString()
+    override val type: String = eventType.javaClass.simpleName
 }

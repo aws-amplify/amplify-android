@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
@@ -29,46 +30,46 @@ import java.util.Date
 
 object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
-        Action { dispatcher, environment ->
+        Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
             val userPoolTokens = event.storedCredentials?.cognitoUserPoolTokens
-            val authenticationEvent = userPoolTokens?.let {
+            val evt = userPoolTokens?.let {
                 val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, it)
                 AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
             } ?: AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
-            dispatcher.send(authenticationEvent)
-            dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(event.configuration)))
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+
+            val authEvent = AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(event.configuration))
+            logger?.verbose("$id Sending event ${authEvent.type}")
+            dispatcher.send(authEvent)
         }
 
     override fun initiateSRPSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
-        Action { dispatcher, environment ->
-            with(event) {
-                val srpEvent = username?.run {
-                    password?.run { SRPEvent(SRPEvent.EventType.InitiateSRP(username, password)) }
-                } ?: AuthenticationEvent(
-                    AuthenticationEvent.EventType.ThrowError(
-                        AuthException("Sign in failed.", "username or password empty")
-                    )
-                )
-                dispatcher.send(srpEvent)
-            }
+        Action<AuthEnvironment>("InitSRPSignIn") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = event.username?.run {
+                event.password?.run { SRPEvent(SRPEvent.EventType.InitiateSRP(event.username, event.password)) }
+            } ?: AuthenticationEvent(
+                AuthenticationEvent.EventType.ThrowError(AuthException("Sign in failed.", "username or password empty"))
+            )
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 
     override fun initiateSignOutAction(
         event: AuthenticationEvent.EventType.SignOutRequested,
         signedInData: SignedInData
-    ) = Action { dispatcher, environment ->
-        if (event.isGlobalSignOut) {
-            dispatcher.send(SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData)))
+    ) = Action<AuthEnvironment>("InitSignOut") { id, dispatcher ->
+        logger?.verbose("$id Starting execution")
+        val evt = if (event.isGlobalSignOut) {
+            SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData))
         } else {
-            dispatcher.send(
-                SignOutEvent(
-                    SignOutEvent.EventType.SignOutLocally(
-                        signedInData,
-                        isGlobalSignOut = false,
-                        invalidateTokens = false
-                    )
-                )
+            SignOutEvent(
+                SignOutEvent.EventType.SignOutLocally(signedInData, isGlobalSignOut = false, invalidateTokens = false)
             )
         }
+        logger?.verbose("$id Sending event ${evt.type}")
+        dispatcher.send(evt)
     }
 }

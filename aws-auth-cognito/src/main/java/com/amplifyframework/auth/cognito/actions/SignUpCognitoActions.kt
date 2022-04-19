@@ -29,9 +29,9 @@ import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 
 object SignUpCognitoActions : SignUpActions {
     override fun startSignUpAction(event: SignUpEvent.EventType.InitiateSignUp) =
-        Action { dispatcher, environment ->
-            val env = (environment as AuthEnvironment)
-            runCatching {
+        Action<AuthEnvironment>("StartSignUp") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = try {
                 val userAttributes = event.options.userAttributes.map {
                     AttributeType {
                         name = it.key.keyString
@@ -42,17 +42,16 @@ object SignUpCognitoActions : SignUpActions {
                     this.username = event.username
                     this.password = event.password
                     this.userAttributes = userAttributes
-                    this.clientId = env.configuration.userPool?.appClient
+                    this.clientId = configuration.userPool?.appClient
                     this.secretHash = SRPHelper.getSecretHash(
                         event.username,
-                        env.configuration.userPool?.appClient,
-                        env.configuration.userPool?.appClientSecret
+                        configuration.userPool?.appClient,
+                        configuration.userPool?.appClientSecret
                     )
                 }
 
-                env.cognitoAuthService.cognitoIdentityProviderClient?.signUp(options)
-            }.onSuccess {
-                val deliveryDetails = it?.codeDeliveryDetails?.let { details ->
+                val response = cognitoAuthService.cognitoIdentityProviderClient?.signUp(options)
+                val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
                     mapOf(
                         "DESTINATION" to details.destination,
                         "MEDIUM" to details.deliveryMedium?.value,
@@ -60,69 +59,74 @@ object SignUpCognitoActions : SignUpActions {
                     )
                 }
 
-                dispatcher.send(
-                    SignUpEvent(
-                        SignUpEvent.EventType.InitiateSignUpSuccess(
-                            SignedUpData(it?.userSub, event.username, deliveryDetails)
-                        )
+                SignUpEvent(
+                    SignUpEvent.EventType.InitiateSignUpSuccess(
+                        SignedUpData(response?.userSub, event.username, deliveryDetails)
                     )
                 )
-            }.onFailure {
-                dispatcher.send(SignUpEvent(SignUpEvent.EventType.InitiateSignUpFailure(it as Exception)))
+            } catch (e: Exception) {
+                SignUpEvent(SignUpEvent.EventType.InitiateSignUpFailure(e))
             }
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 
     override fun confirmSignUpAction(event: SignUpEvent.EventType.ConfirmSignUp) =
-        Action { dispatcher, environment ->
-            val env = (environment as AuthEnvironment)
-            runCatching {
+        Action<AuthEnvironment>("ConfirmSignUp") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = try {
                 val options = ConfirmSignUpRequest {
                     this.username = event.username
                     this.confirmationCode = event.confirmationCode
-                    this.clientId = env.configuration.userPool?.appClient
+                    this.clientId = configuration.userPool?.appClient
                     this.secretHash = SRPHelper.getSecretHash(
                         event.username,
-                        env.configuration.userPool?.appClient,
-                        env.configuration.userPool?.appClientSecret
+                        configuration.userPool?.appClient,
+                        configuration.userPool?.appClientSecret
                     )
                 }
-                env.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp(options)
-            }.onSuccess {
-                dispatcher.send(SignUpEvent(SignUpEvent.EventType.ConfirmSignUpSuccess()))
-            }.onFailure {
-                dispatcher.send(SignUpEvent(SignUpEvent.EventType.ConfirmSignUpFailure(it as Exception)))
+
+                cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp(options)
+                SignUpEvent(SignUpEvent.EventType.ConfirmSignUpSuccess())
+            } catch (e: Exception) {
+                SignUpEvent(SignUpEvent.EventType.ConfirmSignUpFailure(e))
             }
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 
     override fun resendConfirmationCodeAction(event: SignUpEvent.EventType.ResendSignUpCode) =
-        Action { dispatcher, environment ->
-            val env = (environment as AuthEnvironment)
-            runCatching {
+        Action<AuthEnvironment>("ResendConfirmationCode") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = try {
                 val options = ResendConfirmationCodeRequest {
-                    clientId = env.configuration.userPool?.appClient
+                    clientId = configuration.userPool?.appClient
                     username = event.username
                 }
-                env.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode(options)
-            }.onSuccess {
-                val deliveryDetails = it?.codeDeliveryDetails?.let { details ->
+
+                val response = cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode(options)
+                val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
                     mapOf(
                         "DESTINATION" to details.destination,
                         "MEDIUM" to details.deliveryMedium?.value,
                         "ATTRIBUTE" to details.attributeName
                     )
-                } ?: mapOf()
+                }
 
                 SignUpEvent(
-                    SignUpEvent.EventType.ResendSignUpCodeSuccess(
-                        SignedUpData("", event.username, deliveryDetails)
-                    )
+                    SignUpEvent.EventType.ResendSignUpCodeSuccess(SignedUpData("", event.username, deliveryDetails))
                 )
-            }.onFailure {
-                dispatcher.send(SignUpEvent(SignUpEvent.EventType.ResendSignUpCodeFailure(it as Exception)))
+            } catch (e: Exception) {
+                SignUpEvent(SignUpEvent.EventType.ResendSignUpCodeFailure(e))
             }
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 
-    override fun resetSignUpAction() = Action { dispatcher, environment ->
-        dispatcher.send(AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp()))
+    override fun resetSignUpAction() = Action<AuthEnvironment>("ResetSignUp") { id, dispatcher ->
+        logger?.verbose("$id Starting execution")
+        val evt = AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp())
+        logger?.verbose("$id Sending event ${evt.type}")
+        dispatcher.send(evt)
     }
 }

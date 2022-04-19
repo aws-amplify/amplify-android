@@ -24,20 +24,27 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 
 object AuthorizationCognitoActions : AuthorizationActions {
-    override fun resetAuthorizationAction() = Action { dispatcher, environment ->
-        val env = environment as AuthEnvironment
-        dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.Configure(env.configuration)))
+    override fun resetAuthorizationAction() = Action<AuthEnvironment>("resetAuthZ") { id, dispatcher ->
+        logger?.verbose("$id Starting execution")
+        val evt = AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
+        logger?.verbose("$id Sending event ${evt.type}")
+        dispatcher.send(evt)
     }
 
-    override fun configureAuthorizationAction() = Action { dispatcher, environment ->
-        dispatcher.send(AuthEvent(AuthEvent.EventType.ConfiguredAuthorization))
+    override fun configureAuthorizationAction() = Action<AuthEnvironment>("ConfigureAuthZ") { id, dispatcher ->
+        logger?.verbose("$id Starting execution")
+        val evt = AuthEvent(AuthEvent.EventType.ConfiguredAuthorization)
+        logger?.verbose("$id Sending event ${evt.type}")
+        dispatcher.send(evt)
     }
 
     override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential?) =
-        Action { dispatcher, _ ->
-            val event = amplifyCredential?.cognitoUserPoolTokens?.let {
+        Action<AuthEnvironment>("InitFetchAuthSession") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = amplifyCredential?.cognitoUserPoolTokens?.let {
                 FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential))
             } ?: FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
-            dispatcher.send(event)
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 }

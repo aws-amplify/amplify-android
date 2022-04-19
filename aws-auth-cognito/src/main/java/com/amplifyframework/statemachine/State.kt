@@ -21,7 +21,7 @@ package com.amplifyframework.statemachine
  */
 interface State {
     val type: String
-        get() = this.toString()
+        get() = this.javaClass.simpleName
 
     override fun equals(other: Any?): Boolean
     override fun toString(): String

@@ -16,16 +16,14 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
+import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 
-class AuthEnvironment : Environment {
-    lateinit var configuration: AuthConfiguration
+class AuthEnvironment internal constructor(
+    val configuration: AuthConfiguration,
+    val cognitoAuthService: AWSCognitoAuthServiceBehavior,
+    val logger: Logger? = null
+) : Environment {
     internal lateinit var srpHelper: SRPHelper
-
-    val cognitoAuthService = AWSCognitoAuthService
-
-    companion object {
-        val empty = AuthEnvironment()
-    }
 }

@@ -36,5 +36,5 @@ class SignOutEvent(
         data class RevokeToken(val signedInData: SignedInData) : EventType()
     }
 
-    override val type = eventType.toString()
+    override val type: String = eventType.javaClass.simpleName
 }

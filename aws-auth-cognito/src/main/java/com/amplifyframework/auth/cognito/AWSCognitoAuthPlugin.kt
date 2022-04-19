@@ -19,6 +19,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import aws.sdk.kotlin.runtime.auth.credentials.Credentials
+import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -88,16 +90,17 @@ import org.json.JSONObject
  */
 class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     companion object {
+        const val AWS_COGNITO_AUTH_LOG_NAMESPACE = "amplify:aws-cognito-auth:%s"
+
         private const val AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
 
-    private var authEnvironment = AuthEnvironment()
-    private var authStateMachine = AuthStateMachine(authEnvironment)
-    private lateinit var authConfiguration: AuthConfiguration
+    private lateinit var configuration: AuthConfiguration
+    private lateinit var authStateMachine: AuthStateMachine
+    private lateinit var credentialStoreStateMachine: CredentialStoreStateMachine
 
-    private var credentialStoreEnvironment = CredentialStoreEnvironment()
-    private var credentialStoreStateMachine =
-        CredentialStoreStateMachine(credentialStoreEnvironment)
+    private val logger =
+        Amplify.Logging.forNamespace(AWS_COGNITO_AUTH_LOG_NAMESPACE.format(this::class.java.simpleName))
 
     override fun signUp(
         username: String,
@@ -542,7 +545,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                             fetchIdentityState is FetchIdentityState.Error -> {
                                 // if aws creds but no id -> should never happen - Ref #AWSCognitoAuthSession.UnreachableCase
                                 // if no tokens and no id but has aws creds -> should never happen - Ref #AWSCognitoAuthSession.UnreachableCase
-                                identityIdResult = when (authEnvironment.configuration.identityPool) {
+                                identityIdResult = when (configuration.identityPool) {
                                     null -> AuthSessionResult.failure(AuthException.InvalidAccountTypeException())
                                     else -> AuthSessionResult.failure(
                                         AuthException(
@@ -872,19 +875,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
-            authConfiguration = AuthConfiguration.fromJson(pluginConfiguration).build()
+            configuration = AuthConfiguration.fromJson(pluginConfiguration).build()
+            val authEnvironment = AuthEnvironment(configuration, configureCognitoClients(), logger)
+            authStateMachine = AuthStateMachine(authEnvironment)
             System.setProperty("aws.frameworkMetadata", UserAgent.string())
-            credentialStoreEnvironment.applicationContext = context.applicationContext
-            val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(
-                credentialStoreEnvironment.applicationContext,
-                authConfiguration
-            )
-            credentialStoreEnvironment.credentialStore = awsCognitoAuthCredentialStore
 
-            credentialStoreEnvironment.legacyCredentialStore = AWSCognitoLegacyCredentialStore(
-                credentialStoreEnvironment.applicationContext,
-                authConfiguration
-            )
+            configureCredentialStore(pluginConfiguration, context)
+            addAuthStateChangeListener()
         } catch (exception: JSONException) {
             throw AuthException(
                 "Failed to configure AWSCognitoAuthPlugin.",
@@ -893,21 +890,53 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             )
         }
 
-        sendCredentialStoreConfigure()
+        configureAuthStates()
     }
 
-    private fun sendCredentialStoreConfigure() {
+    private fun configureCognitoClients(): AWSCognitoAuthServiceBehavior {
+        val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
+            CognitoIdentityProviderClient { this.region = it.region }
+        }
+
+        val cognitoIdentityClient = configuration.identityPool?.let { it ->
+            CognitoIdentityClient { this.region = it.region }
+        }
+
+        return object : AWSCognitoAuthServiceBehavior {
+            override var cognitoIdentityProviderClient = cognitoIdentityProviderClient
+            override var cognitoIdentityClient = cognitoIdentityClient
+        }
+    }
+
+    private fun configureCredentialStore(pluginConfiguration: JSONObject, context: Context) {
+        val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(context.applicationContext, configuration)
+        val legacyCredentialStore = AWSCognitoLegacyCredentialStore(context.applicationContext, configuration)
+        val credentialStoreEnvironment =
+            CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore)
+        credentialStoreStateMachine = CredentialStoreStateMachine(credentialStoreEnvironment)
+    }
+
+    private fun addAuthStateChangeListener(): StateChangeListenerToken {
+        return authStateMachine.listen(
+            { authState ->
+                logger.verbose("Auth State Change: $authState")
+            },
+            null
+        )
+    }
+
+    private fun configureAuthStates() {
         var token: StateChangeListenerToken? = null
         token = credentialStoreStateMachine.listen(
             {
                 when {
                     it is CredentialStoreState.Error -> {
-                        authStateMachine.send(AuthEvent(AuthEvent.EventType.ConfigureAuth(authConfiguration, null)))
+                        authStateMachine.send(AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, null)))
                         token?.let(credentialStoreStateMachine::cancel)
                     }
                     it is CredentialStoreState.Success -> {
                         authStateMachine.send(
-                            AuthEvent(AuthEvent.EventType.ConfigureAuth(authConfiguration, it.storedCredentials))
+                            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, it.storedCredentials))
                         )
                         token?.let(credentialStoreStateMachine::cancel)
                     }
@@ -921,7 +950,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         )
     }
 
-    override fun getEscapeHatch() = authEnvironment.cognitoAuthService
+    override fun getEscapeHatch() = configureCognitoClients()
 
     override fun getPluginKey() = AWS_COGNITO_AUTH_PLUGIN_KEY
 

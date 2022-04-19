@@ -15,27 +15,33 @@
 
 package com.amplifyframework.statemachine
 
-typealias ActionClosure = (EventDispatcher, Environment) -> Unit
+typealias ActionClosure = suspend (EventDispatcher, Environment) -> Unit
+typealias BoundActionClosure<T> = suspend T.(String?, EventDispatcher) -> Unit
 
 interface Action {
     val id: String
-        get() = this.javaClass.name
+        get() = this.javaClass.simpleName
 
     suspend fun execute(dispatcher: EventDispatcher, environment: Environment)
 
     companion object {
         fun basic(id: String, block: ActionClosure) = BasicAction(id, block)
 
-        inline operator fun invoke(
-            crossinline block: suspend (EventDispatcher, Environment) -> Unit
-        ): Action {
-            return object : Action {
-                override suspend fun execute(
-                    dispatcher: EventDispatcher,
-                    environment: Environment
-                ) {
-                    block(dispatcher, environment)
-                }
+        inline operator fun invoke(name: String? = null, crossinline block: ActionClosure) = object : Action {
+            override val id = name ?: super.id
+            override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
+                block(dispatcher, environment)
+            }
+        }
+
+        inline operator fun <EnvType : Environment> invoke(
+            name: String? = null,
+            crossinline block: BoundActionClosure<EnvType>
+        ) = object : Action {
+            override val id = name ?: super.id
+            override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
+                val safeEnv = environment as EnvType
+                safeEnv.block(id, dispatcher)
             }
         }
     }

@@ -64,6 +64,9 @@ open class StateTransitionTestBase {
     internal lateinit var configuration: AuthConfiguration
 
     @Mock
+    internal lateinit var cognitoAuthService: AWSCognitoAuthServiceBehavior
+
+    @Mock
     internal lateinit var mockAuthActions: AuthActions
 
     @Mock

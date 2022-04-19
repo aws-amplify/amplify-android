@@ -36,5 +36,5 @@ class AuthEvent(val eventType: EventType, override val time: Date? = null) :
         object ConfiguredAuthorization : EventType()
     }
 
-    override val type = eventType.toString()
+    override val type: String = eventType.javaClass.simpleName
 }

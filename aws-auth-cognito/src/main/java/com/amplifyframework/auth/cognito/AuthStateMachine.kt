@@ -67,7 +67,7 @@ internal class AuthStateMachine(
     )
 
     companion object {
-        fun logging() = AuthStateMachine(
+        fun logging(environment: Environment) = AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
                     SignUpState.Resolver(SignUpCognitoActions).logging(),
@@ -86,7 +86,7 @@ internal class AuthStateMachine(
                 ).logging(),
                 AuthCognitoActions
             ).logging(),
-            AuthEnvironment.empty
+            environment
         )
     }
 }

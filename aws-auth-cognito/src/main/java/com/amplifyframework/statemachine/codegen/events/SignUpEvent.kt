@@ -46,5 +46,5 @@ class SignUpEvent(
         data class ConfirmSignUpFailure(val exception: Exception) : EventType()
     }
 
-    override val type = eventType.toString()
+    override val type: String = eventType.javaClass.simpleName
 }

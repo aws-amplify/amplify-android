@@ -31,5 +31,5 @@ class FetchAuthSessionEvent(
         data class FetchedAuthSession(val amplifyCredential: AmplifyCredential?) : EventType()
     }
 
-    override val type = eventType.toString()
+    override val type: String = eventType.javaClass.simpleName
 }

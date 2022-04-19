@@ -15,8 +15,6 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
-import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
@@ -26,42 +24,30 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 
 object AuthCognitoActions : AuthActions {
     override fun initializeAuthConfigurationAction(event: AuthEvent.EventType.ConfigureAuth) =
-        Action { dispatcher, environment ->
-            with(environment as AuthEnvironment) {
-                configuration = event.configuration
-                val configureEvent: AuthEvent = configuration.userPool?.run {
-                    AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, event.storedCredentials))
-                } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration))
-                dispatcher.send(configureEvent)
-            }
+        Action<AuthEnvironment>("InitAuthConfig") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = configuration.userPool?.run {
+                AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, event.storedCredentials))
+            } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration))
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 
     override fun initializeAuthenticationConfigurationAction(event: AuthEvent.EventType.ConfigureAuthentication) =
-        Action { dispatcher, environment ->
-            with(environment as AuthEnvironment) {
-                configuration.userPool?.let {
-                    cognitoAuthService.cognitoIdentityProviderClient =
-                        CognitoIdentityProviderClient {
-                            this.region = configuration.userPool?.region
-                        }
-                }
-                dispatcher.send(
-                    AuthenticationEvent(
-                        AuthenticationEvent.EventType.Configure(event.configuration, event.storedCredentials)
-                    )
-                )
-            }
+        Action<AuthEnvironment>("InitAuthNConfig") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = AuthenticationEvent(
+                AuthenticationEvent.EventType.Configure(event.configuration, event.storedCredentials)
+            )
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 
     override fun initializeAuthorizationConfigurationAction(event: AuthEvent.EventType) =
-        Action { dispatcher, environment ->
-            with(environment as AuthEnvironment) {
-                configuration.identityPool?.let {
-                    cognitoAuthService.cognitoIdentityClient = CognitoIdentityClient {
-                        this.region = configuration.identityPool?.region
-                    }
-                }
-                dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration)))
-            }
+        Action<AuthEnvironment>("InitAuthZConfig") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 }

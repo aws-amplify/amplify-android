@@ -22,8 +22,3 @@ interface AWSCognitoAuthServiceBehavior {
     var cognitoIdentityProviderClient: CognitoIdentityProviderClient?
     var cognitoIdentityClient: CognitoIdentityClient?
 }
-
-object AWSCognitoAuthService : AWSCognitoAuthServiceBehavior {
-    override var cognitoIdentityProviderClient: CognitoIdentityProviderClient? = null
-    override var cognitoIdentityClient: CognitoIdentityClient? = null
-}

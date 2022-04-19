@@ -29,17 +29,17 @@ import kotlin.time.Duration.Companion.seconds
 
 object FetchUserPoolTokensCognitoActions : FetchUserPoolTokensActions {
     override fun refreshFetchUserPoolTokensAction(amplifyCredential: AmplifyCredential?): Action =
-        Action { dispatcher, environment ->
-            val env = (environment as AuthEnvironment)
-            try {
-                val refreshTokenResponse =
-                    env.cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
-                        authFlow = AuthFlowType.RefreshToken
-                        clientId = env.configuration.userPool?.appClient
-                        authParameters = amplifyCredential?.cognitoUserPoolTokens?.refreshToken?.let {
-                            mapOf("REFRESH_TOKEN" to it)
-                        }
+        Action<AuthEnvironment>("RefreshUserPoolTokens") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = try {
+                val refreshTokenResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
+                    authFlow = AuthFlowType.RefreshToken
+                    clientId = configuration.userPool?.appClient
+                    authParameters = amplifyCredential?.cognitoUserPoolTokens?.refreshToken?.let {
+                        mapOf("REFRESH_TOKEN" to it)
                     }
+                }
+
                 val expiresIn = refreshTokenResponse?.authenticationResult?.expiresIn?.toLong() ?: 0
                 val cognitoUserPoolTokens = CognitoUserPoolTokens(
                     idToken = refreshTokenResponse?.authenticationResult?.idToken,
@@ -49,16 +49,19 @@ object FetchUserPoolTokensCognitoActions : FetchUserPoolTokensActions {
                 )
 
                 val updatedCredentials = amplifyCredential?.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)
+                val fetchedEvent = FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.Fetched())
+                logger?.verbose("$id Sending event ${fetchedEvent.type}")
+                dispatcher.send(fetchedEvent)
 
-                dispatcher.send(FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.Fetched()))
-                dispatcher.send(
-                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(updatedCredentials))
-                )
+                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(updatedCredentials))
             } catch (e: Exception) {
-                dispatcher.send(FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.ThrowError(e)))
-                dispatcher.send(
-                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
-                )
+                val errorEvent = FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.ThrowError(e))
+                logger?.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent)
+
+                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
             }
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 }

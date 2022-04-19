@@ -23,7 +23,7 @@ import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import java.util.Locale
 
-internal class AWSCognitoLegacyCredentialStore(
+class AWSCognitoLegacyCredentialStore(
     val context: Context,
     private val authConfiguration: AuthConfiguration,
     keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()

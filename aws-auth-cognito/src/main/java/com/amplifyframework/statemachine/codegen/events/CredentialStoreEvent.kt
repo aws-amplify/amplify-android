@@ -32,5 +32,5 @@ class CredentialStoreEvent(val eventType: EventType, override val time: Date? = 
         data class ThrowError(val error: CredentialStoreError) : EventType()
     }
 
-    override val type = eventType.toString()
+    override val type: String = eventType.javaClass.simpleName
 }

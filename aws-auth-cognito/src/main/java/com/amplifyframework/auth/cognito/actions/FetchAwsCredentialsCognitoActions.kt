@@ -26,37 +26,42 @@ import com.amplifyframework.statemachine.codegen.events.FetchAwsCredentialsEvent
 
 object FetchAwsCredentialsCognitoActions : FetchAWSCredentialsActions {
     override fun initFetchAWSCredentialsAction(amplifyCredential: AmplifyCredential?): Action =
-        Action { dispatcher, environment ->
-            val env = (environment as AuthEnvironment)
-            val idToken = amplifyCredential?.cognitoUserPoolTokens?.idToken
-            val loginsMap: Map<String, String>? = env.configuration.userPool?.identityProviderName?.let { provider ->
-                idToken?.let { mapOf(provider to idToken) }
-            }
+        Action<AuthEnvironment>("InitFetchAWSCredentials") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = try {
+                val idToken = amplifyCredential?.cognitoUserPoolTokens?.idToken
+                val loginsMap: Map<String, String>? = configuration.userPool?.identityProviderName?.let { provider ->
+                    idToken?.let { mapOf(provider to idToken) }
+                }
 
-            val getCredentialsForIdentityRequest = GetCredentialsForIdentityRequest {
-                identityId = amplifyCredential?.identityId
-                loginsMap?.let { logins = loginsMap }
-            }
+                val getCredentialsForIdentityRequest = GetCredentialsForIdentityRequest {
+                    identityId = amplifyCredential?.identityId
+                    loginsMap?.let { logins = loginsMap }
+                }
 
-            try {
                 val getCredentialsForIdentityResponse =
-                    env.cognitoAuthService.cognitoIdentityClient?.getCredentialsForIdentity(
+                    cognitoAuthService.cognitoIdentityClient?.getCredentialsForIdentity(
                         getCredentialsForIdentityRequest
                     )
+
                 val credentials = getCredentialsForIdentityResponse?.credentials?.let {
                     AWSCredentials(it.accessKeyId, it.secretKey, it.sessionToken, it.expiration?.epochSeconds)
                 }
-                val updatedAmplifyCredential = amplifyCredential?.copy(awsCredentials = credentials)
 
-                dispatcher.send(FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.Fetched()))
-                dispatcher.send(
-                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(updatedAmplifyCredential))
-                )
+                val updatedAmplifyCredential = amplifyCredential?.copy(awsCredentials = credentials)
+                val fetchedEvent = FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.Fetched())
+                logger?.verbose("$id Sending event ${fetchedEvent.type}")
+                dispatcher.send(fetchedEvent)
+
+                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(updatedAmplifyCredential))
             } catch (e: Exception) {
-                dispatcher.send(FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.ThrowError(e)))
-                dispatcher.send(
-                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(amplifyCredential))
-                )
+                val errorEvent = FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.ThrowError(e))
+                logger?.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent)
+
+                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchedAuthSession(amplifyCredential))
             }
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 }

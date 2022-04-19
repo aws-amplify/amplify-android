@@ -93,7 +93,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 ),
                 mockAuthActions
             ),
-            AuthEnvironment.empty
+            AuthEnvironment(configuration, cognitoAuthService)
         )
     }
 
