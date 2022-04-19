@@ -158,7 +158,7 @@ final class AppSyncRequestFactory {
                                  SubscriptionType subscriptionType,
                                  AuthModeStrategyType strategyType) throws DataStoreException {
         try {
-            AppSyncGraphQLRequest<T> request = AppSyncGraphQLRequest.builder()
+            return AppSyncGraphQLRequest.builder()
                     .modelClass(modelSchema.getModelClass())
                     .modelSchema(modelSchema)
                     .operation(subscriptionType)
@@ -166,7 +166,6 @@ final class AppSyncRequestFactory {
                     .requestAuthorizationStrategyType(strategyType)
                     .responseType(TypeMaker.getParameterizedType(ModelWithMetadata.class, modelSchema.getModelClass()))
                     .build();
-            return request;
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
@@ -432,19 +431,6 @@ final class AppSyncRequestFactory {
             } else if (association.isOwner()) {
                 String targetName = association.getTargetName();
                 result.put(targetName, extractAssociateId(modelField, instance, schema));
-//                Object targetPrimaryKey = extractAssociateId(modelField, instance, schema);
-//                if (targetPrimaryKey instanceof ModelPrimaryKey) {
-//                    ModelPrimaryKey<?> modelPrimaryKey = (ModelPrimaryKey<?>) targetPrimaryKey;
-//                    Iterator<String> targetKeyIterator = Arrays.stream(association.getTargetKeyArray()).iterator();
-//                    result.put(targetKeyIterator.next(), modelPrimaryKey.key());
-//                    while (targetKeyIterator.hasNext()) {
-//                        Iterator<? extends Serializable> sortKeyIterator = modelPrimaryKey.sortedKeys().iterator();
-//                        result.put(targetKeyIterator.next(), sortKeyIterator.next());
-//                    }
-//                } else {
-//                    result.put(association.getTargetKeyArray()[0], extractAssociateId(modelField, instance, schema));
-//
-//                }
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
         }
