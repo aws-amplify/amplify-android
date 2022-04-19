@@ -72,7 +72,7 @@ public final class S3KeysTest {
     @Test
     public void amplifyKeyIsExtractedFromPublicServiceKey() {
         final String publicServiceKey = "public/foo/bar";
-        assertEquals("foo/bar", S3Keys.extractAmplifyKey(publicServiceKey));
+        assertEquals("foo/bar", S3Keys.extractAmplifyKey(publicServiceKey, "public/"));
     }
 
     /**
@@ -82,7 +82,7 @@ public final class S3KeysTest {
     @Test
     public void amplifyKeyIsExtractedFromProtectedServiceKey() {
         final String serviceKey = "protected/foo/bar";
-        assertEquals("bar", S3Keys.extractAmplifyKey(serviceKey));
+        assertEquals("bar", S3Keys.extractAmplifyKey(serviceKey, "protected/foo/"));
     }
 
     /**
@@ -92,26 +92,16 @@ public final class S3KeysTest {
     @Test
     public void amplifyKeyIsExtractedFromPrivateServiceKey() {
         final String serviceKey = "private/foo/bar";
-        assertEquals("bar", S3Keys.extractAmplifyKey(serviceKey));
+        assertEquals("bar", S3Keys.extractAmplifyKey(serviceKey, "private/foo/"));
     }
 
     /**
-     * An attempt to extract an Amplify key from a service key that has a non-existent accessor
-     * should throw an error.
+     * Validates the extraction of an Amplify key, from a private service key.
+     * Service key should not be stripped off since the prefix is empty.
      */
-    @Test(expected = IllegalArgumentException.class)
-    public void extractKeyFromServiceKeyWithBadAccessor() {
-        final String serviceKey = "master/foo/bar";
-        S3Keys.extractAmplifyKey(serviceKey);
-    }
-
-    /**
-     * An attempt to extract an Amplify key from a service key that only has a prefix
-     * should throw an error.
-     */
-    @Test(expected = IllegalArgumentException.class)
-    public void extractKeyFromIncompleteServiceKey() {
-        final String serviceKey = "private/foo";
-        S3Keys.extractAmplifyKey(serviceKey);
+    @Test
+    public void amplifyKeyIsExtractedFromEmptyPrefix() {
+        final String serviceKey = "bar";
+        assertEquals("bar", S3Keys.extractAmplifyKey(serviceKey, ""));
     }
 }

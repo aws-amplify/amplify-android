@@ -83,7 +83,7 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
                     prefix -> {
                         try {
                             String serviceKey = prefix.concat(getRequest().getPath());
-                            List<StorageItem> listedItems = storageService.listFiles(serviceKey);
+                            List<StorageItem> listedItems = storageService.listFiles(serviceKey, prefix);
                             onSuccess.accept(StorageListResult.fromItems(listedItems));
                         } catch (Exception exception) {
                             onError.accept(new StorageException(

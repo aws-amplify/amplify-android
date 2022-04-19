@@ -85,32 +85,12 @@ public final class S3Keys {
      * a user-friendly key for Amplify. It strips the access level
      * prefix as well as the associated identity ID.
      * @param serviceKey S3 specific key containing access level an identity ID
+     * @param prefix string to be removed from the serviceKey
      * @return Amplify storage key devoid of S3 specific details
      * @throws IllegalArgumentException for wrong service key format
      */
     @NonNull
-    public static String extractAmplifyKey(@NonNull String serviceKey) {
-        try {
-            int accessLevelIndex = serviceKey.indexOf(BUCKET_SEPARATOR);
-            if (accessLevelIndex < 0) {
-                throw new IllegalArgumentException("Missing access level.");
-            }
-            String accessLevelString = serviceKey.substring(0, accessLevelIndex).toUpperCase(Locale.US);
-            StorageAccessLevel accessLevel = StorageAccessLevel.valueOf(accessLevelString);
-
-            // public keys are formatted as "public/{key}"
-            if (StorageAccessLevel.PUBLIC.equals(accessLevel)) {
-                return serviceKey.substring(accessLevelIndex + 1);
-            }
-
-            // private and protected keys are formatted as "{access-level}/{identity-id}/{key}"
-            int identityIdIndex = serviceKey.indexOf(BUCKET_SEPARATOR, accessLevelIndex + 1);
-            if (identityIdIndex < 0) {
-                throw new IllegalArgumentException("Missing identity ID.");
-            }
-            return serviceKey.substring(identityIdIndex + 1);
-        } catch (RuntimeException exception) {
-            throw new IllegalArgumentException("Service key is incorrectly formatted.", exception);
-        }
+    public static String extractAmplifyKey(@NonNull String serviceKey, @NonNull String prefix) {
+        return serviceKey.replace(prefix, "");
     }
 }
