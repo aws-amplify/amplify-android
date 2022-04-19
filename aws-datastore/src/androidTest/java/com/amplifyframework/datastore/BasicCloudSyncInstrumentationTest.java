@@ -122,7 +122,7 @@ public final class BasicCloudSyncInstrumentationTest {
             .timeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .dataStoreConfiguration(DataStoreConfiguration.builder()
                 .syncExpression(BlogOwner.class, () -> BlogOwner.CREATED_AT.gt(tenMinutesAgoDateTime))
-                    .syncExpression(Blog.class, () -> Blog.CREATED_AT.gt(tenMinutesAgoDateTime))
+                .syncExpression(Blog.class, () -> Blog.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Post.class, () -> Post.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Comment.class, () -> Comment.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Author.class, () -> Author.CREATED_AT.gt(tenMinutesAgoDateTime))
