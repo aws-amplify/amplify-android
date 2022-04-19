@@ -267,8 +267,6 @@ internal class TransferManager @JvmOverloads constructor(
     }
 
     private fun shouldUploadInMultipart(file: File): Boolean {
-        // TODO("Mulitpart upload is not yet working in kotlin sdk, issue:https://github.com/awslabs/aws-sdk-kotlin/issues/536")
-        return false
-        // return file.length() > TransferRecord.MINIMUM_UPLOAD_PART_SIZE
+        return file.length() > TransferRecord.MINIMUM_UPLOAD_PART_SIZE
     }
 }

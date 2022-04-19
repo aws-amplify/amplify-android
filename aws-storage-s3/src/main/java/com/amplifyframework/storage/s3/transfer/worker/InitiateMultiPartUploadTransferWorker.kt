@@ -33,14 +33,12 @@ internal class InitiateMultiPartUploadTransferWorker(
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     override suspend fun performWork(): Result {
-        val putObjectRequest = createPutObjectRequest(transferRecord)
+        val putObjectRequest = createPutObjectRequest(transferRecord, null)
         return s3.createMultipartUpload {
             bucket = putObjectRequest.bucket
             key = putObjectRequest.key
             acl = putObjectRequest.acl
             metadata = putObjectRequest.metadata
-            // TODO("Add multipart user agent")
-            // TODO("Add withSSEAwsKeyManagementParams")
             tagging = putObjectRequest.tagging
         }.let {
             transferStatusUpdater.updateMultipartId(transferRecord.id, it.uploadId)

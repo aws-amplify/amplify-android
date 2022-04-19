@@ -18,14 +18,11 @@ import android.content.Context
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.smithy.kotlin.runtime.content.ByteStream
-import aws.smithy.kotlin.runtime.io.SdkByteReadChannel
-import aws.smithy.kotlin.runtime.io.readChannel
-import aws.smithy.kotlin.runtime.util.InternalApi
+import com.amplifyframework.storage.s3.transfer.PartUploadProgressListener
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferState
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.File
-import kotlin.properties.Delegates
 
 /**
  * Worker to upload a part for multipart upload
@@ -39,8 +36,7 @@ internal class PartUploadTransferWorker(
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     private lateinit var multiPartUploadId: String
-    // private var transferProgressListener: TransferProgressListener? = null
-    private var transferRecordId by Delegates.notNull<Int>()
+    private lateinit var partUploadProgressListener: PartUploadProgressListener
     override var maxRetryCount = 3
 
     override suspend fun performWork(): Result {
@@ -48,41 +44,26 @@ internal class PartUploadTransferWorker(
             return Result.retry()
         }
         multiPartUploadId = inputData.keyValueMap[MULTI_PART_UPLOAD_ID] as String
-        // TODO("Add progress listener")
+        partUploadProgressListener = PartUploadProgressListener(transferRecord, transferStatusUpdater)
         return s3.uploadPart {
-            contentLength = transferRecord.bytesTotal
             bucket = transferRecord.bucketName
             key = transferRecord.key
             uploadId = multiPartUploadId
-            body = ByteStream.chunk(
+            body = ByteStream.readWithProgressUpdates(
                 File(transferRecord.file),
                 transferRecord.fileOffset,
-                transferRecord.bytesTotal
+                transferRecord.bytesTotal,
+                partUploadProgressListener
             )
             partNumber = transferRecord.partNumber
         }.let { response ->
             response.eTag?.let { tag ->
-                transferDB.updateETag(transferRecordId, tag)
-                transferDB.updateState(transferRecordId, TransferState.PART_COMPLETED)
+                transferDB.updateETag(transferRecord.id, tag)
+                transferDB.updateState(transferRecord.id, TransferState.PART_COMPLETED)
                 updateProgress()
                 Result.success(outputData)
             } ?: run {
                 throw IllegalStateException("Etag is empty")
-            }
-        }
-    }
-
-    private val shouldRetry = !isStopped && runAttemptCount < maxRetryCount
-
-    @OptIn(InternalApi::class)
-    private fun ByteStream.Companion.chunk(
-        file: File,
-        start: Long,
-        length: Long
-    ): ByteStream {
-        return object : ByteStream.OneShotStream() {
-            override fun readFrom(): SdkByteReadChannel {
-                return file.readChannel(start, start + length - 1)
             }
         }
     }
@@ -95,30 +76,4 @@ internal class PartUploadTransferWorker(
             false
         )
     }
-
-    // TODO("Progress listener support is missing in kotlin sdk")
-    /*inner class TransferProgressListener(private val transferRecord: TransferRecord) :
-        ProgressListener {
-
-        private var resetProgress = false
-
-        override fun progressChanged(progressEvent: ProgressEvent) {
-            if (!resetProgress) {
-                transferRecord.bytesCurrent += progressEvent.bytesTransferred
-                *//*transferStatusUpdater.getMultiPartTransferListener(transferRecord.mainUploadId)
-                    ?.progressChanged(progressEvent)*//*
-            }
-        }
-
-        fun resetProgress() {
-            resetProgress = true
-            *//*transferStatusUpdater.getMultiPartTransferListener(transferRecord.mainUploadId)
-                ?.progressChanged(
-                    ProgressEvent(
-                        ProgressEvent.RESET_EVENT_CODE,
-                        transferRecord.bytesCurrent
-                    )
-                )*//*
-        }
-    }*/
 }

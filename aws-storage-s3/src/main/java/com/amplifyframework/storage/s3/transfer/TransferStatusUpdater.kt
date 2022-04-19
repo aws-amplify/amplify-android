@@ -38,7 +38,9 @@ internal class TransferStatusUpdater private constructor(
     private val transferStatusListenerMap:
         MutableMap<Int, MutableList<WeakReference<TransferListener>>> by lazy { ConcurrentHashMap() }
     private val transferWorkInfoIdMap: MutableMap<String, Int> by lazy { ConcurrentHashMap() }
-    // private val multiPartTransferStatusListener: MutableMap<Int, MultiPartUploadTaskListener> by lazy { ConcurrentHashMap() }
+    private val multiPartTransferStatusListener: MutableMap<Int, MultiPartUploadTaskListener> by lazy {
+        ConcurrentHashMap()
+    }
     val activeTransferMap = object : AbstractMutableMap<Int, TransferRecord>() {
 
         val transferRecordMap = mutableMapOf<Int, TransferRecord>()
@@ -166,20 +168,19 @@ internal class TransferStatusUpdater private constructor(
         }
     }
 
-    /*@Synchronized
+    @Synchronized
     fun registerMultiPartTransferListener(
         transferRecordId: Int,
         transferListener: MultiPartUploadTaskListener
     ) {
-        TODO("Add back when progress listener is available")
-        *//*if (!multiPartTransferStatusListener.containsKey(transferRecordId)) {
+        if (!multiPartTransferStatusListener.containsKey(transferRecordId)) {
             multiPartTransferStatusListener[transferRecordId] = transferListener
-        }*//*
-    }*/
+        }
+    }
 
-    /*fun getMultiPartTransferListener(transferRecordId: Int): MultiPartUploadTaskListener? {
+    fun getMultiPartTransferListener(transferRecordId: Int): MultiPartUploadTaskListener? {
         return multiPartTransferStatusListener[transferRecordId]
-    }*/
+    }
 
     @Synchronized
     fun addWorkRequest(workRequestId: String, transferRecordId: Int, isChainedRequest: Boolean) {
@@ -201,7 +202,9 @@ internal class TransferStatusUpdater private constructor(
 
     @Synchronized
     fun unregisterAllListener(transferRecordId: Int) {
-        transferStatusListenerMap.remove(transferRecordId)
-        // TODO(multiPartTransferStatusListener.remove(transferRecordId))
+        mainHandler.post {
+            transferStatusListenerMap.remove(transferRecordId)
+            multiPartTransferStatusListener.remove(transferRecordId)
+        }
     }
 }

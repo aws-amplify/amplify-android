@@ -180,6 +180,10 @@ data class TransferRecord(
                 transferStatusUpdater,
                 transferDB
             )
+            transferStatusUpdater.registerMultiPartTransferListener(
+                id,
+                MultiPartUploadTaskListener(this, transferDB, transferStatusUpdater)
+            )
         } else {
             enqueueTransfer(pluginKey, workManager, workerObserver, transferStatusUpdater)
         }

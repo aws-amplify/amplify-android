@@ -23,6 +23,7 @@ import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
+import com.amplifyframework.storage.s3.transfer.UploadProgressListener
 
 internal class SinglePartUploadWorker(
     private val s3: S3Client,
@@ -32,43 +33,13 @@ internal class SinglePartUploadWorker(
     workerParameters: WorkerParameters
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
-    // private lateinit var transferProgressListener: TransferProgressListener
+    private lateinit var uploadProgressListener: UploadProgressListener
 
     override suspend fun performWork(): Result {
-        val putObjectRequest = createPutObjectRequest(transferRecord)
-        s3.putObject(putObjectRequest).let {
-            return Result.success(outputData)
+        uploadProgressListener = UploadProgressListener(transferRecord, transferStatusUpdater)
+        val putObjectRequest = createPutObjectRequest(transferRecord, uploadProgressListener)
+        return s3.putObject(putObjectRequest).let {
+            Result.success(outputData)
         }
     }
-
-    /*inner class TransferProgressListener(private val transferRecord: TransferRecord) :
-        ProgressListener {
-        private var bytesTransferredSoFar = 0L
-        private var resetProgress = false
-
-        @Synchronized
-        override fun progressChanged(progressEvent: ProgressEvent) {
-            progressEvent.eventCode.takeIf { it == ProgressEvent.RESET_EVENT_CODE }?.let {
-                bytesTransferredSoFar = 0L
-                transferRecord.bytesCurrent = bytesTransferredSoFar
-                updateProgress(false)
-                resetProgress = true
-            } ?: run {
-                bytesTransferredSoFar += progressEvent.bytesTransferred
-                transferRecord.bytesCurrent = bytesTransferredSoFar
-                updateProgress(true)
-            }
-        }
-
-        private fun updateProgress(notifyListener: Boolean) {
-            if (!resetProgress) {
-                transferStatusUpdater.updateProgress(
-                    transferRecord.id,
-                    transferRecord.bytesCurrent,
-                    transferRecord.bytesTotal,
-                    notifyListener
-                )
-            }
-        }
-    }*/
 }

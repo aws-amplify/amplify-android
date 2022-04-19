@@ -189,47 +189,4 @@ internal class TransferWorkerObserver private constructor(
                 .removeObserver(this@TransferWorkerObserver)
         }
     }
-
-    /*
-    TODO(implement when progress listener is supported by kotlin sdk)
-    internal inner class MultiPartUploadTaskListener(private val transferRecord: TransferRecord) :
-        ProgressListener {
-
-        private var totalBytesTransferred: AtomicLong = AtomicLong(0L)
-
-        init {
-            val previouslyTransferBytes =
-                transferDB.queryBytesTransferredByMainUploadId(transferRecord.id)
-            totalBytesTransferred.getAndAdd(previouslyTransferBytes)
-        }
-
-        override fun progressChanged(progressEvent: ProgressEvent?) {
-            progressEvent?.let {
-                if (progressEvent.eventCode == ProgressEvent.RESET_EVENT_CODE) {
-                    totalBytesTransferred.getAndAdd(progressEvent.bytesTransferred * -1)
-                    if (totalBytesTransferred.get() < 0) {
-                        totalBytesTransferred.set(0L)
-                    }
-                    transferRecord.bytesCurrent = totalBytesTransferred.get()
-                    updateProgress(false)
-                } else {
-                    totalBytesTransferred.getAndAdd(progressEvent.bytesTransferred)
-                    transferRecord.bytesCurrent = totalBytesTransferred.get()
-                    if (transferRecord.bytesCurrent > transferRecord.bytesTotal) {
-                        transferRecord.bytesCurrent = transferRecord.bytesTotal
-                    }
-                    updateProgress(true)
-                }
-            }
-        }
-
-        private fun updateProgress(notifyListener: Boolean) {
-            transferStatusUpdater.updateProgress(
-                transferRecord.id,
-                transferRecord.bytesCurrent,
-                transferRecord.bytesTotal,
-                notifyListener
-            )
-        }
-    }*/
 }

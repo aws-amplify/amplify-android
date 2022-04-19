@@ -19,7 +19,10 @@ import android.content.Context
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
-import aws.smithy.kotlin.runtime.content.writeToFile
+import aws.smithy.kotlin.runtime.content.ByteStream
+import aws.smithy.kotlin.runtime.io.writeChannel
+import aws.smithy.kotlin.runtime.util.InternalApi
+import com.amplifyframework.storage.s3.transfer.DownloadProgressListener
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.File
@@ -35,10 +38,12 @@ internal class DownloadWorker(
     workerParameters: WorkerParameters
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
-    // private lateinit var transferProgressListener: DownloadProgressListener
+    private lateinit var downloadProgressListener: DownloadProgressListener
+    private val bufferSize = 16 * 1000
 
+    @OptIn(InternalApi::class)
     override suspend fun performWork(): Result {
-        // transferProgressListener = DownloadProgressListener(transferRecord)
+        downloadProgressListener = DownloadProgressListener(transferRecord, transferStatusUpdater)
         val file = File(transferRecord.file)
         val downloadedBytes = file.length()
         val getObjectRequest = GetObjectRequest {
@@ -46,55 +51,29 @@ internal class DownloadWorker(
             bucket = transferRecord.bucketName
             range = downloadedBytes.toString()
         }
-        // TODO("Append userAgent")
-        // TODO("Attach progress listener")
         return s3.getObject(getObjectRequest) { response ->
             val totalBytes = response.contentLength
             transferRecord.bytesTotal = totalBytes
             transferRecord.bytesCurrent = downloadedBytes
             file.parentFile?.takeIf { !it.exists() }?.mkdirs()
-            response.body?.writeToFile(file)
+            val byteArray = ByteArray(bufferSize)
+            val byteStream = response.body as ByteStream.OneShotStream
+            var bytesRead: Int
+            file.writeChannel().use { channel ->
+                while (byteStream.readFrom().readAvailable(byteArray)
+                    .also { bytesRead = it } != -1
+                ) {
+                    channel.writeAvailable(byteArray)
+                    downloadProgressListener.progressChanged(bytesRead.toLong())
+                }
+            }
             transferStatusUpdater.updateProgress(
                 transferRecord.id,
-                downloadedBytes,
+                totalBytes,
                 totalBytes,
                 true
             )
             Result.success(outputData)
         }
     }
-
-    // TODO("Progress listener support is missing in kotlin sdk")
-    /*inner class DownloadProgressListener(private val transferRecord: TransferRecord) :
-        ProgressListener {
-        private var bytesTransferredSoFar = 0L
-        private var resetProgress = false
-
-        init {
-            bytesTransferredSoFar = transferRecord.bytesCurrent
-        }
-
-        @Synchronized
-        override fun progressChanged(progressEvent: ProgressEvent) {
-            progressEvent.eventCode.takeIf { it == ProgressEvent.RESET_EVENT_CODE }?.let {
-                bytesTransferredSoFar = 0L
-                resetProgress = true
-            } ?: run {
-                bytesTransferredSoFar += progressEvent.bytesTransferred
-                transferRecord.bytesCurrent = bytesTransferredSoFar
-                updateProgress()
-            }
-        }
-
-        private fun updateProgress() {
-            if (!resetProgress) {
-                transferStatusUpdater.updateProgress(
-                    transferRecord.id,
-                    transferRecord.bytesCurrent,
-                    transferRecord.bytesTotal,
-                    true
-                )
-            }
-        }
-    }*/
 }
