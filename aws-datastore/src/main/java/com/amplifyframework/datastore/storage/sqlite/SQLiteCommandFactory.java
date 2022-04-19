@@ -502,8 +502,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
             // Reference the foreign key and primary key using the corresponding table's alias.
             String foreignKeyName = foreignKey.getQuotedColumnName().replace(table.getName(), tableAlias);
-            //String foreignKeyName = Wrap.inBackticks(tableAlias) + "." +
-            // Wrap.inBackticks(SQLiteTable.getPrimaryKey());
             String ownedTablePrimaryKeyName = ownedTable.getPrimaryKeyColumnName().replace(ownedTableName,
                     ownedTableAlias);
             joinStatement.append(SqlKeyword.ON)

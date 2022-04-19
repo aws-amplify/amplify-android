@@ -453,7 +453,6 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     existingItem,
                     modelSchema);
             @SuppressWarnings("unchecked") // cast SerializedModel to Model
-                    //TODOPM: fix id passed into the instance
             PendingMutation<T> mergedPendingMutation = (PendingMutation<T>) PendingMutation.instance(
                     mergedSerializedModel,
                     modelSchema,
