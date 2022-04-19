@@ -239,7 +239,7 @@ public final class SQLiteColumn {
         /**
          * Sets the name of field that this foreign key refers to.
          * This should be null if this is column is not a foreign key.
-         * @param ownedField the name of table that this foreign key refers to
+         * @param ownedField the name of field that this foreign key refers to
          * @return builder instance with given type
          */
         public Builder ownerField(String ownedField) {
