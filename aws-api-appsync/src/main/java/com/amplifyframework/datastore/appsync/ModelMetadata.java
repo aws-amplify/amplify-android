@@ -63,7 +63,7 @@ public final class ModelMetadata implements Model {
 
     /**
      * Gets ID.
-     * @return ID
+     * @return identifier
      */
     @NonNull
     public String resolveIdentifier() {
