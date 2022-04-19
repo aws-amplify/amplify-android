@@ -175,10 +175,11 @@ public final class AWSS3StorageService implements StorageService {
     /**
      * List items inside an S3 path.
      * @param path The path to list items from
+     * @param prefix path appended to S3 keys
      * @return A list of parsed items
      */
     @NonNull
-    public List<StorageItem> listFiles(@NonNull String path) {
+    public List<StorageItem> listFiles(@NonNull String path, @NonNull String prefix) {
         startServiceIfNotAlreadyStarted();
         ArrayList<StorageItem> itemList = new ArrayList<>();
         ListObjectsV2Request request =
@@ -191,7 +192,7 @@ public final class AWSS3StorageService implements StorageService {
             for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
                 // Remove the access level prefix from service key
                 String serviceKey = objectSummary.getKey();
-                String amplifyKey = S3Keys.extractAmplifyKey(serviceKey);
+                String amplifyKey = S3Keys.extractAmplifyKey(serviceKey, prefix);
 
                 itemList.add(new StorageItem(
                         amplifyKey,
