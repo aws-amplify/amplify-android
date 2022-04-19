@@ -35,7 +35,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
-import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
@@ -179,6 +178,17 @@ open class StateTransitionTestBase {
                     )
                 }
             )
+
+        Mockito.`when`(
+            mockAuthorizationActions.resetAuthorizationAction()
+        )
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
+                    )
+                }
+            )
     }
 
     internal fun setupSRPActions() {
@@ -278,12 +288,6 @@ open class StateTransitionTestBase {
     }
 
     internal fun setupFetchAuthActions() {
-//        Mockito.`when`(mockFetchAwsCredentialsActions.initFetchAWSCredentialsAction(MockitoHelper.anyObject()))
-//            .thenReturn(
-//                Action { dispatcher, _ ->
-//                    dispatcher.send(FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.Fetched(credentials)))
-//                })
-
         Mockito.`when`(
             mockFetchUserPoolTokensActions.refreshFetchUserPoolTokensAction(
                 MockitoHelper.anyObject()
@@ -292,18 +296,12 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        FetchUserPoolTokensEvent(
-                            FetchUserPoolTokensEvent.EventType.Fetched()
+                        FetchAuthSessionEvent(
+                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
                         )
                     )
                 }
             )
-
-//        Mockito.`when`(mockFetchIdentityActions.initFetchIdentityAction(MockitoHelper.anyObject()))
-//            .thenReturn(
-//                Action { dispatcher, _ ->
-//                    dispatcher.send(FetchIdentityEvent(FetchIdentityEvent.EventType.Fetched(credentials)))
-//                })
 
         Mockito.`when`(
             mockFetchAuthSessionActions.configureUserPoolTokensAction(MockitoHelper.anyObject())
@@ -341,6 +339,14 @@ open class StateTransitionTestBase {
                             FetchAuthSessionEvent.EventType.FetchedAuthSession(credentials)
                         )
                     )
+                }
+            )
+
+        Mockito.`when`(
+            mockFetchAuthSessionActions.authorizationSessionEstablished(MockitoHelper.anyObject())
+        )
+            .thenReturn(
+                Action { dispatcher, _ ->
                     dispatcher.send(
                         AuthorizationEvent(
                             AuthorizationEvent.EventType.FetchedAuthSession(credentials)
