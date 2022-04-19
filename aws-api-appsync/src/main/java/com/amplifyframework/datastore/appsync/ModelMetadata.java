@@ -62,7 +62,7 @@ public final class ModelMetadata implements Model {
     }
 
     /**
-     * Gets ID.
+     * Gets identifier.
      * @return identifier
      */
     @NonNull
