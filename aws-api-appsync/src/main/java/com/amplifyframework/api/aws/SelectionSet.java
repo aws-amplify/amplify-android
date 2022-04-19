@@ -266,9 +266,8 @@ public final class SelectionSet {
                     && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
                     && operation != QueryType.SYNC
             ) {
-                Iterator<String> primaryKeyIterator = schema.getPrimaryIndexFields().listIterator();
-                if (primaryKeyIterator.hasNext()) {
-                    result.add(new SelectionSet(primaryKeyIterator.next()));
+                for (String s : schema.getPrimaryIndexFields()) {
+                    result.add(new SelectionSet(s));
                 }
                 return result;
             }
