@@ -38,5 +38,10 @@ public enum AuthChannelEventName {
      * The authorization credentials have expired and require the user to re-sign in to be refreshed. Auth remains in a
      * Signed In authentication state but the user is no longer authorized to perform any operations.
      */
-    SESSION_EXPIRED;
+    SESSION_EXPIRED,
+
+    /**
+     * The account for a user has been deleted.
+     */
+    USER_DELETED;
 }

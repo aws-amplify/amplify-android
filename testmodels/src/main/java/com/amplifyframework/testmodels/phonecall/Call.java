@@ -19,11 +19,11 @@ import java.util.UUID;
 @ModelConfig(pluralName = "Calls")
 public final class Call implements Model {
   public static final QueryField ID = field("Call", "id");
-  public static final QueryField MINUTES = field("Call", "minutes");
+  public static final QueryField STARTTIME = field("Call", "startTime");
   public static final QueryField CALLER = field("Call", "callerId");
   public static final QueryField CALLEE = field("Call", "calleeId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="Int", isRequired = true) Integer minutes;
+  private final @ModelField(targetType="AWSTime", isRequired = true) Temporal.Time startTime;
   private final @ModelField(targetType="Phone", isRequired = true) @BelongsTo(targetName = "callerId", type = Phone.class) Phone caller;
   private final @ModelField(targetType="Phone", isRequired = true) @BelongsTo(targetName = "calleeId", type = Phone.class) Phone callee;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
@@ -32,8 +32,8 @@ public final class Call implements Model {
       return id;
   }
   
-  public Integer getMinutes() {
-      return minutes;
+  public Temporal.Time getStartTime() {
+      return startTime;
   }
   
   public Phone getCaller() {
@@ -52,9 +52,9 @@ public final class Call implements Model {
       return updatedAt;
   }
   
-  private Call(String id, Integer minutes, Phone caller, Phone callee) {
+  private Call(String id, Temporal.Time startTime, Phone caller, Phone callee) {
     this.id = id;
-    this.minutes = minutes;
+    this.startTime = startTime;
     this.caller = caller;
     this.callee = callee;
   }
@@ -68,7 +68,7 @@ public final class Call implements Model {
       } else {
       Call call = (Call) obj;
       return ObjectsCompat.equals(getId(), call.getId()) &&
-              ObjectsCompat.equals(getMinutes(), call.getMinutes()) &&
+              ObjectsCompat.equals(getStartTime(), call.getStartTime()) &&
               ObjectsCompat.equals(getCaller(), call.getCaller()) &&
               ObjectsCompat.equals(getCallee(), call.getCallee()) &&
               ObjectsCompat.equals(getCreatedAt(), call.getCreatedAt()) &&
@@ -80,7 +80,7 @@ public final class Call implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
-      .append(getMinutes())
+      .append(getStartTime())
       .append(getCaller())
       .append(getCallee())
       .append(getCreatedAt())
@@ -94,7 +94,7 @@ public final class Call implements Model {
     return new StringBuilder()
       .append("Call {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("minutes=" + String.valueOf(getMinutes()) + ", ")
+      .append("startTime=" + String.valueOf(getStartTime()) + ", ")
       .append("caller=" + String.valueOf(getCaller()) + ", ")
       .append("callee=" + String.valueOf(getCallee()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
@@ -103,7 +103,7 @@ public final class Call implements Model {
       .toString();
   }
   
-  public static MinutesStep builder() {
+  public static StartTimeStep builder() {
       return new Builder();
   }
   
@@ -136,12 +136,12 @@ public final class Call implements Model {
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      minutes,
+      startTime,
       caller,
       callee);
   }
-  public interface MinutesStep {
-    CallerStep minutes(Integer minutes);
+  public interface StartTimeStep {
+    CallerStep startTime(Temporal.Time startTime);
   }
   
 
@@ -161,9 +161,9 @@ public final class Call implements Model {
   }
   
 
-  public static class Builder implements MinutesStep, CallerStep, CalleeStep, BuildStep {
+  public static class Builder implements StartTimeStep, CallerStep, CalleeStep, BuildStep {
     private String id;
-    private Integer minutes;
+    private Temporal.Time startTime;
     private Phone caller;
     private Phone callee;
     @Override
@@ -172,15 +172,15 @@ public final class Call implements Model {
         
         return new Call(
           id,
-          minutes,
+          startTime,
           caller,
           callee);
     }
     
     @Override
-     public CallerStep minutes(Integer minutes) {
-        Objects.requireNonNull(minutes);
-        this.minutes = minutes;
+     public CallerStep startTime(Temporal.Time startTime) {
+        Objects.requireNonNull(startTime);
+        this.startTime = startTime;
         return this;
     }
     
@@ -221,16 +221,16 @@ public final class Call implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, Integer minutes, Phone caller, Phone callee) {
+    private CopyOfBuilder(String id, Temporal.Time startTime, Phone caller, Phone callee) {
       super.id(id);
-      super.minutes(minutes)
+      super.startTime(startTime)
         .caller(caller)
         .callee(callee);
     }
     
     @Override
-     public CopyOfBuilder minutes(Integer minutes) {
-      return (CopyOfBuilder) super.minutes(minutes);
+     public CopyOfBuilder startTime(Temporal.Time startTime) {
+      return (CopyOfBuilder) super.startTime(startTime);
     }
     
     @Override

@@ -60,7 +60,7 @@ public class AWSS3StorageListOperationTest {
             {}
         )
         awsS3StorageListOperation.start()
-        Mockito.verify(storageService).listFiles(expectedKey)
+        Mockito.verify(storageService).listFiles(expectedKey, "public/")
     }
 
     @Test
@@ -94,7 +94,7 @@ public class AWSS3StorageListOperationTest {
             {}
         )
         awsS3StorageListOperation.start()
-        Mockito.verify(storageService).listFiles(expectedKey)
+        Mockito.verify(storageService).listFiles(expectedKey, "")
     }
 
     @Test
@@ -128,6 +128,6 @@ public class AWSS3StorageListOperationTest {
             {}
         )
         awsS3StorageListOperation.start()
-        Mockito.verify(storageService).listFiles(expectedKey)
+        Mockito.verify(storageService).listFiles(expectedKey, "publicCustom/")
     }
 }

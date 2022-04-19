@@ -315,4 +315,10 @@ interface Auth {
      */
     @Throws(AuthException::class)
     suspend fun signOut(options: AuthSignOutOptions = AuthSignOutOptions.builder().build())
+
+    /**
+     * Delete the account of the currently signed in user.
+     */
+    @Throws(AuthException::class)
+    suspend fun deleteUser()
 }

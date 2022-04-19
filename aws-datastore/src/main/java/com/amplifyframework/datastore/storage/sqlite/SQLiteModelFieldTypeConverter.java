@@ -38,6 +38,12 @@ import com.amplifyframework.logging.Logger;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -125,9 +131,36 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             case DATE:
                 return value instanceof String ? value : ((Temporal.Date) value).format();
             case DATE_TIME:
-                return value instanceof String ? value : ((Temporal.DateTime) value).format();
+                OffsetDateTime offsetDateTime;
+                if (value instanceof String) {
+                    offsetDateTime = OffsetDateTime.parse((String) value);
+                } else {
+                    Temporal.DateTime newValue = (Temporal.DateTime) value;
+                    offsetDateTime = OffsetDateTime.parse(newValue.format());
+                }
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter
+                        .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'");
+                return offsetDateTime.toInstant().atOffset(ZoneOffset.UTC).format(dateTimeFormatter);
             case TIME:
-                return value instanceof String ? value : ((Temporal.Time) value).format();
+                String timeValue;
+                if (value instanceof String) {
+                    timeValue = (String) value;
+                } else {
+                    timeValue = ((Temporal.Time) value).format();
+                }
+                LocalTime localTime;
+                ZoneOffset zoneOffset;
+                try {
+                    OffsetTime offsetTime = OffsetTime.parse(timeValue, DateTimeFormatter.ISO_OFFSET_TIME);
+                    localTime = LocalTime.from(offsetTime);
+                    zoneOffset = ZoneOffset.from(offsetTime);
+                } catch (DateTimeParseException exception) {
+                    localTime = LocalTime.parse(timeValue, DateTimeFormatter.ISO_LOCAL_TIME);
+                    zoneOffset = ZoneOffset.UTC;
+                }
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSSSSS'Z'");
+                return OffsetTime.of(localTime, zoneOffset).withOffsetSameInstant(ZoneOffset.UTC)
+                        .format(timeFormatter);
             case TIMESTAMP:
                 if (value instanceof Integer) {
                     return ((Integer) value).longValue();
