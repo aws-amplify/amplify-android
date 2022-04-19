@@ -53,7 +53,8 @@ public final class ModelMetadata implements Model {
             @NonNull String id,
             @Nullable Boolean deleted,
             @Nullable Integer version,
-            @Nullable Temporal.Timestamp lastChangedAt, String typename) {
+            @Nullable Temporal.Timestamp lastChangedAt,
+            @Nullable String typename) {
         this.id = Objects.requireNonNull(id);
         this._deleted = deleted;
         this._version = version;
