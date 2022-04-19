@@ -406,7 +406,7 @@ public final class StorageComponentTest {
                 null
         );
 
-        when(storageService.listFiles(anyString()))
+        when(storageService.listFiles(anyString(), anyString()))
                 .thenReturn(Collections.singletonList(item));
 
         StorageListResult result =
