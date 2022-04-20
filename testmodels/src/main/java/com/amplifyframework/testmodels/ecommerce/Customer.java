@@ -39,8 +39,8 @@ public final class Customer implements Model {
   }
 
   public String getId() {
-        return id;
-    }
+      return id;
+  }
 
   public String getEmail() {
       return email;

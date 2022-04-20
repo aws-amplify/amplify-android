@@ -32,12 +32,6 @@ public final class GroupPublicUPAPIPost implements Model {
       return id;
   }
 
-  @NonNull
-  public String resolveIdentifier() {
-      return id;
-  }
-
-
   public String getName() {
       return name;
   }
