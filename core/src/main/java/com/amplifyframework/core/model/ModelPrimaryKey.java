@@ -139,7 +139,7 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
             StringBuilder id = new StringBuilder();
             try {
                 final ListIterator<String> primaryKeyListIterator = modelSchema.getPrimaryIndexFields().listIterator();
-                if (primaryKeyListIterator.hasNext()) {
+                while (primaryKeyListIterator.hasNext()) {
                     id.append(serializedData.get(primaryKeyListIterator.next()));
                     if (primaryKeyListIterator.hasNext()) {
                         id.append("#");
