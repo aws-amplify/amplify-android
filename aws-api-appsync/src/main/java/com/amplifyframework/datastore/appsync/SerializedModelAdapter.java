@@ -89,14 +89,14 @@ public final class SerializedModelAdapter
                 ModelSchema nestedModelSchema = schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
                 serializedData.put(field.getName(), SerializedModel.builder()
                     .modelSchema(nestedModelSchema)
-                        .serializedData(Collections.singletonMap("id", item.getValue().getAsString()))
+                    .serializedData(Collections.singletonMap("id", item.getValue().getAsString()))
                     .build());
             }
         }
 
         return SerializedModel.builder()
             .modelSchema(modelSchema)
-                .serializedData(serializedData)
+            .serializedData(serializedData)
             .build();
     }
 }

@@ -134,7 +134,7 @@ public final class HybridTemporalSyncInstrumentationTest {
         Map<String, Object> sentData = toMap(meeting);
         SerializedModel sentModel = SerializedModel.builder()
             .modelSchema(modelSchema)
-                .serializedData(sentData)
+            .serializedData(sentData)
             .build();
         HubAccumulator publicationAccumulator =
             HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelSchema.getName(),

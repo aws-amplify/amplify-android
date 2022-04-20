@@ -80,7 +80,7 @@ public final class ModelWithMetadataAdapterTest {
             .put("_lastChangedAt", metadata.getLastChangedAt().getSecondsSinceEpoch())
             .put("_deleted", metadata.isDeleted())
             .put("_version", metadata.getVersion())
-                .put("__typename", metadata.getTypename())
+            .put("__typename", metadata.getTypename())
             .toString();
         String actual = gson.toJson(mwm);
         JSONAssert.assertEquals(expected, actual, true);
