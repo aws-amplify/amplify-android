@@ -39,7 +39,7 @@ internal class DownloadWorker(
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     private lateinit var downloadProgressListener: DownloadProgressListener
-    private val bufferSize = 16 * 1000
+    private val defaultBufferSize = 16 * 1024
 
     @OptIn(InternalApi::class)
     override suspend fun performWork(): Result {
@@ -56,7 +56,10 @@ internal class DownloadWorker(
             transferRecord.bytesTotal = totalBytes
             transferRecord.bytesCurrent = downloadedBytes
             file.parentFile?.takeIf { !it.exists() }?.mkdirs()
-            val byteArray = ByteArray(bufferSize)
+            val bufferSize = takeIf { response.contentLength < defaultBufferSize }?.let {
+                response.contentLength
+            } ?: defaultBufferSize
+            val byteArray = ByteArray(bufferSize.toInt())
             val byteStream = response.body as ByteStream.OneShotStream
             var bytesRead: Int
             file.writeChannel().use { channel ->

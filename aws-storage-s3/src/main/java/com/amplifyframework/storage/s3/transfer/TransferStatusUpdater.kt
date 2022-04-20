@@ -21,7 +21,6 @@ import android.os.Looper
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import java.io.File
-import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -35,8 +34,9 @@ internal class TransferStatusUpdater private constructor(
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val transferStatusListenerMap:
-        MutableMap<Int, MutableList<WeakReference<TransferListener>>> by lazy { ConcurrentHashMap() }
+    private val transferStatusListenerMap: MutableMap<Int, MutableList<TransferListener>> by lazy {
+        ConcurrentHashMap()
+    }
     private val transferWorkInfoIdMap: MutableMap<String, Int> by lazy { ConcurrentHashMap() }
     private val multiPartTransferStatusListener: MutableMap<Int, MultiPartUploadTaskListener> by lazy {
         ConcurrentHashMap()
@@ -108,7 +108,7 @@ internal class TransferStatusUpdater private constructor(
 
         transferStatusListenerMap[transferRecordId]?.forEach { listener ->
             run {
-                mainHandler.post { listener.get()?.onStateChanged(transferRecordId, newState) }
+                mainHandler.post { listener.onStateChanged(transferRecordId, newState) }
             }
         }
 
@@ -132,7 +132,7 @@ internal class TransferStatusUpdater private constructor(
         if (notifyListener) {
             transferStatusListenerMap[transferRecordId]?.forEach {
                 mainHandler.post {
-                    it.get()?.onProgressChanged(
+                    it.onProgressChanged(
                         transferRecordId,
                         bytesCurrent,
                         bytesTotal
@@ -145,7 +145,7 @@ internal class TransferStatusUpdater private constructor(
     @Synchronized
     fun updateOnError(transferRecordId: Int, exception: Exception) {
         transferStatusListenerMap[transferRecordId]?.forEach {
-            mainHandler.post { it.get()?.onError(transferRecordId, exception) }
+            mainHandler.post { it.onError(transferRecordId, exception) }
         }
     }
 
@@ -158,13 +158,12 @@ internal class TransferStatusUpdater private constructor(
     @Synchronized
     fun registerListener(transferRecordId: Int, transferListener: TransferListener) {
         transferStatusListenerMap[transferRecordId]?.let {
-            val weakRefTransferListener = WeakReference(transferListener)
-            if (!it.contains(weakRefTransferListener)) {
-                it.add(weakRefTransferListener)
+            val transferListener = transferListener
+            if (!it.contains(transferListener)) {
+                it.add(transferListener)
             }
         } ?: run {
-            transferStatusListenerMap[transferRecordId] =
-                mutableListOf(WeakReference(transferListener))
+            transferStatusListenerMap[transferRecordId] = mutableListOf(transferListener)
         }
     }
 
@@ -197,7 +196,9 @@ internal class TransferStatusUpdater private constructor(
 
     @Synchronized
     fun unregisterListener(transferRecordId: Int, transferListener: TransferListener) {
-        transferStatusListenerMap[transferRecordId]?.remove(WeakReference(transferListener))
+        mainHandler.post {
+            transferStatusListenerMap[transferRecordId]?.remove(transferListener)
+        }
     }
 
     @Synchronized
