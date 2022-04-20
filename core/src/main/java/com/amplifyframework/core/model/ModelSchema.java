@@ -127,7 +127,7 @@ public final class ModelSchema {
 
             final Model.Type type = modelConfig != null
                     ? modelConfig.type()
-                    : Model.Type.SYSTEM;
+                    : Model.Type.USER;
 
             final String listPluralName = modelConfig != null && !modelConfig.listPluralName().isEmpty()
                     ? modelConfig.listPluralName()

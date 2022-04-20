@@ -35,17 +35,17 @@ public interface Model {
      */
     @NonNull
     default Serializable resolveIdentifier() {
-        String exceptionMessage = "Primary key field not found.";
+        String exceptionMessage = "Primary key field Id not found.";
         try {
             String defaultPrimaryKeyMethod = "getId";
             Method method = this.getClass().getMethod(defaultPrimaryKeyMethod);
             return (Serializable) Objects.requireNonNull(method.invoke(this));
         } catch (IllegalAccessException exception) {
-            throw (new IllegalStateException(exceptionMessage));
+            throw (new IllegalStateException(exceptionMessage, exception));
         } catch (NoSuchMethodException exception) {
-            throw (new IllegalStateException(exceptionMessage));
+            throw (new IllegalStateException(exceptionMessage, exception));
         } catch (InvocationTargetException exception) {
-            throw (new IllegalStateException(exceptionMessage));
+            throw (new IllegalStateException(exceptionMessage, exception));
         }
     }
 

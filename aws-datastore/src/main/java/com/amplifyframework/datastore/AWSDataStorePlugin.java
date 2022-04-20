@@ -66,7 +66,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long LIFECYCLE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(7);
+    private static final long LIFECYCLE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
 
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.

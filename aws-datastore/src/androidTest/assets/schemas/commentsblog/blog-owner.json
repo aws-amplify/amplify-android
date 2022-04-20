@@ -53,5 +53,5 @@
     "modelClass": "com.amplifyframework.core.model.SerializedModel",
     "name": "BlogOwner",
     "pluralName": "BlogOwners",
-    "modelType": "SYSTEM"
+    "modelType": "USER"
 }
