@@ -93,7 +93,7 @@ class SqlQueryProcessor {
         final SQLiteTable table = SQLiteTable.fromSchema(schema);
         final String tableName = table.getName();
         final List<String> primaryKeyList = table.getPrimaryKeyColumns();
-        QueryPredicate matchId = ModelPrimaryKey.Helper.getQueryPredicate(model, tableName, primaryKeyList);
+        final QueryPredicate matchId = ModelPrimaryKey.Helper.getQueryPredicate(model, tableName, primaryKeyList);
 
         final QueryPredicate condition = predicate.and(matchId);
         return sqlCommandProcessor.executeExists(sqlCommandFactory.existsFor(schema, condition));
