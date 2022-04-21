@@ -1,3 +1,10 @@
+## [Release 1.35.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.2)
+
+### Bug Fixes
+- Update logic to extract S3 keys from list api response (#1706)
+
+[See all changes between 1.35.1 and 1.35.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.1...release_v1.35.2)
+
 ## [Release 1.35.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.1)
 
 ### Bug Fixes
