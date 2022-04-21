@@ -1,3 +1,21 @@
+## [Release 0.19.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.2)
+
+### Bug Fixes
+- Update logic to extract S3 keys from list api response (#1706)
+
+[See all changes between 0.19.1 and 0.19.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.1...release-kotlin_v0.19.2)
+
+## [Release 0.19.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.1)
+
+### Bug Fixes
+- **aws-api:** double-encode plus in url path segments (#1252)
+
+### Miscellaneous
+- Conflict resolver fixes in comments. (#1681)
+- Provide default message for GraphQLResponse.Error when null/missing (#1700)
+
+[See all changes between 0.19.0 and 0.19.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.0...release-kotlin_v0.19.1)
+
 ## [Release 0.19.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.0)
 
 ### Features
