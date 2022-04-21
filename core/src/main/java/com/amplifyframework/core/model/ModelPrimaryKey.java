@@ -155,7 +155,7 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
 
         /**
          * Takes in a key value and escapes " with "" and encapsulates with ".
-         * @param key string value of primary key field which need needs to be encapsulated and escaped.
+         * @param key string value of primary key field which needs to be encapsulated and escaped.
          * @return encapsulated and escaped string.
          */
         public static String escapeAndEncapsulateString(String key) {
