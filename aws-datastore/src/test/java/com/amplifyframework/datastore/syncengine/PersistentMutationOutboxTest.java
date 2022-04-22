@@ -351,9 +351,10 @@ public final class PersistentMutationOutboxTest {
      * create a mutation twice.
      * @throws DataStoreException On failure to query storage to assert post-action value of mutation
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void existingCreationIncomingCreationYieldsError() throws DataStoreException, InterruptedException {
+    public void existingCreationIncomingCreationYieldsError() throws AmplifyException, InterruptedException {
         // Arrange an existing creation mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("The Real Papa Tony")
@@ -377,10 +378,11 @@ public final class PersistentMutationOutboxTest {
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
-        PendingMutation.PersistentRecord storedMutation =
-            storage.query(PersistentRecord.class, Where.id(existingCreationId)).get(0);
+        PersistentRecord storedMutation = storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class,
+                existingCreationId)).get(0);
         assertEquals(modelInExistingMutation, converter.fromRecord(storedMutation).getMutatedItem());
-        assertTrue(storage.query(PersistentRecord.class, Where.id(incomingCreationId)).isEmpty());
+        assertTrue(storage.query(PersistentRecord.class,
+                Where.identifier(PersistentRecord.class, incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
@@ -393,9 +395,10 @@ public final class PersistentMutationOutboxTest {
      * something that already exists and is being updated.
      * @throws DataStoreException On failure to to query which mutations are in storage
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void existingUpdateIncomingCreationYieldsError() throws DataStoreException, InterruptedException {
+    public void existingUpdateIncomingCreationYieldsError() throws AmplifyException, InterruptedException {
         // Arrange an existing update mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Tony with improvements applied")
@@ -419,10 +422,11 @@ public final class PersistentMutationOutboxTest {
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
-        PendingMutation.PersistentRecord storedMutation =
-            storage.query(PersistentRecord.class, Where.id(exitingUpdateId)).get(0);
+        PersistentRecord storedMutation = storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class,
+                exitingUpdateId)).get(0);
         assertEquals(modelInExistingMutation, converter.fromRecord(storedMutation).getMutatedItem());
-        assertTrue(storage.query(PersistentRecord.class, Where.id(incomingCreationId)).isEmpty());
+        assertTrue(storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class,
+                incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
@@ -436,9 +440,10 @@ public final class PersistentMutationOutboxTest {
      * something that currently already exists. That's like an "update."
      * @throws DataStoreException On failure to query which mutation is present in storage
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void existingDeletionIncomingCreationYieldsError() throws DataStoreException, InterruptedException {
+    public void existingDeletionIncomingCreationYieldsError() throws AmplifyException, InterruptedException {
         // Arrange an existing deletion mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -462,10 +467,11 @@ public final class PersistentMutationOutboxTest {
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
-        PendingMutation.PersistentRecord storedMutation =
-            storage.query(PersistentRecord.class, Where.id(existingDeletionId)).get(0);
+        PersistentRecord storedMutation = storage.query(PersistentRecord.class,
+                Where.identifier(PersistentRecord.class, existingDeletionId)).get(0);
         assertEquals(modelInExistingMutation, converter.fromRecord(storedMutation).getMutatedItem());
-        assertTrue(storage.query(PersistentRecord.class, Where.id(incomingCreationId)).isEmpty());
+        assertTrue(storage.query(PersistentRecord.class,
+                Where.identifier(PersistentRecord.class, incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
@@ -476,11 +482,12 @@ public final class PersistentMutationOutboxTest {
      * If there is a pending deletion, enqueuing an update will fail, since the thing being
      * updated is not meant to exist.
      * @throws DataStoreException On failure to query storage, for the purpose of asserting the
-     *                            state of mutations after the test action
-     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     *                            state of mutations after the test action.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer.
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void existingDeletionIncomingUpdateYieldsError() throws DataStoreException, InterruptedException {
+    public void existingDeletionIncomingUpdateYieldsError() throws AmplifyException, InterruptedException {
         // Arrange an existing deletion mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -504,10 +511,11 @@ public final class PersistentMutationOutboxTest {
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
-        PendingMutation.PersistentRecord storedMutation =
-            storage.query(PersistentRecord.class, Where.id(existingDeletionId)).get(0);
-        assertEquals(modelInExistingMutation, converter.fromRecord(storedMutation).getMutatedItem());
-        assertTrue(storage.query(PersistentRecord.class, Where.id(incomingUpdateId)).isEmpty());
+            PersistentRecord storedMutation = storage.query(PersistentRecord.class,
+                    Where.identifier(PersistentRecord.class, existingDeletionId)).get(0);
+            assertEquals(modelInExistingMutation, converter.fromRecord(storedMutation).getMutatedItem());
+            assertTrue(storage.query(PersistentRecord.class,  Where.identifier(PersistentRecord.class,
+                    incomingUpdateId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
@@ -522,7 +530,7 @@ public final class PersistentMutationOutboxTest {
      */
     @Test
     public void existingUpdateIncomingUpdateWithConditionAppendsMutation()
-            throws DataStoreException, InterruptedException {
+            throws AmplifyException, InterruptedException {
         // Arrange an existing update mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -546,13 +554,13 @@ public final class PersistentMutationOutboxTest {
         enqueueObserver.assertComplete();
 
         // Assert: the existing mutation is still there, by id ....
-        List<PendingMutation.PersistentRecord> recordsForExistingMutationId =
-            storage.query(PersistentRecord.class, Where.id(existingUpdateId));
+        List<PersistentRecord> recordsForExistingMutationId = storage.query(PersistentRecord.class,
+                Where.identifier(PersistentRecord.class, existingUpdateId));
         assertEquals(1, recordsForExistingMutationId.size());
 
         // Assert: And the new one is also there
         List<PendingMutation.PersistentRecord> recordsForIncomingMutationId =
-            storage.query(PersistentRecord.class, Where.id(incomingUpdateId));
+            storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class, incomingUpdateId));
         assertEquals(1, recordsForIncomingMutationId.size());
 
         // The original mutation should remain as is
@@ -584,12 +592,13 @@ public final class PersistentMutationOutboxTest {
     /**
      * When there is an existing update mutation, and a new update mutation comes in,
      * then we need to remove any existing mutations for that modelId and create the new one.
-     * @throws DataStoreException On failure to query storage for current mutations state
-     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws DataStoreException On failure to query storage for current mutations state.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer.
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
     public void existingUpdateIncomingUpdateWithoutConditionRewritesExistingMutation()
-            throws DataStoreException, InterruptedException {
+            throws AmplifyException, InterruptedException {
         // Arrange an existing update mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -767,12 +776,13 @@ public final class PersistentMutationOutboxTest {
      * When there is an existing creation mutation, and an update comes in,
      * the exiting creation should be updated with the contents of the incoming
      * mutation. The original creation mutation ID should be retained, for ordering.
-     * @throws DataStoreException On failure to query the storage to examine which mutations were saved
-     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws DataStoreException On failure to query the storage to examine which mutations were saved.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer.
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
     public void existingCreationIncomingUpdateRewritesExitingMutation()
-            throws DataStoreException, InterruptedException {
+            throws AmplifyException, InterruptedException {
         // Arrange an existing creation mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -797,12 +807,12 @@ public final class PersistentMutationOutboxTest {
 
         // Assert: the existing mutation is still there, by id ....
         List<PendingMutation.PersistentRecord> recordsForExistingMutationId =
-            storage.query(PersistentRecord.class, Where.id(existingCreationId));
+            storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class, existingCreationId));
         assertEquals(1, recordsForExistingMutationId.size());
 
         // And the new one is not, by ID...
         List<PendingMutation.PersistentRecord> recordsForIncomingMutationId =
-            storage.query(PersistentRecord.class, Where.id(incomingUpdateId));
+            storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class, incomingUpdateId));
         assertEquals(0, recordsForIncomingMutationId.size());
 
         // However, the original mutation has been updated to include the contents of the
@@ -828,10 +838,11 @@ public final class PersistentMutationOutboxTest {
     /**
      * When there is already a creation pending, and then we get a deletion for the same model ID,
      * we should just remove the creation. It means like "never mind, don't actually create."
-     * @throws DataStoreException On failure to query storage for mutations state after test action
+     * @throws DataStoreException On failure to query storage for mutations state after test action.
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void existingCreationIncomingDeletionRemovesExisting() throws DataStoreException {
+    public void existingCreationIncomingDeletionRemovesExisting() throws AmplifyException {
         BlogOwner joe = BlogOwner.builder()
             .name("Original Joe")
             .build();
@@ -843,8 +854,10 @@ public final class PersistentMutationOutboxTest {
         String incomingDeletionId = incomingDeletion.getMutationId().toString();
         mutationOutbox.enqueue(incomingDeletion).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
-        assertTrue(storage.query(PersistentRecord.class, Where.id(existingCreationId)).isEmpty());
-        assertTrue(storage.query(PersistentRecord.class, Where.id(incomingDeletionId)).isEmpty());
+        assertTrue(storage.query(PersistentRecord.class,
+                Where.identifier(PersistentRecord.class, existingCreationId)).isEmpty());
+        assertTrue(storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class,
+                incomingDeletionId)).isEmpty());
 
         // There are no pending mutations.
         assertNull(mutationOutbox.peek());
@@ -857,7 +870,7 @@ public final class PersistentMutationOutboxTest {
      * @throws DataStoreException On failure to query storage to inspect mutation records after test action
      */
     @Test
-    public void existingUpdateIncomingDeletionOverwritesExisting() throws DataStoreException {
+    public void existingUpdateIncomingDeletionOverwritesExisting() throws AmplifyException {
         BlogOwner joe = BlogOwner.builder()
             .name("Original Joe")
             .build();
@@ -871,12 +884,12 @@ public final class PersistentMutationOutboxTest {
 
         // The original mutation ID is preserved.
         List<PendingMutation.PersistentRecord> existingMutationRecords =
-            storage.query(PersistentRecord.class, Where.id(existingUpdateId));
+            storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class, existingUpdateId));
         assertEquals(1, existingMutationRecords.size());
 
         // The new ID was discarded ....
         List<PendingMutation.PersistentRecord> incomingMutationRecords =
-            storage.query(PersistentRecord.class, Where.id(incomingDeletionId));
+            storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class, incomingDeletionId));
         assertEquals(0, incomingMutationRecords.size());
 
         // HOWEVER,
@@ -907,7 +920,7 @@ public final class PersistentMutationOutboxTest {
      * @throws DataStoreException On failure to query storage for records
      */
     @Test
-    public void existingDeletionIncomingDeletionOverwritesExisting() throws DataStoreException {
+    public void existingDeletionIncomingDeletionOverwritesExisting() throws AmplifyException {
         BlogOwner sammy = BlogOwner.builder()
             .name("Sammy Swanson")
             .build();
@@ -920,12 +933,14 @@ public final class PersistentMutationOutboxTest {
 
         // Existing record is still there
         List<PersistentRecord> existingMutationRecords =
-            storage.query(PersistentRecord.class, Where.id(exitingDeletion.getMutationId().toString()));
+            storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class,
+                    exitingDeletion.getMutationId().toString()));
         assertEquals(1, existingMutationRecords.size());
 
         // Incoming is not present
         List<PersistentRecord> incomingMutationRecords =
-            storage.query(PersistentRecord.class, Where.id(incomingDeletion.getMutationId().toString()));
+            storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class,
+                    incomingDeletion.getMutationId().toString()));
         assertEquals(0, incomingMutationRecords.size());
 
         // Still a deletion, as the next outbox item
@@ -1157,13 +1172,13 @@ public final class PersistentMutationOutboxTest {
             );
     }
 
-    private void assertRecordCountForMutationId(String mutationId, int expectedCount) throws DataStoreException {
+    private void assertRecordCountForMutationId(String mutationId, int expectedCount) throws AmplifyException {
         List<PersistentRecord> recordsForExistingMutationId = getPendingMutationRecordFromStorage(mutationId);
         assertEquals(expectedCount, recordsForExistingMutationId.size());
     }
 
-    private List<PersistentRecord> getPendingMutationRecordFromStorage(String mutationId) throws DataStoreException {
-        return storage.query(PersistentRecord.class, Where.id(mutationId));
+    private List<PersistentRecord> getPendingMutationRecordFromStorage(String mutationId) throws AmplifyException {
+        return storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class, mutationId));
     }
 
     private List<PersistentRecord> getAllPendingMutationRecordFromStorage() throws DataStoreException {

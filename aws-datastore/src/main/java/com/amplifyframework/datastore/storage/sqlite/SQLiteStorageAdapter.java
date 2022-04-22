@@ -32,7 +32,6 @@ import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
-import com.amplifyframework.core.model.ModelPrimaryKey;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
@@ -51,6 +50,7 @@ import com.amplifyframework.datastore.model.CompoundModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.datastore.storage.sqlite.migrations.ModelMigrations;
 import com.amplifyframework.logging.Logger;
@@ -766,11 +766,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 sqlCommandProcessor.execute(sqlCommandFactory.updateFor(modelSchema, item));
                 break;
             case DELETE:
-                LOG.verbose("Deleting item in " + sqliteTable.getName() + " identified by ID: " + item
-                        .getPrimaryKeyString());
-                final QueryPredicate matchId = ModelPrimaryKey.Helper.getQueryPredicate(item, sqliteTable.getName(),
-                        sqliteTable.getPrimaryKeyColumns());
-                sqlCommandProcessor.execute(sqlCommandFactory.deleteFor(modelSchema, matchId));
+                LOG.verbose("Deleting item in " + sqliteTable.getName() + " identified by ID: " +
+                        item.getPrimaryKeyString());
+                final SQLiteColumn primaryKey = sqliteTable.getPrimaryKey();
+                if (primaryKey != null) {
+                    final String primaryKeyName = sqliteTable.getPrimaryKey().getName();
+                    final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName)
+                            .eq(item.getPrimaryKeyString());
+                    sqlCommandProcessor.execute(sqlCommandFactory.deleteFor(modelSchema, matchId));
+                }
                 break;
             default:
                 throw new DataStoreException(

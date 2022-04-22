@@ -57,12 +57,14 @@ public final class Where {
     }
 
     /**
+     * This method is deprecated please use {@link #identifier(Class, Serializable)}  }
      * Factory method that builds the options with a predicate matching the model id and the
      * pagination set to the first result only.
      *
      * @param modelId model identifier.
      * @return options with proper predicate and pagination to match a model by its id.
      */
+    @Deprecated
     public static QueryOptions id(@NonNull final String modelId) {
         final QueryField idField = QueryField.field(PrimaryKey.fieldName());
         return matches(idField.eq(Objects.requireNonNull(modelId)))
