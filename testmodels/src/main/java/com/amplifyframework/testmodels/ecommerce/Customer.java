@@ -28,15 +28,6 @@ public final class Customer implements Model {
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String email;
   private final @ModelField(targetType="String") String username;
-  private CustomerPrimaryKey customerPrimaryKey;
-
-  @NonNull
-  public Serializable resolveIdentifier() {
-      if (customerPrimaryKey == null) {
-          customerPrimaryKey = new CustomerPrimaryKey(email);
-      }
-      return customerPrimaryKey;
-  }
 
   public String getId() {
       return id;
@@ -203,13 +194,6 @@ public final class Customer implements Model {
      public CopyOfBuilder username(String username) {
       return (CopyOfBuilder) super.username(username);
     }
-  }
-
-  public class CustomerPrimaryKey extends ModelPrimaryKey<Customer>{
-      private static final long serialVersionUID = 1L;
-      public CustomerPrimaryKey(String email) {
-          super(email, "");
-      }
   }
   
 }
