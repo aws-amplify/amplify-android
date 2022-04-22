@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
@@ -93,10 +94,11 @@ public final class SQLiteStorageAdapterClearTest {
      * Then call clear and verify that the database file is re-created
      * and is writable.
      * @throws DataStoreException bubbles up exceptions thrown from the adapter
-     * @throws InterruptedException If interrupted while test observer awaits terminal result
+     * @throws InterruptedException If interrupted while test observer awaits terminal result.
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void clearDeletesAndRecreatesDatabase() throws DataStoreException, InterruptedException {
+    public void clearDeletesAndRecreatesDatabase() throws AmplifyException, InterruptedException {
         assertDbFileExists();
         assertEquals(0, fileObserver.createFileEventCount);
         assertEquals(0, fileObserver.deleteFileEventCount);
@@ -147,14 +149,16 @@ public final class SQLiteStorageAdapterClearTest {
         fail("Could not find " + blogger + " in event observer.");
     }
 
-    private <T extends Model> void assertRecordIsInDb(T item) throws DataStoreException {
-        List<? extends Model> results = adapter.query(item.getClass(), Where.id(item.getPrimaryKeyString()));
+    private <T extends Model> void assertRecordIsInDb(T item) throws AmplifyException {
+        List<? extends Model> results = adapter.query(item.getClass(),
+                Where.identifier(item.getClass(), item.getPrimaryKeyString()));
         assertEquals(1, results.size());
         assertEquals(item, results.get(0));
     }
 
-    private <T extends Model> void assertRecordIsNotInDb(T item) throws DataStoreException {
-        List<? extends Model> results = adapter.query(item.getClass(), Where.id(item.getPrimaryKeyString()));
+    private <T extends Model> void assertRecordIsNotInDb(T item) throws AmplifyException {
+        List<? extends Model> results = adapter.query(item.getClass(),
+                Where.identifier(item.getClass(), item.getPrimaryKeyString()));
         assertNotNull(results);
         assertEquals(0, results.size());
     }
