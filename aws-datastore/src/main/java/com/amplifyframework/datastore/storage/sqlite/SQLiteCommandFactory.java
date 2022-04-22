@@ -55,6 +55,10 @@ import java.util.Set;
  * {@link Model} and {@link ModelSchema}.
  */
 final class SQLiteCommandFactory implements SQLCommandFactory {
+    /**
+     * Undefined is the name of the index annotation created by codegen for custom primary key based on the design for
+     * Custom primary key.
+     */
     public static final String UNDEFINED = "undefined";
 
     private final SchemaRegistry schemaRegistry;
@@ -103,31 +107,32 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     public Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         Set<SqlCommand> indexCommands = new HashSet<>();
-
         for (ModelIndex modelIndex : modelSchema.getIndexes().values()) {
-            final StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("CREATE INDEX IF NOT EXISTS")
-                    .append(SqlKeyword.DELIMITER)
-                    .append(Wrap.inBackticks(getIndexName(modelIndex.getIndexName(), modelIndex.getIndexFieldNames())))
-                    .append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.ON)
-                    .append(SqlKeyword.DELIMITER)
-                    .append(Wrap.inBackticks(table.getName()))
-                    .append(SqlKeyword.DELIMITER);
+            if (shouldCreateIndex(modelIndex)) {
+                final StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("CREATE INDEX IF NOT EXISTS")
+                        .append(SqlKeyword.DELIMITER)
+                        .append(Wrap.inBackticks(getIndexName(modelIndex.getIndexName(),
+                                modelIndex.getIndexFieldNames())))
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.ON)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(Wrap.inBackticks(table.getName()))
+                        .append(SqlKeyword.DELIMITER);
 
-            stringBuilder.append("(");
-            Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
-            while (iterator.hasNext()) {
-                final String indexColumnName = iterator.next();
-                stringBuilder.append(Wrap.inBackticks(indexColumnName));
-                if (iterator.hasNext()) {
-                    stringBuilder.append(",").append(SqlKeyword.DELIMITER);
+                stringBuilder.append("(");
+                Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
+                while (iterator.hasNext()) {
+                    final String indexColumnName = iterator.next();
+                    stringBuilder.append(Wrap.inBackticks(indexColumnName));
+                    if (iterator.hasNext()) {
+                        stringBuilder.append(",").append(SqlKeyword.DELIMITER);
+                    }
                 }
+                stringBuilder.append(");");
+                indexCommands.add(new SqlCommand(table.getName(), stringBuilder.toString()));
             }
-            stringBuilder.append(");");
-            indexCommands.add(new SqlCommand(table.getName(), stringBuilder.toString()));
         }
-
         return Immutable.of(indexCommands);
     }
 
@@ -598,5 +603,12 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         }
         builder.append(")");
         return builder;
+    }
+
+    private boolean shouldCreateIndex(ModelIndex modelIndex) {
+        if (modelIndex.getIndexName().equals(UNDEFINED) && modelIndex.getIndexFieldNames().size() == 1) {
+            return false;
+        }
+        return true;
     }
 }
