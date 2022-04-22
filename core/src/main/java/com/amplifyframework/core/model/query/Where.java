@@ -57,10 +57,10 @@ public final class Where {
     }
 
     /**
-     * This method is deprecated please use {@link #identifier(Class, Serializable)}  }
+     * This method is @Deprecated please use {@link #identifier(Class, Serializable)}}
      * Factory method that builds the options with a predicate matching the model id and the
      * pagination set to the first result only.
-     *
+     * @deprecated This method is @Deprecated please use {@link #identifier(Class, Serializable)}}
      * @param modelId model identifier.
      * @return options with proper predicate and pagination to match a model by its id.
      */

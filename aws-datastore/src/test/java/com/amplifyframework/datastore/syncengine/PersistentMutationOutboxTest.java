@@ -511,11 +511,11 @@ public final class PersistentMutationOutboxTest {
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
-            PersistentRecord storedMutation = storage.query(PersistentRecord.class,
-                    Where.identifier(PersistentRecord.class, existingDeletionId)).get(0);
-            assertEquals(modelInExistingMutation, converter.fromRecord(storedMutation).getMutatedItem());
-            assertTrue(storage.query(PersistentRecord.class,  Where.identifier(PersistentRecord.class,
-                    incomingUpdateId)).isEmpty());
+        PersistentRecord storedMutation = storage.query(PersistentRecord.class,
+                Where.identifier(PersistentRecord.class, existingDeletionId)).get(0);
+        assertEquals(modelInExistingMutation, converter.fromRecord(storedMutation).getMutatedItem());
+        assertTrue(storage.query(PersistentRecord.class, Where.identifier(PersistentRecord.class,
+                incomingUpdateId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
@@ -525,8 +525,9 @@ public final class PersistentMutationOutboxTest {
     /**
      * When there is an existing update mutation, and a new update mutation with condition
      * comes in, then the existing one should remain and the new one should be appended.
-     * @throws DataStoreException On failure to query storage for current mutations state
-     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws DataStoreException On failure to query storage for current mutations state.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer.
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
     public void existingUpdateIncomingUpdateWithConditionAppendsMutation()
@@ -867,7 +868,8 @@ public final class PersistentMutationOutboxTest {
      * When there is already an existing update, and then a deletion comes in, we should
      * use the deletion, not the update. No sense in updating the record if you're just going to
      * delete it.
-     * @throws DataStoreException On failure to query storage to inspect mutation records after test action
+     * @throws DataStoreException On failure to query storage to inspect mutation records after test action.
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
     public void existingUpdateIncomingDeletionOverwritesExisting() throws AmplifyException {
@@ -917,7 +919,8 @@ public final class PersistentMutationOutboxTest {
     /**
      * If there is an existing deletion mutation, and then we get another one, update the original
      * with the new one.
-     * @throws DataStoreException On failure to query storage for records
+     * @throws DataStoreException On failure to query storage for records.
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
     public void existingDeletionIncomingDeletionOverwritesExisting() throws AmplifyException {

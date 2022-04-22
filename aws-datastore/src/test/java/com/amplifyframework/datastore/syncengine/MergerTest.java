@@ -387,7 +387,8 @@ public final class MergerTest {
         assertEquals(
             Collections.singletonList(existingMetadata),
             storageAdapter.query(ModelMetadata.class,
-                    Where.identifier(ModelMetadata.class,existingModel.getModelName() + "|" + existingModel.getId()))
+                    Where.identifier(ModelMetadata.class,
+                            existingModel.getModelName() + "|" + existingModel.getId()))
         );
     }
 
@@ -396,8 +397,9 @@ public final class MergerTest {
      * So, this test should always behave like {@link #itemWithLowerVersionIsNotMerged()}.
      * But, it the inputs to the system are technically different, so it is
      * a distinct test in terms of system input/output.
-     * @throws DataStoreException On failure to interact with storage during arrange/verification
-     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws DataStoreException On failure to interact with storage during arrange/verification.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer.
+     *@throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
     public void itemWithoutVersionIsNotMerged() throws AmplifyException, InterruptedException {

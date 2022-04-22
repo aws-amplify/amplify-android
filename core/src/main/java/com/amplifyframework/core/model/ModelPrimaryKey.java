@@ -15,12 +15,8 @@
 
 package com.amplifyframework.core.model;
 
-import com.amplifyframework.core.model.query.predicate.QueryField;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -82,31 +78,6 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
          * Character which is used as delimiter while concatenating primary key fields.
          */
         public static final String PRIMARY_KEY_DELIMITER = "#";
-
-        /**
-         * Helper function which creates a query predicate which returns.
-         * @param model Model to create the predicate from.
-         * @param tableName Table name for which predicate needs to be created.
-         * @param primaryKeyList List of primary key field value list.
-         * @return Query Predicate to query with a unique identifier.
-         */
-        public static QueryPredicate getQueryPredicate(Model model, String tableName, List<String> primaryKeyList) {
-            QueryPredicate matchId = null;
-            if (!(model.resolveIdentifier() instanceof ModelPrimaryKey)) {
-                matchId = QueryField.field(tableName, primaryKeyList.get(0)).eq(model.resolveIdentifier());
-            } else {
-                ModelPrimaryKey<?> primaryKey = (ModelPrimaryKey<?>) model.resolveIdentifier();
-                Iterator<?> sortKeyIterator = primaryKey.sortedKeys().listIterator();
-                for (String key : primaryKeyList) {
-                    if (matchId == null) {
-                        matchId = QueryField.field(tableName, key).eq(primaryKey.key().toString());
-                    } else {
-                        matchId.and(QueryField.field(tableName, key).eq(sortKeyIterator.next()));
-                    }
-                }
-            }
-            return matchId;
-        }
 
         /**
          * Returns string representation of the unique key.
