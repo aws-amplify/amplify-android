@@ -51,6 +51,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -201,10 +202,10 @@ public class SqlCommandTest {
 
     /**
      * Test if {@link ModelSchema} with index returns an expected
-     * CREATE INDEX SQL command.
+     * CREATE INDEX SQL command. The Create Index command should only be generated if the Primary key is composite.
      */
     @Test
-    public void expectedCreateIndexCommandForModelPrimaryKey() {
+    public void expectedCreateIndexCommandNotCreatedForSingleModelPrimaryKey() {
         final ModelIndex index = ModelIndex.builder()
                 .indexName(SQLiteCommandFactory.UNDEFINED)
                 .indexFieldNames(Collections.singletonList("id"))
@@ -219,12 +220,7 @@ public class SqlCommandTest {
         final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
                 .createIndexesFor(modelSchema)
                 .iterator();
-        assertTrue(sqlCommandIterator.hasNext());
-
-        final SqlCommand createIndexSqlCommand = sqlCommandIterator.next();
-        assertEquals("Person", createIndexSqlCommand.tableName());
-        assertEquals("CREATE INDEX IF NOT EXISTS `undefined_id` ON `Person` (`id`);",
-                createIndexSqlCommand.sqlStatement());
+        assertFalse(sqlCommandIterator.hasNext());
     }
 
     /**
