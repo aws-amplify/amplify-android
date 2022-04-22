@@ -306,9 +306,10 @@ public final class MergerTest {
      * shall be rejected from the merger.
      * @throws DataStoreException On failure interacting with local store during test arrange/verify.
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void itemWithLowerVersionIsNotMerged() throws DataStoreException, InterruptedException {
+    public void itemWithLowerVersionIsNotMerged() throws AmplifyException, InterruptedException {
         // Arrange a model and metadata into storage.
         BlogOwner existingModel = BlogOwner.builder()
             .name("Cornelius Daniels")
@@ -336,7 +337,8 @@ public final class MergerTest {
         // And his metadata is the still the same.
         assertEquals(
             Collections.singletonList(existingMetadata),
-            storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getPrimaryKeyString()))
+            storageAdapter.query(ModelMetadata.class,
+                    Where.identifier(ModelMetadata.class, existingModel.getPrimaryKeyString()))
         );
     }
 
@@ -346,9 +348,10 @@ public final class MergerTest {
      * The version must be strictly HIGHER than the current version, in order for the merge to succeed.
      * @throws DataStoreException On failure to interact with storage during arrange/verify
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void itemWithSameVersionIsNotMerged() throws DataStoreException, InterruptedException {
+    public void itemWithSameVersionIsNotMerged() throws AmplifyException, InterruptedException {
         // Arrange a model and metadata into storage.
         BlogOwner existingModel = BlogOwner.builder()
             .name("Cornelius Daniels")
@@ -384,7 +387,7 @@ public final class MergerTest {
         assertEquals(
             Collections.singletonList(existingMetadata),
             storageAdapter.query(ModelMetadata.class,
-                    Where.id(existingModel.getModelName() + "|" + existingModel.getId()))
+                    Where.identifier(ModelMetadata.class,existingModel.getModelName() + "|" + existingModel.getId()))
         );
     }
 
@@ -397,7 +400,7 @@ public final class MergerTest {
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void itemWithoutVersionIsNotMerged() throws DataStoreException, InterruptedException {
+    public void itemWithoutVersionIsNotMerged() throws AmplifyException, InterruptedException {
         // Arrange a model and metadata into storage.
         BlogOwner existingModel = BlogOwner.builder()
             .name("Cornelius Daniels")
@@ -424,7 +427,7 @@ public final class MergerTest {
         // And his metadata is the still the same.
         assertEquals(
             Collections.singletonList(existingMetadata),
-            storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getId()))
+            storageAdapter.query(ModelMetadata.class, Where.identifier(ModelMetadata.class, existingModel.getId()))
         );
     }
 

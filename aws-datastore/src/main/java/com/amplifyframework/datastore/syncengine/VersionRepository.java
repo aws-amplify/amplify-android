@@ -57,7 +57,8 @@ final class VersionRepository {
             // The ModelMetadata for the model uses the same ID as an identifier.
             localStorageAdapter.query(
                 ModelMetadata.class,
-                Where.id(model.getModelName() + "|" + model.getPrimaryKeyString()),
+                Where.identifier(ModelMetadata.class,
+                        model.getModelName() + "|" + model.getPrimaryKeyString()),
                 iterableResults -> {
                     try {
                         emitter.onSuccess(extractVersion(model, iterableResults));
