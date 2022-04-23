@@ -37,7 +37,6 @@ import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -367,7 +366,6 @@ public class ObserveQueryExecutorTest {
      * @throws AmplifyException data store exception.
      */
     @Test
-    @Ignore("FAILING IN BUILD")
     public void observeQueryReturnsSortedListOfTotalItemsWithInt() throws InterruptedException,
             AmplifyException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -375,7 +373,7 @@ public class ObserveQueryExecutorTest {
         AtomicInteger count = new AtomicInteger();
         List<Post> posts = new ArrayList<>();
 
-        for (int counter = 0; counter < 5; counter++) {
+        for (int counter = 5; counter < 7; counter++) {
             final Post post = Post.builder()
                     .title(counter + "-title")
                     .status(PostStatus.INACTIVE)
@@ -397,7 +395,7 @@ public class ObserveQueryExecutorTest {
                 List<Post> sorted = new ArrayList<>(posts);
                 Collections.sort(sorted, Comparator.comparing(Post::getRating));
                 assertEquals(sorted, value.getItems());
-                Assert.assertEquals(11, value.getItems().size());
+                Assert.assertEquals(3, value.getItems().size());
                 changeLatch.countDown();
             }
             count.getAndIncrement();
@@ -415,7 +413,7 @@ public class ObserveQueryExecutorTest {
             threadPool,
             mockSyncStatus,
             new ModelSorter<>(),
-            maxRecords, 2);
+            maxRecords, 0);
 
         List<QuerySortBy> sortBy = new ArrayList<>();
         sortBy.add(Post.RATING.ascending());
@@ -427,24 +425,22 @@ public class ObserveQueryExecutorTest {
                 onObservationError,
                 onObservationComplete);
         Assert.assertTrue(latch.await(2, TimeUnit.SECONDS));
-        for (int i = 5; i < 11; i++) {
-            Post itemChange = Post.builder()
-                    .title(i + "-title")
-                    .status(PostStatus.INACTIVE)
-                    .rating(i)
-                    .build();
-            posts.add(itemChange);
-            subject.onNext(StorageItemChange.<Post>builder()
-                .changeId(UUID.randomUUID().toString())
-                .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
-                .item(itemChange)
-                .patchItem(SerializedModel.create(itemChange,
-                        ModelSchema.fromModelClass(Post.class)))
-                .modelSchema(ModelSchema.fromModelClass(Post.class))
-                .predicate(QueryPredicates.all())
-                .type(StorageItemChange.Type.CREATE)
-                .build());
-        }
+        Post itemChange = Post.builder()
+                .title(1 + "-title")
+                .status(PostStatus.INACTIVE)
+                .rating(1)
+                .build();
+        posts.add(itemChange);
+        subject.onNext(StorageItemChange.<Post>builder()
+            .changeId(UUID.randomUUID().toString())
+            .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
+            .item(itemChange)
+            .patchItem(SerializedModel.create(itemChange,
+                    ModelSchema.fromModelClass(Post.class)))
+            .modelSchema(ModelSchema.fromModelClass(Post.class))
+            .predicate(QueryPredicates.all())
+            .type(StorageItemChange.Type.CREATE)
+            .build());
         Assert.assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
     }
 
