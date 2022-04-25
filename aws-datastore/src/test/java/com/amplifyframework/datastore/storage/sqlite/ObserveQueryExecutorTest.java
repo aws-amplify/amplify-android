@@ -37,6 +37,7 @@ import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -366,13 +367,13 @@ public class ObserveQueryExecutorTest {
      * @throws AmplifyException data store exception.
      */
     @Test
+    @Ignore("Failing because of race condition. Added an integration test instead.")
     public void observeQueryReturnsSortedListOfTotalItemsWithInt() throws InterruptedException,
             AmplifyException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
         AtomicInteger count = new AtomicInteger();
         List<Post> posts = new ArrayList<>();
-
         for (int counter = 5; counter < 7; counter++) {
             final Post post = Post.builder()
                     .title(counter + "-title")
@@ -381,12 +382,12 @@ public class ObserveQueryExecutorTest {
                     .build();
             posts.add(post);
         }
-        int maxRecords = 50;
+        int maxRecords = 1;
         Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         SyncStatus mockSyncStatus = mock(SyncStatus.class);
         when(mockSyncStatus.get(any(), any())).thenReturn(false);
         Subject<StorageItemChange<? extends Model>> subject =
-                PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
+                PublishSubject.<StorageItemChange<? extends Model>>create();
         Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value -> {
             if (count.get() == 0) {
                 Assert.assertTrue(value.getItems().contains(posts.get(0)));
