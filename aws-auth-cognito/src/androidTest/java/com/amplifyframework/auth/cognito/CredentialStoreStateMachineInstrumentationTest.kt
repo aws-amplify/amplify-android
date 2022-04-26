@@ -22,12 +22,13 @@ import com.amplifyframework.auth.cognito.testutils.AuthConfigurationProvider
 import com.amplifyframework.auth.cognito.testutils.CredentialStoreUtil
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.google.gson.Gson
-import junit.framework.Assert.assertTrue
 import org.json.JSONObject
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@Ignore("This class only has 1 test that was ignored hence ignoring the entire class")
 @RunWith(AndroidJUnit4::class)
 class CredentialStoreStateMachineInstrumentationTest {
     private val context = InstrumentationRegistry.getInstrumentation().context
@@ -45,6 +46,7 @@ class CredentialStoreStateMachineInstrumentationTest {
 
     private val authConfigJson = JSONObject(Gson().toJson(configuration))
 
+    @Ignore("Test ignored as this test does not capture the new way credential store is accessed via the credential state machine")
     @Test
     fun test_CredentialStore_Migration_Succeeds_On_Plugin_Configuration() {
         AWSCognitoAuthPlugin().configure(authConfigJson, context)
@@ -55,6 +57,6 @@ class CredentialStoreStateMachineInstrumentationTest {
         )
         val creds = credentialStore.retrieveCredential()
 
-        assertTrue(creds == credential)
+        assert(creds == credential)
     }
 }
