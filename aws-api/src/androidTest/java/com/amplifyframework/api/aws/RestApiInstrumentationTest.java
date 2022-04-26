@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import android.util.Log;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
@@ -27,7 +29,8 @@ import com.amplifyframework.testutils.sync.SynchronousAuth;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -50,12 +53,18 @@ public final class RestApiInstrumentationTest {
      * @throws AmplifyException if configuration fails
      * @throws InterruptedException If {@link SynchronousAuth} initialization fails
      */
-    @Before
-    public void setUp() throws AmplifyException, InterruptedException {
+    @BeforeClass
+    public static void setUp() throws AmplifyException, InterruptedException {
         ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
         api = SynchronousApi.delegatingTo(asyncDelegate);
-        SynchronousAuth.delegatingToCognito(getApplicationContext(), new AWSCognitoAuthPlugin());
 
+        // TODO: delegatingToCognito method directly accesses Amplify.AUTH which might cause
+        // exception if this test is run in different order.
+        try {
+            SynchronousAuth.delegatingToCognito(getApplicationContext(), new AWSCognitoAuthPlugin());
+        } catch (Exception exception) {
+            Log.d("RestApiInstrumentationTest", "Synchronous Auth is already enabled.");
+        }
     }
 
     /**
@@ -154,5 +163,13 @@ public final class RestApiInstrumentationTest {
         final RestResponse response = api.get("iamAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());
         assertFalse("Response should be unsuccessful", response.getCode().isSuccessful());
+    }
+
+    /**
+     * Reset all the static fields.
+     */
+    @AfterClass
+    public static void tearDown() {
+        api = null;
     }
 }

@@ -751,7 +751,6 @@ public final class MultiAuthSyncEngineInstrumentationTest {
                              boolean signInWithOidc,
                              AuthorizationType expectedAuthType)
         throws AmplifyException, IOException {
-        Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
         String tag = modelType.getSimpleName();
 
         MultiAuthTestModelProvider modelProvider =

@@ -33,7 +33,9 @@ import com.amplifyframework.testutils.sync.SynchronousAuth;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -77,8 +79,8 @@ public final class GraphQLInstrumentationTest {
      * @throws AmplifyException From Amplify configuration
      * @throws InterruptedException From failure to initialize auth
      */
-    @Before
-    public void setUp() throws AmplifyException, InterruptedException {
+    @BeforeClass
+    public static void setUp() throws AmplifyException, InterruptedException {
         // Set up and configure API category
         ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
         api = SynchronousApi.delegatingTo(asyncDelegate);
@@ -86,6 +88,23 @@ public final class GraphQLInstrumentationTest {
         // Set up Auth
         synchronousAuth = SynchronousAuth.delegatingToCognito(getApplicationContext(),
                 new AWSCognitoAuthPlugin());
+    }
+
+    /**
+     * Reset all the assigned static fields.
+     */
+    @AfterClass
+    public static void tearDown() {
+        synchronousAuth = null;
+        api = null;
+    }
+
+    /**
+     * Start auth with signedout state.
+     * @throws AuthException if signout fails.
+     */
+    @Before
+    public void setUpAuth() throws AuthException {
         synchronousAuth.signOut();
     }
 
