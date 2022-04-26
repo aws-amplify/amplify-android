@@ -43,7 +43,6 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -154,7 +153,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     OffsetTime offsetTime = OffsetTime.parse(timeValue, DateTimeFormatter.ISO_OFFSET_TIME);
                     localTime = LocalTime.from(offsetTime);
                     zoneOffset = ZoneOffset.from(offsetTime);
-                } catch (DateTimeParseException exception) {
+                } catch (Exception exception) {
                     localTime = LocalTime.parse(timeValue, DateTimeFormatter.ISO_LOCAL_TIME);
                     zoneOffset = ZoneOffset.UTC;
                 }
