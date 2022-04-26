@@ -42,8 +42,6 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.TestStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.logging.AndroidLoggingPlugin;
-import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.multiauth.GroupPrivatePublicUPIAMAPIPost;
