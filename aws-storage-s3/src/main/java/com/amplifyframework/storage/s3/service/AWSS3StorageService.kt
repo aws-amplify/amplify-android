@@ -105,25 +105,27 @@ internal class AWSS3StorageService(
      * @param path The path to list items from
      * @return A list of parsed items
      */
-    override fun listFiles(path: String): MutableList<StorageItem> {
+    override fun listFiles(path: String, prefix: String): MutableList<StorageItem>? {
         val items = mutableListOf<StorageItem>()
         runBlocking {
             val result = s3Client.listObjectsV2Paginated {
-                bucket = s3BucketName
-                prefix = path
+                this.bucket = s3BucketName
+                this.prefix = path
             }
             result.collect {
                 it.contents?.forEach { value ->
                     val key = value.key
                     val lastModified = value.lastModified
                     val eTag = value.eTag
-                    if (key != null && lastModified != null && eTag != null) items += StorageItem(
-                        S3Keys.extractAmplifyKey(key),
-                        value.size,
-                        Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
-                        eTag,
-                        null
-                    )
+                    if (key != null && lastModified != null && eTag != null) {
+                        items += StorageItem(
+                            S3Keys.extractAmplifyKey(key, prefix),
+                            value.size,
+                            Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
+                            eTag,
+                            null
+                        )
+                    }
                 }
             }
         }
