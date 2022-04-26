@@ -17,6 +17,8 @@ package com.amplifyframework.testutils.sync;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RawRes;
@@ -116,8 +118,12 @@ public final class SynchronousAuth {
         AuthCategory authCategory = new AuthCategory();
         authCategory.addPlugin((AuthPlugin<?>) authPlugin);
         authCategory.configure(authCategoryConfiguration, context);
-        Amplify.Auth.addPlugin((AuthPlugin<?>) authPlugin);
-        Amplify.configure(context);
+        try {
+            Amplify.Auth.addPlugin((AuthPlugin<?>) authPlugin);
+            Amplify.configure(context);
+        } catch (Exception exception) {
+            Log.i("SynchronousAuth", "Amplify already called", exception);
+        }
         //TODO: make authCategory confiuration synchronous
         Thread.sleep(AUTH_OPERATION_TIMEOUT_MS);
         return SynchronousAuth.delegatingTo(authCategory);
