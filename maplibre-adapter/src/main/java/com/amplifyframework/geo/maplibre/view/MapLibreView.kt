@@ -222,8 +222,8 @@ class MapLibreView
 
     private fun enableClustering(map: MapboxMap, style: Style) {
         val geoJsonClusterOptions = GeoJsonOptions().withCluster(true)
-                                        .withClusterMaxZoom(clusteringOptions.maxClusterZoomLevel)
-                                        .withClusterRadius(clusteringOptions.clusterRadius)
+            .withClusterMaxZoom(clusteringOptions.maxClusterZoomLevel)
+            .withClusterRadius(clusteringOptions.clusterRadius)
         this.symbolManager = SymbolManager(this, map, style, null, geoJsonClusterOptions).apply {
             iconAllowOverlap = true
             iconIgnorePlacement = true
@@ -237,11 +237,17 @@ class MapLibreView
         val circleColorProperty = if (clusteringOptions.clusterColorSteps.isEmpty()) {
             PropertyFactory.circleColor(clusteringOptions.clusterColor)
         } else {
-            val circleColorStops = clusteringOptions.clusterColorSteps.toSortedMap().flatMap { (pointCount, clusterColor) ->
-                mutableListOf(Expression.stop(pointCount, Expression.color(clusterColor)))
-            }.toTypedArray()
-            PropertyFactory.circleColor(Expression.step(Expression.get("point_count"),
-                Expression.color(clusteringOptions.clusterColor), *circleColorStops))
+            val circleColorStops =
+                clusteringOptions.clusterColorSteps.toSortedMap().flatMap { (pointCount, clusterColor) ->
+                    mutableListOf(Expression.stop(pointCount, Expression.color(clusterColor)))
+                }.toTypedArray()
+            PropertyFactory.circleColor(
+                Expression.step(
+                    Expression.get("point_count"),
+                    Expression.color(clusteringOptions.clusterColor),
+                    *circleColorStops
+                )
+            )
         }
 
         // Change the circle radius based on zoom level
@@ -249,8 +255,9 @@ class MapLibreView
             Expression.exponential(1.75),
             Expression.zoom(),
             Expression.stop(map.minZoomLevel, 60),
-            Expression.stop(clusteringOptions.maxClusterZoomLevel, 20))
-        
+            Expression.stop(clusteringOptions.maxClusterZoomLevel, 20)
+        )
+
         clusterCircleLayer.setProperties(
             circleColorProperty,
             PropertyFactory.circleRadius(circleRadiusExpression)
