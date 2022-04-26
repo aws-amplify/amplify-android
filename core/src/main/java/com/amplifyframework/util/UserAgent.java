@@ -224,7 +224,7 @@ public final class UserAgent {
         @Override
         public String toString() {
             return String.format(
-                "%s:%s md/%s/%s md/locale/%s_%s)",
+                "%s:%s md/%s/%s md/locale/%s_%s",
                 libraryName, libraryVersion,
                 deviceManufacturer, deviceName,
                 userLanguage, userRegion
