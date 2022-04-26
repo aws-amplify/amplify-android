@@ -29,11 +29,13 @@ import org.json.JSONObject
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 /**
  * Tests various functionalities related to Maps API in [AWSLocationGeoPlugin].
  */
+@Ignore("Geo category is not available in dev-preview")
 class MapsApiTest {
     private var auth: SynchronousAuth? = null
     private var geo: SynchronousGeo? = null

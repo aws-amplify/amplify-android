@@ -32,11 +32,13 @@ import java.util.UUID
 import kotlin.random.Random.Default.nextDouble
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 /**
  * Tests various functionalities related to Search API in [AWSLocationGeoPlugin].
  */
+@Ignore("Geo category is not available in dev-preview")
 class SearchApiTest {
     private var auth: SynchronousAuth? = null
     private var geo: SynchronousGeo? = null
