@@ -765,6 +765,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                         authorizationState.signedInData.username
                     )
                 }
+                else -> {
+                    // no-op
+                }
             }
             semaphore.release()
         }
