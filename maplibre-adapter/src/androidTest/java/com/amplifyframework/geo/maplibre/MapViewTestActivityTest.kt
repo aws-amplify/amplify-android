@@ -32,8 +32,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Ignore
 import org.junit.Test
 
+@Ignore("Geo category is not available in dev-preview")
 class MapViewTestActivityTest {
 
     /**
