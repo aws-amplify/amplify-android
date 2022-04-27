@@ -3,7 +3,7 @@
 ### Miscellaneous
 - Utilizes Amplify categories based on [AWS SDK for Kotlin](https://github.com/awslabs/aws-sdk-kotlin).
 
-[See all changes between 0.19.1 and 0.19.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.2...release-kotlin_v0.20.0-dev-preview.0)
+[See all changes between 0.19.2 and 0.20.0-dev-preview.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.2...release-kotlin_v0.20.0-dev-preview.0)
 
 ## [Release 0.19.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.2)
 

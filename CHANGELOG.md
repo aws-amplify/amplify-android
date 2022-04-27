@@ -1,4 +1,4 @@
-## [Release 1.36.0-dev-preview.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.2)
+## [Release 1.36.0-dev-preview.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.0-dev-preview.0)
 ### ⚠ BREAKING CHANGES
 - The escape hatch for dev-preview supported plugins will no longer return AWSMobileClient
 
