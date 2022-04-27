@@ -65,7 +65,8 @@ class SearchApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Test(expected = GeoException::class)
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test(expected = GeoException::class)
     fun cannotSearchByTextWithoutAuth() {
         signOutFromCognito()
         val query = UUID.randomUUID().toString()
@@ -79,7 +80,8 @@ class SearchApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Test(expected = GeoException::class)
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test(expected = GeoException::class)
     fun cannotSearchByCoordinatesWithoutAuth() {
         signOutFromCognito()
         val coordinates = Coordinates(
@@ -97,7 +99,8 @@ class SearchApiTest {
      * Both fetched [GeoSearchResult] and [GeoSearchResult.places] are guaranteed
      * to be non-null. There is no guarantee that result is not empty (no match).
      */
-    @Test
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test
     fun searchByTextReturnsResult() {
         signInWithCognito()
         val query = UUID.randomUUID().toString()
@@ -113,7 +116,8 @@ class SearchApiTest {
      * Both fetched [GeoSearchResult] and [GeoSearchResult.places] are guaranteed
      * to be non-null. Searching by coordinates will always return at least one place.
      */
-    @Test
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test
     fun searchByCoordinatesReturnsNonEmptyResult() {
         signInWithCognito()
         val coordinates = Coordinates(

@@ -64,7 +64,8 @@ class MapsApiTest {
      * Both "layers" and "sources" are critical information required for rendering
      * a map, so assert that both fields exist in the document.
      */
-    @Test
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test
     fun styleDescriptorLoadsProperly() {
         signInWithCognito()
         val style = geo?.getMapStyleDescriptor(GetMapStyleDescriptorOptions.defaults())
@@ -84,7 +85,8 @@ class MapsApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Test(expected = GeoException::class)
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test(expected = GeoException::class)
     fun cannotFetchStyleWithoutAuth() {
         signOutFromCognito()
         // should not be authorized to fetch map resource from Amazon Location Service
