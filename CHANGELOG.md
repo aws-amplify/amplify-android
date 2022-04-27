@@ -1,10 +1,10 @@
 ## [Release 1.36.0-dev-preview.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.0-dev-preview.0)
 ### ⚠ BREAKING CHANGES
-- The escape hatch for dev-preview supported plugins will no longer return AWSMobileClient
+- The escape hatch for dev-preview supported plugins will no longer return AWSMobileClient.
 
 ### Features
 - **Auth**:
-  - Redesigned AWS Cognito Plugin architecture using state machines. Dependency on AWSMobileClient
+  - Redesigned AWS Cognito Plugin architecture using state machines.
   - Dependency on `AWSMobileClient` is replaced with [AWS SDK for Kotlin](https://github.com/awslabs/aws-sdk-kotlin).
 - **Storage** :
   - Removed dependency on AWS TransferUtility and other improvements
