@@ -46,7 +46,7 @@ class CredentialStoreStateMachineInstrumentationTest {
 
     private val authConfigJson = JSONObject(Gson().toJson(configuration))
 
-    @Ignore("Test ignored as this test does not capture the new way credential store is accessed via the credential state machine")
+    @Ignore("Test needs to be changed as credential store is not publicly accessible anymore")
     @Test
     fun test_CredentialStore_Migration_Succeeds_On_Plugin_Configuration() {
         AWSCognitoAuthPlugin().configure(authConfigJson, context)

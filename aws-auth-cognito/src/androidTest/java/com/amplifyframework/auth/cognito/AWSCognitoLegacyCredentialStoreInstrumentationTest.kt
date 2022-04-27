@@ -39,7 +39,7 @@ class AWSCognitoLegacyCredentialStoreInstrumentationTest {
     @Before
     fun setup() {
         store = AWSCognitoLegacyCredentialStore(context, configuration)
-        //TODO: Pull the appClientID from the configuration instead of hardcoding
+        // TODO: Pull the appClientID from the configuration instead of hardcoding
         CredentialStoreUtil.setupLegacyStore(context, "userPoolAppClientId", "identityPoolId")
     }
 

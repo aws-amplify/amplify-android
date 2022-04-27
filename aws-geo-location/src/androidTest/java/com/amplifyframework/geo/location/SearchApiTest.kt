@@ -33,7 +33,6 @@ import kotlin.random.Random.Default.nextDouble
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Ignore
-import org.junit.Test
 
 /**
  * Tests various functionalities related to Search API in [AWSLocationGeoPlugin].

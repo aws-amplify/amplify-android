@@ -30,7 +30,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
-import org.junit.Test
 
 /**
  * Tests various functionalities related to Maps API in [AWSLocationGeoPlugin].

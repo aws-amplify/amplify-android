@@ -21,7 +21,6 @@ import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
-import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
@@ -36,7 +35,6 @@ import com.amplifyframework.testutils.sync.SynchronousStorage;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
-import org.junit.Test;
 
 import java.io.File;
 import java.util.Iterator;

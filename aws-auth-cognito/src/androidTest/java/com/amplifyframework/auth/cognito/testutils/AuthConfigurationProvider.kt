@@ -30,8 +30,8 @@ object AuthConfigurationProvider {
                 )
             ),
             CognitoUserPool(
-                //Note that com.amplifyframework.auth.cognito.AWSCognitoLegacyCredentialStoreInstrumentationTest.setup
-                //depends on hardcoded value of AppClientId here.
+                // Warning com.amplifyframework.auth.cognito.AWSCognitoLegacyCredentialStoreInstrumentationTest.setup
+                // depends on hardcoded value of AppClientId here.
                 UserPoolData(
                     "userPoolPoolId",
                     "userPoolRegion",
