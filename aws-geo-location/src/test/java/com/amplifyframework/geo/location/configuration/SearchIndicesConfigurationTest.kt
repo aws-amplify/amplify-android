@@ -33,9 +33,12 @@ class SearchIndicesConfigurationTest {
     @Test
     fun searchIndicesConfigurationBuildsFromJson() {
         val json = JSONObject()
-            .put("items", JSONArray()
-                .put("search_index_A")
-                .put("search_index_B"))
+            .put(
+                "items",
+                JSONArray()
+                    .put("search_index_A")
+                    .put("search_index_B")
+            )
             .put("default", "search_index_B")
         val config = SearchIndicesConfiguration.fromJson(json).build()
         val expected = SearchIndicesConfiguration.builder()
@@ -52,8 +55,11 @@ class SearchIndicesConfigurationTest {
     @Test
     fun defaultIsNotExplicitlyRequired() {
         val json = JSONObject()
-            .put("items", JSONArray()
-                .put("search_index_A"))
+            .put(
+                "items",
+                JSONArray()
+                    .put("search_index_A")
+            )
         val config = SearchIndicesConfiguration.fromJson(json).build()
         val expected = SearchIndicesConfiguration.builder()
             .items(setOf("search_index_A"))

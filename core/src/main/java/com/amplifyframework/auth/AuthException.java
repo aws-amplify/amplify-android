@@ -56,6 +56,54 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     * Auth exception caused by auth state being in an invalid state.
+     */
+    public static class InvalidStateException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Auth state reached an invalid state.";
+        private static final String RECOVERY_SUGGESTION = "Please reset auth plugin and reattempt the operation.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public InvalidStateException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public InvalidStateException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Auth exception caused by the user being already signed in.
+     */
+    public static class SignedInException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "You are currently signed in.";
+        private static final String RECOVERY_SUGGESTION = "Please sign out and reattempt the operation.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public SignedInException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public SignedInException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Auth exception caused by the user being signed out.
      */
     public static class SignedOutException extends AuthException {

@@ -17,7 +17,6 @@ package com.amplifyframework.geo.maplibre
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
@@ -46,5 +45,4 @@ class MapViewTestActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(mapView)
     }
-
 }

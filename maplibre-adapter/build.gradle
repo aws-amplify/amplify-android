@@ -22,7 +22,7 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
 ext {
-    minSdkVersion = 21
+    minSdkVersion = 24
 }
 
 android {

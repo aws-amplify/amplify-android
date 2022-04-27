@@ -16,6 +16,8 @@
 package com.amplifyframework.storage.s3;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.auth.AuthCredentialsProvider;
+import com.amplifyframework.storage.ObjectMetadata;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.storage.StorageException;
@@ -28,15 +30,14 @@ import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.service.StorageService;
+import com.amplifyframework.storage.s3.transfer.TransferListener;
+import com.amplifyframework.storage.s3.transfer.TransferObserver;
+import com.amplifyframework.storage.s3.transfer.TransferState;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.random.RandomBytes;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.random.RandomTempFile;
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -86,8 +87,8 @@ public final class StorageComponentTest {
         this.storage = new StorageCategory();
         this.storageService = mock(StorageService.class);
         StorageService.Factory storageServiceFactory = (context, region, bucket) -> storageService;
-        CognitoAuthProvider cognitoAuthProvider = mock(CognitoAuthProvider.class);
-        doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId();
+        AuthCredentialsProvider cognitoAuthProvider = mock(AuthCredentialsProvider.class);
+        doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId(null);
         this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory,
                 cognitoAuthProvider, new AWSS3StoragePluginConfiguration.Builder().build())
         );
@@ -247,7 +248,8 @@ public final class StorageComponentTest {
         final String toRemoteKey = RandomString.string();
         final File fromLocalFile = new RandomTempFile(FILE_SIZE);
 
-        TransferObserver observer = mock(TransferObserver.class);
+        com.amplifyframework.storage.s3.transfer.TransferObserver observer =
+                mock(com.amplifyframework.storage.s3.transfer.TransferObserver.class);
         when(storageService.uploadFile(anyString(), any(File.class), any(ObjectMetadata.class)))
                 .thenReturn(observer);
 
@@ -256,7 +258,7 @@ public final class StorageComponentTest {
             listener.onStateChanged(0, TransferState.COMPLETED);
             return null;
         }).when(observer)
-                .setTransferListener(any(TransferListener.class));
+                .setTransferListener(any(com.amplifyframework.storage.s3.transfer.TransferListener.class));
 
         StorageUploadFileResult result =
                 Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
@@ -323,16 +325,17 @@ public final class StorageComponentTest {
         final String toRemoteKey = RandomString.string();
         final File fromLocalFile = new RandomTempFile(FILE_SIZE);
 
-        TransferObserver observer = mock(TransferObserver.class);
+        com.amplifyframework.storage.s3.transfer.TransferObserver observer =
+                mock(com.amplifyframework.storage.s3.transfer.TransferObserver.class);
         when(storageService.uploadFile(anyString(), any(File.class), any(ObjectMetadata.class)))
                 .thenReturn(observer);
 
         doAnswer(invocation -> {
-            TransferListener listener = invocation.getArgument(0);
+            com.amplifyframework.storage.s3.transfer.TransferListener listener = invocation.getArgument(0);
             listener.onError(0, testError);
             return null;
         }).when(observer)
-                .setTransferListener(any(TransferListener.class));
+                .setTransferListener(any(com.amplifyframework.storage.s3.transfer.TransferListener.class));
 
         StorageException error =
                 Await.<StorageUploadFileResult, StorageException>error((onResult, onError) ->
