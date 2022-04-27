@@ -14,15 +14,17 @@
  */
 package com.amplifyframework.storage.s3.operation
 
+import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.s3.CognitoAuthProvider
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.google.common.util.concurrent.MoreExecutors
+import io.mockk.coEvery
+import io.mockk.mockk
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
@@ -31,12 +33,12 @@ class AWSS3StorageRemoveOperationTest {
 
     private lateinit var awsS3StorageRemoveOperation: AWSS3StorageRemoveOperation
     private lateinit var storageService: StorageService
-    private lateinit var cognitoAuthProvider: CognitoAuthProvider
+    private lateinit var authCredentialsProvider: AuthCredentialsProvider
 
     @Before
     fun setup() {
         storageService = Mockito.spy(StorageService::class.java)
-        cognitoAuthProvider = Mockito.mock(CognitoAuthProvider::class.java)
+        authCredentialsProvider = mockk()
     }
 
     @Test
@@ -44,11 +46,11 @@ class AWSS3StorageRemoveOperationTest {
         val key = "123"
         val expectedKey = "public/123"
         val request = AWSS3StorageRemoveRequest(key, StorageAccessLevel.PUBLIC, "")
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageRemoveOperation = AWSS3StorageRemoveOperation(
             storageService,
             MoreExecutors.newDirectExecutorService(),
-            cognitoAuthProvider,
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {},
             {},
@@ -63,11 +65,11 @@ class AWSS3StorageRemoveOperationTest {
         val key = "123"
         val expectedKey = "123"
         val request = AWSS3StorageRemoveRequest(key, StorageAccessLevel.PUBLIC, "")
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageRemoveOperation = AWSS3StorageRemoveOperation(
             storageService,
             MoreExecutors.newDirectExecutorService(),
-            cognitoAuthProvider,
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
@@ -93,11 +95,11 @@ class AWSS3StorageRemoveOperationTest {
         val key = "123"
         val expectedKey = "publicCustom/123"
         val request = AWSS3StorageRemoveRequest(key, StorageAccessLevel.PUBLIC, "")
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageRemoveOperation = AWSS3StorageRemoveOperation(
             storageService,
             MoreExecutors.newDirectExecutorService(),
-            cognitoAuthProvider,
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {

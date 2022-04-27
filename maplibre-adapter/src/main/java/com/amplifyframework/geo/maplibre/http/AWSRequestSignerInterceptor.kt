@@ -19,14 +19,13 @@ import com.amazonaws.DefaultRequest
 import com.amazonaws.http.HttpMethodName
 import com.amazonaws.util.IOUtils
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
+import java.io.ByteArrayInputStream
+import java.net.URI
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import okio.Buffer
-import java.io.ByteArrayInputStream
-import java.net.URI
-import java.util.*
 
 private typealias AWSRequest = com.amazonaws.Request<Any>
 
@@ -84,7 +83,7 @@ internal class AWSRequestSignerInterceptor(
         awsRequest.setEncodedResourcePath(request.url.encodedPath)
         awsRequest.parameters = url.queryParameterNames.associateWith { url.queryParameter(it) }
         awsRequest.endpoint = URI.create("${url.scheme}://${url.host}")
-        awsRequest.httpMethod = HttpMethodName.valueOf(request.method.toUpperCase(Locale.ROOT))
+        awsRequest.httpMethod = HttpMethodName.valueOf(request.method.uppercase())
         awsRequest.content = ByteArrayInputStream(body)
         awsRequest.headers = request.headers.associate { (name, value) -> name to value }
 
@@ -93,5 +92,4 @@ internal class AWSRequestSignerInterceptor(
         signer.sign(awsRequest, plugin.credentialsProvider.credentials)
         return awsRequest
     }
-
 }

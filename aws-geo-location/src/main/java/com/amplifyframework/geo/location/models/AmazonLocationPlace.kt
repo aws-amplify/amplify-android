@@ -15,9 +15,9 @@
 
 package com.amplifyframework.geo.location.models
 
+import com.amazonaws.services.geo.model.Place as AmazonPlace
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.Place
-import com.amazonaws.services.geo.model.Place as AmazonPlace
 
 /**
  * Specialized [Place] instance that can hold metadata returned
@@ -39,8 +39,10 @@ data class AmazonLocationPlace(
 ) : Place(coordinates) {
     internal constructor(place: AmazonPlace) : this(
         // Amazon Location Service represents 2d point as [long, lat]
-        Coordinates(place.geometry.point[1],  // latitude
-                    place.geometry.point[0]), // longitude
+        Coordinates(
+            place.geometry.point[1], // latitude
+            place.geometry.point[0]
+        ), // longitude
         place.label,
         place.addressNumber,
         place.street,

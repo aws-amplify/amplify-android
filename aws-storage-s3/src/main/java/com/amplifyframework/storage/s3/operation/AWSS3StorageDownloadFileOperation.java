@@ -18,6 +18,7 @@ package com.amplifyframework.storage.s3.operation;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
@@ -27,54 +28,57 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
-import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+import com.amplifyframework.storage.s3.transfer.TransferListener;
+import com.amplifyframework.storage.s3.transfer.TransferObserver;
+import com.amplifyframework.storage.s3.transfer.TransferState;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
 
 /**
  * An operation to download a file from AWS S3.
  */
 public final class AWSS3StorageDownloadFileOperation
-        extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
+    extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
     private final StorageService storageService;
-    private final CognitoAuthProvider cognitoAuthProvider;
+    private final AuthCredentialsProvider authCredentialsProvider;
     private final Consumer<StorageTransferProgress> onProgress;
     private final Consumer<StorageDownloadFileResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
-    private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
     private File file;
+    private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
+    private final ExecutorService executorService;
 
     /**
      * Constructs a new AWSS3StorageDownloadFileOperation.
      *
      * @param storageService                  S3 client wrapper
-     * @param cognitoAuthProvider             Interface to retrieve AWS specific auth information
+     * @param executorService                 Executor service used for running blocking operations
+     * @param authCredentialsProvider         Interface to retrieve AWS specific auth information
      * @param request                         download request parameters
-     * @param awss3StoragePluginConfiguration s3Plugin configuration
+     * @param awss3StoragePluginConfiguration Storage plugin configuration
      * @param onProgress                      Notified upon advancements in download progress
      * @param onSuccess                       Notified when download results are available
      * @param onError                         Notified upon download error
      */
     public AWSS3StorageDownloadFileOperation(
-            @NonNull StorageService storageService,
-            @NonNull CognitoAuthProvider cognitoAuthProvider,
-            @NonNull AWSS3StorageDownloadFileRequest request,
-            @NonNull AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration,
-            @NonNull Consumer<StorageTransferProgress> onProgress,
-            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError
+        @NonNull StorageService storageService,
+        @NonNull ExecutorService executorService,
+        @NonNull AuthCredentialsProvider authCredentialsProvider,
+        @NonNull AWSS3StorageDownloadFileRequest request,
+        @NonNull AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration,
+        @NonNull Consumer<StorageTransferProgress> onProgress,
+        @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+        @NonNull Consumer<StorageException> onError
     ) {
         super(request);
         this.storageService = storageService;
-        this.cognitoAuthProvider = cognitoAuthProvider;
+        this.executorService = executorService;
+        this.authCredentialsProvider = authCredentialsProvider;
         this.onProgress = onProgress;
         this.onSuccess = onSuccess;
         this.onError = onError;
@@ -90,28 +94,28 @@ public final class AWSS3StorageDownloadFileOperation
         if (transferObserver != null) {
             return;
         }
-
-        this.file = getRequest().getLocal();
-
-        awsS3StoragePluginConfiguration.
-            getAWSS3PluginPrefixResolver(cognitoAuthProvider).
-            resolvePrefix(getRequest().getAccessLevel(),
-            getRequest().getTargetIdentityId(),
-                prefix -> {
-                    try {
-                        String serviceKey = prefix.concat(getRequest().getKey());
-                        transferObserver = storageService.downloadToFile(serviceKey, file);
-                        transferObserver.setTransferListener(new DownloadTransferListener());
-                    } catch (Exception exception) {
-                        onError.accept(new StorageException(
+        executorService.submit(() -> {
+            awsS3StoragePluginConfiguration.
+                getAWSS3PluginPrefixResolver(authCredentialsProvider).
+                resolvePrefix(
+                    getRequest().getAccessLevel(),
+                    getRequest().getTargetIdentityId(),
+                    prefix -> {
+                        try {
+                            String serviceKey = prefix.concat(getRequest().getKey());
+                            this.file = getRequest().getLocal();
+                            transferObserver = storageService.downloadToFile(serviceKey, file);
+                            transferObserver.setTransferListener(new DownloadTransferListener());
+                        } catch (Exception exception) {
+                            onError.accept(new StorageException(
                                 "Issue downloading file",
                                 exception,
                                 "See included exception for more details and suggestions to fix."
-                        ));
-                    }
-                },
-                onError);
-
+                            ));
+                        }
+                    },
+                    onError);
+        });
     }
 
     @Override
@@ -121,9 +125,9 @@ public final class AWSS3StorageDownloadFileOperation
                 storageService.cancelTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                        "Something went wrong while attempting to cancel your AWS S3 Storage download file operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
+                    "Something went wrong while attempting to cancel your AWS S3 Storage download file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
                 ));
             }
         }
@@ -136,9 +140,9 @@ public final class AWSS3StorageDownloadFileOperation
                 storageService.pauseTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                        "Something went wrong while attempting to pause your AWS S3 Storage download file operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
+                    "Something went wrong while attempting to pause your AWS S3 Storage download file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
                 ));
             }
         }
@@ -151,9 +155,9 @@ public final class AWSS3StorageDownloadFileOperation
                 storageService.resumeTransfer(transferObserver);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                        "Something went wrong while attempting to resume your AWS S3 Storage download file operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
+                    "Something went wrong while attempting to resume your AWS S3 Storage download file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
                 ));
             }
         }
@@ -164,7 +168,7 @@ public final class AWSS3StorageDownloadFileOperation
         @Override
         public void onStateChanged(int transferId, TransferState state) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create(StorageChannelEventName.DOWNLOAD_STATE, state.name()));
+                HubEvent.create(StorageChannelEventName.DOWNLOAD_STATE, state.name()));
             switch (state) {
                 case COMPLETED:
                     onSuccess.accept(StorageDownloadFileResult.fromFile(file));
@@ -184,11 +188,11 @@ public final class AWSS3StorageDownloadFileOperation
         @Override
         public void onError(int transferId, Exception exception) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create(StorageChannelEventName.DOWNLOAD_ERROR, exception));
+                HubEvent.create(StorageChannelEventName.DOWNLOAD_ERROR, exception));
             onError.accept(new StorageException(
-                    "Something went wrong with your AWS S3 Storage download file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
+                "Something went wrong with your AWS S3 Storage download file operation",
+                exception,
+                "See attached exception for more information and suggestions"
             ));
         }
     }

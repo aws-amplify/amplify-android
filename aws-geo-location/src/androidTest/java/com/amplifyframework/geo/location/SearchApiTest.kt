@@ -17,7 +17,6 @@ package com.amplifyframework.geo.location
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
@@ -29,16 +28,16 @@ import com.amplifyframework.geo.result.GeoSearchResult
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
-import org.junit.Assert.*
-
-import org.junit.Before
-import org.junit.Test
-import java.util.*
+import java.util.UUID
 import kotlin.random.Random.Default.nextDouble
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Ignore
 
 /**
  * Tests various functionalities related to Search API in [AWSLocationGeoPlugin].
  */
+@Ignore("Geo category is not available in dev-preview")
 class SearchApiTest {
     private var auth: SynchronousAuth? = null
     private var geo: SynchronousGeo? = null
@@ -65,7 +64,8 @@ class SearchApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Test(expected = GeoException::class)
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test(expected = GeoException::class)
     fun cannotSearchByTextWithoutAuth() {
         signOutFromCognito()
         val query = UUID.randomUUID().toString()
@@ -79,7 +79,8 @@ class SearchApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Test(expected = GeoException::class)
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test(expected = GeoException::class)
     fun cannotSearchByCoordinatesWithoutAuth() {
         signOutFromCognito()
         val coordinates = Coordinates(
@@ -97,13 +98,14 @@ class SearchApiTest {
      * Both fetched [GeoSearchResult] and [GeoSearchResult.places] are guaranteed
      * to be non-null. There is no guarantee that result is not empty (no match).
      */
-    @Test
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test
     fun searchByTextReturnsResult() {
         signInWithCognito()
         val query = UUID.randomUUID().toString()
         val result = geo?.searchByText(query, GeoSearchByTextOptions.defaults())
-        assertNotNull(result)
-        assertNotNull(result!!.places)
+        Assert.assertNotNull(result)
+        Assert.assertNotNull(result!!.places)
     }
 
     /**
@@ -113,7 +115,8 @@ class SearchApiTest {
      * Both fetched [GeoSearchResult] and [GeoSearchResult.places] are guaranteed
      * to be non-null. Searching by coordinates will always return at least one place.
      */
-    @Test
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test
     fun searchByCoordinatesReturnsNonEmptyResult() {
         signInWithCognito()
         val coordinates = Coordinates(
@@ -121,15 +124,15 @@ class SearchApiTest {
             nextDouble(-180.0, 180.0)
         )
         val result = geo?.searchByCoordinates(coordinates, GeoSearchByCoordinatesOptions.defaults())
-        assertNotNull(result)
-        assertNotNull(result!!.places)
+        Assert.assertNotNull(result)
+        Assert.assertNotNull(result!!.places)
 
         // Reverse lookup will always return at least one result
-        assertFalse(result.places.isEmpty())
+        Assert.assertFalse(result.places.isEmpty())
 
         // First entry is on top of originally queried coordinates (within 1km)
         val queried = result.places[0].geometry as Coordinates
-        assertTrue(coordinates.centralAngle(queried) < 0.00001)
+        Assert.assertTrue(coordinates.centralAngle(queried) < 0.00001)
     }
 
     private fun signInWithCognito() {

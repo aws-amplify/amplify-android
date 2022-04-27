@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.auth.DummyCredentialsProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
@@ -39,9 +40,6 @@ import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.util.TypeMaker;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
@@ -102,17 +100,7 @@ public final class AWSApiPluginTest {
 
         ApiAuthProviders apiAuthProviders = ApiAuthProviders
             .builder()
-            .awsCredentialsProvider(new AWSCredentialsProvider() {
-                @Override
-                public AWSCredentials getCredentials() {
-                    return new BasicAWSCredentials("DUMMY_ID", "DUMMY_SECRET");
-                }
-
-                @Override
-                public void refresh() {
-
-                }
-            })
+            .awsCredentialsProvider(DummyCredentialsProvider.INSTANCE)
             .cognitoUserPoolsAuthProvider(new CognitoUserPoolsAuthProvider() {
                 @Override
                 public String getLatestAuthToken() throws ApiException {

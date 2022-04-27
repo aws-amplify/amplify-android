@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,12 +16,10 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.auth.DummyCredentialsProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.testutils.random.RandomString;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -55,10 +53,7 @@ public final class SubscriptionAuthorizerTest {
         functionToken = RandomString.string();
         apiAuthProviders = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> apiKey)
-                .awsCredentialsProvider(new FakeCredentialsProvider(
-                        RandomString.string(),
-                        RandomString.string()
-                ))
+                .awsCredentialsProvider(DummyCredentialsProvider.INSTANCE)
                 .cognitoUserPoolsAuthProvider(new FakeCognitoAuthProvider(
                         cognitoUserPoolsToken,
                         RandomString.string()
@@ -138,26 +133,6 @@ public final class SubscriptionAuthorizerTest {
         SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
         JSONObject header = authorizer.createHeadersForConnection(AuthorizationType.AWS_LAMBDA);
         assertEquals(functionToken, header.getString("Authorization"));
-    }
-
-    private static final class FakeCredentialsProvider implements AWSCredentialsProvider {
-        private final String accessKey;
-        private final String secretKey;
-
-        private FakeCredentialsProvider(String accessKey, String secretKey) {
-            this.accessKey = accessKey;
-            this.secretKey = secretKey;
-        }
-
-        @Override
-        public AWSCredentials getCredentials() {
-            return new BasicAWSCredentials(accessKey, secretKey);
-        }
-
-        @Override
-        public void refresh() {
-            // No-op
-        }
     }
 
     private static final class FakeCognitoAuthProvider implements CognitoUserPoolsAuthProvider {
