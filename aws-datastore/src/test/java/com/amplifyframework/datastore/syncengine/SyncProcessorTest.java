@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
@@ -45,6 +46,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.HubEventFilter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
+import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testutils.HubAccumulator;
@@ -61,9 +63,11 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -149,6 +153,7 @@ public final class SyncProcessorTest {
                 .syncPageSize(1_000)
                 .errorHandler(dataStoreException -> errorHandlerCallCount++)
                 .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
+                .syncExpression(Author.class, QueryPredicates::none)
                 .build();
 
         QueryPredicateProvider queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
@@ -179,8 +184,10 @@ public final class SyncProcessorTest {
         // Arrange - BEGIN
         int expectedModelCount = Arrays.asList(Post.class, BlogOwner.class).size();
         // Collects one syncQueriesStarted event.
+        //The count should be one less than total model count because Author model has sync expression =
+        // QueryPredicates.none()
         HubAccumulator syncStartAccumulator =
-            createAccumulator(syncQueryStartedForModels(modelCount), 1);
+            createAccumulator(syncQueryStartedForModels(modelCount - 1), 1);
         // Collects one syncQueriesReady event.
         HubAccumulator syncQueryReadyAccumulator =
             createAccumulator(forEvent(DataStoreChannelEventName.SYNC_QUERIES_READY), 1);
@@ -313,9 +320,11 @@ public final class SyncProcessorTest {
         //   - two for the BlogOwner,
         //   - and 1 for the deleted drum post
         List<? extends Model> itemsInStorage = storageAdapter.query(modelProvider);
+        //The count should be one less than total model count because Author model has sync expression =
+        // QueryPredicates.none()
         assertEquals(
             itemsInStorage.toString(),
-            2 + 3 + modelProvider.models().size(),
+            2 + 3 + modelProvider.models().size() - 1,
             itemsInStorage.size()
         );
         assertEquals(
@@ -334,9 +343,20 @@ public final class SyncProcessorTest {
                 .blockingGet()
         );
 
+        //The models to be synced should be one less than total model because Author model has sync expression =
+        // QueryPredicates.none()
+        Iterator<Class<? extends Model>> modelIterator = modelProvider.models().iterator();
+        Set<Class<? extends Model>> modelsToBeSynced = new HashSet<>();
+        while (modelIterator.hasNext()){
+            Class<? extends Model> model = modelIterator.next();
+            if(model != Author.class){
+                modelsToBeSynced.add(model);
+            }
+        }
+
         // Assert that there is a list sync time for every model managed by the system.
         assertEquals(
-            Observable.fromIterable(modelProvider.models())
+            Observable.fromIterable(modelsToBeSynced)
                 .map(Class::getSimpleName)
                 .toList()
                 .map(HashSet::new)
@@ -385,9 +405,11 @@ public final class SyncProcessorTest {
         // Plus an entry for last sync time for every model type.
         List<? extends Model> storageItems = storageAdapter.query(modelProvider);
 
+        //The count should be one less than total model count because Author model has sync expression =
+        // QueryPredicates.none()
         assertEquals(
             storageItems.toString(),
-            1 + 2 + modelProvider.models().size(),
+            1 + 2 + (modelProvider.models().size() - 1),
             storageItems.size()
         );
 
@@ -415,9 +437,19 @@ public final class SyncProcessorTest {
             .sorted(SortByModelId::compare)
             .toSortedList(SortByModelId::compare)
             .flatMapObservable(Observable::fromIterable);
+        //The count should be one less than total model count because Author model has sync expression =
+        // QueryPredicates.none()
+        Iterator<Class<? extends Model>> modelIterator = modelProvider.models().iterator();
+        Set<Class<? extends Model>> modelsToBeSynced = new HashSet<>();
+        while (modelIterator.hasNext()){
+            Class<? extends Model> model = modelIterator.next();
+            if(model != Author.class){
+                modelsToBeSynced.add(model);
+            }
+        }
 
         assertEquals(
-            modelProvider.models().size(),
+            modelProvider.models().size() - 1,
             actualSyncTimeRecords.toList()
                 .blockingGet()
                 .size()
@@ -429,7 +461,7 @@ public final class SyncProcessorTest {
             .toList() // Get a list of the actual records,
             .map(HashSet::new) // Put them into a hash set.
             .blockingGet()
-            .containsAll(Observable.fromIterable(modelProvider.models())
+            .containsAll(Observable.fromIterable(modelsToBeSynced)
                 .map(Class::getSimpleName)
                 .toList()
                 .map(HashSet::new)
@@ -468,7 +500,9 @@ public final class SyncProcessorTest {
         assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
         // Assert: the sync time that was passed to AppSync should have been `null`.
-        int modelClassCount = modelProvider.models().size();
+        //The class count should be one less than total model count because Author model has sync expression =
+        // QueryPredicates.none()
+        int modelClassCount = modelProvider.models().size() - 1;
         @SuppressWarnings("unchecked") // ignore GraphQLRequest.class not being a parameterized type.
         ArgumentCaptor<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> requestCaptor =
                 ArgumentCaptor.forClass(GraphQLRequest.class);
@@ -509,7 +543,9 @@ public final class SyncProcessorTest {
         assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
         // Assert: the sync time that was passed to AppSync should have been `null`.
-        int modelClassCount = modelProvider.models().size();
+        //The class count should be one less than total model count because Author model has sync expression =
+        // QueryPredicates.none()
+        int modelClassCount = modelProvider.models().size() - 1;
         @SuppressWarnings("unchecked") // ignore GraphQLRequest.class not being a parameterized type.
         ArgumentCaptor<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> requestCaptor =
                 ArgumentCaptor.forClass(GraphQLRequest.class);
@@ -752,9 +788,11 @@ public final class SyncProcessorTest {
         // Lastly: validate the current contents of the storage adapter.
         // There should be 2 BlogOwners, and 2 MetaData records.
         List<? extends Model> itemsInStorage = storageAdapter.query(modelProvider);
+        //The class count should be one less than total model count because Author model has sync expression =
+        // QueryPredicates.none()
         assertEquals(
                 itemsInStorage.toString(),
-                expectedResponseItems.size() * 2 + modelProvider.models().size(),
+                expectedResponseItems.size() * 2 + (modelProvider.models().size() - 1),
                 itemsInStorage.size()
         );
         assertEquals(
