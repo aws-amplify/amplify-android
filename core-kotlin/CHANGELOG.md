@@ -1,3 +1,13 @@
+## [Release 0.19.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.3)
+
+### Bug Fixes
+- When DateTimeParseException is not available for lower apis (#1701)
+
+### Miscellaneous
+- Version bumps (#1721)
+
+[See all changes between 0.19.2 and 0.19.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.2...release-kotlin_v0.19.3)
+
 ## [Release 0.19.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.2)
 
 ### Bug Fixes
