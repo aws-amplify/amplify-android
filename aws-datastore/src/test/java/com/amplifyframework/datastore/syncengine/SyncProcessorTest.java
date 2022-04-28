@@ -347,9 +347,9 @@ public final class SyncProcessorTest {
         // QueryPredicates.none()
         Iterator<Class<? extends Model>> modelIterator = modelProvider.models().iterator();
         Set<Class<? extends Model>> modelsToBeSynced = new HashSet<>();
-        while (modelIterator.hasNext()){
+        while (modelIterator.hasNext()) {
             Class<? extends Model> model = modelIterator.next();
-            if(model != Author.class){
+            if (model != Author.class) {
                 modelsToBeSynced.add(model);
             }
         }
@@ -441,9 +441,9 @@ public final class SyncProcessorTest {
         // QueryPredicates.none()
         Iterator<Class<? extends Model>> modelIterator = modelProvider.models().iterator();
         Set<Class<? extends Model>> modelsToBeSynced = new HashSet<>();
-        while (modelIterator.hasNext()){
+        while (modelIterator.hasNext()) {
             Class<? extends Model> model = modelIterator.next();
-            if(model != Author.class){
+            if (model != Author.class) {
                 modelsToBeSynced.add(model);
             }
         }

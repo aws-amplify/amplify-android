@@ -41,7 +41,6 @@ import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.util.ForEach;
 import com.amplifyframework.util.Time;
 
 import java.util.ArrayList;
