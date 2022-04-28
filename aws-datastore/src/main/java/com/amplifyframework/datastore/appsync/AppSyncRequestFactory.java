@@ -221,13 +221,6 @@ final class AppSyncRequestFactory {
     }
 
     static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
-        if (QueryPredicates.all().equals(queryPredicate)) {
-            return Collections.singletonMap("id", Collections.singletonMap("ne", null));
-        }
-        if (QueryPredicates.none().equals(queryPredicate)) {
-            // id cannot be null, so match none
-            return Collections.singletonMap("id", Collections.singletonMap("eq", null));
-        }
         if (queryPredicate instanceof QueryPredicateOperation) {
             QueryPredicateOperation<?> qpo = (QueryPredicateOperation<?>) queryPredicate;
             QueryOperator<?> op = qpo.operator();

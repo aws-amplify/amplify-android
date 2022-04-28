@@ -182,20 +182,6 @@ public final class AppSyncRequestFactoryTest {
                 true);
     }
 
-    /**
-     * If a MatchNoneQueryPredicate is provided, it should be wrapped in an AND group.
-     * This enables AppSync to optimize by performing an DDB query instead of scan.
-     * @throws AmplifyException On failure to parse ModelSchema from model class
-     * @throws JSONException from JSONAssert.assertEquals.
-     */
-    @Test
-    public void validateMatchNonePredicateForSyncExpressionIsWrappedWithAnd() throws AmplifyException, JSONException {
-        ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
-        final GraphQLRequest<Iterable<Post>> request =
-                AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.none());
-        JSONAssert.assertEquals(Resources.readAsString("base-sync-request-with-predicate-match-none.txt"),
-                request.getContent(), true);
-    }
 
     /**
      * Checks that we're getting the expected output for a mutation with predicate.
@@ -308,16 +294,6 @@ public final class AppSyncRequestFactoryTest {
             AppSyncRequestFactory.parsePredicate(
                 Blog.NAME.beginsWith("A day in the life of a...").and(Blog.OWNER.eq("DUMMY_OWNER_ID"))
             )
-        );
-
-        assertEquals(
-            Collections.singletonMap("id", Collections.singletonMap("ne", null)),
-            AppSyncRequestFactory.parsePredicate(QueryPredicates.all())
-        );
-
-        assertEquals(
-            Collections.singletonMap("id", Collections.singletonMap("eq", null)),
-            AppSyncRequestFactory.parsePredicate(QueryPredicates.none())
         );
     }
 
