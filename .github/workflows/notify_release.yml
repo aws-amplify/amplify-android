@@ -4,7 +4,7 @@ name: Notify Amplify Android Release
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on release created (draft) or released (stable) events but only for the main branch
+  # Triggers the workflow on release created (draft) or published (release and prerelease) events but only for the main branch
   release:
     types: [created, published]
 
