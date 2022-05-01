@@ -60,7 +60,7 @@ public final class ModelConverter {
                 }
                 result.put(fieldName, SerializedModel.builder()
                     .modelSchema(nestedSchema)
-                        .serializedData(Collections.singletonMap("id", associateId))
+                    .serializedData(Collections.singletonMap("id", associateId))
                     .build());
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship

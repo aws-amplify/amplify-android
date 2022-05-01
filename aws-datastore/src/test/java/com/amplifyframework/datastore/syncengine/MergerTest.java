@@ -188,7 +188,7 @@ public final class MergerTest {
                 false,
                 1,
                 Temporal.Timestamp.now(),
-                    originalModel.getModelName());
+                originalModel.getModelName());
         storageAdapter.save(originalModel, originalMetadata);
 
         // Act: merge a save.
