@@ -34,8 +34,8 @@ public final class Blog implements Model {
 
 
   public String getId() {
-        return id;
-    }
+      return id;
+  }
 
   public String getName() {
       return name;

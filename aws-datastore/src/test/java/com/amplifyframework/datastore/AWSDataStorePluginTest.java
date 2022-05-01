@@ -639,7 +639,7 @@ public final class AWSDataStorePluginTest {
         return Person.builder()
             .firstName(firstName)
             .lastName(lastName)
-                .age(41)
+            .age(41)
             .build();
     }
 

@@ -154,7 +154,7 @@ public final class ModelMetadata implements Model {
             ", _deleted=" + _deleted +
             ", _version=" + _version +
             ", _lastChangedAt=" + _lastChangedAt +
-                ",  __typename=" + __typename +
+            ",  __typename=" + __typename +
             '}';
     }
 }

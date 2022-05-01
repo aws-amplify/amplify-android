@@ -30,13 +30,8 @@ public final class GroupPrivatePublicUPIAMAPIPost implements Model {
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
   public String getId() {
-      return id;
+    return id;
   }
-
-    @NonNull
-    public String resolveIdentifier() {
-        return id;
-    }
 
   public String getName() {
       return name;
