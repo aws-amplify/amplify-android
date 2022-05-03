@@ -21,6 +21,8 @@ body:
           | `com.amplifyframework:aws-api-appsync`               | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-api-appsync)                    |
           | `com.amplifyframework:aws-auth-cognito`              | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-auth-cognito)                   |
           | `com.amplifyframework:aws-datastore`                 | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-datastore)                      |
+          | `com.amplifyframework:aws-geo-location`              | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-geo-location)                   |
+          | `com.amplifyframework:maplibre-adapter`              | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/maplibre-adapter)                   |
           | `com.amplifyframework:aws-storage-s3`                | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-storage-s3)                     |
           | `com.amplifyframework:aws-predictions`               | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-predictions)                    |
           | `com.amplifyframework:aws-predictions-tensorflow`    | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-predictions-tensorflow)         |
@@ -67,6 +69,7 @@ body:
         - REST API
         - GraphQL API
         - DataStore
+        - Geo
         - Storage
         - Predictions
         - Not applicable
