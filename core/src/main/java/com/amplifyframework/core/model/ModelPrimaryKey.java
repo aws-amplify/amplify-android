@@ -16,10 +16,12 @@
 package com.amplifyframework.core.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * This class is a representation of the custom primary key.
@@ -107,21 +109,27 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
          * @return String representation of the unique key.
          */
         public static String getUniqueKey(ModelSchema modelSchema, Map<String, Object> serializedData) {
-            StringBuilder id = new StringBuilder();
+            String uniqueIdentifier = null;
             try {
-                final ListIterator<String> primaryKeyListIterator = modelSchema.getPrimaryIndexFields().listIterator();
+                List<String> primaryKeyFieldList = modelSchema.getPrimaryIndexFields();
+                if (primaryKeyFieldList.size() == 1) {
+                    return Objects.requireNonNull(serializedData.get(primaryKeyFieldList.get(0))).toString();
+                }
+                final ListIterator<String> primaryKeyListIterator = primaryKeyFieldList.listIterator();
+                final Serializable partitionKey = (Serializable) serializedData.get(primaryKeyListIterator.next());
+                final List<Serializable> sortKeys = new ArrayList<>();
                 while (primaryKeyListIterator.hasNext()) {
-                    id.append(serializedData.get(primaryKeyListIterator.next()));
-                    if (primaryKeyListIterator.hasNext()) {
-                        id.append("#");
-                    }
+                    sortKeys.add((Serializable) serializedData.get(primaryKeyListIterator.next()));
+                }
+                if (partitionKey != null) {
+                    uniqueIdentifier = getIdentifier(partitionKey, sortKeys);
                 }
             } catch (Exception exception) {
                 throw (new IllegalStateException("Invalid Primary Key," +
                         " It should either be single field or of type composite primary key" +
                         " Primary Key." + exception));
             }
-            return id.toString();
+            return uniqueIdentifier;
         }
 
         /**
