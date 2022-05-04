@@ -353,7 +353,7 @@ public final class SQLiteTable {
         /**
          * Sets the type of the table.
          * @param type the type of the table.
-         * @return builder instance with given name.
+         * @return builder instance with given type.
          */
         @NonNull
         public Builder type(@NonNull Model.Type type) {
