@@ -19,9 +19,20 @@ import java.util.Date
 import java.util.UUID
 
 interface StateMachineEvent {
+
+    /**
+     * Unique event identifier
+     */
     val id: String
         get() = UUID.randomUUID().toString()
 
+    /**
+     * Describe the type of event related to the originating occurrence.
+     */
     val type: String
+
+    /**
+     * Timestamp of when the occurrence happened.
+     */
     val time: Date?
 }
