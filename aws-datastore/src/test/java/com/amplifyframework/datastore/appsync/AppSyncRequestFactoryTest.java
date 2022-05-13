@@ -289,7 +289,7 @@ public final class AppSyncRequestFactoryTest {
         assertEquals(
             Collections.singletonMap("and", Arrays.asList(
                 Collections.singletonMap("name", Collections.singletonMap("beginsWith", "A day in the life of a...")),
-                Collections.singletonMap("blogOwnerId", Collections.singletonMap("eq", "DUMMY_OWNER_ID"))
+                Collections.singletonMap("blogOwnerBlogId", Collections.singletonMap("eq", "DUMMY_OWNER_ID"))
             )),
             AppSyncRequestFactory.parsePredicate(
                 Blog.NAME.beginsWith("A day in the life of a...").and(Blog.OWNER.eq("DUMMY_OWNER_ID"))
