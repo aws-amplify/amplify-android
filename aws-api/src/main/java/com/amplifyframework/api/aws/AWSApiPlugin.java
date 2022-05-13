@@ -710,14 +710,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             case GET:
             case DELETE:
                 if (options.hasData()) {
-                    throw new ApiException("HTTP method does not support data object! " + type,
-                            "Try sending the request without any data in the options.");
+                    operationRequest = new RestOperationRequest(
+                            type,
+                            options.getPath(),
+                            options.getData(),
+                            options.getHeaders(),
+                            options.getQueryParameters());
+                } else {
+                    operationRequest = new RestOperationRequest(
+                            type,
+                            options.getPath(),
+                            options.getHeaders(),
+                            options.getQueryParameters());
                 }
-                operationRequest = new RestOperationRequest(
-                        type,
-                        options.getPath(),
-                        options.getHeaders(),
-                        options.getQueryParameters());
                 break;
             case PUT:
             case POST:
