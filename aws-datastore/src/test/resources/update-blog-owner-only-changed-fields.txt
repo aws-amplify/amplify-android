@@ -5,7 +5,11 @@
     _lastChangedAt
     _version
     blog {
-      id
+      items {
+        id
+      }
+      nextToken
+      startedAt
     }
     createdAt
     id

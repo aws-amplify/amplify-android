@@ -69,6 +69,7 @@ public class ModelConverterTest {
         Map<String, Object> actual = ModelConverter.toMap(blog, schema);
 
         Map<String, Object> expected = new HashMap<>();
+        expected.put("updatedAt", null);
         expected.put("id", blog.getId());
         expected.put("name", "A neat blog");
         expected.put("createdAt", null);
@@ -76,6 +77,7 @@ public class ModelConverterTest {
                 .modelSchema(schemaRegistry.getModelSchemaForModelClass(BlogOwner.class))
                 .serializedData(Collections.singletonMap("id", blog.getOwner().getId()))
                 .build());
+
         assertEquals(expected, actual);
     }
 }

@@ -7,13 +7,18 @@
       _lastChangedAt
       _version
       blog {
-        __typename
-        _deleted
-        _lastChangedAt
-        _version
-        createdAt
-        id
-        name
+        items {
+          __typename
+          _deleted
+          _lastChangedAt
+          _version
+          createdAt
+          id
+          name
+          updatedAt
+        }
+        nextToken
+        startedAt
       }
       createdAt
       id
