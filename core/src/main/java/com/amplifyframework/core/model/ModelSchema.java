@@ -80,6 +80,9 @@ public final class ModelSchema {
     // Class of the model this schema will represent
     private final Class<? extends Model> modelClass;
 
+    // Model schema version
+    private final String modelSchemaVersion;
+
     private ModelSchema(Builder builder) {
         this.name = builder.name;
         this.pluralName = builder.pluralName;
@@ -91,6 +94,7 @@ public final class ModelSchema {
         this.indexes = builder.indexes;
         this.modelClass = builder.modelClass;
         this.modelType = builder.type;
+        this.modelSchemaVersion = builder.modelSchemaVersion;
     }
 
     /**
@@ -137,6 +141,10 @@ public final class ModelSchema {
                     ? modelConfig.syncPluralName()
                     : null;
 
+            final String modelSchemaVersion = modelConfig != null && !modelConfig.version().isEmpty()
+                    ? modelConfig.version()
+                    : null;
+
             if (modelConfig != null) {
                 for (com.amplifyframework.core.model.annotations.AuthRule ruleAnnotation : modelConfig.authRules()) {
                     authRules.add(new AuthRule(ruleAnnotation));
@@ -178,6 +186,7 @@ public final class ModelSchema {
                     .indexes(indexes)
                     .modelClass(clazz)
                     .modelType(type)
+                    .version(modelSchemaVersion)
                     .build();
         } catch (Exception exception) {
             throw new AmplifyException(
@@ -295,6 +304,16 @@ public final class ModelSchema {
     @Nullable
     public String getListPluralName() {
         return listPluralName;
+    }
+
+    /**
+     * Returns the version number of this model schema
+     *
+     * @return the version number of this model schema.
+     */
+    @Nullable
+    public String getVersion() {
+        return modelSchemaVersion;
     }
 
     /**
@@ -457,6 +476,7 @@ public final class ModelSchema {
         private String syncPluralName;
         private final List<AuthRule> authRules;
         private Model.Type type;
+        private String modelSchemaVersion;
 
         Builder() {
             this.authRules = new ArrayList<>();
@@ -589,6 +609,17 @@ public final class ModelSchema {
         }
 
         /**
+         * The type of the Model this schema represents.
+         * @param modelSchemaVersion schema version.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder version(@NonNull String modelSchemaVersion) {
+            this.modelSchemaVersion = modelSchemaVersion;
+            return this;
+        }
+
+        /**
          * Return the ModelSchema object.
          * @return the ModelSchema object.
          */
@@ -598,6 +629,5 @@ public final class ModelSchema {
             Objects.requireNonNull(name);
             return new ModelSchema(Builder.this);
         }
-
     }
 }
