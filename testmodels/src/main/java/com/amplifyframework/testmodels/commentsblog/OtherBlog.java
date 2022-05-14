@@ -19,7 +19,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
 /** This is an auto generated class representing the OtherBlog type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "OtherBlogs")
+@ModelConfig(pluralName = "OtherBlogs", version = "V1")
 public final class OtherBlog implements Model {
   public static final QueryField ID = field("OtherBlog", "id");
   public static final QueryField NAME = field("OtherBlog", "name");
@@ -27,7 +27,7 @@ public final class OtherBlog implements Model {
   public static final QueryField CREATED_AT = field("OtherBlog", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="BlogOwnerWithCustomPK", isRequired = true) @BelongsTo(targetName = "blogOwnerWithCustomPkBlogsId", type = BlogOwnerWithCustomPK.class) BlogOwnerWithCustomPK owner;
+  private final @ModelField(targetType="BlogOwnerWithCustomPK", isRequired = true) @BelongsTo(targetNames = {"otherBlogOwnerName", "otherBlogOwnerWea", }, type = BlogOwnerWithCustomPK.class) BlogOwnerWithCustomPK owner;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   public String getId() {

@@ -70,5 +70,5 @@ public @interface ModelConfig {
      * Model Version.
      * @return Version of Model.
      */
-    String version() default "V1";
+    String version() default "V0";
 }
