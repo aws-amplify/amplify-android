@@ -4,7 +4,7 @@ name: Notify Comments on PCR
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on comment events on pending response issues
+  # Triggers the workflow on comment events on closed, pending response and closing soon issues
   issue_comment:
     types: [created]
 
