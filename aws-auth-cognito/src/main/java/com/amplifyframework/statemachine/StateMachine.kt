@@ -28,7 +28,7 @@ typealias StateChangeListenerToken = UUID
 typealias OnSubscribedCallback = () -> Unit
 
 /**
- * Models, mutates and processes effects of a system as a finite state automaton. It consists of:
+ * Model, mutate and process effects of a system as a finite state automaton. It consists of:
  * State - which represents the current state of the system
  * Resolver - a mechanism for mutating state in response to events and returning side effects called Actions
  * Listener - which accepts and enqueues incoming events
@@ -52,7 +52,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     private val dispatcherQueue: CoroutineDispatcher
 
     /**
-     * Manages consistency of internal state machine state and limits invocation of listeners to a minimum of one at a time.
+     * Manage consistency of internal state machine state and limits invocation of listeners to a minimum of one at a time.
      */
     private val operationQueue = newFixedThreadPoolContext(1, "Single threaded dispatcher")
     private val exceptionHandler = CoroutineExceptionHandler { _, exception ->
@@ -80,7 +80,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     }
 
     /**
-     * Start listening to state changes updates. Asynchronously invokes listener on a background queue with the current state.
+     * Start listening to state changes updates. Asynchronously invoke listener on a background queue with the current state.
      * Both `listener` and `onSubscribe` will be invoked on a background queue.
      * @param listener listener to be invoked on state changes
      * @param onSubscribe callback to invoke when subscription is complete
@@ -95,7 +95,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     }
 
     /**
-     * Stop listening to state changes updates. Registers a pending cancellation if a new event comes in between the time
+     * Stop listening to state changes updates. Register a pending cancellation if a new event comes in between the time
      * `cancel` is called and the time the pending cancellation is processed, the event will not be dispatched to the listener.
      * @param token identifies the listener to be removed
      */
@@ -107,7 +107,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     }
 
     /**
-     * Invokes `completion` with the current state
+     * Invoke `completion` with the current state
      * @param completion callback to invoke with the current state
      */
     fun getCurrentState(completion: (StateType) -> Unit) {
@@ -117,7 +117,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     }
 
     /**
-     * Registers a listener.
+     * Register a listener.
      * @param token token, which will be retained in the subscribers map
      * @param listener listener to invoke when the state has changed
      * @param onSubscribe callback to invoke when subscription is complete
@@ -146,7 +146,8 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     }
 
     /**
-     * Sends `event` to the StateMachine for resolution, and applies any effects and new states returned from the resolution.
+     * Send `event` to the StateMachine for resolution, and applies any effects and new states returned from the resolution.
+     * @param event event to send to the system
      */
     override fun send(event: StateMachineEvent) {
         GlobalScope.launch(stateMachineScope) {
@@ -172,9 +173,10 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
 
     /**
      * Resolver mutates the state based on current state and incoming event, and returns resolution with new state and
-     * effects. If the state machine's state after resolving is not equal to the state before the event, updates the
-     * state machine's state and invokes listeners with the new state. Regardless of whether the state is new or not,
+     * effects. If the state machine's state after resolving is not equal to the state before the event, update the
+     * state machine's state and invoke listeners with the new state. Regardless of whether the state is new or not,
      * the state machine will execute any effects from the event resolution process.
+     * @param event event to apply on current state for resolution
      */
     private fun process(event: StateMachineEvent) {
         val resolution = resolver.resolve(currentState, event)
