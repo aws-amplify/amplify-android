@@ -1,0 +1,30 @@
+{
+  "query": "mutation CreateOtherBlog($input: CreateOtherBlogInput!) {
+  createOtherBlog(input: $input) {
+    __typename
+    _deleted
+    _lastChangedAt
+    _version
+    createdAt
+    id
+    name
+    owner {
+      name
+      wea
+    }
+    otherBlogOwnerName
+    otherBlogOwnerWea
+    updatedAt
+  }
+}
+",
+  "variables": {
+    "input": {
+      "name" : "My Other Blog",
+      "otherBlogOwnerName" : "Stanley",
+      "otherBlogOwnerWea" : "WEA",
+      "createdAt" : null,
+      "id": "5a90f4dc-2dd7-49bd-85f8-d45119c30790"
+    }
+  }
+}

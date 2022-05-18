@@ -40,6 +40,9 @@ public final class ModelAssociation {
     // Name of the field within same model that references foreign key
     private final String targetName;
 
+    // Name array of the fields within same model that references custom foreign keys
+    private final String[] targetNames;
+
     // Name of the field in the associated model
     private final String associatedName;
 
@@ -52,6 +55,7 @@ public final class ModelAssociation {
     private ModelAssociation(@NonNull Builder builder) {
         this.name = Objects.requireNonNull(builder.name);
         this.targetName = builder.targetName;
+        this.targetNames = builder.targetNames;
         this.associatedName = builder.associatedName;
         this.associatedType = builder.associatedType;
     }
@@ -79,6 +83,15 @@ public final class ModelAssociation {
      */
     public String getTargetName() {
         return targetName;
+    }
+
+    /**
+     * Gets the target names of foreign key.
+     * Null if field holding this association is not a foreign key.
+     * @return The name of field within same model that references foreign key.
+     */
+    public String[] getTargetNames() {
+        return targetNames;
     }
 
     /**
@@ -154,6 +167,7 @@ public final class ModelAssociation {
     public static final class Builder {
         private String name;
         private String targetName;
+        private String[] targetNames;
         private String associatedName;
         private String associatedType;
 
@@ -174,6 +188,17 @@ public final class ModelAssociation {
          */
         public Builder targetName(String targetName) {
             this.targetName = targetName;
+            return this;
+        }
+
+        /**
+         * Sets the array of name of the field referring to the foreign keys.  Used when there is
+         * a custom primary key on the target.
+         * @param targetNames array of name of the field referring to the foreign key.
+         * @return the association model builder with give target names
+         */
+        public Builder targetNames(String[] targetNames) {
+            this.targetNames = targetNames;
             return this;
         }
 
