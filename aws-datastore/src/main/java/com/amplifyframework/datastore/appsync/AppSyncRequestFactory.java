@@ -56,6 +56,7 @@ import com.amplifyframework.util.TypeMaker;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -214,7 +215,7 @@ final class AppSyncRequestFactory {
             AuthModeStrategyType strategyType) throws DataStoreException {
         try {
             Map<String, Object> inputMap = getMapOfFieldNameAndValues(schema, model);
-            return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE, strategyType);
+             return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
