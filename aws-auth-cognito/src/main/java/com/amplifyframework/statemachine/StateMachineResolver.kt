@@ -21,7 +21,7 @@ import java.util.logging.Logger
 /**
  * Executes a state transition when a precondition is fulfilled or when an event is received.
  *
- * StateMachineEvent are resolved as follows:
+ * StateMachineEvents are resolved as follows:
  *
  * - Traverse the State tree depth-first
  * - Resolve each leaf State (that is, each State that has no substates) using the current state and incoming event.
