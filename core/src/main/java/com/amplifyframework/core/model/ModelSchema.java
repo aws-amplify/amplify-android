@@ -81,7 +81,7 @@ public final class ModelSchema {
     private final Class<? extends Model> modelClass;
 
     // Model schema version
-    private final String modelSchemaVersion;
+    private final int modelSchemaVersion;
 
     private ModelSchema(Builder builder) {
         this.name = builder.name;
@@ -141,9 +141,7 @@ public final class ModelSchema {
                     ? modelConfig.syncPluralName()
                     : null;
 
-            final String modelSchemaVersion = modelConfig != null && !modelConfig.version().isEmpty()
-                    ? modelConfig.version()
-                    : null;
+            final int modelSchemaVersion = modelConfig != null ? modelConfig.version() : 0;
 
             if (modelConfig != null) {
                 for (com.amplifyframework.core.model.annotations.AuthRule ruleAnnotation : modelConfig.authRules()) {
@@ -240,6 +238,7 @@ public final class ModelSchema {
             return ModelAssociation.builder()
                     .name(BelongsTo.class.getSimpleName())
                     .targetName(association.targetName())
+                    .targetNames(association.targetNames())
                     .associatedType(association.type().getSimpleName())
                     .associatedName(field.getName())
                     .build();
@@ -312,7 +311,7 @@ public final class ModelSchema {
      * @return the version number of this model schema.
      */
     @Nullable
-    public String getVersion() {
+    public int getVersion() {
         return modelSchemaVersion;
     }
 
@@ -476,7 +475,7 @@ public final class ModelSchema {
         private String syncPluralName;
         private final List<AuthRule> authRules;
         private Model.Type type;
-        private String modelSchemaVersion;
+        private int modelSchemaVersion;
 
         Builder() {
             this.authRules = new ArrayList<>();
@@ -614,7 +613,7 @@ public final class ModelSchema {
          * @return the builder object
          */
         @NonNull
-        public Builder version(@NonNull String modelSchemaVersion) {
+        public Builder version(@NonNull int modelSchemaVersion) {
             this.modelSchemaVersion = modelSchemaVersion;
             return this;
         }
