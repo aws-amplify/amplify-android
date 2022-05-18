@@ -19,7 +19,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
 /** This is an auto generated class representing the OtherBlog type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "OtherBlogs", version = "V1")
+@ModelConfig(pluralName = "OtherBlogs", version = 1)
 public final class OtherBlog implements Model {
   public static final QueryField ID = field("OtherBlog", "id");
   public static final QueryField NAME = field("OtherBlog", "name");

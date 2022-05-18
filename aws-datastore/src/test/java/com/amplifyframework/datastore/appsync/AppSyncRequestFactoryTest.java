@@ -279,36 +279,6 @@ public final class AppSyncRequestFactoryTest {
     }
 
     /**
-     * Checks that we're getting the expected output for a delete mutation for an object with a custom primary key
-     * using the V2 schema definition.
-     * @throws DataStoreException If the output does not match.
-     * @throws AmplifyException On failure to parse ModelSchema from model class
-     * @throws JSONException from JSONAssert.assertEquals.
-     */
-    @Test
-    public void validateDeleteWithCustomPrimaryKeyV2() throws AmplifyException, JSONException {
-        ModelSchema schema = ModelSchema.fromModelClass(OtherBlog.class);
-        final BlogOwnerWithCustomPK blogOwner = BlogOwnerWithCustomPK.builder()
-                .name("Stanley")
-                .wea("WEA")
-                .build();
-        final OtherBlog blog = OtherBlog.builder()
-                .name("My other blog")
-                .owner(blogOwner)
-                .build();
-        JSONAssert.assertEquals(
-                Resources.readAsString("delete-item.txt"),
-                AppSyncRequestFactory.buildDeletionRequest(schema,
-                        blog,
-                        1,
-                        QueryPredicates.all(),
-                        DEFAULT_STRATEGY).getContent(),
-                true
-        );
-    }
-
-
-    /**
      * Checks that the predicate expression matches the expected value.
      * @throws DataStoreException If the output does not match.
      */
@@ -443,7 +413,7 @@ public final class AppSyncRequestFactoryTest {
                 .id("b0792b4b-2b38-4ab7-a12d-42b35583171e")
                 .build();
         final OtherBlog blog = OtherBlog.builder()
-                .name("My other blog")
+                .name("My Other Blog")
                 .owner(blogOwner)
                 .id("5a90f4dc-2dd7-49bd-85f8-d45119c30790")
                 .build();

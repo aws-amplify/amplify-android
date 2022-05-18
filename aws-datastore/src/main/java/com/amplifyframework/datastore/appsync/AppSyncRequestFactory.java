@@ -30,6 +30,7 @@ import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.ModelPrimaryKey;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
@@ -55,6 +56,7 @@ import com.amplifyframework.util.TypeMaker;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -213,7 +215,7 @@ final class AppSyncRequestFactory {
             AuthModeStrategyType strategyType) throws DataStoreException {
         try {
             Map<String, Object> inputMap = getMapOfFieldNameAndValues(schema, model);
-            return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE, strategyType);
+             return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
                     amplifyException, "Validate your model file.");
@@ -422,12 +424,33 @@ final class AppSyncRequestFactory {
             if (association == null) {
                 result.put(fieldName, extractFieldValue(modelField.getName(), instance, schema));
             } else if (association.isOwner()) {
-                String targetName = association.getTargetName();
-                result.put(targetName, extractAssociateId(modelField, instance, schema));
+                if  (schema.getVersion() >= 1 && association.getTargetNames() != null
+                        && association.getTargetNames().length > 0) {
+                    insertForeignKeyValues(result, modelField, instance, schema, association);
+                } else{
+                    String targetName = association.getTargetName();
+                    result.put(targetName, extractAssociateId(modelField, instance, schema));
+                }
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
         }
         return result;
+    }
+
+    private static void insertForeignKeyValues(Map<String, Object> result, ModelField modelField,
+                                               Model instance, ModelSchema schema,
+                                               ModelAssociation association) throws AmplifyException {
+        final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
+        if (modelField.isModel() && fieldValue instanceof Model) {
+            final ModelPrimaryKey<?> primaryKey = (ModelPrimaryKey<?>) ((Model) fieldValue).resolveIdentifier();
+
+            result.put(association.getTargetNames()[0], primaryKey.key().toString());
+
+            for (int i = 0; i < primaryKey.sortedKeys().size(); i++) {
+                result.put(association.getTargetNames()[i+1], primaryKey.sortedKeys().get(i).toString());
+            }
+        }
+
     }
 
     private static Object extractAssociateId(ModelField modelField, Model instance, ModelSchema schema)
