@@ -1,7 +1,6 @@
 ## [Release 1.35.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.4)
 
 ### Miscellaneous
-- Update changelog after manual release v1.35.3 (#1724)
 - Update SDK version in build.gradle (#1741)
 
 [See all changes between 1.35.3 and 1.35.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.3...release_v1.35.4)
