@@ -1,3 +1,11 @@
+## [Release 0.19.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.4)
+
+### Miscellaneous
+- Update changelog after manual release v1.35.3 (#1724)
+- Update SDK version in build.gradle (#1741)
+
+[See all changes between 0.19.3 and 0.19.4](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.3...release-kotlin_v0.19.4)
+
 ## [Release 0.19.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.3)
 
 ### Bug Fixes
