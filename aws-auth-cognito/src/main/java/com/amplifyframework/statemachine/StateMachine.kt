@@ -37,6 +37,9 @@ typealias OnSubscribedCallback = () -> Unit
  * @implements EventDispatcher
  * @param resolver responsible for mutating state based on incoming events
  * @param environment holds system specific environment info accessible to Effects/Actions
+ * @param executor responsible for invoking effects
+ * @param concurrentQueue event queue or thread pool for effect executor and subscription callback
+ * @param initialState starting state of the system (resolver default state will be used if omitted)
  */
 internal open class StateMachine<StateType : State, EnvironmentType : Environment>(
     resolver: StateMachineResolver<StateType>,
