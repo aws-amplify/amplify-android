@@ -1,3 +1,20 @@
+## [Release 1.35.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.4)
+
+### Miscellaneous
+- Update SDK version in build.gradle (#1741)
+
+[See all changes between 1.35.3 and 1.35.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.3...release_v1.35.4)
+
+## [Release 1.35.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.3)
+
+### Bug Fixes
+- When DateTimeParseException is not available for lower apis (#1701)
+
+### Miscellaneous
+- Version bumps (#1721)
+
+[See all changes between 1.35.2 and 1.35.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.2...release_v1.35.3)
+
 ## [Release 1.35.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.2)
 
 ### Bug Fixes
