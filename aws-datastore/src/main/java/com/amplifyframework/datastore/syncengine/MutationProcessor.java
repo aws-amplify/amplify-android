@@ -113,9 +113,15 @@ final class MutationProcessor {
             if (next == null) {
                 return Completable.complete();
             }
-            boolean itemFailedToProcess = !processOutboxItem(next)
-                .blockingAwait(ITEM_PROCESSING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            if (itemFailedToProcess) {
+            try {
+                boolean itemFailedToProcess = !processOutboxItem(next)
+                    .blockingAwait(ITEM_PROCESSING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                if (itemFailedToProcess) {
+                    return Completable.error(new DataStoreException(
+                        "Timeout processing " + next, "Check your internet connection."
+                    ));
+                }
+            } catch (RuntimeException e) {
                 return Completable.error(new DataStoreException(
                     "Failed to process " + next, "Check your internet connection."
                 ));
