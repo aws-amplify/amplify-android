@@ -67,7 +67,8 @@
       }
     },
     "indexes": {},
-    "modelClass": "com.amplifyframework.core.model.SerializedModel"
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
+    "modelSchemaVersion": 0
   },
   "serializedData": {
     "owner": "2cb080ce-bc93-44c6-aa77-f985af311afa",
