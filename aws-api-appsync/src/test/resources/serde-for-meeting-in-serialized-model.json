@@ -80,7 +80,8 @@
     },
     "associations": {},
     "indexes": {},
-    "modelClass": "com.amplifyframework.core.model.SerializedModel"
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
+    "modelSchemaVersion": 0
   },
   "serializedData": {
     "date": "2020-11-05Z",
