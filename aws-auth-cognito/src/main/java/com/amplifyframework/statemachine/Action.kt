@@ -18,6 +18,17 @@ package com.amplifyframework.statemachine
 typealias ActionClosure = suspend (EventDispatcher, Environment) -> Unit
 typealias BoundActionClosure<T> = suspend T.(String?, EventDispatcher) -> Unit
 
+/**
+ * "Side Effects" that states may wish to perform when exiting in response to a StateMachineEvent.
+ *
+ * Side effects are interactions outside the assignment of a State's own property values, such as:
+ * - Emitting a new StateMachineEvent to indicate an important state change
+ * - Interacting with an outside system such as making a network call or reading from storage
+ * - Starting or canceling a timer
+ *
+ * Side effects are part of the return value of State Resolvers. They are resolved and executed by the State Machine
+ * after the new State is fully resolved and applied.
+ */
 interface Action {
     val id: String
         get() = this.javaClass.simpleName
