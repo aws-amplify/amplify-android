@@ -306,7 +306,7 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns the version number of this model schema
+     * Returns the version number of this model schema.
      *
      * @return the version number of this model schema.
      */
