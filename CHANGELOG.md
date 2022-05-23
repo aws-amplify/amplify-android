@@ -1,3 +1,11 @@
+## [Release 1.35.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.5)
+
+### Miscellaneous
+- Update notify_comments.yml (#1746)
+- Update SDK version in build.gradle (#1747)
+
+[See all changes between 1.35.4 and 1.35.5](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.4...release_v1.35.5)
+
 ## [Release 1.35.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.4)
 
 ### Miscellaneous
