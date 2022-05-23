@@ -1,6 +1,7 @@
 ## [Release 0.19.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.5)
 
 ### Miscellaneous
+- chore: update gson version (#1744)
 - Update notify_comments.yml (#1746)
 - Update SDK version in build.gradle (#1747)
 
