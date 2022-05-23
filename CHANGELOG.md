@@ -1,6 +1,7 @@
 ## [Release 1.35.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.5)
 
 ### Miscellaneous
+- chore: update gson version (#1744)
 - Update notify_comments.yml (#1746)
 - Update SDK version in build.gradle (#1747)
 
