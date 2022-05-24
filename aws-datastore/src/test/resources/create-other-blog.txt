@@ -12,8 +12,6 @@
       name
       wea
     }
-    otherBlogOwnerName
-    otherBlogOwnerWea
     updatedAt
   }
 }
