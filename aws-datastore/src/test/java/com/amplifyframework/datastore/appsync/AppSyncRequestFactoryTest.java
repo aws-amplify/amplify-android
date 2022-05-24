@@ -417,7 +417,6 @@ public final class AppSyncRequestFactoryTest {
                 .owner(blogOwner)
                 .id("5a90f4dc-2dd7-49bd-85f8-d45119c30790")
                 .build();
-
         ModelSchema schema = ModelSchema.fromModelClass(OtherBlog.class);
         String expected = Resources.readAsString("create-other-blog.txt");
         String actual = AppSyncRequestFactory.buildCreationRequest(schema, blog, DEFAULT_STRATEGY).getContent();
