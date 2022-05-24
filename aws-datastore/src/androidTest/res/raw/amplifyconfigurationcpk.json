@@ -6,10 +6,25 @@
             "awsAPIPlugin": {
                 "customprimarykeybuil": {
                     "endpointType": "GraphQL",
-                    "endpoint": "https://plerwwxvpnc2zczcfmpavg46am.appsync-api.us-east-1.amazonaws.com/graphql",
+                    "endpoint": " https://bckstuvn75f2tjiligyhxmlovy.appsync-api.us-east-1.amazonaws.com/graphql",
                     "region": "us-east-1",
                     "authorizationType": "API_KEY",
-                    "apiKey": "da2-e7f7dx3ldnablda3rgsv2gd6xu"
+                    "apiKey": "da2-i7guzjtkqvfjddlryhhcapun2q"
+                }
+            }
+        }
+    },
+
+
+    "auth": {
+        "plugins": {
+            "AppSync": {
+                "Default": {
+                    "ApiUrl": "https://bckstuvn75f2tjiligyhxmlovy.appsync-api.us-east-1.amazonaws.com/graphql",
+                    "Region": "us-east-1",
+                    "AuthMode": "API_KEY",
+                    "ApiKey": "da2-i7guzjtkqvfjddlryhhcapun2q",
+                    "ClientDatabasePrefix": "DataStoreIntegTestsApi_API_KEY"
                 }
             }
         }
