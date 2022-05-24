@@ -29,7 +29,7 @@ dependencies {
     testImplementation project(path: ':aws-api-appsync') // Used to reference Temporal types in tests.
     testImplementation project(path: ':testmodels')
     testImplementation(project(path: ':testutils')) {
-        transitive = false
+        transitive = true
     }
     testImplementation dependency.junit
     testImplementation dependency.mockito
@@ -40,7 +40,7 @@ dependencies {
     testImplementation dependency.gson
 
     androidTestImplementation (project(path: ':testutils')) {
-        transitive = false
+        transitive = true
     }
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.core

@@ -351,6 +351,7 @@ public final class AppSyncClient implements AppSync {
             final Consumer<DataStoreException> onFailure) {
 
         final Consumer<GraphQLResponse<ModelWithMetadata<T>>> responseConsumer = response -> {
+            LOG.debug(response.toString());
             if (response.hasErrors()) {
                 onResponse.accept(new GraphQLResponse<>(null, response.getErrors()));
             } else {

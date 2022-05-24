@@ -132,7 +132,7 @@ final class DataStoreCategoryConfigurator {
         dataStoreCategory.initialize(context);
         dataStoreCategory.start(NoOpAction.create(), NoOpConsumer.create());
 
-        initializationObserver.await(timeoutAmount, timeoutUnit);
+        initializationObserver.await(50000, timeoutUnit);
 
         return dataStoreCategory;
     }

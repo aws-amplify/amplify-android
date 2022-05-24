@@ -1,19 +1,20 @@
-package com.amplifyframework.testmodels.commentsblog;
+package com.amplifyframework.testmodels.customprimarykey;
 
-import com.amplifyframework.util.Immutable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.util.Immutable;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-/** 
+
+/**
  *  Contains the set of model classes that implement {@link Model}
  * interface.
  */
 
 public final class AmplifyModelProvider implements ModelProvider {
-  private static final String AMPLIFY_MODEL_VERSION = "313b773087e72b546d24c87e137d7b58";
+  private static final String AMPLIFY_MODEL_VERSION = "f456f41feffb2922075f552066ba946c";
   private static AmplifyModelProvider amplifyGeneratedModelInstance;
   private AmplifyModelProvider() {
     
@@ -34,8 +35,7 @@ public final class AmplifyModelProvider implements ModelProvider {
   @Override
    public Set<Class<? extends Model>> models() {
     final Set<Class<? extends Model>> modifiableSet = new HashSet<>(
-            Arrays.<Class<? extends Model>>asList(Blog.class, Post.class, Comment.class, PostAuthorJoin.class,
-             Author.class, BlogOwner.class, BlogOwnerWithCustomPK.class)
+          Arrays.<Class<? extends Model>>asList(Blog.class, Post.class, Comment.class)
         );
     
         return Immutable.of(modifiableSet);

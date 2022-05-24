@@ -138,6 +138,7 @@ public final class SQLiteTable {
                 .build();
     }
 
+
     private static SQLiteDataType sqlTypeFromModelField(ModelField modelField) {
         return TypeConverter.getSQLiteDataType(modelField);
     }

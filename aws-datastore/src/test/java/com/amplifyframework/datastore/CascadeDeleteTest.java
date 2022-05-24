@@ -1,18 +1,3 @@
-/*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.amplifyframework.datastore;
 
 import android.content.Context;
@@ -23,9 +8,7 @@ import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
-import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLOperation;
-import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
@@ -40,9 +23,9 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
-import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
-import com.amplifyframework.testmodels.personcar.Car;
-import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testmodels.customprimarykey.AmplifyModelProvider;
+import com.amplifyframework.testmodels.customprimarykey.Blog2;
+import com.amplifyframework.testmodels.customprimarykey.BlogOwnerWithCustomPK;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
@@ -51,24 +34,19 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
 import org.robolectric.RobolectricTestRunner;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import io.reactivex.rxjava3.core.Completable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atLeast;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -76,10 +54,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
-public final class ConflictResolverIntegrationTest {
+public class CascadeDeleteTest {
+
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
     private Context context;
     private ModelProvider modelProvider;
+    BlogOwnerWithCustomPK blogOwnerWithCustomPK = createBlogOwner();
+    Blog2 blog = createBlog(blogOwnerWithCustomPK);
+    SynchronousDataStore synchronousDataStore;
 
     /**
      * Wire up dependencies for the SyncProcessor, and build one for testing.
@@ -88,23 +70,24 @@ public final class ConflictResolverIntegrationTest {
     @Before
     public void setup() throws AmplifyException {
         this.context = getApplicationContext();
-        modelProvider = spy(AmplifyCliGeneratedModelProvider.singletonInstance());
-        this.modelProvider = spy(AmplifyCliGeneratedModelProvider.singletonInstance());
+        modelProvider = spy(AmplifyModelProvider.getInstance());
+        this.modelProvider = spy(AmplifyModelProvider.getInstance());
     }
 
     /**
-     * When conflict resolution is setup as Local on conflict local data should be merged.
+     * When {@link Completable} completes,
+     * then the local storage adapter should have all of the remote model state.
      * @throws AmplifyException On failure interacting with storage adapter
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      * @throws JSONException If unable to parse the JSON.
      */
     @SuppressWarnings("unchecked") // Varied types in Observable.fromArray(...).
     @Test
-    public void conflictIsResolvedByRetryingLocalData() throws AmplifyException, JSONException, InterruptedException {
+    public void cascadeDeleteChildModelWithCPKData() throws AmplifyException, JSONException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(4);
         // Arrange for the user-provided conflict handler to always request local retry.
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
-        Person person1 = setupApiMock(latch, mockApiCategory);
+        BlogOwnerWithCustomPK blogOwnerWithCustomPK = setupApiMock(latch, mockApiCategory);
 
         JSONObject dataStorePluginJson = new JSONObject()
                 .put("syncIntervalInMinutes", 60);
@@ -112,10 +95,9 @@ public final class ConflictResolverIntegrationTest {
                 .modelProvider(modelProvider)
                 .apiCategory(mockApiCategory)
                 .dataStoreConfiguration(DataStoreConfiguration.builder()
-                        .conflictHandler(DataStoreConflictHandler.alwaysRetryLocal())
                         .build())
                 .build();
-        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
+        synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
         awsDataStorePlugin.start(() -> { }, (onError) -> { });
@@ -124,23 +106,20 @@ public final class ConflictResolverIntegrationTest {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
         // Save person 1
-        synchronousDataStore.save(person1);
-        Person result1 = synchronousDataStore.get(Person.class, person1.getId());
+        synchronousDataStore.save(blogOwnerWithCustomPK);
+        //Person result1 = synchronousDataStore.get(Person.class, person1.getId());
         assertTrue(latch.await(7, TimeUnit.SECONDS));
-        assertEquals(person1, result1);
+        //assertEquals(person1, result1);
     }
 
     @SuppressWarnings("unchecked")
-    private Person setupApiMock(CountDownLatch latch, ApiCategory mockApiCategory) {
-        Person person1 = createPerson("Test", "Dummy I");
+    private BlogOwnerWithCustomPK setupApiMock(CountDownLatch latch, ApiCategory mockApiCategory) {
         //Mock success on subscription.
         doAnswer(invocation -> {
             int indexOfStartConsumer = 1;
             Consumer<String> onStart = invocation.getArgument(indexOfStartConsumer);
             GraphQLOperation<?> mockOperation = mock(GraphQLOperation.class);
-            doAnswer(opAnswer -> {
-                return null;
-            }).when(mockOperation).cancel();
+            doAnswer(opAnswer -> null).when(mockOperation).cancel();
 
             // Trigger the subscription start event.
             onStart.accept(RandomString.string());
@@ -153,48 +132,31 @@ public final class ConflictResolverIntegrationTest {
                 any(Action.class)
         );
 
-        //When mutate is called on the appsync for the first time unhandled conflict error is returned.
+        //When mutate is called to save blog owner save blog.
         doAnswer(invocation -> {
+            //When mutate is called on the appsync for the second time success response is returned
             int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
+            Consumer<GraphQLResponse<ModelWithMetadata<BlogOwnerWithCustomPK>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            List<GraphQLLocation> locations = new ArrayList<>();
-            locations.add(new GraphQLLocation(2, 3));
-            List<GraphQLPathSegment> path = new ArrayList<>();
-            path.add(new GraphQLPathSegment("updatePost"));
-            Map<String, Object> serverModelData = new HashMap<>();
-            serverModelData.put("id", "5c895eae-88ef-4ce8-9d58-e27d0c7cbe99");
-            serverModelData.put("createdAt", "2022-02-04T19:41:05.973Z");
-            serverModelData.put("first_name", "test");
-            serverModelData.put("last_name", "server last");
-            serverModelData.put("_version", 92);
-            serverModelData.put("_deleted", false);
-            serverModelData.put("_lastChangedAt", 1_000);
-            Map<String, Object> extensions = new HashMap<>();
-            extensions.put("errorInfo", null);
-            extensions.put("data", serverModelData);
-            extensions.put("errorType", "ConflictUnhandled");
-            ArrayList<GraphQLResponse.Error> errorList = new ArrayList<>();
-            errorList.add(new GraphQLResponse.Error("Conflict resolver rejects mutation.",
-                                                         locations,
-                                                            path,
-                                                        extensions));
-            onResponse.accept(new GraphQLResponse<>(null, errorList));
-            // latch makes sure conflict unhandled response is returned.
+            ModelMetadata modelMetadata = new ModelMetadata(blogOwnerWithCustomPK.getId(),
+                    false, 1, Temporal.Timestamp.now(),
+                    "BlogOwnerWithCustomPK");
+            ModelWithMetadata<BlogOwnerWithCustomPK> modelWithMetadata = new ModelWithMetadata<>(blogOwnerWithCustomPK,
+                    modelMetadata);
+            onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
+            // latch makes sure success response is returned.
+            synchronousDataStore.save(blog);
             latch.countDown();
             return mock(GraphQLOperation.class);
         }).doAnswer(invocation -> {
             //When mutate is called on the appsync for the second time success response is returned
             int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
+            Consumer<GraphQLResponse<ModelWithMetadata<Blog2>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now(),
-                    "Person");
-            ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
+            ModelMetadata modelMetadata = new ModelMetadata(blog.getId(), false, 1, Temporal.Timestamp.now(),
+                    "Blog");
+            ModelWithMetadata<Blog2> modelWithMetadata = new ModelWithMetadata<>(blog, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
-            verify(mockApiCategory, atLeast(2)).mutate(argThat(getMatcherFor(person1)),
-                    any(),
-                    any());
             // latch makes sure success response is returned.
             latch.countDown();
             return mock(GraphQLOperation.class);
@@ -203,13 +165,14 @@ public final class ConflictResolverIntegrationTest {
         // Setup to mimic successful sync
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
-            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1,
+            ModelMetadata modelMetadata = new ModelMetadata(blogOwnerWithCustomPK.getId(), false, 1,
                     Temporal.Timestamp.now(), "Person");
-            ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
+            ModelWithMetadata<BlogOwnerWithCustomPK> modelWithMetadata = new ModelWithMetadata<>(blogOwnerWithCustomPK,
+                    modelMetadata);
             // Mock the API emitting an ApiEndpointStatusChangeEvent event.
-            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Person>>>> onResponse =
+            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<BlogOwnerWithCustomPK>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            PaginatedResult<ModelWithMetadata<Person>> data =
+            PaginatedResult<ModelWithMetadata<BlogOwnerWithCustomPK>> data =
                     new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             latch.countDown();
@@ -217,39 +180,48 @@ public final class ConflictResolverIntegrationTest {
 
         }).doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
-            Car car = Car.builder().build();
-            ModelMetadata modelMetadata = new ModelMetadata(car.getId(), false, 1, Temporal.Timestamp.now(), "Person");
-            ModelWithMetadata<Car> modelWithMetadata = new ModelWithMetadata<>(car, modelMetadata);
-            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Car>>>> onResponse =
+            ModelMetadata modelMetadata = new ModelMetadata(blog.getId(),
+                    false, 1, Temporal.Timestamp.now(), "Person");
+            ModelWithMetadata<Blog2> modelWithMetadata = new ModelWithMetadata<>(blog, modelMetadata);
+            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Blog2>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            PaginatedResult<ModelWithMetadata<Car>> data =
+            PaginatedResult<ModelWithMetadata<Blog2>> data =
                     new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             latch.countDown();
             return mock(GraphQLOperation.class);
         }).when(mockApiCategory).query(any(), any(), any());
-        return person1;
+        return blogOwnerWithCustomPK;
     }
 
-    private static ArgumentMatcher<GraphQLRequest<ModelWithMetadata<Person>>> getMatcherFor(Person person) {
-        return graphQLRequest -> {
-            try {
-                JSONObject payload = new JSONObject(graphQLRequest.getContent());
-                String modelIdInRequest = payload.getJSONObject("variables").getJSONObject("input").getString("id");
-                return person.getId().equals(modelIdInRequest);
-            } catch (JSONException exception) {
-                fail("Invalid GraphQLRequest payload." + exception.getMessage());
-            }
-            return false;
-        };
-    }
+//    private static ArgumentMatcher<GraphQLRequest<ModelWithMetadata<Person>>> getMatcherFor(Person person) {
+//        return graphQLRequest -> {
+//            try {
+//                JSONObject payload = new JSONObject(graphQLRequest.getContent());
+//                String modelIdInRequest = payload.getJSONObject("variables").getJSONObject("input").getString("id");
+//                return person.getId().equals(modelIdInRequest);
+//            } catch (JSONException exception) {
+//                fail("Invalid GraphQLRequest payload." + exception.getMessage());
+//            }
+//            return false;
+//        };
+//    }
 
-    private Person createPerson(String firstName, String lastName) {
-        return Person.builder()
-                .firstName(firstName)
-                .lastName(lastName)
+    private BlogOwnerWithCustomPK createBlogOwner() {
+        return BlogOwnerWithCustomPK.builder()
+                .name("testBlogOwner")
+                .wea("testWea")
                 .build();
     }
+
+    private Blog2 createBlog(BlogOwnerWithCustomPK owner) {
+        return Blog2.builder()
+                .name("testBlog")
+                .owner(owner)
+                .build();
+    }
+
+
 
     @SuppressWarnings("unchecked")
     private ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
@@ -267,9 +239,9 @@ public final class ConflictResolverIntegrationTest {
             // Mock the API emitting an ApiEndpointStatusChangeEvent event.
             Amplify.Hub.publish(HubChannel.API, hubEvent);
             int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Person>>>> onResponse =
+            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Blog2>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            PaginatedResult<ModelWithMetadata<Person>> data = new PaginatedResult<>(Collections.emptyList(), null);
+            PaginatedResult<ModelWithMetadata<Blog2>> data = new PaginatedResult<>(Collections.emptyList(), null);
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             return null;
         }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
