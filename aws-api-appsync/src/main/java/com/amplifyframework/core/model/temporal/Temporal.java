@@ -26,7 +26,6 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -89,12 +88,12 @@ public final class Temporal {
                 OffsetDateTime odt = OffsetDateTime.parse(text, getOffsetDateTimeFormatter());
                 localDate = LocalDate.from(odt);
                 zoneOffset = ZoneOffset.from(odt);
-            } catch (DateTimeParseException exception) {
+            } catch (Exception exception) {
                 try {
                     // Optional timezone offset not present
                     localDate = LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE);
                     zoneOffset = null;
-                } catch (DateTimeParseException dateTimeParseException) {
+                } catch (Exception dateTimeParseException) {
                     throw new IllegalArgumentException("Failed to create Temporal.Date object from " + text, exception);
                 }
             }
@@ -220,7 +219,7 @@ public final class Temporal {
         public DateTime(@NonNull String text) {
             try {
                 this.offsetDateTime = OffsetDateTime.parse(text, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-            } catch (DateTimeParseException exception) {
+            } catch (Exception exception) {
                 throw new IllegalArgumentException("Failed to create Temporal.DateTime object from " + text, exception);
             }
         }
@@ -334,11 +333,11 @@ public final class Temporal {
                 OffsetTime offsetTime = OffsetTime.parse(text, DateTimeFormatter.ISO_OFFSET_TIME);
                 localTime = LocalTime.from(offsetTime);
                 zoneOffset = ZoneOffset.from(offsetTime);
-            } catch (DateTimeParseException exception) {
+            } catch (Exception exception) {
                 try {
                     localTime = LocalTime.parse(text, DateTimeFormatter.ISO_LOCAL_TIME);
                     zoneOffset = null;
-                } catch (DateTimeParseException dateTimeParseException) {
+                } catch (Exception dateTimeParseException) {
                     throw new IllegalArgumentException("Failed to create Temporal.Time object from " + text, exception);
                 }
             }
