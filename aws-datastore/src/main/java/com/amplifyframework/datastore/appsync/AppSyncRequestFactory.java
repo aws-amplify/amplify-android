@@ -441,12 +441,16 @@ final class AppSyncRequestFactory {
                                                ModelAssociation association) throws AmplifyException {
         final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
         if (modelField.isModel() && fieldValue instanceof Model) {
-            final ModelPrimaryKey<?> primaryKey = (ModelPrimaryKey<?>) ((Model) fieldValue).resolveIdentifier();
+            if (((Model) fieldValue).resolveIdentifier() instanceof ModelPrimaryKey<?>) {
+                final ModelPrimaryKey<?> primaryKey = (ModelPrimaryKey<?>) ((Model) fieldValue).resolveIdentifier();
 
-            result.put(association.getTargetNames()[0], primaryKey.key().toString());
+                result.put(association.getTargetNames()[0], primaryKey.key().toString());
 
-            for (int i = 0; i < primaryKey.sortedKeys().size(); i++) {
-                result.put(association.getTargetNames()[i + 1], primaryKey.sortedKeys().get(i).toString());
+                for (int i = 0; i < primaryKey.sortedKeys().size(); i++) {
+                    result.put(association.getTargetNames()[i + 1], primaryKey.sortedKeys().get(i).toString());
+                }
+            } else {
+
             }
         }
 
