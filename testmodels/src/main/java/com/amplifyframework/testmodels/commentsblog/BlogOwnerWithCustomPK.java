@@ -29,7 +29,7 @@ public final class BlogOwnerWithCustomPK implements Model {
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String", isRequired = true) String name;
     private final @ModelField(targetType="String", isRequired = true) String wea;
-    private final @ModelField(targetType="Blog") @HasMany(associatedWith = "blogOwner", type = Blog.class) List<Blog> blogs = null;
+    private final @ModelField(targetType="OtherBlog") @HasMany(associatedWith = "OtherBlog", type = Blog.class) List<OtherBlog> otherBlogs = null;
     private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
     private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
     private BlogOwnerPrimaryKey blogOwnerPrimaryKey;
@@ -54,8 +54,8 @@ public final class BlogOwnerWithCustomPK implements Model {
         return wea;
     }
 
-    public List<Blog> getBlogs() {
-        return blogs;
+    public List<OtherBlog> getOtherBlogs() {
+        return otherBlogs;
     }
 
     public Temporal.DateTime getCreatedAt() {
