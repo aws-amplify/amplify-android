@@ -450,7 +450,7 @@ final class AppSyncRequestFactory {
                     result.put(association.getTargetNames()[i + 1], primaryKey.sortedKeys().get(i).toString());
                 }
             } else {
-
+                // What goes here?
             }
         }
 
