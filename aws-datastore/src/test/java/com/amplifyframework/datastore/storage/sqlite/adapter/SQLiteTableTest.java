@@ -19,6 +19,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteDataType;
 import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.customprimarykey.Comment;
 
 import org.junit.Test;
 
@@ -90,5 +91,83 @@ public class SQLiteTableTest {
         SQLiteTable actual = SQLiteTable.fromSchema(schema);
         assertEquals(expected, actual);
         assertEquals("id", actual.getPrimaryKey().getFieldName());
+    }
+
+    /**
+     * Test if a {@link ModelSchema} for {@link com.amplifyframework.testmodels.customprimarykey.Comment}
+     * returns an expected {@link SQLiteTable}.  This tests the general
+     * use case, for an object with most data types (String, Integer, enum, BelongsTo, and HasMany relationships).
+     * @throws AmplifyException on error deriving ModelSchema.
+     */
+    @Test
+    public void createSQLiteTableForaModelWithParentHavingCPK() throws AmplifyException {
+        ModelSchema schema = ModelSchema.fromModelClass(Comment.class);
+        Map<String, SQLiteColumn> columns = new HashMap<>();
+        columns.put("title", SQLiteColumn.builder()
+                .name("title")
+                .fieldName("title")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(true)
+                .tableName("Comment")
+                .build());
+        columns.put("post", SQLiteColumn.builder()
+                .name("@@postForeignKey")
+                .fieldName("post")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("Comment")
+                .ownerOf("Post")
+                .build());
+        columns.put("@@primaryKey", SQLiteColumn.builder()
+                .name("@@primaryKey")
+                .fieldName("@@primaryKey")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(true)
+                .tableName("Comment")
+                .build());
+        columns.put("description", SQLiteColumn.builder()
+                .name("description")
+                .fieldName("description")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("Comment")
+                .build());
+        columns.put("content", SQLiteColumn.builder()
+                .name("content")
+                .fieldName("content")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(true)
+                .tableName("Comment")
+                .build());
+        columns.put("likes", SQLiteColumn.builder()
+                .name("likes")
+                .fieldName("likes")
+                .dataType(SQLiteDataType.INTEGER)
+                .isNonNull(true)
+                .tableName("Comment")
+                .build());
+        columns.put("updatedAt", SQLiteColumn.builder()
+                .name("updatedAt")
+                .fieldName("updatedAt")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("Comment")
+                .build());
+        columns.put("createdAt", SQLiteColumn.builder()
+                .name("createdAt")
+                .fieldName("createdAt")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("Comment")
+                .build());
+
+        SQLiteTable expected = SQLiteTable.builder()
+                .columns(columns)
+                .name("Comment")
+                .build();
+
+        SQLiteTable actual = SQLiteTable.fromSchema(schema);
+        assertEquals(expected, actual);
+        assertEquals("@@primaryKey", actual.getPrimaryKey().getFieldName());
     }
 }

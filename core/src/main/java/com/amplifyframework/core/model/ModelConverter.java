@@ -17,9 +17,11 @@ package com.amplifyframework.core.model;
 
 import com.amplifyframework.AmplifyException;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -53,14 +55,14 @@ public final class ModelConverter {
                 result.put(fieldName, extractFieldValue(modelField.getName(), instance, schema));
             } else if (association.isOwner()) {
                 ModelSchema nestedSchema = schemaRegistry.getModelSchemaForModelClass(targetType);
-                Object associateId = extractAssociateId(modelField, instance, schema);
+                Map<String, Object> associateId = extractAssociateId(modelField, instance, schema);
                 if (associateId == null) {
                     // Skip fields that are not set, so that they are not set to null in the request.
                     continue;
                 }
                 result.put(fieldName, SerializedModel.builder()
                     .modelSchema(nestedSchema)
-                    .serializedData(Collections.singletonMap("id", associateId))
+                    .serializedData(associateId)
                     .build());
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
@@ -68,13 +70,39 @@ public final class ModelConverter {
         return result;
     }
 
-    private static Object extractAssociateId(ModelField modelField, Model instance, ModelSchema schema)
+    private static Map<String, Object> extractAssociateId(ModelField modelField, Model instance,
+                                                                    ModelSchema schema)
             throws AmplifyException {
         final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
         if (modelField.isModel() && fieldValue instanceof Model) {
-            return ((Model) fieldValue).getPrimaryKeyString();
+            Model associatedModel = (Model) fieldValue;
+            ModelSchema childSchema =
+                    SchemaRegistry.instance().getModelSchemaForModelClass(associatedModel.getModelName());
+            /* Loop through primary key fields and get their respective values from the key map.
+              Deserialize the key value to the model with primary key values populated.
+              This will be used to create appsync delete mutation.  */
+
+            HashMap<String, Object> hashMap = new HashMap<>();
+            if (childSchema.getPrimaryIndexFields().size() > 1 && (associatedModel.resolveIdentifier()
+                    instanceof ModelPrimaryKey)) {
+                ModelPrimaryKey<? extends Model> primaryKey =
+                        (ModelPrimaryKey<? extends Model>) associatedModel.resolveIdentifier();
+                Iterator<String> pkFieldIterator = childSchema.getPrimaryIndexFields().listIterator();
+                hashMap.put(pkFieldIterator.next(), primaryKey.key());
+                Iterator<? extends Serializable> sortKeyIterator = primaryKey.sortedKeys().listIterator();
+
+                while (pkFieldIterator.hasNext()) {
+                    hashMap.put(pkFieldIterator.next(), sortKeyIterator.next());
+                }
+                return hashMap;
+            } else {
+                // Create dummy model instance using just the ID and model type
+                return Collections.singletonMap(childSchema.getPrimaryIndexFields().get(0),
+                        associatedModel.getPrimaryKeyString());
+            }
+
         } else if (modelField.isModel() && fieldValue instanceof Map) {
-            return ((Map<?, ?>) fieldValue).get("id");
+            return Collections.singletonMap("id", ((Map<?, ?>) fieldValue).get("id"));
         } else if (modelField.isModel() && fieldValue == null) {
             return null;
         } else {

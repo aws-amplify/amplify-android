@@ -1,0 +1,39 @@
+type Blog @model {
+  id: ID!
+  name: String!
+  posts: [Post] @connection(name: "BlogPosts")
+  owner: BlogOwnerWithCustomPK! @connection(name: "BlogOwner")
+  createdAt: AWSDateTime
+}
+
+enum PostStatus {
+  ACTIVE
+  INACTIVE
+}
+
+type Post @model {
+  id: ID!
+  title: String!
+  blog: Blog @connection(name: "BlogPosts")
+  comments: [Comment] @connection(name: "PostComments")
+  authors: [PostAuthorJoin] @connection(keyName: "byPost", fields: ["id"])
+  status: PostStatus!
+  rating: Int!
+  createdAt: AWSDateTime
+}
+
+type Comment @model {
+  id: ID!
+  content: String
+  post: Post @connection(name: "PostComments")
+  createdAt: AWSDateTime
+}
+
+type BlogOwnerWithCustomPK @model
+@key(fields: ["name", "wea"]){
+  name: String!
+  id: ID!
+  wea: String!
+  createdAt: AWSDateTime
+}
+
