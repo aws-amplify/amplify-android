@@ -21,6 +21,7 @@ import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
@@ -39,6 +40,7 @@ import org.junit.Ignore;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
+import org.junit.Test;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static com.amplifyframework.storage.s3.UserCredentials.Credential;
@@ -49,7 +51,6 @@ import static org.junit.Assert.assertNotNull;
  * Instrumentation test to confirm that Storage List behaves
  * correctly with regards to the provided storage access level.
  */
-@Ignore("Fix these tests after dev-preview")
 public final class AWSS3StorageListAccessLevelTest {
     private static final String TEST_DIR_NAME = Long.toString(System.currentTimeMillis());
     private static final long UPLOAD_SIZE = 100L;
@@ -113,8 +114,7 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-//    @Test
-    @Ignore("Fix these tests after dev-preview")
+    @Test
     public void testListUnauthenticatedPublicAccess() throws Exception {
         listOptions = StorageListOptions.builder()
                 .accessLevel(StorageAccessLevel.PUBLIC)
@@ -131,8 +131,7 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-//    @Test
-    @Ignore("Fix these tests after dev-preview")
+    @Test
     public void testListUnauthenticatedProtectedAccess() throws Exception {
         listOptions = StorageListOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
@@ -151,8 +150,7 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-//    @Test(expected = StorageException.class)
-    @Ignore("Fix these tests after dev-preview")
+    @Test(expected = StorageException.class)
     public void testListUnauthenticatedPrivateAccess() throws Exception {
         listOptions = StorageListOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
@@ -167,8 +165,7 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-//    @Test
-    @Ignore("Fix these tests after dev-preview")
+    @Test
     public void testListAuthenticatedProtectedAccess() throws Exception {
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         listOptions = StorageListOptions.builder()
@@ -184,8 +181,7 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-//    @Test
-    @Ignore("Fix these tests after dev-preview")
+    @Test
     public void testListAuthenticatedPrivateAccess() throws Exception {
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         listOptions = StorageListOptions.builder()
@@ -205,8 +201,7 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-//    @Test
-    @Ignore("Fix these tests after dev-preview")
+    @Test
     public void testListDifferentUsersProtectedAccess() throws Exception {
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         listOptions = StorageListOptions.builder()
@@ -226,8 +221,7 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-//    @Test(expected = StorageException.class)
-    @Ignore("Fix these tests after dev-preview")
+    @Test(expected = StorageException.class)
     public void testListDifferentUsersPrivateAccess() throws Exception {
         synchronousAuth.signIn(userOne.getUsername(), userTwo.getPassword());
         listOptions = StorageListOptions.builder()
