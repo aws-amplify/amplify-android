@@ -297,7 +297,16 @@ public final class Orchestrator {
                 // are then used to filter data received from AppSync.
                 queryPredicateProvider.resolvePredicates();
 
-                subscriptionProcessor.startSubscriptions();
+                try {
+                    subscriptionProcessor.startSubscriptions();
+                } catch (Throwable failure) {
+                    if (!emitter.tryOnError(new DataStoreException("DataStore subscriptionProcessor failed to start.", failure, "Check your internet.")))
+                    {
+                        LOG.warn("DataStore subscriptionProcessor failed to start after emitter was disposed.", failure);
+                        emitter.onComplete();
+                    }
+                    return;
+                }
                 publishNetworkStatusEvent(true);
 
                 long startTime = System.currentTimeMillis();
