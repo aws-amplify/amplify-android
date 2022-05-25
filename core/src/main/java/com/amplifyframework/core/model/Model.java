@@ -65,8 +65,8 @@ public interface Model {
     @NonNull
     default String getPrimaryKeyString() {
         try {
-            if (resolveIdentifier() instanceof ModelPrimaryKey) {
-                return ((ModelPrimaryKey<?>) resolveIdentifier()).getIdentifier();
+            if (resolveIdentifier() instanceof ModelIdentifier) {
+                return ((ModelIdentifier<?>) resolveIdentifier()).getIdentifier();
             } else {
                 return (String) resolveIdentifier();
             }

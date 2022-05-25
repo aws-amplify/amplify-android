@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelPrimaryKey;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -89,10 +89,10 @@ public final class Where {
         QueryOptions queryOptions = null;
         Iterator<String> pkField = primaryKeyList.listIterator();
         final QueryField idField = QueryField.field(itemClass.getSimpleName(), pkField.next());
-        if (primaryKeyList.size() == 1 && !(modelPrimaryKey instanceof ModelPrimaryKey)) {
+        if (primaryKeyList.size() == 1 && !(modelPrimaryKey instanceof ModelIdentifier)) {
             queryOptions = matches(idField.eq(Objects.requireNonNull(modelPrimaryKey.toString())));
         } else {
-            ModelPrimaryKey<?> primaryKey = (ModelPrimaryKey<?>) modelPrimaryKey;
+            ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) modelPrimaryKey;
             Iterator<?> sortKeyIterator = primaryKey.sortedKeys().listIterator();
             queryOptions = matches(idField.eq(Objects.requireNonNull(primaryKey.key())));
             while (sortKeyIterator.hasNext()) {

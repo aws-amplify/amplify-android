@@ -75,12 +75,12 @@ public class ModelTest {
          */
         @NonNull
         @Override
-        public TestModelPrimaryKey resolveIdentifier() {
-            return new TestModelPrimaryKey(first, last);
+        public TestModelIdentifier resolveIdentifier() {
+            return new TestModelIdentifier(first, last);
         }
     }
 
-    public class TestModelPrimaryKey extends ModelPrimaryKey<TestModel> {
+    public class TestModelIdentifier extends ModelIdentifier<TestModel> {
 
         private static final long serialVersionUID = 1L;
 
@@ -89,7 +89,7 @@ public class ModelTest {
          * @param first partition key.
          * @param last sort key.
          */
-        public TestModelPrimaryKey(String first, String last) {
+        public TestModelIdentifier(String first, String last) {
             super(first, last);
         }
     }
