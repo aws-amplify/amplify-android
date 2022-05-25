@@ -17,17 +17,17 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the OtherBlog type in your schema. */
+/** This is an auto generated class representing the Blog2 type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "OtherBlogs", type = Model.Type.USER, version = 1)
-public final class OtherBlog implements Model {
-  public static final QueryField ID = field("OtherBlog", "id");
-  public static final QueryField NAME = field("OtherBlog", "name");
-  public static final QueryField OWNER = field("OtherBlog", "blogOwnerWithCustomPkBlogsId");
-  public static final QueryField CREATED_AT = field("OtherBlog", "createdAt");
+@ModelConfig(pluralName = "Blog2s", type = Model.Type.USER, version = 1)
+public final class Blog2 implements Model {
+  public static final QueryField ID = field("Blog2", "id");
+  public static final QueryField NAME = field("Blog2", "name");
+  public static final QueryField OWNER = field("Blog2", "blogOwner2BlogsId");
+  public static final QueryField CREATED_AT = field("Blog2", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="BlogOwnerWithCustomPK", isRequired = true) @BelongsTo(targetNames = {"blogOwnerWithCustomPkBlogsId"}, type = BlogOwnerWithCustomPK.class) BlogOwnerWithCustomPK owner;
+  private final @ModelField(targetType="BlogOwner2", isRequired = true) @BelongsTo(targetNames = {"blogOwner2BlogsId"}, type = BlogOwner2.class) BlogOwner2 owner;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   public String resolveIdentifier() {
@@ -42,7 +42,7 @@ public final class OtherBlog implements Model {
       return name;
   }
   
-  public BlogOwnerWithCustomPK getOwner() {
+  public BlogOwner2 getOwner() {
       return owner;
   }
   
@@ -54,7 +54,7 @@ public final class OtherBlog implements Model {
       return updatedAt;
   }
   
-  private OtherBlog(String id, String name, BlogOwnerWithCustomPK owner, Temporal.DateTime createdAt) {
+  private Blog2(String id, String name, BlogOwner2 owner, Temporal.DateTime createdAt) {
     this.id = id;
     this.name = name;
     this.owner = owner;
@@ -68,12 +68,12 @@ public final class OtherBlog implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      OtherBlog otherBlog = (OtherBlog) obj;
-      return ObjectsCompat.equals(getId(), otherBlog.getId()) &&
-              ObjectsCompat.equals(getName(), otherBlog.getName()) &&
-              ObjectsCompat.equals(getOwner(), otherBlog.getOwner()) &&
-              ObjectsCompat.equals(getCreatedAt(), otherBlog.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), otherBlog.getUpdatedAt());
+      Blog2 blog2 = (Blog2) obj;
+      return ObjectsCompat.equals(getId(), blog2.getId()) &&
+              ObjectsCompat.equals(getName(), blog2.getName()) &&
+              ObjectsCompat.equals(getOwner(), blog2.getOwner()) &&
+              ObjectsCompat.equals(getCreatedAt(), blog2.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), blog2.getUpdatedAt());
       }
   }
   
@@ -92,7 +92,7 @@ public final class OtherBlog implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("OtherBlog {")
+      .append("Blog2 {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("owner=" + String.valueOf(getOwner()) + ", ")
@@ -114,8 +114,8 @@ public final class OtherBlog implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    */
-  public static OtherBlog justId(String id) {
-    return new OtherBlog(
+  public static Blog2 justId(String id) {
+    return new Blog2(
       id,
       null,
       null,
@@ -135,12 +135,12 @@ public final class OtherBlog implements Model {
   
 
   public interface OwnerStep {
-    BuildStep owner(BlogOwnerWithCustomPK owner);
+    BuildStep owner(BlogOwner2 owner);
   }
   
 
   public interface BuildStep {
-    OtherBlog build();
+    Blog2 build();
     BuildStep id(String id);
     BuildStep createdAt(Temporal.DateTime createdAt);
   }
@@ -149,13 +149,13 @@ public final class OtherBlog implements Model {
   public static class Builder implements NameStep, OwnerStep, BuildStep {
     private String id;
     private String name;
-    private BlogOwnerWithCustomPK owner;
+    private BlogOwner2 owner;
     private Temporal.DateTime createdAt;
     @Override
-     public OtherBlog build() {
+     public Blog2 build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new OtherBlog(
+        return new Blog2(
           id,
           name,
           owner,
@@ -170,7 +170,7 @@ public final class OtherBlog implements Model {
     }
     
     @Override
-     public BuildStep owner(BlogOwnerWithCustomPK owner) {
+     public BuildStep owner(BlogOwner2 owner) {
         Objects.requireNonNull(owner);
         this.owner = owner;
         return this;
@@ -194,7 +194,7 @@ public final class OtherBlog implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, BlogOwnerWithCustomPK owner, Temporal.DateTime createdAt) {
+    private CopyOfBuilder(String id, String name, BlogOwner2 owner, Temporal.DateTime createdAt) {
       super.id(id);
       super.name(name)
         .owner(owner)
@@ -207,7 +207,7 @@ public final class OtherBlog implements Model {
     }
     
     @Override
-     public CopyOfBuilder owner(BlogOwnerWithCustomPK owner) {
+     public CopyOfBuilder owner(BlogOwner2 owner) {
       return (CopyOfBuilder) super.owner(owner);
     }
     

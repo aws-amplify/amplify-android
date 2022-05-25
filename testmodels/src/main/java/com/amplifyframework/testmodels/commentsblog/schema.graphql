@@ -64,3 +64,18 @@ type BlogOwnerWithCustomPK @model
   createdAt: AWSDateTime
 }
 
+type Blog2 @model {
+  id: ID!
+  name: String!
+  owner: BlogOwner2! @belongsTo
+  createdAt: AWSDateTime
+}
+
+type BlogOwner2 @model
+{
+  name: String! @primaryKey
+  blogs: [Blog2] @hasMany
+  id: ID!
+  createdAt: AWSDateTime
+}
+
