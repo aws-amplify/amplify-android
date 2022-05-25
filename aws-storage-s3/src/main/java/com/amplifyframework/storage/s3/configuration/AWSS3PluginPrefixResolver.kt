@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.s3.configuration
 
+import android.util.Log
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageAccessLevel
@@ -55,6 +56,7 @@ internal class StorageAccessLevelAwarePrefixResolver(
         onSuccess: Consumer<String>,
         onError: Consumer<StorageException>
     ) {
+        Log.d("INSTRUMENTATION", "fetching identityId")
         val identityId = runCatching {
             runBlocking {
                 authCredentialsProvider.getIdentityId()
@@ -63,9 +65,11 @@ internal class StorageAccessLevelAwarePrefixResolver(
         when {
             identityId.isSuccess -> {
                 val resultIdentityId = targetIdentity ?: identityId.getOrThrow()
+                Log.d("INSTRUMENTATION", "fetched $resultIdentityId")
                 onSuccess.accept(S3Keys.getAccessLevelPrefix(accessLevel, resultIdentityId))
             }
             else -> {
+                Log.d("INSTRUMENTATION", "fetched resultIdentityId ${identityId.exceptionOrNull().toString()}")
                 onError.accept(StorageException("Failed to fetch identity ID", identityId.exceptionOrNull().toString()))
             }
         }

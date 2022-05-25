@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.s3.operation;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.auth.AuthCredentialsProvider;
@@ -83,7 +84,9 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
                     prefix -> {
                         try {
                             String serviceKey = prefix.concat(getRequest().getPath());
+                            Log.d("INSTRUMENTATION", "List" + serviceKey);
                             List<StorageItem> listedItems = storageService.listFiles(serviceKey, prefix);
+                            Log.d("INSTRUMENTATION", "List fetched" + listedItems.size());
                             onSuccess.accept(StorageListResult.fromItems(listedItems));
                         } catch (Exception exception) {
                             onError.accept(new StorageException(
