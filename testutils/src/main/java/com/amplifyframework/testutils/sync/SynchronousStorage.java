@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
  * performing various operations.
  */
 public final class SynchronousStorage {
-    private static final long STORAGE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(50);
+    private static final long STORAGE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(200);
     private final StorageCategoryBehavior asyncDelegate;
 
     private SynchronousStorage(StorageCategoryBehavior asyncDelegate) {

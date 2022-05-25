@@ -5,6 +5,7 @@ import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
 import aws.sdk.kotlin.services.s3.presigners.presign
+import aws.smithy.kotlin.runtime.client.SdkLogMode
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageItem
@@ -35,6 +36,7 @@ internal class AWSS3StorageService(
 
     private var s3Client: S3Client = S3Client {
         region = awsRegion
+        sdkLogMode = SdkLogMode.LogRequestWithBody + SdkLogMode.LogResponseWithBody
         credentialsProvider = authCredentialsProvider
     }
 
