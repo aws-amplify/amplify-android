@@ -27,7 +27,7 @@ public final class Blog2 implements Model {
   public static final QueryField CREATED_AT = field("Blog2", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="BlogOwner2", isRequired = true) @BelongsTo(targetNames = {"blogOwner2BlogsId"}, type = BlogOwner2.class) BlogOwner2 owner;
+  private final @ModelField(targetType="BlogOwner2", isRequired = true) @BelongsTo(targetName = "otherBlogOwner2Name", targetNames = {"otherBlogOwner2Name"}, type = BlogOwner2.class) BlogOwner2 owner;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   public String resolveIdentifier() {

@@ -407,11 +407,12 @@ public final class AppSyncRequestFactoryTest {
      * @throws JSONException from JSONAssert.assertEquals.
      */
     @Test
-    public void validateMutationGenerationOnCreateItemWithCustomForeignKeyAndSortKey() throws AmplifyException, JSONException {
+    public void validateMutationGenerationOnCreateItemWithCustomForeignKeyAndSortKey() throws
+            AmplifyException, JSONException {
         final BlogOwnerWithCustomPK blogOwner = BlogOwnerWithCustomPK.builder()
+                .id("b0792b4b-2b38-4ab7-a12d-42b35583171e")
                 .name("Stanley")
                 .wea("WEA")
-                .id("b0792b4b-2b38-4ab7-a12d-42b35583171e")
                 .build();
         final OtherBlog blog = OtherBlog.builder()
                 .name("My Other Blog")
@@ -437,10 +438,11 @@ public final class AppSyncRequestFactoryTest {
      * @throws JSONException from JSONAssert.assertEquals.
      */
     @Test
-    public void validateMutationGenerationOnCreateItemWithCustomForeignKeyNoSortKey() throws AmplifyException, JSONException {
+    public void validateMutationGenerationOnCreateItemWithCustomForeignKeyNoSortKey()
+            throws AmplifyException, JSONException {
         final BlogOwner2 blogOwner = BlogOwner2.builder()
-                .name("Stanley")
                 .id("b0792b4b-2b38-4ab7-a12d-42b35583171e")
+                .name("Stanley")
                 .build();
         final Blog2 blog = Blog2.builder()
                 .name("My Other Blog")
@@ -450,8 +452,6 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Blog2.class);
         String expected = Resources.readAsString("create-blog2.txt");
         String actual = AppSyncRequestFactory.buildCreationRequest(schema, blog, DEFAULT_STRATEGY).getContent();
-        System.out.println("  Actual: " + actual);
-        System.out.println("Expected: " + expected);
         JSONAssert.assertEquals(
                 expected,
                 actual,
