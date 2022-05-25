@@ -3,42 +3,31 @@ package com.amplifyframework.testmodels.customprimarykey;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelPrimaryKey;
-import com.amplifyframework.core.model.annotations.BelongsTo;
-import com.amplifyframework.core.model.annotations.HasMany;
-import com.amplifyframework.core.model.annotations.Index;
+import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.temporal.Temporal;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the Post type in your schema. */
+/** This is an auto generated class representing the BlogWithDefaultHasOne type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Posts", type = Model.Type.USER, version = 1)
-@Index(name = "undefined", fields = {"id","title"})
-public final class Post implements Model {
-  public static final QueryField ID = field("Post", "id");
-  public static final QueryField TITLE = field("Post", "title");
-  public static final QueryField BLOG = field("Post", "blogPostsId");
+@ModelConfig(pluralName = "BlogWithDefaultHasOnes", type = Model.Type.USER, version = 1)
+public final class BlogWithDefaultHasOne implements Model {
+  public static final QueryField ID = field("BlogWithDefaultHasOne", "id");
+  public static final QueryField TITLE = field("BlogWithDefaultHasOne", "title");
+  public static final QueryField BLOG_WITH_DEFAULT_HAS_ONE_OWNER_ID = field("BlogWithDefaultHasOne", "blogWithDefaultHasOneOwnerId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String", isRequired = true) String title;
-  private final @ModelField(targetType="Blog") @BelongsTo(targetNames = {"blogPostsId"}, type = Blog.class) Blog blog;
-  private final @ModelField(targetType="Comment") @HasMany(associatedWith = "post", type = Comment.class) List<Comment> comments = null;
+  private final @ModelField(targetType="String") String title;
+  private final @ModelField(targetType="User") @HasOne(associatedWith = "id", type = User.class) User owner = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-  private PostModelPrimaryKey postModelPrimaryKey;
-
-  public PostModelPrimaryKey resolveIdentifier() {
-      if (postModelPrimaryKey == null) {
-          postModelPrimaryKey = new PostModelPrimaryKey(id, title);
-      }
-    return postModelPrimaryKey;
+  private final @ModelField(targetType="ID") String blogWithDefaultHasOneOwnerId;
+  public String resolveIdentifier() {
+    return id;
   }
   
   public String getId() {
@@ -49,12 +38,8 @@ public final class Post implements Model {
       return title;
   }
   
-  public Blog getBlog() {
-      return blog;
-  }
-  
-  public List<Comment> getComments() {
-      return comments;
+  public User getOwner() {
+      return owner;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -65,10 +50,14 @@ public final class Post implements Model {
       return updatedAt;
   }
   
-  private Post(String id, String title, Blog blog) {
+  public String getBlogWithDefaultHasOneOwnerId() {
+      return blogWithDefaultHasOneOwnerId;
+  }
+  
+  private BlogWithDefaultHasOne(String id, String title, String blogWithDefaultHasOneOwnerId) {
     this.id = id;
     this.title = title;
-    this.blog = blog;
+    this.blogWithDefaultHasOneOwnerId = blogWithDefaultHasOneOwnerId;
   }
   
   @Override
@@ -78,12 +67,12 @@ public final class Post implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      Post post = (Post) obj;
-      return ObjectsCompat.equals(getId(), post.getId()) &&
-              ObjectsCompat.equals(getTitle(), post.getTitle()) &&
-              ObjectsCompat.equals(getBlog(), post.getBlog()) &&
-              ObjectsCompat.equals(getCreatedAt(), post.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), post.getUpdatedAt());
+      BlogWithDefaultHasOne blogWithDefaultHasOne = (BlogWithDefaultHasOne) obj;
+      return ObjectsCompat.equals(getId(), blogWithDefaultHasOne.getId()) &&
+              ObjectsCompat.equals(getTitle(), blogWithDefaultHasOne.getTitle()) &&
+              ObjectsCompat.equals(getCreatedAt(), blogWithDefaultHasOne.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), blogWithDefaultHasOne.getUpdatedAt()) &&
+              ObjectsCompat.equals(getBlogWithDefaultHasOneOwnerId(), blogWithDefaultHasOne.getBlogWithDefaultHasOneOwnerId());
       }
   }
   
@@ -92,9 +81,9 @@ public final class Post implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getTitle())
-      .append(getBlog())
       .append(getCreatedAt())
       .append(getUpdatedAt())
+      .append(getBlogWithDefaultHasOneOwnerId())
       .toString()
       .hashCode();
   }
@@ -102,17 +91,17 @@ public final class Post implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("Post {")
+      .append("BlogWithDefaultHasOne {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("title=" + String.valueOf(getTitle()) + ", ")
-      .append("blog=" + String.valueOf(getBlog()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
-      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
+      .append("blogWithDefaultHasOneOwnerId=" + String.valueOf(getBlogWithDefaultHasOneOwnerId()))
       .append("}")
       .toString();
   }
   
-  public static TitleStep builder() {
+  public static BuildStep builder() {
       return new Builder();
   }
   
@@ -124,8 +113,8 @@ public final class Post implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    */
-  public static Post justId(String id) {
-    return new Post(
+  public static BlogWithDefaultHasOne justId(String id) {
+    return new BlogWithDefaultHasOne(
       id,
       null,
       null
@@ -135,44 +124,39 @@ public final class Post implements Model {
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       title,
-      blog);
+      blogWithDefaultHasOneOwnerId);
   }
-  public interface TitleStep {
-    BuildStep title(String title);
-  }
-  
-
   public interface BuildStep {
-    Post build();
+    BlogWithDefaultHasOne build();
     BuildStep id(String id);
-    BuildStep blog(Blog blog);
+    BuildStep title(String title);
+    BuildStep blogWithDefaultHasOneOwnerId(String blogWithDefaultHasOneOwnerId);
   }
   
 
-  public static class Builder implements TitleStep, BuildStep {
+  public static class Builder implements BuildStep {
     private String id;
     private String title;
-    private Blog blog;
+    private String blogWithDefaultHasOneOwnerId;
     @Override
-     public Post build() {
+     public BlogWithDefaultHasOne build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new Post(
+        return new BlogWithDefaultHasOne(
           id,
           title,
-          blog);
+          blogWithDefaultHasOneOwnerId);
     }
     
     @Override
      public BuildStep title(String title) {
-        Objects.requireNonNull(title);
         this.title = title;
         return this;
     }
     
     @Override
-     public BuildStep blog(Blog blog) {
-        this.blog = blog;
+     public BuildStep blogWithDefaultHasOneOwnerId(String blogWithDefaultHasOneOwnerId) {
+        this.blogWithDefaultHasOneOwnerId = blogWithDefaultHasOneOwnerId;
         return this;
     }
     
@@ -188,10 +172,10 @@ public final class Post implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String title, Blog blog) {
+    private CopyOfBuilder(String id, String title, String blogWithDefaultHasOneOwnerId) {
       super.id(id);
       super.title(title)
-        .blog(blog);
+        .blogWithDefaultHasOneOwnerId(blogWithDefaultHasOneOwnerId);
     }
     
     @Override
@@ -200,15 +184,9 @@ public final class Post implements Model {
     }
     
     @Override
-     public CopyOfBuilder blog(Blog blog) {
-      return (CopyOfBuilder) super.blog(blog);
+     public CopyOfBuilder blogWithDefaultHasOneOwnerId(String blogWithDefaultHasOneOwnerId) {
+      return (CopyOfBuilder) super.blogWithDefaultHasOneOwnerId(blogWithDefaultHasOneOwnerId);
     }
   }
-
-  public static class PostModelPrimaryKey extends ModelPrimaryKey<Comment> {
-        private static final long serialVersionUID = 1L;
-        public PostModelPrimaryKey(String id, String title) {
-            super(id, title);
-        }
-    }
+  
 }
