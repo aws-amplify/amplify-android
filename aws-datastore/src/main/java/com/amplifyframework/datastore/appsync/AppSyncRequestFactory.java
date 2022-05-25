@@ -30,7 +30,7 @@ import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
-import com.amplifyframework.core.model.ModelPrimaryKey;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
@@ -53,12 +53,15 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 
@@ -443,16 +446,22 @@ final class AppSyncRequestFactory {
                                                ModelAssociation association) throws AmplifyException {
         final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
         if (modelField.isModel() && fieldValue instanceof Model) {
-            if (((Model) fieldValue).resolveIdentifier() instanceof ModelPrimaryKey<?>) {
-                final ModelPrimaryKey<?> primaryKey = (ModelPrimaryKey<?>) ((Model) fieldValue).resolveIdentifier();
+            if (((Model) fieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
+                final ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) ((Model) fieldValue).resolveIdentifier();
+                ListIterator<String> targetNames = Arrays.asList(association.getTargetNames()).listIterator();
+                Iterator<? extends Serializable> sortedKeys = primaryKey.sortedKeys().listIterator();
 
-                result.put(association.getTargetNames()[0], primaryKey.key().toString());
+                result.put(targetNames.next(), primaryKey.key().toString());
 
-                for (int i = 0; i < primaryKey.sortedKeys().size(); i++) {
-                    result.put(association.getTargetNames()[i + 1], primaryKey.sortedKeys().get(i).toString());
+                while (targetNames.hasNext()) {
+                    result.put(targetNames.next(), sortedKeys.next().toString());
                 }
+            } else if (((Model) fieldValue).resolveIdentifier() instanceof String) {
+                result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
             } else {
-                // What goes here?
+                throw new AmplifyException(
+                        "Unknown resolveIdentifier type " + ((Model) fieldValue).resolveIdentifier().toString(),
+                        "This may be a bug, consider filing a ticket.");
             }
         }
 
