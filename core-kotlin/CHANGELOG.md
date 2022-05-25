@@ -1,3 +1,19 @@
+## [Release 0.20.5-dev-preview.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v0.20.5-dev-preview.0)
+
+### Bug Fixes
+
+- When DateTimeParseException is not available for lower apis (#1701)
+
+### Miscellaneous
+
+- Version bumps (#1721)
+- Update SDK version in build.gradle (#1741)
+- chore: update gson version (#1744)
+- Update notify_comments.yml (#1746)
+- Update SDK version in build.gradle (#1747)
+
+[See all changes between 0.20.0-dev-preview.0 and 0.20.5-dev-preview.0](https://github.com/aws-amplify/amplify-android/compare/release_v0.20.0...release_v0.20.5-dev-preview.0)
+
 ## [Release 0.20.0-dev-preview.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.0-dev-preview.0)
 
 ### Miscellaneous
