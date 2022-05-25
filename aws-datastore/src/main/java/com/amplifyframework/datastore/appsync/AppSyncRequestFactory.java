@@ -425,6 +425,8 @@ final class AppSyncRequestFactory {
             } else if (association.isOwner()) {
                 if (schema.getVersion() >= 1 && association.getTargetNames() != null
                         && association.getTargetNames().length > 0) {
+                    // When target name length is more than 0 there are two scenarios, one is when
+                    // there is custom primary key and other is when we have composite primary key.
                     insertForeignKeyValues(result, modelField, instance, schema, association);
                 } else {
                     String targetName = association.getTargetName();

@@ -88,7 +88,7 @@ public final class ModelAssociation {
     /**
      * Gets the target names of foreign key.
      * Null if field holding this association is not a foreign key.
-     * @return The name of field within same model that references foreign key.
+     * @return The names of field within same model that references foreign key.
      */
     public String[] getTargetNames() {
         return targetNames;

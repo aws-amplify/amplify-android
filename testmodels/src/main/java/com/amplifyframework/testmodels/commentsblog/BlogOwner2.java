@@ -2,7 +2,6 @@ package com.amplifyframework.testmodels.commentsblog;
 
 import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.temporal.Temporal;
-import com.amplifyframework.core.model.ModelIdentifier;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,27 +17,21 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the BlogOwnerWithCustomPK type in your schema. */
+/** This is an auto generated class representing the BlogOwner2 type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "BlogOwnerWithCustomPKS", type = Model.Type.USER, version = 1)
-@Index(name = "undefined", fields = {"name","wea"})
-public final class BlogOwnerWithCustomPK implements Model {
-  public static final QueryField ID = field("BlogOwnerWithCustomPK", "id");
-  public static final QueryField NAME = field("BlogOwnerWithCustomPK", "name");
-  public static final QueryField WEA = field("BlogOwnerWithCustomPK", "wea");
-  public static final QueryField CREATED_AT = field("BlogOwnerWithCustomPK", "createdAt");
+@ModelConfig(pluralName = "BlogOwner2s", type = Model.Type.USER, version = 1)
+@Index(name = "undefined", fields = {"name"})
+public final class BlogOwner2 implements Model {
+  public static final QueryField ID = field("BlogOwner2", "id");
+  public static final QueryField NAME = field("BlogOwner2", "name");
+  public static final QueryField CREATED_AT = field("BlogOwner2", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="OtherBlog") @HasMany(associatedWith = "owner", type = OtherBlog.class) List<OtherBlog> blogs = null;
-  private final @ModelField(targetType="String", isRequired = true) String wea;
+  private final @ModelField(targetType="Blog2") @HasMany(associatedWith = "owner", type = Blog2.class) List<Blog2> blogs = null;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-  private BlogOwnerWithCustomPKIdentifier blogOwnerWithCustomPKIdentifier;
-  public BlogOwnerWithCustomPKIdentifier resolveIdentifier() {
-    if (blogOwnerWithCustomPKIdentifier == null) {
-      this.blogOwnerWithCustomPKIdentifier = new BlogOwnerWithCustomPKIdentifier(name, wea);
-    }
-    return blogOwnerWithCustomPKIdentifier;
+  public String resolveIdentifier() {
+    return name;
   }
   
   public String getId() {
@@ -49,12 +42,8 @@ public final class BlogOwnerWithCustomPK implements Model {
       return name;
   }
   
-  public List<OtherBlog> getBlogs() {
+  public List<Blog2> getBlogs() {
       return blogs;
-  }
-  
-  public String getWea() {
-      return wea;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -65,10 +54,9 @@ public final class BlogOwnerWithCustomPK implements Model {
       return updatedAt;
   }
   
-  private BlogOwnerWithCustomPK(String id, String name, String wea, Temporal.DateTime createdAt) {
+  private BlogOwner2(String id, String name, Temporal.DateTime createdAt) {
     this.id = id;
     this.name = name;
-    this.wea = wea;
     this.createdAt = createdAt;
   }
   
@@ -79,12 +67,11 @@ public final class BlogOwnerWithCustomPK implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      BlogOwnerWithCustomPK blogOwnerWithCustomPk = (BlogOwnerWithCustomPK) obj;
-      return ObjectsCompat.equals(getId(), blogOwnerWithCustomPk.getId()) &&
-              ObjectsCompat.equals(getName(), blogOwnerWithCustomPk.getName()) &&
-              ObjectsCompat.equals(getWea(), blogOwnerWithCustomPk.getWea()) &&
-              ObjectsCompat.equals(getCreatedAt(), blogOwnerWithCustomPk.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), blogOwnerWithCustomPk.getUpdatedAt());
+      BlogOwner2 blogOwner2 = (BlogOwner2) obj;
+      return ObjectsCompat.equals(getId(), blogOwner2.getId()) &&
+              ObjectsCompat.equals(getName(), blogOwner2.getName()) &&
+              ObjectsCompat.equals(getCreatedAt(), blogOwner2.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), blogOwner2.getUpdatedAt());
       }
   }
   
@@ -93,7 +80,6 @@ public final class BlogOwnerWithCustomPK implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getName())
-      .append(getWea())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -103,10 +89,9 @@ public final class BlogOwnerWithCustomPK implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("BlogOwnerWithCustomPK {")
+      .append("BlogOwner2 {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
-      .append("wea=" + String.valueOf(getWea()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -120,7 +105,6 @@ public final class BlogOwnerWithCustomPK implements Model {
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       name,
-      wea,
       createdAt);
   }
   public interface IdStep {
@@ -129,33 +113,26 @@ public final class BlogOwnerWithCustomPK implements Model {
   
 
   public interface NameStep {
-    WeaStep name(String name);
-  }
-  
-
-  public interface WeaStep {
-    BuildStep wea(String wea);
+    BuildStep name(String name);
   }
   
 
   public interface BuildStep {
-    BlogOwnerWithCustomPK build();
+    BlogOwner2 build();
     BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
 
-  public static class Builder implements IdStep, NameStep, WeaStep, BuildStep {
+  public static class Builder implements IdStep, NameStep, BuildStep {
     private String id;
     private String name;
-    private String wea;
     private Temporal.DateTime createdAt;
     @Override
-     public BlogOwnerWithCustomPK build() {
+     public BlogOwner2 build() {
         
-        return new BlogOwnerWithCustomPK(
+        return new BlogOwner2(
           id,
           name,
-          wea,
           createdAt);
     }
     
@@ -167,16 +144,9 @@ public final class BlogOwnerWithCustomPK implements Model {
     }
     
     @Override
-     public WeaStep name(String name) {
+     public BuildStep name(String name) {
         Objects.requireNonNull(name);
         this.name = name;
-        return this;
-    }
-    
-    @Override
-     public BuildStep wea(String wea) {
-        Objects.requireNonNull(wea);
-        this.wea = wea;
         return this;
     }
     
@@ -189,10 +159,9 @@ public final class BlogOwnerWithCustomPK implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String wea, Temporal.DateTime createdAt) {
+    private CopyOfBuilder(String id, String name, Temporal.DateTime createdAt) {
       super.id(id)
         .name(name)
-        .wea(wea)
         .createdAt(createdAt);
     }
     
@@ -207,21 +176,8 @@ public final class BlogOwnerWithCustomPK implements Model {
     }
     
     @Override
-     public CopyOfBuilder wea(String wea) {
-      return (CopyOfBuilder) super.wea(wea);
-    }
-    
-    @Override
      public CopyOfBuilder createdAt(Temporal.DateTime createdAt) {
       return (CopyOfBuilder) super.createdAt(createdAt);
-    }
-  }
-  
-
-  public static class BlogOwnerWithCustomPKIdentifier extends ModelIdentifier<BlogOwnerWithCustomPK> {
-    private static final long serialVersionUID = 1L;
-    public BlogOwnerWithCustomPKIdentifier(String name, String wea) {
-      super(name, wea);
     }
   }
   
