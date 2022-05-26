@@ -273,7 +273,7 @@ internal abstract class BaseTransferWorker(
                     }
 
                     override suspend fun readRemaining(limit: Int): ByteArray {
-                        return readRemaining(limit).also {
+                        return oneShotStream.readRemaining(limit).also {
                             if (it.isNotEmpty()) {
                                 progressListener?.progressChanged(it.size.toLong())
                             }
