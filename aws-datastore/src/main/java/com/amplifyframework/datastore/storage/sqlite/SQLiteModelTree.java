@@ -147,12 +147,14 @@ final class SQLiteModelTree {
                         if (childSchema.getPrimaryIndexFields().size() > 1) {
                             childFields.addAll(childSchema.getPrimaryIndexFields());
                         }
-                        parentId = childSchema.getAssociations() // get a map of associations
-                                .get(association.getAssociatedName()) // get @BelongsTo association linked to this field
-                                .getTargetName(); // get the target field (parent) name
+                        parentId = SQLiteTable.getForeignKeyColumnName(childSchema.getVersion(),
+                                // get a map of associations
+                                association.getAssociatedName(), childSchema.getAssociations()
+                                        // get the target field (parent) name
+                                        .get(association.getAssociatedName()));
                     } catch (NullPointerException unexpectedAssociation) {
-                        LOG.warn("Foreign key was not found due to unidirectional relationship without @BelongsTo. " +
-                                "Failed to publish cascading mutations.",
+                        LOG.warn("Foreign key was not found due to unidirectional relationship without " +
+                                        "@BelongsTo. " + "Failed to publish cascading mutations.",
                                 unexpectedAssociation);
                         return;
                     }
