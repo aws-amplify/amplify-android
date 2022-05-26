@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.s3.credentials
 
+import android.util.Log
 import aws.sdk.kotlin.runtime.auth.credentials.Credentials
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.auth.AuthSession
@@ -34,9 +35,11 @@ internal class CognitoCredentialsProvider : AuthCredentialsProvider {
      */
     override suspend fun getIdentityId(): String {
         return suspendCoroutine { continuation ->
+            Log.d("INSTRUMENTATION", "fetch getIdentityId")
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
                     authSession.toAWSCognitoAuthSession()?.identityId?.value?.let {
+                        Log.d("INSTRUMENTATION", "fetched identity $it")
                         continuation.resume(it)
                     } ?: continuation.resumeWithException(
                         Exception(
@@ -57,9 +60,11 @@ internal class CognitoCredentialsProvider : AuthCredentialsProvider {
      */
     override suspend fun getCredentials(): Credentials {
         return suspendCoroutine { continuation ->
+            Log.d("INSTRUMENTATION", "fetch getCredentials")
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
                     authSession.toAWSCognitoAuthSession()?.awsCredentials?.value?.let {
+                        Log.d("INSTRUMENTATION", "fetched getCredentials $it")
                         continuation.resume(it)
                     } ?: continuation.resumeWithException(
                         Exception(
