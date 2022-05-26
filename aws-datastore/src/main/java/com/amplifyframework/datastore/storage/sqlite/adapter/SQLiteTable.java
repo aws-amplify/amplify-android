@@ -114,7 +114,7 @@ public final class SQLiteTable {
             // All associated fields are also foreign keys at this point
             SQLiteColumn column = SQLiteColumn.builder()
                     .name(isAssociated
-                            ? association.getTargetName()
+                            ? getForeignKeyColumnName(modelSchema.getVersion(), modelField.getName(), association)
                             : modelField.getName())
                     .fieldName(modelField.getName())
                     .tableName(modelSchema.getName())
@@ -212,6 +212,24 @@ public final class SQLiteTable {
             return PrimaryKey.fieldName();
         }
         return getPrimaryKey().getQuotedColumnName();
+    }
+
+    /**
+     * Returns the column name of foreign key for the associated field passed in.
+     * @param schemaVersion int
+     * @param fieldName String associated filedName ModelAssociation association
+     * @param association ModelAssociation
+     * @return the column name of foreign key
+     */
+    @NonNull
+    public static String getForeignKeyColumnName(int schemaVersion, String fieldName, ModelAssociation association) {
+        if (schemaVersion == 0) {
+            return association.getTargetName();
+        }
+        if (association.getTargetNames().length > 1) {
+            return "@@" + fieldName + "ForeignKey";
+        }
+        return association.getTargetNames()[0];
     }
 
     /**
