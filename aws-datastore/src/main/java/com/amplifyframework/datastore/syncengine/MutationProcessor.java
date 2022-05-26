@@ -121,9 +121,9 @@ final class MutationProcessor {
                         "Timeout processing " + next, "Check your internet connection."
                     ));
                 }
-            } catch (RuntimeException e) {
+            } catch (RuntimeException error) {
                 return Completable.error(new DataStoreException(
-                    "Failed to process " + next, "Check your internet connection."
+                        "Failed to process " + error, "Check your internet connection."
                 ));
             }
         } while (true);
