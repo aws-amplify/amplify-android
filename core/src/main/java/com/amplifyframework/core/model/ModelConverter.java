@@ -84,9 +84,9 @@ public final class ModelConverter {
 
             HashMap<String, Object> hashMap = new HashMap<>();
             if (childSchema.getPrimaryIndexFields().size() > 1 && (associatedModel.resolveIdentifier()
-                    instanceof ModelPrimaryKey)) {
-                ModelPrimaryKey<? extends Model> primaryKey =
-                        (ModelPrimaryKey<? extends Model>) associatedModel.resolveIdentifier();
+                    instanceof ModelIdentifier)) {
+                ModelIdentifier<? extends Model> primaryKey =
+                        (ModelIdentifier<? extends Model>) associatedModel.resolveIdentifier();
                 Iterator<String> pkFieldIterator = childSchema.getPrimaryIndexFields().listIterator();
                 hashMap.put(pkFieldIterator.next(), primaryKey.key());
                 Iterator<? extends Serializable> sortKeyIterator = primaryKey.sortedKeys().listIterator();

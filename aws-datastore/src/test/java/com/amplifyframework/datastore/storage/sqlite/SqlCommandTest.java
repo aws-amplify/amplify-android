@@ -205,7 +205,7 @@ public class SqlCommandTest {
      * CREATE INDEX SQL command. The Create Index command should only be generated if the Primary key is composite.
      */
     @Test
-    public void expectedCreateIndexCommandNotCreatedForSingleModelPrimaryKey() {
+    public void expectedCreateIndexCommandNotCreatedForSingleModelIdentifier() {
         final ModelIndex index = ModelIndex.builder()
                 .indexName(SQLiteCommandFactory.UNDEFINED)
                 .indexFieldNames(Collections.singletonList("id"))

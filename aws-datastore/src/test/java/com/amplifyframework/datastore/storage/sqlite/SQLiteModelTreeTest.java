@@ -188,7 +188,7 @@ public final class SQLiteModelTreeTest {
     private class D extends TestModel {
         @ModelField(targetType = "String") private final String name;
         @ModelField(targetType = "String") private final String title;
-        @ModelField(targetType = "C") @BelongsTo(targetName = "cId", type = C.class) private C c;
+        @ModelField(targetType = "C") @BelongsTo(targetNames = {"cId"}, type = C.class) private C c;
         @NonNull public DIdentifier resolveIdentifier() { return new DIdentifier(name, title); }
         private D(String name, String title) {
             this.name = name;

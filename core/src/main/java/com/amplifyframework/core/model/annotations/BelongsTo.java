@@ -44,16 +44,19 @@ public @interface BelongsTo {
     Class<? extends Model> type();
 
     /**
-     * Returns the target name of foreign key.
+     * Returns the target name of foreign key when schema version == 0.
+     * When Version >= 1, this field is empty.
      * This is the name that will be used to store foreign key.
      * @return the target name of foreign key.
      */
     String targetName() default "";
 
     /**
-     * Returns the target names of foreign key when there is a primary key and at least one sort key.
+     * Returns the target name(s) of foreign key when schema version >= 1.
+     * When schema version == 0, this field is empty.
+     * Primary key will always be in targetName[0].  Sort keys will be in targetNames[1], targetNames[2], ...
      * These are the names that will be used to store foreign key.
-     * @return the target names of foreign key.
+     * @return the target name(s) of foreign key.
      */
     String[] targetNames() default {};
 }

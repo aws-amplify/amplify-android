@@ -3,7 +3,7 @@ package com.amplifyframework.testmodels.customprimarykey;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelPrimaryKey;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.Index;
@@ -32,13 +32,13 @@ public final class Post implements Model {
   private final @ModelField(targetType="Comment") @HasMany(associatedWith = "post", type = Comment.class) List<Comment> comments = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-  private PostModelPrimaryKey postModelPrimaryKey;
+  private PostModelIdentifier postModelIdentifier;
 
-  public PostModelPrimaryKey resolveIdentifier() {
-      if (postModelPrimaryKey == null) {
-          postModelPrimaryKey = new PostModelPrimaryKey(id, title);
+  public PostModelIdentifier resolveIdentifier() {
+      if (postModelIdentifier == null) {
+          postModelIdentifier = new PostModelIdentifier(id, title);
       }
-    return postModelPrimaryKey;
+    return postModelIdentifier;
   }
   
   public String getId() {
@@ -205,9 +205,9 @@ public final class Post implements Model {
     }
   }
 
-  public static class PostModelPrimaryKey extends ModelPrimaryKey<Comment> {
+  public static class PostModelIdentifier extends ModelIdentifier<Comment> {
         private static final long serialVersionUID = 1L;
-        public PostModelPrimaryKey(String id, String title) {
+        public PostModelIdentifier(String id, String title) {
             super(id, title);
         }
     }

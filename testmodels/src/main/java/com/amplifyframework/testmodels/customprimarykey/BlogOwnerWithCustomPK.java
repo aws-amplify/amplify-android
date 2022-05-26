@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelPrimaryKey;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
@@ -226,7 +226,7 @@ public final class BlogOwnerWithCustomPK implements Model {
         }
     }
 
-    public class BlogOwnerPrimaryKey extends ModelPrimaryKey<BlogOwnerWithCustomPK> {
+    public class BlogOwnerPrimaryKey extends ModelIdentifier<BlogOwnerWithCustomPK> {
         private static final long serialVersionUID = 1L;
 
         protected BlogOwnerPrimaryKey(String name, String wea) {
