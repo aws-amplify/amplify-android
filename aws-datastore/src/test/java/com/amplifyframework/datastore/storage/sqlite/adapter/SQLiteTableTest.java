@@ -46,6 +46,14 @@ public class SQLiteTableTest {
                 .isNonNull(true)
                 .tableName("Post")
                 .build());
+        columns.put("blog", SQLiteColumn.builder()
+                .name("blogPostsId")
+                .fieldName("blog")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("Post")
+                .ownerOf("Blog")
+                .build());
         columns.put("title", SQLiteColumn.builder()
                 .name("title")
                 .fieldName("title")
@@ -53,13 +61,19 @@ public class SQLiteTableTest {
                 .isNonNull(true)
                 .tableName("Post")
                 .build());
-        columns.put("blog", SQLiteColumn.builder()
-                .name("postBlogId")
-                .fieldName("blog")
+        columns.put("status", SQLiteColumn.builder()
+                .name("status")
+                .fieldName("status")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(true)
+                .tableName("Post")
+                .build());
+        columns.put("updatedAt", SQLiteColumn.builder()
+                .name("updatedAt")
+                .fieldName("updatedAt")
                 .dataType(SQLiteDataType.TEXT)
                 .isNonNull(false)
                 .tableName("Post")
-                .ownerOf("Blog")
                 .build());
         columns.put("status", SQLiteColumn.builder()
                 .name("status")
@@ -74,6 +88,14 @@ public class SQLiteTableTest {
                 .dataType(SQLiteDataType.INTEGER)
                 .isNonNull(true)
                 .tableName("Post")
+                .build());
+        columns.put("author", SQLiteColumn.builder()
+                .name("authorPostsId")
+                .fieldName("author")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("Post")
+                .ownerOf("Author")
                 .build());
         columns.put("createdAt", SQLiteColumn.builder()
                 .name("createdAt")

@@ -6,17 +6,15 @@
       _deleted
       _lastChangedAt
       _version
-      authors {
-        items {
-          __typename
-          _deleted
-          _lastChangedAt
-          _version
-          createdAt
-          id
-        }
-        nextToken
-        startedAt
+      author {
+        __typename
+        _deleted
+        _lastChangedAt
+        _version
+        createdAt
+        id
+        name
+        updatedAt
       }
       blog {
         __typename
@@ -26,6 +24,7 @@
         createdAt
         id
         name
+        updatedAt
       }
       comments {
         items {
@@ -36,6 +35,7 @@
           content
           createdAt
           id
+          updatedAt
         }
         nextToken
         startedAt
@@ -45,6 +45,7 @@
       rating
       status
       title
+      updatedAt
     }
     nextToken
     startedAt

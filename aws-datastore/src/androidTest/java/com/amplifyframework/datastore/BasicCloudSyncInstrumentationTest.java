@@ -43,7 +43,6 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
-import com.amplifyframework.testmodels.commentsblog.PostAuthorJoin;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.ModelAssert;
@@ -125,7 +124,6 @@ public final class BasicCloudSyncInstrumentationTest {
                 .syncExpression(Post.class, () -> Post.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Comment.class, () -> Comment.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Author.class, () -> Author.CREATED_AT.gt(tenMinutesAgoDateTime))
-                .syncExpression(PostAuthorJoin.class, () -> PostAuthorJoin.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .build())
             .finish();
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);

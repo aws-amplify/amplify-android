@@ -1,22 +1,20 @@
  {
-  authors {
-    items {
-      author {
-        createdAt
-        id
-        name
-      }
-      createdAt
-      id
-      post {
+  author {
+    createdAt
+    id
+    name
+    posts {
+      items {
         createdAt
         id
         rating
         status
         title
+        updatedAt
       }
+      nextToken
     }
-    nextToken
+    updatedAt
   }
   blog {
     createdAt
@@ -36,9 +34,11 @@
         rating
         status
         title
+        updatedAt
       }
       nextToken
     }
+    updatedAt
   }
   comments {
     items {
@@ -51,7 +51,9 @@
         rating
         status
         title
+        updatedAt
       }
+      updatedAt
     }
     nextToken
   }
@@ -60,4 +62,5 @@
   rating
   status
   title
+  updatedAt
 }

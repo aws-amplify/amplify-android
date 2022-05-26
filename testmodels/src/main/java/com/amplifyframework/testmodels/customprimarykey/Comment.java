@@ -3,7 +3,7 @@ package com.amplifyframework.testmodels.customprimarykey;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelPrimaryKey;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
@@ -245,7 +245,7 @@ public final class Comment implements Model {
   }
   
 
-  public static class CommentPrimaryKey extends ModelPrimaryKey<Comment> {
+  public static class CommentPrimaryKey extends ModelIdentifier<Comment> {
     private static final long serialVersionUID = 1L;
     public CommentPrimaryKey(String title, String content, Integer likes) {
       super(title, content, likes);

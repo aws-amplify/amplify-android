@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelPrimaryKey;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.HasMany;
@@ -189,14 +189,14 @@ public final class SQLiteModelTreeTest {
         @ModelField(targetType = "String") private final String name;
         @ModelField(targetType = "String") private final String title;
         @ModelField(targetType = "C") @BelongsTo(targetNames = {"cId"}, type = C.class) private C c;
-        @NonNull public DPrimaryKey resolveIdentifier() { return new DPrimaryKey(name, title); }
+        @NonNull public DIdentifier resolveIdentifier() { return new DIdentifier(name, title); }
         private D(String name, String title) {
             this.name = name;
             this.title = title;
         }
     }
 
-    private class DPrimaryKey extends ModelPrimaryKey<D> {
+    private class DIdentifier extends ModelIdentifier<D> {
         private static final long serialVersionUID = 1L;
 
         /**
@@ -205,7 +205,7 @@ public final class SQLiteModelTreeTest {
          * @param name        Partition key.
          * @param title Array of sort keys.
          */
-        DPrimaryKey(String name, String title) {
+        DIdentifier(String name, String title) {
             super(name, title);
         }
     }

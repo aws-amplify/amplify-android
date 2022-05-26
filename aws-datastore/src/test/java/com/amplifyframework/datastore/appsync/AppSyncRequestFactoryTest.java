@@ -38,8 +38,12 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
+import com.amplifyframework.testmodels.commentsblog.Blog2;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner2;
+import com.amplifyframework.testmodels.commentsblog.BlogOwnerWithCustomPK;
 import com.amplifyframework.testmodels.commentsblog.Comment;
+import com.amplifyframework.testmodels.commentsblog.OtherBlog;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.ecommerce.Item;
 import com.amplifyframework.testmodels.ecommerce.Status;
@@ -249,6 +253,7 @@ public final class AppSyncRequestFactoryTest {
         );
     }
 
+
     /**
      * Checks that we're getting the expected output for a delete mutation for an object with a custom primary key.
      * @throws DataStoreException If the output does not match.
@@ -289,7 +294,7 @@ public final class AppSyncRequestFactoryTest {
         assertEquals(
             Collections.singletonMap("and", Arrays.asList(
                 Collections.singletonMap("name", Collections.singletonMap("beginsWith", "A day in the life of a...")),
-                Collections.singletonMap("blogOwnerId", Collections.singletonMap("eq", "DUMMY_OWNER_ID"))
+                Collections.singletonMap("blogOwnerBlogId", Collections.singletonMap("eq", "DUMMY_OWNER_ID"))
             )),
             AppSyncRequestFactory.parsePredicate(
                 Blog.NAME.beginsWith("A day in the life of a...").and(Blog.OWNER.eq("DUMMY_OWNER_ID"))
@@ -392,6 +397,65 @@ public final class AppSyncRequestFactoryTest {
             Resources.readAsString("create-comment-request.txt"),
             AppSyncRequestFactory.buildCreationRequest(schema, comment, DEFAULT_STRATEGY).getContent(),
             true
+        );
+    }
+
+    /**
+     * Validates creation of a "create a model" request on a model with a custom foreign key and sort key.
+     * @throws DataStoreException On failure to interrogate the model fields.
+     * @throws AmplifyException On failure to parse ModelSchema from model class
+     * @throws JSONException from JSONAssert.assertEquals.
+     */
+    @Test
+    public void validateMutationGenerationOnCreateItemWithCustomForeignKeyAndSortKey() throws
+            AmplifyException, JSONException {
+        final BlogOwnerWithCustomPK blogOwner = BlogOwnerWithCustomPK.builder()
+                .id("b0792b4b-2b38-4ab7-a12d-42b35583171e")
+                .name("Stanley")
+                .wea("WEA")
+                .build();
+        final OtherBlog blog = OtherBlog.builder()
+                .name("My Other Blog")
+                .owner(blogOwner)
+                .id("5a90f4dc-2dd7-49bd-85f8-d45119c30790")
+                .build();
+        ModelSchema schema = ModelSchema.fromModelClass(OtherBlog.class);
+        String expected = Resources.readAsString("create-other-blog.txt");
+        String actual = AppSyncRequestFactory.buildCreationRequest(schema, blog, DEFAULT_STRATEGY).getContent();
+        System.out.println("  Actual: " + actual);
+        System.out.println("Expected: " + expected);
+        JSONAssert.assertEquals(
+                expected,
+                actual,
+                true
+        );
+    }
+
+    /**
+     * Validates creation of a "create a model" request on a model with a custom foreign key and sort key.
+     * @throws DataStoreException On failure to interrogate the model fields.
+     * @throws AmplifyException On failure to parse ModelSchema from model class
+     * @throws JSONException from JSONAssert.assertEquals.
+     */
+    @Test
+    public void validateMutationGenerationOnCreateItemWithCustomForeignKeyNoSortKey()
+            throws AmplifyException, JSONException {
+        final BlogOwner2 blogOwner = BlogOwner2.builder()
+                .id("b0792b4b-2b38-4ab7-a12d-42b35583171e")
+                .name("Stanley")
+                .build();
+        final Blog2 blog = Blog2.builder()
+                .name("My Other Blog")
+                .owner(blogOwner)
+                .id("5a90f4dc-2dd7-49bd-85f8-d45119c30790")
+                .build();
+        ModelSchema schema = ModelSchema.fromModelClass(Blog2.class);
+        String expected = Resources.readAsString("create-blog2.txt");
+        String actual = AppSyncRequestFactory.buildCreationRequest(schema, blog, DEFAULT_STRATEGY).getContent();
+        JSONAssert.assertEquals(
+                expected,
+                actual,
+                true
         );
     }
 

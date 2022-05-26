@@ -30,6 +30,7 @@ import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
@@ -52,12 +53,15 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 
@@ -422,12 +426,40 @@ final class AppSyncRequestFactory {
             if (association == null) {
                 result.put(fieldName, extractFieldValue(modelField.getName(), instance, schema));
             } else if (association.isOwner()) {
-                String targetName = association.getTargetName();
-                result.put(targetName, extractAssociateId(modelField, instance, schema));
+                if (schema.getVersion() >= 1 && association.getTargetNames() != null
+                        && association.getTargetNames().length > 0) {
+                    // When target name length is more than 0 there are two scenarios, one is when
+                    // there is custom primary key and other is when we have composite primary key.
+                    insertForeignKeyValues(result, modelField, instance, schema, association);
+                } else {
+                    String targetName = association.getTargetName();
+                    result.put(targetName, extractAssociateId(modelField, instance, schema));
+                }
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
         }
         return result;
+    }
+
+    private static void insertForeignKeyValues(Map<String, Object> result, ModelField modelField,
+                                               Model instance, ModelSchema schema,
+                                               ModelAssociation association) throws AmplifyException {
+        final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
+        if (modelField.isModel() && fieldValue instanceof Model) {
+            if (((Model) fieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
+                final ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) ((Model) fieldValue).resolveIdentifier();
+                ListIterator<String> targetNames = Arrays.asList(association.getTargetNames()).listIterator();
+                Iterator<? extends Serializable> sortedKeys = primaryKey.sortedKeys().listIterator();
+
+                result.put(targetNames.next(), primaryKey.key().toString());
+
+                while (targetNames.hasNext()) {
+                    result.put(targetNames.next(), sortedKeys.next().toString());
+                }
+            } else {
+                result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
+            }
+        }
     }
 
     private static Object extractAssociateId(ModelField modelField, Model instance, ModelSchema schema)

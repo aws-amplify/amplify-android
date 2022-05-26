@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelPrimaryKey;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
@@ -65,7 +65,7 @@ public final class PersonWithCPK implements Model {
     @ModelField(targetType = "AWSDateTime", isReadOnly = true)
     private Temporal.DateTime updatedAt;
 
-    private PersonPrimaryKey personPrimaryKey;
+    private PersonIdentifier personPrimaryKey;
 
     private PersonWithCPK(String first_name,
                           String last_name,
@@ -130,9 +130,9 @@ public final class PersonWithCPK implements Model {
     }
 
     @NonNull
-    public PersonPrimaryKey resolveIdentifier() {
+    public PersonIdentifier resolveIdentifier() {
         if (personPrimaryKey == null){
-            personPrimaryKey = new PersonPrimaryKey(first_name, age);
+            personPrimaryKey = new PersonIdentifier(first_name, age);
         }
         return  personPrimaryKey;
     }
@@ -418,9 +418,9 @@ public final class PersonWithCPK implements Model {
         }
     }
 
-    public class PersonPrimaryKey extends ModelPrimaryKey<PersonWithCPK> {
+    public class PersonIdentifier extends ModelIdentifier<PersonWithCPK> {
         private static final long serialVersionUID = 1L;
-        public PersonPrimaryKey(String firstName, int age){
+        public PersonIdentifier(String firstName, int age){
             super(firstName, age);
         }
     }

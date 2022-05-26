@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelPrimaryKey;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -76,23 +76,23 @@ public final class Where {
      * pagination set to the first result only.
      *
      * @param itemClass model class.
-     * @param modelPrimaryKey model identifier.
+     * @param modelIdentifier model identifier.
      * @param <T> Extends Model.
      * @return options with proper predicate and pagination to match a model by its id.
      * @throws AmplifyException Throws AmplifyException.
      */
     public static <T extends Model> QueryOptions identifier(@NonNull Class<T> itemClass,
-                                                           @NonNull final Serializable modelPrimaryKey)
+                                                            @NonNull final Serializable modelIdentifier)
             throws AmplifyException {
         final ModelSchema schema = ModelSchema.fromModelClass(itemClass);
         final List<String> primaryKeyList = schema.getPrimaryIndexFields();
         QueryOptions queryOptions = null;
         Iterator<String> pkField = primaryKeyList.listIterator();
         final QueryField idField = QueryField.field(itemClass.getSimpleName(), pkField.next());
-        if (primaryKeyList.size() == 1 && !(modelPrimaryKey instanceof ModelPrimaryKey)) {
-            queryOptions = matches(idField.eq(Objects.requireNonNull(modelPrimaryKey.toString())));
+        if (primaryKeyList.size() == 1 && !(modelIdentifier instanceof ModelIdentifier)) {
+            queryOptions = matches(idField.eq(Objects.requireNonNull(modelIdentifier.toString())));
         } else {
-            ModelPrimaryKey<?> primaryKey = (ModelPrimaryKey<?>) modelPrimaryKey;
+            ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) modelIdentifier;
             Iterator<?> sortKeyIterator = primaryKey.sortedKeys().listIterator();
             queryOptions = matches(idField.eq(Objects.requireNonNull(primaryKey.key())));
             while (sortKeyIterator.hasNext()) {

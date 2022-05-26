@@ -1,7 +1,6 @@
 package com.amplifyframework.testmodels.commentsblog;
 
 import com.amplifyframework.core.model.annotations.HasMany;
-import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.List;
@@ -18,20 +17,23 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the Blog type in your schema. */
+/** This is an auto generated class representing the BlogOwner2 type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Blogs")
-public final class Blog implements Model {
-  public static final QueryField ID = field("Blog", "id");
-  public static final QueryField NAME = field("Blog", "name");
-  public static final QueryField OWNER = field("Blog", "blogOwnerBlogId");
-  public static final QueryField CREATED_AT = field("Blog", "createdAt");
+@ModelConfig(pluralName = "BlogOwner2s", type = Model.Type.USER, version = 1)
+@Index(name = "undefined", fields = {"name"})
+public final class BlogOwner2 implements Model {
+  public static final QueryField ID = field("BlogOwner2", "id");
+  public static final QueryField NAME = field("BlogOwner2", "name");
+  public static final QueryField CREATED_AT = field("BlogOwner2", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
-  private final @ModelField(targetType="BlogOwner") @BelongsTo(targetName = "blogOwnerBlogId", type = BlogOwner.class) BlogOwner owner;
+  private final @ModelField(targetType="Blog2") @HasMany(associatedWith = "owner", type = Blog2.class) List<Blog2> blogs = null;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
+  public String resolveIdentifier() {
+    return name;
+  }
+  
   public String getId() {
       return id;
   }
@@ -40,12 +42,8 @@ public final class Blog implements Model {
       return name;
   }
   
-  public List<Post> getPosts() {
-      return posts;
-  }
-  
-  public BlogOwner getOwner() {
-      return owner;
+  public List<Blog2> getBlogs() {
+      return blogs;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -56,10 +54,9 @@ public final class Blog implements Model {
       return updatedAt;
   }
   
-  private Blog(String id, String name, BlogOwner owner, Temporal.DateTime createdAt) {
+  private BlogOwner2(String id, String name, Temporal.DateTime createdAt) {
     this.id = id;
     this.name = name;
-    this.owner = owner;
     this.createdAt = createdAt;
   }
   
@@ -70,12 +67,11 @@ public final class Blog implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      Blog blog = (Blog) obj;
-      return ObjectsCompat.equals(getId(), blog.getId()) &&
-              ObjectsCompat.equals(getName(), blog.getName()) &&
-              ObjectsCompat.equals(getOwner(), blog.getOwner()) &&
-              ObjectsCompat.equals(getCreatedAt(), blog.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), blog.getUpdatedAt());
+      BlogOwner2 blogOwner2 = (BlogOwner2) obj;
+      return ObjectsCompat.equals(getId(), blogOwner2.getId()) &&
+              ObjectsCompat.equals(getName(), blogOwner2.getName()) &&
+              ObjectsCompat.equals(getCreatedAt(), blogOwner2.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), blogOwner2.getUpdatedAt());
       }
   }
   
@@ -84,7 +80,6 @@ public final class Blog implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getName())
-      .append(getOwner())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -94,70 +89,58 @@ public final class Blog implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("Blog {")
+      .append("BlogOwner2 {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
-      .append("owner=" + String.valueOf(getOwner()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
   
-  public static NameStep builder() {
+  public static IdStep builder() {
       return new Builder();
-  }
-  
-  /** 
-   * WARNING: This method should not be used to build an instance of this object for a CREATE mutation.
-   * This is a convenience method to return an instance of the object with only its ID populated
-   * to be used in the context of a parameter in a delete mutation or referencing a foreign key
-   * in a relationship.
-   * @param id the id of the existing item this instance will represent
-   * @return an instance of this model with only ID populated
-   */
-  public static Blog justId(String id) {
-    return new Blog(
-      id,
-      null,
-      null,
-      null
-    );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       name,
-      owner,
       createdAt);
   }
+  public interface IdStep {
+    NameStep id(String id);
+  }
+  
+
   public interface NameStep {
     BuildStep name(String name);
   }
   
 
   public interface BuildStep {
-    Blog build();
-    BuildStep id(String id);
-    BuildStep owner(BlogOwner owner);
+    BlogOwner2 build();
     BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
 
-  public static class Builder implements NameStep, BuildStep {
+  public static class Builder implements IdStep, NameStep, BuildStep {
     private String id;
     private String name;
-    private BlogOwner owner;
     private Temporal.DateTime createdAt;
     @Override
-     public Blog build() {
-        String id = this.id != null ? this.id : UUID.randomUUID().toString();
+     public BlogOwner2 build() {
         
-        return new Blog(
+        return new BlogOwner2(
           id,
           name,
-          owner,
           createdAt);
+    }
+    
+    @Override
+     public NameStep id(String id) {
+        Objects.requireNonNull(id);
+        this.id = id;
+        return this;
     }
     
     @Override
@@ -168,44 +151,28 @@ public final class Blog implements Model {
     }
     
     @Override
-     public BuildStep owner(BlogOwner owner) {
-        this.owner = owner;
-        return this;
-    }
-    
-    @Override
      public BuildStep createdAt(Temporal.DateTime createdAt) {
         this.createdAt = createdAt;
-        return this;
-    }
-    
-    /** 
-     * @param id id
-     * @return Current Builder instance, for fluent method chaining
-     */
-    public BuildStep id(String id) {
-        this.id = id;
         return this;
     }
   }
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, BlogOwner owner, Temporal.DateTime createdAt) {
-      super.id(id);
-      super.name(name)
-        .owner(owner)
+    private CopyOfBuilder(String id, String name, Temporal.DateTime createdAt) {
+      super.id(id)
+        .name(name)
         .createdAt(createdAt);
+    }
+    
+    @Override
+     public CopyOfBuilder id(String id) {
+      return (CopyOfBuilder) super.id(id);
     }
     
     @Override
      public CopyOfBuilder name(String name) {
       return (CopyOfBuilder) super.name(name);
-    }
-    
-    @Override
-     public CopyOfBuilder owner(BlogOwner owner) {
-      return (CopyOfBuilder) super.owner(owner);
     }
     
     @Override
