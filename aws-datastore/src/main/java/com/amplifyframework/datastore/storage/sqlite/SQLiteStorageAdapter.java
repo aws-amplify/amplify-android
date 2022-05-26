@@ -378,7 +378,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             } catch (DataStoreException dataStoreException) {
                 onError.accept(dataStoreException);
             } catch (Exception someOtherTypeOfException) {
-                String modelToString = item.getModelName() + "[id=" + item.getPrimaryKeyString() + "]";
+                String modelToString = item.getModelName() + "[primaryKey =" + item.getPrimaryKeyString() + "]";
                 DataStoreException dataStoreException = new DataStoreException(
                     "Error in saving the model: " + modelToString,
                     someOtherTypeOfException, "See attached exception for details."

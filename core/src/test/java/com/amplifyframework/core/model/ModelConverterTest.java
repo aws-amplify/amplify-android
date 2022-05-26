@@ -18,6 +18,8 @@ package com.amplifyframework.core.model;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.customprimarykey.Comment;
+import com.amplifyframework.testmodels.customprimarykey.Post;
 
 import org.junit.Test;
 
@@ -78,6 +80,50 @@ public class ModelConverterTest {
                 .serializedData(Collections.singletonMap("id", blog.getOwner().getId()))
                 .build());
 
+        assertEquals(expected, actual);
+    }
+
+    /**
+     * Verify that a Java model with CPK having children with CPK
+     * converted to a Map returns the expected value.
+     * @throws AmplifyException On failure to derive ModelSchema
+     */
+    @Test public void toMapForModelandParentWithCpkReturnsExpectedMap() throws AmplifyException {
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(new HashSet<>(Arrays.asList(com.amplifyframework.testmodels.
+                customprimarykey.Blog.class, Post.class, Comment.class)));
+
+        com.amplifyframework.testmodels.customprimarykey.Blog blog =
+                com.amplifyframework.testmodels.customprimarykey.Blog.builder()
+                .name("test blog")
+                .build();
+        Post post = Post.builder()
+                .title("test post")
+                .blog(blog)
+                .build();
+        Comment comment = Comment.builder()
+                .title("title comment")
+                .content("new content title")
+                .likes(10)
+                .description("yeh fun comment")
+                .post(post)
+                .build();
+        ModelSchema schema = ModelSchema.fromModelClass(Comment.class);
+        Map<String, Object> actual = ModelConverter.toMap(comment, schema);
+        HashMap<String, Object> postMap = new HashMap<>();
+        postMap.put("id", post.getId());
+        postMap.put("title", post.getTitle());
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("post", SerializedModel.builder()
+                .modelSchema(ModelSchema.fromModelClass(Post.class))
+                        .serializedData(postMap)
+                        .build());
+        expected.put("description", "yeh fun comment");
+        expected.put("title", "title comment");
+        expected.put("content", "new content title");
+        expected.put("likes", 10);
+        expected.put("updatedAt", null);
+        expected.put("createdAt", null);
         assertEquals(expected, actual);
     }
 }

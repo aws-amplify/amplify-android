@@ -2,6 +2,7 @@
   "id": "3d128fdd-17a8-45ea-a166-44f6712b86f4",
   "modelSchema": {
     "name": "Blog",
+    "modelSchemaVersion": 0,
     "pluralName": "Blogs",
     "authRules": [],
     "fields": {
