@@ -71,7 +71,7 @@ public final class AWSS3StorageListAccessLevelTest {
     @BeforeClass
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
-
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "TRACE");
         WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
         synchronousAuth = SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
         IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth);

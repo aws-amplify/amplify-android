@@ -1,6 +1,7 @@
 package com.amplifyframework.storage.s3.service
 
 import android.content.Context
+import android.util.Log
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
@@ -110,11 +111,13 @@ internal class AWSS3StorageService(
     override fun listFiles(path: String, prefix: String): MutableList<StorageItem>? {
         val items = mutableListOf<StorageItem>()
         runBlocking {
+            Log.d("INSTRUMENTATION", "calling listObjectsV2Paginated")
             val result = s3Client.listObjectsV2Paginated {
                 this.bucket = s3BucketName
                 this.prefix = path
             }
             result.collect {
+                Log.d("INSTRUMENTATION", "Collecting Items ${it.contents?.size}")
                 it.contents?.forEach { value ->
                     val key = value.key
                     val lastModified = value.lastModified
@@ -131,6 +134,7 @@ internal class AWSS3StorageService(
                 }
             }
         }
+        Log.d("INSTRUMENTATION", "Returning items ${items.size}")
         return items
     }
 
