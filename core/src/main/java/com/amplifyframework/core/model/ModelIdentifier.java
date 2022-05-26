@@ -27,7 +27,7 @@ import java.util.Objects;
  * This class is a representation of the custom primary key.
  * @param <T> Model.
  */
-public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
+public abstract class ModelIdentifier<T extends Model> implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private final Serializable key;
@@ -38,7 +38,7 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
      * @param key Partition key.
      * @param sortedKeys Array of sort keys.
      */
-    public ModelPrimaryKey(Serializable key, Serializable... sortedKeys) {
+    public ModelIdentifier(Serializable key, Serializable... sortedKeys) {
         this.key = key;
         this.sortedKeys = Arrays.asList(sortedKeys);
     }
@@ -89,8 +89,8 @@ public abstract class ModelPrimaryKey<T extends Model> implements Serializable {
         public static String getUniqueKey(Serializable uniqueId) {
             String uniqueStringId;
             try {
-                if (uniqueId instanceof ModelPrimaryKey) {
-                    uniqueStringId = ((ModelPrimaryKey<?>) uniqueId).getIdentifier();
+                if (uniqueId instanceof ModelIdentifier) {
+                    uniqueStringId = ((ModelIdentifier<?>) uniqueId).getIdentifier();
                 } else {
                     uniqueStringId = uniqueId.toString();
                 }

@@ -337,7 +337,7 @@ public final class SerializedModel implements Model {
         @Override
         public BuilderSteps.BuildStep serializedData(@NonNull Map<String, Object> serializedData) {
             this.serializedData.putAll(Objects.requireNonNull(serializedData));
-            this.id = ModelPrimaryKey.Helper.getUniqueKey(modelSchema, serializedData);
+            this.id = ModelIdentifier.Helper.getUniqueKey(modelSchema, serializedData);
             return Builder.this;
         }
 

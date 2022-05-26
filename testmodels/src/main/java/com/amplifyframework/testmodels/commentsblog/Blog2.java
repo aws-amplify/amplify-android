@@ -17,29 +17,33 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the Comment type in your schema. */
+/** This is an auto generated class representing the Blog2 type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Comments")
-public final class Comment implements Model {
-  public static final QueryField ID = field("Comment", "id");
-  public static final QueryField CONTENT = field("Comment", "content");
-  public static final QueryField POST = field("Comment", "postCommentsId");
-  public static final QueryField CREATED_AT = field("Comment", "createdAt");
+@ModelConfig(pluralName = "Blog2s", type = Model.Type.USER, version = 1)
+public final class Blog2 implements Model {
+  public static final QueryField ID = field("Blog2", "id");
+  public static final QueryField NAME = field("Blog2", "name");
+  public static final QueryField OWNER = field("Blog2", "blogOwner2BlogsId");
+  public static final QueryField CREATED_AT = field("Blog2", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="String") String content;
-  private final @ModelField(targetType="Post") @BelongsTo(targetName = "postCommentsId", type = Post.class) Post post;
+  private final @ModelField(targetType="String", isRequired = true) String name;
+  private final @ModelField(targetType="BlogOwner2", isRequired = true) @BelongsTo(targetName = "otherBlogOwner2Name", targetNames = {"otherBlogOwner2Name"}, type = BlogOwner2.class) BlogOwner2 owner;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
+  public String resolveIdentifier() {
+    return id;
+  }
+  
   public String getId() {
       return id;
   }
   
-  public String getContent() {
-      return content;
+  public String getName() {
+      return name;
   }
   
-  public Post getPost() {
-      return post;
+  public BlogOwner2 getOwner() {
+      return owner;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -50,10 +54,10 @@ public final class Comment implements Model {
       return updatedAt;
   }
   
-  private Comment(String id, String content, Post post, Temporal.DateTime createdAt) {
+  private Blog2(String id, String name, BlogOwner2 owner, Temporal.DateTime createdAt) {
     this.id = id;
-    this.content = content;
-    this.post = post;
+    this.name = name;
+    this.owner = owner;
     this.createdAt = createdAt;
   }
   
@@ -64,12 +68,12 @@ public final class Comment implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      Comment comment = (Comment) obj;
-      return ObjectsCompat.equals(getId(), comment.getId()) &&
-              ObjectsCompat.equals(getContent(), comment.getContent()) &&
-              ObjectsCompat.equals(getPost(), comment.getPost()) &&
-              ObjectsCompat.equals(getCreatedAt(), comment.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), comment.getUpdatedAt());
+      Blog2 blog2 = (Blog2) obj;
+      return ObjectsCompat.equals(getId(), blog2.getId()) &&
+              ObjectsCompat.equals(getName(), blog2.getName()) &&
+              ObjectsCompat.equals(getOwner(), blog2.getOwner()) &&
+              ObjectsCompat.equals(getCreatedAt(), blog2.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), blog2.getUpdatedAt());
       }
   }
   
@@ -77,8 +81,8 @@ public final class Comment implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
-      .append(getContent())
-      .append(getPost())
+      .append(getName())
+      .append(getOwner())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -88,17 +92,17 @@ public final class Comment implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("Comment {")
+      .append("Blog2 {")
       .append("id=" + String.valueOf(getId()) + ", ")
-      .append("content=" + String.valueOf(getContent()) + ", ")
-      .append("post=" + String.valueOf(getPost()) + ", ")
+      .append("name=" + String.valueOf(getName()) + ", ")
+      .append("owner=" + String.valueOf(getOwner()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
   
-  public static BuildStep builder() {
+  public static NameStep builder() {
       return new Builder();
   }
   
@@ -110,8 +114,8 @@ public final class Comment implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    */
-  public static Comment justId(String id) {
-    return new Comment(
+  public static Blog2 justId(String id) {
+    return new Blog2(
       id,
       null,
       null,
@@ -121,44 +125,54 @@ public final class Comment implements Model {
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      content,
-      post,
+      name,
+      owner,
       createdAt);
   }
+  public interface NameStep {
+    OwnerStep name(String name);
+  }
+  
+
+  public interface OwnerStep {
+    BuildStep owner(BlogOwner2 owner);
+  }
+  
+
   public interface BuildStep {
-    Comment build();
+    Blog2 build();
     BuildStep id(String id);
-    BuildStep content(String content);
-    BuildStep post(Post post);
     BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
 
-  public static class Builder implements BuildStep {
+  public static class Builder implements NameStep, OwnerStep, BuildStep {
     private String id;
-    private String content;
-    private Post post;
+    private String name;
+    private BlogOwner2 owner;
     private Temporal.DateTime createdAt;
     @Override
-     public Comment build() {
+     public Blog2 build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new Comment(
+        return new Blog2(
           id,
-          content,
-          post,
+          name,
+          owner,
           createdAt);
     }
     
     @Override
-     public BuildStep content(String content) {
-        this.content = content;
+     public OwnerStep name(String name) {
+        Objects.requireNonNull(name);
+        this.name = name;
         return this;
     }
     
     @Override
-     public BuildStep post(Post post) {
-        this.post = post;
+     public BuildStep owner(BlogOwner2 owner) {
+        Objects.requireNonNull(owner);
+        this.owner = owner;
         return this;
     }
     
@@ -180,21 +194,21 @@ public final class Comment implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String content, Post post, Temporal.DateTime createdAt) {
+    private CopyOfBuilder(String id, String name, BlogOwner2 owner, Temporal.DateTime createdAt) {
       super.id(id);
-      super.content(content)
-        .post(post)
+      super.name(name)
+        .owner(owner)
         .createdAt(createdAt);
     }
     
     @Override
-     public CopyOfBuilder content(String content) {
-      return (CopyOfBuilder) super.content(content);
+     public CopyOfBuilder name(String name) {
+      return (CopyOfBuilder) super.name(name);
     }
     
     @Override
-     public CopyOfBuilder post(Post post) {
-      return (CopyOfBuilder) super.post(post);
+     public CopyOfBuilder owner(BlogOwner2 owner) {
+      return (CopyOfBuilder) super.owner(owner);
     }
     
     @Override
