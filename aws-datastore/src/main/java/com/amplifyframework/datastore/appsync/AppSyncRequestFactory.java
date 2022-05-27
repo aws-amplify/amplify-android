@@ -456,10 +456,15 @@ final class AppSyncRequestFactory {
                 while (targetNames.hasNext()) {
                     result.put(targetNames.next(), sortedKeys.next().toString());
                 }
-            } else {
+            } else if (((Model) fieldValue).resolveIdentifier() instanceof String) {
                 result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
+            } else {
+                throw new AmplifyException(
+                        "Unknown resolveIdentifier type " + ((Model) fieldValue).resolveIdentifier().toString(),
+                        "This may be a bug, consider filing a ticket.");
             }
         }
+
     }
 
     private static Object extractAssociateId(ModelField modelField, Model instance, ModelSchema schema)
