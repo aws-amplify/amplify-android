@@ -76,23 +76,23 @@ public final class Where {
      * pagination set to the first result only.
      *
      * @param itemClass model class.
-     * @param modelIdentifier model identifier.
+     * @param modelPrimaryKey model identifier.
      * @param <T> Extends Model.
      * @return options with proper predicate and pagination to match a model by its id.
      * @throws AmplifyException Throws AmplifyException.
      */
     public static <T extends Model> QueryOptions identifier(@NonNull Class<T> itemClass,
-                                                            @NonNull final Serializable modelIdentifier)
+                                                           @NonNull final Serializable modelPrimaryKey)
             throws AmplifyException {
         final ModelSchema schema = ModelSchema.fromModelClass(itemClass);
         final List<String> primaryKeyList = schema.getPrimaryIndexFields();
         QueryOptions queryOptions = null;
         Iterator<String> pkField = primaryKeyList.listIterator();
         final QueryField idField = QueryField.field(itemClass.getSimpleName(), pkField.next());
-        if (primaryKeyList.size() == 1 && !(modelIdentifier instanceof ModelIdentifier)) {
-            queryOptions = matches(idField.eq(Objects.requireNonNull(modelIdentifier.toString())));
+        if (primaryKeyList.size() == 1 && !(modelPrimaryKey instanceof ModelIdentifier)) {
+            queryOptions = matches(idField.eq(Objects.requireNonNull(modelPrimaryKey.toString())));
         } else {
-            ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) modelIdentifier;
+            ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) modelPrimaryKey;
             Iterator<?> sortKeyIterator = primaryKey.sortedKeys().listIterator();
             queryOptions = matches(idField.eq(Objects.requireNonNull(primaryKey.key())));
             while (sortKeyIterator.hasNext()) {
