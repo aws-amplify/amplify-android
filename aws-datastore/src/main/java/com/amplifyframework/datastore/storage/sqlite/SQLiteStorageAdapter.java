@@ -563,15 +563,21 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             QueryOptions options = Where.matches(predicate);
             try (Cursor cursor = sqlCommandProcessor.rawQuery(sqlCommandFactory.queryFor(modelSchema, options))) {
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-                final String primaryKeyName = sqliteTable.getPrimaryKey().getAliasedName();
+                final List<String> primaryKeyNames = modelSchema.getPrimaryIndexFields();
 
                 // identify items that meet the predicate
                 List<T> items = new ArrayList<>();
                 if (cursor != null && cursor.moveToFirst()) {
-                    int index = cursor.getColumnIndexOrThrow(primaryKeyName);
+                    /** Populate the mapOfModelPrimaryKeys with the values of
+                     *  the primary key/ keys for the model**/
                     do {
-                        String id = cursor.getString(index);
-                        String dummyJson = gson.toJson(Collections.singletonMap("id", id));
+                        HashMap<String, String> mapOfModelPrimaryKeys = new HashMap<>();
+                        for (String field : primaryKeyNames) {
+                            int index = cursor.getColumnIndexOrThrow(sqliteTable.getName() + "_" + field);
+                            String fieldValue = cursor.getString(index);
+                            mapOfModelPrimaryKeys.put(field, fieldValue);
+                        }
+                        String dummyJson = gson.toJson(mapOfModelPrimaryKeys);
                         T dummyItem = gson.fromJson(dummyJson, itemClass);
                         items.add(dummyItem);
                     } while (cursor.moveToNext());
