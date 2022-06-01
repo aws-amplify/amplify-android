@@ -176,7 +176,7 @@ public final class SQLiteTable {
                     return column;
                 }
             }
-            if (column.isPrimaryKey()) {
+            if ((primaryKeyColumns.size() <= 1) && column.isPrimaryKey()) {
                 return column;
             }
         }
