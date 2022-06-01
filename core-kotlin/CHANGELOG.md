@@ -1,3 +1,19 @@
+## [Release 0.19.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.5)
+
+### Miscellaneous
+- chore: update gson version (#1744)
+- Update notify_comments.yml (#1746)
+- Update SDK version in build.gradle (#1747)
+
+[See all changes between 0.19.4 and 0.19.5](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.4...release-kotlin_v0.19.5)
+
+## [Release 0.19.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.4)
+
+### Miscellaneous
+- Update SDK version in build.gradle (#1741)
+
+[See all changes between 0.19.3 and 0.19.4](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.3...release-kotlin_v0.19.4)
+
 ## [Release 0.19.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.3)
 
 ### Bug Fixes
