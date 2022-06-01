@@ -20,6 +20,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteDataType;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.customprimarykey.Comment;
+import com.amplifyframework.testmodels.customprimarykey.ModelCompositeMultiplePk;
 
 import org.junit.Test;
 
@@ -186,6 +187,77 @@ public class SQLiteTableTest {
         SQLiteTable expected = SQLiteTable.builder()
                 .columns(columns)
                 .name("Comment")
+                .build();
+
+        SQLiteTable actual = SQLiteTable.fromSchema(schema);
+        assertEquals(expected, actual);
+        assertEquals("@@primaryKey", actual.getPrimaryKey().getFieldName());
+    }
+
+    /**
+     * Test if a {@link ModelSchema} for {@link
+     * com.amplifyframework.testmodels.customprimarykey.ModelCompositeMultiplePk}
+     * returns an expected {@link SQLiteTable}.  This tests the general
+     * use case for composite primary key with a field name id.
+     * @throws AmplifyException on error deriving ModelSchema.
+     */
+    @Test
+    public void createSQLiteTableForaModelWithParentHavingCPKWithId() throws AmplifyException {
+        ModelSchema schema = ModelSchema.fromModelClass(ModelCompositeMultiplePk.class);
+        Map<String, SQLiteColumn> columns = new HashMap<>();
+        columns.put("id", SQLiteColumn.builder()
+                .name("id")
+                .fieldName("id")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(true)
+                .tableName("ModelCompositeMultiplePk")
+                .build());
+        columns.put("@@primaryKey", SQLiteColumn.builder()
+                .name("@@primaryKey")
+                .fieldName("@@primaryKey")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(true)
+                .tableName("ModelCompositeMultiplePk")
+                .build());
+        columns.put("location", SQLiteColumn.builder()
+                .name("location")
+                .fieldName("location")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(true)
+                .tableName("ModelCompositeMultiplePk")
+                .build());
+        columns.put("name", SQLiteColumn.builder()
+                .name("name")
+                .fieldName("name")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(true)
+                .tableName("ModelCompositeMultiplePk")
+                .build());
+        columns.put("lastName", SQLiteColumn.builder()
+                .name("lastName")
+                .fieldName("lastName")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("ModelCompositeMultiplePk")
+                .build());
+        columns.put("updatedAt", SQLiteColumn.builder()
+                .name("updatedAt")
+                .fieldName("updatedAt")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("ModelCompositeMultiplePk")
+                .build());
+        columns.put("createdAt", SQLiteColumn.builder()
+                .name("createdAt")
+                .fieldName("createdAt")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("ModelCompositeMultiplePk")
+                .build());
+
+        SQLiteTable expected = SQLiteTable.builder()
+                .columns(columns)
+                .name("ModelCompositeMultiplePk")
                 .build();
 
         SQLiteTable actual = SQLiteTable.fromSchema(schema);
