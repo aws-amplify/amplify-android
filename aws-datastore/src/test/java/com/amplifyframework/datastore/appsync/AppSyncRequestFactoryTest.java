@@ -438,54 +438,6 @@ public final class AppSyncRequestFactoryTest {
      * @throws JSONException from JSONAssert.assertEquals.
      */
     @Test
-    public void validateMutationGenerationOnCreateItemWithCustomForeignKeyAndSortKeyWithANestedSerializedModel() throws
-            AmplifyException, JSONException {
-        final BlogOwnerWithCustomPK blogOwner = BlogOwnerWithCustomPK.builder()
-                .id("b0792b4b-2b38-4ab7-a12d-42b35583171e")
-                .name("Stanley")
-                .wea("WEA")
-                .build();
-        Map<String, Object> serializedBlogOwnerData = new HashMap<>();
-        serializedBlogOwnerData.put("id", blogOwner.getId());
-        serializedBlogOwnerData.put("name", blogOwner.getName());
-        serializedBlogOwnerData.put("wea", blogOwner.getWea());
-        SerializedModel serializedModel = SerializedModel.builder()
-                .modelSchema(ModelSchema.fromModelClass(BlogOwnerWithCustomPK.class))
-                .serializedData(serializedBlogOwnerData).build();
-        final OtherBlog blog = OtherBlog.builder()
-                .name("My Other Blog")
-                .owner(blogOwner)
-                .id("5a90f4dc-2dd7-49bd-85f8-d45119c30790")
-                .build();
-        Map<String, Object> serializedBlogData = new HashMap<>();
-        serializedBlogData.put("id", blog.getId());
-        serializedBlogData.put("name", blog.getName());
-        serializedBlogData.put("owner", serializedModel);
-        serializedBlogData.put("createdAt", null);
-        ModelSchema schema = ModelSchema.fromModelClass(OtherBlog.class);
-        SerializedModel serializedModelBlog = SerializedModel.builder()
-                .modelSchema(schema)
-                .serializedData(serializedBlogData).build();
-        String expected = Resources.readAsString("create-other-blog.txt");
-        String actual = AppSyncRequestFactory.buildCreationRequest(schema, serializedModelBlog, DEFAULT_STRATEGY)
-                .getContent();
-        System.out.println("  Actual: " + actual);
-        System.out.println("Expected: " + expected);
-        JSONAssert.assertEquals(
-                expected,
-                actual,
-                true
-        );
-    }
-
-
-    /**
-     * Validates creation of a "create a model" request on a model with a custom foreign key and sort key.
-     * @throws DataStoreException On failure to interrogate the model fields.
-     * @throws AmplifyException On failure to parse ModelSchema from model class
-     * @throws JSONException from JSONAssert.assertEquals.
-     */
-    @Test
     public void validateMutationGenerationOnCreateItemWithCustomForeignKeyNoSortKey()
             throws AmplifyException, JSONException {
         final BlogOwner2 blogOwner = BlogOwner2.builder()

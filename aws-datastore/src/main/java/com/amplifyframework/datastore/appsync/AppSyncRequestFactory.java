@@ -456,21 +456,12 @@ final class AppSyncRequestFactory {
                 while (targetNames.hasNext()) {
                     result.put(targetNames.next(), sortedKeys.next().toString());
                 }
-            } else if ((fieldValue instanceof SerializedModel)) {
-                SerializedModel serializedModel = ((SerializedModel) fieldValue);
-                ModelSchema serializedSchema = serializedModel.getModelSchema();
-                if (serializedSchema != null &&
-                        serializedSchema.getPrimaryIndexFields().size() > 1) {
-
-                    ListIterator<String> primaryKeyFieldsIterator = serializedSchema.getPrimaryIndexFields()
-                            .listIterator();
-                    for (String targetName : association.getTargetNames()) {
-                        result.put(targetName, serializedModel.getSerializedData()
-                                .get(primaryKeyFieldsIterator.next()));
-                    }
-                }
-            } else {
+            } else if (((Model) fieldValue).resolveIdentifier() instanceof String) {
                 result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
+            } else {
+                throw new AmplifyException(
+                        "Unknown resolveIdentifier type " + ((Model) fieldValue).resolveIdentifier().toString(),
+                        "This may be a bug, consider filing a ticket.");
             }
         }
 
