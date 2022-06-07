@@ -143,8 +143,8 @@ final class MutationProcessor {
                                     .andThen(merger.merge(modelWithMetadata))
                                     .andThen(Completable
                                             .fromRunnable(() -> {
-                                                announceMutationProcessed(mutationOutboxItem.getModelSchema().getName()
-                                                        , modelWithMetadata);
+                                                announceMutationProcessed(mutationOutboxItem.getModelSchema().getName(),
+                                                        modelWithMetadata);
                                             }))
                                     .doOnComplete(() -> {
                                         String modelName = mutationOutboxItem.getModelSchema().getName();
