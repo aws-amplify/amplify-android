@@ -65,13 +65,17 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
-import com.amplifyframework.statemachine.codegen.events.AuthEvent
-import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
-import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
-import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
-import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import com.amplifyframework.statemachine.codegen.events.SignUpEvent
-import com.amplifyframework.statemachine.codegen.states.*
+import com.amplifyframework.statemachine.codegen.events.*
+import com.amplifyframework.statemachine.codegen.states.AuthenticationState
+import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
+import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
+import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
+import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
+import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SignOutState
+import com.amplifyframework.statemachine.codegen.states.SignUpState
+import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.util.UserAgent
 import java.util.concurrent.Semaphore
 import org.json.JSONException
@@ -807,7 +811,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                     }
                     is CredentialStoreState.Error -> {
                         listenerToken?.let(credentialStoreStateMachine::cancel)
-                        onError.accept(AuthException.UnknownException())
+                        DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(AuthException.UnknownException(it.error)))
                     }
                     else -> {
                         // no-op
@@ -828,16 +832,18 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             { authState ->
                 when (val authZState = authState.authZState) {
                     is AuthorizationState.SessionEstablished -> {
-                        when (authZState.deleteUserState) {
+                        val deleteUserState = authZState.deleteUserState
+                        when (deleteUserState) {
                             is DeleteUserState.UserDeleted -> {
                                 onSuccess.call()
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.USER_DELETED))
                                 listenerToken?.let(authStateMachine::cancel)
                             }
                             is DeleteUserState.Error -> {
-                                //TODO: Add an appropriate error exception for Delete user to AuthException
-                                onError.accept(AuthException.InvalidAccountTypeException())
                                 listenerToken?.let(authStateMachine::cancel)
+                                onError.accept(
+                                    CognitoAuthExceptionConverter.lookup(deleteUserState.exception, "Request to delete user failed.")
+                                )
                             }
                             else -> {}
                         }
