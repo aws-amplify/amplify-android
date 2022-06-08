@@ -16,16 +16,7 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.AuthActions
-import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
-import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
-import com.amplifyframework.statemachine.codegen.actions.FetchAWSCredentialsActions
-import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
-import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
-import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
-import com.amplifyframework.statemachine.codegen.actions.SRPActions
-import com.amplifyframework.statemachine.codegen.actions.SignOutActions
-import com.amplifyframework.statemachine.codegen.actions.SignUpActions
+import com.amplifyframework.statemachine.codegen.actions.*
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignedInData
@@ -88,6 +79,9 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockFetchIdentityActions: FetchIdentityActions
+
+    @Mock
+    internal lateinit var mockDeleteUserActions: DeleteUserActions
 
     @Mock
     internal lateinit var mockFetchUserPoolTokensActions: FetchUserPoolTokensActions

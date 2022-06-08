@@ -27,16 +27,7 @@ import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
-import com.amplifyframework.statemachine.codegen.states.AuthState
-import com.amplifyframework.statemachine.codegen.states.AuthenticationState
-import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
-import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
-import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
-import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
-import com.amplifyframework.statemachine.codegen.states.SRPSignInState
-import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.SignUpState
+import com.amplifyframework.statemachine.codegen.states.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -89,6 +80,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                         FetchUserPoolTokensState.Resolver(mockFetchUserPoolTokensActions),
                         mockFetchAuthSessionActions
                     ),
+                    DeleteUserState.Resolver(mockDeleteUserActions),
                     mockAuthorizationActions
                 ),
                 mockAuthActions
