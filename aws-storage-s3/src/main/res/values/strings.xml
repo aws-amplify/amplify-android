@@ -14,4 +14,8 @@
    permissions and limitations under the License.
 -->
 
-<resources />
+<resources>
+    <string name="amplify_storage_notification_channel_id">Transfer Channel</string>
+    <string name="amplify_storage_notification_channel_name">Amplify Transfer Channel</string>
+    <string name="amplify_storage_notification_title">Amplify transfer service is running</string>
+</resources>
