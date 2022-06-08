@@ -280,14 +280,13 @@ public final class AWSS3StorageService implements StorageService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createChannel();
         }
-        int appIcon = context.getApplicationContext().getApplicationInfo().icon > 0 ?
-            context.getApplicationContext().getApplicationInfo().icon : R.drawable.ic_notification_test;
+        int appIcon = R.drawable.amplify_storage_transfer_notification_icon;
         return new NotificationCompat.Builder(
             context,
-            context.getString(R.string.amplify_notification_channel_id)
+            context.getString(R.string.amplify_storage_notification_channel_id)
         )
             .setSmallIcon(appIcon)
-            .setContentTitle(context.getString(R.string.amplify_notification_title))
+            .setContentTitle(context.getString(R.string.amplify_storage_notification_title))
             .build();
     }
 
@@ -297,8 +296,8 @@ public final class AWSS3StorageService implements StorageService {
             (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.createNotificationChannel(
             new NotificationChannel(
-                context.getString(R.string.amplify_notification_channel_id),
-                context.getString(R.string.amplify_notification_channel_name),
+                context.getString(R.string.amplify_storage_notification_channel_id),
+                context.getString(R.string.amplify_storage_notification_channel_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             )
         );
