@@ -21,6 +21,7 @@ import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 
 object AuthorizationCognitoActions : AuthorizationActions {
@@ -47,4 +48,16 @@ object AuthorizationCognitoActions : AuthorizationActions {
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
+
+    override fun initializeDeleteUser(token: String?): Action =
+        Action<AuthEnvironment>("InitDeleteUser") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = token?.let {
+                DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(token))
+            } ?: AuthEvent(AuthEvent.EventType.ConfiguredAuthorization)
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
 }
+
+

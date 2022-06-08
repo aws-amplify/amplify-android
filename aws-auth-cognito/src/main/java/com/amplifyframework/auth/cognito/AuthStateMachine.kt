@@ -15,29 +15,11 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.cognito.actions.AuthCognitoActions
-import com.amplifyframework.auth.cognito.actions.AuthenticationCognitoActions
-import com.amplifyframework.auth.cognito.actions.AuthorizationCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchAwsCredentialsCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchIdentityCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensCognitoActions
-import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
-import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
-import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
+import com.amplifyframework.auth.cognito.actions.*
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver
-import com.amplifyframework.statemachine.codegen.states.AuthState
-import com.amplifyframework.statemachine.codegen.states.AuthenticationState
-import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
-import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
-import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
-import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
-import com.amplifyframework.statemachine.codegen.states.SRPSignInState
-import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.SignUpState
+import com.amplifyframework.statemachine.codegen.states.*
 
 internal class AuthStateMachine(
     resolver: StateMachineResolver<AuthState>,
@@ -59,6 +41,7 @@ internal class AuthStateMachine(
                     FetchUserPoolTokensState.Resolver(FetchUserPoolTokensCognitoActions),
                     FetchAuthSessionCognitoActions
                 ),
+                DeleteUserState.Resolver(DeleteUserActions),
                 AuthorizationCognitoActions
             ),
             AuthCognitoActions
@@ -82,6 +65,7 @@ internal class AuthStateMachine(
                         FetchUserPoolTokensState.Resolver(FetchUserPoolTokensCognitoActions).logging(),
                         FetchAuthSessionCognitoActions
                     ).logging(),
+                    DeleteUserState.Resolver(DeleteUserActions),
                     AuthorizationCognitoActions
                 ).logging(),
                 AuthCognitoActions

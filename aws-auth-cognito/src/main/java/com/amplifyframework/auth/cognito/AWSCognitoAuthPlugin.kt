@@ -71,15 +71,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
-import com.amplifyframework.statemachine.codegen.states.AuthenticationState
-import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
-import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
-import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
-import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
-import com.amplifyframework.statemachine.codegen.states.SRPSignInState
-import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.SignUpState
+import com.amplifyframework.statemachine.codegen.states.*
 import com.amplifyframework.util.UserAgent
 import java.util.concurrent.Semaphore
 import org.json.JSONException
@@ -552,7 +544,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                             "Failed to fetch identity.",
                                             fetchIdentityState.exception,
                                             "Sign in or enable guest access. See the attached exception for more" +
-                                                " details."
+                                                    " details."
                                         )
                                     )
                                 }
@@ -600,6 +592,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 when (it) {
                     is CredentialStoreState.Success -> {
                         token?.let(credentialStoreStateMachine::cancel)
+
                         onSuccess.accept(session)
                     }
                     is CredentialStoreState.Error -> {
@@ -800,7 +793,66 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
-        TODO("Not yet implemented")
+        var listenerToken: StateChangeListenerToken? = null
+        listenerToken = credentialStoreStateMachine.listen(
+            {
+                when (it) {
+                    is CredentialStoreState.Success -> {
+                        listenerToken?.let(credentialStoreStateMachine::cancel)
+                        if (it.storedCredentials?.cognitoUserPoolTokens?.accessToken != null) {
+                            _deleteUser(it.storedCredentials.cognitoUserPoolTokens.accessToken, onSuccess, onError)
+                        } else {
+                            onError.accept(AuthException.InvalidAccountTypeException())
+                        }
+                    }
+                    is CredentialStoreState.Error -> {
+                        listenerToken?.let(credentialStoreStateMachine::cancel)
+                        onError.accept(AuthException.UnknownException())
+                    }
+                    else -> {
+                        // no-op
+                    }
+                }
+            },
+            {
+                credentialStoreStateMachine.send(
+                    CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                )
+            }
+        )
+    }
+
+    private fun _deleteUser(token: String, onSuccess: Action, onError: Consumer<AuthException>) {
+        var listenerToken: StateChangeListenerToken? = null
+        listenerToken = authStateMachine.listen(
+            { authState ->
+                when (val authZState = authState.authZState) {
+                    is AuthorizationState.SessionEstablished -> {
+                        when (authZState.deleteUserState) {
+                            is DeleteUserState.UserDeleted -> {
+                                onSuccess.call()
+                                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.USER_DELETED))
+                                listenerToken?.let(authStateMachine::cancel)
+                            }
+                            is DeleteUserState.Error -> {
+                                //TODO: Add an appropriate error exception for Delete user to AuthException
+                                onError.accept(AuthException.InvalidAccountTypeException())
+                                listenerToken?.let(authStateMachine::cancel)
+                            }
+                            else -> {}
+                        }
+                    }
+                    else -> {
+                        // no-op
+                    }
+                }
+            },
+            {
+                val event = AuthorizationEvent(AuthorizationEvent.EventType.DeleteUser(token))
+                authStateMachine.send(event)
+            }
+        )
+
     }
 
     private fun _signOut(
