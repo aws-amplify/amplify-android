@@ -838,8 +838,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             { authState ->
                 when (val authZState = authState.authZState) {
                     is AuthorizationState.SessionEstablished -> {
-                        val deleteUserState = authZState.deleteUserState
-                        when (deleteUserState) {
+                        when (val deleteUserState = authZState.deleteUserState) {
                             is DeleteUserState.UserDeleted -> {
                                 clearCredentialStore(
                                     onSuccess = {
@@ -962,14 +961,17 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         var token: StateChangeListenerToken? = null
         token = credentialStoreStateMachine.listen(
             {
-                when {
-                    it is CredentialStoreState.Success -> {
+                when (it) {
+                    is CredentialStoreState.Success -> {
                         token?.let(credentialStoreStateMachine::cancel)
-                        onSuccess
+                        onSuccess()
                     }
-                    it is CredentialStoreState.Error -> {
+                    is CredentialStoreState.Error -> {
                         token?.let(credentialStoreStateMachine::cancel)
                         onError(it)
+                    }
+                    else -> {
+                        //no op
                     }
                 }
             },

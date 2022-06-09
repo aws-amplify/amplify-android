@@ -70,6 +70,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         setupSignOutActions()
         setupSignUpActions()
         setupFetchAuthActions()
+        setupDeleteAction()
         setupStateMachine()
         Dispatchers.setMain(mainThreadSurrogate)
     }
@@ -637,6 +638,55 @@ class StateTransitionTests : StateTransitionTestBase() {
             AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
         )
 
+        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+    }
+
+    @Test
+    fun testDeleteUser() {
+        setupConfigureSignedIn()
+        val configureLatch = CountDownLatch(1)
+        val subscribeLatch = CountDownLatch(1)
+        val testLatch = CountDownLatch(2)
+        var token: StateChangeListenerToken? = null
+        token = stateMachine.listen(
+            { it ->
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        AuthorizationEvent(
+                            AuthorizationEvent.EventType.DeleteUser("TOKEN-123")
+                        )
+                    )
+                }
+
+                val authZDeleteUserState =
+                    it.authZState.takeIf {
+                            itZ -> itZ is AuthorizationState.DeletingUser
+                    }
+                authZDeleteUserState?.run {
+                    testLatch.countDown()
+                }
+
+                val authZState =
+                    it.authZState.takeIf { itZ -> itZ is AuthorizationState.SessionEstablished }
+                authZState?.run {
+                    token?.let(stateMachine::cancel)
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
+            }
+        )
+
+        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
+
+        stateMachine.send(
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+        )
         assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
     }
