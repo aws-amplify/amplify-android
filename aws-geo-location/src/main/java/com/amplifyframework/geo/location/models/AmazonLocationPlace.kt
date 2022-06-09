@@ -15,11 +15,11 @@
 
 package com.amplifyframework.geo.location.models
 
+import aws.sdk.kotlin.services.location.model.Place as AmazonPlace
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.Place
-import aws.sdk.kotlin.services.location.model.Place as AmazonPlace
 
 /**
  * Specialized [Place] instance that can hold metadata returned

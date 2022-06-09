@@ -17,11 +17,14 @@ package com.amplifyframework.geo.maplibre.http
 
 import aws.sdk.kotlin.runtime.auth.signing.AwsSigningConfig
 import aws.sdk.kotlin.runtime.auth.signing.sign
+import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
 import aws.smithy.kotlin.runtime.http.HttpMethod
 import aws.smithy.kotlin.runtime.http.Url
 import aws.smithy.kotlin.runtime.http.content.ByteArrayContent
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
@@ -29,9 +32,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import okio.Buffer
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
 
 const val AMAZON_HOST = "amazonaws.com"
 
@@ -80,8 +80,8 @@ internal class AWSRequestSignerInterceptor(
     private fun signRequest(request: Request): HttpRequest {
         val url = request.url
         val headers: AwsHeaders = AwsHeaders.invoke {
-            request.headers.names().forEach { headerName ->
-                request.header(headerName)?.let { set(headerName, it) }
+            request.headers.forEach { (name, value) ->
+                setMissing(name, value)
             }
             set("Host", request.url.host)
         }

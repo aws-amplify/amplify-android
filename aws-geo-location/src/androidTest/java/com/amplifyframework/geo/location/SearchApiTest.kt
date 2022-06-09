@@ -28,11 +28,11 @@ import com.amplifyframework.geo.result.GeoSearchResult
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
+import java.util.UUID
+import kotlin.random.Random.Default.nextDouble
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import java.util.*
-import kotlin.random.Random.Default.nextDouble
 
 /**
  * Tests various functionalities related to Search API in [AWSLocationGeoPlugin].

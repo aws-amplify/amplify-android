@@ -37,9 +37,9 @@ import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
+import java.util.concurrent.Executors
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
-import java.util.concurrent.Executors
 
 /**
  * A plugin for the Geo category to interact with Amazon Location Service.
