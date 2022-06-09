@@ -26,8 +26,8 @@ class AuthorizationEvent(val eventType: EventType, override val time: Date? = nu
         data class Configure(val configuration: AuthConfiguration) : EventType()
         data class FetchAuthSession(val amplifyCredential: AmplifyCredential?) : EventType()
         data class FetchedAuthSession(val amplifyCredential: AmplifyCredential?) : EventType()
-        data class DeleteUser(val token: String?): EventType()
-        data class UserDeleted(val id: String = ""): EventType()
+        data class DeleteUser(val token: String?) : EventType()
+        data class UserDeleted(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 

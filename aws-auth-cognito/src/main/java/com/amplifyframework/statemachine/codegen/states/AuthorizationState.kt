@@ -20,7 +20,6 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
-import com.amplifyframework.statemachine.codegen.actions.DeleteUserActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 
@@ -29,7 +28,7 @@ sealed class AuthorizationState : State {
     data class Configured(val id: String = "") : AuthorizationState()
     data class FetchingAuthSession(override var fetchAuthSessionState: FetchAuthSessionState?) :
         AuthorizationState()
-    data class DeletingUser(override var deleteUserState: DeleteUserState?): AuthorizationState()
+    data class DeletingUser(override var deleteUserState: DeleteUserState?) : AuthorizationState()
     data class SessionEstablished(val amplifyCredential: AmplifyCredential?) :
         AuthorizationState()
 
@@ -60,7 +59,6 @@ sealed class AuthorizationState : State {
             val resolution = resolveAuthorizationEvent(oldState, event)
             val actions = resolution.actions.toMutableList()
             val builder = Builder(resolution.newState)
-            val deleteUserBuilder = DeleteUserBuilder(resolution.newState)
 
             oldState.fetchAuthSessionState?.let { fetchAuthSessionResolver.resolve(it, event) }?.let {
                 builder.fetchAuthSessionState = it.newState
@@ -68,7 +66,7 @@ sealed class AuthorizationState : State {
             }
 
             oldState.deleteUserState?.let { deleteUserResolver.resolve(it, event) }?.let {
-                deleteUserBuilder.deleteUserState = it.newState
+                builder.deleteUserState = it.newState
                 actions += it.actions
             }
             return StateResolution(builder.build(), actions)
@@ -140,19 +138,10 @@ sealed class AuthorizationState : State {
     class Builder(private val authZState: AuthorizationState) :
         com.amplifyframework.statemachine.Builder<AuthorizationState> {
         var fetchAuthSessionState: FetchAuthSessionState? = null
-
+        var deleteUserState: DeleteUserState? = null
         override fun build(): AuthorizationState = when (authZState) {
             is FetchingAuthSession -> FetchingAuthSession(fetchAuthSessionState)
             is SessionEstablished -> SessionEstablished(authZState.amplifyCredential)
-            else -> authZState
-        }
-    }
-
-    class DeleteUserBuilder(private val authZState: AuthorizationState) :
-        com.amplifyframework.statemachine.Builder<AuthorizationState> {
-        var deleteUserState: DeleteUserState? = null
-
-        override fun build(): AuthorizationState = when (authZState) {
             is DeletingUser -> DeletingUser(deleteUserState)
             else -> authZState
         }

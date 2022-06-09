@@ -59,5 +59,3 @@ object AuthorizationCognitoActions : AuthorizationActions {
             dispatcher.send(evt)
         }
 }
-
-

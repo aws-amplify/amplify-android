@@ -16,12 +16,10 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.GlobalSignOutRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.DeleteUserActions
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
-import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 object DeleteUserActions : DeleteUserActions {
     override fun initDeleteUserAction(accessToken: String): Action =

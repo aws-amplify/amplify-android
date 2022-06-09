@@ -65,17 +65,23 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
-import com.amplifyframework.statemachine.codegen.events.*
+import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
+import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
+import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
 import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
 import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
-import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.util.UserAgent
 import java.util.concurrent.Semaphore
 import org.json.JSONException
@@ -548,7 +554,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                             "Failed to fetch identity.",
                                             fetchIdentityState.exception,
                                             "Sign in or enable guest access. See the attached exception for more" +
-                                                    " details."
+                                                " details."
                                         )
                                     )
                                 }
@@ -835,14 +841,33 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                         val deleteUserState = authZState.deleteUserState
                         when (deleteUserState) {
                             is DeleteUserState.UserDeleted -> {
-                                onSuccess.call()
-                                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.USER_DELETED))
-                                listenerToken?.let(authStateMachine::cancel)
+                                clearCredentialStore(
+                                    onSuccess = {
+                                        onSuccess.call()
+                                        Amplify.Hub.publish(
+                                            HubChannel.AUTH,
+                                            HubEvent.create(AuthChannelEventName.USER_DELETED)
+                                        )
+                                        listenerToken?.let(authStateMachine::cancel)
+                                    },
+                                    onError = {
+                                        authStateMachine.send(
+                                            DeleteUserEvent(
+                                                DeleteUserEvent.EventType.ThrowError(
+                                                    AuthException.UnknownException(it.error)
+                                                )
+                                            )
+                                        )
+                                    }
+                                )
                             }
                             is DeleteUserState.Error -> {
                                 listenerToken?.let(authStateMachine::cancel)
                                 onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(deleteUserState.exception, "Request to delete user failed.")
+                                    CognitoAuthExceptionConverter.lookup(
+                                        deleteUserState.exception,
+                                        "Request to delete user failed."
+                                    )
                                 )
                             }
                             else -> {}
@@ -858,7 +883,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 authStateMachine.send(event)
             }
         )
-
     }
 
     private fun _signOut(
@@ -902,6 +926,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         )
     }
 
+    // TODO: Remove this function and use the #clearCredentialStore helper method
     private fun waitForSignOut(username: String) {
         var token: StateChangeListenerToken? = null
         token = credentialStoreStateMachine.listen(
@@ -922,6 +947,29 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                 SignOutEvent.EventType.SignedOutFailure(AuthException.UnknownException(it.error))
                             )
                         )
+                    }
+                }
+            },
+            {
+                credentialStoreStateMachine.send(
+                    CredentialStoreEvent(CredentialStoreEvent.EventType.ClearCredentialStore())
+                )
+            }
+        )
+    }
+
+    private fun clearCredentialStore(onSuccess: () -> Unit, onError: (error: CredentialStoreState.Error) -> Unit) {
+        var token: StateChangeListenerToken? = null
+        token = credentialStoreStateMachine.listen(
+            {
+                when {
+                    it is CredentialStoreState.Success -> {
+                        token?.let(credentialStoreStateMachine::cancel)
+                        onSuccess
+                    }
+                    it is CredentialStoreState.Error -> {
+                        token?.let(credentialStoreStateMachine::cancel)
+                        onError(it)
                     }
                 }
             },
