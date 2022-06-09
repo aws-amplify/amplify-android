@@ -1,3 +1,17 @@
+## [Release 1.35.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.6)
+
+### Bug Fixes
+- fix: start transfer service as foreground for >= API26 (#1759)
+
+### Miscellaneous
+- chore: update notify_release.yml (#1720)
+- ignore flaky test (#1768)
+- upgrade jmespath to version 1.6.1 (#1766)
+- Create closed_issue_message.yml (#1754)
+- Bump SDK version to 2.48.0 (#1773)
+
+[See all changes between 1.35.5 and 1.35.6](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.5...release_v1.35.6)
+
 ## [Release 1.35.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.5)
 
 ### Miscellaneous
