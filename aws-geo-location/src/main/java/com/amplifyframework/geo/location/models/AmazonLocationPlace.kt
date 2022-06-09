@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,9 +15,11 @@
 
 package com.amplifyframework.geo.location.models
 
-import com.amazonaws.services.geo.model.Place as AmazonPlace
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.Place
+import aws.sdk.kotlin.services.location.model.Place as AmazonPlace
 
 /**
  * Specialized [Place] instance that can hold metadata returned
@@ -39,10 +41,15 @@ data class AmazonLocationPlace(
 ) : Place(coordinates) {
     internal constructor(place: AmazonPlace) : this(
         // Amazon Location Service represents 2d point as [long, lat]
-        Coordinates(
-            place.geometry.point[1], // latitude
-            place.geometry.point[0]
-        ), // longitude
+        place.geometry?.point?.let {
+            Coordinates(
+                it[1], // latitude
+                it[0] // longitude
+            )
+        } ?: throw GeoException(
+            "Coordinates cannot be initialized",
+            AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+        ),
         place.label,
         place.addressNumber,
         place.street,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -34,12 +34,12 @@ internal interface GeoService<T> {
      *
      * @param mapName map name
      */
-    fun getStyleJson(mapName: String): String
+    suspend fun getStyleJson(mapName: String): String
 
     /**
      * Searches index for the location details given a string query.
      */
-    fun geocode(
+    suspend fun geocode(
         index: String,
         query: String,
         limit: Int,
@@ -50,7 +50,7 @@ internal interface GeoService<T> {
     /**
      * Searches index for the location details given a set of coordinates.
      */
-    fun reverseGeocode(
+    suspend fun reverseGeocode(
         index: String,
         position: Coordinates,
         limit: Int

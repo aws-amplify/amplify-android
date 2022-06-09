@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -32,9 +32,10 @@ class MapViewTestActivity : AppCompatActivity() {
     internal var auth: SynchronousAuth? = null
 
     private val geo: GeoCategory by lazy {
-        val authCategory = TestCategory.forPlugin(AWSCognitoAuthPlugin()) as AuthCategory
-        auth = SynchronousAuth.delegatingTo(authCategory)
-        TestCategory.forPlugin(AWSLocationGeoPlugin(authProvider = authCategory)) as GeoCategory
+        val awsCognitoAuthPlugin = AWSCognitoAuthPlugin()
+        val authCategory = TestCategory.forPlugin(awsCognitoAuthPlugin) as AuthCategory
+        auth = SynchronousAuth.delegatingToCognito(this, awsCognitoAuthPlugin)
+        TestCategory.forPlugin(AWSLocationGeoPlugin(authCategory = authCategory)) as GeoCategory
     }
 
     internal val mapView: MapLibreView by lazy {

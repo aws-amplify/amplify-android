@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -28,16 +28,15 @@ import com.amplifyframework.geo.result.GeoSearchResult
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
-import java.util.UUID
-import kotlin.random.Random.Default.nextDouble
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
+import org.junit.Test
+import java.util.*
+import kotlin.random.Random.Default.nextDouble
 
 /**
  * Tests various functionalities related to Search API in [AWSLocationGeoPlugin].
  */
-@Ignore("Geo category is not available in dev-preview")
 class SearchApiTest {
     private var auth: SynchronousAuth? = null
     private var geo: SynchronousGeo? = null
@@ -50,10 +49,10 @@ class SearchApiTest {
         // Auth plugin uses default configuration
         val authPlugin = AWSCognitoAuthPlugin()
         val authCategory = TestCategory.forPlugin(authPlugin) as AuthCategory
-        auth = SynchronousAuth.delegatingTo(authCategory)
+        auth = SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), authPlugin)
 
         // Geo plugin uses above auth category to authenticate users
-        val geoPlugin = AWSLocationGeoPlugin(authProvider = authCategory)
+        val geoPlugin = AWSLocationGeoPlugin(authCategory = authCategory)
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
     }
@@ -64,8 +63,7 @@ class SearchApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Ignore("Geo category is not available in dev-preview")
-//    @Test(expected = GeoException::class)
+    @Test(expected = GeoException::class)
     fun cannotSearchByTextWithoutAuth() {
         signOutFromCognito()
         val query = UUID.randomUUID().toString()
@@ -79,8 +77,7 @@ class SearchApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Ignore("Geo category is not available in dev-preview")
-//    @Test(expected = GeoException::class)
+    @Test(expected = GeoException::class)
     fun cannotSearchByCoordinatesWithoutAuth() {
         signOutFromCognito()
         val coordinates = Coordinates(
@@ -98,8 +95,7 @@ class SearchApiTest {
      * Both fetched [GeoSearchResult] and [GeoSearchResult.places] are guaranteed
      * to be non-null. There is no guarantee that result is not empty (no match).
      */
-    @Ignore("Geo category is not available in dev-preview")
-//    @Test
+    @Test
     fun searchByTextReturnsResult() {
         signInWithCognito()
         val query = UUID.randomUUID().toString()
@@ -115,8 +111,7 @@ class SearchApiTest {
      * Both fetched [GeoSearchResult] and [GeoSearchResult.places] are guaranteed
      * to be non-null. Searching by coordinates will always return at least one place.
      */
-    @Ignore("Geo category is not available in dev-preview")
-//    @Test
+    @Test
     fun searchByCoordinatesReturnsNonEmptyResult() {
         signInWithCognito()
         val coordinates = Coordinates(
