@@ -29,7 +29,7 @@ import com.amplifyframework.geo.models.SearchArea
 
 /**
  * Implements the backend provider for the location plugin using
- * AWS Mobile SDK's [LocationClient].
+ * AWS Kotlin SDK's [LocationClient].
  * @param credentialsProvider AWS credentials provider for authorizing API calls
  * @param region AWS region for the Amazon Location Service
  */
