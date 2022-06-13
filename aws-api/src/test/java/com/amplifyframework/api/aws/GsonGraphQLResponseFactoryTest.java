@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 
 /**
  * Unit test for implementation of ResponseFactory.
@@ -355,6 +356,28 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Assert that the response is expected
         assertEquals(expectedResponse, response);
+    }
+
+    /**
+     * If a {@link GraphQLResponse} from the server contains invalid JSON, the response factory
+     * should be resilient to this and throw an {@link ApiException}.
+     *
+     * @throws ApiException On failure to build a test request from {@link #buildDummyRequest(Type)}
+     */
+    @Test
+    public void errorWithInvalidJSONThrowsApiException() throws ApiException {
+        // Arrange some invalid JSON string from the "server"
+        final String responseJson = Resources.readAsString("error-invalid-json.html");
+
+        // Act! Create a dummy request
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
+
+        // Assert that an error is thrown
+        assertThrows(
+                ApiException.class,
+                () -> responseFactory.buildResponse(request, responseJson)
+        );
     }
 
     /**
