@@ -30,7 +30,6 @@ import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
@@ -38,6 +37,8 @@ import com.amazonaws.services.textract.AmazonTextractClient;
 import com.amazonaws.services.translate.AmazonTranslateClient;
 
 import java.nio.ByteBuffer;
+
+import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
 
 /**
  * Predictions service that makes inferences via AWS cloud computing.
@@ -58,7 +59,7 @@ public final class AWSPredictionsService {
      */
     public AWSPredictionsService(
             @NonNull AWSPredictionsPluginConfiguration configuration,
-            @NonNull AWSCredentialsProvider credentialsProvider) {
+            @NonNull CredentialsProvider credentialsProvider) {
         this.configuration = configuration;
         this.pollyService = new AWSPollyService(configuration, credentialsProvider);
         this.translateService = new AWSTranslateService(configuration, credentialsProvider);

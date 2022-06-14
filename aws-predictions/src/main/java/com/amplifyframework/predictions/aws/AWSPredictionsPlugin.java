@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -20,10 +20,11 @@ import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
-import com.amplifyframework.core.Amplify;
+import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
+import com.amplifyframework.predictions.aws.auth.CognitoCredentialsProvider;
 import com.amplifyframework.predictions.aws.models.AWSVoiceType;
 import com.amplifyframework.predictions.aws.operation.AWSIdentifyOperation;
 import com.amplifyframework.predictions.aws.operation.AWSInterpretOperation;
@@ -48,9 +49,6 @@ import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
-
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.mobile.client.AWSMobileClient;
 import org.json.JSONObject;
 
 import java.util.concurrent.ExecutorService;
@@ -61,13 +59,12 @@ import java.util.concurrent.Executors;
  */
 public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictionsEscapeHatch> {
     private static final String AWS_PREDICTIONS_PLUGIN_KEY = "awsPredictionsPlugin";
-    private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
 
     private final ExecutorService executorService;
 
     private AWSPredictionsPluginConfiguration configuration;
     private AWSPredictionsService predictionsService;
-    private AWSCredentialsProvider credentialsProviderOverride; // Currently used for integration testing purposes
+    private CredentialsProvider credentialsProviderOverride; // Currently used for integration testing purposes
 
     /**
      * Constructs the AWS Predictions Plugin initializing the executor service.
@@ -77,7 +74,7 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     }
 
     @VisibleForTesting
-    AWSPredictionsPlugin(AWSCredentialsProvider credentialsProviderOverride) {
+    AWSPredictionsPlugin(CredentialsProvider credentialsProviderOverride) {
         this();
         this.credentialsProviderOverride = credentialsProviderOverride;
     }
@@ -92,14 +89,13 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     public void configure(JSONObject pluginConfiguration, @NonNull Context context) throws PredictionsException {
         this.configuration = AWSPredictionsPluginConfiguration.fromJson(pluginConfiguration);
 
-        AWSCredentialsProvider credentialsProvider;
+        CredentialsProvider credentialsProvider;
 
         if (credentialsProviderOverride != null) {
             credentialsProvider = credentialsProviderOverride;
         } else {
             try {
-                credentialsProvider =
-                        (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
+                credentialsProvider = new CognitoCredentialsProvider();
             } catch (IllegalStateException exception) {
                 throw new PredictionsException(
                         "AWSPredictionsPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
