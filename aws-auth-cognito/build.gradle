@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,19 +13,38 @@
  * permissions and limitations under the License.
  */
 
+plugins {
+    id "org.jetbrains.kotlin.plugin.serialization" version "1.6.10"
+}
+
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply from: rootProject.file("configuration/publishing.gradle")
 apply from: rootProject.file("configuration/checkstyle.gradle")
 
 dependencies {
     implementation project(path: ':core')
+    implementation dependency.kotlin.coroutines
+    implementation dependency.kotlin.serializationJson
     implementation dependency.androidx.appcompat
-    implementation dependency.aws.mobileclient
-    implementation dependency.aws.cognitoauth
+    implementation dependency.androidx.security
+    implementation (dependency.aws.cognitoidentity)
+    implementation dependency.aws.cognitoidentityprovider
 
     testImplementation project(path: ':testutils')
+    //noinspection GradleDependency
+    testImplementation 'org.json:json:20180813'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test:1.5.31'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:1.5.31'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0'
+
     testImplementation dependency.junit
     testImplementation dependency.mockito
+    testImplementation dependency.mockk
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
+
+    androidTestImplementation dependency.androidx.test.runner
+    androidTestImplementation dependency.androidx.test.junit
+    androidTestImplementation dependency.aws.authcore
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import android.net.Uri;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
+import com.amplifyframework.api.aws.auth.CognitoCredentialsProvider;
+import com.amplifyframework.api.aws.auth.IamRequestDecorator;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
@@ -27,19 +29,20 @@ import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.core.Amplify;
 
-import com.amazonaws.DefaultRequest;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.http.HttpMethodName;
-import com.amazonaws.mobile.client.AWSMobileClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
 final class SubscriptionAuthorizer {
     private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
@@ -83,9 +86,9 @@ final class SubscriptionAuthorizer {
                 }
                 return forApiKey(keyProvider);
             case AWS_IAM:
-                AWSCredentialsProvider credentialsProvider = authProviders.getAWSCredentialsProvider();
+                CredentialsProvider credentialsProvider = authProviders.getAWSCredentialsProvider();
                 if (credentialsProvider == null) {
-                    credentialsProvider = getAWSMobileClient();
+                    credentialsProvider = new CognitoCredentialsProvider();
                 }
                 return forIam(credentialsProvider, request, connectionFlag);
             case AMAZON_COGNITO_USER_POOLS:
@@ -183,32 +186,28 @@ final class SubscriptionAuthorizer {
     }
 
     private JSONObject forIam(
-            AWSCredentialsProvider credentialsProvider,
+            CredentialsProvider credentialsProvider,
             GraphQLRequest<?> request,
             boolean connectionFlag
     ) throws ApiException {
         final URI apiUrl = getRequestEndpoint(connectionFlag);
-        final String apiRegion = configuration.getRegion();
         final String requestContent = request != null ? request.getContent() : "{}";
 
         // Construct a request to be signed
-        DefaultRequest<?> canonicalRequest = new DefaultRequest<>("appsync");
-        canonicalRequest.setEndpoint(apiUrl);
-        canonicalRequest.addHeader("accept", "application/json, text/javascript");
-        canonicalRequest.addHeader("content-encoding", "amz-1.0");
-        canonicalRequest.addHeader("content-type", "application/json; charset=UTF-8");
-        canonicalRequest.setHttpMethod(HttpMethodName.valueOf("POST"));
-        canonicalRequest.setContent(new ByteArrayInputStream(requestContent.getBytes()));
-
-        // Sign with AppSync's SigV4 signer that also considers connection resource path
-        new AppSyncV4Signer(apiRegion, connectionFlag).sign(
-                canonicalRequest,
-                credentialsProvider.getCredentials()
-        );
-
-        // Extract header from signed request and return
-        Map<String, String> signedHeaders = canonicalRequest.getHeaders();
-        return new JSONObject(signedHeaders);
+        Request okHttpRequest = new Request.Builder()
+                .url(apiUrl.toString())
+                .addHeader("accept", "application/json, text/javascript")
+                .addHeader("content-type", "application/json; charset=UTF-8")
+                .post(RequestBody.create(requestContent.getBytes(), MediaType.parse("application/json; charset=UTF-8")))
+                .build();
+        // Sign with Kotlin signer; connection resource path is set by `getRequestEndpoint()`
+        // TODO : dev preview previously headers were signed here. check if IamRequestDecorator call is necessary
+        AppSyncV4Signer signer = new AppSyncV4Signer(configuration.getRegion());
+        Request decorated = new IamRequestDecorator(signer, credentialsProvider, "appsync").decorate(okHttpRequest);
+        Map<String, List<String>> signedHeaders = decorated.headers().toMultimap();
+        Map<String, String> simpleSignedHeaders = new HashMap<>();
+        signedHeaders.forEach((k, v) -> simpleSignedHeaders.put(k, v.get(0)));
+        return new JSONObject(simpleSignedHeaders);
     }
 
     private String getHost() {
@@ -225,19 +224,6 @@ final class SubscriptionAuthorizer {
                     "Error constructing canonical URI for IAM request signature",
                     uriException,
                     "Verify that the API configuration contains valid GraphQL endpoint."
-            );
-        }
-    }
-
-    private AWSCredentialsProvider getAWSMobileClient() throws ApiException {
-        try {
-            return (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
-        } catch (IllegalStateException exception) {
-            throw new ApiException(
-                    "AWSApiPlugin depends on AWSCognitoAuthPlugin, but it is currently missing.",
-                    exception,
-                    "Before configuring Amplify, be sure to add AWSCognitoAuthPlugin same as you " +
-                            "added AWSApiPlugin."
             );
         }
     }

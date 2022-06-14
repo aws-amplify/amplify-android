@@ -76,10 +76,10 @@ done
 echo "Status = $status Result = $result"
 
 ./scripts/generate_df_testrun_report --run_arn="$run_arn" --module_name="$module_name" --pr="$CODEBUILD_SOURCE_VERSION" --output_path="build/allTests/$module_name/"
-# If the result is PASSED, then exit with a return code 0
-if [ "$result" = "PASSED" ]
+# If the result is FAILED, then exit with a non-zero return
+if [ "$result" = "FAILED" ]
 then
-  exit 0
+  exit 1
 fi
-# Otherwise, exit with a non-zero.
-exit 1
+# Otherwise, exit with a zero.
+exit 0

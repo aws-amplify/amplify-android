@@ -14,6 +14,7 @@
  */
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
@@ -37,12 +38,12 @@ dependencies {
     testImplementation dependency.androidx.test.core
     testImplementation dependency.mockk
 
+    androidTestImplementation dependency.aws.awstypes
     androidTestImplementation dependency.mockito
     androidTestImplementation project(path: ':testmodels')
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation project(path: ':aws-api')
     androidTestImplementation project(path: ':aws-auth-cognito')
-    androidTestImplementation dependency.aws.mobileclient
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
@@ -52,3 +53,6 @@ dependencies {
     androidTestImplementation dependency.oauth2
 }
 
+afterEvaluate {
+    it.android.kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
+}

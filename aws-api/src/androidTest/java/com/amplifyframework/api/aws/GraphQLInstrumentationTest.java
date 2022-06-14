@@ -23,15 +23,19 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
+import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -66,25 +70,42 @@ public final class GraphQLInstrumentationTest {
     private static final String API_WITH_COGNITO_USER_POOLS = "eventsApiWithUserPools";
 
     private static SynchronousApi api;
-    private static SynchronousMobileClient mobileClient;
+    private static SynchronousAuth synchronousAuth;
 
     private String currentApiName;
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
      * @throws AmplifyException From Amplify configuration
-     * @throws SynchronousMobileClient.MobileClientException From failure to initialize auth
+     * @throws InterruptedException From failure to initialize auth
      */
-    @Before
-    public void setUp() throws AmplifyException, SynchronousMobileClient.MobileClientException {
+    @BeforeClass
+    public static void setUp() throws AmplifyException, InterruptedException {
         // Set up and configure API category
         ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
         api = SynchronousApi.delegatingTo(asyncDelegate);
 
         // Set up Auth
-        mobileClient = SynchronousMobileClient.instance();
-        mobileClient.initialize();
-        mobileClient.signOut();
+        synchronousAuth = SynchronousAuth.delegatingToCognito(getApplicationContext(),
+                new AWSCognitoAuthPlugin());
+    }
+
+    /**
+     * Reset all the assigned static fields.
+     */
+    @AfterClass
+    public static void tearDown() {
+        synchronousAuth = null;
+        api = null;
+    }
+
+    /**
+     * Start auth with signedout state.
+     * @throws AuthException if signout fails.
+     */
+    @Before
+    public void setUpAuth() throws AuthException {
+        synchronousAuth.signOut();
     }
 
     /**
@@ -119,18 +140,18 @@ public final class GraphQLInstrumentationTest {
      *          expected response from the endpoint
      * @throws JSONException On failure to obtain credentials from test
      *          resources
-     * @throws SynchronousMobileClient.MobileClientException On failure
+     * @throws AuthException On failure
      *          to sign in as a valid user
      */
     @Test
     @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void subscriptionReceivesMutationOverCognitoUserPools() throws
-            ApiException, JSONException, SynchronousMobileClient.MobileClientException {
+            ApiException, JSONException, AuthException {
         currentApiName = API_WITH_COGNITO_USER_POOLS;
         JSONObject credentials = Resources.readAsJson(getApplicationContext(), R.raw.credentials);
         String username = credentials.getString("username");
         String password = credentials.getString("password");
-        mobileClient.signIn(username, password);
+        synchronousAuth.signIn(username, password);
         subscriptionReceivesMutation();
     }
 

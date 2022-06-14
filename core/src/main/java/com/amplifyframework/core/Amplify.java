@@ -144,7 +144,7 @@ public final class Amplify {
 
             // Configure User-Agent utility
             UserAgent.configure(configuration.getPlatformVersions());
-
+            System.setProperty("aws.frameworkMetadata", UserAgent.string());
             if (configuration.isDevMenuEnabled()) {
                 DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
             }

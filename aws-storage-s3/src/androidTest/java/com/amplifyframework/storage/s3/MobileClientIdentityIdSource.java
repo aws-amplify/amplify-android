@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,7 +17,10 @@ package com.amplifyframework.storage.s3;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthSession;
 import com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 
 import java.util.Objects;
@@ -27,29 +30,29 @@ import java.util.Objects;
  * an instance of {@link SynchronousMobileClient} for it.
  */
 final class MobileClientIdentityIdSource implements IdentityIdSource {
-    private final SynchronousMobileClient synchronousMobileClient;
+    private final SynchronousAuth synchronousAuth;
 
-    private MobileClientIdentityIdSource(SynchronousMobileClient synchronousMobileClient) {
-        this.synchronousMobileClient = synchronousMobileClient;
+    private MobileClientIdentityIdSource(SynchronousAuth synchronousAuth) {
+        this.synchronousAuth = synchronousAuth;
     }
 
-    static MobileClientIdentityIdSource create(@NonNull SynchronousMobileClient synchronousMobileClient) {
-        Objects.requireNonNull(synchronousMobileClient);
-        return new MobileClientIdentityIdSource(synchronousMobileClient);
+    static MobileClientIdentityIdSource create(@NonNull SynchronousAuth synchronousAuth) {
+        Objects.requireNonNull(synchronousAuth);
+        return new MobileClientIdentityIdSource(synchronousAuth);
     }
 
     @NonNull
     @Override
     public String fetchIdentityId(@NonNull String username, @NonNull String password) throws IllegalArgumentException {
         try {
-            if (synchronousMobileClient.isSignedIn()) {
-                synchronousMobileClient.signOut();
+            if (synchronousAuth.fetchAuthSession().isSignedIn()) {
+                synchronousAuth.signOut();
             }
-            synchronousMobileClient.signIn(username, password);
-            String identityId = synchronousMobileClient.getIdentityId();
-            synchronousMobileClient.signOut();
+            synchronousAuth.signIn(username, password);
+            String identityId = ((AWSCognitoAuthSession) synchronousAuth.fetchAuthSession()).getIdentityId().getValue();
+            synchronousAuth.signOut();
             return Objects.requireNonNull(identityId);
-        } catch (NullPointerException | SynchronousMobileClient.MobileClientException lookupFailure) {
+        } catch (NullPointerException | AuthException lookupFailure) {
             throw new IllegalArgumentException(lookupFailure);
         }
     }

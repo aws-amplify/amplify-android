@@ -17,7 +17,6 @@ package com.amplifyframework.geo.location
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
@@ -27,15 +26,15 @@ import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
 import org.json.JSONObject
-
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Test
+import org.junit.Ignore
 
 /**
  * Tests various functionalities related to Maps API in [AWSLocationGeoPlugin].
  */
+@Ignore("Geo category is not available in dev-preview")
 class MapsApiTest {
     private var auth: SynchronousAuth? = null
     private var geo: SynchronousGeo? = null
@@ -64,7 +63,8 @@ class MapsApiTest {
      * Both "layers" and "sources" are critical information required for rendering
      * a map, so assert that both fields exist in the document.
      */
-    @Test
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test
     fun styleDescriptorLoadsProperly() {
         signInWithCognito()
         val style = geo?.getMapStyleDescriptor(GetMapStyleDescriptorOptions.defaults())
@@ -84,7 +84,8 @@ class MapsApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Test(expected = GeoException::class)
+    @Ignore("Geo category is not available in dev-preview")
+//    @Test(expected = GeoException::class)
     fun cannotFetchStyleWithoutAuth() {
         signOutFromCognito()
         // should not be authorized to fetch map resource from Amazon Location Service
