@@ -19,19 +19,19 @@ import aws.sdk.kotlin.runtime.auth.credentials.Credentials
 import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.Amplify
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 /**
  * Wrapper to provide credentials from Auth synchronously and asynchronously
  */
-internal open class CognitoCredentialsProvider : CredentialsProvider {
+internal class CognitoCredentialsProvider : CredentialsProvider {
     /**
      * Request [Credentials] from the provider.
      */
     override suspend fun getCredentials(): Credentials {
-        return suspendCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
                     (authSession as? AWSCognitoAuthSession)?.awsCredentials?.value?.let {

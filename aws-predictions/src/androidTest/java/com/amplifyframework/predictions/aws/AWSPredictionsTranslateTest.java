@@ -39,7 +39,7 @@ import static org.junit.Assert.assertTrue;
  * for valid input.
  */
 public final class AWSPredictionsTranslateTest {
-
+    
     private SynchronousPredictions predictions;
 
     /**
