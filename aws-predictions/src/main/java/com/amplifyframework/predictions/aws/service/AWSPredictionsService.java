@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -34,11 +34,11 @@ import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
 import com.amazonaws.services.textract.AmazonTextractClient;
-import com.amazonaws.services.translate.AmazonTranslateClient;
 
 import java.nio.ByteBuffer;
 
 import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
+import aws.sdk.kotlin.services.translate.TranslateClient;
 
 /**
  * Predictions service that makes inferences via AWS cloud computing.
@@ -227,12 +227,12 @@ public final class AWSPredictionsService {
     }
 
     /**
-     * Return configured Amazon Translate client for
+     * Return configured Translate client for
      * direct access to AWS endpoint.
-     * @return the configured Amazon Translate client
+     * @return the configured Translate client
      */
     @NonNull
-    public AmazonTranslateClient getTranslateClient() {
+    public TranslateClient getTranslateClient() {
         return translateService.getClient();
     }
 

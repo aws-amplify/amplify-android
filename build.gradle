@@ -107,7 +107,7 @@ ext {
             polly: "com.amazonaws:aws-android-sdk-polly:$awsSdkVersion",
             rekognition: "com.amazonaws:aws-android-sdk-rekognition:$awsSdkVersion",
             textract: "com.amazonaws:aws-android-sdk-textract:$awsSdkVersion",
-            translate: "com.amazonaws:aws-android-sdk-translate:$awsSdkVersion",
+            translate: "aws.sdk.kotlin:translate:$awsKoltinSdkVersion",
             s3Kotlin: "aws.sdk.kotlin:s3:$awsKoltinSdkVersion",
             ktor: "aws.smithy.kotlin:http-client-engine-ktor:0.7.7",
             signing: "aws.sdk.kotlin:aws-signing:$awsKoltinSdkVersion",
