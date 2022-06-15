@@ -78,57 +78,6 @@ internal class AWSTranslateService(
         onError
         )
     }
-
-    /*fun translate(
-        text: String,
-        sourceLanguage: LanguageType,
-        targetLanguage: LanguageType,
-        onSuccess: Consumer<TranslateTextResult>,
-        onError: Consumer<PredictionsException>
-    ) {
-        try {
-            onSuccess.accept(fetchTranslation(text, sourceLanguage, targetLanguage))
-        } catch (exception: PredictionsException) {
-            onError.accept(exception)
-        }
-    }
-
-    @Throws(PredictionsException::class)
-    private fun fetchTranslation(
-        textToTranslate: String,
-        sourceLanguage: LanguageType,
-        targetLanguage: LanguageType
-    ): TranslateTextResult {
-        // Throw if default language is not configured
-        val source =
-            if (LanguageType.UNKNOWN != sourceLanguage) sourceLanguage else pluginConfiguration.translateTextConfiguration.sourceLanguage
-        val target =
-            if (LanguageType.UNKNOWN != targetLanguage) targetLanguage else pluginConfiguration.translateTextConfiguration.targetLanguage
-
-        // Translate given text via AWS Translate
-        val result: TranslateTextResponse
-        try {
-            result = runBlocking {
-                client.translateText {
-                    this.text = textToTranslate
-                    this.sourceLanguageCode = source.languageCode
-                    this.targetLanguageCode = target.languageCode
-                }
-            }
-        } catch (serviceException: ClientException) {
-            throw PredictionsException(
-                "AWS Translate encountered an error while translating text.",
-                serviceException, "See attached service exception for more details."
-            )
-        }
-        val translation = result.translatedText
-        val targetCode = result.targetLanguageCode
-        val language = LanguageType.from(targetCode)
-        return TranslateTextResult.builder()
-            .translatedText(translation ?: "")
-            .targetLanguage(language)
-            .build()
-    }*/
     
     private fun <T : Any> execute(
         runnableTask: suspend () -> T,
