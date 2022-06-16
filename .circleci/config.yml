@@ -29,9 +29,9 @@ orbs:
 
 workflows:
   canaries:
-#    when:
-#      and:
-#        - equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
-#        - equal: [ "Canaries", << pipeline.schedule.name >> ]
+    when:
+      and:
+        - equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
+        - equal: [ "Canaries", << pipeline.schedule.name >> ]
     jobs:
       - getting-started-smoke-test/android
