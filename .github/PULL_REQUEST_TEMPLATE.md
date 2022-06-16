@@ -1,3 +1,5 @@
+- [ ] PR title and description conforms to [Pull Request](https://github.com/aws-amplify/amplify-android/blob/main/CONTRIBUTING.md#pull-request-guidelines) guidelines.
+
 *Issue #, if available:*
 
 *Description of changes:*
