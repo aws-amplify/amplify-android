@@ -74,8 +74,8 @@ internal class AWSTranslateService(
                     throwable, "See attached service exception for more details."
                 )
             },
-        onSuccess,
-        onError
+            onSuccess,
+            onError
         )
     }
     

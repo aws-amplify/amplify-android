@@ -20,10 +20,10 @@ import androidx.annotation.NonNull;
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
-import com.amazonaws.services.textract.AmazonTextractClient;
 
 import java.util.Objects;
 
+import aws.sdk.kotlin.services.textract.TextractClient;
 import aws.sdk.kotlin.services.translate.TranslateClient;
 
 /**
@@ -35,14 +35,14 @@ public final class AWSPredictionsEscapeHatch {
     private final TranslateClient translate;
     private final AmazonPollyClient polly;
     private final AmazonRekognitionClient rekognition;
-    private final AmazonTextractClient textract;
+    private final TextractClient textract;
     private final AmazonComprehendClient comprehend;
 
     AWSPredictionsEscapeHatch(
             @NonNull TranslateClient translate,
             @NonNull AmazonPollyClient polly,
             @NonNull AmazonRekognitionClient rekognition,
-            @NonNull AmazonTextractClient textract,
+            @NonNull TextractClient textract,
             @NonNull AmazonComprehendClient comprehend
     ) {
         this.translate = Objects.requireNonNull(translate);
@@ -83,12 +83,12 @@ public final class AWSPredictionsEscapeHatch {
     }
 
     /**
-     * Return configured Amazon Textract client to access
+     * Return configured Textract client to access
      * low-level methods for document analysis.
-     * @return the configured Amazon Textract client
+     * @return the configured Textract client
      */
     @NonNull
-    public AmazonTextractClient getTextractClient() {
+    public TextractClient getTextractClient() {
         return textract;
     }
 

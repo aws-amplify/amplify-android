@@ -33,11 +33,11 @@ import com.amplifyframework.predictions.result.TranslateTextResult;
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
-import com.amazonaws.services.textract.AmazonTextractClient;
 
 import java.nio.ByteBuffer;
 
 import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
+import aws.sdk.kotlin.services.textract.TextractClient;
 import aws.sdk.kotlin.services.translate.TranslateClient;
 
 /**
@@ -257,12 +257,12 @@ public final class AWSPredictionsService {
     }
 
     /**
-     * Return configured Amazon Textract client for
+     * Return configured Textract client for
      * direct access to AWS endpoint.
-     * @return the configured Amazon Textract client
+     * @return the configured Textract client
      */
     @NonNull
-    public AmazonTextractClient getTextractClient() {
+    public TextractClient getTextractClient() {
         return textractService.getClient();
     }
 

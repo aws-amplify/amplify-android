@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -14,51 +14,76 @@
  */
 package com.amplifyframework.predictions.aws.service
 
-import com.amazonaws.services.textract.AmazonTextractClient
+import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
+import aws.sdk.kotlin.services.textract.TextractClient
+import aws.sdk.kotlin.services.textract.model.Block
+import aws.sdk.kotlin.services.textract.model.BlockType
+import aws.sdk.kotlin.services.textract.model.Document
+import aws.sdk.kotlin.services.textract.model.FeatureType
 import com.amplifyframework.core.Consumer
-import com.amplifyframework.predictions.models.Selection
-import com.amplifyframework.predictions.models.Table
+import com.amplifyframework.predictions.PredictionsException
+import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration
+import com.amplifyframework.predictions.aws.adapter.TextractResultTransformers
+import com.amplifyframework.predictions.models.*
+import com.amplifyframework.predictions.result.IdentifyDocumentTextResult
+import com.amplifyframework.predictions.result.IdentifyResult
+import kotlinx.coroutines.runBlocking
 import java.lang.StringBuilder
 import java.nio.ByteBuffer
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.concurrent.Executors
 
 /**
  * Predictions service for performing text translation.
  */
 internal class AWSTextractService(
-    pluginConfiguration: AWSPredictionsPluginConfiguration,
-    credentialsProvider: AWSCredentialsProvider
+    private val pluginConfiguration: AWSPredictionsPluginConfiguration,
+    private val authCredentialsProvider: CredentialsProvider
 ) {
-    private val textract: AmazonTextractClient
-    private val pluginConfiguration: AWSPredictionsPluginConfiguration
-    private fun createTextractClient(credentialsProvider: AWSCredentialsProvider): AmazonTextractClient {
-        val configuration = ClientConfiguration()
-        configuration.setUserAgent(UserAgent.string())
-        return AmazonTextractClient(credentialsProvider, configuration)
+    val client: TextractClient = TextractClient {
+        this.region = pluginConfiguration.defaultRegion
+        this.credentialsProvider = authCredentialsProvider
     }
+
+    private val executor = Executors.newCachedThreadPool()
 
     fun detectDocumentText(
         type: TextFormatType,
         imageData: ByteBuffer,
-        onSuccess: Consumer<IdentifyResult?>,
-        onError: Consumer<PredictionsException?>
+        onSuccess: Consumer<IdentifyResult>,
+        onError: Consumer<PredictionsException>
     ) {
-        val features: MutableList<String> = ArrayList()
-        if (TextFormatType.FORM == type || TextFormatType.ALL == type) {
-            features.add(FeatureType.FORMS.toString())
-        }
-        if (TextFormatType.TABLE == type || TextFormatType.ALL == type) {
-            features.add(FeatureType.TABLES.toString())
-        }
-        try {
-            onSuccess.accept(analyzeDocument(imageData, features))
-        } catch (exception: PredictionsException) {
-            onError.accept(exception)
-        }
+        execute(
+            {
+                val features: MutableList<FeatureType> = ArrayList()
+                if (TextFormatType.FORM == type || TextFormatType.ALL == type) {
+                    features.add(FeatureType.Forms)
+                }
+                if (TextFormatType.TABLE == type || TextFormatType.ALL == type) {
+                    features.add(FeatureType.Tables)
+                }
+                // Analyze document from given image via Amazon Textract
+                val result = client.analyzeDocument {
+                    this.document = Document {
+                        this.bytes = imageData.array()
+                    }
+                    this.featureTypes = features
+                }
+                processTextractBlocks(result.blocks ?: emptyList())
+            },
+            { throwable ->
+                PredictionsException(
+                    "AWS Textract encountered an error while analyzing document.",
+                    throwable, "See attached service exception for more details."
+                )
+            },
+            onSuccess,
+            onError
+        )
     }
 
-    @Throws(PredictionsException::class)
+    /*@Throws(PredictionsException::class)
     private fun detectDocumentText(imageData: ByteBuffer): IdentifyDocumentTextResult {
         val request: DetectDocumentTextRequest = DetectDocumentTextRequest()
             .withDocument(Document().withBytes(imageData))
@@ -74,29 +99,7 @@ internal class AWSTextractService(
             )
         }
         return processTextractBlocks(result.getBlocks())
-    }
-
-    @Throws(PredictionsException::class)
-    private fun analyzeDocument(
-        imageData: ByteBuffer,
-        features: List<String>
-    ): IdentifyDocumentTextResult {
-        val request: AnalyzeDocumentRequest = AnalyzeDocumentRequest()
-            .withDocument(Document().withBytes(imageData))
-            .withFeatureTypes(features)
-
-        // Analyze document from given image via Amazon Textract
-        val result: AnalyzeDocumentResult
-        result = try {
-            textract.analyzeDocument(request)
-        } catch (serviceException: AmazonClientException) {
-            throw PredictionsException(
-                "AWS Textract encountered an error while analyzing document.",
-                serviceException, "See attached service exception for more details."
-            )
-        }
-        return processTextractBlocks(result.getBlocks())
-    }
+    }*/
 
     private fun processTextractBlocks(blocks: List<Block>): IdentifyDocumentTextResult {
         val fullTextBuilder = StringBuilder()
@@ -112,48 +115,36 @@ internal class AWSTextractService(
         for (block in blocks) {
             // This is the map that will be used for traversing the graph.
             // Each block can contain "relationships", which point to other blocks by ID.
-            val id: String = block.getId()
+            val id: String = block.id ?: ""
             blockMap[id] = block
-            val type: BlockType = BlockType.fromValue(block.getBlockType())
-            when (type) {
-                LINE -> {
-                    rawLineText.add(block.getText())
-                    lines.add(TextractResultTransformers.fetchIdentifiedText(block))
-                    continue
-                }
-                WORD -> {
-                    fullTextBuilder.append(block.getText()).append(" ")
-                    words.add(TextractResultTransformers.fetchIdentifiedText(block))
-                    continue
-                }
-                SELECTION_ELEMENT -> {
-                    selections.add(TextractResultTransformers.fetchSelection(block))
-                    continue
-                }
-                TABLE -> {
-                    tableBlocks.add(block)
-                    continue
-                }
-                KEY_VALUE_SET -> {
-                    keyValueBlocks.add(block)
-                    continue
-                }
-                else -> {
+            block.blockType?.let { blockType ->
+                when (blockType) {
+                    BlockType.Line -> {
+                        block.text?.let { blockText -> rawLineText.add(blockText) }
+                        TextractResultTransformers.fetchIdentifiedText(block)?.let { identifiedText ->  lines.add(identifiedText) }
+                    }
+                    BlockType.Word -> {
+                        fullTextBuilder.append(block.text).append(" ")
+                        TextractResultTransformers.fetchIdentifiedText(block)?.let { identifiedText ->  words.add(identifiedText) }
+                    }
+                    BlockType.SelectionElement -> {
+                        TextractResultTransformers.fetchSelection(block)?.let { selection ->  selections.add(selection) }
+                    }
+                    BlockType.Table -> {
+                        tableBlocks.add(block)
+                    }
+                    BlockType.KeyValueSet -> {
+                        keyValueBlocks.add(block)
+                    }
+                    else -> { }
                 }
             }
         }
         for (tableBlock in tableBlocks) {
-            val table: Table = TextractResultTransformers.fetchTable(tableBlock, blockMap)
-            if (table != null) {
-                tables.add(table)
-            }
+            TextractResultTransformers.fetchTable(tableBlock, blockMap)?.let { table -> tables.add(table) }
         }
         for (keyValueBlock in keyValueBlocks) {
-            val keyValue: BoundedKeyValue =
-                TextractResultTransformers.fetchKeyValue(keyValueBlock, blockMap)
-            if (keyValue != null) {
-                keyValues.add(keyValue)
-            }
+            TextractResultTransformers.fetchKeyValue(keyValueBlock, blockMap)?.let { keyValue -> keyValues.add(keyValue) }
         }
         return IdentifyDocumentTextResult.builder()
             .fullText(fullTextBuilder.toString().trim { it <= ' ' })
@@ -166,11 +157,22 @@ internal class AWSTextractService(
             .build()
     }
 
-    val client: AmazonTextractClient
-        get() = textract
-
-    init {
-        textract = createTextractClient(credentialsProvider)
-        this.pluginConfiguration = pluginConfiguration
+    private fun <T : Any> execute(
+        runnableTask: suspend () -> T,
+        errorTransformer: (Throwable) -> PredictionsException,
+        onResult: Consumer<T>,
+        onError: Consumer<PredictionsException>
+    ) {
+        executor.execute {
+            try {
+                runBlocking {
+                    val result = runnableTask()
+                    onResult.accept(result)
+                }
+            } catch (error: Throwable) {
+                val predictionsException = errorTransformer.invoke(error)
+                onError.accept(predictionsException)
+            }
+        }
     }
 }
