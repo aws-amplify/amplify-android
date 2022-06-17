@@ -127,17 +127,15 @@ internal abstract class BaseTransferWorker(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createChannel()
         }
-        val appIcon = takeIf { applicationContext.applicationInfo.icon > 0 }?.let {
-            applicationContext.applicationInfo.icon
-        } ?: R.drawable.ic_notification_test
+        val appIcon = R.drawable.amplify_storage_transfer_notification_icon
         return ForegroundInfo(
             1,
             NotificationCompat.Builder(
                 applicationContext,
-                applicationContext.getString(R.string.amplify_notification_channel_id)
+                applicationContext.getString(R.string.amplify_storage_notification_channel_id)
             )
                 .setSmallIcon(appIcon)
-                .setContentTitle(applicationContext.getString(R.string.amplify_notification_title))
+                .setContentTitle(applicationContext.getString(R.string.amplify_storage_notification_title))
                 .build()
         )
     }
@@ -155,8 +153,8 @@ internal abstract class BaseTransferWorker(
             applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(
             NotificationChannel(
-                applicationContext.getString(R.string.amplify_notification_channel_id),
-                applicationContext.getString(R.string.amplify_notification_channel_name),
+                applicationContext.getString(R.string.amplify_storage_notification_channel_id),
+                applicationContext.getString(R.string.amplify_storage_notification_channel_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             )
         )
