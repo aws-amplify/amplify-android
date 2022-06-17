@@ -127,9 +127,7 @@ internal abstract class BaseTransferWorker(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createChannel()
         }
-        val appIcon = takeIf { applicationContext.applicationInfo.icon > 0 }?.let {
-            applicationContext.applicationInfo.icon
-        } ?: R.drawable.ic_notification_test
+        val appIcon = R.drawable.amplify_storage_transfer_notification_icon
         return ForegroundInfo(
             1,
             NotificationCompat.Builder(
