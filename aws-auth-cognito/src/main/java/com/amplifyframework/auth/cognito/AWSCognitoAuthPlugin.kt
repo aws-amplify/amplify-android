@@ -21,6 +21,7 @@ import android.content.Intent
 import aws.sdk.kotlin.runtime.auth.credentials.Credentials
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -81,6 +82,8 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.util.UserAgent
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.concurrent.Semaphore
 import org.json.JSONException
 import org.json.JSONObject
@@ -684,7 +687,56 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        var listenerToken: StateChangeListenerToken? = null
+        listenerToken = credentialStoreStateMachine.listen(
+            {
+                when (it) {
+                    is CredentialStoreState.Success -> {
+                        listenerToken?.let(credentialStoreStateMachine::cancel)
+                        if (it.storedCredentials?.cognitoUserPoolTokens?.accessToken != null) {
+                            _updatePassword(it.storedCredentials.cognitoUserPoolTokens.accessToken, oldPassword, newPassword, onSuccess, onError)
+                        } else {
+                            onError.accept(AuthException.InvalidAccountTypeException())
+                        }
+                    }
+                    is CredentialStoreState.Error -> {
+                        listenerToken?.let(credentialStoreStateMachine::cancel)
+                        onError.accept(AuthException.UnknownException(it.error))
+                    }
+                    else -> {
+
+                    }
+                }
+            },
+            {
+                credentialStoreStateMachine.send(
+                    CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                )
+            }
+        )
+    }
+
+    private fun _updatePassword(token: String,
+                                oldPassword: String,
+                                newPassword: String,
+                                onSuccess: Action,
+                                onError: Consumer<AuthException>) {
+        val changePasswordRequest = ChangePasswordRequest.invoke {
+            previousPassword = oldPassword
+            proposedPassword = newPassword
+            accessToken = token
+        }
+
+        try {
+            GlobalScope.launch {
+                val cognitoClient = configureCognitoClients().cognitoIdentityProviderClient?.changePassword(changePasswordRequest)
+                onSuccess.call()
+            }
+        }
+        catch(e: Exception)
+        {
+            onError.accept(AuthException.UpdatePasswordException())
+        }
     }
 
     override fun fetchUserAttributes(
