@@ -19,6 +19,7 @@ apply plugin: 'kotlin-android'
 
 dependencies {
     implementation project(path: ':core')
+    implementation dependency.aws.mobileclient
     implementation dependency.junit
     implementation dependency.mockito
     implementation dependency.androidx.test.core
