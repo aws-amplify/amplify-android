@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -101,7 +101,6 @@ ext {
             authcore: "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion",
             cognitoidentity: "aws.sdk.kotlin:cognitoidentity:$awsKoltinSdkVersion",
             cognitoidentityprovider: "aws.sdk.kotlin:cognitoidentityprovider:$awsKoltinSdkVersion",
-            location: "com.amazonaws:aws-android-sdk-location:$awsSdkVersion",
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion",
             polly: "com.amazonaws:aws-android-sdk-polly:$awsSdkVersion",
@@ -111,7 +110,8 @@ ext {
             s3Kotlin: "aws.sdk.kotlin:s3:$awsKoltinSdkVersion",
             ktor: "aws.smithy.kotlin:http-client-engine-ktor:0.7.7",
             signing: "aws.sdk.kotlin:aws-signing:$awsKoltinSdkVersion",
-            awstypes: "aws.sdk.kotlin:aws-types:$awsKoltinSdkVersion"
+            awstypes: "aws.sdk.kotlin:aws-types:$awsKoltinSdkVersion",
+            location: "aws.sdk.kotlin:location:$awsKoltinSdkVersion"
         ],
         kotlin: [
             stdlib: 'org.jetbrains.kotlin:kotlin-stdlib:1.6.10',

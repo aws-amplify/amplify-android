@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
 package com.amplifyframework.geo.location
 
 import android.content.Context
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.services.geo.AmazonLocationClient
+import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
+import aws.sdk.kotlin.services.location.LocationClient
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.geo.GeoCategoryPlugin
 import com.amplifyframework.geo.GeoException
+import com.amplifyframework.geo.location.auth.CognitoCredentialsProvider
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
 import com.amplifyframework.geo.location.options.AmazonLocationSearchByCoordinatesOptions
 import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptions
@@ -37,6 +38,7 @@ import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
 import java.util.concurrent.Executors
+import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 
 /**
@@ -45,15 +47,14 @@ import org.json.JSONObject
 class AWSLocationGeoPlugin(
     // for programmatically overriding amplifyconfiguration.json
     private val userConfiguration: GeoConfiguration? = null,
-    private val authProvider: AuthCategory = Amplify.Auth
-) : GeoCategoryPlugin<AmazonLocationClient?>() {
+    private val authCategory: AuthCategory = Amplify.Auth
+) : GeoCategoryPlugin<LocationClient?>() {
     companion object {
         private const val GEO_PLUGIN_KEY = "awsLocationGeoPlugin"
-        private const val AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
 
     private lateinit var configuration: GeoConfiguration
-    private lateinit var geoService: GeoService<AmazonLocationClient>
+    private lateinit var geoService: GeoService<LocationClient>
 
     private val executor = Executors.newCachedThreadPool()
     private val defaultMapName: String by lazy {
@@ -63,9 +64,8 @@ class AWSLocationGeoPlugin(
         configuration.searchIndices!!.default
     }
 
-    val credentialsProvider: AWSCredentialsProvider by lazy {
-        val authPlugin = authProvider.getPlugin(AUTH_PLUGIN_KEY)
-        authPlugin.escapeHatch as AWSCredentialsProvider
+    val credentialsProvider: CredentialsProvider by lazy {
+        CognitoCredentialsProvider(authCategory)
     }
 
     override fun getPluginKey(): String {
@@ -87,7 +87,7 @@ class AWSLocationGeoPlugin(
         }
     }
 
-    override fun getEscapeHatch(): AmazonLocationClient {
+    override fun getEscapeHatch(): LocationClient {
         return geoService.provider
     }
 
@@ -212,15 +212,17 @@ class AWSLocationGeoPlugin(
 
     // Helper method that launches given task on a new worker thread.
     private fun <T : Any> execute(
-        runnableTask: () -> T,
+        runnableTask: suspend () -> T,
         errorTransformer: (Throwable) -> GeoException,
         onResult: Consumer<T>,
         onError: Consumer<GeoException>
     ) {
         executor.execute {
             try {
-                val result = runnableTask.invoke()
-                onResult.accept(result)
+                runBlocking {
+                    val result = runnableTask()
+                    onResult.accept(result)
+                }
             } catch (error: Throwable) {
                 val geoException = errorTransformer.invoke(error)
                 onError.accept(geoException)
