@@ -747,6 +747,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 schemaRegistry.getModelSchemaForModelClass(modelName);
             createTableCommands.add(sqlCommandFactory.createTableFor(modelSchema));
             createIndexCommands.addAll(sqlCommandFactory.createIndexesFor(modelSchema));
+            createIndexCommands.addAll(sqlCommandFactory.createIndexesForForeignKeys(modelSchema));
         }
         return new CreateSqlCommands(createTableCommands, createIndexCommands);
     }

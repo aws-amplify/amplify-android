@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.customprimarykey.Comment;
 import com.amplifyframework.util.GsonFactory;
 
 import com.google.gson.Gson;
@@ -165,5 +166,16 @@ public class SQLCommandProcessorTest {
         QueryPredicate predicate = BlogOwner.ID.eq(abigailMcGregor.getId());
         SqlCommand existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate);
         assertFalse(sqlCommandProcessor.executeExists(existsCommand));
+    }
+
+    /**
+     * Create a BlogOwner, but don't insert it.  Then verify that executeExists returns false.
+     * @throws AmplifyException on failure to create ModelSchema from class.
+     */
+    @Test
+    public void testIndexNotCreatedWhenFieldsInBelongsTo() throws AmplifyException {
+        ModelSchema blogOwnerSchema = ModelSchema.fromModelClass(Comment.class);
+        sqlCommandFactory.createIndexesFor(blogOwnerSchema);
+        assertEquals(1, sqlCommandFactory.createIndexesFor(blogOwnerSchema).size());
     }
 }
