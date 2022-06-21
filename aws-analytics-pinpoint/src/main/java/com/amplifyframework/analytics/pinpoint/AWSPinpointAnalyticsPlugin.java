@@ -34,6 +34,8 @@ import com.amplifyframework.analytics.AnalyticsStringProperty;
 import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -320,7 +322,11 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
 
     @Override
     public void flushEvents() {
-        analyticsClient.submitEvents();
+        analyticsClient.submitEvents(analyticsEvents ->
+                Amplify.Hub.publish(HubChannel.ANALYTICS, HubEvent
+                    .create(AnalyticsHubEventNames.FLUSH_EVENTS, analyticsEvents)),
+            e -> { }
+        );
     }
 
     @NonNull

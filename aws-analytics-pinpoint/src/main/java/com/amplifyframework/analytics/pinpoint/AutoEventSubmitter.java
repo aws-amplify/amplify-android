@@ -42,7 +42,7 @@ final class AutoEventSubmitter {
         this.autoFlushInterval = autoFlushInterval;
         this.submitRunnable = () -> {
             LOG.debug(String.format(Locale.US, "Auto submitting events after %d seconds", autoFlushInterval));
-            analyticsClient.submitEvents();
+            Amplify.Analytics.flushEvents();
             handler.postDelayed(this.submitRunnable, autoFlushInterval);
         };
     }
