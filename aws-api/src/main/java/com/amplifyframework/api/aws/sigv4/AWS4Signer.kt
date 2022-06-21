@@ -15,11 +15,11 @@
 
 package com.amplifyframework.api.aws.sigv4
 
-import aws.sdk.kotlin.runtime.auth.credentials.Credentials
-import aws.sdk.kotlin.runtime.auth.signing.AwsSignedBodyHeaderType
-import aws.sdk.kotlin.runtime.auth.signing.AwsSigningConfig
-import aws.sdk.kotlin.runtime.auth.signing.SigningResult
-import aws.sdk.kotlin.runtime.auth.signing.sign
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.auth.awssigning.AwsSignedBodyHeader
+import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
+import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningResult
+import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import kotlinx.coroutines.runBlocking
 
@@ -27,24 +27,24 @@ import kotlinx.coroutines.runBlocking
  * Abstraction for signing a HTTP Request using [aws.sdk.kotlin.runtime.auth.signing.sign]
  */
 abstract class AWS4Signer(private val regionName: String) {
-    protected var awsSignedBodyHeaderType = AwsSignedBodyHeaderType.NONE
+    protected var awsSignedBodyHeaderType = AwsSignedBodyHeader.NONE
 
     /**
      * Async signing
      */
     suspend fun sign(
         httpRequest: HttpRequest,
-        credentials: Credentials,
+        credentialsProvider: CredentialsProvider,
         serviceName: String
-    ): SigningResult<HttpRequest> {
+    ): AwsSigningResult<HttpRequest> {
         val signingConfig = AwsSigningConfig.invoke {
             region = regionName
             useDoubleUriEncode = true
             service = serviceName
-            this.credentials = credentials
+            this.credentialsProvider = credentialsProvider
             signedBodyHeader = awsSignedBodyHeaderType
         }
-        return sign(httpRequest, signingConfig)
+        return DefaultAwsSigner.sign(httpRequest, signingConfig)
     }
 
     /**
@@ -52,11 +52,11 @@ abstract class AWS4Signer(private val regionName: String) {
      */
     fun signBlocking(
         httpRequest: HttpRequest,
-        credentials: Credentials,
+        credentialsProvider: CredentialsProvider,
         serviceName: String
-    ): SigningResult<HttpRequest> {
+    ): AwsSigningResult<HttpRequest> {
         return runBlocking {
-            sign(httpRequest, credentials, serviceName)
+            sign(httpRequest, credentialsProvider, serviceName)
         }
     }
 }
@@ -66,7 +66,7 @@ abstract class AWS4Signer(private val regionName: String) {
  */
 class AppSyncV4Signer(regionName: String) : AWS4Signer(regionName) {
     init {
-        awsSignedBodyHeaderType = AwsSignedBodyHeaderType.X_AMZ_CONTENT_SHA256
+        awsSignedBodyHeaderType = AwsSignedBodyHeader.X_AMZ_CONTENT_SHA256
     }
 }
 

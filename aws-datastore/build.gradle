@@ -38,7 +38,6 @@ dependencies {
     testImplementation dependency.androidx.test.core
     testImplementation dependency.mockk
 
-    androidTestImplementation dependency.aws.awstypes
     androidTestImplementation dependency.mockito
     androidTestImplementation project(path: ':testmodels')
     androidTestImplementation project(path: ':testutils')
