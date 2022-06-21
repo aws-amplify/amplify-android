@@ -15,8 +15,8 @@
 
 package com.amplifyframework.geo.maplibre.http
 
-import aws.sdk.kotlin.runtime.auth.signing.AwsSigningConfig
-import aws.sdk.kotlin.runtime.auth.signing.sign
+import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
+import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
 import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
 import aws.smithy.kotlin.runtime.http.HttpMethod
 import aws.smithy.kotlin.runtime.http.Url
@@ -101,7 +101,7 @@ internal class AWSRequestSignerInterceptor(
 
         runBlocking {
             // sign request with AWS Signer for the underlying service
-            sign(awsRequest, signingConfig)
+            DefaultAwsSigner.sign(awsRequest, signingConfig)
         }
         return awsRequest
     }

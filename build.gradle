@@ -97,7 +97,6 @@ ext {
         aws: [
             core: "com.amazonaws:aws-android-sdk-core:$awsSdkVersion",
             comprehend: "com.amazonaws:aws-android-sdk-comprehend:$awsSdkVersion",
-            location: "com.amazonaws:aws-android-sdk-location:$awsSdkVersion",
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion",
             polly: "com.amazonaws:aws-android-sdk-polly:$awsSdkVersion",
@@ -109,7 +108,7 @@ ext {
             cognitoidentityprovider: "aws.sdk.kotlin:cognitoidentityprovider:$awsKoltinSdkVersion",
             credentials: "aws.smithy.kotlin:aws-credentials:0.10.2",
             ktor: "aws.smithy.kotlin:http-client-engine-ktor:0.7.7",
-            location: "aws.sdk.kotlin:location:$awsKoltinSdkVersion"
+            location: "aws.sdk.kotlin:location:$awsKoltinSdkVersion",
             s3: "aws.sdk.kotlin:s3:$awsKoltinSdkVersion",
             signing: "aws.smithy.kotlin:aws-signing-default:0.10.2",
         ],
