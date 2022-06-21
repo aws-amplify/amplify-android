@@ -28,15 +28,15 @@ dependencies {
     implementation dependency.kotlin.serializationJson
     implementation dependency.androidx.appcompat
     implementation dependency.androidx.security
-    implementation (dependency.aws.cognitoidentity)
+    implementation dependency.aws.cognitoidentity
     implementation dependency.aws.cognitoidentityprovider
 
     testImplementation project(path: ':testutils')
     //noinspection GradleDependency
     testImplementation 'org.json:json:20180813'
     testImplementation 'org.jetbrains.kotlin:kotlin-test:1.5.31'
-    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:1.5.31'
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0'
+    testImplementation dependency.kotlin.test.junit
+    testImplementation dependency.kotlin.test.coroutines
 
     testImplementation dependency.junit
     testImplementation dependency.mockito
@@ -46,5 +46,4 @@ dependencies {
 
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
-    androidTestImplementation dependency.aws.authcore
 }
