@@ -15,12 +15,12 @@
 
 package com.amplifyframework.geo.location.service
 
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import aws.sdk.kotlin.services.location.LocationClient
 import aws.sdk.kotlin.services.location.model.GetMapStyleDescriptorRequest
 import aws.sdk.kotlin.services.location.model.SearchPlaceIndexForPositionRequest
 import aws.sdk.kotlin.services.location.model.SearchPlaceIndexForTextRequest
 import aws.smithy.kotlin.runtime.ServiceException
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.geo.location.models.AmazonLocationPlace
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.CountryCode

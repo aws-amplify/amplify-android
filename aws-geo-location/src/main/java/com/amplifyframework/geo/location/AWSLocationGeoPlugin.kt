@@ -16,8 +16,8 @@
 package com.amplifyframework.geo.location
 
 import android.content.Context
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import aws.sdk.kotlin.services.location.LocationClient
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.core.Amplify

@@ -15,8 +15,8 @@
 
 package com.amplifyframework.geo.location.auth
 
-import aws.sdk.kotlin.runtime.auth.credentials.Credentials
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import kotlin.coroutines.resume
