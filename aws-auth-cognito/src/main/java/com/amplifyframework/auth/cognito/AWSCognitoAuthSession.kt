@@ -15,7 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
-import aws.sdk.kotlin.runtime.auth.credentials.Credentials
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthException.SignedOutException
