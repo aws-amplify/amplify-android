@@ -80,7 +80,7 @@ public final class ModelConverter {
                     SchemaRegistry.instance().getModelSchemaForModelClass(associatedModel.getModelName());
             /* Loop through primary key fields and get their respective values from the key map.
               Deserialize the key value to the model with primary key values populated.
-              This will be used to create appsync delete mutation.  */
+             */
 
             HashMap<String, Object> hashMap = new HashMap<>();
             if (childSchema.getPrimaryIndexFields().size() > 1 && (associatedModel.resolveIdentifier()
@@ -95,7 +95,14 @@ public final class ModelConverter {
                     hashMap.put(pkFieldIterator.next(), sortKeyIterator.next());
                 }
                 return hashMap;
-            } else {
+            } else if (childSchema.getPrimaryIndexFields().size() > 1 &&
+                    (associatedModel instanceof SerializedModel)) {
+                for (String pkField : childSchema.getPrimaryIndexFields()) {
+                    hashMap.put(pkField, ((SerializedModel) associatedModel).getSerializedData().get(pkField));
+                }
+                return hashMap;
+            }
+            else {
                 // Create dummy model instance using just the ID and model type
                 return Collections.singletonMap(childSchema.getPrimaryIndexFields().get(0),
                         associatedModel.getPrimaryKeyString());
