@@ -20,8 +20,6 @@ import android.os.HandlerThread;
 
 import com.amplifyframework.core.Amplify;
 
-import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
-
 import java.util.Locale;
 
 /**
@@ -33,7 +31,7 @@ final class AutoEventSubmitter {
     private Runnable submitRunnable;
     private final long autoFlushInterval;
 
-    AutoEventSubmitter(final AnalyticsClient analyticsClient, final long autoFlushInterval) {
+    AutoEventSubmitter(final long autoFlushInterval) {
         HandlerThread handlerThread = new HandlerThread("AutoEventSubmitter");
         handlerThread.start();
         this.handler = new Handler(handlerThread.getLooper());

@@ -170,7 +170,7 @@ public class AnalyticsPinpointInstrumentedTest {
     @Test
     public void testFlushEventHubEvent() {
         HubAccumulator analyticsHubEventAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsHubEventNames.FLUSH_EVENTS, 1)
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1)
                 .start();
         String eventName1 = "Amplify-event" + UUID.randomUUID().toString();
         AnalyticsEvent event1 = AnalyticsEvent.builder()
@@ -198,7 +198,7 @@ public class AnalyticsPinpointInstrumentedTest {
 
         HubEvent<?> hubEvent = analyticsHubEventAccumulator.awaitFirst();
         List<?> hubEventData = (List<?>) hubEvent.getData();
-        assertEquals(AnalyticsHubEventNames.FLUSH_EVENTS.getEventName(), hubEvent.getName());
+        assertEquals(AnalyticsChannelEventName.FLUSH_EVENTS.getEventName(), hubEvent.getName());
         assertEquals(eventName1, ((com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent) hubEventData.
             get(0)).
             getEventType());

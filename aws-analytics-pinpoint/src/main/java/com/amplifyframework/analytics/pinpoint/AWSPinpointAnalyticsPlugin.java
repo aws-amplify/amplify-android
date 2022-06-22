@@ -331,7 +331,7 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
     public void flushEvents() {
         analyticsClient.submitEvents(analyticsEvents ->
                 Amplify.Hub.publish(HubChannel.ANALYTICS, HubEvent
-                    .create(AnalyticsHubEventNames.FLUSH_EVENTS, analyticsEvents)),
+                    .create(AnalyticsChannelEventName.FLUSH_EVENTS, analyticsEvents)),
             e -> {
                 LOG.error("Failed to flush events", e);
             }
@@ -419,8 +419,7 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         this.targetingClient = pinpointManager.getTargetingClient();
 
         // Initiate the logic to automatically submit events periodically
-        autoEventSubmitter = new AutoEventSubmitter(analyticsClient,
-                pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
+        autoEventSubmitter = new AutoEventSubmitter(pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
         autoEventSubmitter.start();
 
         // Instantiate the logic to automatically track app session

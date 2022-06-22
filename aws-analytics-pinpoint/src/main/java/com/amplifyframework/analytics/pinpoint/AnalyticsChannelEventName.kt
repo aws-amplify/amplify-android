@@ -19,7 +19,7 @@ package com.amplifyframework.analytics.pinpoint
  * that are published via {@link HubCategory#publish(HubChannel, HubEvent)} on the
  * {@link HubChannel#ANALYTICS} channel.
  */
-enum class AnalyticsHubEventNames(val eventName: String) {
+enum class AnalyticsChannelEventName(val eventName: String) {
     /**
      * Event sent out on submitEventWithResults with the list of all the event
      * successfully submitted
