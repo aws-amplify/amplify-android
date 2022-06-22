@@ -57,6 +57,11 @@ public final class ModelWithMetadataAdapter implements
      */
     public static final String LAST_CHANGED_AT_KEY = "_lastChangedAt";
 
+    /***
+     * Name of the object type for the server response.
+     */
+    public static final String TYPENAME_KEY = "__typename";
+
     /**
      * Register this deserializer into a {@link GsonBuilder}.
      * @param builder A {@link GsonBuilder}
@@ -97,6 +102,7 @@ public final class ModelWithMetadataAdapter implements
         jsonObject.remove(DELETED_KEY);
         jsonObject.remove(VERSION_KEY);
         jsonObject.remove(LAST_CHANGED_AT_KEY);
+        jsonObject.remove(TYPENAME_KEY);
     }
 
     @Override

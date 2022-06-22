@@ -173,6 +173,7 @@ public final class ConflictResolverIntegrationTest {
             serverModelData.put("_version", 92);
             serverModelData.put("_deleted", false);
             serverModelData.put("_lastChangedAt", 1_000);
+            serverModelData.put("__typename", "Post");
             Map<String, Object> extensions = new HashMap<>();
             extensions.put("errorInfo", null);
             extensions.put("data", serverModelData);

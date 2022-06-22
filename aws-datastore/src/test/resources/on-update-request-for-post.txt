@@ -1,6 +1,7 @@
 {
   "query": "subscription OnUpdatePost {
   onUpdatePost {
+    __typename
     _deleted
     _lastChangedAt
     _version

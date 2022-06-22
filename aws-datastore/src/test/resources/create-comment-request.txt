@@ -1,6 +1,7 @@
 {
   "query": "mutation CreateComment($input: CreateCommentInput!) {
   createComment(input: $input) {
+    __typename
     _deleted
     _lastChangedAt
     _version

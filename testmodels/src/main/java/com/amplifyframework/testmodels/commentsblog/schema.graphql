@@ -1,3 +1,11 @@
+# Steps to provision this schema
+# 1. `amplify init`
+#  Make sure you have the following amplify/cli.json configuration:
+#   "transformerversion": 1
+#   "useexperimentalpipelinedtransformer": false
+# 2. `amplify add api`, auth type API key, and provide this schema
+# 3. `amplify push` to provision the backend.
+
 type Blog @model {
   id: ID!
   name: String!

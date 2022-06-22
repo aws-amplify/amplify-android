@@ -62,6 +62,11 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the DataStore API Interface.
+ *
+ * This is an integration test which uses a provisioned backend.
+ * Find the schema and model files by navigating to the Models used in this class.
+ * Follow the provisioning steps there to generate the `amplifyconfiguration.json` file and
+ * copy it over to the res/raw folder.
  */
 @SuppressWarnings("SameParameterValue")
 public final class AppSyncClientInstrumentationTest {
