@@ -24,6 +24,7 @@ import aws.sdk.kotlin.services.s3.model.CompletedPart
 import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.ObjectMetadata
+import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.utils.JsonUtils
 import java.io.File
@@ -74,6 +75,7 @@ internal class TransferDB private constructor(context: Context) {
      * @return An Uri of the record inserted.
      */
     fun insertMultipartUploadRecord(
+        transferId: String,
         bucket: String,
         key: String,
         file: File,
@@ -84,6 +86,7 @@ internal class TransferDB private constructor(context: Context) {
         isLastPart: Int
     ): Uri {
         val values: ContentValues = generateContentValuesForMultiPartUpload(
+            transferId,
             bucket, key, file,
             fileOffset, partNumber, uploadId, bytesTotal, isLastPart, ObjectMetadata(),
             null
@@ -104,6 +107,7 @@ internal class TransferDB private constructor(context: Context) {
      * @return An Uri of the record inserted.
      */
     fun insertSingleTransferRecord(
+        transferId: String,
         type: TransferType,
         bucket: String,
         key: String,
@@ -112,6 +116,7 @@ internal class TransferDB private constructor(context: Context) {
         metadata: ObjectMetadata? = ObjectMetadata(),
     ): Uri {
         val values = generateContentValuesForSinglePartTransfer(
+            transferId,
             type,
             bucket,
             key,
@@ -283,8 +288,7 @@ internal class TransferDB private constructor(context: Context) {
                 TransferState.IN_PROGRESS.toString(),
                 TransferState.RESUMED_WAITING.toString(),
                 TransferState.WAITING.toString(),
-                TransferState.PAUSED.toString(),
-                TransferState.WAITING_FOR_NETWORK.toString()
+                TransferState.PAUSED.toString()
             )
         } else {
             selection =
@@ -297,7 +301,6 @@ internal class TransferDB private constructor(context: Context) {
                 TransferState.RESUMED_WAITING.toString(),
                 TransferState.WAITING.toString(),
                 TransferState.PAUSED.toString(),
-                TransferState.WAITING_FOR_NETWORK.toString(),
                 type.toString()
             )
         }
@@ -392,17 +395,31 @@ internal class TransferDB private constructor(context: Context) {
         var c: Cursor? = null
         try {
             c = queryTransferById(id)
-            c?.let {
+            c?.use {
                 if (it.moveToFirst()) {
                     transferRecord = TransferRecord.updateFromDB(c)
                 }
             }
         } catch (exception: Exception) {
             logger.error("Transfer Record Not Found", exception)
-        } finally {
-            c?.close()
         }
 
+        return transferRecord
+    }
+
+    fun getTransferByTransferId(transferId: String): TransferRecord? {
+        var transferRecord: TransferRecord? = null
+        var c: Cursor? = null
+        try {
+            c = transferDBHelper.query(getTransferRecordIdUri(transferId))
+            c.use {
+                if (it.moveToFirst()) {
+                    transferRecord = TransferRecord.updateFromDB(c)
+                }
+            }
+        } catch (exception: Exception) {
+            logger.error("Transfer Record Not Found", exception)
+        }
         return transferRecord
     }
 
@@ -448,6 +465,19 @@ internal class TransferDB private constructor(context: Context) {
      */
     fun deletePartTransferRecords(id: Int): Int {
         return transferDBHelper.delete(getPartUri(id))
+    }
+
+    /**
+     * Gets the Uri of part records of a multipart upload.
+     *
+     * @param mainUploadId The main upload id of the transfer.
+     * @return The Uri of the part upload records that have the given
+     * mainUploadId value.
+     */
+    private fun getTransferRecordIdUri(transferId: String): Uri {
+        return Uri.parse(
+            transferDBHelper.contentUri.toString() + "/transferId/" + transferId
+        )
     }
 
     /**
@@ -521,6 +551,7 @@ internal class TransferDB private constructor(context: Context) {
      */
 
     private fun insertSingleTransferRecord(
+        transferId: String,
         type: TransferType,
         bucket: String,
         key: String,
@@ -529,6 +560,7 @@ internal class TransferDB private constructor(context: Context) {
         cannedAcl: ObjectCannedAcl?
     ): Uri {
         val values = generateContentValuesForSinglePartTransfer(
+            transferId,
             type,
             bucket,
             key,
@@ -560,6 +592,7 @@ internal class TransferDB private constructor(context: Context) {
      * @return The ContentValues object generated.
      */
     fun generateContentValuesForMultiPartUpload(
+        transferId: String,
         bucket: String?,
         key: String?,
         file: File,
@@ -572,6 +605,7 @@ internal class TransferDB private constructor(context: Context) {
         cannedAcl: ObjectCannedAcl?
     ): ContentValues {
         val values = ContentValues()
+        values.put(TransferTable.COLUMN_TRANSFER_ID, transferId)
         values.put(TransferTable.COLUMN_TYPE, TransferType.UPLOAD.toString())
         values.put(TransferTable.COLUMN_STATE, TransferState.WAITING.toString())
         values.put(TransferTable.COLUMN_BUCKET_NAME, bucket)
@@ -676,6 +710,7 @@ internal class TransferDB private constructor(context: Context) {
      * @return The ContentValues object generated.
      */
     private fun generateContentValuesForSinglePartTransfer(
+        transferId: String,
         type: TransferType,
         bucket: String,
         key: String,
@@ -684,6 +719,7 @@ internal class TransferDB private constructor(context: Context) {
         cannedAcl: ObjectCannedAcl?
     ): ContentValues {
         val values = ContentValues()
+        values.put(TransferTable.COLUMN_TRANSFER_ID, transferId)
         values.put(TransferTable.COLUMN_TYPE, type.toString())
         values.put(TransferTable.COLUMN_STATE, TransferState.WAITING.toString())
         values.put(TransferTable.COLUMN_BUCKET_NAME, bucket)

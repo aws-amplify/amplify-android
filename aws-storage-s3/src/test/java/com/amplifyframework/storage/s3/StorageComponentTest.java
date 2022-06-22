@@ -22,6 +22,7 @@ import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
+import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
@@ -170,7 +171,7 @@ public final class StorageComponentTest {
         // result by default. We need a non-null transfer observer.
         // One option is to mock that, too.
         TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.downloadToFile(anyString(), any(File.class)))
+        when(storageService.downloadToFile(anyString(), anyString(), any(File.class)))
                 .thenReturn(observer);
 
         // Since we use a mock TransferObserver, it has no internal logic
@@ -213,7 +214,7 @@ public final class StorageComponentTest {
         final File toLocalFile = new RandomTempFile();
 
         TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.downloadToFile(anyString(), any(File.class)))
+        when(storageService.downloadToFile(anyString(), anyString(), any(File.class)))
                 .thenReturn(observer);
 
         doAnswer(invocation -> {
