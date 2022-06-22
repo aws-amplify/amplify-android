@@ -57,7 +57,7 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 30
 
-    awsSdkVersion = '2.44.0'
+    awsSdkVersion = '2.48.1'
     fragmentVersion = '1.3.1'
     navigationVersion = '2.3.4'
     dependency = [
@@ -111,7 +111,7 @@ ext {
 
         oauth2: 'com.google.auth:google-auth-library-oauth2-http:0.26.0',
         okhttp: 'com.squareup.okhttp3:okhttp:4.9.1',
-        gson: 'com.google.code.gson:gson:2.8.6',
+        gson: 'com.google.code.gson:gson:2.8.9',
         maplibre: [
             sdk: 'org.maplibre.gl:android-sdk:9.5.2',
             annotations: 'org.maplibre.gl:android-plugin-annotation-v9:1.0.0'
