@@ -123,10 +123,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         Set<SqlCommand> indexCommands = new HashSet<>();
         for (SQLiteColumn foreignKey : table.getForeignKeys()) {
-            String connectedType = foreignKey.getOwnedType();
-            ModelSchema connectedSchema = schemaRegistry.getModelSchemaForModelClass(connectedType);
-            String connectedId = getIdField(connectedSchema.getPrimaryIndexFields(),
-                    connectedSchema.getModelType());
+            String connectedId = foreignKey.getName();
             String fkIndexName = table.getName() + connectedId;
             indexCommands.add(createIndexCommand(table.getName(),
                     fkIndexName, Collections.singletonList(connectedId)));
@@ -638,9 +635,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         for (Map.Entry<String, ModelAssociation> associationEntry : associationMap.entrySet()) {
             if (associationEntry.getValue().isOwner()) {
                 for (String targetName : associationEntry.getValue().getTargetNames()) {
-                    return !modelIndex.getIndexFieldNames().contains(targetName);
+                    if (modelIndex.getIndexFieldNames().contains(targetName)) {
+                        return false;
+                    }
                 }
-                return false;
             }
         }
         return true;
