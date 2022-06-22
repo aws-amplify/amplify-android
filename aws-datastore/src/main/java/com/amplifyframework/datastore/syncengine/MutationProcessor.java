@@ -140,16 +140,16 @@ final class MutationProcessor {
                             // This is done before merging, because the merger will refuse to merge
                             // if there are outstanding mutations in the outbox.
                             mutationOutbox.remove(mutationOutboxItem.getMutationId())
-                                    .andThen(merger.merge(modelWithMetadata))
-                                    .andThen(Completable
-                                            .fromRunnable(() -> {
-                                                announceMutationProcessed(mutationOutboxItem.getModelSchema().getName(),
-                                                        modelWithMetadata);
-                                            }))
-                                    .doOnComplete(() -> {
-                                        String modelName = mutationOutboxItem.getModelSchema().getName();
-                                        announceMutationProcessed(modelName, modelWithMetadata);
-                                    })
+                                .andThen(merger.merge(modelWithMetadata))
+                                .andThen(Completable
+                                        .fromRunnable(() -> {
+                                            announceMutationProcessed(mutationOutboxItem.getModelSchema().getName(),
+                                                    modelWithMetadata);
+                                        }))
+                                .doOnComplete(() -> {
+                                    String modelName = mutationOutboxItem.getModelSchema().getName();
+                                    announceMutationProcessed(modelName, modelWithMetadata);
+                                })
                 )
             )
             .doOnComplete(() -> {

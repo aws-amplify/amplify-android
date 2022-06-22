@@ -170,7 +170,7 @@ public class SQLCommandProcessorTest {
     }
 
     /**
-     * Create a BlogOwner, but don't insert it.  Then verify that executeExists returns false.
+     * Verify that index for fields included in belongs to is not created for Comments.
      * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
