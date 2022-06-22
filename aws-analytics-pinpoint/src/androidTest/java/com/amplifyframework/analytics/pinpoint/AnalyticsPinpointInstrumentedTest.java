@@ -168,7 +168,7 @@ public class AnalyticsPinpointInstrumentedTest {
      *
      */
     @Test
-    public void testFlushEvent() {
+    public void testFlushEventHubEvent() {
         HubAccumulator analyticsHubEventAccumulator =
             HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsHubEventNames.FLUSH_EVENTS, 1)
                 .start();
@@ -195,17 +195,16 @@ public class AnalyticsPinpointInstrumentedTest {
         assertEquals(2, analyticsClient.getAllEvents().size());
         Amplify.Analytics.flushEvents();
         waitForAutoFlush(analyticsClient);
+
         HubEvent<?> hubEvent = analyticsHubEventAccumulator.awaitFirst();
         List<?> hubEventData = (List<?>) hubEvent.getData();
-        LOG.debug("Events in database after calling submitEvents() after submitting: " +
-                analyticsClient.getAllEvents().size());
+        assertEquals(AnalyticsHubEventNames.FLUSH_EVENTS.getEventName(), hubEvent.getName());
         assertEquals(eventName1, ((com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent) hubEventData.
             get(0)).
             getEventType());
         assertEquals(eventName2, ((com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent) hubEventData.
             get(1)).
             getEventType());
-        assertEquals(0, analyticsClient.getAllEvents().size());
     }
 
     /**
