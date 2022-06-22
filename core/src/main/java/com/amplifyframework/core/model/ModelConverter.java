@@ -101,8 +101,7 @@ public final class ModelConverter {
                     hashMap.put(pkField, ((SerializedModel) associatedModel).getSerializedData().get(pkField));
                 }
                 return hashMap;
-            }
-            else {
+            } else {
                 // Create dummy model instance using just the ID and model type
                 return Collections.singletonMap(childSchema.getPrimaryIndexFields().get(0),
                         associatedModel.getPrimaryKeyString());
