@@ -36,6 +36,7 @@ import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.logging.Logger;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -59,6 +60,12 @@ import java.util.Objects;
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
 public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
+
+    /**
+     * logger for Analytics category.
+     */
+    protected static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
+
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({
             USER_NAME,
@@ -325,7 +332,9 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         analyticsClient.submitEvents(analyticsEvents ->
                 Amplify.Hub.publish(HubChannel.ANALYTICS, HubEvent
                     .create(AnalyticsHubEventNames.FLUSH_EVENTS, analyticsEvents)),
-            e -> { }
+            e -> {
+                LOG.error("Failed to flush events", e);
+            }
         );
     }
 

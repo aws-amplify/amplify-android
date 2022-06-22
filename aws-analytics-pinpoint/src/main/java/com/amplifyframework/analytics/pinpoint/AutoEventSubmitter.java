@@ -19,7 +19,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.logging.Logger;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 
@@ -29,7 +28,6 @@ import java.util.Locale;
  * Submits all the recorded event periodically.
  */
 final class AutoEventSubmitter {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
 
     private final Handler handler;
     private Runnable submitRunnable;
@@ -41,7 +39,10 @@ final class AutoEventSubmitter {
         this.handler = new Handler(handlerThread.getLooper());
         this.autoFlushInterval = autoFlushInterval;
         this.submitRunnable = () -> {
-            LOG.debug(String.format(Locale.US, "Auto submitting events after %d seconds", autoFlushInterval));
+            AWSPinpointAnalyticsPlugin.LOG.debug(
+                String.format(Locale.US, "Auto submitting events after %d seconds",
+                    autoFlushInterval)
+            );
             Amplify.Analytics.flushEvents();
             handler.postDelayed(this.submitRunnable, autoFlushInterval);
         };
