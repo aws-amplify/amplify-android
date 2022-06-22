@@ -1,0 +1,50 @@
+name: Projects beta automation
+on:
+  issues:
+    types: [opened, assigned, unassigned, labeled, unlabeled]
+    
+jobs:
+  add_issue:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.action == 'opened' }}
+    steps:
+      - name: Add to project
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROJECT_WORKFLOW_TOKEN }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+        shell: bash
+        run: |
+            curl -s POST https://api.github.com/graphql -H "Authorization:Bearer $GITHUB_TOKEN" --data '{"query":"mutation {addProjectNextItem(input:{projectId:\"${{ env.PROJECT_ID }}\" contentId:\"${{ env.ISSUE_ID }}\"}) {projectNextItem {id}}}"}' > /dev/null
+            
+  move_to_wip:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.action == 'assigned' || contains(github.event.issue.labels.*.name, 'pending-response') || contains(github.event.issue.labels.*.name, 'closing soon') }}
+    steps:
+      - name: Move to WIP column
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROJECT_WORKFLOW_TOKEN }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+          FIELD_ID: ${{ secrets.STATUS_COL }}
+          FIELD_OPT_ID: ${{ secrets.WIP_OPT_ID }}
+        shell: bash
+        run: |
+            curl -s POST https://api.github.com/graphql -H "Authorization:Bearer $GITHUB_TOKEN" —data '{"query":"mutation {updateProjectNextItemField(input:{projectId:\"${{ env.PROJECT_ID }}\" itemId:\"${{ env.ISSUE_ID }}\" fieldId:\"${{ env.FIELD_ID }}\" value:\"${{ env.FIELD_OPT_ID }}\"}) {projectNextItem {id}}}"}' > /dev/null
+ 
+  move_to_todo:
+    runs-on: ubuntu-latest
+    if: ${{ join(github.event.issue.assignees.*.login) == '' && !contains(github.event.issue.labels.*.name, 'pending-response') && !contains(github.event.issue.labels.*.name, 'closing soon') }}
+    steps:
+      - name: Move to Todo column
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROJECT_WORKFLOW_TOKEN }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+          FIELD_ID: ${{ secrets.STATUS_COL }}
+          FIELD_OPT_ID: ${{ secrets.TODO_OPT_ID }}
+        shell: bash
+        run: |
+            curl -s POST https://api.github.com/graphql -H "Authorization:Bearer $GITHUB_TOKEN" --data '{"query":"mutation {updateProjectNextItemField(input:{projectId:\"${{ env.PROJECT_ID }}\" itemId:\"${{ env.ISSUE_ID }}\" fieldId:\"${{ env.FIELD_ID }}\" value:\"${{ env.FIELD_OPT_ID }}\"}) {projectNextItem {id}}}"}' > /dev/null
+            
+            
