@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -174,8 +175,13 @@ public class SQLCommandProcessorTest {
      */
     @Test
     public void testIndexNotCreatedWhenFieldsInBelongsTo() throws AmplifyException {
-        ModelSchema blogOwnerSchema = ModelSchema.fromModelClass(Comment.class);
-        sqlCommandFactory.createIndexesFor(blogOwnerSchema);
-        assertEquals(1, sqlCommandFactory.createIndexesFor(blogOwnerSchema).size());
+        ModelSchema commentSchema = ModelSchema.fromModelClass(Comment.class);
+        sqlCommandFactory.createIndexesFor(commentSchema);
+        Set<SqlCommand> sqlCommands = sqlCommandFactory.createIndexesFor(commentSchema);
+        assertEquals(1, sqlCommands.size());
+        String sqlCommand = sqlCommands.iterator().next().sqlStatement();
+        assertTrue(sqlCommand.contains("CREATE INDEX IF NOT EXISTS" +
+                " `undefined_title_content_likes` ON `Comment` (`title`, `content`, `likes`);"));
+        assertFalse(sqlCommand.contains("`postCommentsId`, `content`"));
     }
 }

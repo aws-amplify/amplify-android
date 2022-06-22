@@ -638,7 +638,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         for (Map.Entry<String, ModelAssociation> associationEntry : associationMap.entrySet()) {
             if (associationEntry.getValue().isOwner()) {
                 for (String targetName : associationEntry.getValue().getTargetNames()) {
-                   return !modelIndex.getIndexFieldNames().contains(targetName);
+                    return !modelIndex.getIndexFieldNames().contains(targetName);
                 }
                 return false;
             }
