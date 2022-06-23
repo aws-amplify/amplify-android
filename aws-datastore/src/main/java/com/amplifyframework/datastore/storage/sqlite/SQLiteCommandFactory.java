@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
@@ -42,6 +43,7 @@ import com.amplifyframework.util.Wrap;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -108,32 +110,53 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         Set<SqlCommand> indexCommands = new HashSet<>();
         for (ModelIndex modelIndex : modelSchema.getIndexes().values()) {
-            if (shouldCreateIndex(modelIndex)) {
-                final StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("CREATE INDEX IF NOT EXISTS")
-                        .append(SqlKeyword.DELIMITER)
-                        .append(Wrap.inBackticks(getIndexName(modelIndex.getIndexName(),
-                                modelIndex.getIndexFieldNames())))
-                        .append(SqlKeyword.DELIMITER)
-                        .append(SqlKeyword.ON)
-                        .append(SqlKeyword.DELIMITER)
-                        .append(Wrap.inBackticks(table.getName()))
-                        .append(SqlKeyword.DELIMITER);
-
-                stringBuilder.append("(");
-                Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
-                while (iterator.hasNext()) {
-                    final String indexColumnName = iterator.next();
-                    stringBuilder.append(Wrap.inBackticks(indexColumnName));
-                    if (iterator.hasNext()) {
-                        stringBuilder.append(",").append(SqlKeyword.DELIMITER);
-                    }
-                }
-                stringBuilder.append(");");
-                indexCommands.add(new SqlCommand(table.getName(), stringBuilder.toString()));
+            if (shouldCreateIndex(modelIndex, modelSchema.getAssociations())) {
+                indexCommands.add(createIndexCommand(table.getName(), modelIndex.getIndexName(),
+                        modelIndex.getIndexFieldNames()));
             }
         }
         return Immutable.of(indexCommands);
+    }
+
+    @NonNull
+    public Set<SqlCommand> createIndexesForForeignKeys(@NonNull ModelSchema modelSchema) {
+        final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
+        Set<SqlCommand> indexCommands = new HashSet<>();
+        for (SQLiteColumn foreignKey : table.getForeignKeys()) {
+            String connectedId = foreignKey.getName();
+            String fkIndexName = table.getName() + connectedId;
+            indexCommands.add(createIndexCommand(table.getName(),
+                    fkIndexName, Collections.singletonList(connectedId)));
+        }
+        return Immutable.of(indexCommands);
+    }
+
+    @NonNull
+    private SqlCommand createIndexCommand(String tableName,
+                                          String indexName,
+                                          List<String> indexFieldNames) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("CREATE INDEX IF NOT EXISTS")
+                .append(SqlKeyword.DELIMITER)
+                .append(Wrap.inBackticks(getIndexName(indexName,
+                        indexFieldNames)))
+                .append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.ON)
+                .append(SqlKeyword.DELIMITER)
+                .append(Wrap.inBackticks(tableName))
+                .append(SqlKeyword.DELIMITER);
+
+        stringBuilder.append("(");
+        Iterator<String> iterator = indexFieldNames.iterator();
+        while (iterator.hasNext()) {
+            final String indexColumnName = iterator.next();
+            stringBuilder.append(Wrap.inBackticks(indexColumnName));
+            if (iterator.hasNext()) {
+                stringBuilder.append(",").append(SqlKeyword.DELIMITER);
+            }
+        }
+        stringBuilder.append(");");
+        return new SqlCommand(tableName, stringBuilder.toString());
     }
 
     @NonNull
@@ -605,9 +628,18 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         return builder;
     }
 
-    private boolean shouldCreateIndex(ModelIndex modelIndex) {
+    private boolean shouldCreateIndex(ModelIndex modelIndex, Map<String, ModelAssociation> associationMap) {
         if (modelIndex.getIndexName().equals(UNDEFINED) && modelIndex.getIndexFieldNames().size() == 1) {
             return false;
+        }
+        for (Map.Entry<String, ModelAssociation> associationEntry : associationMap.entrySet()) {
+            if (associationEntry.getValue().isOwner()) {
+                for (String targetName : associationEntry.getValue().getTargetNames()) {
+                    if (modelIndex.getIndexFieldNames().contains(targetName)) {
+                        return false;
+                    }
+                }
+            }
         }
         return true;
     }

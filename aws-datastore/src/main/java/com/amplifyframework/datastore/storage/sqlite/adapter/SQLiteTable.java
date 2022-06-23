@@ -122,7 +122,7 @@ public final class SQLiteTable {
                             ? association.getAssociatedType()
                             : null)
                     .ownerField(isAssociated
-                            ? association.getAssociatedName()
+                            ? modelField.getName()
                             : null)
                     .isNonNull(modelField.isRequired())
                     .dataType(sqlTypeFromModelField(modelField))
