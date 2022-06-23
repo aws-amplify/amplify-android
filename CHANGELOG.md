@@ -1,3 +1,13 @@
+## [Release 1.36.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.0)
+
+### Features
+- Add flushEvents HubEvent for analytics (#1792)
+
+### Miscellaneous
+- Update build.gradle
+
+[See all changes between 1.35.7 and 1.36.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.7...release_v1.36.0)
+
 ## [Release 1.35.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.7)
 
 ### Miscellaneous

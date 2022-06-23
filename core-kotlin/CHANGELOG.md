@@ -1,3 +1,13 @@
+## [Release 0.20.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.0)
+
+### Features
+- Add flushEvents HubEvent for analytics (#1792)
+
+### Miscellaneous
+- Update build.gradle
+
+[See all changes between 0.19.7 and 0.20.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.7...release-kotlin_v0.20.0)
+
 ## [Release 0.19.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.7)
 
 ### Miscellaneous
