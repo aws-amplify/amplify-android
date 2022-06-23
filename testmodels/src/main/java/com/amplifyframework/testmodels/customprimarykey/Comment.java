@@ -19,6 +19,8 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "Comments", type = Model.Type.USER, version = 1)
 @Index(name = "undefined", fields = {"title","content","likes"})
+@Index(name = "byPost", fields = {"postCommentsId", "postCommentTitle"})
+
 public final class Comment implements Model {
   public static final QueryField POST = field("Comment", "postCommentsId");
   public static final QueryField TITLE = field("Comment", "title");
