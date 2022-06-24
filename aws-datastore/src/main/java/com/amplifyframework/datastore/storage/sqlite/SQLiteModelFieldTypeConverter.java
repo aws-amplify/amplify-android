@@ -34,6 +34,7 @@ import com.amplifyframework.datastore.model.ModelHelper;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.UserAgent;
 
 import com.google.gson.Gson;
 
@@ -130,6 +131,9 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             case DATE:
                 return value instanceof String ? value : ((Temporal.Date) value).format();
             case DATE_TIME:
+                if (UserAgent.isFlutter() && value instanceof String) {
+                    return value;
+                }
                 OffsetDateTime offsetDateTime;
                 if (value instanceof String) {
                     offsetDateTime = OffsetDateTime.parse((String) value);
@@ -141,6 +145,9 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                         .ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'");
                 return offsetDateTime.toInstant().atOffset(ZoneOffset.UTC).format(dateTimeFormatter);
             case TIME:
+                if (UserAgent.isFlutter() && value instanceof String) {
+                    return value;
+                }
                 String timeValue;
                 if (value instanceof String) {
                     timeValue = (String) value;
