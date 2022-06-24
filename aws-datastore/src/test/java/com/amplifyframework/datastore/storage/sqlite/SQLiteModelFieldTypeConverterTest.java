@@ -79,14 +79,14 @@ public class SQLiteModelFieldTypeConverterTest {
     @Test
     public void testConvertRawValueToTargetDateTimeFlutter() throws AmplifyException {
         UserAgent.configure(Map.of(UserAgent.Platform.FLUTTER, "1.0"));
-        final String value = "16:00:00.050020000";
+        final String value = "2020-01-01T16:00:00.050020000";
         final JavaFieldType fieldType = JavaFieldType.DATE_TIME;
         final Gson gson = GsonFactory.instance();
         final Object actual = SQLiteModelFieldTypeConverter.convertRawValueToTarget(
                 value,
                 fieldType,
                 gson);
-        final String expected = "16:00:00.050020000";
+        final String expected = "2020-01-01T16:00:00.050020000";
         assertEquals(expected, actual);
     }
 }
