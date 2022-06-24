@@ -40,7 +40,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
 
-            val authEvent = AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(event.configuration))
+            val authEvent = AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(event.configuration, event.storedCredentials))
             logger?.verbose("$id Sending event ${authEvent.type}")
             dispatcher.send(authEvent)
         }

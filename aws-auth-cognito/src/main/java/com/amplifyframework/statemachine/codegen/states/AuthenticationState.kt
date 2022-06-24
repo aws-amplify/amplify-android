@@ -15,6 +15,9 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
+import com.amplifyframework.auth.cognito.isAuthenticationEvent
+import com.amplifyframework.auth.cognito.isSignOutEvent
+import com.amplifyframework.auth.cognito.isSignUpEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -23,6 +26,7 @@ import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 
 sealed class AuthenticationState : State {
@@ -47,10 +51,6 @@ sealed class AuthenticationState : State {
     ) :
         StateMachineResolver<AuthenticationState> {
         override val defaultState = NotConfigured()
-
-        private fun asAuthenticationEvent(event: StateMachineEvent): AuthenticationEvent.EventType? {
-            return (event as? AuthenticationEvent)?.eventType
-        }
 
         override fun resolve(
             oldState: AuthenticationState,
@@ -82,8 +82,8 @@ sealed class AuthenticationState : State {
             oldState: AuthenticationState,
             event: StateMachineEvent
         ): StateResolution<AuthenticationState> {
-            val authenticationEvent = asAuthenticationEvent(event)
-            val signUpEvent = (event as? SignUpEvent)?.eventType
+            val authenticationEvent = event.isAuthenticationEvent()
+            val signUpEvent = event.isSignUpEvent()
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
                 is NotConfigured -> when (authenticationEvent) {
@@ -103,7 +103,7 @@ sealed class AuthenticationState : State {
                     else -> defaultResolution
                 }
                 is SigningIn -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.InitializedSignedIn -> StateResolution(
+                    is AuthenticationEvent.EventType.SignInCompleted -> StateResolution(
                         SignedIn(authenticationEvent.signedInData)
                     )
                     is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(SignedOut(SignedOutData()))
@@ -121,9 +121,9 @@ sealed class AuthenticationState : State {
                     }
                     else -> defaultResolution
                 }
-                is SigningOut -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.InitializedSignedOut -> StateResolution(
-                        SignedOut(authenticationEvent.signedOutData)
+                is SigningOut -> when (val signOutEvent = event.isSignOutEvent()) {
+                    is SignOutEvent.EventType.SignedOutSuccess -> StateResolution(
+                        SignedOut(SignedOutData(signOutEvent.signedInData.username))
                     )
                     else -> defaultResolution
                 }

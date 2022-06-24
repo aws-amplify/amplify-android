@@ -26,9 +26,10 @@ import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 object AuthorizationCognitoActions : AuthorizationActions {
     override fun resetAuthorizationAction() = Action<AuthEnvironment>("resetAuthZ") { id, dispatcher ->
         logger?.verbose("$id Starting execution")
-        val evt = AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
-        logger?.verbose("$id Sending event ${evt.type}")
-        dispatcher.send(evt)
+        // TODO: recover from error
+//        val evt = AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
+//        logger?.verbose("$id Sending event ${evt.type}")
+//        dispatcher.send(evt)
     }
 
     override fun configureAuthorizationAction() = Action<AuthEnvironment>("ConfigureAuthZ") { id, dispatcher ->

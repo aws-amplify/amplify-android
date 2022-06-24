@@ -22,7 +22,7 @@ import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 
 sealed class FetchAuthSessionState : State {
-    data class InitializingFetchAuthSession(val id: String = "") : FetchAuthSessionState()
+    data class NotStarted(val id: String = "") : FetchAuthSessionState()
     data class FetchingUserPoolTokens(
         override var fetchUserPoolTokensState: FetchUserPoolTokensState?
     ) : FetchAuthSessionState()
@@ -33,7 +33,7 @@ sealed class FetchAuthSessionState : State {
         override var fetchAwsCredentialsState: FetchAwsCredentialsState?
     ) : FetchAuthSessionState()
 
-    data class SessionEstablished(val id: String = "") : FetchAuthSessionState()
+    data class Fetched(val id: String = "") : FetchAuthSessionState()
 
     open var fetchAwsCredentialsState: FetchAwsCredentialsState? = FetchAwsCredentialsState.Configuring()
     open var fetchUserPoolTokensState: FetchUserPoolTokensState? = FetchUserPoolTokensState.Configuring()
@@ -45,7 +45,7 @@ sealed class FetchAuthSessionState : State {
         private val fetchUserPoolTokensResolver: StateMachineResolver<FetchUserPoolTokensState>,
         private val fetchAuthSessionActions: FetchAuthSessionActions
     ) : StateMachineResolver<FetchAuthSessionState> {
-        override val defaultState = InitializingFetchAuthSession()
+        override val defaultState = NotStarted()
         private fun asFetchAuthSessionEvent(event: StateMachineEvent): FetchAuthSessionEvent.EventType? {
             return (event as? FetchAuthSessionEvent)?.eventType
         }
@@ -82,7 +82,7 @@ sealed class FetchAuthSessionState : State {
             val fetchAuthSessionEvent = asFetchAuthSessionEvent(event)
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
-                is InitializingFetchAuthSession -> {
+                is NotStarted -> {
                     when (fetchAuthSessionEvent) {
                         is FetchAuthSessionEvent.EventType.FetchUserPoolTokens -> {
                             val newState = FetchingUserPoolTokens(oldState.fetchUserPoolTokensState)
@@ -131,7 +131,7 @@ sealed class FetchAuthSessionState : State {
                             val action = fetchAuthSessionActions.authorizationSessionEstablished(
                                 fetchAuthSessionEvent.amplifyCredential
                             )
-                            StateResolution(SessionEstablished(), listOf(action))
+                            StateResolution(Fetched(), listOf(action))
                         }
                         else -> defaultResolution
                     }

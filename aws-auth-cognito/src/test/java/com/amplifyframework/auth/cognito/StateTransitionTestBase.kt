@@ -126,7 +126,7 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
+                        AuthorizationEvent(AuthorizationEvent.EventType.Configure)
                     )
                 }
             )
@@ -185,7 +185,7 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
+                        AuthorizationEvent(AuthorizationEvent.EventType.Configure)
                     )
                 }
             )
@@ -349,7 +349,7 @@ open class StateTransitionTestBase {
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         AuthorizationEvent(
-                            AuthorizationEvent.EventType.FetchedAuthSession(credentials)
+                            AuthorizationEvent.EventType.Fetched(credentials)
                         )
                     )
                 }
