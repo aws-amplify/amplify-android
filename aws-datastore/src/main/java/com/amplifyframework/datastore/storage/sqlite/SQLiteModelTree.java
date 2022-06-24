@@ -96,9 +96,13 @@ final class SQLiteModelTree {
             String dummyJson;
             for (HashMap<String, String> keyMap : entry.getValue()) {
                 if (rootModel.getClass() == SerializedModel.class) {
+                    Map<String, Object> serializedData = new HashMap<String, Object>();
+                    for (Map.Entry<String, String> keyMapEntry : keyMap.entrySet()) {
+                        serializedData.put(keyMapEntry.getKey(), keyMapEntry.getValue());
+                    }
                     SerializedModel dummyItem = SerializedModel.builder()
                             .modelSchema(schema)
-                            .serializedData(Collections.singletonMap("id", keyMap.get("id")))
+                            .serializedData(serializedData)
                             .build();
                     descendants.add(dummyItem);
                 } else {
