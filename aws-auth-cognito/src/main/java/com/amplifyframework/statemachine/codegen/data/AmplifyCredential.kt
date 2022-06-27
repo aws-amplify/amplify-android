@@ -15,14 +15,29 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.auth.AuthProvider
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AmplifyCredential(
-    val cognitoUserPoolTokens: CognitoUserPoolTokens?,
-    val identityId: String?,
-    val awsCredentials: AWSCredentials?,
-)
+sealed class AmplifyCredential {
+    @Serializable @SerialName("empty") object Empty : AmplifyCredential()
+    data class UserPool(val tokens: CognitoUserPoolTokens) : AmplifyCredential()
+    data class IdentityPool(val identityId: String, val credentials: AWSCredentials) : AmplifyCredential()
+    data class IdentityPoolFederated(
+        val federatedToken: FederatedToken,
+        val identityId: String,
+        val credentials: AWSCredentials
+    ) : AmplifyCredential()
+
+    data class UserAndIdentityPool(
+        val tokens: CognitoUserPoolTokens,
+        val identityId: String,
+        val credentials: AWSCredentials
+    ) : AmplifyCredential()
+}
+
+data class FederatedToken(val token: String, val provider: AuthProvider)
 
 @Serializable
 data class CognitoUserPoolTokens(
@@ -48,10 +63,10 @@ data class CognitoUserPoolTokens(
 ) {
     override fun toString(): String {
         return "CognitoUserPoolTokens(" +
-            "idToken = ${idToken?.substring(0..4)}***, " +
-            "accessToken = ${accessToken?.substring(0..4)}***, " +
-            "refreshToken = ${refreshToken?.substring(0..4)}***" +
-            ")"
+                "idToken = ${idToken?.substring(0..4)}***, " +
+                "accessToken = ${accessToken?.substring(0..4)}***, " +
+                "refreshToken = ${refreshToken?.substring(0..4)}***" +
+                ")"
     }
 }
 
@@ -64,10 +79,10 @@ data class AWSCredentials(
 ) {
     override fun toString(): String {
         return "AWSCredentials(" +
-            "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
-            "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
-            "sessionToken = ${sessionToken?.substring(0..4)}***, " +
-            "expiration = $expiration" +
-            ")"
+                "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
+                "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
+                "sessionToken = ${sessionToken?.substring(0..4)}***, " +
+                "expiration = $expiration" +
+                ")"
     }
 }

@@ -31,7 +31,7 @@ sealed class CredentialStoreState : State {
     data class StoringCredentials(val id: String = "") : CredentialStoreState()
     data class ClearingCredentials(val id: String = "") : CredentialStoreState()
     data class Idle(val id: String = "") : CredentialStoreState()
-    data class Success(val storedCredentials: AmplifyCredential?) : CredentialStoreState()
+    data class Success(val storedCredentials: AmplifyCredential) : CredentialStoreState()
     data class Error(val error: CredentialStoreError) : CredentialStoreState()
 
     override val type = this.toString()

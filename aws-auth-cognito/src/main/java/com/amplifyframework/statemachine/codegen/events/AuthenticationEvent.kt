@@ -28,7 +28,7 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
     sealed class EventType {
         data class Configure(
             val configuration: AuthConfiguration,
-            val storedCredentials: AmplifyCredential?
+            val storedCredentials: AmplifyCredential
         ) : EventType()
 
         object Configured : EventType()

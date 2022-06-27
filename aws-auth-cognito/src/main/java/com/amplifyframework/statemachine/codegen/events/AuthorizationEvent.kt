@@ -23,10 +23,9 @@ class AuthorizationEvent(val eventType: EventType, override val time: Date? = nu
     StateMachineEvent {
     sealed class EventType {
         object Configure : EventType()
-        //        case fetchUnAuthSession
-        data class FetchAuthSession(val amplifyCredential: AmplifyCredential?) : EventType()
+        data class FetchAuthSession(val amplifyCredential: AmplifyCredential) : EventType()
         data class CachedCredentialsAvailable(val amplifyCredential: AmplifyCredential) : EventType()
-        data class Fetched(val amplifyCredential: AmplifyCredential?) : EventType()
+        data class Fetched(val amplifyCredential: AmplifyCredential) : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 

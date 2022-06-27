@@ -486,14 +486,14 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 when (val authZState = authState.authZState) {
                     is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
-                        val authSession = AWSCognitoAuthSession.fromAmplifyCredential(
-                            authZState.amplifyCredential,
-                            userPoolTokensResult,
-                            identityIdResult,
-                            awsCredentialsResult
-                        )
-                        authZState.amplifyCredential?.let { storeAuthSession(authSession, it, onSuccess, onError) }
-                            ?: onSuccess.accept(authSession)
+//                        val authSession = AWSCognitoAuthSession.fromAmplifyCredential(
+//                            authZState.amplifyCredential,
+//                            userPoolTokensResult,
+//                            identityIdResult,
+//                            awsCredentialsResult
+//                        )
+//                        authZState.amplifyCredential?.let { storeAuthSession(authSession, it, onSuccess, onError) }
+//                            ?: onSuccess.accept(authSession)
                     }
                     is AuthorizationState.FetchingAuthSession -> {
                         val fetchUserPoolTokensState = authZState.fetchAuthSessionState.fetchUserPoolTokensState
@@ -551,7 +551,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 }
             },
             {
-                val event = AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession(credentials))
+                val event = AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession(credentials as AmplifyCredential))
                 authStateMachine.send(event)
             }
         )
