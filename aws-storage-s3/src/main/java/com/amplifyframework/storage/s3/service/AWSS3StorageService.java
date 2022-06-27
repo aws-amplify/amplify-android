@@ -15,13 +15,20 @@
 
 package com.amplifyframework.storage.s3.service;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationCompat;
 
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
+import com.amplifyframework.storage.s3.R;
 import com.amplifyframework.storage.s3.utils.S3Keys;
 import com.amplifyframework.util.UserAgent;
 
@@ -175,10 +182,11 @@ public final class AWSS3StorageService implements StorageService {
     /**
      * List items inside an S3 path.
      * @param path The path to list items from
+     * @param prefix path appended to S3 keys
      * @return A list of parsed items
      */
     @NonNull
-    public List<StorageItem> listFiles(@NonNull String path) {
+    public List<StorageItem> listFiles(@NonNull String path, @NonNull String prefix) {
         startServiceIfNotAlreadyStarted();
         ArrayList<StorageItem> itemList = new ArrayList<>();
         ListObjectsV2Request request =
@@ -191,7 +199,7 @@ public final class AWSS3StorageService implements StorageService {
             for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
                 // Remove the access level prefix from service key
                 String serviceKey = objectSummary.getKey();
-                String amplifyKey = S3Keys.extractAmplifyKey(serviceKey);
+                String amplifyKey = S3Keys.extractAmplifyKey(serviceKey, prefix);
 
                 itemList.add(new StorageItem(
                         amplifyKey,
@@ -248,7 +256,13 @@ public final class AWSS3StorageService implements StorageService {
     private void startServiceIfNotAlreadyStarted() {
         if (!transferUtilityServiceStarted) {
             // TODO: When a reset method is defined, stop service.
-            context.startService(new Intent(context, TransferService.class));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Intent serviceIntent = new Intent(context, TransferService.class);
+                serviceIntent.putExtra(TransferService.INTENT_KEY_NOTIFICATION, createDefaultNotification());
+                context.startForegroundService(serviceIntent);
+            } else {
+                context.startService(new Intent(context, TransferService.class));
+            }
             transferUtilityServiceStarted = true;
         }
     }
@@ -260,5 +274,32 @@ public final class AWSS3StorageService implements StorageService {
     @NonNull
     public AmazonS3Client getClient() {
         return client;
+    }
+
+    private Notification createDefaultNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createChannel();
+        }
+        int appIcon = R.drawable.amplify_storage_transfer_notification_icon;
+        return new NotificationCompat.Builder(
+            context,
+            context.getString(R.string.amplify_storage_notification_channel_id)
+        )
+            .setSmallIcon(appIcon)
+            .setContentTitle(context.getString(R.string.amplify_storage_notification_title))
+            .build();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void createChannel() {
+        NotificationManager notificationManager =
+            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.createNotificationChannel(
+            new NotificationChannel(
+                context.getString(R.string.amplify_storage_notification_channel_id),
+                context.getString(R.string.amplify_storage_notification_channel_name),
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+        );
     }
 }

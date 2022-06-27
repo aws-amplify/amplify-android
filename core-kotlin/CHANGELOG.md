@@ -1,3 +1,80 @@
+## [Release 0.20.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.0)
+
+### Features
+- Add flushEvents HubEvent for analytics (#1792)
+
+### Miscellaneous
+- Update build.gradle
+
+[See all changes between 0.19.7 and 0.20.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.7...release-kotlin_v0.20.0)
+
+## [Release 0.19.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.7)
+
+### Miscellaneous
+- Fix for adding data back to the delete request if it contains data as that is allowed for the Delete api (#1735)
+- Fix/1485 : Fix for sending the session expired hub event when all credentials are expired (#1779)
+- Updating build.gradle to include the latest version of the aws sdk (#1783)
+
+[See all changes between 0.19.6 and 0.19.7](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.6...release-kotlin_v0.19.7)
+
+## [Release 0.19.6](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.6)
+
+### Bug Fixes
+- fix: start transfer service as foreground for >= API26 (#1759)
+
+### Miscellaneous
+- chore: update notify_release.yml (#1720)
+- ignore flaky test (#1768)
+- upgrade jmespath to version 1.6.1 (#1766)
+- Create closed_issue_message.yml (#1754)
+- Bump SDK version to 2.48.0 (#1773)
+
+[See all changes between 0.19.5 and 0.19.6](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.5...release-kotlin_v0.19.6)
+
+## [Release 0.19.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.5)
+
+### Miscellaneous
+- chore: update gson version (#1744)
+- Update notify_comments.yml (#1746)
+- Update SDK version in build.gradle (#1747)
+
+[See all changes between 0.19.4 and 0.19.5](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.4...release-kotlin_v0.19.5)
+
+## [Release 0.19.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.4)
+
+### Miscellaneous
+- Update SDK version in build.gradle (#1741)
+
+[See all changes between 0.19.3 and 0.19.4](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.3...release-kotlin_v0.19.4)
+
+## [Release 0.19.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.3)
+
+### Bug Fixes
+- When DateTimeParseException is not available for lower apis (#1701)
+
+### Miscellaneous
+- Version bumps (#1721)
+
+[See all changes between 0.19.2 and 0.19.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.2...release-kotlin_v0.19.3)
+
+## [Release 0.19.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.2)
+
+### Bug Fixes
+- Update logic to extract S3 keys from list api response (#1706)
+
+[See all changes between 0.19.1 and 0.19.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.1...release-kotlin_v0.19.2)
+
+## [Release 0.19.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.1)
+
+### Bug Fixes
+- **aws-api:** double-encode plus in url path segments (#1252)
+
+### Miscellaneous
+- Conflict resolver fixes in comments. (#1681)
+- Provide default message for GraphQLResponse.Error when null/missing (#1700)
+
+[See all changes between 0.19.0 and 0.19.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.0...release-kotlin_v0.19.1)
+
 ## [Release 0.19.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.0)
 
 ### Features

@@ -84,9 +84,10 @@ public interface StorageService {
     /**
      * Returns a list of items from provided path inside the storage.
      * @param path path inside storage to inspect for list of items
+     * @param prefix path appended to S3 keys
      * @return A list of parsed items present inside given path
      */
-    List<StorageItem> listFiles(@NonNull String path);
+    List<StorageItem> listFiles(@NonNull String path, @NonNull String prefix);
 
     /**
      * Delete an object with specific key inside the storage.
