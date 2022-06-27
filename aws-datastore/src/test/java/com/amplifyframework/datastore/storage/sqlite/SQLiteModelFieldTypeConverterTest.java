@@ -73,7 +73,7 @@ public class SQLiteModelFieldTypeConverterTest {
     }
 
     /**
-     * Set user agent to Flutter
+     * Set user agent to Flutter.
      * @throws AmplifyException not expected.
      */
     private void setUserAgent() throws AmplifyException {
