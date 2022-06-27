@@ -60,7 +60,7 @@ public class SQLiteModelFieldTypeConverterTest {
      */
     @Test
     public void testConvertRawValueToTargetTimeFlutter() throws AmplifyException {
-        UserAgent.configure(Map.of(UserAgent.Platform.FLUTTER, "1.0"));
+        setUserAgent();
         final String value = "16:00:00.050020000";
         final JavaFieldType fieldType = JavaFieldType.TIME;
         final Gson gson = GsonFactory.instance();
@@ -73,12 +73,21 @@ public class SQLiteModelFieldTypeConverterTest {
     }
 
     /**
+     * Set user agent to Flutter
+     * @throws AmplifyException not expected.
+     */
+    private void setUserAgent() throws AmplifyException {
+        Map<UserAgent.Platform, String> useragent = Map.of(UserAgent.Platform.FLUTTER, "1.0");
+        UserAgent.configure(useragent);
+    }
+
+    /**
      * Test DATE_TIME converter for Flutter.
      * @throws AmplifyException Not expected.
      */
     @Test
     public void testConvertRawValueToTargetDateTimeFlutter() throws AmplifyException {
-        UserAgent.configure(Map.of(UserAgent.Platform.FLUTTER, "1.0"));
+        setUserAgent();
         final String value = "2020-01-01T16:00:00.050020000";
         final JavaFieldType fieldType = JavaFieldType.DATE_TIME;
         final Gson gson = GsonFactory.instance();
