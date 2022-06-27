@@ -79,7 +79,7 @@ public class SQLiteModelFieldTypeConverterTest {
      */
     private void setUserAgent() throws AmplifyException {
         Map<UserAgent.Platform, String> map = new HashMap<>();
-        map.put(UserAgent.Platform.FLUTTER, "1.0"UserAgent.Platform.FLUTTER, "1.0");
+        map.put(UserAgent.Platform.FLUTTER, "1.0");
         UserAgent.configure(map);
     }
 
