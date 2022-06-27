@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -77,8 +78,9 @@ public class SQLiteModelFieldTypeConverterTest {
      * @throws AmplifyException not expected.
      */
     private void setUserAgent() throws AmplifyException {
-        Map<UserAgent.Platform, String> useragent = Map.of(UserAgent.Platform.FLUTTER, "1.0");
-        UserAgent.configure(useragent);
+        Map<UserAgent.Platform, String> map = new HashMap<>();
+        map.put(UserAgent.Platform.FLUTTER, "1.0"UserAgent.Platform.FLUTTER, "1.0");
+        UserAgent.configure(map);
     }
 
     /**
