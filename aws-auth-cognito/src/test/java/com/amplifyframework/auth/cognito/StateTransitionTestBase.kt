@@ -373,5 +373,17 @@ open class StateTransitionTestBase {
                     )
                 }
             )
+        Mockito.`when`(
+            mockAuthorizationActions.initializeDeleteUser(MockitoHelper.anyObject())
+        )
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        AuthorizationEvent(
+                            AuthorizationEvent.EventType.UserDeleted()
+                        )
+                    )
+                }
+            )
     }
 }
