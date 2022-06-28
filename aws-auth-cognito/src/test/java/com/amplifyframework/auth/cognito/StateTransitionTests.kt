@@ -23,6 +23,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
@@ -656,24 +657,19 @@ class StateTransitionTests : StateTransitionTestBase() {
                 authState?.run {
                     configureLatch.countDown()
                     stateMachine.send(
-                        AuthorizationEvent(
-                            AuthorizationEvent.EventType.DeleteUser("TOKEN-123")
+                        DeleteUserEvent(
+                            DeleteUserEvent.EventType.DeleteUser("TOKEN-123")
                         )
                     )
                 }
 
-                val authZDeleteUserState =
-                    it.authZState.takeIf {
-                            itZ -> itZ is AuthorizationState.DeletingUser
-                    }
-                authZDeleteUserState?.run {
-                    testLatch.countDown()
+                val deleteUserState = it.authZState?.deleteUserState
+
+                val userDeletedSuccess = deleteUserState.takeIf {
+                    it -> it is DeleteUserState.UserDeleted
                 }
 
-                val authZState =
-                    it.authZState.takeIf { itZ -> itZ is AuthorizationState.SessionEstablished }
-                authZState?.run {
-                    token?.let(stateMachine::cancel)
+                userDeletedSuccess.run {
                     testLatch.countDown()
                 }
             },

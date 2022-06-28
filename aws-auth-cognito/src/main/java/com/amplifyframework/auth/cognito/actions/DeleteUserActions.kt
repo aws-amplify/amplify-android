@@ -30,7 +30,7 @@ object DeleteUserActions : DeleteUserActions {
                 cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
                     DeleteUserRequest.invoke { accessToken }
                 )
-                DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
+                AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(true))
             } catch (e: Exception) {
                 logger?.warn("Failed to delete user.", e)
                 DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e))

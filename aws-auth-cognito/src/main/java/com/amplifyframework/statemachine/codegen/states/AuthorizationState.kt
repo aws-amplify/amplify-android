@@ -22,6 +22,7 @@ import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 
 sealed class AuthorizationState : State {
     data class NotConfigured(val id: String = "") : AuthorizationState()
@@ -52,6 +53,10 @@ sealed class AuthorizationState : State {
             return (event as? AuthorizationEvent)?.eventType
         }
 
+        private fun asDeleteUserEvent(event: StateMachineEvent): DeleteUserEvent.EventType? {
+            return (event as? DeleteUserEvent)?.eventType
+        }
+
         override fun resolve(
             oldState: AuthorizationState,
             event: StateMachineEvent,
@@ -78,6 +83,7 @@ sealed class AuthorizationState : State {
         ): StateResolution<AuthorizationState> {
             val authorizationEvent = asAuthorizationEvent(event)
             val defaultResolution = StateResolution(oldState)
+            val deleteUserEvent = asDeleteUserEvent(event)
             return when (oldState) {
                 is NotConfigured -> {
                     when (authorizationEvent) {
@@ -93,18 +99,15 @@ sealed class AuthorizationState : State {
                     }
                 }
                 is Configured ->
-                    when (authorizationEvent) {
-                        is AuthorizationEvent.EventType.FetchAuthSession -> {
+                    when  {
+                        authorizationEvent is AuthorizationEvent.EventType.FetchAuthSession -> {
                             val action =
                                 authorizationActions.initializeFetchAuthSession(authorizationEvent.amplifyCredential)
                             val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
                             StateResolution(newState, listOf(action))
                         }
-                        is AuthorizationEvent.EventType.DeleteUser -> {
-                            val action =
-                                authorizationActions.initializeDeleteUser(authorizationEvent.token)
-                            val newState = DeletingUser(oldState.deleteUserState)
-                            StateResolution(newState, listOf(action))
+                        deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> {
+                            StateResolution(DeletingUser(oldState.deleteUserState))
                         }
                         else -> defaultResolution
                     }
@@ -118,11 +121,10 @@ sealed class AuthorizationState : State {
                         else -> defaultResolution
                     }
                 is DeletingUser -> {
-                    when (authorizationEvent) {
-                        is AuthorizationEvent.EventType.UserDeleted -> {
-                            val action = authorizationActions.resetAuthorizationAction()
-                            val newState = SessionEstablished(null)
-                            StateResolution(newState, listOf(action))
+                    when (deleteUserEvent) {
+                        is DeleteUserEvent.EventType.UserSignedOutAndDeleted -> {
+                            val newState = NotConfigured()
+                            StateResolution(newState)
                         }
                         else -> defaultResolution
                     }

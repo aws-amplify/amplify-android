@@ -837,40 +837,15 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         listenerToken = authStateMachine.listen(
             { authState ->
                 when (val authZState = authState.authZState) {
-                    is AuthorizationState.SessionEstablished -> {
+                    is AuthorizationState.Configured -> {
                         when (val deleteUserState = authZState.deleteUserState) {
-                            is DeleteUserState.SigningOut -> {
-                                signOut(
-                                    AuthSignOutOptions.builder().globalSignOut(true).build(),
-                                    onSuccess = {
-                                        authStateMachine.send(DeleteUserEvent(DeleteUserEvent.EventType.UserSignedOutAndDeleted()))
-                                    },
-                                    onError = {
-                                        authStateMachine.send(DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(AuthException.SignedOutException())))
-                                    }
-                                )
-
-                            }
                             is DeleteUserState.UserDeleted -> {
-                                clearCredentialStore(
-                                    onSuccess = {
-                                        onSuccess.call()
-                                        Amplify.Hub.publish(
-                                            HubChannel.AUTH,
-                                            HubEvent.create(AuthChannelEventName.USER_DELETED)
-                                        )
-                                        listenerToken?.let(authStateMachine::cancel)
-                                    },
-                                    onError = {
-                                        authStateMachine.send(
-                                            DeleteUserEvent(
-                                                DeleteUserEvent.EventType.ThrowError(
-                                                    AuthException.UnknownException(it.error)
-                                                )
-                                            )
-                                        )
-                                    }
-                                )
+                                    onSuccess.call()
+                                    Amplify.Hub.publish(
+                                        HubChannel.AUTH,
+                                        HubEvent.create(AuthChannelEventName.USER_DELETED)
+                                    )
+                                    listenerToken?.let(authStateMachine::cancel)
                             }
                             is DeleteUserState.Error -> {
                                 listenerToken?.let(authStateMachine::cancel)

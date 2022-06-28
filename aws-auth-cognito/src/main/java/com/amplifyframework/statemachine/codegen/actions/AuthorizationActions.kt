@@ -22,5 +22,4 @@ interface AuthorizationActions {
     fun resetAuthorizationAction(): Action
     fun configureAuthorizationAction(): Action
     fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential?): Action
-    fun initializeDeleteUser(token: String?): Action
 }

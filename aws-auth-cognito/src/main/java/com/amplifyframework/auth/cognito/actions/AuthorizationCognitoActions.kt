@@ -48,14 +48,4 @@ object AuthorizationCognitoActions : AuthorizationActions {
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
-
-    override fun initializeDeleteUser(token: String?): Action =
-        Action<AuthEnvironment>("InitDeleteUser") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
-            val evt = token?.let {
-                DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(token))
-            } ?: AuthEvent(AuthEvent.EventType.ConfiguredAuthorization)
-            logger?.verbose("$id Sending event ${evt.type}")
-            dispatcher.send(evt)
-        }
 }
