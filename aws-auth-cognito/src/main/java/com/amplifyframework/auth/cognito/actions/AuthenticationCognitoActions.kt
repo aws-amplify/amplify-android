@@ -38,6 +38,10 @@ object AuthenticationCognitoActions : AuthenticationActions {
                     val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, credentials.tokens)
                     AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
                 }
+                is AmplifyCredential.UserAndIdentityPool -> {
+                    val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, credentials.tokens)
+                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
+                }
                 else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             }
             logger?.verbose("$id Sending event ${evt.type}")

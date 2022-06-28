@@ -21,20 +21,50 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed class AmplifyCredential {
-    @Serializable @SerialName("empty") object Empty : AmplifyCredential()
+    @Serializable
+    @SerialName("empty")
+    object Empty : AmplifyCredential()
+
+    @Serializable
+    @SerialName("userPool")
     data class UserPool(val tokens: CognitoUserPoolTokens) : AmplifyCredential()
+
+    @Serializable
+    @SerialName("identityPool")
     data class IdentityPool(val identityId: String, val credentials: AWSCredentials) : AmplifyCredential()
+
+//    @Serializable
+//    @SerialName("identityPoolFederated")
     data class IdentityPoolFederated(
         val federatedToken: FederatedToken,
         val identityId: String,
         val credentials: AWSCredentials
     ) : AmplifyCredential()
 
+    @Serializable
+    @SerialName("userAndIdentityPool")
     data class UserAndIdentityPool(
         val tokens: CognitoUserPoolTokens,
         val identityId: String,
         val credentials: AWSCredentials
     ) : AmplifyCredential()
+
+    fun update(identityId: String? = null, awsCredentials: AWSCredentials? = null): AmplifyCredential {
+        return when {
+            identityId != null -> when (this) {
+                is UserAndIdentityPool -> copy(identityId = identityId)
+                is UserPool -> UserAndIdentityPool(this.tokens, identityId, AWSCredentials.empty)
+                is IdentityPool -> copy(identityId = identityId)
+                else -> Empty
+            }
+            awsCredentials != null -> when (this) {
+                is UserAndIdentityPool -> copy(credentials = awsCredentials)
+                is IdentityPool -> copy(credentials = awsCredentials)
+                else -> Empty
+            }
+            else -> this
+        }
+    }
 }
 
 data class FederatedToken(val token: String, val provider: AuthProvider)
@@ -77,6 +107,11 @@ data class AWSCredentials(
     val sessionToken: String?,
     val expiration: Long?,
 ) {
+
+    companion object {
+        val empty = AWSCredentials("", "", "", 0)
+    }
+
     override fun toString(): String {
         return "AWSCredentials(" +
                 "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
