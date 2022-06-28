@@ -1,19 +1,27 @@
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.datastore;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
-
 import static com.amplifyframework.datastore.DataStoreHubEventFilters.publicationOf;
 import static com.amplifyframework.datastore.DataStoreHubEventFilters.receiptOf;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import android.content.Context;
-import android.util.Log;
-
 import androidx.annotation.RawRes;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.aws.AWSApiPlugin;
@@ -29,7 +37,6 @@ import com.amplifyframework.datastore.appsync.SynchronousAppSync;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
-import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.transformerV2.schemadrift.EnumDrift;
 import com.amplifyframework.testmodels.transformerV2.schemadrift.SchemaDrift;
 import com.amplifyframework.testmodels.transformerV2.schemadrift.SchemaDriftModelProvider;
@@ -42,15 +49,9 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
-
-import javax.xml.validation.Schema;
 
 public final class SchemaDriftTest {
     private static final int TIMEOUT_SECONDS = 60;
@@ -118,6 +119,11 @@ public final class SchemaDriftTest {
         }
     }
 
+    /**
+     * Perform DataStore.save
+     * Expected result: Model should be published to AppSync
+     * @throws AmplifyException Not expected.
+     */
     @Test
     public void testSave() throws AmplifyException {
         dataStore.start();
@@ -140,11 +146,16 @@ public final class SchemaDriftTest {
         assertEquals(remoteModel.getId(), localSchemaDrift.getId());
     }
 
+    /**
+     * Save a SchemaDrift model with enum value "THREE" by calling API directly with the
+     * mutation request document since the code generated EnumDrift was modified to remove the
+     * case so it wouldn't be possible otherwise due to type safety.
+     *
+     * Expected result: Model should be received as a subscription event and synced to local store.
+     * @throws AmplifyException Not expected.
+     */
     @Test
     public void testSyncEnumWithInvalidValue() throws AmplifyException {
-        // Save a SchemaDrift model with enum value "THREE" by calling API directly with the
-        // mutation request document since the code generated EnumDrift was modified to remove the
-        // case so it wouldn't be possible otherwise due to type safety.
         SchemaDrift directSchemaDrift = api.create(
                 new SimpleGraphQLRequest<>(
                         Assets.readAsString("schema-drift-mutation.graphql"),
