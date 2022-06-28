@@ -37,7 +37,7 @@ sealed class AuthorizationState : State {
     open var fetchAuthSessionState: FetchAuthSessionState? =
         FetchAuthSessionState.InitializingFetchAuthSession()
 
-    open var deleteUserState: DeleteUserState? = DeleteUserState.Configuring()
+    open var deleteUserState: DeleteUserState? = DeleteUserState.NotStarted()
 
     override val type = this.toString()
 
