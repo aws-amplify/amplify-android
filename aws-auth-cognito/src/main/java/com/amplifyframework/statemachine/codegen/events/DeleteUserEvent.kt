@@ -25,6 +25,8 @@ class DeleteUserEvent(
     sealed class EventType {
         data class DeleteUser(val accessToken: String) : EventType()
         data class Deleted(val id: String = "") : EventType()
+        data class SignOutDeletedUser(val id: String = "") : EventType()
+        data class UserSignedOutAndDeleted(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 

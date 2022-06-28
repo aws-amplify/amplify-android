@@ -839,6 +839,18 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 when (val authZState = authState.authZState) {
                     is AuthorizationState.SessionEstablished -> {
                         when (val deleteUserState = authZState.deleteUserState) {
+                            is DeleteUserState.SigningOut -> {
+                                signOut(
+                                    AuthSignOutOptions.builder().globalSignOut(true).build(),
+                                    onSuccess = {
+                                        authStateMachine.send(DeleteUserEvent(DeleteUserEvent.EventType.UserSignedOutAndDeleted()))
+                                    },
+                                    onError = {
+                                        authStateMachine.send(DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(AuthException.SignedOutException())))
+                                    }
+                                )
+
+                            }
                             is DeleteUserState.UserDeleted -> {
                                 clearCredentialStore(
                                     onSuccess = {

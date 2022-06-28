@@ -24,14 +24,15 @@ import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import java.lang.Exception
 
 sealed class DeleteUserState : State {
-    data class Configuring(val id: String = "") : DeleteUserState()
+    data class NotStarted(val id: String = "") : DeleteUserState()
     data class DeletingUser(val id: String = "") : DeleteUserState()
+    data class SigningOut(val id: String = "") : DeleteUserState()
     data class UserDeleted(val id: String = "") : DeleteUserState()
     data class Error(val exception: Exception) : DeleteUserState()
 
     class Resolver(private val deleteUserActions: DeleteUserActions) :
         StateMachineResolver<DeleteUserState> {
-        override val defaultState = Configuring()
+        override val defaultState = NotStarted()
         private fun asDeleteUserEvent(event: StateMachineEvent): DeleteUserEvent.EventType? {
             return (event as? DeleteUserEvent)?.eventType
         }
@@ -42,7 +43,7 @@ sealed class DeleteUserState : State {
         ): StateResolution<DeleteUserState> {
             val deleteUserEvent = asDeleteUserEvent(event)
             return when (oldState) {
-                is Configuring -> {
+                is NotStarted -> {
                     when (deleteUserEvent) {
                         is DeleteUserEvent.EventType.DeleteUser -> {
                             val action = deleteUserActions.initDeleteUserAction(deleteUserEvent.accessToken)
@@ -53,10 +54,16 @@ sealed class DeleteUserState : State {
                 }
                 is DeletingUser -> {
                     when (deleteUserEvent) {
-                        is DeleteUserEvent.EventType.Deleted -> StateResolution(UserDeleted())
+                        is DeleteUserEvent.EventType.SignOutDeletedUser -> StateResolution(SigningOut())
                         is DeleteUserEvent.EventType.ThrowError -> {
                             StateResolution(Error(deleteUserEvent.exception))
                         }
+                        else -> StateResolution(oldState)
+                    }
+                }
+                is SigningOut -> {
+                    when (deleteUserEvent) {
+                        is DeleteUserEvent.EventType.UserSignedOutAndDeleted -> StateResolution((UserDeleted()))
                         else -> StateResolution(oldState)
                     }
                 }

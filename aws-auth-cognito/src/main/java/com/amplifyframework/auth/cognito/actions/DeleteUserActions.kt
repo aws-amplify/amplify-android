@@ -19,6 +19,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.DeleteUserActions
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 
 object DeleteUserActions : DeleteUserActions {
@@ -29,7 +30,7 @@ object DeleteUserActions : DeleteUserActions {
                 cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
                     DeleteUserRequest.invoke { accessToken }
                 )
-                DeleteUserEvent(DeleteUserEvent.EventType.Deleted())
+                DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
             } catch (e: Exception) {
                 logger?.warn("Failed to delete user.", e)
                 DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e))
