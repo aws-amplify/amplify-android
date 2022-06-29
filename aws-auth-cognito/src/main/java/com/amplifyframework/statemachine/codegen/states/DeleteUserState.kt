@@ -49,7 +49,7 @@ sealed class DeleteUserState : State {
             val deleteUserEvent = asDeleteUserEvent(event)
             val authenticationEvent = asAuthenticationEvent(event)
             return when (oldState) {
-                is NotStarted -> {
+                is NotStarted, is Error-> {
                     when (deleteUserEvent) {
                         is DeleteUserEvent.EventType.DeleteUser -> {
                             val action = deleteUserActions.initDeleteUserAction(deleteUserEvent.accessToken)
@@ -60,7 +60,8 @@ sealed class DeleteUserState : State {
                 }
                 is DeletingUser -> {
                     when {
-                        authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(SigningOut())
+                        authenticationEvent is AuthenticationEvent.EventType.SignOutRequested ->
+                            StateResolution(SigningOut())
                         deleteUserEvent is DeleteUserEvent.EventType.ThrowError -> {
                             StateResolution(Error(deleteUserEvent.exception))
                         }
@@ -68,8 +69,9 @@ sealed class DeleteUserState : State {
                     }
                 }
                 is SigningOut -> {
-                    when {
-                        authenticationEvent is AuthenticationEvent.EventType.InitializedSignedOut -> StateResolution((UserDeleted()))
+                    when (authenticationEvent) {
+                        is AuthenticationEvent.EventType.InitializedSignedOut ->
+                            StateResolution((UserDeleted()))
                         else -> StateResolution(oldState)
                     }
                 }

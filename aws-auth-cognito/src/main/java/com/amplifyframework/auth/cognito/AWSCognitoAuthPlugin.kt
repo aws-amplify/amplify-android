@@ -837,15 +837,15 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         listenerToken = authStateMachine.listen(
             { authState ->
                 when (val authZState = authState.authZState) {
-                    is AuthorizationState.Configured -> {
+                    is AuthorizationState.DeletingUser -> {
                         when (val deleteUserState = authZState.deleteUserState) {
                             is DeleteUserState.UserDeleted -> {
-                                    onSuccess.call()
-                                    Amplify.Hub.publish(
-                                        HubChannel.AUTH,
-                                        HubEvent.create(AuthChannelEventName.USER_DELETED)
-                                    )
-                                    listenerToken?.let(authStateMachine::cancel)
+                                onSuccess.call()
+                                Amplify.Hub.publish(
+                                    HubChannel.AUTH,
+                                    HubEvent.create(AuthChannelEventName.USER_DELETED)
+                                )
+                                listenerToken?.let(authStateMachine::cancel)
                             }
                             is DeleteUserState.Error -> {
                                 listenerToken?.let(authStateMachine::cancel)
@@ -856,7 +856,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                     )
                                 )
                             }
-                            else -> {}
+                            else -> {
+                                println(deleteUserState)
+                            }
                         }
                     }
                     else -> {
@@ -865,7 +867,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 }
             },
             {
-                val event = AuthorizationEvent(AuthorizationEvent.EventType.DeleteUser(token))
+                val event = DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(accessToken = token))
                 authStateMachine.send(event)
             }
         )
@@ -958,7 +960,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                         onError(it)
                     }
                     else -> {
-                        //no op
+                        // no op
                     }
                 }
             },

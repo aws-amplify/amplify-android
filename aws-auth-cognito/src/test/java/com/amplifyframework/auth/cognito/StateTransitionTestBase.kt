@@ -360,7 +360,7 @@ open class StateTransitionTestBase {
             )
     }
 
-    internal fun setupDeleteAction(){
+    internal fun setupDeleteAction() {
         Mockito.`when`(
             mockDeleteUserActions.initDeleteUserAction(MockitoHelper.anyObject())
         )

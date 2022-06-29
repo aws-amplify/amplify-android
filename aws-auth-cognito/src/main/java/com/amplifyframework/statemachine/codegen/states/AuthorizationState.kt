@@ -99,7 +99,7 @@ sealed class AuthorizationState : State {
                     }
                 }
                 is Configured ->
-                    when  {
+                    when {
                         authorizationEvent is AuthorizationEvent.EventType.FetchAuthSession -> {
                             val action =
                                 authorizationActions.initializeFetchAuthSession(authorizationEvent.amplifyCredential)
