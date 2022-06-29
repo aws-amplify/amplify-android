@@ -76,7 +76,7 @@ public final class SchemaDriftTest {
 
         StrictMode.enable();
         Context context = getApplicationContext();
-        @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfiguration");
+        @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfiguration_v2");
 
         // Setup an API
         CategoryConfiguration apiCategoryConfiguration =
@@ -159,6 +159,7 @@ public final class SchemaDriftTest {
      */
     @Test
     public void testSyncEnumWithInvalidValue() throws AmplifyException {
+        // Send the model directly to API
         SchemaDrift directSchemaDrift = api.create(
                 new SimpleGraphQLRequest<>(
                         Assets.readAsString("schema-drift-mutation.graphql"),
@@ -167,13 +168,13 @@ public final class SchemaDriftTest {
                         new GsonVariablesSerializer()
                 )
         );
-        // Retrieve it directly from API
-        SchemaDrift remoteModel = api.get(SchemaDrift.class, directSchemaDrift.getId());
-        assertEquals(remoteModel.getId(), directSchemaDrift.getId());
-
         HubAccumulator receiptOfSchemaDrift =
                 HubAccumulator.create(HubChannel.DATASTORE, receiptOf(directSchemaDrift.getId()), 1)
                         .start();
+
+        // Retrieve it directly from API
+        SchemaDrift remoteModel = api.get(SchemaDrift.class, directSchemaDrift.getId());
+        assertEquals(remoteModel.getId(), directSchemaDrift.getId());
 
         // Start and sync the models from AppSync
         dataStore.start();
