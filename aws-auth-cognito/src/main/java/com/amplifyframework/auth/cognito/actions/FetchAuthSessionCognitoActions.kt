@@ -34,7 +34,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
     override fun configureUserPoolTokensAction(amplifyCredential: AmplifyCredential): Action =
         Action<AuthEnvironment>("ConfigureUserPoolTokens") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = when(amplifyCredential) {
+            val evt = when (amplifyCredential) {
                 is AmplifyCredential.UserPool -> {
                     if (SessionHelper.isValid(amplifyCredential.tokens)) {
                         // User Pool Tokens (id Token and access Token) are valid
@@ -59,16 +59,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
     override fun configureIdentityAction(amplifyCredential: AmplifyCredential): Action =
         Action<AuthEnvironment>("ConfigureIdentity") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = when(amplifyCredential) {
-                is AmplifyCredential.Empty -> {
-                    val fetchedEvent = FetchIdentityEvent(FetchIdentityEvent.EventType.Fetched())
-                    logger?.verbose("$id Sending event ${fetchedEvent.type}")
-                    dispatcher.send(fetchedEvent)
-
-                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchAwsCredentials(amplifyCredential))
-                }
-                else -> FetchIdentityEvent(FetchIdentityEvent.EventType.Fetch(amplifyCredential))
-            }
+            val evt = FetchIdentityEvent(FetchIdentityEvent.EventType.Fetch(amplifyCredential))
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
@@ -76,7 +67,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
     override fun configureAWSCredentialsAction(amplifyCredential: AmplifyCredential): Action =
         Action<AuthEnvironment>("ConfigureAWSCredentials") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = when(amplifyCredential) {
+            val evt = when (amplifyCredential) {
                 is AmplifyCredential.Empty -> {
                     // TODO: fix expiry
                     val fetchedEvent = FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.Fetched())

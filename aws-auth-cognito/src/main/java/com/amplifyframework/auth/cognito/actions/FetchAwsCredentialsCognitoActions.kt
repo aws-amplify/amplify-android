@@ -34,7 +34,7 @@ object FetchAwsCredentialsCognitoActions : FetchAWSCredentialsActions {
                     is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens.idToken
                     else -> null
                 }
-                val identityId = when(amplifyCredential) {
+                val identityId = when (amplifyCredential) {
                     is AmplifyCredential.IdentityPool -> amplifyCredential.identityId
                     is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.identityId
                     else -> null

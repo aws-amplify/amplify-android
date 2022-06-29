@@ -63,7 +63,9 @@ sealed class SignOutState : State {
                         val newState = SignedOut(SignedOutData(oldState.signedInData.username))
                         StateResolution(newState)
                     }
-                    is AuthEvent.EventType.CachedCredentialsFailed -> StateResolution(Error(Exception("Failed clearing store")))
+                    is AuthEvent.EventType.CachedCredentialsFailed -> StateResolution(
+                        Error(Exception("Failed clearing store"))
+                    )
                     else -> defaultResolution
                 }
                 is SigningOutGlobally -> when (signOutEvent) {

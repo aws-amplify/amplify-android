@@ -73,7 +73,9 @@ object CredentialStoreActions : StoreActions {
                 credentials?.let {
                     credentialStore.saveCredential(it)
                     CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
-                } ?: CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(CredentialStoreError("No credentials to store.")))
+                } ?: CredentialStoreEvent(
+                    CredentialStoreEvent.EventType.ThrowError(CredentialStoreError("No credentials to store."))
+                )
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             }

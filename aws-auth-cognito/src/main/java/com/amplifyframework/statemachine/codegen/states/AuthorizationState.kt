@@ -25,7 +25,6 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -94,7 +93,7 @@ sealed class AuthorizationState : State {
                     when {
                         authorizationEvent is AuthorizationEvent.EventType.FetchAuthSession -> {
                             val action =
-                                authorizationActions.initializeFetchAuthSession(authorizationEvent.amplifyCredential)
+                                authorizationActions.initializeFetchAuthSession(AmplifyCredential.Empty)
                             val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
                             StateResolution(newState, listOf(action))
                         }
@@ -134,8 +133,12 @@ sealed class AuthorizationState : State {
                         )
                         else -> defaultResolution
                     }
-                is SessionEstablished -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
+                is SessionEstablished -> when {
+                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
+                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(
+                        SigningOut()
+                    )
+                    // handle refresh tokens
                     else -> defaultResolution
                 }
                 else -> defaultResolution

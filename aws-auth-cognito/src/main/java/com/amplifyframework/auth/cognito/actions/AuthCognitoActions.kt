@@ -45,9 +45,9 @@ object AuthCognitoActions : AuthActions {
     override fun initializeAuthorizationConfigurationAction(event: AuthEvent.EventType) =
         Action<AuthEnvironment>("InitAuthZConfig") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val handleEvent = { credentials: AmplifyCredential? ->
+            val handleEvent = { credentials: AmplifyCredential ->
                 when (credentials) {
-                    null -> AuthorizationEvent(AuthorizationEvent.EventType.Configure)
+                    AmplifyCredential.Empty -> AuthorizationEvent(AuthorizationEvent.EventType.Configure)
                     else -> AuthorizationEvent(AuthorizationEvent.EventType.CachedCredentialsAvailable(credentials))
                 }
             }

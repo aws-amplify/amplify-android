@@ -33,7 +33,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = when(val credentials = event.storedCredentials) {
+            val evt = when (val credentials = event.storedCredentials) {
                 is AmplifyCredential.UserPool -> {
                     val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, credentials.tokens)
                     AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
@@ -47,7 +47,9 @@ object AuthenticationCognitoActions : AuthenticationActions {
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
 
-            val authEvent = AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(event.configuration, event.storedCredentials))
+            val authEvent = AuthEvent(
+                AuthEvent.EventType.ConfiguredAuthentication(event.configuration, event.storedCredentials)
+            )
             logger?.verbose("$id Sending event ${authEvent.type}")
             dispatcher.send(authEvent)
         }

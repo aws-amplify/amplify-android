@@ -53,9 +53,9 @@ sealed class AmplifyCredential {
         return when {
             identityId != null -> when (this) {
                 is UserAndIdentityPool -> copy(identityId = identityId)
-                is UserPool -> UserAndIdentityPool(this.tokens, identityId, AWSCredentials.empty)
+                is UserPool -> UserAndIdentityPool(tokens, identityId, AWSCredentials.empty)
                 is IdentityPool -> copy(identityId = identityId)
-                else -> Empty
+                else -> IdentityPool(identityId = identityId, AWSCredentials.empty)
             }
             awsCredentials != null -> when (this) {
                 is UserAndIdentityPool -> copy(credentials = awsCredentials)
@@ -66,6 +66,17 @@ sealed class AmplifyCredential {
         }
     }
 }
+
+// TODO: token abstraction
+// sealed class Token{
+//    data class CognitoUserPoolTokens(
+//        val idToken: String?,
+//        val accessToken: String?,
+//        val refreshToken: String?,
+//        val expiration: Long?,
+//    )
+//    data class FederatedToken(val token: String, val provider: AuthProvider) : Token()
+// }
 
 data class FederatedToken(val token: String, val provider: AuthProvider)
 
@@ -93,10 +104,10 @@ data class CognitoUserPoolTokens(
 ) {
     override fun toString(): String {
         return "CognitoUserPoolTokens(" +
-                "idToken = ${idToken?.substring(0..4)}***, " +
-                "accessToken = ${accessToken?.substring(0..4)}***, " +
-                "refreshToken = ${refreshToken?.substring(0..4)}***" +
-                ")"
+            "idToken = ${idToken?.substring(0..4)}***, " +
+            "accessToken = ${accessToken?.substring(0..4)}***, " +
+            "refreshToken = ${refreshToken?.substring(0..4)}***" +
+            ")"
     }
 }
 
@@ -109,15 +120,15 @@ data class AWSCredentials(
 ) {
 
     companion object {
-        val empty = AWSCredentials("", "", "", 0)
+        val empty = AWSCredentials(null, null, null, 0)
     }
 
     override fun toString(): String {
         return "AWSCredentials(" +
-                "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
-                "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
-                "sessionToken = ${sessionToken?.substring(0..4)}***, " +
-                "expiration = $expiration" +
-                ")"
+            "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
+            "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
+            "sessionToken = ${sessionToken?.substring(0..4)}***, " +
+            "expiration = $expiration" +
+            ")"
     }
 }
