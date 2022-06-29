@@ -919,8 +919,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         var token: StateChangeListenerToken? = null
         token = credentialStoreStateMachine.listen(
             {
-                when {
-                    it is CredentialStoreState.Success -> {
+                when (it) {
+                    is CredentialStoreState.Success -> {
                         token?.let(credentialStoreStateMachine::cancel)
                         authStateMachine.send(
                             AuthenticationEvent(
@@ -928,7 +928,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                             )
                         )
                     }
-                    it is CredentialStoreState.Error -> {
+                    is CredentialStoreState.Error -> {
                         token?.let(credentialStoreStateMachine::cancel)
                         authStateMachine.send(
                             SignOutEvent(
