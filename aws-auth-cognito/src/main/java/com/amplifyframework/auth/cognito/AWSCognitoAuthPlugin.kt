@@ -857,7 +857,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                 )
                             }
                             else -> {
-                                println(deleteUserState)
+                                // No-op
                             }
                         }
                     }

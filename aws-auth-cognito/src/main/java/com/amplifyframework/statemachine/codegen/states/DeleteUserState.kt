@@ -48,8 +48,11 @@ sealed class DeleteUserState : State {
         ): StateResolution<DeleteUserState> {
             val deleteUserEvent = asDeleteUserEvent(event)
             val authenticationEvent = asAuthenticationEvent(event)
+            if (deleteUserEvent == null) {
+                return StateResolution(oldState)
+            }
             return when (oldState) {
-                is NotStarted, is Error-> {
+                is NotStarted, is Error -> {
                     when (deleteUserEvent) {
                         is DeleteUserEvent.EventType.DeleteUser -> {
                             val action = deleteUserActions.initDeleteUserAction(deleteUserEvent.accessToken)
