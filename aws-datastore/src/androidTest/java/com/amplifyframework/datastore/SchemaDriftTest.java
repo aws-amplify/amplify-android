@@ -15,13 +15,9 @@
 
 package com.amplifyframework.datastore;
 
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
-import static com.amplifyframework.datastore.DataStoreHubEventFilters.publicationOf;
-import static com.amplifyframework.datastore.DataStoreHubEventFilters.receiptOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import android.content.Context;
 import androidx.annotation.RawRes;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.aws.AWSApiPlugin;
@@ -49,9 +45,15 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import java.util.Date;
+
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
+
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static com.amplifyframework.datastore.DataStoreHubEventFilters.publicationOf;
+import static com.amplifyframework.datastore.DataStoreHubEventFilters.receiptOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public final class SchemaDriftTest {
     private static final int TIMEOUT_SECONDS = 60;
@@ -120,8 +122,8 @@ public final class SchemaDriftTest {
     }
 
     /**
-     * Perform DataStore.save
-     * Expected result: Model should be published to AppSync
+     * Perform DataStore.save.
+     * Expected result: Model should be published to AppSync.
      * @throws AmplifyException Not expected.
      */
     @Test
