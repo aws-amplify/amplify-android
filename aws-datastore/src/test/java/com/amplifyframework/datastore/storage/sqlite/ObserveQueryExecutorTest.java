@@ -112,7 +112,8 @@ public class ObserveQueryExecutorTest {
      * @throws DataStoreException DataStoreException
      * @throws AmplifyException AmplifyException
      */
-    @Ignore("Flaky test")
+    @Test
+    @Ignore("Always fails.")
     public void observeQueryReturnsRecordsBasedOnMaxRecords() throws InterruptedException, AmplifyException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(3);

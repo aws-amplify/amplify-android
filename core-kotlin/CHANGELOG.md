@@ -1,3 +1,22 @@
+## [Release 0.20.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.0)
+
+### Features
+- Add flushEvents HubEvent for analytics (#1792)
+
+### Miscellaneous
+- Update build.gradle
+
+[See all changes between 0.19.7 and 0.20.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.7...release-kotlin_v0.20.0)
+
+## [Release 0.19.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.7)
+
+### Miscellaneous
+- Fix for adding data back to the delete request if it contains data as that is allowed for the Delete api (#1735)
+- Fix/1485 : Fix for sending the session expired hub event when all credentials are expired (#1779)
+- Updating build.gradle to include the latest version of the aws sdk (#1783)
+
+[See all changes between 0.19.6 and 0.19.7](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.6...release-kotlin_v0.19.7)
+
 ## [Release 0.19.6](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.6)
 
 ### Bug Fixes
