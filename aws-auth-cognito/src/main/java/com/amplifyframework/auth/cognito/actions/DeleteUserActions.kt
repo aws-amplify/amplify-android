@@ -28,9 +28,9 @@ object DeleteUserActions : DeleteUserActions {
         Action<AuthEnvironment>("DeleteUser") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
-//                cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
-//                    DeleteUserRequest.invoke { this.accessToken = accessToken }
-//                )
+                cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
+                    DeleteUserRequest.invoke { this.accessToken = accessToken }
+                )
                 AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(true))
             } catch (e: Exception) {
                 logger?.warn("Failed to delete user.", e)
