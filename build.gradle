@@ -105,7 +105,7 @@ ext {
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion",
             polly: "com.amazonaws:aws-android-sdk-polly:$awsSdkVersion",
-            rekognition: "com.amazonaws:aws-android-sdk-rekognition:$awsSdkVersion",
+            rekognition: "aws.sdk.kotlin:rekognition:$awsKoltinSdkVersion",
             textract: "aws.sdk.kotlin:textract:$awsKoltinSdkVersion",
             translate: "aws.sdk.kotlin:translate:$awsKoltinSdkVersion",
             s3Kotlin: "aws.sdk.kotlin:s3:$awsKoltinSdkVersion",

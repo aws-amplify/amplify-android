@@ -19,10 +19,10 @@ import androidx.annotation.NonNull;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.polly.AmazonPollyClient;
-import com.amazonaws.services.rekognition.AmazonRekognitionClient;
 
 import java.util.Objects;
 
+import aws.sdk.kotlin.services.rekognition.RekognitionClient;
 import aws.sdk.kotlin.services.textract.TextractClient;
 import aws.sdk.kotlin.services.translate.TranslateClient;
 
@@ -34,14 +34,14 @@ import aws.sdk.kotlin.services.translate.TranslateClient;
 public final class AWSPredictionsEscapeHatch {
     private final TranslateClient translate;
     private final AmazonPollyClient polly;
-    private final AmazonRekognitionClient rekognition;
+    private final RekognitionClient rekognition;
     private final TextractClient textract;
     private final AmazonComprehendClient comprehend;
 
     AWSPredictionsEscapeHatch(
             @NonNull TranslateClient translate,
             @NonNull AmazonPollyClient polly,
-            @NonNull AmazonRekognitionClient rekognition,
+            @NonNull RekognitionClient rekognition,
             @NonNull TextractClient textract,
             @NonNull AmazonComprehendClient comprehend
     ) {
@@ -73,12 +73,12 @@ public final class AWSPredictionsEscapeHatch {
     }
 
     /**
-     * Return configured Amazon Rekognition client to access
+     * Return configured Rekognition client to access
      * low-level methods for image analysis.
-     * @return the configured Amazon Rekognition client
+     * @return the configured Rekognition client
      */
     @NonNull
-    public AmazonRekognitionClient getRekognitionClient() {
+    public RekognitionClient getRekognitionClient() {
         return rekognition;
     }
 
