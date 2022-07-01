@@ -21,6 +21,7 @@ import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.util.GsonObjectConverter;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -30,6 +31,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -63,7 +65,7 @@ public final class SerializedModelAdapter
         for (Map.Entry<String, Object> entry : src.getSerializedData().entrySet()) {
             if (entry.getValue() instanceof SerializedModel) {
                 SerializedModel serializedModel = (SerializedModel) entry.getValue();
-                serializedData.add(entry.getKey(), new JsonPrimitive(serializedModel.getPrimaryKeyString()));
+                serializedData.add(entry.getKey(), context.serialize(serializedModel.getSerializedData()));
             } else {
                 serializedData.add(entry.getKey(), context.serialize(entry.getValue()));
             }
@@ -87,9 +89,11 @@ public final class SerializedModelAdapter
             if (field != null && field.isModel()) {
                 SchemaRegistry schemaRegistry = SchemaRegistry.instance();
                 ModelSchema nestedModelSchema = schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
+                Gson gson = new Gson();
+                Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
                 serializedData.put(field.getName(), SerializedModel.builder()
                     .modelSchema(nestedModelSchema)
-                    .serializedData(Collections.singletonMap("id", item.getValue().getAsString()))
+                    .serializedData(gson.fromJson(item.getValue(), mapType))
                     .build());
             }
         }
