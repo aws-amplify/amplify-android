@@ -369,6 +369,27 @@ public class SqlCommandTest {
     }
 
     /**
+     * Validates that a query, with an order by clause is generated correctly.
+     * @throws DataStoreException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
+     */
+    @Test
+    public void queryWithPredicate() throws DataStoreException {
+        final ModelSchema personSchema = getPersonModelSchema();
+        final String testName = "name";
+        final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
+                personSchema,
+                Where.matches(Person.FIRST_NAME.eq(testName))
+        );
+        assertNotNull(sqlCommand);
+        assertEquals(
+                PERSON_BASE_QUERY + " WHERE `first_name` = ?;",
+                sqlCommand.sqlStatement()
+        );
+        assertEquals(1, sqlCommand.getBindings().size());
+        assert(sqlCommand.getBindings().contains(testName));
+    }
+
+    /**
      * Verify the SqlCommand generated to check if a model exists is as expected.
      * @throws DataStoreException From {@link SQLCommandFactory#existsFor(ModelSchema, QueryPredicate)}
      */

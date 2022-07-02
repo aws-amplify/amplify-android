@@ -234,6 +234,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             if (predicate instanceof QueryPredicateOperation) {
                 QueryPredicateOperation<?> predicateOperation = (QueryPredicateOperation<?>) predicate;
                 String predicateOperationField = predicateOperation.field();
+                sqlPredicateString = sqlPredicateString.replace(predicateOperationField,
+                        Wrap.inBackticks(predicateOperationField));
                 if (predicateOperationField.equals(PrimaryKey.fieldName()) && predicateOperation.modelName() == null
                         && predicateOperation.operator().type() == QueryOperator.Type.EQUAL) {
                     // The WHERE condition is Where.id("some-ID") but no model name is given.
