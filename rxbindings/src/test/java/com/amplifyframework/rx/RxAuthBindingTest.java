@@ -988,8 +988,23 @@ public final class RxAuthBindingTest {
      * it would.
      */
     @Test
-    public void testGetCurrentUser() {
-        //TODO: Implement this
+    public void testGetCurrentUser() throws InterruptedException {
+        AuthUser authUser = new AuthUser("testUserId", "testUsername");
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            int positionOfCompletionAction = 0;
+            Consumer<AuthUser> onResult = invocation.getArgument(positionOfCompletionAction);
+            onResult.accept(authUser);
+            return null;
+        }).when(delegate).getCurrentUser(anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<AuthUser> observer = auth.getCurrentUser().test();
+
+        // Assert: Completable completes successfully
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNoErrors()
+                .assertComplete();
     }
 
     /**
