@@ -41,6 +41,7 @@ import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
+import com.amplifyframework.core.Consumer
 
 /**
  * Defines Authentication behaviors available from Kotlin.
@@ -306,7 +307,7 @@ interface Auth {
      * @return the currently logged in user with basic info and methods for fetching/updating user attributes
      * @return Information about the current user
      */
-    fun getCurrentUser(): AuthUser?
+    suspend fun getCurrentUser(): AuthUser
 
     /**
      * Sign out with advanced options.

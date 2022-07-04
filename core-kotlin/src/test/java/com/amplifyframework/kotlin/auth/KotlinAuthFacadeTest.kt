@@ -679,7 +679,7 @@ class KotlinAuthFacadeTest {
         } answers {
             val indexOfResultConsumer = 2
             val onResult = it.invocation.args[indexOfResultConsumer]
-                as Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>
+                    as Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>
             onResult.accept(affirmed)
         }
         assertEquals(affirmed, auth.updateUserAttributes(genderAffirmation))
@@ -792,10 +792,16 @@ class KotlinAuthFacadeTest {
      * have any suspending functions, this is a straight pass through verification.
      */
     @Test
-    fun getCurrentUserSucceeds() {
-        val expectedAuthUser = AuthUser("userId", "username")
-        every { delegate.currentUser } returns expectedAuthUser
-        assertEquals(expectedAuthUser, auth.getCurrentUser())
+    fun getCurrentUserSucceeds(): Unit = runBlocking {
+        val authUser = AuthUser("testUserID", "testUsername")
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfResultConsumer = 0
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthUser>
+            onResult.accept(authUser)
+        }
+        auth.getCurrentUser()
     }
 
     /**
@@ -803,10 +809,16 @@ class KotlinAuthFacadeTest {
      * Kotlin facade should, too.  Essentially, the AuthUser returned is nullable.
      */
     @Test
-    fun getCurrentUserSucceedsWhenSignedOut() {
-        val expectedAuthUser = null
-        every { delegate.currentUser } returns expectedAuthUser
-        assertEquals(expectedAuthUser, auth.getCurrentUser())
+    fun getCurrentUserSucceedsWhenSignedOut(): Unit = runBlocking {
+        val authUser = AuthUser("", "")
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfResultConsumer = 0
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthUser>
+            onResult.accept(authUser)
+        }
+        auth.getCurrentUser()
     }
 
     /**
@@ -815,9 +827,15 @@ class KotlinAuthFacadeTest {
      * have any suspending functions, this is a straight pass through verification.
      */
     @Test(expected = AuthException::class)
-    fun getCurrentUserThrows() {
+    fun getCurrentUserThrows(): Unit = runBlocking {
         val expectedException = AuthException("uh", "oh")
-        every { delegate.currentUser } throws expectedException
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 1
+            val onResult = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onResult.accept(expectedException)
+        }
         auth.getCurrentUser()
     }
 

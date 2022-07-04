@@ -552,7 +552,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                             "Failed to fetch identity.",
                                             fetchIdentityState.exception,
                                             "Sign in or enable guest access. See the attached exception for more" +
-                                                " details."
+                                                    " details."
                                         )
                                     )
                                 }
@@ -754,29 +754,25 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         TODO("Not yet implemented")
     }
 
-    override fun getCurrentUser(): AuthUser? {
-        var authUser: AuthUser? = null
-        val semaphore = Semaphore(0)
+    override fun getCurrentUser(
+        onSuccess: Consumer<AuthUser>,
+        onError: Consumer<AuthException>
+    ) {
         authStateMachine.getCurrentState { authState ->
             when (val authorizationState = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    authUser = AuthUser(
-                        authorizationState.signedInData.userId,
-                        authorizationState.signedInData.username
+                    onSuccess.accept(
+                        AuthUser(
+                            authorizationState.signedInData.userId,
+                            authorizationState.signedInData.username
+                        )
                     )
                 }
                 else -> {
-                    // no-op
+                    onError.accept(AuthException.InvalidStateException())
                 }
             }
-            semaphore.release()
         }
-        try {
-            semaphore.acquire()
-        } catch (ex: InterruptedException) {
-            throw Exception("Interrupted while waiting for current user", ex)
-        }
-        return authUser
     }
 
     override fun signOut(onSuccess: Action, onError: Consumer<AuthException>) {

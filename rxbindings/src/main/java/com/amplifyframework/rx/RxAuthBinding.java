@@ -273,8 +273,8 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
-    public AuthUser getCurrentUser() {
-        return delegate.getCurrentUser();
+    public Single<AuthUser> getCurrentUser() {
+        return toSingle(delegate::getCurrentUser);
     }
 
     @Override

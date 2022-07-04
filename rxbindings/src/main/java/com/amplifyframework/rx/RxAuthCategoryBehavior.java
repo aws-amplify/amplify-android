@@ -398,7 +398,7 @@ public interface RxAuthCategoryBehavior {
      * Gets the currently logged in User.
      * @return the currently logged in user with basic info and methods for fetching/updating user attributes
      */
-    AuthUser getCurrentUser();
+    Single<AuthUser> getCurrentUser();
 
     /**
      * Sign out of the current device.

@@ -462,7 +462,10 @@ public interface AuthCategoryBehavior {
      * Gets the currently logged in User.
      * @return the currently logged in user with basic info and methods for fetching/updating user attributes
      */
-    AuthUser getCurrentUser();
+    void getCurrentUser(
+            @NonNull Consumer<AuthUser> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
 
     /**
      * Sign out of the current device.
