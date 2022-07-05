@@ -84,9 +84,6 @@ class StateTransitionTests : StateTransitionTestBase() {
                 ),
                 AuthorizationState.Resolver(
                     FetchAuthSessionState.Resolver(
-                        FetchAwsCredentialsState.Resolver(mockFetchAwsCredentialsActions),
-                        FetchIdentityState.Resolver(mockFetchIdentityActions),
-                        FetchUserPoolTokensState.Resolver(mockFetchUserPoolTokensActions),
                         mockFetchAuthSessionActions
                     ),
                     mockAuthorizationActions

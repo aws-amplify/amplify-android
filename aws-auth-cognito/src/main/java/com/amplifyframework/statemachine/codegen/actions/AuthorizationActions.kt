@@ -22,4 +22,5 @@ interface AuthorizationActions {
     fun resetAuthorizationAction(): Action
     fun configureAuthorizationAction(): Action
     fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential): Action
+    fun refreshAuthSessionAction(amplifyCredential: AmplifyCredential): Action
 }

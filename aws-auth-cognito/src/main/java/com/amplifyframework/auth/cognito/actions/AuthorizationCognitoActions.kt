@@ -15,12 +15,17 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
+import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
+import kotlin.time.Duration.Companion.seconds
 
 object AuthorizationCognitoActions : AuthorizationActions {
     override fun resetAuthorizationAction() = Action<AuthEnvironment>("resetAuthZ") { id, dispatcher ->
@@ -41,11 +46,42 @@ object AuthorizationCognitoActions : AuthorizationActions {
     override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential) =
         Action<AuthEnvironment>("InitFetchAuthSession") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = when (amplifyCredential) {
-                is AmplifyCredential.UserPool -> FetchAuthSessionEvent(
-                    FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential)
+            val evt = FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun refreshAuthSessionAction(amplifyCredential: AmplifyCredential) =
+        Action<AuthEnvironment>("RefreshUserPoolTokens") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = try {
+                val authParameters = when (amplifyCredential) {
+                    is AmplifyCredential.UserPool -> amplifyCredential.tokens.refreshToken?.let {
+                        mapOf("REFRESH_TOKEN" to it)
+                    }
+                    is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens.refreshToken?.let {
+                        mapOf("REFRESH_TOKEN" to it)
+                    }
+                    else -> null
+                }
+                val refreshTokenResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
+                    authFlow = AuthFlowType.RefreshToken
+                    clientId = configuration.userPool?.appClient
+                    this.authParameters = authParameters
+                }
+
+                val expiresIn = refreshTokenResponse?.authenticationResult?.expiresIn?.toLong() ?: 0
+                val cognitoUserPoolTokens = CognitoUserPoolTokens(
+                    idToken = refreshTokenResponse?.authenticationResult?.idToken,
+                    accessToken = refreshTokenResponse?.authenticationResult?.accessToken,
+                    refreshToken = refreshTokenResponse?.authenticationResult?.refreshToken,
+                    expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
                 )
-                else -> FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
+
+                val updatedCredentials = AmplifyCredential.UserPool(cognitoUserPoolTokens)
+                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(updatedCredentials))
+            } catch (e: Exception) {
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
