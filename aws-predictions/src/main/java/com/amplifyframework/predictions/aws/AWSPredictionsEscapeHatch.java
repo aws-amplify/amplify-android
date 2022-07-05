@@ -17,11 +17,10 @@ package com.amplifyframework.predictions.aws;
 
 import androidx.annotation.NonNull;
 
-import com.amazonaws.services.polly.AmazonPollyClient;
-
 import java.util.Objects;
 
 import aws.sdk.kotlin.services.comprehend.ComprehendClient;
+import aws.sdk.kotlin.services.polly.PollyClient;
 import aws.sdk.kotlin.services.rekognition.RekognitionClient;
 import aws.sdk.kotlin.services.textract.TextractClient;
 import aws.sdk.kotlin.services.translate.TranslateClient;
@@ -33,14 +32,14 @@ import aws.sdk.kotlin.services.translate.TranslateClient;
  */
 public final class AWSPredictionsEscapeHatch {
     private final TranslateClient translate;
-    private final AmazonPollyClient polly;
+    private final PollyClient polly;
     private final RekognitionClient rekognition;
     private final TextractClient textract;
     private final ComprehendClient comprehend;
 
     AWSPredictionsEscapeHatch(
             @NonNull TranslateClient translate,
-            @NonNull AmazonPollyClient polly,
+            @NonNull PollyClient polly,
             @NonNull RekognitionClient rekognition,
             @NonNull TextractClient textract,
             @NonNull ComprehendClient comprehend
@@ -65,10 +64,10 @@ public final class AWSPredictionsEscapeHatch {
     /**
      * Return configured Amazon Polly client to access
      * low-level methods for speech synthesis.
-     * @return the configured Amazon Polly client
+     * @return the configured Polly client
      */
     @NonNull
-    public AmazonPollyClient getPollyClient() {
+    public PollyClient getPollyClient() {
         return polly;
     }
 

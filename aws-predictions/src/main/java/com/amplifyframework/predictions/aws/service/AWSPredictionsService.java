@@ -30,12 +30,11 @@ import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
-import com.amazonaws.services.polly.AmazonPollyClient;
-
 import java.nio.ByteBuffer;
 
 import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
 import aws.sdk.kotlin.services.comprehend.ComprehendClient;
+import aws.sdk.kotlin.services.polly.PollyClient;
 import aws.sdk.kotlin.services.rekognition.RekognitionClient;
 import aws.sdk.kotlin.services.textract.TextractClient;
 import aws.sdk.kotlin.services.translate.TranslateClient;
@@ -237,12 +236,12 @@ public final class AWSPredictionsService {
     }
 
     /**
-     * Return configured Amazon Polly client for
+     * Return configured Polly client for
      * direct access to AWS endpoint.
-     * @return the configured Amazon Polly client
+     * @return the configured Polly client
      */
     @NonNull
-    public AmazonPollyClient getPollyClient() {
+    public PollyClient getPollyClient() {
         return pollyService.getClient();
     }
 

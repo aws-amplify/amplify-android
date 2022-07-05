@@ -104,7 +104,7 @@ ext {
             location: "com.amazonaws:aws-android-sdk-location:$awsSdkVersion",
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion",
-            polly: "com.amazonaws:aws-android-sdk-polly:$awsSdkVersion",
+            polly: "aws.sdk.kotlin:polly:$awsKoltinSdkVersion",
             rekognition: "aws.sdk.kotlin:rekognition:$awsKoltinSdkVersion",
             textract: "aws.sdk.kotlin:textract:$awsKoltinSdkVersion",
             translate: "aws.sdk.kotlin:translate:$awsKoltinSdkVersion",
