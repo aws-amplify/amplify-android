@@ -30,12 +30,12 @@ import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
-import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.polly.AmazonPollyClient;
 
 import java.nio.ByteBuffer;
 
 import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
+import aws.sdk.kotlin.services.comprehend.ComprehendClient;
 import aws.sdk.kotlin.services.rekognition.RekognitionClient;
 import aws.sdk.kotlin.services.textract.TextractClient;
 import aws.sdk.kotlin.services.translate.TranslateClient;
@@ -272,7 +272,7 @@ public final class AWSPredictionsService {
      * @return the configured Amazon Comprehend client
      */
     @NonNull
-    public AmazonComprehendClient getComprehendClient() {
+    public ComprehendClient getComprehendClient() {
         return comprehendService.getClient();
     }
 }

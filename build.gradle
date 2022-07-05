@@ -97,7 +97,7 @@ ext {
         aws: [
             core: "com.amazonaws:aws-android-sdk-core:$awsSdkVersion",
             s3: "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion",
-            comprehend: "com.amazonaws:aws-android-sdk-comprehend:$awsSdkVersion",
+            comprehend: "aws.sdk.kotlin:comprehend:$awsKoltinSdkVersion",
             authcore: "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion",
             cognitoidentity: "aws.sdk.kotlin:cognitoidentity:$awsKoltinSdkVersion",
             cognitoidentityprovider: "aws.sdk.kotlin:cognitoidentityprovider:$awsKoltinSdkVersion",

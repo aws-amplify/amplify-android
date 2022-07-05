@@ -17,11 +17,11 @@ package com.amplifyframework.predictions.aws;
 
 import androidx.annotation.NonNull;
 
-import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.polly.AmazonPollyClient;
 
 import java.util.Objects;
 
+import aws.sdk.kotlin.services.comprehend.ComprehendClient;
 import aws.sdk.kotlin.services.rekognition.RekognitionClient;
 import aws.sdk.kotlin.services.textract.TextractClient;
 import aws.sdk.kotlin.services.translate.TranslateClient;
@@ -36,14 +36,14 @@ public final class AWSPredictionsEscapeHatch {
     private final AmazonPollyClient polly;
     private final RekognitionClient rekognition;
     private final TextractClient textract;
-    private final AmazonComprehendClient comprehend;
+    private final ComprehendClient comprehend;
 
     AWSPredictionsEscapeHatch(
             @NonNull TranslateClient translate,
             @NonNull AmazonPollyClient polly,
             @NonNull RekognitionClient rekognition,
             @NonNull TextractClient textract,
-            @NonNull AmazonComprehendClient comprehend
+            @NonNull ComprehendClient comprehend
     ) {
         this.translate = Objects.requireNonNull(translate);
         this.polly = Objects.requireNonNull(polly);
@@ -93,12 +93,12 @@ public final class AWSPredictionsEscapeHatch {
     }
 
     /**
-     * Return configured Amazon Comprehend client to access
+     * Return configured Comprehend client to access
      * low-level methods for text interpretation.
-     * @return the configured Amazon Comprehend client
+     * @return the configured Comprehend client
      */
     @NonNull
-    public AmazonComprehendClient getComprehendClient() {
+    public ComprehendClient getComprehendClient() {
         return comprehend;
     }
 }
