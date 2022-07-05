@@ -38,6 +38,7 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
+import com.amplifyframework.util.UserAgent;
 import com.amplifyframework.util.Wrap;
 
 import com.google.gson.Gson;
@@ -234,8 +235,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             if (predicate instanceof QueryPredicateOperation) {
                 QueryPredicateOperation<?> predicateOperation = (QueryPredicateOperation<?>) predicate;
                 String predicateOperationField = predicateOperation.field();
-                sqlPredicateString = sqlPredicateString.replace(predicateOperationField,
-                        Wrap.inBackticks(predicateOperationField));
+                if (UserAgent.isFlutter() && !Empty.check(predicateOperationField)){
+                    sqlPredicateString = sqlPredicateString.replace(predicateOperationField,
+                       Wrap.inBackticks(predicateOperationField));
+                }
                 if (predicateOperationField.equals(PrimaryKey.fieldName()) && predicateOperation.modelName() == null
                         && predicateOperation.operator().type() == QueryOperator.Type.EQUAL) {
                     // The WHERE condition is Where.id("some-ID") but no model name is given.
