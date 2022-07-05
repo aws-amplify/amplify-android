@@ -468,12 +468,11 @@ final class AppSyncRequestFactory {
                         result.put(targetName, serializedModel.getSerializedData()
                                 .get(primaryKeyFieldsIterator.next()));
                     }
+                } else {
+                    result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
                 }
-            } else {
-                result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
             }
         }
-
     }
 
     private static Object extractAssociateId(ModelField modelField, Model instance, ModelSchema schema)
