@@ -465,6 +465,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             { authState ->
                 when (val authZState = authState.authZState) {
                     is AuthorizationState.SessionEstablished -> {
+                        //TODO: fix immediate session success
                         token?.let(authStateMachine::cancel)
                         onSuccess.accept(authZState.amplifyCredential.getCognitoSession())
                     }
