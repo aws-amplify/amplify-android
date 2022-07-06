@@ -665,7 +665,7 @@ class StateTransitionTests : StateTransitionTestBase() {
 
                 val deleteUserState = it.authZState?.deleteUserState
 
-                val userDeletedSuccess = deleteUserState.takeIf {
+                val userDeletedSuccess = deleteUserState?.takeIf {
                     it is DeleteUserState.UserDeleted
                 }
 
