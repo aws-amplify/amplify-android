@@ -117,6 +117,14 @@ public final class UserAgent {
     }
 
     /**
+     * Returns true if running on Flutter.
+     * @return Returns true if running on Flutter.
+     */
+    public static boolean isFlutter() {
+        return string().contains(Platform.FLUTTER.libraryName);
+    }
+
+    /**
      * Enum to represent various platforms that use Amplify library for tracking
      * usage metrics.
      *
