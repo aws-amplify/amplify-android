@@ -81,7 +81,6 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.util.UserAgent
-import java.util.concurrent.Semaphore
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -761,6 +760,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         authStateMachine.getCurrentState { authState ->
             when (val authorizationState = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
+                    if (authorizationState.signedInData.userId.isEmpty() && authorizationState.signedInData.username.isEmpty()) {
+                        onError.accept(AuthException.InvalidStateException())
+                    }
                     onSuccess.accept(
                         AuthUser(
                             authorizationState.signedInData.userId,
@@ -769,7 +771,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                     )
                 }
                 else -> {
-                    onError.accept(AuthException.InvalidStateException())
+                    onError.accept(AuthException.SignedOutException())
                 }
             }
         }

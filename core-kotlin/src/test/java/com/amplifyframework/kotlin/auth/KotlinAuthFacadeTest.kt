@@ -805,18 +805,18 @@ class KotlinAuthFacadeTest {
     }
 
     /**
-     * When the getCurrentUser() delegate return null, the proxy API in the
-     * Kotlin facade should, too.  Essentially, the AuthUser returned is nullable.
+     * When the getCurrentUser() has null values an Auth Exception should be sent in the onError
+     * which should be captured in the Kotlin facade too
      */
-    @Test
-    fun getCurrentUserSucceedsWhenSignedOut(): Unit = runBlocking {
-        val authUser = AuthUser("", "")
+    @Test(expected = AuthException.SignedOutException::class)
+    fun getCurrentUserThrowsWhenSignedOut(): Unit = runBlocking {
+        val expectedException = AuthException.SignedOutException()
         every {
             delegate.getCurrentUser(any(), any())
         } answers {
-            val indexOfResultConsumer = 0
-            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthUser>
-            onResult.accept(authUser)
+            val indexOfResultConsumer = 1
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthException>
+            onResult.accept(expectedException)
         }
         auth.getCurrentUser()
     }
