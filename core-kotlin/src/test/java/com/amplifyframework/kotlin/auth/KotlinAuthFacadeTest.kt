@@ -679,7 +679,7 @@ class KotlinAuthFacadeTest {
         } answers {
             val indexOfResultConsumer = 2
             val onResult = it.invocation.args[indexOfResultConsumer]
-                    as Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>
+                as Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>
             onResult.accept(affirmed)
         }
         assertEquals(affirmed, auth.updateUserAttributes(genderAffirmation))

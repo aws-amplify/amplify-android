@@ -63,8 +63,9 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
+import com.amplifyframework.statemachine.codegen.data.UserSignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -364,9 +365,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                     }
                     is AuthenticationState.SignedIn -> {
                         token?.let(authStateMachine::cancel)
-                        val cognitoUserPoolTokens = authNState.signedInData.cognitoUserPoolTokens
-                        // Store tokens to credential store
-                        waitForSignInCompletion(cognitoUserPoolTokens, onSuccess, onError)
+                        // Store signed in data to credential store
+                        waitForSignInCompletion(authNState.signedInData, onSuccess, onError)
                     }
                     else -> {
                         // no-op
@@ -383,7 +383,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     private fun waitForSignInCompletion(
-        tokens: CognitoUserPoolTokens,
+        signedInData: SignedInData,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
@@ -409,7 +409,14 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             {
                 credentialStoreStateMachine.send(
                     CredentialStoreEvent(
-                        CredentialStoreEvent.EventType.StoreCredentials(AmplifyCredential(tokens, null, null))
+                        CredentialStoreEvent.EventType.StoreCredentials(
+                            AmplifyCredential(
+                                signedInData.cognitoUserPoolTokens,
+                                null,
+                                null,
+                                UserSignedInData(userid = signedInData.userId, username = signedInData.username)
+                            )
+                        )
                     )
                 )
             }
@@ -551,7 +558,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                             "Failed to fetch identity.",
                                             fetchIdentityState.exception,
                                             "Sign in or enable guest access. See the attached exception for more" +
-                                                    " details."
+                                                " details."
                                         )
                                     )
                                 }
@@ -758,16 +765,42 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            when (val authorizationState = authState.authNState) {
+            when (authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    if (authorizationState.signedInData.userId.isEmpty() && authorizationState.signedInData.username.isEmpty()) {
-                        onError.accept(AuthException.InvalidStateException())
-                    }
-                    onSuccess.accept(
-                        AuthUser(
-                            authorizationState.signedInData.userId,
-                            authorizationState.signedInData.username
-                        )
+                    var token: StateChangeListenerToken? = null
+                    token = credentialStoreStateMachine.listen(
+                        {
+                            when (it) {
+                                is CredentialStoreState.Success -> {
+                                    val userSignedInData = it.storedCredentials?.userSignedInData
+                                    if (userSignedInData == null ||
+                                        (userSignedInData.userid.isEmpty() && userSignedInData.username.isEmpty())
+                                    ) {
+                                        onError.accept(AuthException.InvalidStateException())
+                                    } else {
+                                        onSuccess.accept(
+                                            AuthUser(
+                                                userSignedInData.userid,
+                                                userSignedInData.username
+                                            )
+                                        )
+                                    }
+                                    token?.let(credentialStoreStateMachine::cancel)
+                                }
+                                is CredentialStoreState.Error -> {
+                                    token?.let(credentialStoreStateMachine::cancel)
+                                    onError.accept(AuthException.InvalidStateException())
+                                }
+                                else -> {
+                                    // no-op
+                                }
+                            }
+                        },
+                        {
+                            credentialStoreStateMachine.send(
+                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                            )
+                        }
                     )
                 }
                 else -> {

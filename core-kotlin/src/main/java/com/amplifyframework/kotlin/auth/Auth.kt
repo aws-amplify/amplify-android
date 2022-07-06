@@ -41,7 +41,6 @@ import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
-import com.amplifyframework.core.Consumer
 
 /**
  * Defines Authentication behaviors available from Kotlin.
