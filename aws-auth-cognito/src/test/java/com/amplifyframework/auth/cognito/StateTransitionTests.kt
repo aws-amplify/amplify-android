@@ -669,7 +669,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     it is DeleteUserState.UserDeleted
                 }
 
-                userDeletedSuccess.run {
+                userDeletedSuccess?.run {
                     testLatch.countDown()
                 }
             },
