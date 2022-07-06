@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.Intent
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthChannelEventName
@@ -84,6 +85,7 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.util.UserAgent
+import kotlinx.coroutines.runBlocking
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -647,7 +649,61 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<MutableList<AuthDevice>>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        var token: StateChangeListenerToken? = null
+        token = credentialStoreStateMachine.listen(
+            {
+                when (it) {
+                    is CredentialStoreState.Success -> {
+                        token?.let(credentialStoreStateMachine::cancel)
+                        val accessToken = it.storedCredentials?.cognitoUserPoolTokens?.accessToken
+                        if (!accessToken.isNullOrEmpty()) {
+                            runBlocking {
+                                _fetchDevices(
+                                    accessToken,
+                                    onSuccess,
+                                    onError
+                                )
+                            }
+                        } else {
+                            onError.accept(AuthException.InvalidStateException())
+                        }
+                    }
+                    is CredentialStoreState.Error -> {
+                        token?.let(credentialStoreStateMachine::cancel)
+                        onError.accept(AuthException.InvalidStateException())
+                    }
+                    else -> {
+                        // no-op
+                    }
+                }
+            },
+            {
+                credentialStoreStateMachine.send(
+                    CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                )
+            }
+        )
+    }
+
+    private suspend fun _fetchDevices(
+        token: String, onSuccess: Consumer<MutableList<AuthDevice>>,
+        onError: Consumer<AuthException>
+    ) {
+        val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
+            CognitoIdentityProviderClient { this.region = it.region }
+        }
+        try {
+            val response = cognitoIdentityProviderClient?.listDevices(ListDevicesRequest.invoke { accessToken = token })
+            val _devices = response?.devices
+            val authdeviceList = mutableListOf<AuthDevice>()
+            _devices?.forEach {
+                authdeviceList.add(AuthDevice.fromId(it.deviceKey ?: ""))
+            }
+            onSuccess.accept(authdeviceList)
+        }
+        catch (e: Exception) {
+            onError.accept(AuthException(e.localizedMessage, e, AuthException.TODO_RECOVERY_SUGGESTION))
+        }
     }
 
     override fun resetPassword(
