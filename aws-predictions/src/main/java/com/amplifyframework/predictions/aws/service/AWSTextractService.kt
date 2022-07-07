@@ -24,15 +24,19 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration
 import com.amplifyframework.predictions.aws.adapter.TextractResultTransformers
-import com.amplifyframework.predictions.models.*
+import com.amplifyframework.predictions.models.BoundedKeyValue
+import com.amplifyframework.predictions.models.IdentifiedText
+import com.amplifyframework.predictions.models.Selection
+import com.amplifyframework.predictions.models.Table
+import com.amplifyframework.predictions.models.TextFormatType
 import com.amplifyframework.predictions.result.IdentifyDocumentTextResult
 import com.amplifyframework.predictions.result.IdentifyResult
-import kotlinx.coroutines.runBlocking
 import java.lang.StringBuilder
 import java.nio.ByteBuffer
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.concurrent.Executors
+import kotlinx.coroutines.runBlocking
 
 /**
  * Predictions service for performing text translation.
@@ -75,7 +79,8 @@ internal class AWSTextractService(
             { throwable ->
                 PredictionsException(
                     "AWS Textract encountered an error while analyzing document.",
-                    throwable, "See attached exception for more details."
+                    throwable,
+                    "See attached exception for more details."
                 )
             },
             onSuccess,
@@ -103,14 +108,24 @@ internal class AWSTextractService(
                 when (blockType) {
                     BlockType.Line -> {
                         block.text?.let { blockText -> rawLineText.add(blockText) }
-                        TextractResultTransformers.fetchIdentifiedText(block)?.let { identifiedText ->  lines.add(identifiedText) }
+                        TextractResultTransformers.fetchIdentifiedText(block)?.let { identifiedText ->
+                            lines.add(
+                                identifiedText
+                            )
+                        }
                     }
                     BlockType.Word -> {
                         fullTextBuilder.append(block.text).append(" ")
-                        TextractResultTransformers.fetchIdentifiedText(block)?.let { identifiedText ->  words.add(identifiedText) }
+                        TextractResultTransformers.fetchIdentifiedText(block)?.let { identifiedText ->
+                            words.add(
+                                identifiedText
+                            )
+                        }
                     }
                     BlockType.SelectionElement -> {
-                        TextractResultTransformers.fetchSelection(block)?.let { selection ->  selections.add(selection) }
+                        TextractResultTransformers.fetchSelection(block)?.let { selection ->
+                            selections.add(selection)
+                        }
                     }
                     BlockType.Table -> {
                         tableBlocks.add(block)
@@ -126,7 +141,9 @@ internal class AWSTextractService(
             TextractResultTransformers.fetchTable(tableBlock, blockMap)?.let { table -> tables.add(table) }
         }
         for (keyValueBlock in keyValueBlocks) {
-            TextractResultTransformers.fetchKeyValue(keyValueBlock, blockMap)?.let { keyValue -> keyValues.add(keyValue) }
+            TextractResultTransformers.fetchKeyValue(keyValueBlock, blockMap)?.let { keyValue ->
+                keyValues.add(keyValue)
+            }
         }
         return IdentifyDocumentTextResult.builder()
             .fullText(fullTextBuilder.toString().trim { it <= ' ' })

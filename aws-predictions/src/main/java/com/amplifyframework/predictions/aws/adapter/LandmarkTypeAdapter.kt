@@ -31,21 +31,23 @@ object LandmarkTypeAdapter {
     fun fromRekognition(landmark: String): com.amplifyframework.predictions.models.LandmarkType {
         return when (LandmarkType.fromValue(landmark)) {
             LandmarkType.EyeLeft, LandmarkType.LeftEyeLeft, LandmarkType.LeftEyeRight, LandmarkType.LeftEyeUp,
-                LandmarkType.LeftEyeDown -> com.amplifyframework.predictions.models.LandmarkType.LEFT_EYE
+            LandmarkType.LeftEyeDown -> com.amplifyframework.predictions.models.LandmarkType.LEFT_EYE
             LandmarkType.EyeRight, LandmarkType.RightEyeLeft, LandmarkType.RightEyeRight, LandmarkType.RightEyeUp,
-                LandmarkType.RightEyeDown -> com.amplifyframework.predictions.models.LandmarkType.RIGHT_EYE
+            LandmarkType.RightEyeDown -> com.amplifyframework.predictions.models.LandmarkType.RIGHT_EYE
             LandmarkType.LeftEyeBrowLeft, LandmarkType.LeftEyeBrowRight, LandmarkType.LeftEyeBrowUp ->
                 com.amplifyframework.predictions.models.LandmarkType.LEFT_EYEBROW
             LandmarkType.RightEyeBrowLeft, LandmarkType.RightEyeBrowRight, LandmarkType.RightEyeBrowUp ->
                 com.amplifyframework.predictions.models.LandmarkType.RIGHT_EYEBROW
             LandmarkType.Nose -> com.amplifyframework.predictions.models.LandmarkType.NOSE
-            LandmarkType.NoseLeft, LandmarkType.NoseRight -> com.amplifyframework.predictions.models.LandmarkType.NOSE_CREST
+            LandmarkType.NoseLeft, LandmarkType.NoseRight ->
+                com.amplifyframework.predictions.models.LandmarkType.NOSE_CREST
             LandmarkType.MouthLeft, LandmarkType.MouthRight, LandmarkType.MouthUp, LandmarkType.MouthDown ->
                 com.amplifyframework.predictions.models.LandmarkType.OUTER_LIPS
             LandmarkType.LeftPupil -> com.amplifyframework.predictions.models.LandmarkType.LEFT_PUPIL
             LandmarkType.RightPupil -> com.amplifyframework.predictions.models.LandmarkType.RIGHT_PUPIL
-            LandmarkType.UpperJawlineLeft, LandmarkType.MidJawlineLeft, LandmarkType.ChinBottom, LandmarkType.MidJawlineRight,
-                LandmarkType.UpperJawlineRight -> com.amplifyframework.predictions.models.LandmarkType.FACE_CONTOUR
+            LandmarkType.UpperJawlineLeft, LandmarkType.MidJawlineLeft, LandmarkType.ChinBottom,
+            LandmarkType.MidJawlineRight, LandmarkType.UpperJawlineRight ->
+                com.amplifyframework.predictions.models.LandmarkType.FACE_CONTOUR
             else -> com.amplifyframework.predictions.models.LandmarkType.UNKNOWN
         }
     }

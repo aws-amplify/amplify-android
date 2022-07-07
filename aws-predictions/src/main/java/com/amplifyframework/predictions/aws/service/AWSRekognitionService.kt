@@ -14,34 +14,40 @@
  */
 package com.amplifyframework.predictions.aws.service
 
-import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration
+import android.graphics.RectF
+import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import aws.sdk.kotlin.services.rekognition.RekognitionClient
-import com.amplifyframework.predictions.result.IdentifyResult
+import aws.sdk.kotlin.services.rekognition.model.Attribute
+import aws.sdk.kotlin.services.rekognition.model.Image
+import aws.sdk.kotlin.services.rekognition.model.TextTypes
+import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
-import com.amplifyframework.predictions.result.IdentifyLabelsResult
+import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration
+import com.amplifyframework.predictions.aws.adapter.EmotionTypeAdapter
+import com.amplifyframework.predictions.aws.adapter.GenderBinaryTypeAdapter
+import com.amplifyframework.predictions.aws.adapter.RekognitionResultTransformers
+import com.amplifyframework.predictions.models.Celebrity
+import com.amplifyframework.predictions.models.CelebrityDetails
+import com.amplifyframework.predictions.models.Emotion
+import com.amplifyframework.predictions.models.EntityDetails
+import com.amplifyframework.predictions.models.EntityMatch
+import com.amplifyframework.predictions.models.Gender
+import com.amplifyframework.predictions.models.IdentifiedText
+import com.amplifyframework.predictions.models.Label
+import com.amplifyframework.predictions.models.LabelType
 import com.amplifyframework.predictions.result.IdentifyCelebritiesResult
 import com.amplifyframework.predictions.result.IdentifyEntitiesResult
 import com.amplifyframework.predictions.result.IdentifyEntityMatchesResult
-import android.graphics.RectF
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
-import aws.sdk.kotlin.services.rekognition.model.*
-import com.amplifyframework.core.Consumer
-import com.amplifyframework.predictions.aws.adapter.RekognitionResultTransformers
-import com.amplifyframework.predictions.aws.adapter.GenderBinaryTypeAdapter
-import com.amplifyframework.predictions.aws.adapter.EmotionTypeAdapter
-import com.amplifyframework.predictions.models.*
-import com.amplifyframework.predictions.models.Celebrity
-import com.amplifyframework.predictions.models.Emotion
-import com.amplifyframework.predictions.models.Gender
-import com.amplifyframework.predictions.models.Label
+import com.amplifyframework.predictions.result.IdentifyLabelsResult
+import com.amplifyframework.predictions.result.IdentifyResult
 import com.amplifyframework.predictions.result.IdentifyTextResult
-import kotlinx.coroutines.runBlocking
 import java.lang.StringBuilder
 import java.net.MalformedURLException
 import java.net.URL
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.Collections
 import java.util.concurrent.Executors
+import kotlinx.coroutines.runBlocking
 
 /**
  * Predictions service for performing image analysis.
@@ -50,7 +56,7 @@ internal class AWSRekognitionService(
     private val pluginConfiguration: AWSPredictionsPluginConfiguration,
     private val authCredentialsProvider: CredentialsProvider
 ) {
-    
+
     val client: RekognitionClient = RekognitionClient {
         this.region = pluginConfiguration.defaultRegion
         this.credentialsProvider = authCredentialsProvider
@@ -85,7 +91,8 @@ internal class AWSRekognitionService(
             { throwable ->
                 PredictionsException(
                     "Amazon Rekognition encountered an error while detecting labels.",
-                    throwable, "See attached exception for more details."
+                    throwable,
+                    "See attached exception for more details."
                 )
             },
             onSuccess,
@@ -104,13 +111,13 @@ internal class AWSRekognitionService(
                 PredictionsException(
                     "Celebrity detection is disabled.",
                     "Please enable celebrity detection via Amplify CLI. This feature should be accessible by " +
-                            "running `amplify update predictions` in the console and updating entities " +
-                            "detection resource with advanced configuration setting."
+                        "running `amplify update predictions` in the console and updating entities " +
+                        "detection resource with advanced configuration setting."
                 )
             )
             return
         }
-        
+
         execute(
             {
                 val celebrities = detectCelebrities(imageData)
@@ -119,7 +126,8 @@ internal class AWSRekognitionService(
             { throwable ->
                 PredictionsException(
                     "Amazon Rekognition encountered an error while recognizing celebrities.",
-                    throwable, "See attached exception for more details."
+                    throwable,
+                    "See attached exception for more details."
                 )
             },
             onSuccess,
@@ -147,8 +155,9 @@ internal class AWSRekognitionService(
             },
             { throwable ->
                 PredictionsException(
-                    "Amazon Rekognition encountered an error while either detecting faces or searching for known faces.",
-                    throwable, "See attached exception for more details."
+                    "Amazon Rekognition encountered an error while either detecting or searching for faces.",
+                    throwable,
+                    "See attached exception for more details."
                 )
             },
             onSuccess,
@@ -168,7 +177,8 @@ internal class AWSRekognitionService(
             { throwable ->
                 PredictionsException(
                     "Amazon Rekognition encountered an error while detecting text.",
-                    throwable, "See attached exception for more details."
+                    throwable,
+                    "See attached exception for more details."
                 )
             },
             onSuccess,
@@ -188,7 +198,8 @@ internal class AWSRekognitionService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "Amazon Rekognition encountered an error while detecting labels.",
-                exception, "See attached exception for more details."
+                exception,
+                "See attached exception for more details."
             )
         }
         val labels: MutableList<Label> = ArrayList()
@@ -227,7 +238,8 @@ internal class AWSRekognitionService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "Amazon Rekognition encountered an error while detecting moderation labels.",
-                exception, "See attached exception for more details."
+                exception,
+                "See attached exception for more details."
             )
         }
         val labels: MutableList<Label> = ArrayList()
@@ -245,7 +257,7 @@ internal class AWSRekognitionService(
         }
         return labels
     }
-    
+
     private suspend fun detectCelebrities(imageData: ByteBuffer): List<CelebrityDetails> {
         val result = client.recognizeCelebrities {
             this.image = Image {
@@ -306,7 +318,8 @@ internal class AWSRekognitionService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "Amazon Rekognition encountered an error while detecting faces.",
-                exception, "See attached exception for more details."
+                exception,
+                "See attached exception for more details."
             )
         }
         val entities: MutableList<EntityDetails> = ArrayList()
@@ -361,7 +374,7 @@ internal class AWSRekognitionService(
         maxEntities: Int,
         collectionId: String
     ): List<EntityMatch> {
-        
+
         val result = try {
             client.searchFacesByImage {
                 this.image = Image {
@@ -373,7 +386,8 @@ internal class AWSRekognitionService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "Amazon Rekognition encountered an error while searching for known faces.",
-                exception, "See attached exception for more details."
+                exception,
+                "See attached exception for more details."
             )
         }
         val matches: MutableList<EntityMatch> = ArrayList()
@@ -392,7 +406,7 @@ internal class AWSRekognitionService(
         }
         return matches
     }
-    
+
     private suspend fun detectPlainText(imageData: ByteBuffer): IdentifyTextResult {
         val result = client.detectText {
             this.image = Image {

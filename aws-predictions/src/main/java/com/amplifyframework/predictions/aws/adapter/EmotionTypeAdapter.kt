@@ -14,8 +14,8 @@
  */
 package com.amplifyframework.predictions.aws.adapter
 
-import com.amplifyframework.predictions.models.EmotionType
 import aws.sdk.kotlin.services.rekognition.model.EmotionName
+import com.amplifyframework.predictions.models.EmotionType
 
 /**
  * Utility to convert AWS Rekognition's emotion type

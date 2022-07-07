@@ -19,9 +19,9 @@ import aws.sdk.kotlin.runtime.auth.credentials.Credentials
 import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.Amplify
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * Wrapper to provide credentials from Auth synchronously and asynchronously
@@ -39,7 +39,7 @@ internal class CognitoCredentialsProvider : CredentialsProvider {
                     } ?: continuation.resumeWithException(
                         Exception(
                             "Failed to get credentials. " +
-                                    "Check if you are signed in and configured identity pools correctly."
+                                "Check if you are signed in and configured identity pools correctly."
                         )
                     )
                 },

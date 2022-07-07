@@ -15,15 +15,15 @@
 package com.amplifyframework.predictions.aws.service
 
 import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
-import aws.sdk.kotlin.services.translate.TranslateClient.Companion.invoke
-import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration
 import aws.sdk.kotlin.services.translate.TranslateClient
+import aws.sdk.kotlin.services.translate.TranslateClient.Companion.invoke
+import com.amplifyframework.core.Consumer
+import com.amplifyframework.predictions.PredictionsException
+import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration
 import com.amplifyframework.predictions.models.LanguageType
 import com.amplifyframework.predictions.result.TranslateTextResult
-import com.amplifyframework.predictions.PredictionsException
-import com.amplifyframework.core.Consumer
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Executors
+import kotlinx.coroutines.runBlocking
 
 /**
  * Predictions service for performing text translation.
@@ -38,7 +38,7 @@ internal class AWSTranslateService(
     }
 
     private val executor = Executors.newCachedThreadPool()
-    
+
     fun translate(
         textToTranslate: String,
         sourceLanguage: LanguageType,
@@ -70,14 +70,15 @@ internal class AWSTranslateService(
             { throwable ->
                 PredictionsException(
                     "AWS Translate encountered an error while translating text.",
-                    throwable, "See attached exception for more details."
+                    throwable,
+                    "See attached exception for more details."
                 )
             },
             onSuccess,
             onError
         )
     }
-    
+
     private fun <T : Any> execute(
         runnableTask: suspend () -> T,
         errorTransformer: (Throwable) -> PredictionsException,
@@ -86,7 +87,7 @@ internal class AWSTranslateService(
     ) {
         executor.execute {
             try {
-                runBlocking { 
+                runBlocking {
                     val result = runnableTask()
                     onResult.accept(result)
                 }

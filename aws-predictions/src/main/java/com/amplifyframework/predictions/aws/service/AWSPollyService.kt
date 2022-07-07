@@ -16,16 +16,20 @@ package com.amplifyframework.predictions.aws.service
 
 import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import aws.sdk.kotlin.services.polly.PollyClient
-import aws.sdk.kotlin.services.polly.model.*
+import aws.sdk.kotlin.services.polly.model.LanguageCode
+import aws.sdk.kotlin.services.polly.model.OutputFormat
+import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
+import aws.sdk.kotlin.services.polly.model.TextType
+import aws.sdk.kotlin.services.polly.model.VoiceId
 import aws.smithy.kotlin.runtime.content.toByteArray
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration
 import com.amplifyframework.predictions.aws.models.AWSVoiceType
 import com.amplifyframework.predictions.result.TextToSpeechResult
-import kotlinx.coroutines.runBlocking
 import java.io.InputStream
 import java.util.concurrent.Executors
+import kotlinx.coroutines.runBlocking
 
 /**
  * Predictions service for performing text to speech conversion.
@@ -60,14 +64,15 @@ internal class AWSPollyService(
             { throwable ->
                 PredictionsException(
                     "AWS Polly encountered an error while synthesizing speech.",
-                    throwable, "See attached exception for more details."
+                    throwable,
+                    "See attached exception for more details."
                 )
             },
             onSuccess,
             onError
         )
     }
-    
+
     private suspend fun synthesizeSpeech(text: String, voiceType: AWSVoiceType): InputStream {
         val languageCode: String
         val voiceId: String
@@ -81,7 +86,7 @@ internal class AWSPollyService(
             languageCode = voiceType.languageCode
             voiceId = voiceType.name
         }
-        
+
         val synthesizeSpeechRequest = SynthesizeSpeechRequest {
             this.text = text
             this.textType = TextType.Text

@@ -14,8 +14,8 @@
  */
 package com.amplifyframework.predictions.aws.adapter
 
-import com.amplifyframework.predictions.models.GenderBinaryType
 import aws.sdk.kotlin.services.rekognition.model.GenderType
+import com.amplifyframework.predictions.models.GenderBinaryType
 
 /**
  * Utility to convert AWS Rekognition's gender type

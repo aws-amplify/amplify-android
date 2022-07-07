@@ -16,7 +16,9 @@ package com.amplifyframework.predictions.aws.service
 
 import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import aws.sdk.kotlin.services.comprehend.ComprehendClient
-import aws.sdk.kotlin.services.comprehend.model.*
+import aws.sdk.kotlin.services.comprehend.model.DominantLanguage
+import aws.sdk.kotlin.services.comprehend.model.LanguageCode
+import aws.sdk.kotlin.services.comprehend.model.SyntaxLanguageCode
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration
@@ -24,15 +26,18 @@ import com.amplifyframework.predictions.aws.adapter.EntityTypeAdapter
 import com.amplifyframework.predictions.aws.adapter.SentimentTypeAdapter
 import com.amplifyframework.predictions.aws.adapter.SpeechTypeAdapter
 import com.amplifyframework.predictions.aws.configuration.InterpretTextConfiguration
-import com.amplifyframework.predictions.models.*
 import com.amplifyframework.predictions.models.Entity
 import com.amplifyframework.predictions.models.EntityType
 import com.amplifyframework.predictions.models.KeyPhrase
+import com.amplifyframework.predictions.models.Language
+import com.amplifyframework.predictions.models.LanguageType
+import com.amplifyframework.predictions.models.Sentiment
 import com.amplifyframework.predictions.models.SentimentType
+import com.amplifyframework.predictions.models.Syntax
 import com.amplifyframework.predictions.result.InterpretResult
-import kotlinx.coroutines.runBlocking
 import java.util.ArrayList
 import java.util.concurrent.Executors
+import kotlinx.coroutines.runBlocking
 
 /**
  * Predictions service for performing text interpretation.
@@ -79,7 +84,8 @@ internal class AWSComprehendService(
             { throwable ->
                 PredictionsException(
                     "AWS Comprehend encountered an error while interpreting text.",
-                    throwable, "See attached exception for more details."
+                    throwable,
+                    "See attached exception for more details."
                 )
             },
             onSuccess,
@@ -92,7 +98,7 @@ internal class AWSComprehendService(
         // Language is a required field for other detections.
         // Always fetch language regardless of what configuration says.
         isResourceConfigured(InterpretTextConfiguration.InterpretType.LANGUAGE)
-        
+
         // Detect dominant language from given text via AWS Comprehend
         val result = try {
             client.detectDominantLanguage {
@@ -101,10 +107,11 @@ internal class AWSComprehendService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "AWS Comprehend encountered an error while detecting dominant language.",
-                exception, "See attached exception for more details."
+                exception,
+                "See attached exception for more details."
             )
         }
-        
+
         // Find the most dominant language from the list
         var dominantLanguage: DominantLanguage? = null
         result.languages?.forEach { language ->
@@ -154,7 +161,8 @@ internal class AWSComprehendService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "AWS Comprehend encountered an error while detecting sentiment.",
-                exception, "See attached exception for more details."
+                exception,
+                "See attached exception for more details."
             )
         }
 
@@ -193,7 +201,8 @@ internal class AWSComprehendService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "AWS Comprehend encountered an error while detecting key phrases.",
-                exception, "See attached exception for more details."
+                exception,
+                "See attached exception for more details."
             )
         }
 
@@ -231,7 +240,8 @@ internal class AWSComprehendService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "AWS Comprehend encountered an error while detecting entities.",
-                exception, "See attached exception for more details."
+                exception,
+                "See attached exception for more details."
             )
         }
 
@@ -271,7 +281,8 @@ internal class AWSComprehendService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "AWS Comprehend encountered an error while detecting syntax.",
-                exception, "See attached exception for more details."
+                exception,
+                "See attached exception for more details."
             )
         }
 
@@ -295,7 +306,7 @@ internal class AWSComprehendService(
         }
         return syntaxTokens
     }
-    
+
     private fun isResourceConfigured(type: InterpretTextConfiguration.InterpretType): Boolean {
         // Check if text interpretation is configured
         val configuredType: InterpretTextConfiguration.InterpretType =
