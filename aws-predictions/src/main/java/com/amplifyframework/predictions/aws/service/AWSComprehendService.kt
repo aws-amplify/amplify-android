@@ -77,7 +77,7 @@ internal class AWSComprehendService(
                     .build()
             },
             { throwable ->
-                throw PredictionsException(
+                PredictionsException(
                     "AWS Comprehend encountered an error while interpreting text.",
                     throwable, "See attached exception for more details."
                 )
@@ -101,8 +101,7 @@ internal class AWSComprehendService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "AWS Comprehend encountered an error while detecting dominant language.",
-                exception,
-                "See attached exception for more details."
+                exception, "See attached exception for more details."
             )
         }
         
@@ -155,8 +154,7 @@ internal class AWSComprehendService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "AWS Comprehend encountered an error while detecting sentiment.",
-                exception,
-                "See attached exception for more details."
+                exception, "See attached exception for more details."
             )
         }
 
@@ -195,8 +193,7 @@ internal class AWSComprehendService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "AWS Comprehend encountered an error while detecting key phrases.",
-                exception,
-                "See attached exception for more details."
+                exception, "See attached exception for more details."
             )
         }
 
@@ -234,8 +231,7 @@ internal class AWSComprehendService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "AWS Comprehend encountered an error while detecting entities.",
-                exception,
-                "See attached exception for more details."
+                exception, "See attached exception for more details."
             )
         }
 
@@ -275,8 +271,7 @@ internal class AWSComprehendService(
         } catch (exception: Exception) {
             throw PredictionsException(
                 "AWS Comprehend encountered an error while detecting syntax.",
-                exception,
-                "See attached exception for more details."
+                exception, "See attached exception for more details."
             )
         }
 

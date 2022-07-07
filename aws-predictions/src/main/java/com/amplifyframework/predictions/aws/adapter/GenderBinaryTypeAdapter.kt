@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.predictions.aws.adapter
 
-import aws.sdk.kotlin.services.rekognition.model.GenderType.Companion.fromValue
 import com.amplifyframework.predictions.models.GenderBinaryType
 import aws.sdk.kotlin.services.rekognition.model.GenderType
 
@@ -31,7 +30,7 @@ object GenderBinaryTypeAdapter {
      * @return Amplify's [GenderBinaryType] enum
      */
     fun fromRekognition(gender: String): GenderBinaryType {
-        return when (fromValue(gender)) {
+        return when (GenderType.fromValue(gender)) {
             GenderType.Male -> GenderBinaryType.MALE
             GenderType.Female -> GenderBinaryType.FEMALE
             else -> GenderBinaryType.UNKNOWN

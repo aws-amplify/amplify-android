@@ -85,7 +85,7 @@ internal class AWSRekognitionService(
             { throwable ->
                 PredictionsException(
                     "Amazon Rekognition encountered an error while detecting labels.",
-                    throwable, "See attached service exception for more details."
+                    throwable, "See attached exception for more details."
                 )
             },
             onSuccess,
@@ -119,7 +119,7 @@ internal class AWSRekognitionService(
             { throwable ->
                 PredictionsException(
                     "Amazon Rekognition encountered an error while recognizing celebrities.",
-                    throwable, "See attached service exception for more details."
+                    throwable, "See attached exception for more details."
                 )
             },
             onSuccess,
@@ -148,7 +148,7 @@ internal class AWSRekognitionService(
             { throwable ->
                 PredictionsException(
                     "Amazon Rekognition encountered an error while either detecting faces or searching for known faces.",
-                    throwable, "See attached service exception for more details."
+                    throwable, "See attached exception for more details."
                 )
             },
             onSuccess,
@@ -168,20 +168,28 @@ internal class AWSRekognitionService(
             { throwable ->
                 PredictionsException(
                     "Amazon Rekognition encountered an error while detecting text.",
-                    throwable, "See attached service exception for more details."
+                    throwable, "See attached exception for more details."
                 )
             },
             onSuccess,
             onError
         )
     }
-    
+
+    @Throws(PredictionsException::class)
     private suspend fun detectLabels(imageData: ByteBuffer): List<Label> {
         // Detect labels in the given image via Amazon Rekognition
-        val result = client.detectLabels { 
-            this.image = Image {
-                this.bytes = imageData.array()
+        val result = try {
+            client.detectLabels {
+                this.image = Image {
+                    this.bytes = imageData.array()
+                }
             }
+        } catch (exception: Exception) {
+            throw PredictionsException(
+                "Amazon Rekognition encountered an error while detecting labels.",
+                exception, "See attached exception for more details."
+            )
         }
         val labels: MutableList<Label> = ArrayList()
         result.labels?.forEach { rekognitionLabel ->
@@ -207,12 +215,20 @@ internal class AWSRekognitionService(
         }
         return labels
     }
-    
+
+    @Throws(PredictionsException::class)
     private suspend fun detectModerationLabels(imageData: ByteBuffer): List<Label> {
-        val result = client.detectModerationLabels {
-            this.image = Image {
-                this.bytes = imageData.array()
+        val result = try {
+            client.detectModerationLabels {
+                this.image = Image {
+                    this.bytes = imageData.array()
+                }
             }
+        } catch (exception: Exception) {
+            throw PredictionsException(
+                "Amazon Rekognition encountered an error while detecting moderation labels.",
+                exception, "See attached exception for more details."
+            )
         }
         val labels: MutableList<Label> = ArrayList()
         result.moderationLabels?.forEach { moderationLabel ->
@@ -277,13 +293,21 @@ internal class AWSRekognitionService(
         }
         return celebrities
     }
-    
+
+    @Throws(PredictionsException::class)
     private suspend fun detectEntities(imageData: ByteBuffer): List<EntityDetails> {
-        val result = client.detectFaces { 
-            this.image = Image {
-                this.bytes = imageData.array()
+        val result = try {
+            client.detectFaces {
+                this.image = Image {
+                    this.bytes = imageData.array()
+                }
+                this.attributes = mutableListOf(Attribute.All)
             }
-            this.attributes = mutableListOf(Attribute.All)
+        } catch (exception: Exception) {
+            throw PredictionsException(
+                "Amazon Rekognition encountered an error while detecting faces.",
+                exception, "See attached exception for more details."
+            )
         }
         val entities: MutableList<EntityDetails> = ArrayList()
         result.faceDetails?.forEach { face ->
@@ -330,19 +354,27 @@ internal class AWSRekognitionService(
         }
         return entities
     }
-    
+
+    @Throws(PredictionsException::class)
     private suspend fun detectEntityMatches(
         imageData: ByteBuffer,
         maxEntities: Int,
         collectionId: String
     ): List<EntityMatch> {
         
-        val result = client.searchFacesByImage {
-            this.image = Image {
-                this.bytes = imageData.array()
+        val result = try {
+            client.searchFacesByImage {
+                this.image = Image {
+                    this.bytes = imageData.array()
+                }
+                this.maxFaces = maxEntities
+                this.collectionId = collectionId
             }
-            this.maxFaces = maxEntities
-            this.collectionId = collectionId
+        } catch (exception: Exception) {
+            throw PredictionsException(
+                "Amazon Rekognition encountered an error while searching for known faces.",
+                exception, "See attached exception for more details."
+            )
         }
         val matches: MutableList<EntityMatch> = ArrayList()
         result.faceMatches?.forEach { rekognitionMatch ->
@@ -405,7 +437,11 @@ internal class AWSRekognitionService(
                     onResult.accept(result)
                 }
             } catch (error: Throwable) {
-                val predictionsException = errorTransformer.invoke(error)
+                val predictionsException = if (error is PredictionsException) {
+                    error
+                } else {
+                    errorTransformer.invoke(error)
+                }
                 onError.accept(predictionsException)
             }
         }

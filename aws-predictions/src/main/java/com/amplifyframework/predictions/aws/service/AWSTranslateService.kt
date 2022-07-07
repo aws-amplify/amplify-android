@@ -21,9 +21,6 @@ import aws.sdk.kotlin.services.translate.TranslateClient
 import com.amplifyframework.predictions.models.LanguageType
 import com.amplifyframework.predictions.result.TranslateTextResult
 import com.amplifyframework.predictions.PredictionsException
-import kotlin.Throws
-import aws.sdk.kotlin.services.translate.model.TranslateTextResponse
-import aws.smithy.kotlin.runtime.ClientException
 import com.amplifyframework.core.Consumer
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Executors
@@ -52,9 +49,11 @@ internal class AWSTranslateService(
         execute(
             {
                 val source =
-                    if (LanguageType.UNKNOWN != sourceLanguage) sourceLanguage else pluginConfiguration.translateTextConfiguration.sourceLanguage
+                    if (LanguageType.UNKNOWN != sourceLanguage) sourceLanguage else
+                        pluginConfiguration.translateTextConfiguration.sourceLanguage
                 val target =
-                    if (LanguageType.UNKNOWN != targetLanguage) targetLanguage else pluginConfiguration.translateTextConfiguration.targetLanguage
+                    if (LanguageType.UNKNOWN != targetLanguage) targetLanguage else
+                        pluginConfiguration.translateTextConfiguration.targetLanguage
                 val result = client.translateText {
                     this.text = textToTranslate
                     this.sourceLanguageCode = source.languageCode
@@ -71,7 +70,7 @@ internal class AWSTranslateService(
             { throwable ->
                 PredictionsException(
                     "AWS Translate encountered an error while translating text.",
-                    throwable, "See attached service exception for more details."
+                    throwable, "See attached exception for more details."
                 )
             },
             onSuccess,

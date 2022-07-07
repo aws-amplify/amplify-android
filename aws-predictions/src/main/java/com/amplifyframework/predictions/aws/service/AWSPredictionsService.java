@@ -226,9 +226,9 @@ public final class AWSPredictionsService {
     }
 
     /**
-     * Return configured Translate client for
+     * Return configured Amazon Translate client for
      * direct access to AWS endpoint.
-     * @return the configured Translate client
+     * @return the configured Amazon Translate client
      */
     @NonNull
     public TranslateClient getTranslateClient() {
@@ -236,9 +236,9 @@ public final class AWSPredictionsService {
     }
 
     /**
-     * Return configured Polly client for
+     * Return configured Amazon Polly client for
      * direct access to AWS endpoint.
-     * @return the configured Polly client
+     * @return the configured Amazon Polly client
      */
     @NonNull
     public PollyClient getPollyClient() {
@@ -246,9 +246,9 @@ public final class AWSPredictionsService {
     }
 
     /**
-     * Return configured Rekognition client for
+     * Return configured Amazon Rekognition client for
      * direct access to AWS endpoint.
-     * @return the configured Rekognition client
+     * @return the configured Amazon Rekognition client
      */
     @NonNull
     public RekognitionClient getRekognitionClient() {
@@ -256,9 +256,9 @@ public final class AWSPredictionsService {
     }
 
     /**
-     * Return configured Textract client for
+     * Return configured Amazon Textract client for
      * direct access to AWS endpoint.
-     * @return the configured Textract client
+     * @return the configured Amazon Textract client
      */
     @NonNull
     public TextractClient getTextractClient() {

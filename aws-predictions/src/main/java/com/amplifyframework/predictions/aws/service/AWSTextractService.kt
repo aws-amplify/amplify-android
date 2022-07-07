@@ -75,31 +75,13 @@ internal class AWSTextractService(
             { throwable ->
                 PredictionsException(
                     "AWS Textract encountered an error while analyzing document.",
-                    throwable, "See attached service exception for more details."
+                    throwable, "See attached exception for more details."
                 )
             },
             onSuccess,
             onError
         )
     }
-
-    /*@Throws(PredictionsException::class)
-    private fun detectDocumentText(imageData: ByteBuffer): IdentifyDocumentTextResult {
-        val request: DetectDocumentTextRequest = DetectDocumentTextRequest()
-            .withDocument(Document().withBytes(imageData))
-
-        // Extract text from given image via Amazon Textract
-        val result: DetectDocumentTextResult
-        result = try {
-            textract.detectDocumentText(request)
-        } catch (serviceException: AmazonClientException) {
-            throw PredictionsException(
-                "AWS Textract encountered an error while detecting document text.",
-                serviceException, "See attached service exception for more details."
-            )
-        }
-        return processTextractBlocks(result.getBlocks())
-    }*/
 
     private fun processTextractBlocks(blocks: List<Block>): IdentifyDocumentTextResult {
         val fullTextBuilder = StringBuilder()

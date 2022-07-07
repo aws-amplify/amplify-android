@@ -52,9 +52,9 @@ public final class AWSPredictionsEscapeHatch {
     }
 
     /**
-     * Return configured Translate client to access
+     * Return configured Amazon Translate client to access
      * low-level methods for text translation.
-     * @return the configured Translate client
+     * @return the configured Amazon Translate client
      */
     @NonNull
     public TranslateClient getTranslateClient() {
@@ -64,7 +64,7 @@ public final class AWSPredictionsEscapeHatch {
     /**
      * Return configured Amazon Polly client to access
      * low-level methods for speech synthesis.
-     * @return the configured Polly client
+     * @return the configured Amazon Polly client
      */
     @NonNull
     public PollyClient getPollyClient() {
@@ -72,9 +72,9 @@ public final class AWSPredictionsEscapeHatch {
     }
 
     /**
-     * Return configured Rekognition client to access
+     * Return configured Amazon Rekognition client to access
      * low-level methods for image analysis.
-     * @return the configured Rekognition client
+     * @return the configured Amazon Rekognition client
      */
     @NonNull
     public RekognitionClient getRekognitionClient() {
@@ -82,9 +82,9 @@ public final class AWSPredictionsEscapeHatch {
     }
 
     /**
-     * Return configured Textract client to access
+     * Return configured Amazon Textract client to access
      * low-level methods for document analysis.
-     * @return the configured Textract client
+     * @return the configured Amazon Textract client
      */
     @NonNull
     public TextractClient getTextractClient() {
@@ -92,9 +92,9 @@ public final class AWSPredictionsEscapeHatch {
     }
 
     /**
-     * Return configured Comprehend client to access
+     * Return configured Amazon Comprehend client to access
      * low-level methods for text interpretation.
-     * @return the configured Comprehend client
+     * @return the configured Amazon Comprehend client
      */
     @NonNull
     public ComprehendClient getComprehendClient() {

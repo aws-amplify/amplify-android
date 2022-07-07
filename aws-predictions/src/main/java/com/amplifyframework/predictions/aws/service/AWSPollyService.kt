@@ -58,7 +58,7 @@ internal class AWSPollyService(
                 TextToSpeechResult.fromAudioData(data)
             },
             { throwable ->
-                throw PredictionsException(
+                PredictionsException(
                     "AWS Polly encountered an error while synthesizing speech.",
                     throwable, "See attached exception for more details."
                 )
@@ -91,7 +91,7 @@ internal class AWSPollyService(
             this.sampleRate = MP3_SAMPLE_RATE.toString()
         }
         // Synthesize speech from given text via Amazon Polly
-        val result: SynthesizeSpeechResponse = client.synthesizeSpeech(synthesizeSpeechRequest) { synthesizeSpeechResponse ->
+        val result = client.synthesizeSpeech(synthesizeSpeechRequest) { synthesizeSpeechResponse ->
             synthesizeSpeechResponse
         }
         return result.audioStream?.toByteArray()?.inputStream() ?: "".byteInputStream()

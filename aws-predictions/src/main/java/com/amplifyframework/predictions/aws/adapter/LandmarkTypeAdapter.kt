@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.predictions.aws.adapter
 
-import aws.sdk.kotlin.services.rekognition.model.LandmarkType.Companion.fromValue
 import aws.sdk.kotlin.services.rekognition.model.LandmarkType
 
 /**
@@ -30,7 +29,7 @@ object LandmarkTypeAdapter {
      */
     @JvmStatic
     fun fromRekognition(landmark: String): com.amplifyframework.predictions.models.LandmarkType {
-        return when (fromValue(landmark)) {
+        return when (LandmarkType.fromValue(landmark)) {
             LandmarkType.EyeLeft, LandmarkType.LeftEyeLeft, LandmarkType.LeftEyeRight, LandmarkType.LeftEyeUp,
                 LandmarkType.LeftEyeDown -> com.amplifyframework.predictions.models.LandmarkType.LEFT_EYE
             LandmarkType.EyeRight, LandmarkType.RightEyeLeft, LandmarkType.RightEyeRight, LandmarkType.RightEyeUp,

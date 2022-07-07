@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.predictions.aws.adapter
 
-import aws.sdk.kotlin.services.rekognition.model.EmotionName.Companion.fromValue
 import com.amplifyframework.predictions.models.EmotionType
 import aws.sdk.kotlin.services.rekognition.model.EmotionName
 
@@ -31,7 +30,7 @@ object EmotionTypeAdapter {
      * @return Amplify's [EmotionType] enum
      */
     fun fromRekognition(emotion: String): EmotionType {
-        return when (fromValue(emotion)) {
+        return when (EmotionName.fromValue(emotion)) {
             EmotionName.Happy -> EmotionType.HAPPY
             EmotionName.Sad -> EmotionType.SAD
             EmotionName.Angry -> EmotionType.ANGRY

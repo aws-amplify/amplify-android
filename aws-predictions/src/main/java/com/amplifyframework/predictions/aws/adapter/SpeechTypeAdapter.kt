@@ -48,7 +48,6 @@ object SpeechTypeAdapter {
             PartOfSpeechTagType.Sconj -> SpeechType.SUBORDINATING_CONJUNCTION
             PartOfSpeechTagType.Sym -> SpeechType.SYMBOL
             PartOfSpeechTagType.Verb -> SpeechType.VERB
-            PartOfSpeechTagType.O -> SpeechType.UNKNOWN
             else -> SpeechType.UNKNOWN
         }
     }

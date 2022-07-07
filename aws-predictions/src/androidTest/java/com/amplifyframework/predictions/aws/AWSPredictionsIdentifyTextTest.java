@@ -56,7 +56,7 @@ public final class AWSPredictionsIdentifyTextTest {
 
     /**
      * Configure Predictions category before each test.
-     * @throws Exception if mobile client initialization fails
+     * @throws Exception if {@link SynchronousAuth} initialization fails
      */
     @Before
     public void setUp() throws Exception {
