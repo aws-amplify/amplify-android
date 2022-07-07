@@ -554,7 +554,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                             "Failed to fetch identity.",
                                             fetchIdentityState.exception,
                                             "Sign in or enable guest access. See the attached exception for more" +
-                                                " details."
+                                                    " details."
                                         )
                                     )
                                 }
@@ -914,7 +914,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         )
     }
 
-    // TODO: Remove this function and use the #clearCredentialStore helper method
     private fun waitForSignOut(username: String) {
         var token: StateChangeListenerToken? = null
         token = credentialStoreStateMachine.listen(
@@ -935,32 +934,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                 SignOutEvent.EventType.SignedOutFailure(AuthException.UnknownException(it.error))
                             )
                         )
-                    }
-                }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.ClearCredentialStore())
-                )
-            }
-        )
-    }
-
-    private fun clearCredentialStore(onSuccess: () -> Unit, onError: (error: CredentialStoreState.Error) -> Unit) {
-        var token: StateChangeListenerToken? = null
-        token = credentialStoreStateMachine.listen(
-            {
-                when (it) {
-                    is CredentialStoreState.Success -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        onSuccess()
-                    }
-                    is CredentialStoreState.Error -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        onError(it)
-                    }
-                    else -> {
-                        // no op
                     }
                 }
             },
