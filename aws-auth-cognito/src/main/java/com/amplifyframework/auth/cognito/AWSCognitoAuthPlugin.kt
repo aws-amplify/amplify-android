@@ -554,7 +554,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                             "Failed to fetch identity.",
                                             fetchIdentityState.exception,
                                             "Sign in or enable guest access. See the attached exception for more" +
-                                                    " details."
+                                                " details."
                                         )
                                     )
                                 }
