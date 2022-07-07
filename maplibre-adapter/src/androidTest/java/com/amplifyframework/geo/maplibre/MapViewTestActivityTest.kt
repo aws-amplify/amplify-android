@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -32,16 +32,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Ignore
+import org.junit.Test
 
-@Ignore("Geo category is not available in dev-preview")
 class MapViewTestActivityTest {
 
     /**
      * Tests that activity can successfully load a map instance.
      */
-//    @Test
-    @Ignore("Geo category is not available in dev-preview")
+    @Test
     fun loadsMapSuccessfully() = runBlocking {
         val scenario = launchActivity<MapViewTestActivity>()
         val map = suspendCoroutine<MapboxMap> { continuation ->
@@ -60,8 +58,7 @@ class MapViewTestActivityTest {
     /**
      * Tests that clustering is enabled by default when setting the style for a map.
      */
-//    @Test
-    @Ignore("Geo category is not available in dev-preview")
+    @Test
     fun enablesClusteringByDefault() = runBlocking {
         val scenario = launchActivity<MapViewTestActivity>()
         val mapStyle = suspendCoroutine<Style> { continuation ->
@@ -83,8 +80,7 @@ class MapViewTestActivityTest {
     /**
      * Tests that clustering can be enabled and clustering options passed in for the map.
      */
-//    @Test
-    @Ignore("Geo category is not available in dev-preview")
+    @Test
     fun clusteringCanBeEnabledWithOptions() = runBlocking {
         val clusteringOptions = ClusteringOptions.builder().clusterColor(Color.RED).build()
         val scenario = launchActivity<MapViewTestActivity>()
@@ -109,8 +105,7 @@ class MapViewTestActivityTest {
     /**
      * Tests that clustering can be enabled for the map without passing in clustering options.
      */
-//    @Test
-    @Ignore("Geo category is not available in dev-preview")
+    @Test
     fun clusteringCanBeEnabledWithoutOptions() = runBlocking {
         val scenario = launchActivity<MapViewTestActivity>()
         val mapStyle = suspendCoroutine<Style> { continuation ->
@@ -134,8 +129,7 @@ class MapViewTestActivityTest {
     /**
      * Tests that clustering can be disabled for the map.
      */
-//    @Test
-    @Ignore("Geo category is not available in dev-preview")
+    @Test
     fun clusteringCanBeDisabled(): Unit = runBlocking {
         val scenario = launchActivity<MapViewTestActivity>()
         val mapStyle = suspendCoroutine<Style> { continuation ->

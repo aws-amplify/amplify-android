@@ -35,7 +35,7 @@ import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
 import okhttp3.Request;
 
 /**

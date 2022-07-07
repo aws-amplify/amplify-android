@@ -15,7 +15,7 @@
 
 package com.amplifyframework.storage.s3.credentials
 
-import aws.sdk.kotlin.runtime.auth.credentials.Credentials
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession

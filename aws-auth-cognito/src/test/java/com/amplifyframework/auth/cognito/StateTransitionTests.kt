@@ -176,7 +176,6 @@ class StateTransitionTests : StateTransitionTestBase() {
     @Test
     fun testConfigureSignedOut() {
         setupConfigureSignedOut()
-        val testLatch = CountDownLatch(1)
         val listenLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         var token: StateChangeListenerToken? = null
@@ -196,11 +195,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val configure =
             AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, null))
         stateMachine.send(configure)
-        stateMachine.getCurrentState {
-            assertTrue(it is AuthState.ConfiguringAuth)
-            testLatch.countDown()
-        }
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
     }
 
@@ -208,7 +203,6 @@ class StateTransitionTests : StateTransitionTestBase() {
     fun testConfigureSignedIn() {
         setupConfigureSignedIn()
 
-        val testLatch = CountDownLatch(1)
         val listenLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         var token: StateChangeListenerToken? = null
@@ -228,11 +222,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val configure =
             AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
         stateMachine.send(configure)
-        stateMachine.getCurrentState {
-            assertTrue(it is AuthState.ConfiguringAuth)
-            testLatch.countDown()
-        }
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
     }
 

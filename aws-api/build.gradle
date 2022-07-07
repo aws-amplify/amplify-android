@@ -24,7 +24,7 @@ dependencies {
     implementation project(':aws-auth-cognito')
 
     implementation dependency.androidx.appcompat
-    implementation(dependency.aws.signing)
+    implementation dependency.aws.signing
     implementation dependency.gson
     implementation dependency.okhttp
 
