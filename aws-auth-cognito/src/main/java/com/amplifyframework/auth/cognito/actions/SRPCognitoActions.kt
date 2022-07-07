@@ -103,7 +103,7 @@ object SRPCognitoActions : SRPActions {
                 val signedInData = response?.authenticationResult?.let {
                     val expiresIn = Instant.now().plus(it.expiresIn.seconds).epochSeconds
                     val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
-                    SignedInData(userId, username, Date(), SignInMethod.SRP, tokens)
+                    SignedInData(userId, username, Date(), SignInMethod.SRP, tokens, it.newDeviceMetadata)
                 }
                 val finalizeEvent = SRPEvent(SRPEvent.EventType.FinalizeSRPSignIn())
                 logger?.verbose("$id Sending event ${finalizeEvent.type}")

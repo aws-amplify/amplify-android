@@ -207,7 +207,7 @@ class AWSCognitoAuthCredentialStoreTest {
                 "sessionToken",
                 expiration
             ),
-            UserSignedInData(userid = "userid", username = "username")
+            UserSignedInData(userid = "userid", username = "username", "device_id")
         )
     }
 

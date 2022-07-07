@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.NewDeviceMetadataType
 import java.util.Date
 
 data class SignedInData(
@@ -22,5 +23,6 @@ data class SignedInData(
     val username: String,
     val signedInDate: Date,
     val signInMethod: SignInMethod,
-    val cognitoUserPoolTokens: CognitoUserPoolTokens
+    val cognitoUserPoolTokens: CognitoUserPoolTokens,
+    val deviceInfo: NewDeviceMetadataType? = null
 )
