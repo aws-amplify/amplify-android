@@ -75,7 +75,7 @@ public final class AppSyncClientInstrumentationTest {
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
         Context context = getApplicationContext();
-        @RawRes int resourceId = Resources.getRawResourceId(context, "amplifyconfiguration_v2");
+        @RawRes int resourceId = Resources.getRawResourceId(context, "amplifyconfigurationupdated");
 
         ApiCategory asyncDelegate = new ApiCategory();
         asyncDelegate.addPlugin(new AWSApiPlugin());
