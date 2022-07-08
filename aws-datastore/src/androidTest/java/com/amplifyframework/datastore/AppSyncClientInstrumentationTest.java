@@ -37,6 +37,7 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
@@ -74,7 +75,7 @@ public final class AppSyncClientInstrumentationTest {
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
         Context context = getApplicationContext();
-        @RawRes int resourceId = Resources.getRawResourceId(context, "amplifyconfiguration");
+        @RawRes int resourceId = Resources.getRawResourceId(context, "amplifyconfiguration_v2");
 
         ApiCategory asyncDelegate = new ApiCategory();
         asyncDelegate.addPlugin(new AWSApiPlugin());
@@ -96,6 +97,7 @@ public final class AppSyncClientInstrumentationTest {
         ModelSchema blogOwnerSchema = ModelSchema.fromModelClass(BlogOwner.class);
         ModelSchema postSchema = ModelSchema.fromModelClass(Post.class);
         ModelSchema blogSchema = ModelSchema.fromModelClass(Blog.class);
+        ModelSchema authorSchema = ModelSchema.fromModelClass(Author.class);
 
         long startTimeSeconds = TimeUnit.MILLISECONDS.toSeconds(new Date().getTime());
 
@@ -141,18 +143,23 @@ public final class AppSyncClientInstrumentationTest {
 //            .map(GraphQLResponse::getData)
 //            .subscribe(blogCreationSubscriber);
 //        blogCreationSubscriber.assertValue(blogCreateResult);
-
+        Author author = Author.builder()
+                .name("Author 1")
+                .build();
+        create(author, authorSchema);
         // Create Posts which Blog hasMany of
         Post post1 = Post.builder()
             .title("Post 1")
             .status(PostStatus.ACTIVE)
             .rating(4)
+            .author(author)
             .blog(blog)
             .build();
         Post post2 = Post.builder()
             .title("Post 2")
             .status(PostStatus.INACTIVE)
             .rating(-1)
+            .author(author)
             .blog(blog)
             .build();
         Post post1ModelResult = create(post1, postSchema).getModel();
@@ -161,12 +168,14 @@ public final class AppSyncClientInstrumentationTest {
         // Results only have blog ID so strip out other information from the original post blog
         ModelAssert.assertEqualsIgnoringTimestamps(
             post1.copyOfBuilder()
+                .author(Author.justId(author.getId()))
                 .blog(Blog.justId(blog.getId()))
                 .build(),
             post1ModelResult
         );
         ModelAssert.assertEqualsIgnoringTimestamps(
             post2.copyOfBuilder()
+                .author(Author.justId(author.getId()))
                 .blog(Blog.justId(blog.getId()))
                 .build(),
             post2ModelResult
@@ -195,6 +204,7 @@ public final class AppSyncClientInstrumentationTest {
         ModelAssert.assertEqualsIgnoringTimestamps(
             post1.copyOfBuilder()
                 .blog(Blog.justId(blog.getId()))
+                .author(Author.justId(author.getId()))
                 .build(),
             post1DeleteResult.getModel()
         );
