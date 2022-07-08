@@ -36,6 +36,7 @@ import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testmodels.personcar.PersonWithCPK;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.util.GsonFactory;
+import com.amplifyframework.util.UserAgent;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,8 +46,10 @@ import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -370,10 +373,11 @@ public class SqlCommandTest {
 
     /**
      * Validates that a query, with an order by clause is generated correctly.
-     * @throws DataStoreException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
+     * @throws AmplifyException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
      */
     @Test
-    public void queryWithPredicate() throws DataStoreException {
+    public void queryWithPredicate() throws AmplifyException {
+        setUserAgent();
         final ModelSchema personSchema = getPersonModelSchema();
         final String testName = "name";
         final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
@@ -386,7 +390,7 @@ public class SqlCommandTest {
                 sqlCommand.sqlStatement()
         );
         assertEquals(1, sqlCommand.getBindings().size());
-        assert(sqlCommand.getBindings().contains(testName));
+        assertTrue(sqlCommand.getBindings().contains(testName));
     }
 
     /**
@@ -488,5 +492,15 @@ public class SqlCommandTest {
                 .indexes(Collections.singletonMap("undefined", index))
                 .modelType(Model.Type.USER)
                 .build();
+    }
+
+    /**
+     * Set user agent to Flutter.
+     * @throws AmplifyException not expected.
+     */
+    private void setUserAgent() throws AmplifyException {
+        Map<UserAgent.Platform, String> map = new HashMap<>();
+        map.put(UserAgent.Platform.FLUTTER, "1.0");
+        UserAgent.configure(map);
     }
 }

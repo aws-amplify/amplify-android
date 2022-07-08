@@ -235,7 +235,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             if (predicate instanceof QueryPredicateOperation) {
                 QueryPredicateOperation<?> predicateOperation = (QueryPredicateOperation<?>) predicate;
                 String predicateOperationField = predicateOperation.field();
-                if (UserAgent.isFlutter() && !Empty.check(predicateOperationField)){
+                if (UserAgent.isFlutter() && !Empty.check(predicateOperationField)) {
                     sqlPredicateString = sqlPredicateString.replace(predicateOperationField,
                        Wrap.inBackticks(predicateOperationField));
                 }
