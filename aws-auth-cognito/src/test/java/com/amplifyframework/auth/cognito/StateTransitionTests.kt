@@ -26,7 +26,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
@@ -36,7 +35,6 @@ import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
 import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.SignUpState
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -67,7 +65,6 @@ class StateTransitionTests : StateTransitionTestBase() {
         setupAuthZActions()
         setupSRPActions()
         setupSignOutActions()
-        setupSignUpActions()
         setupFetchAuthActions()
         setupStateMachine()
         Dispatchers.setMain(mainThreadSurrogate)
@@ -77,7 +74,6 @@ class StateTransitionTests : StateTransitionTestBase() {
         stateMachine = AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
-                    SignUpState.Resolver(mockSignUpActions),
                     SRPSignInState.Resolver(mockSRPActions),
                     SignOutState.Resolver(mockSignOutActions),
                     mockAuthenticationActions
@@ -361,95 +357,12 @@ class StateTransitionTests : StateTransitionTestBase() {
 
     @Test
     fun testSignUp() {
-        setupConfigureSignedOut()
-        val testLatch = CountDownLatch(1)
-        val configureLatch = CountDownLatch(1)
-        val subscribeLatch = CountDownLatch(1)
-        var token: StateChangeListenerToken? = null
-        token = stateMachine.listen(
-            {
-                val authState =
-                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
-                authState?.run {
-                    configureLatch.countDown()
-                    stateMachine.send(
-                        SignUpEvent(
-                            SignUpEvent.EventType.InitiateSignUp(
-                                "username",
-                                "password",
-                                AuthSignUpOptions.builder().build()
-                            )
-                        )
-                    )
-                }
 
-                val authNState =
-                    it.authNState.takeIf { itN ->
-                        itN is AuthenticationState.SigningUp &&
-                            itN.signUpState is SignUpState.SigningUpInitiated
-                    }
-
-                authNState?.apply {
-                    token?.let(stateMachine::cancel)
-                    testLatch.countDown()
-                }
-            },
-            {
-                subscribeLatch.countDown()
-            }
-        )
-
-        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
-
-        stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
-        )
-
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
-        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
     }
 
     @Test
     fun testConfirmSignUp() {
-        setupConfigureSignedOut()
-        val testLatch = CountDownLatch(1)
-        val configureLatch = CountDownLatch(1)
-        val subscribeLatch = CountDownLatch(1)
-        var token: StateChangeListenerToken? = null
-        token = stateMachine.listen(
-            {
-                val authState =
-                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
-                authState?.run {
-                    configureLatch.countDown()
-                    stateMachine.send(
-                        SignUpEvent(SignUpEvent.EventType.ConfirmSignUp("username", "code"))
-                    )
-                }
 
-                val authNState =
-                    it.authNState.takeIf { itN ->
-                        itN is AuthenticationState.SigningUp &&
-                            itN.signUpState is SignUpState.SignedUp
-                    }
-                authNState?.apply {
-                    token?.let(stateMachine::cancel)
-                    testLatch.countDown()
-                }
-            },
-            {
-                subscribeLatch.countDown()
-            }
-        )
-
-        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
-
-        stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
-        )
-
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
-        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
     }
 
     @Test
