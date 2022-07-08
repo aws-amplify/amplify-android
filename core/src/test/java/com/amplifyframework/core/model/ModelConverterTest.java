@@ -18,6 +18,8 @@ package com.amplifyframework.core.model;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.customprimarykey.Comment;
+import com.amplifyframework.testmodels.customprimarykey.Post;
 
 import org.junit.Test;
 
@@ -79,5 +81,34 @@ public class ModelConverterTest {
                 .build());
 
         assertEquals(expected, actual);
+    }
+
+    /**
+     * Verify that a Java model with children converted to a Map returns the expected value.
+     * @throws AmplifyException On failure to derive ModelSchema
+     */
+    @Test public void toMapForSerializedModelWithChildrenAndCustomPrimaryKeyReturnsExpectedMap()
+            throws AmplifyException {
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(new HashSet<>(Arrays.asList(Post.class, Comment.class)));
+        HashMap<String, Object> postMap = new HashMap<String, Object>();
+        postMap.put("id", "testId");
+        postMap.put("title", "new post");
+        SerializedModel post = SerializedModel.builder()
+                .modelSchema(schemaRegistry.getModelSchemaForModelClass(Post.class))
+                .serializedData(postMap)
+                .build();
+        HashMap<String, Object> commentMap = new HashMap<String, Object>();
+        commentMap.put("title", "A neat comment");
+        commentMap.put("content", "neat comment");
+        commentMap.put("likes", 1);
+        commentMap.put("post", post);
+        SerializedModel comment = SerializedModel.builder()
+                .modelSchema(schemaRegistry.getModelSchemaForModelClass(Comment.class))
+                .serializedData(commentMap)
+                .build();
+        ModelSchema schema = ModelSchema.fromModelClass(Comment.class);
+        Map<String, Object> actual = ModelConverter.toMap(comment, schema);
+        assertEquals(comment.getSerializedData(), actual);
     }
 }
