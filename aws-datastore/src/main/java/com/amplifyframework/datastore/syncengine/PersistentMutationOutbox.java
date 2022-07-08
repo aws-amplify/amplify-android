@@ -190,8 +190,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
                         try {
                             PendingMutation.PersistentRecord persistentRecord = results.next();
                             mutationQueue.add(converter.fromRecord(persistentRecord));
-                        } catch (DataStoreException conversionFailure) {
-                            emitter.onError(conversionFailure);
+                        } catch (Throwable throwable) {
+                            emitter.onError(throwable);
                             return;
                         }
                     }

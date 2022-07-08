@@ -1,3 +1,10 @@
+## [Release 1.36.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.2)
+
+### Miscellaneous
+- Expand a catch clause to catch all (#1806)
+
+[See all changes between 1.36.1 and 1.36.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.1...release_v1.36.2)
+
 ## [Release 1.36.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.1)
 
 ### Miscellaneous
