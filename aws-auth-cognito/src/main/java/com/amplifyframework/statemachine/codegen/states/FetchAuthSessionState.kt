@@ -44,11 +44,15 @@ sealed class FetchAuthSessionState : State {
             return when (oldState) {
                 is NotStarted -> {
                     when (fetchAuthSessionEvent) {
+                        is FetchAuthSessionEvent.EventType.FetchAwsCredentials -> {
+                            val action =
+                                fetchAuthSessionActions.fetchAWSCredentialsAction(fetchAuthSessionEvent.amplifyCredential)
+                            StateResolution(FetchingAWSCredentials(), listOf(action))
+                        }
                         is FetchAuthSessionEvent.EventType.FetchIdentity -> {
-                            val newState = FetchingIdentity()
                             val action =
                                 fetchAuthSessionActions.fetchIdentityAction(fetchAuthSessionEvent.amplifyCredential)
-                            StateResolution(newState, listOf(action))
+                            StateResolution(FetchingIdentity(), listOf(action))
                         }
                         else -> defaultResolution
                     }
@@ -56,10 +60,9 @@ sealed class FetchAuthSessionState : State {
                 is FetchingIdentity -> {
                     when (fetchAuthSessionEvent) {
                         is FetchAuthSessionEvent.EventType.FetchAwsCredentials -> {
-                            val newState = FetchingAWSCredentials()
                             val action =
                                 fetchAuthSessionActions.fetchAWSCredentialsAction(fetchAuthSessionEvent.amplifyCredential)
-                            StateResolution(newState, listOf(action))
+                            StateResolution(FetchingAWSCredentials(), listOf(action))
                         }
                         else -> defaultResolution
                     }
