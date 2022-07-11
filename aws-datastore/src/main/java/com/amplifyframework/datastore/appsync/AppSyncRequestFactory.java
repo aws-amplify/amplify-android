@@ -471,6 +471,8 @@ final class AppSyncRequestFactory {
                 } else {
                     result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
                 }
+            } else {
+                result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
             }
         }
     }
