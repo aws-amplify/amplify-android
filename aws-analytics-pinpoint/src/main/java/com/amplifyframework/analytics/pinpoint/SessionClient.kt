@@ -52,7 +52,7 @@ internal class SessionClient(
             if (!session.isPaused()) {
                 session.pause()
             }
-            val stopTime = takeIf { session.stopTime != null }?.let { session.stopTime } ?: 0L
+            val stopTime = session.stopTime ?: 0L
             analyticsClient?.let {
                 val pinpointEvent = it.createEvent(
                     sessionStopEvent,

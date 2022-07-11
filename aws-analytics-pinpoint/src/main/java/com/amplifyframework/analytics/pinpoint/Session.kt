@@ -30,7 +30,7 @@ internal class Session {
 
     internal val sessionDuration: Long
         get() {
-            val time = takeIf { stopTime != null }?.let { stopTime } ?: System.currentTimeMillis()
+            val time = stopTime ?: System.currentTimeMillis()
             var duration = 0L
             if (time > startTime) {
                 duration = time - startTime
@@ -56,7 +56,7 @@ internal class Session {
         this@Session.stopTime = null
     }
 
-    fun isPaused(): Boolean = stopTime?.let { true } ?: false
+    fun isPaused(): Boolean = stopTime != null
 
     fun pause() {
         if (!isPaused()) {

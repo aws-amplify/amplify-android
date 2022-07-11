@@ -34,6 +34,7 @@ internal class PinpointEvent constructor(
 ) {
 
     init {
+        // TODO("Add documentation")
         require(eventType.length <= 50)
     }
 
