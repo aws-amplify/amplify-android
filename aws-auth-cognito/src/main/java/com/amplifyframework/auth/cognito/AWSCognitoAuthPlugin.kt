@@ -66,7 +66,6 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
-import com.amplifyframework.statemachine.codegen.data.UserSignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -414,8 +413,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                             AmplifyCredential(
                                 signedInData.cognitoUserPoolTokens,
                                 null,
-                                null,
-                                UserSignedInData(userid = signedInData.userId, username = signedInData.username)
+                                null
                             )
                         )
                     )
