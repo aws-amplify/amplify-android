@@ -52,7 +52,7 @@ internal class AuthStateMachine(
                 SignUpState.Resolver(SignUpCognitoActions),
                 SRPSignInState.Resolver(SRPCognitoActions),
                 SignOutState.Resolver(SignOutCognitoActions),
-                AuthenticationCognitoActions
+                AuthenticationCognitoActions,
             ),
             AuthorizationState.Resolver(
                 FetchAuthSessionState.Resolver(
@@ -76,7 +76,7 @@ internal class AuthStateMachine(
                     SignUpState.Resolver(SignUpCognitoActions).logging(),
                     SRPSignInState.Resolver(SRPCognitoActions).logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
-                    AuthenticationCognitoActions
+                    AuthenticationCognitoActions,
                 ).logging(),
                 AuthorizationState.Resolver(
                     FetchAuthSessionState.Resolver(

@@ -120,15 +120,7 @@ sealed class AuthorizationState : State {
                         }
                         else -> defaultResolution
                     }
-                is DeletingUser -> {
-                    when (deleteUserEvent) {
-                        is DeleteUserEvent.EventType.UserSignedOutAndDeleted -> {
-                            val newState = NotConfigured()
-                            StateResolution(newState)
-                        }
-                        else -> defaultResolution
-                    }
-                }
+                is DeletingUser -> { defaultResolution }
                 is SessionEstablished, is Error -> when (authorizationEvent) {
                     is AuthorizationEvent.EventType.Configure -> StateResolution(Configured())
                     else -> defaultResolution

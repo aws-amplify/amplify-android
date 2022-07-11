@@ -38,19 +38,11 @@ sealed class DeleteUserState : State {
             return (event as? DeleteUserEvent)?.eventType
         }
 
-        private fun asAuthenticationEvent(event: StateMachineEvent): AuthenticationEvent.EventType? {
-            return (event as? AuthenticationEvent)?.eventType
-        }
-
         override fun resolve(
             oldState: DeleteUserState,
             event: StateMachineEvent
         ): StateResolution<DeleteUserState> {
-            val deleteUserEvent = asDeleteUserEvent(event)
-            val authenticationEvent = asAuthenticationEvent(event)
-            if (deleteUserEvent == null) {
-                return StateResolution(oldState)
-            }
+            val deleteUserEvent = asDeleteUserEvent(event) ?: return StateResolution(oldState)
             return when (oldState) {
                 is NotStarted, is Error -> {
                     when (deleteUserEvent) {
@@ -62,19 +54,11 @@ sealed class DeleteUserState : State {
                     }
                 }
                 is DeletingUser -> {
-                    when {
-                        authenticationEvent is AuthenticationEvent.EventType.SignOutRequested ->
-                            StateResolution(SigningOut())
-                        deleteUserEvent is DeleteUserEvent.EventType.ThrowError -> {
+                    when (deleteUserEvent) {
+                        is DeleteUserEvent.EventType.SignOutDeletedUser -> StateResolution(UserDeleted())
+                        is DeleteUserEvent.EventType.ThrowError -> {
                             StateResolution(Error(deleteUserEvent.exception))
                         }
-                        else -> StateResolution(oldState)
-                    }
-                }
-                is SigningOut -> {
-                    when (authenticationEvent) {
-                        is AuthenticationEvent.EventType.InitializedSignedOut ->
-                            StateResolution((UserDeleted()))
                         else -> StateResolution(oldState)
                     }
                 }
