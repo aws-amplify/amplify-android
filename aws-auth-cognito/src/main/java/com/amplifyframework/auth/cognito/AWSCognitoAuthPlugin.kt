@@ -14,7 +14,6 @@
  */
 
 package com.amplifyframework.auth.cognito
-
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -83,6 +82,9 @@ import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.util.UserAgent
 import java.util.concurrent.Semaphore
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.json.JSONException
@@ -694,64 +696,62 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<MutableList<AuthUserAttribute>>,
         onError: Consumer<AuthException>
     ) {
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
 
-        getAccessToken(
-            {
-                val getUserRequest = GetUserRequest.invoke {
-                    this.accessToken = it
-                }
-                GlobalScope.launch {
-                    try {
-                        val user = configureCognitoClients().cognitoIdentityProviderClient?.getUser(getUserRequest)
-                        val userAttributes = buildList {
-                            user?.userAttributes?.mapTo(this) {
-                                AuthUserAttribute(
-                                    AuthUserAttributeKey.custom(it.name),
-                                    it.value
-                                )
+                    GlobalScope.launch {
+                        try {
+                            var accessToken = getAccessToken()
+                            val getUserRequest = GetUserRequest.invoke {
+                                this.accessToken = accessToken
                             }
+                            val user = configureCognitoClients().cognitoIdentityProviderClient?.getUser(getUserRequest)
+                            val userAttributes = buildList {
+                                user?.userAttributes?.mapTo(this) {
+                                    AuthUserAttribute(
+                                        AuthUserAttributeKey.custom(it.name),
+                                        it.value
+                                    )
+                                }
+                            }
+                            onSuccess.accept(userAttributes.toMutableList())
+                        } catch (e: Exception) {
+                            onError.accept(AuthException.UnknownException(e))
                         }
-                        onSuccess.accept(userAttributes.toMutableList())
-                    } catch (e: Exception) {
-                        onError.accept(AuthException.FetchUserAttributeException())
                     }
                 }
-            },
-            onError
-        )
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
     }
 
-    private fun getAccessToken(
-        onSuccess: Consumer<String>,
-        onError: Consumer<AuthException>
-    ) {
-        var listenerToken: StateChangeListenerToken? = null
-        listenerToken = credentialStoreStateMachine.listen(
-            {
-                when (it) {
-                    is CredentialStoreState.Success -> {
-                        listenerToken?.let(credentialStoreStateMachine::cancel)
-                        if (it.storedCredentials?.cognitoUserPoolTokens?.accessToken != null) {
-                            onSuccess.accept(it.storedCredentials.cognitoUserPoolTokens.accessToken)
-                        } else {
-                            onError.accept(AuthException.InvalidAccountTypeException())
+    private suspend fun getAccessToken(): String? {
+        return suspendCoroutine { continuation ->
+            var listenerToken: StateChangeListenerToken? = null
+            listenerToken = credentialStoreStateMachine.listen(
+                {
+                    when (it) {
+                        is CredentialStoreState.Success -> {
+                            listenerToken?.let(credentialStoreStateMachine::cancel)
+                            continuation.resume(it.storedCredentials?.cognitoUserPoolTokens?.accessToken)
+                        }
+                        is CredentialStoreState.Error -> {
+                            listenerToken?.let(credentialStoreStateMachine::cancel)
+                            continuation.resumeWithException(AuthException.UnknownException(it.error))
                         }
                     }
-                    is CredentialStoreState.Error -> {
-                        listenerToken?.let(credentialStoreStateMachine::cancel)
-                        onError.accept(AuthException.UnknownException(it.error))
-                    }
-                    else -> {
-                    }
+                },
+                {
+                    credentialStoreStateMachine.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                    )
                 }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                )
-            }
-        )
+            )
+        }
     }
+
     override fun updateUserAttribute(
         attribute: AuthUserAttribute,
         options: AuthUpdateUserAttributeOptions,
