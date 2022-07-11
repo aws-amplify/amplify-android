@@ -433,7 +433,8 @@ public final class ModelSchema {
                 getFields(),
                 getAssociations(),
                 getIndexes(),
-                getModelClass()
+                getModelClass(),
+                getVersion()
         );
     }
 
@@ -449,6 +450,7 @@ public final class ModelSchema {
             ", associations=" + associations +
             ", indexes=" + indexes +
             ", modelClass=" + modelClass +
+            ", modelSchemaVersion=" + modelSchemaVersion +
             '}';
     }
 
