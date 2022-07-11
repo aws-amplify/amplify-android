@@ -286,11 +286,10 @@ public final class TextractResultTransformersTest {
         List<Point> points = new ArrayList<>();
         for (int i = 0; i < minPoints; i++) {
             points.add(Point.Companion.invoke((pointBuilder) -> {
-                    pointBuilder.setX(random.nextFloat());
-                    pointBuilder.setY(random.nextFloat());
-                    return Unit.INSTANCE;
-                })
-            );
+                pointBuilder.setX(random.nextFloat());
+                pointBuilder.setY(random.nextFloat());
+                return Unit.INSTANCE;
+            }));
         }
         return points;
     }

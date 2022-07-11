@@ -14,13 +14,13 @@
  */
 package com.amplifyframework.predictions.aws.service
 
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import aws.sdk.kotlin.services.polly.PollyClient
 import aws.sdk.kotlin.services.polly.model.LanguageCode
 import aws.sdk.kotlin.services.polly.model.OutputFormat
 import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
 import aws.sdk.kotlin.services.polly.model.TextType
 import aws.sdk.kotlin.services.polly.model.VoiceId
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.content.toByteArray
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
@@ -96,10 +96,10 @@ internal class AWSPollyService(
             this.sampleRate = MP3_SAMPLE_RATE.toString()
         }
         // Synthesize speech from given text via Amazon Polly
-        val result = client.synthesizeSpeech(synthesizeSpeechRequest) { synthesizeSpeechResponse ->
-            synthesizeSpeechResponse
+        val audioStream = client.synthesizeSpeech(synthesizeSpeechRequest) { synthesizeSpeechResponse ->
+            synthesizeSpeechResponse.audioStream?.toByteArray()?.inputStream()
         }
-        return result.audioStream?.toByteArray()?.inputStream() ?: "".byteInputStream()
+        return audioStream ?: "".byteInputStream()
     }
 
     private fun <T : Any> execute(

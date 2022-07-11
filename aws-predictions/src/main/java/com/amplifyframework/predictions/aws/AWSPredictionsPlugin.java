@@ -20,7 +20,6 @@ import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
@@ -49,10 +48,13 @@ import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
+
 import org.json.JSONObject;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
 
 /**
  * A plugin for the predictions category.

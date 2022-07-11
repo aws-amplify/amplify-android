@@ -30,14 +30,15 @@ import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
+import aws.sdk.kotlin.services.comprehend.ComprehendClient;
+
 import java.nio.ByteBuffer;
 
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
-import aws.sdk.kotlin.services.comprehend.ComprehendClient;
 import aws.sdk.kotlin.services.polly.PollyClient;
 import aws.sdk.kotlin.services.rekognition.RekognitionClient;
 import aws.sdk.kotlin.services.textract.TextractClient;
 import aws.sdk.kotlin.services.translate.TranslateClient;
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
 
 /**
  * Predictions service that makes inferences via AWS cloud computing.

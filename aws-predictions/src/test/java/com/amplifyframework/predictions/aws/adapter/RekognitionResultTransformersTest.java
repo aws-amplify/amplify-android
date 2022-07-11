@@ -41,22 +41,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import aws.sdk.kotlin.services.rekognition.model.Beard;
 import aws.sdk.kotlin.services.rekognition.model.BoundingBox;
 import aws.sdk.kotlin.services.rekognition.model.EyeOpen;
 import aws.sdk.kotlin.services.rekognition.model.Eyeglasses;
 import aws.sdk.kotlin.services.rekognition.model.FaceDetail;
+import aws.sdk.kotlin.services.rekognition.model.Geometry;
 import aws.sdk.kotlin.services.rekognition.model.MouthOpen;
 import aws.sdk.kotlin.services.rekognition.model.Mustache;
 import aws.sdk.kotlin.services.rekognition.model.Point;
 import aws.sdk.kotlin.services.rekognition.model.Smile;
 import aws.sdk.kotlin.services.rekognition.model.Sunglasses;
 import aws.sdk.kotlin.services.rekognition.model.TextDetection;
-import aws.sdk.kotlin.services.rekognition.model.Geometry;
 import kotlin.Unit;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests that the result transformer utility methods work
@@ -143,9 +143,9 @@ public final class RekognitionResultTransformersTest {
                         high = low;
                         low = temp;
                     }
-                   ageRangeBuilder.setHigh(high);
-                   ageRangeBuilder.setLow(low);
-                   return Unit.INSTANCE;
+                    ageRangeBuilder.setHigh(high);
+                    ageRangeBuilder.setLow(low);
+                    return Unit.INSTANCE;
                 });
 
         AgeRange amplifyAgeRange = RekognitionResultTransformers.fromRekognitionAgeRange(rekognitionAgeRange);
@@ -181,14 +181,18 @@ public final class RekognitionResultTransformersTest {
     public void testLandmarksConversion() {
         aws.sdk.kotlin.services.rekognition.model.Landmark leftEyeDown =
                 aws.sdk.kotlin.services.rekognition.model.Landmark.Companion.invoke((landmarkBuilder) -> {
-                    landmarkBuilder.setType(aws.sdk.kotlin.services.rekognition.model.LandmarkType.LeftEyeDown.INSTANCE);
+                    landmarkBuilder.setType(
+                            aws.sdk.kotlin.services.rekognition.model.LandmarkType.LeftEyeDown.INSTANCE
+                    );
                     landmarkBuilder.setX(random.nextFloat());
                     landmarkBuilder.setY(random.nextFloat());
                     return Unit.INSTANCE;
                 });
         aws.sdk.kotlin.services.rekognition.model.Landmark leftEyeRight =
                 aws.sdk.kotlin.services.rekognition.model.Landmark.Companion.invoke((landmarkBuilder) -> {
-                    landmarkBuilder.setType(aws.sdk.kotlin.services.rekognition.model.LandmarkType.LeftEyeRight.INSTANCE);
+                    landmarkBuilder.setType(
+                            aws.sdk.kotlin.services.rekognition.model.LandmarkType.LeftEyeRight.INSTANCE
+                    );
                     landmarkBuilder.setX(random.nextFloat());
                     landmarkBuilder.setY(random.nextFloat());
                     return Unit.INSTANCE;

@@ -14,12 +14,12 @@
  */
 package com.amplifyframework.predictions.aws.service
 
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import aws.sdk.kotlin.services.textract.TextractClient
 import aws.sdk.kotlin.services.textract.model.Block
 import aws.sdk.kotlin.services.textract.model.BlockType
 import aws.sdk.kotlin.services.textract.model.Document
 import aws.sdk.kotlin.services.textract.model.FeatureType
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration

@@ -14,11 +14,11 @@
  */
 package com.amplifyframework.predictions.aws.service
 
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
 import aws.sdk.kotlin.services.comprehend.ComprehendClient
 import aws.sdk.kotlin.services.comprehend.model.DominantLanguage
 import aws.sdk.kotlin.services.comprehend.model.LanguageCode
 import aws.sdk.kotlin.services.comprehend.model.SyntaxLanguageCode
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration

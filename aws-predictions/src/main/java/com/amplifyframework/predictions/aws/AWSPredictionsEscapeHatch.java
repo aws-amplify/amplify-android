@@ -17,9 +17,10 @@ package com.amplifyframework.predictions.aws;
 
 import androidx.annotation.NonNull;
 
+import aws.sdk.kotlin.services.comprehend.ComprehendClient;
+
 import java.util.Objects;
 
-import aws.sdk.kotlin.services.comprehend.ComprehendClient;
 import aws.sdk.kotlin.services.polly.PollyClient;
 import aws.sdk.kotlin.services.rekognition.RekognitionClient;
 import aws.sdk.kotlin.services.textract.TextractClient;
