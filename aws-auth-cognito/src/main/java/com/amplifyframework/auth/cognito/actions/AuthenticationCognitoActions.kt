@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
@@ -34,7 +35,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
             logger?.verbose("$id Starting execution")
             val userPoolTokens = event.storedCredentials?.cognitoUserPoolTokens
             val evt = userPoolTokens?.let {
-                val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, it)
+                val signedInData = SignedInData(JWTParser.getClaim(it.accessToken?:"", "sub")?:"", JWTParser.getClaim(it.accessToken?:"", "username")?:"", Date(), SignInMethod.SRP, it)
                 AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
             } ?: AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             logger?.verbose("$id Sending event ${evt.type}")
