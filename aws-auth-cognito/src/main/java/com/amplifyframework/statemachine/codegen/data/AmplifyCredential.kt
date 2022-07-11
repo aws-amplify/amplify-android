@@ -21,8 +21,7 @@ import kotlinx.serialization.Serializable
 data class AmplifyCredential(
     val cognitoUserPoolTokens: CognitoUserPoolTokens?,
     val identityId: String?,
-    val awsCredentials: AWSCredentials?,
-    val userSignedInData: UserSignedInData? = null
+    val awsCredentials: AWSCredentials?
 )
 
 @Serializable
@@ -55,12 +54,6 @@ data class CognitoUserPoolTokens(
             ")"
     }
 }
-
-@Serializable
-data class UserSignedInData(
-    val userid: String,
-    val username: String
-)
 
 @Serializable
 data class AWSCredentials(

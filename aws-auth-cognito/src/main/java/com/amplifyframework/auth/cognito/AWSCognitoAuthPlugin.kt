@@ -34,6 +34,7 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
+import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -772,16 +773,18 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                         {
                             when (it) {
                                 is CredentialStoreState.Success -> {
-                                    val userSignedInData = it.storedCredentials?.userSignedInData
-                                    if (userSignedInData == null ||
-                                        (userSignedInData.userid.isEmpty() && userSignedInData.username.isEmpty())
-                                    ) {
+                                    val userSignedInData = it.storedCredentials
+                                    val accessToken = userSignedInData?.cognitoUserPoolTokens?.accessToken ?: ""
+                                    val userid = JWTParser.getClaim(accessToken, "sub") ?: ""
+                                    val username = JWTParser.getClaim(accessToken, "username") ?: ""
+
+                                    if (userid.isEmpty() && username.isEmpty()) {
                                         onError.accept(AuthException.InvalidStateException())
                                     } else {
                                         onSuccess.accept(
                                             AuthUser(
-                                                userSignedInData.userid,
-                                                userSignedInData.username
+                                                userid,
+                                                username
                                             )
                                         )
                                     }
