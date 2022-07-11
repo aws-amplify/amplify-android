@@ -22,7 +22,6 @@ import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
-import com.amplifyframework.statemachine.codegen.data.UserSignedInData
 import kotlin.test.assertEquals
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -206,8 +205,7 @@ class AWSCognitoAuthCredentialStoreTest {
                 "secretAccessKey",
                 "sessionToken",
                 expiration
-            ),
-            UserSignedInData(userid = "userid", username = "username")
+            )
         )
     }
 
