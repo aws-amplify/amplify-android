@@ -771,8 +771,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                         {
                             when (it) {
                                 is CredentialStoreState.Success -> {
-                                    val userSignedInData = it.storedCredentials
-                                    val accessToken = userSignedInData?.cognitoUserPoolTokens?.accessToken ?: ""
+                                    val accessToken = it.storedCredentials?.cognitoUserPoolTokens?.accessToken ?: ""
                                     val userid = JWTParser.getClaim(accessToken, "sub") ?: ""
                                     val username = JWTParser.getClaim(accessToken, "username") ?: ""
 
