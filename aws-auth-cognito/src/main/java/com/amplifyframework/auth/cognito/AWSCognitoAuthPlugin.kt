@@ -280,11 +280,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
                 )
-                is AuthenticationState.Configured -> {
-                    // Continue resend signup code
-                    _resendSignUpCode(username, options, onSuccess, onError)
-                }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> _resendSignUpCode(username, options, onSuccess, onError)
             }
         }
     }
