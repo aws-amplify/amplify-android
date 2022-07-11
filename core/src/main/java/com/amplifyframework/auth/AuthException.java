@@ -279,6 +279,13 @@ public class AuthException extends AmplifyException {
         private static final String RECOVERY_SUGGESTION = "Please enter correct username.";
 
         /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public UserNotFoundException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
          * Default message/recovery suggestion with a cause.
          *
          * @param cause The original error.
@@ -318,35 +325,6 @@ public class AuthException extends AmplifyException {
          * @param cause The original error.
          */
         public UsernameExistsException(Throwable cause) {
-            super(MESSAGE, cause, RECOVERY_SUGGESTION);
-        }
-    }
-
-    /**
-     * Could not perform the action because user was not found in the system.
-     */
-    public static class FetchUserAttributeException extends AuthException {
-        private static final long serialVersionUID = 1L;
-        private static final String MESSAGE = "User attributes cannot be fetched.";
-        private static final String RECOVERY_SUGGESTION = "Please wait some time and re-try the operation.";
-
-        /**
-         * Default message/recovery suggestion with a cause.
-         *
-         * @param cause The original error.
-         */
-        /**
-         * Default message/recovery suggestion without a cause.
-         */
-        public FetchUserAttributeException() {
-            super(MESSAGE, RECOVERY_SUGGESTION);
-        }
-
-        /**
-         * Default message/recovery suggestion with a cause.
-         * @param cause The original error.
-         */
-        public FetchUserAttributeException(Throwable cause) {
             super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
     }
