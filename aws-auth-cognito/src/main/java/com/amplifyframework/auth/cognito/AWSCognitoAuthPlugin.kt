@@ -76,7 +76,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
@@ -85,7 +84,6 @@ import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
 import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.util.UserAgent
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -125,9 +123,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
                 )
-                // Continue sign up
-                is AuthenticationState.Configured -> _signUp(username, password, options, onSuccess, onError)
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> _signUp(username, password, options, onSuccess, onError)
             }
         }
     }
@@ -170,7 +166,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 }
 
                 val authSignUpResult = AuthSignUpResult(
-                    true,
+                    false,
                     AuthNextSignUpStep(
                         AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
                         mapOf(),
@@ -215,11 +211,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
                 )
-                is AuthenticationState.Configured -> {
-                    // Continue confirm sign up
-                    _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
-                }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
             }
         }
     }
