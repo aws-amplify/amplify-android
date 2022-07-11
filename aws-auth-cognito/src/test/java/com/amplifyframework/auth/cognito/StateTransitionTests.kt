@@ -390,7 +390,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authNState =
                     it.authNState.takeIf { itN ->
                         itN is AuthenticationState.SigningUp &&
-                                itN.signUpState is SignUpState.SigningUpInitiated
+                            itN.signUpState is SignUpState.SigningUpInitiated
                     }
 
                 authNState?.apply {
@@ -434,7 +434,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authNState =
                     it.authNState.takeIf { itN ->
                         itN is AuthenticationState.SigningUp &&
-                                itN.signUpState is SignUpState.SignedUp
+                            itN.signUpState is SignUpState.SignedUp
                     }
                 authNState?.apply {
                     token?.let(stateMachine::cancel)
@@ -469,7 +469,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authState =
                     it.takeIf {
                         it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn &&
-                                it.authZState is AuthorizationState.Configured
+                            it.authZState is AuthorizationState.Configured
                     }
                 authState?.run {
                     configureLatch.countDown()
@@ -483,7 +483,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authZFetchTokensState =
                     it.authZState.takeIf { itZ ->
                         itZ is AuthorizationState.FetchingAuthSession &&
-                                itZ.fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens
+                            itZ.fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens
                     }
                 authZFetchTokensState?.run {
                     testLatch.countDown()
@@ -538,7 +538,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authState =
                     it.takeIf {
                         it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut &&
-                                it.authZState is AuthorizationState.Configured
+                            it.authZState is AuthorizationState.Configured
                     }
                 authState?.run {
                     configureLatch.countDown()
@@ -614,8 +614,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authZRefreshTokensState =
                     it.authZState.takeIf { itZ ->
                         itZ is AuthorizationState.FetchingAuthSession &&
-                                itZ.fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens &&
-                                itZ.fetchAuthSessionState?.fetchUserPoolTokensState is FetchUserPoolTokensState.Refreshing
+                            itZ.fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens &&
+                            itZ.fetchAuthSessionState?.fetchUserPoolTokensState is FetchUserPoolTokensState.Refreshing
                     }
                 authZRefreshTokensState?.run {
                     testLatch.countDown()
