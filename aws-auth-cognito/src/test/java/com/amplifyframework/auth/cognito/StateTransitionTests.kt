@@ -23,12 +23,14 @@ import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
 import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
@@ -66,6 +68,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         setupSRPActions()
         setupSignOutActions()
         setupFetchAuthActions()
+        setupDeleteAction()
         setupStateMachine()
         Dispatchers.setMain(mainThreadSurrogate)
     }
@@ -85,6 +88,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                         FetchUserPoolTokensState.Resolver(mockFetchUserPoolTokensActions),
                         mockFetchAuthSessionActions
                     ),
+                    DeleteUserState.Resolver(mockDeleteUserActions),
                     mockAuthorizationActions
                 ),
                 mockAuthActions
@@ -550,5 +554,57 @@ class StateTransitionTests : StateTransitionTestBase() {
 
         assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+    }
+
+    @Test
+    fun testDeleteUser() {
+        setupConfigureSignedIn()
+        val configureLatch = CountDownLatch(1)
+        val subscribeLatch = CountDownLatch(1)
+        val testLatch = CountDownLatch(1)
+        var token: StateChangeListenerToken? = null
+        token = stateMachine.listen(
+            { it ->
+                println("Auth State :" + it)
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        DeleteUserEvent(
+                            DeleteUserEvent.EventType.DeleteUser("TOKEN-123")
+                        )
+                    )
+                }
+                val signoutState = it.takeIf { it.authNState is AuthenticationState.SignedOut }
+                signoutState?.run {
+                    stateMachine.send(
+                        DeleteUserEvent(
+                            DeleteUserEvent.EventType.SignOutDeletedUser()
+                        )
+                    )
+                }
+                val deleteUserState = it.authZState?.deleteUserState
+                val userDeletedSuccess = deleteUserState?.takeIf {
+                    println("Delete User State: " + it)
+                    it is DeleteUserState.UserDeleted
+                }
+
+                userDeletedSuccess?.run {
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
+            }
+        )
+
+        assertTrue { subscribeLatch.await(5, TimeUnit.MINUTES) }
+
+        stateMachine.send(
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+        )
+        assertTrue { configureLatch.await(5, TimeUnit.MINUTES) }
+        assertTrue { testLatch.await(10, TimeUnit.MINUTES) }
     }
 }
