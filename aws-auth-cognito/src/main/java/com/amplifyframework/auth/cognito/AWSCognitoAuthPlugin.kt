@@ -366,7 +366,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                     is AuthenticationState.SignedIn -> {
                         token?.let(authStateMachine::cancel)
                         // Store signed in data to credential store
-                        waitForSignInCompletion(authNState.signedInData, onSuccess, onError)
+                        storeSignedInData(authNState.signedInData, onSuccess, onError)
                     }
                     else -> {
                         // no-op
@@ -382,7 +382,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         )
     }
 
-    private fun waitForSignInCompletion(
+    private fun storeSignedInData(
         signedInData: SignedInData,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
@@ -764,52 +764,49 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    var token: StateChangeListenerToken? = null
-                    token = credentialStoreStateMachine.listen(
-                        {
-                            when (it) {
-                                is CredentialStoreState.Success -> {
-                                    val accessToken = it.storedCredentials?.cognitoUserPoolTokens?.accessToken ?: ""
-                                    if (accessToken.isEmpty()) {
-                                        onError.accept(AuthException.InvalidUserPoolConfigurationException())
-                                    }
-                                    val userid = JWTParser.getClaim(accessToken, "sub") ?: ""
-                                    val username = JWTParser.getClaim(accessToken, "username") ?: ""
-
-                                    if (userid.isEmpty() && username.isEmpty()) {
-                                        onError.accept(AuthException.InvalidUserPoolConfigurationException())
-                                    } else {
-                                        onSuccess.accept(
-                                            AuthUser(
-                                                userid,
-                                                username
-                                            )
-                                        )
-                                    }
-                                    token?.let(credentialStoreStateMachine::cancel)
-                                }
-                                is CredentialStoreState.Error -> {
-                                    token?.let(credentialStoreStateMachine::cancel)
-                                    onError.accept(AuthException.InvalidStateException())
-                                }
-                                else -> {
-                                    // no-op
-                                }
+            if (authState.authNState !is AuthenticationState.SignedIn) {
+                onError.accept(AuthException.SignedOutException())
+                return@getCurrentState
+            }
+            var token: StateChangeListenerToken? = null
+            token = credentialStoreStateMachine.listen(
+                {
+                    when (it) {
+                        is CredentialStoreState.Success -> {
+                            val accessToken = it.storedCredentials?.cognitoUserPoolTokens?.accessToken ?: ""
+                            if (accessToken.isEmpty()) {
+                                onError.accept(AuthException.InvalidUserPoolConfigurationException())
                             }
-                        },
-                        {
-                            credentialStoreStateMachine.send(
-                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                            )
+                            val userid = JWTParser.getClaim(accessToken, "sub")
+                            val username = JWTParser.getClaim(accessToken, "username")
+
+                            if (userid.isNullOrEmpty() || username.isNullOrEmpty()) {
+                                onError.accept(AuthException.InvalidUserPoolConfigurationException())
+                            } else {
+                                onSuccess.accept(
+                                    AuthUser(
+                                        userid,
+                                        username
+                                    )
+                                )
+                            }
+                            token?.let(credentialStoreStateMachine::cancel)
                         }
+                        is CredentialStoreState.Error -> {
+                            token?.let(credentialStoreStateMachine::cancel)
+                            onError.accept(AuthException.InvalidStateException())
+                        }
+                        else -> {
+                            // no-op
+                        }
+                    }
+                },
+                {
+                    credentialStoreStateMachine.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
                     )
                 }
-                else -> {
-                    onError.accept(AuthException.SignedOutException())
-                }
-            }
+            )
         }
     }
 

@@ -15,16 +15,12 @@
 
 package com.amplifyframework.api.aws.sigv4;
 
-import androidx.annotation.NonNull;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.auth.CognitoCredentialsProvider;
-import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.Consumer;
 
 import java.util.concurrent.Semaphore;
 
@@ -96,7 +92,7 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
     @Override
     public String getUsername() throws ApiException {
         fetchUser();
-        return currentUser != null ? currentUser.getUsername() : "";
+        return currentUser != null ? currentUser.getUsername() : null;
     }
 
     private synchronized void fetchUser() throws ApiException {
@@ -105,7 +101,7 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
             currentUser = value;
             semaphore.release();
         }, value -> {
-            currentUser = new AuthUser("", "");
+            currentUser = null;
             currentUserRetrievalFailureMessage = value.getLocalizedMessage();
             semaphore.release();
         });
