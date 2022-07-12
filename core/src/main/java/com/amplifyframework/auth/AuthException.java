@@ -442,6 +442,10 @@ public class AuthException extends AmplifyException {
         public InvalidUserPoolConfigurationException(Throwable cause) {
             super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+
+        public InvalidUserPoolConfigurationException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
     }
 
     /**

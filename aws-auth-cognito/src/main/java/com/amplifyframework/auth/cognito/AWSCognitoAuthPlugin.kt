@@ -772,11 +772,14 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                             when (it) {
                                 is CredentialStoreState.Success -> {
                                     val accessToken = it.storedCredentials?.cognitoUserPoolTokens?.accessToken ?: ""
+                                    if (accessToken.isEmpty()) {
+                                        onError.accept(AuthException.InvalidUserPoolConfigurationException())
+                                    }
                                     val userid = JWTParser.getClaim(accessToken, "sub") ?: ""
                                     val username = JWTParser.getClaim(accessToken, "username") ?: ""
 
                                     if (userid.isEmpty() && username.isEmpty()) {
-                                        onError.accept(AuthException.InvalidStateException())
+                                        onError.accept(AuthException.InvalidUserPoolConfigurationException())
                                     } else {
                                         onSuccess.accept(
                                             AuthUser(

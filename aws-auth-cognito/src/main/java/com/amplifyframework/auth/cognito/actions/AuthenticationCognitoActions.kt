@@ -34,10 +34,25 @@ object AuthenticationCognitoActions : AuthenticationActions {
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val userPoolTokens = event.storedCredentials?.cognitoUserPoolTokens
-            val evt = userPoolTokens?.let {
-                val signedInData = SignedInData(JWTParser.getClaim(it.accessToken?:"", "sub")?:"", JWTParser.getClaim(it.accessToken?:"", "username")?:"", Date(), SignInMethod.SRP, it)
-                AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
-            } ?: AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
+            val evt = if (userPoolTokens?.accessToken != null) {
+                AuthenticationEvent(
+                    AuthenticationEvent.EventType.InitializedSignedIn(
+                        SignedInData(
+                            JWTParser.getClaim(
+                                userPoolTokens.accessToken,
+                                "sub"
+                            ) ?: "",
+                            JWTParser.getClaim(userPoolTokens.accessToken, "username") ?: "",
+                            Date(),
+                            SignInMethod.SRP,
+                            userPoolTokens
+                        )
+                    )
+                )
+            } else {
+                AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
+            }
+
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
 
