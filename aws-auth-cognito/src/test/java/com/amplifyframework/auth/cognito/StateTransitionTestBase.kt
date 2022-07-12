@@ -19,10 +19,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
-import com.amplifyframework.statemachine.codegen.actions.FetchAWSCredentialsActions
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
-import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
-import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
 import com.amplifyframework.statemachine.codegen.actions.SignUpActions
@@ -85,15 +82,6 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockFetchAuthSessionActions: FetchAuthSessionActions
-
-    @Mock
-    internal lateinit var mockFetchIdentityActions: FetchIdentityActions
-
-    @Mock
-    internal lateinit var mockFetchUserPoolTokensActions: FetchUserPoolTokensActions
-
-    @Mock
-    internal lateinit var mockFetchAwsCredentialsActions: FetchAWSCredentialsActions
 
     internal fun setupAuthActions() {
         Mockito.`when`(mockAuthActions.initializeAuthConfigurationAction(MockitoHelper.anyObject()))
@@ -173,7 +161,7 @@ open class StateTransitionTestBase {
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         FetchAuthSessionEvent(
-                            FetchAuthSessionEvent.EventType.FetchUserPoolTokens(credentials)
+                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
                         )
                     )
                 }
@@ -289,35 +277,7 @@ open class StateTransitionTestBase {
 
     internal fun setupFetchAuthActions() {
         Mockito.`when`(
-            mockFetchUserPoolTokensActions.refreshFetchUserPoolTokensAction(
-                MockitoHelper.anyObject()
-            )
-        )
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        FetchAuthSessionEvent(
-                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
-                        )
-                    )
-                }
-            )
-
-        Mockito.`when`(
-            mockFetchAuthSessionActions.configureUserPoolTokensAction(MockitoHelper.anyObject())
-        )
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        FetchAuthSessionEvent(
-                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
-                        )
-                    )
-                }
-            )
-
-        Mockito.`when`(
-            mockFetchAuthSessionActions.configureIdentityAction(MockitoHelper.anyObject())
+            mockFetchAuthSessionActions.fetchIdentityAction(MockitoHelper.anyObject())
         )
             .thenReturn(
                 Action { dispatcher, _ ->
@@ -330,20 +290,20 @@ open class StateTransitionTestBase {
             )
 
         Mockito.`when`(
-            mockFetchAuthSessionActions.configureAWSCredentialsAction(MockitoHelper.anyObject())
+            mockFetchAuthSessionActions.fetchAWSCredentialsAction(MockitoHelper.anyObject())
         )
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         FetchAuthSessionEvent(
-                            FetchAuthSessionEvent.EventType.FetchedAuthSession(credentials)
+                            FetchAuthSessionEvent.EventType.Fetched(credentials)
                         )
                     )
                 }
             )
 
         Mockito.`when`(
-            mockFetchAuthSessionActions.authorizationSessionEstablished(MockitoHelper.anyObject())
+            mockFetchAuthSessionActions.notifySessionEstablishedAction(MockitoHelper.anyObject())
         )
             .thenReturn(
                 Action { dispatcher, _ ->
