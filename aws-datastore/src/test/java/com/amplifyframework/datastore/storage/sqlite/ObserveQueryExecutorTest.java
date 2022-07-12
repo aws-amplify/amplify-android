@@ -273,6 +273,10 @@ public class ObserveQueryExecutorTest {
      * @throws InterruptedException InterruptedException
      * @throws DataStoreException DataStoreException
      */
+    @Ignore("Test is flacky in builds because of slowness of build environment. This test always passes locally." +
+            " There is a corresponding integration tests " +
+            "SQLiteStorageAdapterObserveQueryTest.querySavedDataWithMultipleItemsThenItemSavesSortedByString" +
+            " which passes reliably.")
     @Test
     public void observeQueryReturnsSortedListOfTotalItems() throws InterruptedException,
             DataStoreException {
