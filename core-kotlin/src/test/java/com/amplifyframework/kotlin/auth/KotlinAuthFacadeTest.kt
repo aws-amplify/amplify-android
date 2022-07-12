@@ -840,6 +840,24 @@ class KotlinAuthFacadeTest {
     }
 
     /**
+     * When the getCurrentUser() delegate throws an error, the proxy
+     * API in the Kotlin facade should, too. Note that this API doesn't
+     * have any suspending functions, this is a straight pass through verification.
+     */
+    @Test(expected = AuthException::class)
+    fun getCurrentUserWhenUserNameIsEmpty(): Unit = runBlocking {
+        val expectedException = AuthException.InvalidUserPoolConfigurationException()
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 1
+            val onResult = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onResult.accept(expectedException)
+        }
+        auth.getCurrentUser()
+    }
+
+    /**
      * Signing out calls through to the delegate. If no error is thrown from
      * the delegate, none is rendered by the coroutine.
      */
