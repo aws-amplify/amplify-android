@@ -45,7 +45,6 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.multiauth.GroupPrivatePublicUPIAMAPIPost;
 import com.amplifyframework.testmodels.multiauth.GroupPrivateUPIAMPost;
 import com.amplifyframework.testmodels.multiauth.GroupPublicUPAPIPost;
@@ -127,23 +126,6 @@ public final class MultiAuthSyncEngineInstrumentationTest {
     private final AtomicReference<String> token = new AtomicReference<>();
     private ServiceAccountCredentials googleServiceAccount;
     private HttpRequestInterceptor requestInterceptor;
-
-    /**
-     * Class name: Author.
-     * Signed in with user pools: false.
-     * Signed in with OIDC: false.
-     * Expected result: AuthorizationType.API_KEY.
-     * @throws AmplifyException Not expected.
-     * @throws IOException Not expected.
-     */
-    @Test
-    public void testAuthorAnonymous() throws IOException, AmplifyException {
-        verifyScenario(Author.class,
-                      false,
-                      false,
-                      AuthorizationType.API_KEY
-        );
-    }
 
     /**
      * Class name: OwnerUPPost.
