@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
@@ -38,11 +37,8 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 AuthenticationEvent(
                     AuthenticationEvent.EventType.InitializedSignedIn(
                         SignedInData(
-                            JWTParser.getClaim(
-                                userPoolTokens.accessToken,
-                                "sub"
-                            ) ?: "",
-                            JWTParser.getClaim(userPoolTokens.accessToken, "username") ?: "",
+                            "",
+                            "",
                             Date(),
                             SignInMethod.SRP,
                             userPoolTokens
