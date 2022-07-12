@@ -460,7 +460,8 @@ public interface AuthCategoryBehavior {
 
     /**
      * Gets the currently logged in User.
-     * @return the currently logged in user with basic info and methods for fetching/updating user attributes
+     * @param onSuccess Success callback
+     * @param onError Error callback
      */
     void getCurrentUser(
             @NonNull Consumer<AuthUser> onSuccess,

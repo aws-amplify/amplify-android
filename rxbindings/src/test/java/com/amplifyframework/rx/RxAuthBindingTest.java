@@ -59,13 +59,11 @@ import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link RxAuthBinding}.
@@ -986,6 +984,7 @@ public final class RxAuthBindingTest {
     /**
      * Getting the current user should just pass through to the delegate, to return whatever
      * it would.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
     public void testGetCurrentUser() throws InterruptedException {

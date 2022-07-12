@@ -60,13 +60,12 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
         final Semaphore semaphore = new Semaphore(0);
         lastTokenRetrievalFailureMessage = null;
         credentialsProvider.getAccessToken(value -> {
-                    token = value;
-                    semaphore.release();
-                }, error -> {
-                    lastTokenRetrievalFailureMessage = error.getLocalizedMessage();
-                    semaphore.release();
-                }
-        );
+            token = value;
+            semaphore.release();
+        }, error -> {
+                lastTokenRetrievalFailureMessage = error.getLocalizedMessage();
+                semaphore.release();
+            });
 
         try {
             semaphore.acquire();
@@ -101,10 +100,10 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
             currentUser = value;
             semaphore.release();
         }, value -> {
-            currentUser = null;
-            currentUserRetrievalFailureMessage = value.getLocalizedMessage();
-            semaphore.release();
-        });
+                currentUser = null;
+                currentUserRetrievalFailureMessage = value.getLocalizedMessage();
+                semaphore.release();
+            });
 
         try {
             semaphore.acquire();
