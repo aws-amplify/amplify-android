@@ -359,7 +359,7 @@ public class ObserveQueryExecutorTest {
                 exception.printStackTrace();
             }
         }
-        Assert.assertTrue(changeLatch.await(7, TimeUnit.SECONDS));
+        Assert.assertTrue(changeLatch.await(10, TimeUnit.SECONDS));
     }
 
     /***
