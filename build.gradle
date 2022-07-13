@@ -103,7 +103,7 @@ ext {
             rekognition: "com.amazonaws:aws-android-sdk-rekognition:$awsSdkVersion",
             textract: "com.amazonaws:aws-android-sdk-textract:$awsSdkVersion",
             translate: "com.amazonaws:aws-android-sdk-translate:$awsSdkVersion",
-            
+
             cognitoidentity: "aws.sdk.kotlin:cognitoidentity:$awsKoltinSdkVersion",
             cognitoidentityprovider: "aws.sdk.kotlin:cognitoidentityprovider:$awsKoltinSdkVersion",
             credentials: "aws.smithy.kotlin:aws-credentials:0.10.2",
@@ -111,6 +111,7 @@ ext {
             location: "aws.sdk.kotlin:location:$awsKoltinSdkVersion",
             s3: "aws.sdk.kotlin:s3:$awsKoltinSdkVersion",
             signing: "aws.smithy.kotlin:aws-signing-default:0.10.2",
+            pinpointKotlin: "aws.sdk.kotlin:pinpoint:$awsKoltinSdkVersion"
         ],
         kotlin: [
             stdlib: 'org.jetbrains.kotlin:kotlin-stdlib:1.6.10',
