@@ -16,12 +16,14 @@
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
+apply plugin: 'kotlin-android'
 
 dependencies {
     implementation project(path: ':core')
     implementation dependency.androidx.appcompat
     implementation dependency.aws.pinpoint
     implementation dependency.aws.mobileclient
+    implementation dependency.aws.pinpointKotlin
 
     testImplementation dependency.junit
     testImplementation dependency.mockito
