@@ -85,7 +85,8 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.util.UserAgent
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -659,13 +660,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                     token?.let(credentialStoreStateMachine::cancel)
                                     val accessToken = it.storedCredentials?.cognitoUserPoolTokens?.accessToken
                                     if (!accessToken.isNullOrEmpty()) {
-                                        runBlocking {
-                                            _fetchDevices(
-                                                accessToken,
-                                                onSuccess,
-                                                onError
-                                            )
-                                        }
+                                        _fetchDevices(
+                                            accessToken,
+                                            onSuccess,
+                                            onError
+                                        )
                                     } else {
                                         onError.accept(AuthException.InvalidStateException())
                                     }
@@ -693,26 +692,28 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         }
     }
 
-    private suspend fun _fetchDevices(
+    private fun _fetchDevices(
         token: String,
         onSuccess: Consumer<MutableList<AuthDevice>>,
         onError: Consumer<AuthException>
     ) {
-        try {
-            val response =
-                configureCognitoClients().cognitoIdentityProviderClient?.listDevices(
-                    ListDevicesRequest.invoke {
-                        accessToken = token
-                    }
-                )
-            val _devices = response?.devices
-            val authdeviceList = mutableListOf<AuthDevice>()
-            _devices?.forEach {
-                authdeviceList.add(AuthDevice.fromId(it.deviceKey ?: ""))
+        GlobalScope.async {
+            try {
+                val response =
+                    configureCognitoClients().cognitoIdentityProviderClient?.listDevices(
+                        ListDevicesRequest.invoke {
+                            accessToken = token
+                        }
+                    )
+                val _devices = response?.devices
+                val authdeviceList = mutableListOf<AuthDevice>()
+                _devices?.forEach {
+                    authdeviceList.add(AuthDevice.fromId(it.deviceKey ?: ""))
+                }
+                onSuccess.accept(authdeviceList)
+            } catch (e: Exception) {
+                onError.accept(AuthException(e.localizedMessage, e, AuthException.TODO_RECOVERY_SUGGESTION))
             }
-            onSuccess.accept(authdeviceList)
-        } catch (e: Exception) {
-            onError.accept(AuthException(e.localizedMessage, e, AuthException.TODO_RECOVERY_SUGGESTION))
         }
     }
 
