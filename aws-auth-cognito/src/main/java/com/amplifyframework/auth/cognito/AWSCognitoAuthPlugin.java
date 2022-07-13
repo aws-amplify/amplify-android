@@ -1236,7 +1236,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             if (options instanceof AWSCognitoAuthWebUISignInOptions) {
                 AWSCognitoAuthWebUISignInOptions cognitoOptions = (AWSCognitoAuthWebUISignInOptions) options;
                 optionsBuilder.idpIdentifier(cognitoOptions.getIdpIdentifier())
-                        .federationProviderName(cognitoOptions.getFederationProviderName());
+                        .federationProviderName(cognitoOptions.getFederationProviderName())
+                        .disableFederation(cognitoOptions.getFederationEnabled()); // Note: API name is incorrect in the HostedUIOptions.
                 signInUIOptionsBuilder.browserPackage(cognitoOptions.getBrowserPackage());
             }
 

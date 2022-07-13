@@ -32,6 +32,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
     private final String idpIdentifier;
     private final String federationProviderName;
     private final String browserPackage;
+    private final Boolean isFederationEnabled;
 
     /**
      * Advanced options for signing in via a hosted web ui.
@@ -44,6 +45,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
      *                               provider name, e.g. .auth0.com
      * @param browserPackage Specify which browser package should be used for web sign in (e.g. "org.mozilla.firefox").
      *                       Defaults to the Chrome package if not specified.
+     * @param isFederationEnabled Specify if federation needs to be disabled, if identity pool not configured.
      */
     protected AWSCognitoAuthWebUISignInOptions(
             List<String> scopes,
@@ -52,12 +54,14 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
             Map<String, String> tokenQueryParameters,
             String idpIdentifier,
             String federationProviderName,
-            String browserPackage
+            String browserPackage,
+            Boolean isFederationEnabled
     ) {
         super(scopes, signInQueryParameters, signOutQueryParameters, tokenQueryParameters);
         this.idpIdentifier = idpIdentifier;
         this.federationProviderName = federationProviderName;
         this.browserPackage = browserPackage;
+        this.isFederationEnabled = isFederationEnabled;
     }
 
     /**
@@ -88,6 +92,14 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
     }
 
     /**
+     * Specify if federation needs to be disabled, if identity pool not configured.
+     * @return false if federation is disabled.
+     */
+
+    @Nullable
+    public Boolean getFederationEnabled() { return isFederationEnabled; }
+
+    /**
      * Returns a builder for this object.
      * @return a builder for this object.
      */
@@ -105,7 +117,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                 getTokenQueryParameters(),
                 getIdpIdentifier(),
                 getFederationProviderName(),
-                getBrowserPackage()
+                getBrowserPackage(),
+                getFederationEnabled()
         );
     }
 
@@ -123,7 +136,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                     ObjectsCompat.equals(getTokenQueryParameters(), webUISignInOptions.getTokenQueryParameters()) &&
                     ObjectsCompat.equals(getIdpIdentifier(), webUISignInOptions.getIdpIdentifier()) &&
                     ObjectsCompat.equals(getFederationProviderName(), webUISignInOptions.getFederationProviderName()) &&
-                    ObjectsCompat.equals(getBrowserPackage(), webUISignInOptions.getBrowserPackage());
+                    ObjectsCompat.equals(getBrowserPackage(), webUISignInOptions.getBrowserPackage()) &&
+                    ObjectsCompat.equals(getFederationEnabled(), webUISignInOptions.getFederationEnabled());
         }
     }
 
@@ -137,6 +151,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                 ", idpIdentifier=" + getIdpIdentifier() +
                 ", federationProviderName=" + getFederationProviderName() +
                 ", browserPackage=" + getBrowserPackage() +
+                ", isFederationEnabled=" + getFederationEnabled() +
                 '}';
     }
 
@@ -147,6 +162,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
         private String idpIdentifier;
         private String federationProviderName;
         private String browserPackage;
+        private Boolean isFederationEnabled;
 
         /**
          * Constructs the builder.
@@ -200,6 +216,16 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
         }
 
         /**
+         * Override federation, if identity pool not configured.
+         * @param isFederationEnabled Specify if federation needs to be disabled, if identity pool not configured.
+         * @return the instance of the builder.
+         */
+        public CognitoBuilder isFederationEnabled(@NonNull Boolean isFederationEnabled) {
+            this.isFederationEnabled = isFederationEnabled;
+            return this;
+        }
+
+        /**
          * Build the object.
          * @return a new instance of AWSCognitoAuthWebUISignInOptions.
          */
@@ -212,7 +238,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                     Immutable.of(super.getTokenQueryParameters()),
                     idpIdentifier,
                     federationProviderName,
-                    browserPackage
+                    browserPackage,
+                    isFederationEnabled
             );
         }
     }
