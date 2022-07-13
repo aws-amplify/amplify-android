@@ -127,7 +127,6 @@ public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
                                           .configureClient("DataStoreIntegTestsApi", okHttpClientBuilder ->
                                               okHttpClientBuilder.addInterceptor(requestInterceptor)
                                           )
-                                          //.apiAuthProviders(apiAuthProviders)
                                           .build());
         apiCategory.configure(apiCategoryConfiguration, context);
 
@@ -195,7 +194,6 @@ public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
         dataStore.save(testRecord);
         expectedEventAccumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertFalse(requestInterceptor.hasUnexpectedRequests());
-        // Sign the user out if sign-in was required.
     }
 
     /**
