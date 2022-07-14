@@ -34,6 +34,8 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
     private String token;
     private final CognitoCredentialsProvider credentialsProvider;
     private String lastTokenRetrievalFailureMessage;
+    private AuthUser currentUser;
+    private String currentUserRetrievalFailureMessage;
 
     /**
      * Creates the object with the instance of {@link CognitoCredentialsProvider}.
@@ -58,21 +60,20 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
         final Semaphore semaphore = new Semaphore(0);
         lastTokenRetrievalFailureMessage = null;
         credentialsProvider.getAccessToken(value -> {
-                token = value;
-                semaphore.release();
-            }, error -> {
+            token = value;
+            semaphore.release();
+        }, error -> {
                 lastTokenRetrievalFailureMessage = error.getLocalizedMessage();
                 semaphore.release();
-            }
-        );
+            });
 
         try {
             semaphore.acquire();
         } catch (InterruptedException exception) {
             throw new ApiException(
-                "Interrupted waiting for Cognito Userpools token.",
-                exception,
-                AmplifyException.TODO_RECOVERY_SUGGESTION
+                    "Interrupted waiting for Cognito Userpools token.",
+                    exception,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }
 
@@ -88,9 +89,36 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
     }
 
     @Override
-    public String getUsername() {
-        AuthUser currentUser = Amplify.Auth.getCurrentUser();
+    public String getUsername() throws ApiException {
+        fetchUser();
+        return currentUser != null ? currentUser.getUsername() : null;
+    }
 
-        return currentUser == null ? null : currentUser.getUsername();
+    private synchronized void fetchUser() throws ApiException {
+        final Semaphore semaphore = new Semaphore(0);
+        Amplify.Auth.getCurrentUser(value -> {
+            currentUser = value;
+            semaphore.release();
+        }, value -> {
+                currentUser = null;
+                currentUserRetrievalFailureMessage = value.getLocalizedMessage();
+                semaphore.release();
+            });
+
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException exception) {
+            throw new ApiException(
+                    "Interrupted waiting for Cognito Username.",
+                    exception,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
+        }
+        if (currentUserRetrievalFailureMessage != null) {
+            throw new ApiException(
+                    currentUserRetrievalFailureMessage,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
+        }
     }
 }

@@ -442,6 +442,13 @@ public class AuthException extends AmplifyException {
         public InvalidUserPoolConfigurationException(Throwable cause) {
             super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public InvalidUserPoolConfigurationException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
     }
 
     /**

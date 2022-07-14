@@ -34,6 +34,7 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
+import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -63,7 +64,7 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -83,7 +84,6 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.util.UserAgent
-import java.util.concurrent.Semaphore
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -367,9 +367,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                     }
                     is AuthenticationState.SignedIn -> {
                         token?.let(authStateMachine::cancel)
-                        val cognitoUserPoolTokens = authNState.signedInData.cognitoUserPoolTokens
-                        // Store tokens to credential store
-                        waitForSignInCompletion(cognitoUserPoolTokens, onSuccess, onError)
+                        // Store signed in data to credential store
+                        storeSignedInData(authNState.signedInData, onSuccess, onError)
                     }
                     else -> {
                         // no-op
@@ -385,8 +384,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         )
     }
 
-    private fun waitForSignInCompletion(
-        tokens: CognitoUserPoolTokens,
+    private fun storeSignedInData(
+        signedInData: SignedInData,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
@@ -412,7 +411,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             {
                 credentialStoreStateMachine.send(
                     CredentialStoreEvent(
-                        CredentialStoreEvent.EventType.StoreCredentials(AmplifyCredential(tokens, null, null))
+                        CredentialStoreEvent.EventType.StoreCredentials(
+                            AmplifyCredential(
+                                signedInData.cognitoUserPoolTokens,
+                                null,
+                                null
+                            )
+                        )
                     )
                 )
             }
@@ -757,29 +762,55 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         TODO("Not yet implemented")
     }
 
-    override fun getCurrentUser(): AuthUser? {
-        var authUser: AuthUser? = null
-        val semaphore = Semaphore(0)
+    override fun getCurrentUser(
+        onSuccess: Consumer<AuthUser>,
+        onError: Consumer<AuthException>
+    ) {
         authStateMachine.getCurrentState { authState ->
-            when (val authorizationState = authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    authUser = AuthUser(
-                        authorizationState.signedInData.userId,
-                        authorizationState.signedInData.username
+            if (authState.authNState !is AuthenticationState.SignedIn) {
+                onError.accept(AuthException.SignedOutException())
+                return@getCurrentState
+            }
+            var token: StateChangeListenerToken? = null
+            token = credentialStoreStateMachine.listen(
+                {
+                    when (it) {
+                        is CredentialStoreState.Success -> {
+                            val accessToken = it.storedCredentials?.cognitoUserPoolTokens?.accessToken ?: ""
+                            if (accessToken.isEmpty()) {
+                                onError.accept(AuthException.InvalidUserPoolConfigurationException())
+                            }
+                            val userid = JWTParser.getClaim(accessToken, "sub")
+                            val username = JWTParser.getClaim(accessToken, "username")
+
+                            if (userid.isNullOrEmpty() || username.isNullOrEmpty()) {
+                                onError.accept(AuthException.InvalidUserPoolConfigurationException())
+                            } else {
+                                onSuccess.accept(
+                                    AuthUser(
+                                        userid,
+                                        username
+                                    )
+                                )
+                            }
+                            token?.let(credentialStoreStateMachine::cancel)
+                        }
+                        is CredentialStoreState.Error -> {
+                            token?.let(credentialStoreStateMachine::cancel)
+                            onError.accept(AuthException.InvalidStateException())
+                        }
+                        else -> {
+                            // no-op
+                        }
+                    }
+                },
+                {
+                    credentialStoreStateMachine.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
                     )
                 }
-                else -> {
-                    // no-op
-                }
-            }
-            semaphore.release()
+            )
         }
-        try {
-            semaphore.acquire()
-        } catch (ex: InterruptedException) {
-            throw Exception("Interrupted while waiting for current user", ex)
-        }
-        return authUser
     }
 
     override fun signOut(onSuccess: Action, onError: Consumer<AuthException>) {
