@@ -33,6 +33,8 @@ public interface CognitoUserPoolsAuthProvider {
     /**
      * Returns the currently logged in user's name from local cache.
      * @return the currently logged in user's name or null if not available
+     * @throws ApiException in case the operation was interrupted by a different thread
+     * or there is a problem retrieving the username
      */
-    String getUsername();
+    String getUsername() throws ApiException;
 }
