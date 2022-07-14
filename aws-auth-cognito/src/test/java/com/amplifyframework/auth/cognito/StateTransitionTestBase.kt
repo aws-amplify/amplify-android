@@ -19,6 +19,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
+import com.amplifyframework.statemachine.codegen.actions.DeleteUserActions
 import com.amplifyframework.statemachine.codegen.actions.FetchAWSCredentialsActions
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
@@ -88,6 +89,9 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockFetchIdentityActions: FetchIdentityActions
+
+    @Mock
+    internal lateinit var mockDeleteUserActions: DeleteUserActions
 
     @Mock
     internal lateinit var mockFetchUserPoolTokensActions: FetchUserPoolTokensActions
@@ -351,6 +355,19 @@ open class StateTransitionTestBase {
                         AuthorizationEvent(
                             AuthorizationEvent.EventType.FetchedAuthSession(credentials)
                         )
+                    )
+                }
+            )
+    }
+
+    internal fun setupDeleteAction() {
+        Mockito.`when`(
+            mockDeleteUserActions.initDeleteUserAction(MockitoHelper.anyObject())
+        )
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(true))
                     )
                 }
             )
