@@ -107,3 +107,7 @@ build-artifacts.tar.gz
 
 # add ignore for jenv
 .java-version
+
+# sample app resources
+sample*
+.graphqlconfig.yml
