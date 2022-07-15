@@ -32,7 +32,7 @@ sealed class SignInState : State {
         }
 
         override fun resolve(oldState: SignInState, event: StateMachineEvent): StateResolution<SignInState> {
-            val resolution = resolveSRPSignInEvent(oldState, event)
+            val resolution = resolveSignInEvent(oldState, event)
             val actions = resolution.actions.toMutableList()
             val builder = Builder(resolution.newState)
 
@@ -44,7 +44,7 @@ sealed class SignInState : State {
             return StateResolution(builder.build(), actions)
         }
 
-        private fun resolveSRPSignInEvent(
+        private fun resolveSignInEvent(
             oldState: SignInState,
             event: StateMachineEvent
         ): StateResolution<SignInState> {
