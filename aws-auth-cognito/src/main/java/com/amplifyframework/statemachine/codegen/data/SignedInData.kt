@@ -23,6 +23,5 @@ data class SignedInData(
     val username: String,
     val signedInDate: Date,
     val signInMethod: SignInMethod,
-    val cognitoUserPoolTokens: CognitoUserPoolTokens,
-    val deviceInfo: NewDeviceMetadataType? = null
+    val cognitoUserPoolTokens: CognitoUserPoolTokens
 )
