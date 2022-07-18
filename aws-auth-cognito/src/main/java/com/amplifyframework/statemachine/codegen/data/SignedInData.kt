@@ -15,7 +15,6 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.NewDeviceMetadataType
 import java.util.Date
 
 data class SignedInData(
