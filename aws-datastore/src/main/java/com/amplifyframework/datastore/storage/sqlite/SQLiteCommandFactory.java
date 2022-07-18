@@ -302,7 +302,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             updatedSqlPredicateString = updatedSqlPredicateString.replace(predicateOperationField,
                     Wrap.inBackticks(predicateOperationField));
         }
-        return sqlPredicateString;
+        return updatedSqlPredicateString;
     }
 
     @NonNull
