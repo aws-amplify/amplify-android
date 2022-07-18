@@ -153,4 +153,21 @@ public final class RestApiInstrumentationTest {
         assertNotNull("Should return non-null data", response.getData());
         assertFalse("Response should be unsuccessful", response.getCode().isSuccessful());
     }
+
+    /**
+     * Test whether an exception that occurs when making a request and that is not
+     * an IOException can be caught in a try/catch.
+     * @throws Exception On failure to catch the exception that occurs when making a request.
+     */
+    @Test
+    public void getRequestNonIOExceptionCanBeCaught() throws Exception {
+        final RestOptions options = RestOptions.builder()
+                .addPath("/invalidPath")
+                .build();
+        try {
+            final RestResponse response = api.get("iamAuthApi", options);
+        } catch (ApiException apiException) {
+            // Expected to enter catch block
+        }
+    }
 }
