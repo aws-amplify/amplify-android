@@ -376,7 +376,7 @@ public class SqlCommandTest {
      * @throws AmplifyException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
      */
     @Test
-    public void queryWithPredicate() throws AmplifyException {
+    public void queryWithPredicateForFlutter() throws AmplifyException {
         setUserAgent();
         final ModelSchema personSchema = getPersonModelSchema();
         final String testName = "name";
@@ -386,7 +386,7 @@ public class SqlCommandTest {
         );
         assertNotNull(sqlCommand);
         assertEquals(
-                PERSON_BASE_QUERY + " WHERE `first_name` = ?;",
+                PERSON_BASE_QUERY + " WHERE first_name = ?;",
                 sqlCommand.sqlStatement()
         );
         assertEquals(1, sqlCommand.getBindings().size());
