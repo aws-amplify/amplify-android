@@ -23,6 +23,7 @@ import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 
 sealed class AuthenticationState : State {
@@ -38,6 +39,7 @@ sealed class AuthenticationState : State {
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
     open var signUpState: SignUpState? = SignUpState.NotStarted()
     open var signOutState: SignOutState? = SignOutState.NotStarted()
+    open var deleteUserState: DeleteUserState? = DeleteUserState.NotStarted()
 
     class Resolver(
         private val signUpResolver: StateMachineResolver<SignUpState>,
@@ -50,6 +52,10 @@ sealed class AuthenticationState : State {
 
         private fun asAuthenticationEvent(event: StateMachineEvent): AuthenticationEvent.EventType? {
             return (event as? AuthenticationEvent)?.eventType
+        }
+
+        private fun asDeleteUserEvent(event: StateMachineEvent): DeleteUserEvent.EventType? {
+            return (event as? DeleteUserEvent)?.eventType
         }
 
         override fun resolve(
@@ -113,18 +119,20 @@ sealed class AuthenticationState : State {
                     is AuthenticationEvent.EventType.ResetSignUp -> StateResolution(SignedOut(SignedOutData()))
                     else -> defaultResolution
                 }
-                is SignedIn -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.SignOutRequested -> {
+                is SignedIn -> when {
+                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
                         val action =
                             authenticationActions.initiateSignOutAction(authenticationEvent, oldState.signedInData)
                         StateResolution(SigningOut(oldState.signOutState), listOf(action))
                     }
                     else -> defaultResolution
                 }
-                is SigningOut -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.InitializedSignedOut -> StateResolution(
-                        SignedOut(authenticationEvent.signedOutData)
-                    )
+                is SigningOut -> when {
+                    authenticationEvent is AuthenticationEvent.EventType.InitializedSignedOut -> {
+                        StateResolution(
+                            SignedOut(authenticationEvent.signedOutData)
+                        )
+                    }
                     else -> defaultResolution
                 }
                 is SignedOut -> when {
