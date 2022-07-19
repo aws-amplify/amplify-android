@@ -677,47 +677,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun forgetDevice(onSuccess: Action, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    var token: StateChangeListenerToken? = null
-                    token = credentialStoreStateMachine.listen(
-                        {
-                            when (it) {
-                                is CredentialStoreState.Success -> {
-                                    token?.let(credentialStoreStateMachine::cancel)
-                                    val storedCredentials = it.storedCredentials
-                                    storedCredentials?.cognitoUserPoolTokens?.accessToken?.let { accessToken ->
-                                        updateDevice(
-                                            accessToken,
-                                            null,
-                                            DeviceRememberedStatusType.NotRemembered,
-                                            onSuccess,
-                                            onError
-                                        )
-                                    } ?: onError.accept(AuthException.InvalidStateException())
-                                }
-                                is CredentialStoreState.Error -> {
-                                    token?.let(credentialStoreStateMachine::cancel)
-                                    onError.accept(AuthException.InvalidStateException())
-                                }
-                                else -> {
-                                    // no-op
-                                }
-                            }
-                        },
-                        {
-                            credentialStoreStateMachine.send(
-                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                            )
-                        }
-                    )
-                }
-                else -> {
-                    onError.accept(AuthException.SignedOutException())
-                }
-            }
-        }
+        forgetDevice(AuthDevice.fromId(""), onSuccess, onError)
     }
 
     private fun updateDevice(
@@ -759,10 +719,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                 is CredentialStoreState.Success -> {
                                     token?.let(credentialStoreStateMachine::cancel)
                                     val storedCredentials = it.storedCredentials
+                                    val deviceID = device.deviceId.ifEmpty { null }
                                     storedCredentials?.cognitoUserPoolTokens?.accessToken?.let { accessToken ->
                                         updateDevice(
                                             accessToken,
-                                            device.deviceId,
+                                            deviceID,
                                             DeviceRememberedStatusType.NotRemembered,
                                             onSuccess,
                                             onError
