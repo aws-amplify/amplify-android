@@ -17,8 +17,26 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
-import com.amplifyframework.auth.*
-import com.amplifyframework.auth.options.*
+import com.amplifyframework.auth.AuthCodeDeliveryDetails
+import com.amplifyframework.auth.AuthDevice
+import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthProvider
+import com.amplifyframework.auth.AuthSession
+import com.amplifyframework.auth.AuthUser
+import com.amplifyframework.auth.AuthUserAttribute
+import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions
+import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
+import com.amplifyframework.auth.options.AuthResetPasswordOptions
+import com.amplifyframework.auth.options.AuthSignInOptions
+import com.amplifyframework.auth.options.AuthSignOutOptions
+import com.amplifyframework.auth.options.AuthSignUpOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
@@ -28,10 +46,9 @@ import com.amplifyframework.core.Consumer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.json.JSONException
+import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertEquals
 
 class AWSCognitoAuthPluginTest {
 
@@ -54,7 +71,9 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signUp(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.signUp(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.signUp(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError)
+        }
     }
 
     @Test
@@ -66,7 +85,14 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.confirmSignUp(expectedUsername, expectedConfirmationCode, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.confirmSignUp(expectedUsername, expectedConfirmationCode, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.confirmSignUp(
+                expectedUsername,
+                expectedConfirmationCode,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
     }
 
     @Test
@@ -77,9 +103,23 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignUpResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
-        authPlugin.confirmSignUp(expectedUsername, expectedConfirmationCode, expectedOptions, expectedOnSuccess, expectedOnError)
+        authPlugin.confirmSignUp(
+            expectedUsername,
+            expectedConfirmationCode,
+            expectedOptions,
+            expectedOnSuccess,
+            expectedOnError
+        )
 
-        verify { realPlugin.confirmSignUp(expectedUsername, expectedConfirmationCode, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.confirmSignUp(
+                expectedUsername,
+                expectedConfirmationCode,
+                expectedOptions,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
     }
 
     @Test
@@ -127,7 +167,15 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signIn(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.signIn(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.signIn(
+                expectedUsername,
+                expectedPassword,
+                expectedOptions,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
     }
 
     @Test
@@ -150,7 +198,9 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.confirmSignIn(expectedConfirmationCode, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.confirmSignIn(expectedConfirmationCode, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.confirmSignIn(expectedConfirmationCode, expectedOptions, expectedOnSuccess, expectedOnError)
+        }
     }
 
     @Test
@@ -162,7 +212,14 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signInWithSocialWebUI(expectedProvider, expectedActivity, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.signInWithSocialWebUI(expectedProvider, expectedActivity, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.signInWithSocialWebUI(
+                expectedProvider,
+                expectedActivity,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
     }
 
     @Test
@@ -173,9 +230,23 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
-        authPlugin.signInWithSocialWebUI(expectedProvider, expectedActivity, expectedOptions, expectedOnSuccess, expectedOnError)
+        authPlugin.signInWithSocialWebUI(
+            expectedProvider,
+            expectedActivity,
+            expectedOptions,
+            expectedOnSuccess,
+            expectedOnError
+        )
 
-        verify { realPlugin.signInWithSocialWebUI(expectedProvider, expectedActivity, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.signInWithSocialWebUI(
+                expectedProvider,
+                expectedActivity,
+                expectedOptions,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
     }
 
     @Test
@@ -304,9 +375,23 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
-        authPlugin.confirmResetPassword(expectedPassword, expectedCode, expectedOptions, expectedOnSuccess, expectedOnError)
+        authPlugin.confirmResetPassword(
+            expectedPassword,
+            expectedCode,
+            expectedOptions,
+            expectedOnSuccess,
+            expectedOnError
+        )
 
-        verify { realPlugin.confirmResetPassword(expectedPassword, expectedCode, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.confirmResetPassword(
+                expectedPassword,
+                expectedCode,
+                expectedOptions,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
     }
 
     @Test
@@ -318,7 +403,9 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updatePassword(expectedOldPassword, expectedNewPassword, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.updatePassword(expectedOldPassword, expectedNewPassword, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.updatePassword(expectedOldPassword, expectedNewPassword, expectedOnSuccess, expectedOnError)
+        }
     }
 
     @Test
@@ -351,7 +438,9 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updateUserAttribute(expectedAttribute, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.updateUserAttribute(expectedAttribute, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.updateUserAttribute(expectedAttribute, expectedOptions, expectedOnSuccess, expectedOnError)
+        }
     }
 
     @Test
@@ -374,7 +463,14 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updateUserAttributes(expectedAttributes, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.updateUserAttributes(expectedAttributes, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.updateUserAttributes(
+                expectedAttributes,
+                expectedOptions,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
     }
 
     @Test
@@ -393,7 +489,13 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resendUserAttributeConfirmationCode(expectedAttributeKey, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.resendUserAttributeConfirmationCode(expectedAttributeKey, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.resendUserAttributeConfirmationCode(
+                expectedAttributeKey,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
     }
 
     @Test
@@ -403,9 +505,21 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthCodeDeliveryDetails> { }
         val expectedOnError = Consumer<AuthException> { }
 
-        authPlugin.resendUserAttributeConfirmationCode(expectedAttributeKey, expectedOptions, expectedOnSuccess, expectedOnError)
+        authPlugin.resendUserAttributeConfirmationCode(
+            expectedAttributeKey,
+            expectedOptions,
+            expectedOnSuccess,
+            expectedOnError
+        )
 
-        verify { realPlugin.resendUserAttributeConfirmationCode(expectedAttributeKey, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.resendUserAttributeConfirmationCode(
+                expectedAttributeKey,
+                expectedOptions,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
     }
 
     @Test
@@ -415,9 +529,21 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
-        authPlugin.confirmUserAttribute(expectedAttributeKey, expectedConfirmationCode, expectedOnSuccess, expectedOnError)
+        authPlugin.confirmUserAttribute(
+            expectedAttributeKey,
+            expectedConfirmationCode,
+            expectedOnSuccess,
+            expectedOnError
+        )
 
-        verify { realPlugin.confirmUserAttribute(expectedAttributeKey, expectedConfirmationCode, expectedOnSuccess, expectedOnError) }
+        verify {
+            realPlugin.confirmUserAttribute(
+                expectedAttributeKey,
+                expectedConfirmationCode,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
     }
 
     @Test
