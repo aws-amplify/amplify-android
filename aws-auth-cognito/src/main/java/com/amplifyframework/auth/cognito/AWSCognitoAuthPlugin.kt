@@ -128,7 +128,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.confirmSignUp(username, confirmationCode, onSuccess, onError)
     }
 
-
     override fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions,

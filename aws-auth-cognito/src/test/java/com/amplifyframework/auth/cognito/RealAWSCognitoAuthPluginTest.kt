@@ -74,8 +74,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.signUp("user", "pass", AuthSignUpOptions.builder().build(), onSuccess, onError)
 
         // THEN
-        verify(exactly = 0) {onSuccess.accept(any()) }
+        verify(exactly = 0) { onSuccess.accept(any()) }
         verify { onError.accept(expectedAuthError) }
     }
-
 }
