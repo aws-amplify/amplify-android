@@ -33,11 +33,19 @@ import io.mockk.coVerify
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.newSingleThreadContext
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
 class ResetPasswordUseCaseTest {
 
     private val dummyClientId = "app client id"
@@ -47,9 +55,19 @@ class ResetPasswordUseCaseTest {
 
     private lateinit var resetPasswordUseCase: ResetPasswordUseCase
 
+    // Used to execute a test in situations where the platform Main dispatcher is not available
+    // see [https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/]
+    private val mainThreadSurrogate = newSingleThreadContext("Main thread")
+
     @Before
     fun setUp() {
+        Dispatchers.setMain(mainThreadSurrogate)
         resetPasswordUseCase = ResetPasswordUseCase(mockCognitoIPClient, dummyClientId)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test

@@ -47,24 +47,28 @@ internal class ResetPasswordUseCase(
                 }
             }
 
-            onSuccess.accept(
-                AuthResetPasswordResult(
-                    false,
-                    AuthNextResetPasswordStep(
-                        AuthResetPasswordStep.CONFIRM_RESET_PASSWORD_WITH_CODE,
-                        mapOf(),
-                        response.codeDeliveryDetails.toAuthCodeDeliveryDetails()
+            withContext(Dispatchers.Main) {
+                onSuccess.accept(
+                    AuthResetPasswordResult(
+                        false,
+                        AuthNextResetPasswordStep(
+                            AuthResetPasswordStep.CONFIRM_RESET_PASSWORD_WITH_CODE,
+                            mapOf(),
+                            response.codeDeliveryDetails.toAuthCodeDeliveryDetails()
+                        )
                     )
                 )
-            )
+            }
         } catch (ex: Exception) {
-            onError.accept(
-                AuthException(
-                    "Received an unsupported response after triggering password recovery.",
-                    ex,
-                    "This is almost certainly a bug. Please report it as an issue in our GitHub repo."
+            withContext(Dispatchers.Main) {
+                onError.accept(
+                    AuthException(
+                        "Received an unsupported response after triggering password recovery.",
+                        ex,
+                        "This is almost certainly a bug. Please report it as an issue in our GitHub repo."
+                    )
                 )
-            )
+            }
         }
     }
 }
