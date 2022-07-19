@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.testutils.Resources;
 
-import com.amazonaws.regions.Region;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -73,7 +72,7 @@ public final class AWSPredictionsPluginConfigurationTest {
         AWSPredictionsPluginConfiguration pluginConfig = AWSPredictionsPluginConfiguration.fromJson(json);
 
         // Default plugin configuration
-        assertEquals(Region.getRegion("us-west-2"), pluginConfig.getDefaultRegion());
+        assertEquals("us-west-2", pluginConfig.getDefaultRegion());
         assertEquals(NetworkPolicy.AUTO, pluginConfig.getDefaultNetworkPolicy());
     }
 
@@ -89,7 +88,7 @@ public final class AWSPredictionsPluginConfigurationTest {
         AWSPredictionsPluginConfiguration pluginConfig = AWSPredictionsPluginConfiguration.fromJson(json);
 
         // Default plugin configuration
-        assertEquals(Region.getRegion("us-west-2"), pluginConfig.getDefaultRegion());
+        assertEquals("us-west-2", pluginConfig.getDefaultRegion());
         assertEquals(NetworkPolicy.AUTO, pluginConfig.getDefaultNetworkPolicy());
 
         // Trying to obtain missing configuration throws
