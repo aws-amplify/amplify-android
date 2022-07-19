@@ -33,11 +33,11 @@ import io.mockk.coVerify
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
+import kotlin.test.assertEquals
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
-import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
