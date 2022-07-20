@@ -24,6 +24,7 @@ import com.amplifyframework.auth.cognito.actions.FetchAwsCredentialsCognitoActio
 import com.amplifyframework.auth.cognito.actions.FetchIdentityCognitoActions
 import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensCognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
+import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
 import com.amplifyframework.statemachine.Environment
@@ -38,6 +39,7 @@ import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
 import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
 import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 
@@ -50,7 +52,7 @@ internal class AuthStateMachine(
         AuthState.Resolver(
             AuthenticationState.Resolver(
                 SignUpState.Resolver(SignUpCognitoActions),
-                SRPSignInState.Resolver(SRPCognitoActions),
+                SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions), SignInCognitoActions),
                 SignOutState.Resolver(SignOutCognitoActions),
                 AuthenticationCognitoActions,
             ),
@@ -74,7 +76,8 @@ internal class AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
                     SignUpState.Resolver(SignUpCognitoActions).logging(),
-                    SRPSignInState.Resolver(SRPCognitoActions).logging(),
+                    SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions).logging(), SignInCognitoActions)
+                        .logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
                     AuthenticationCognitoActions,
                 ).logging(),
