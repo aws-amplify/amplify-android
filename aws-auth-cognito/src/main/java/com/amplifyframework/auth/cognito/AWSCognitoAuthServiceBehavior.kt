@@ -17,8 +17,26 @@ package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 
 interface AWSCognitoAuthServiceBehavior {
     var cognitoIdentityProviderClient: CognitoIdentityProviderClient?
     var cognitoIdentityClient: CognitoIdentityClient?
+
+    companion object {
+        fun fromConfiguration(configuration: AuthConfiguration): AWSCognitoAuthServiceBehavior {
+            val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
+                CognitoIdentityProviderClient { this.region = it.region }
+            }
+
+            val cognitoIdentityClient = configuration.identityPool?.let { it ->
+                CognitoIdentityClient { this.region = it.region }
+            }
+
+            return object : AWSCognitoAuthServiceBehavior {
+                override var cognitoIdentityProviderClient = cognitoIdentityProviderClient
+                override var cognitoIdentityClient = cognitoIdentityClient
+            }
+        }
+    }
 }
