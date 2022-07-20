@@ -58,7 +58,7 @@ ext {
     targetSdkVersion = 30
 
     awsSdkVersion = '2.48.0'
-    awsKoltinSdkVersion = '0.16.3-beta'
+    awsKotlinSdkVersion = '0.16.3-beta'
     fragmentVersion = '1.3.1'
     navigationVersion = '2.3.4'
     dependency = [
@@ -96,22 +96,22 @@ ext {
         ],
         aws: [
             core: "com.amazonaws:aws-android-sdk-core:$awsSdkVersion",
-            comprehend: "com.amazonaws:aws-android-sdk-comprehend:$awsSdkVersion",
+            comprehend: "aws.sdk.kotlin:comprehend:$awsKotlinSdkVersion",
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion",
-            polly: "com.amazonaws:aws-android-sdk-polly:$awsSdkVersion",
-            rekognition: "com.amazonaws:aws-android-sdk-rekognition:$awsSdkVersion",
-            textract: "com.amazonaws:aws-android-sdk-textract:$awsSdkVersion",
-            translate: "com.amazonaws:aws-android-sdk-translate:$awsSdkVersion",
-
-            cognitoidentity: "aws.sdk.kotlin:cognitoidentity:$awsKoltinSdkVersion",
-            cognitoidentityprovider: "aws.sdk.kotlin:cognitoidentityprovider:$awsKoltinSdkVersion",
+            polly: "aws.sdk.kotlin:polly:$awsKotlinSdkVersion",
+            rekognition: "aws.sdk.kotlin:rekognition:$awsKotlinSdkVersion",
+            textract: "aws.sdk.kotlin:textract:$awsKotlinSdkVersion",
+            translate: "aws.sdk.kotlin:translate:$awsKotlinSdkVersion",
+            
+            cognitoidentity: "aws.sdk.kotlin:cognitoidentity:$awsKotlinSdkVersion",
+            cognitoidentityprovider: "aws.sdk.kotlin:cognitoidentityprovider:$awsKotlinSdkVersion",
             credentials: "aws.smithy.kotlin:aws-credentials:0.10.2",
             ktor: "aws.smithy.kotlin:http-client-engine-ktor:0.7.7",
-            location: "aws.sdk.kotlin:location:$awsKoltinSdkVersion",
-            s3: "aws.sdk.kotlin:s3:$awsKoltinSdkVersion",
+            location: "aws.sdk.kotlin:location:$awsKotlinSdkVersion",
+            s3: "aws.sdk.kotlin:s3:$awsKotlinSdkVersion",
             signing: "aws.smithy.kotlin:aws-signing-default:0.10.2",
-            pinpointKotlin: "aws.sdk.kotlin:pinpoint:$awsKoltinSdkVersion"
+            pinpointKotlin: "aws.sdk.kotlin:pinpoint:$awsKotlinSdkVersion"
         ],
         kotlin: [
             stdlib: 'org.jetbrains.kotlin:kotlin-stdlib:1.6.10',
