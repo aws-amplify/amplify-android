@@ -351,7 +351,7 @@ internal class RealAWSCognitoAuthPlugin(
             { authState ->
                 when (val authNState = authState.authNState) {
                     is AuthenticationState.SigningIn -> {
-                        val srpSignInState = authNState.srpSignInState
+                        val srpSignInState = authNState.signInState?.srpSignInState
                         if (srpSignInState is SRPSignInState.Error) {
                             token?.let(authStateMachine::cancel)
                             onError.accept(
