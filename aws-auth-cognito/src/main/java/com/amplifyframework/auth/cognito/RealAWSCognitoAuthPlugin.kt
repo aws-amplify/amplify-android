@@ -17,7 +17,9 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthChannelEventName
@@ -622,10 +624,75 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) {
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    var token: StateChangeListenerToken? = null
+                    token = credentialStoreStateMachine.listen(
+                        {
+                            when (it) {
+                                is CredentialStoreState.Success -> {
+                                    token?.let(credentialStoreStateMachine::cancel)
+                                    val storedCredentials = it.storedCredentials
+                                    storedCredentials?.cognitoUserPoolTokens?.accessToken?.let { accessToken ->
+                                        updateDevice(
+                                            accessToken,
+                                            null,
+                                            DeviceRememberedStatusType.Remembered,
+                                            onSuccess,
+                                            onError
+                                        )
+                                    } ?: onError.accept(AuthException.InvalidStateException())
+                                }
+                                is CredentialStoreState.Error -> {
+                                    token?.let(credentialStoreStateMachine::cancel)
+                                    onError.accept(AuthException.InvalidStateException())
+                                }
+                                else -> {
+                                    // no-op
+                                }
+                            }
+                        },
+                        {
+                            credentialStoreStateMachine.send(
+                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                            )
+                        }
+                    )
+                }
+                else -> {
+                    onError.accept(AuthException.SignedOutException())
+                }
+            }
+        }
     }
 
     override fun forgetDevice(onSuccess: Action, onError: Consumer<AuthException>) {
-        TODO("Not yet implemented")
+        forgetDevice(AuthDevice.fromId(""), onSuccess, onError)
+    }
+
+    private fun updateDevice(
+        _accessToken: String,
+        alternateDeviceId: String?,
+        rememberedStatusType: DeviceRememberedStatusType,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        GlobalScope.async {
+            try {
+                // TODO: Update the stubbed device key when device SRP auth is implemented with its own store.
+                authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.updateDeviceStatus(
+                    UpdateDeviceStatusRequest.invoke {
+                        accessToken = _accessToken
+                        deviceKey = alternateDeviceId ?: "STUB_DEVICE_KEY"
+                        deviceRememberedStatus = rememberedStatusType
+                    }
+                )
+                onSuccess.call()
+            } catch (e: Exception) {
+                onError.accept(AuthException(e.localizedMessage, e, AuthException.TODO_RECOVERY_SUGGESTION))
+            }
+        }
     }
 
     override fun forgetDevice(
@@ -633,7 +700,48 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    var token: StateChangeListenerToken? = null
+                    token = credentialStoreStateMachine.listen(
+                        {
+                            when (it) {
+                                is CredentialStoreState.Success -> {
+                                    token?.let(credentialStoreStateMachine::cancel)
+                                    val storedCredentials = it.storedCredentials
+                                    val deviceID = device.deviceId.ifEmpty { null }
+                                    storedCredentials?.cognitoUserPoolTokens?.accessToken?.let { accessToken ->
+                                        updateDevice(
+                                            accessToken,
+                                            deviceID,
+                                            DeviceRememberedStatusType.NotRemembered,
+                                            onSuccess,
+                                            onError
+                                        )
+                                    } ?: onError.accept(AuthException.InvalidStateException())
+                                }
+                                is CredentialStoreState.Error -> {
+                                    token?.let(credentialStoreStateMachine::cancel)
+                                    onError.accept(AuthException.InvalidStateException())
+                                }
+                                else -> {
+                                    // no-op
+                                }
+                            }
+                        },
+                        {
+                            credentialStoreStateMachine.send(
+                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                            )
+                        }
+                    )
+                }
+                else -> {
+                    onError.accept(AuthException.SignedOutException())
+                }
+            }
+        }
     }
 
     override fun fetchDevices(
