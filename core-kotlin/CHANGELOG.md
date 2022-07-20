@@ -1,3 +1,29 @@
+## [Release 0.20.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.2)
+
+### Miscellaneous
+- Expand a catch clause to catch all (#1806)
+
+[See all changes between 0.20.1 and 0.20.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.1...release-kotlin_v0.20.2)
+
+## [Release 0.20.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.1)
+
+### Miscellaneous
+- fix orchestrator failing if emitter is disposed (#1755)
+- catch exceptions from processOutboxItem (#1743)
+- ci: added canary workflow (#1770)
+
+[See all changes between 0.20.0 and 0.20.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.0...release-kotlin_v0.20.1)
+
+## [Release 0.20.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.0)
+
+### Features
+- Add flushEvents HubEvent for analytics (#1792)
+
+### Miscellaneous
+- Update build.gradle
+
+[See all changes between 0.19.7 and 0.20.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.7...release-kotlin_v0.20.0)
+
 ## [Release 0.19.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.7)
 
 ### Miscellaneous

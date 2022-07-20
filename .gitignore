@@ -83,6 +83,7 @@ __pycache__/
 # Credentials
 **/awsconfiguration.json
 **/amplifyconfiguration.json
+**/amplifyconfiguration_v2.json
 **/credentials.json
 **/google_client_creds.json
 
