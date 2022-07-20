@@ -19,13 +19,19 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.statemachine.StateMachineEvent
 import java.util.Date
 
-class SignInEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
+class CustomSignInEvent(
+    val eventType: EventType,
+    override val time: Date? = null,
+) : StateMachineEvent {
     sealed class EventType {
-        data class InitiateSignInWithSRP(val username: String, val password: String) : EventType()
-        data class InitiateSignInWithCustom(val username: String, val password: String?, val signInOptions: AWSCognitoAuthSignInOptions) : EventType()
-        data class SignedIn(val id: String = "") : EventType()
-        data class ReceivedSMSChallenge(val id: String = "") : EventType()
-        data class ThrowError(val exception: Exception) : EventType()
+        data class InitiateCustomSignIn(
+            val username: String,
+            val password: String?,
+            val signInOptions: AWSCognitoAuthSignInOptions
+        ) : EventType()
+
+        data class FinalizeSignIn(val accessToken: String) : EventType()
+        data class ThrowAuthError(val exception: Exception) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName
