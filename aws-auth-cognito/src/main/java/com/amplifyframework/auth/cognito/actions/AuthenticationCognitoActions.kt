@@ -19,6 +19,7 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
+import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
@@ -57,18 +58,26 @@ object AuthenticationCognitoActions : AuthenticationActions {
             dispatcher.send(authEvent)
         }
 
-    override fun initiateSRPSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
-        Action<AuthEnvironment>("InitSRPSignIn") { id, dispatcher ->
+    override fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
+        Action<AuthEnvironment>("InitSignIn") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = event.username?.run {
-                event.password?.run {
-                    SignInEvent(
-                        SignInEvent.EventType.InitiateSignInWithSRP(event.username, event.password)
-                    )
+            val evt = when (val data = event.signInData) {
+                is SignInData.SRPSignInData -> {
+                    if (data.username != null && data.password != null) {
+                        SignInEvent(SignInEvent.EventType.InitiateSignInWithSRP(data.username, data.password))
+                    } else {
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.ThrowError(
+                                AuthException("Sign in failed.", "username or password empty")
+                            )
+                        )
+                    }
                 }
-            } ?: AuthenticationEvent(
-                AuthenticationEvent.EventType.ThrowError(AuthException("Sign in failed.", "username or password empty"))
-            )
+                is SignInData.HostedUISignInData -> {
+                    SignInEvent(SignInEvent.EventType.InitiateHostedUISignIn())
+                }
+            }
+
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

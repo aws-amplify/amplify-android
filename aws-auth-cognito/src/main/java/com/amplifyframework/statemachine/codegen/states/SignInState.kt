@@ -10,7 +10,7 @@ import com.amplifyframework.statemachine.codegen.events.SignInEvent
 sealed class SignInState : State {
     data class NotStarted(val id: String = "") : SignInState()
     data class SigningInWithSRP(override var srpSignInState: SRPSignInState?) : SignInState()
-    data class SigningInWithHostedUI(val id: String = "") : SignInState()
+    data class SigningInWithHostedUI(override var hostedUISignInState: HostedUISignInState?) : SignInState()
     data class SigningInWithCustom(val id: String = "") : SignInState()
     data class SigningInWithSRPCustom(val id: String = "") : SignInState()
     data class ResolvingSMSChallenge(val id: String = "") : SignInState()
@@ -19,9 +19,11 @@ sealed class SignInState : State {
     data class Error(val exception: Exception) : SignInState()
 
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
+    open var hostedUISignInState: HostedUISignInState? = HostedUISignInState.NotStarted()
 
     class Resolver(
         private val srpSignInResolver: StateMachineResolver<SRPSignInState>,
+        private val hostedUISignInResolver: StateMachineResolver<HostedUISignInState>,
         private val signInActions: SignInActions
     ) :
         StateMachineResolver<SignInState> {

@@ -15,10 +15,10 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
-import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import java.util.Date
@@ -33,11 +33,7 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
 
         data class InitializedSignedIn(val signedInData: SignedInData) : EventType()
         data class InitializedSignedOut(val signedOutData: SignedOutData) : EventType()
-        data class SignInRequested(
-            val username: String?,
-            val password: String?,
-            val options: AuthSignInOptions
-        ) : EventType()
+        data class SignInRequested(val signInData: SignInData) : EventType()
 
         data class SignOutRequested(
             val isGlobalSignOut: Boolean = false,

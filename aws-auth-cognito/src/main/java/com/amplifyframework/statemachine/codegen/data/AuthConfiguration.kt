@@ -20,77 +20,30 @@ import org.json.JSONObject
 /**
  * Configuration options for [AWSCognitoAuthPlugin].
  */
-data class AuthConfiguration internal constructor(val builder: Builder) {
-    val userPool: UserPoolConfiguration? = builder.userPool
-    val identityPool: IdentityPoolConfiguration? = builder.identityPool
+data class AuthConfiguration internal constructor(
+    val userPool: UserPoolConfiguration?,
+    val identityPool: IdentityPoolConfiguration?
+) {
 
     companion object {
         /**
-         * Returns a builder object for auth plugin configuration.
-         * @return fresh configuration builder instance.
-         */
-        @JvmStatic
-        fun builder(): Builder {
-            return Builder()
-        }
-
-        /**
-         * Returns a builder object populated from JSON.
-         * @return populated builder instance.
+         * Returns an AuthConfiguration instance from JSON
+         * @return populated AuthConfiguration instance.
          */
         internal fun fromJson(
             pluginJson: JSONObject,
-            configName: String = Config.DEFAULT.key
-        ): Builder {
-            return Builder(pluginJson, configName)
-        }
-
-        inline operator fun invoke(block: Builder.() -> Unit) = Builder().apply(block).build()
-    }
-
-    /**
-     * Builder class for constructing [AuthConfiguration].
-     */
-    class Builder constructor(
-        configJson: JSONObject? = null,
-        configName: String = Config.DEFAULT.key
-    ) {
-        var userPool: UserPoolConfiguration? = null
-        var identityPool: IdentityPoolConfiguration? = null
-
-        init {
-            configJson?.run {
-                optJSONObject(Config.COGNITO_USER_POOL.key)?.getJSONObject(configName)?.let {
-                    userPool = UserPoolConfiguration.fromJson(it).build()
-                }
-
-                optJSONObject(Config.CREDENTIALS_PROVIDER.key)?.getJSONObject(
-                    Config.COGNITO_IDENTITY.key
-                )
+            configName: String = "Default"
+        ): AuthConfiguration {
+            return AuthConfiguration(
+                userPool = pluginJson.optJSONObject("CognitoUserPool")?.getJSONObject(configName)?.let {
+                    UserPoolConfiguration.fromJson(it).build()
+                },
+                identityPool = pluginJson.optJSONObject("CredentialsProvider")
+                    ?.getJSONObject("CognitoIdentity")
                     ?.getJSONObject(configName)?.let {
-                        identityPool = IdentityPoolConfiguration.fromJson(it).build()
+                        IdentityPoolConfiguration.fromJson(it).build()
                     }
-            }
+            )
         }
-
-        fun userPool(userPool: UserPoolConfiguration) = apply { this.userPool = userPool }
-        fun identityPool(identityPool: IdentityPoolConfiguration) = apply { this.identityPool = identityPool }
-        fun build() = AuthConfiguration(this)
-    }
-
-    private enum class Config(val key: String) {
-        /**
-         * Contains configuration for User Pool.
-         */
-        COGNITO_USER_POOL("CognitoUserPool"),
-
-        CREDENTIALS_PROVIDER("CredentialsProvider"),
-
-        /**
-         * Contains configuration for Identity Pool.
-         */
-        COGNITO_IDENTITY("CognitoIdentity"),
-
-        DEFAULT("Default"),
     }
 }

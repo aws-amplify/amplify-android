@@ -62,6 +62,7 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
@@ -373,7 +374,7 @@ internal class RealAWSCognitoAuthPlugin(
             },
             {
                 val event = AuthenticationEvent(
-                    AuthenticationEvent.EventType.SignInRequested(username, password, options)
+                    AuthenticationEvent.EventType.SignInRequested(SignInData.SRPSignInData(username, password, options))
                 )
                 authStateMachine.send(event)
             }

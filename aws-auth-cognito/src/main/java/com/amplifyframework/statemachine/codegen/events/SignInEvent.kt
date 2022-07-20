@@ -6,6 +6,7 @@ import java.util.Date
 class SignInEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
         data class InitiateSignInWithSRP(val username: String, val password: String) : EventType()
+        data class InitiateHostedUISignIn(val id: String = "") : EventType()
         data class SignedIn(val id: String = "") : EventType()
         data class ReceivedSMSChallenge(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()

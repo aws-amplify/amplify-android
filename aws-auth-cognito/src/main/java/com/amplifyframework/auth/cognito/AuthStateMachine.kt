@@ -38,6 +38,7 @@ import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
 import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
 import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
+import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
@@ -52,7 +53,11 @@ internal class AuthStateMachine(
         AuthState.Resolver(
             AuthenticationState.Resolver(
                 SignUpState.Resolver(SignUpCognitoActions),
-                SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions), SignInCognitoActions),
+                SignInState.Resolver(
+                    SRPSignInState.Resolver(SRPCognitoActions),
+                    HostedUISignInState.Resolver(),
+                    SignInCognitoActions
+                ),
                 SignOutState.Resolver(SignOutCognitoActions),
                 AuthenticationCognitoActions,
             ),
@@ -76,7 +81,11 @@ internal class AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
                     SignUpState.Resolver(SignUpCognitoActions).logging(),
-                    SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions).logging(), SignInCognitoActions)
+                    SignInState.Resolver(
+                        SRPSignInState.Resolver(SRPCognitoActions).logging(),
+                        HostedUISignInState.Resolver().logging(),
+                        SignInCognitoActions
+                    )
                         .logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
                     AuthenticationCognitoActions,

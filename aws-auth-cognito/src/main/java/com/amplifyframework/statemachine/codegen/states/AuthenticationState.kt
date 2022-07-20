@@ -137,7 +137,7 @@ sealed class AuthenticationState : State {
                 }
                 is SignedOut -> when {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
-                        val action = authenticationActions.initiateSRPSignInAction(authenticationEvent)
+                        val action = authenticationActions.initiateSignInAction(authenticationEvent)
                         StateResolution(SigningIn(oldState.signInState), listOf(action))
                     }
                     // TODO: find better way to handle other events

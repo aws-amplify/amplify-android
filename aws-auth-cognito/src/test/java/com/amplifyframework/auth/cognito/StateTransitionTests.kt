@@ -19,6 +19,7 @@ import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
+import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -36,6 +37,7 @@ import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
 import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
 import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
+import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
@@ -83,7 +85,11 @@ class StateTransitionTests : StateTransitionTestBase() {
             AuthState.Resolver(
                 AuthenticationState.Resolver(
                     SignUpState.Resolver(mockSignUpActions),
-                    SignInState.Resolver(SRPSignInState.Resolver(mockSRPActions), mockSignInActions),
+                    SignInState.Resolver(
+                        SRPSignInState.Resolver(mockSRPActions),
+                        HostedUISignInState.Resolver(),
+                        mockSignInActions
+                    ),
                     SignOutState.Resolver(mockSignOutActions),
                     mockAuthenticationActions
                 ),
@@ -248,9 +254,11 @@ class StateTransitionTests : StateTransitionTestBase() {
                     stateMachine.send(
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.SignInRequested(
-                                "username",
-                                "password",
-                                AuthSignInOptions.defaults()
+                                SignInData.SRPSignInData(
+                                    "username",
+                                    "password",
+                                    AuthSignInOptions.defaults()
+                                )
                             )
                         )
                     )
