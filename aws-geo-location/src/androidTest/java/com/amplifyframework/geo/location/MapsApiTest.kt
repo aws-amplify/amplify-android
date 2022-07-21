@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -29,12 +29,11 @@ import org.json.JSONObject
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
+import org.junit.Test
 
 /**
  * Tests various functionalities related to Maps API in [AWSLocationGeoPlugin].
  */
-@Ignore("Geo category is not available in dev-preview")
 class MapsApiTest {
     private var auth: SynchronousAuth? = null
     private var geo: SynchronousGeo? = null
@@ -47,10 +46,10 @@ class MapsApiTest {
         // Auth plugin uses default configuration
         val authPlugin = AWSCognitoAuthPlugin()
         val authCategory = TestCategory.forPlugin(authPlugin) as AuthCategory
-        auth = SynchronousAuth.delegatingTo(authCategory)
+        auth = SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), authPlugin)
 
         // Geo plugin uses above auth category to authenticate users
-        val geoPlugin = AWSLocationGeoPlugin(authProvider = authCategory)
+        val geoPlugin = AWSLocationGeoPlugin(authCategory = authCategory)
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
     }
@@ -63,8 +62,7 @@ class MapsApiTest {
      * Both "layers" and "sources" are critical information required for rendering
      * a map, so assert that both fields exist in the document.
      */
-    @Ignore("Geo category is not available in dev-preview")
-//    @Test
+    @Test
     fun styleDescriptorLoadsProperly() {
         signInWithCognito()
         val style = geo?.getMapStyleDescriptor(GetMapStyleDescriptorOptions.defaults())
@@ -84,8 +82,7 @@ class MapsApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Ignore("Geo category is not available in dev-preview")
-//    @Test(expected = GeoException::class)
+    @Test(expected = GeoException::class)
     fun cannotFetchStyleWithoutAuth() {
         signOutFromCognito()
         // should not be authorized to fetch map resource from Amazon Location Service

@@ -39,7 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;

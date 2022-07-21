@@ -15,7 +15,7 @@
 
 package com.amplifyframework.api.aws.auth
 
-import aws.sdk.kotlin.runtime.auth.credentials.Credentials
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 
 internal object DummyCredentialsProvider : CognitoCredentialsProvider() {
     override suspend fun getCredentials(): Credentials {

@@ -792,21 +792,33 @@ class KotlinAuthFacadeTest {
      * have any suspending functions, this is a straight pass through verification.
      */
     @Test
-    fun getCurrentUserSucceeds() {
-        val expectedAuthUser = AuthUser("userId", "username")
-        every { delegate.currentUser } returns expectedAuthUser
-        assertEquals(expectedAuthUser, auth.getCurrentUser())
+    fun getCurrentUserSucceeds(): Unit = runBlocking {
+        val authUser = AuthUser("testUserID", "testUsername")
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfResultConsumer = 0
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthUser>
+            onResult.accept(authUser)
+        }
+        auth.getCurrentUser()
     }
 
     /**
-     * When the getCurrentUser() delegate return null, the proxy API in the
-     * Kotlin facade should, too.  Essentially, the AuthUser returned is nullable.
+     * When the getCurrentUser() has null values an Auth Exception should be sent in the onError
+     * which should be captured in the Kotlin facade too
      */
-    @Test
-    fun getCurrentUserSucceedsWhenSignedOut() {
-        val expectedAuthUser = null
-        every { delegate.currentUser } returns expectedAuthUser
-        assertEquals(expectedAuthUser, auth.getCurrentUser())
+    @Test(expected = AuthException.SignedOutException::class)
+    fun getCurrentUserThrowsWhenSignedOut(): Unit = runBlocking {
+        val expectedException = AuthException.SignedOutException()
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfResultConsumer = 1
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthException>
+            onResult.accept(expectedException)
+        }
+        auth.getCurrentUser()
     }
 
     /**
@@ -815,9 +827,33 @@ class KotlinAuthFacadeTest {
      * have any suspending functions, this is a straight pass through verification.
      */
     @Test(expected = AuthException::class)
-    fun getCurrentUserThrows() {
+    fun getCurrentUserThrows(): Unit = runBlocking {
         val expectedException = AuthException("uh", "oh")
-        every { delegate.currentUser } throws expectedException
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 1
+            val onResult = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onResult.accept(expectedException)
+        }
+        auth.getCurrentUser()
+    }
+
+    /**
+     * When the getCurrentUser() delegate throws an error, the proxy
+     * API in the Kotlin facade should, too. Note that this API doesn't
+     * have any suspending functions, this is a straight pass through verification.
+     */
+    @Test(expected = AuthException::class)
+    fun getCurrentUserWhenUserNameIsEmpty(): Unit = runBlocking {
+        val expectedException = AuthException.InvalidUserPoolConfigurationException()
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 1
+            val onResult = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onResult.accept(expectedException)
+        }
         auth.getCurrentUser()
     }
 

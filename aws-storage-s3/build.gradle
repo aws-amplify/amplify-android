@@ -23,7 +23,7 @@ dependencies {
     implementation project(path: ':aws-auth-cognito')
 
     implementation dependency.androidx.appcompat
-    implementation dependency.aws.s3Kotlin
+    implementation dependency.aws.s3
     implementation dependency.androidx.workmanager
     implementation dependency.kotlin.futures
     implementation dependency.gson
