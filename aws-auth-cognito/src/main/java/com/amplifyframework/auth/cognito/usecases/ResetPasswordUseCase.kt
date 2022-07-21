@@ -19,6 +19,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderCl
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
@@ -62,11 +63,7 @@ internal class ResetPasswordUseCase(
         } catch (ex: Exception) {
             withContext(Dispatchers.Main) {
                 onError.accept(
-                    AuthException(
-                        "Received an unsupported response after triggering password recovery.",
-                        ex,
-                        "This is almost certainly a bug. Please report it as an issue in our GitHub repo."
-                    )
+                    CognitoAuthExceptionConverter.lookup(ex, AuthException.REPORT_BUG_TO_AWS_SUGGESTION)
                 )
             }
         }

@@ -73,14 +73,10 @@ class ResetPasswordUseCaseTest {
     @Test
     fun `use case calls forgotPassword API with given arguments`() {
         // GIVEN
-        val forgotPassWordRequest = ForgotPasswordRequest {
-            username = dummyUserName
-            clientMetadata = mapOf()
-            clientId = dummyClientId
-        }
-        val forgotPasswordRequestSlot = slot<ForgotPasswordRequest>()
-        coJustRun { mockCognitoIPClient.forgotPassword(capture(forgotPasswordRequestSlot)) }
-        val stubPasswordRequest = ForgotPasswordRequest {
+        val requestBuilderCaptor = slot<ForgotPasswordRequest.Builder.() -> Unit>()
+        coJustRun { mockCognitoIPClient.forgotPassword(capture(requestBuilderCaptor)) }
+
+        val expectedRequestBuilder: ForgotPasswordRequest.Builder.() -> Unit = {
             username = dummyUserName
             clientMetadata = mapOf()
             clientId = dummyClientId
@@ -92,7 +88,10 @@ class ResetPasswordUseCaseTest {
         }
 
         // THEN
-        assertEquals(stubPasswordRequest, forgotPassWordRequest)
+        assertEquals(
+            ForgotPasswordRequest.invoke(expectedRequestBuilder),
+            ForgotPasswordRequest.invoke(requestBuilderCaptor.captured)
+        )
     }
 
     @Test
