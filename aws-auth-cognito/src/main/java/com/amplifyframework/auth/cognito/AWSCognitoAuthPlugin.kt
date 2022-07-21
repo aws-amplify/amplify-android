@@ -25,6 +25,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthChannelEventName
@@ -39,8 +40,8 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -92,7 +93,6 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.util.UserAgent
-import java.util.concurrent.Semaphore
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -804,7 +804,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                 AuthException.UserAttributeNotUpdatedException()
                             )
                         } catch (e: Exception) {
-                            onError.accept(AuthException.UnknownException(e))
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "fallback message"))
                         }
                     }
                 }
@@ -844,7 +844,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                                 AuthException.UserAttributeNotUpdatedException()
                             )
                         } catch (e: Exception) {
-                            onError.accept(AuthException.UnknownException(e))
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "fallback message"))
                         }
                     }
                 }
@@ -886,7 +886,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                             val result = getUpdateUserAttributeResult(userAttributeResponse, userAttributes)
                             onSuccess.accept(result)
                         } catch (e: Exception) {
-                            onError.accept(AuthException.UnknownException(e))
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "fallback message"))
                         }
                     }
                 }
@@ -924,7 +924,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                             val result = getUpdateUserAttributeResult(userAttributeResponse, userAttributes)
                             onSuccess.accept(result)
                         } catch (e: Exception) {
-                            onError.accept(AuthException.UnknownException(e))
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "fallback message"))
                         }
                     }
                 }
@@ -1003,7 +1003,31 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        try {
+                            var accessToken = getAccessToken()
+                            val verifyUserAttributeRequest = VerifyUserAttributeRequest.invoke {
+                                this.accessToken = accessToken
+                                this.attributeName = attributeKey.keyString
+                                this.code = confirmationCode
+                            }
+                            val verifyUserAttributeResponse = configureCognitoClients()
+                                .cognitoIdentityProviderClient?.verifyUserAttribute(
+                                    verifyUserAttributeRequest
+                                )
+                            onSuccess.call()
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "fallback message"))
+                        }
+                    }
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
     }
 
     override fun getCurrentUser(
