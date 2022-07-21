@@ -25,7 +25,7 @@ import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 
 import java.util.Objects;
 
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
 
 /**
  * Wrapper class to contain Auth providers for

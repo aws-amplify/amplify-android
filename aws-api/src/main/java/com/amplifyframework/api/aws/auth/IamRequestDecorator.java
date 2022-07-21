@@ -23,8 +23,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import aws.sdk.kotlin.runtime.auth.credentials.Credentials;
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider;
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
 import aws.smithy.kotlin.runtime.http.Headers;
 import aws.smithy.kotlin.runtime.http.HttpMethod;
 import aws.smithy.kotlin.runtime.http.Url;
@@ -82,9 +81,7 @@ public class IamRequestDecorator implements RequestDecorator {
 
         HttpRequest req2 = new HttpRequest(method, url, headers, body2);
 
-        Credentials creds = ((CognitoCredentialsProvider) credentialsProvider).getCredentialsBlocking();
-
-        HttpRequest request = v4Signer.signBlocking(req2, creds, serviceName).getOutput();
+        HttpRequest request = v4Signer.signBlocking(req2, credentialsProvider, serviceName).getOutput();
 
         //Copy the signed/credentialed request back into an OKHTTP Request object.
         okhttp3.Request.Builder okReqBuilder = new okhttp3.Request.Builder();

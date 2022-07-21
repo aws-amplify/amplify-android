@@ -1,6 +1,6 @@
 package com.amplifyframework.auth
 
-import aws.sdk.kotlin.runtime.auth.credentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 
 interface AuthCredentialsProvider : CredentialsProvider {
     /**

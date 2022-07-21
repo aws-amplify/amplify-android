@@ -308,8 +308,13 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override fun getCurrentUser(): AuthUser? {
-        return delegate.currentUser
+    override suspend fun getCurrentUser(): AuthUser {
+        return suspendCoroutine { continuation ->
+            delegate.getCurrentUser(
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
     }
 
     override suspend fun signOut(options: AuthSignOutOptions) {

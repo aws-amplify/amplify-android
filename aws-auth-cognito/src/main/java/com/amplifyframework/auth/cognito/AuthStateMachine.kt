@@ -18,11 +18,13 @@ package com.amplifyframework.auth.cognito
 import com.amplifyframework.auth.cognito.actions.AuthCognitoActions
 import com.amplifyframework.auth.cognito.actions.AuthenticationCognitoActions
 import com.amplifyframework.auth.cognito.actions.AuthorizationCognitoActions
+import com.amplifyframework.auth.cognito.actions.DeleteUserActions
 import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
 import com.amplifyframework.auth.cognito.actions.FetchAwsCredentialsCognitoActions
 import com.amplifyframework.auth.cognito.actions.FetchIdentityCognitoActions
 import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensCognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
+import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
 import com.amplifyframework.statemachine.Environment
@@ -31,11 +33,13 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
 import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
 import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 
@@ -48,9 +52,9 @@ internal class AuthStateMachine(
         AuthState.Resolver(
             AuthenticationState.Resolver(
                 SignUpState.Resolver(SignUpCognitoActions),
-                SRPSignInState.Resolver(SRPCognitoActions),
+                SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions), SignInCognitoActions),
                 SignOutState.Resolver(SignOutCognitoActions),
-                AuthenticationCognitoActions
+                AuthenticationCognitoActions,
             ),
             AuthorizationState.Resolver(
                 FetchAuthSessionState.Resolver(
@@ -59,6 +63,7 @@ internal class AuthStateMachine(
                     FetchUserPoolTokensState.Resolver(FetchUserPoolTokensCognitoActions),
                     FetchAuthSessionCognitoActions
                 ),
+                DeleteUserState.Resolver(DeleteUserActions),
                 AuthorizationCognitoActions
             ),
             AuthCognitoActions
@@ -71,9 +76,10 @@ internal class AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
                     SignUpState.Resolver(SignUpCognitoActions).logging(),
-                    SRPSignInState.Resolver(SRPCognitoActions).logging(),
+                    SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions).logging(), SignInCognitoActions)
+                        .logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
-                    AuthenticationCognitoActions
+                    AuthenticationCognitoActions,
                 ).logging(),
                 AuthorizationState.Resolver(
                     FetchAuthSessionState.Resolver(
@@ -82,6 +88,7 @@ internal class AuthStateMachine(
                         FetchUserPoolTokensState.Resolver(FetchUserPoolTokensCognitoActions).logging(),
                         FetchAuthSessionCognitoActions
                     ).logging(),
+                    DeleteUserState.Resolver(DeleteUserActions),
                     AuthorizationCognitoActions
                 ).logging(),
                 AuthCognitoActions

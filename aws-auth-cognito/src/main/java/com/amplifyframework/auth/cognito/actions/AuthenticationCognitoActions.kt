@@ -24,7 +24,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
-import com.amplifyframework.statemachine.codegen.events.SRPEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import java.util.Date
 
@@ -33,10 +33,22 @@ object AuthenticationCognitoActions : AuthenticationActions {
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val userPoolTokens = event.storedCredentials?.cognitoUserPoolTokens
-            val evt = userPoolTokens?.let {
-                val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, it)
-                AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
-            } ?: AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
+            val evt = if (userPoolTokens?.accessToken != null) {
+                AuthenticationEvent(
+                    AuthenticationEvent.EventType.InitializedSignedIn(
+                        SignedInData(
+                            "",
+                            "",
+                            Date(),
+                            SignInMethod.SRP,
+                            userPoolTokens
+                        )
+                    )
+                )
+            } else {
+                AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
+            }
+
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
 
@@ -49,7 +61,11 @@ object AuthenticationCognitoActions : AuthenticationActions {
         Action<AuthEnvironment>("InitSRPSignIn") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = event.username?.run {
-                event.password?.run { SRPEvent(SRPEvent.EventType.InitiateSRP(event.username, event.password)) }
+                event.password?.run {
+                    SignInEvent(
+                        SignInEvent.EventType.InitiateSignInWithSRP(event.username, event.password)
+                    )
+                }
             } ?: AuthenticationEvent(
                 AuthenticationEvent.EventType.ThrowError(AuthException("Sign in failed.", "username or password empty"))
             )

@@ -37,6 +37,7 @@ import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -111,7 +112,7 @@ public class ObserveQueryExecutorTest {
      * @throws DataStoreException DataStoreException
      * @throws AmplifyException AmplifyException
      */
-    @Test
+    @Ignore("Flaky test")
     public void observeQueryReturnsRecordsBasedOnMaxRecords() throws InterruptedException, AmplifyException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(3);
@@ -271,7 +272,7 @@ public class ObserveQueryExecutorTest {
      * @throws InterruptedException InterruptedException
      * @throws DataStoreException DataStoreException
      */
-    @Test
+    @Ignore("Flaky test")
     public void observeQueryReturnsSortedListOfTotalItems() throws InterruptedException,
             DataStoreException {
         CountDownLatch latch = new CountDownLatch(1);

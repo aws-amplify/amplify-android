@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -24,8 +24,7 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.predictions.PredictionsCategory;
-
-import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amplifyframework.predictions.aws.auth.CognitoCredentialsProvider;
 
 import java.util.Objects;
 
@@ -47,7 +46,7 @@ final class TestPredictionsCategory {
 
         final PredictionsCategory predictionsCategory = new PredictionsCategory();
         try {
-            predictionsCategory.addPlugin(new AWSPredictionsPlugin(AWSMobileClient.getInstance()));
+            predictionsCategory.addPlugin(new AWSPredictionsPlugin(new CognitoCredentialsProvider()));
             CategoryConfiguration predictionsConfiguration = AmplifyConfiguration.fromConfigFile(context, resourceId)
                     .forCategoryType(CategoryType.PREDICTIONS);
             predictionsCategory.configure(predictionsConfiguration, context);
