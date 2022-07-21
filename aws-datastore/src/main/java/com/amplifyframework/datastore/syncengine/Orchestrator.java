@@ -109,6 +109,7 @@ public final class Orchestrator {
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)
+            .onFailure(this::onApiSyncFailure)
             .build();
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)

@@ -100,6 +100,7 @@ public final class MutationProcessorTest {
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)
+            .onFailure(throwable -> { })
             .build();
     }
 
