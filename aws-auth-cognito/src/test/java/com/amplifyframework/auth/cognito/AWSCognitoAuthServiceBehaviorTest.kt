@@ -40,7 +40,7 @@ class AWSCognitoAuthServiceBehaviorTest {
                 .poolId("pool-b")
                 .region(expectedUserPoolRegion)
                 .build()
-            )
+        )
 
         val testObject = AWSCognitoAuthServiceBehavior.fromConfiguration(config)
 
