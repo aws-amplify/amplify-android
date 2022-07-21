@@ -51,6 +51,12 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
+tasks.register("installGitHooks", Copy) {
+    from new File(rootProject.rootDir, 'scripts/pre-commit')
+    into { new File(rootProject.rootDir, '.git/hooks') }
+    fileMode 0777
+}
+
 ext {
     buildToolsVersion = "30.0.2"
     compileSdkVersion = 30
@@ -103,7 +109,7 @@ ext {
             rekognition: "aws.sdk.kotlin:rekognition:$awsKotlinSdkVersion",
             textract: "aws.sdk.kotlin:textract:$awsKotlinSdkVersion",
             translate: "aws.sdk.kotlin:translate:$awsKotlinSdkVersion",
-            
+
             cognitoidentity: "aws.sdk.kotlin:cognitoidentity:$awsKotlinSdkVersion",
             cognitoidentityprovider: "aws.sdk.kotlin:cognitoidentityprovider:$awsKotlinSdkVersion",
             credentials: "aws.smithy.kotlin:aws-credentials:0.10.2",
@@ -153,6 +159,7 @@ subprojects { project ->
         android.set(true)
     }
     afterEvaluate {
+        preBuild.dependsOn installGitHooks
         configureAndroidLibrary(project)
     }
 }

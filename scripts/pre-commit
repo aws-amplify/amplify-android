@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+echo "*******************************"
+echo   "Running git pre-commit hook"
+echo "*******************************"
+
+./gradlew ktlintFormat --daemon
+
+RESULT=$?
+
+# return 1 exit code if running checks fails
+[ $RESULT -ne 0 ] && exit 1
+exit 0
