@@ -15,9 +15,6 @@
 
 package com.amplifyframework.api.aws.utils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import com.amplifyframework.api.rest.HttpMethod;
 
 import org.junit.Test;
@@ -31,6 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import okhttp3.Request;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests the {@link RestRequestFactory}.
