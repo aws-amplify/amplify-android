@@ -1,3 +1,10 @@
+## [Release 1.36.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.3)
+
+### Bug Fixes
+- **api:** catch all exceptions when making rest request (#1827)
+
+[See all changes between 1.36.2 and 1.36.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.2...release_v1.36.3)
+
 ## [Release 1.36.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.2)
 
 ### Miscellaneous

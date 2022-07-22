@@ -1,3 +1,10 @@
+## [Release 0.20.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.3)
+
+### Bug Fixes
+- **api:** catch all exceptions when making rest request (#1827)
+
+[See all changes between 0.20.2 and 0.20.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.2...release-kotlin_v0.20.3)
+
 ## [Release 0.20.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.2)
 
 ### Miscellaneous
