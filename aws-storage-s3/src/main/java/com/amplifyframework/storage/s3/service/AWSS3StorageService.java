@@ -65,8 +65,6 @@ public final class AWSS3StorageService implements StorageService {
     private final AmazonS3Client client;
     private final CognitoAuthProvider cognitoAuthProvider;
 
-    private boolean transferUtilityServiceStarted = false;
-
     /**
      * Constructs a new AWSS3StorageService.
      * @param region Region in which the S3 endpoint resides
@@ -136,7 +134,7 @@ public final class AWSS3StorageService implements StorageService {
             @NonNull String serviceKey,
             @NonNull File file
     ) {
-        startServiceIfNotAlreadyStarted();
+        startTransferService();
         return transferUtility.download(bucket, serviceKey, file);
     }
 
@@ -153,7 +151,7 @@ public final class AWSS3StorageService implements StorageService {
             @NonNull File file,
             @NonNull ObjectMetadata metadata
     ) {
-        startServiceIfNotAlreadyStarted();
+        startTransferService();
         return transferUtility.upload(bucket, serviceKey, file, metadata);
     }
 
@@ -171,7 +169,7 @@ public final class AWSS3StorageService implements StorageService {
             @NonNull InputStream inputStream,
             @NonNull ObjectMetadata metadata
     ) throws IOException {
-        startServiceIfNotAlreadyStarted();
+        startTransferService();
         UploadOptions uploadOptions = UploadOptions.builder()
                                                     .bucket(bucket)
                                                     .objectMetadata(metadata)
@@ -187,7 +185,7 @@ public final class AWSS3StorageService implements StorageService {
      */
     @NonNull
     public List<StorageItem> listFiles(@NonNull String path, @NonNull String prefix) {
-        startServiceIfNotAlreadyStarted();
+        startTransferService();
         ArrayList<StorageItem> itemList = new ArrayList<>();
         ListObjectsV2Request request =
                 new ListObjectsV2Request().withBucketName(this.bucket).withPrefix(path);
@@ -231,7 +229,7 @@ public final class AWSS3StorageService implements StorageService {
      * @param transfer an in-progress transfer
      */
     public void pauseTransfer(@NonNull TransferObserver transfer) {
-        startServiceIfNotAlreadyStarted();
+        startTransferService();
         transferUtility.pause(transfer.getId());
     }
 
@@ -240,7 +238,7 @@ public final class AWSS3StorageService implements StorageService {
      * @param transfer A transfer to be resumed
      */
     public void resumeTransfer(@NonNull TransferObserver transfer) {
-        startServiceIfNotAlreadyStarted();
+        startTransferService();
         transferUtility.resume(transfer.getId());
     }
 
@@ -249,21 +247,18 @@ public final class AWSS3StorageService implements StorageService {
      * @param transfer A file transfer to cancel
      */
     public void cancelTransfer(@NonNull TransferObserver transfer) {
-        startServiceIfNotAlreadyStarted();
+        startTransferService();
         transferUtility.cancel(transfer.getId());
     }
 
-    private void startServiceIfNotAlreadyStarted() {
-        if (!transferUtilityServiceStarted) {
-            // TODO: When a reset method is defined, stop service.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                Intent serviceIntent = new Intent(context, TransferService.class);
-                serviceIntent.putExtra(TransferService.INTENT_KEY_NOTIFICATION, createDefaultNotification());
-                context.startForegroundService(serviceIntent);
-            } else {
-                context.startService(new Intent(context, TransferService.class));
-            }
-            transferUtilityServiceStarted = true;
+    private void startTransferService() {
+        // TODO: When a reset method is defined, stop service.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent serviceIntent = new Intent(context, TransferService.class);
+            serviceIntent.putExtra(TransferService.INTENT_KEY_NOTIFICATION, createDefaultNotification());
+            context.startForegroundService(serviceIntent);
+        } else {
+            context.startService(new Intent(context, TransferService.class));
         }
     }
 
