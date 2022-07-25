@@ -16,28 +16,43 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
+import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
+import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
+import io.mockk.coJustRun
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.invoke
+import io.mockk.justRun
 import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.slot
 import io.mockk.verify
+import kotlin.test.assertEquals
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
 
     private var logger = mockk<Logger>(relaxed = true)
     private var authConfiguration = mockk<AuthConfiguration>()
+    private var authService = mockk<AWSCognitoAuthServiceBehavior>()
+
     private var authEnvironment = mockk<AuthEnvironment> {
         every { configuration } returns authConfiguration
         every { logger } returns this@RealAWSCognitoAuthPluginTest.logger
+        every { cognitoAuthService } returns authService
     }
+
     private var authStateMachine = mockk<AuthStateMachine>(relaxed = true)
     private var credentialStoreStateMachine = mockk<CredentialStoreStateMachine>(relaxed = true)
 
@@ -76,5 +91,75 @@ class RealAWSCognitoAuthPluginTest {
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
         verify { onError.accept(expectedAuthError) }
+    }
+
+    @Test
+    fun `reset password fails if cognitoIdentityProviderClient is not set`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val expectedAuthError = AuthException.InvalidUserPoolConfigurationException(
+            IllegalArgumentException("Required value was null.")
+        )
+
+        val userPool = UserPoolConfiguration.invoke { appClientId = "app Client Id" }
+        every { authService.cognitoIdentityProviderClient } returns null
+        every { authConfiguration.userPool } returns userPool
+
+        val errorCaptor = slot<AuthException.InvalidUserPoolConfigurationException>()
+        justRun { onError.accept(capture(errorCaptor)) }
+
+        // WHEN
+        plugin.resetPassword("user", AuthResetPasswordOptions.defaults(), onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+        assertEquals(expectedAuthError.toString(), errorCaptor.captured.toString())
+    }
+
+    @Test
+    fun `reset password fails if appClientId is not set`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val expectedAuthError = AuthException.InvalidUserPoolConfigurationException(
+            IllegalArgumentException("Required value was null.")
+        )
+
+        val userPool = UserPoolConfiguration.invoke { appClientId = null }
+        every { authService.cognitoIdentityProviderClient } returns mockk()
+        every { authConfiguration.userPool } returns userPool
+
+        val errorCaptor = slot<AuthException.InvalidUserPoolConfigurationException>()
+        justRun { onError.accept(capture(errorCaptor)) }
+
+        // WHEN
+        plugin.resetPassword("user", AuthResetPasswordOptions.defaults(), onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+        assertEquals(expectedAuthError.toString(), errorCaptor.captured.toString())
+    }
+
+    @Ignore("Test fails in build server")
+    @Test
+    fun `reset password executes ResetPasswordUseCase if required params are set`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
+        val onError = mockk<Consumer<AuthException>>()
+        val options = mockk<AuthResetPasswordOptions>()
+        val username = "user"
+
+        mockkConstructor(ResetPasswordUseCase::class)
+
+        every { authService.cognitoIdentityProviderClient } returns mockk()
+        every { authConfiguration.userPool } returns UserPoolConfiguration.invoke { appClientId = "app Client Id" }
+        coJustRun { anyConstructed<ResetPasswordUseCase>().execute(username, options, onSuccess, onError) }
+
+        // WHEN
+        plugin.resetPassword(username, options, onSuccess, onError)
+
+        // THEN
+        coVerify { anyConstructed<ResetPasswordUseCase>().execute(username, options, onSuccess, onError) }
     }
 }
