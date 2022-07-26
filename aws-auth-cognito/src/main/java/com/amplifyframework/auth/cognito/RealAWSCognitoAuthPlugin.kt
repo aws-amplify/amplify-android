@@ -19,7 +19,6 @@ import android.app.Activity
 import android.content.Intent
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
@@ -911,6 +910,9 @@ internal class RealAWSCognitoAuthPlugin(
                                     listenerToken?.let(credentialStoreStateMachine::cancel)
                                     onError.accept(AuthException.UnknownException(it.error))
                                 }
+                                else -> {
+                                    //No-op
+                                }
                             }
                         },
                         {
@@ -1134,6 +1136,9 @@ internal class RealAWSCognitoAuthPlugin(
                                 authStateMachine.send(event)
                             }
                         )
+                    }
+                    else -> {
+                        // No-op
                     }
                 }
                 when (val deleteUserState = authState.authZState?.deleteUserState) {
