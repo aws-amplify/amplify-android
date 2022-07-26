@@ -121,7 +121,7 @@ class RealAWSCognitoAuthPluginTest {
             UUID.randomUUID()
         }
         coEvery {
-            cognitoAuthService.cognitoIdentityProviderClient?.changePassword(any<ChangePasswordRequest>())
+            authService.cognitoIdentityProviderClient?.changePassword(any<ChangePasswordRequest>())
         } returns ChangePasswordResponse.invoke { }
 
         // WHEN
