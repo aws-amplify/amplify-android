@@ -19,6 +19,7 @@ import android.app.Activity
 import android.content.Intent
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
@@ -880,40 +881,50 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        var listenerToken: StateChangeListenerToken? = null
-        listenerToken = credentialStoreStateMachine.listen(
-            {
-                when (it) {
-                    is CredentialStoreState.Success -> {
-                        listenerToken?.let(credentialStoreStateMachine::cancel)
-                        if (it.storedCredentials?.cognitoUserPoolTokens?.accessToken != null) {
-                            GlobalScope.launch {
-                                _updatePassword(
-                                    it.storedCredentials.cognitoUserPoolTokens.accessToken,
-                                    oldPassword,
-                                    newPassword,
-                                    onSuccess,
-                                    onError
-                                )
+
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
+
+                    var listenerToken: StateChangeListenerToken? = null
+                    listenerToken = credentialStoreStateMachine.listen(
+                        {
+                            when (it) {
+                                is CredentialStoreState.Success -> {
+                                    listenerToken?.let(credentialStoreStateMachine::cancel)
+                                    if (it.storedCredentials?.cognitoUserPoolTokens?.accessToken != null) {
+                                        GlobalScope.launch {
+                                            _updatePassword(
+                                                it.storedCredentials.cognitoUserPoolTokens.accessToken,
+                                                oldPassword,
+                                                newPassword,
+                                                onSuccess,
+                                                onError
+                                            )
+                                        }
+                                    } else {
+                                        onError.accept(AuthException.InvalidAccountTypeException())
+                                    }
+                                }
+                                is CredentialStoreState.Error -> {
+                                    listenerToken?.let(credentialStoreStateMachine::cancel)
+                                    onError.accept(AuthException.UnknownException(it.error))
+                                }
                             }
-                        } else {
-                            onError.accept(AuthException.InvalidAccountTypeException())
+                        },
+                        {
+                            credentialStoreStateMachine.send(
+                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                            )
                         }
-                    }
-                    is CredentialStoreState.Error -> {
-                        listenerToken?.let(credentialStoreStateMachine::cancel)
-                        onError.accept(AuthException.UnknownException(it.error))
-                    }
-                    else -> {
-                    }
+                    )
                 }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                )
+                else -> onError.accept(AuthException.InvalidStateException())
             }
-        )
+        }
+
+
     }
 
     private suspend fun _updatePassword(

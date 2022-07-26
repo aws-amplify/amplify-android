@@ -109,6 +109,14 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Action>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
         val credential = AmplifyCredential(
             CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 120L),
             null,
@@ -134,9 +142,35 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     @Test
+    fun `update password fails when not in SignedIn state`() {
+        // GIVEN
+        val onSuccess = mockk<Action>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.NotConfigured()
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+        // WHEN
+        plugin.updatePassword("old", "new", onSuccess, onError)
+        Thread.sleep(1_000)
+
+        verify(exactly = 0)  { onSuccess.call() }
+        coVerify{ onError.accept(AuthException.InvalidStateException()) }
+    }
+
+    @Test
     fun `update password fails when cognitoIdentityProviderClient not set`() {
         val onSuccess = mockk<Action>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
         val credential = AmplifyCredential(
             CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 120L),
             null,
