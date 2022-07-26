@@ -348,31 +348,6 @@ public class AuthException extends AmplifyException {
     }
 
     /**
-     * Could not perform the action because user was not found in the system.
-     */
-    public static class UserAttributeNotUpdatedException extends AuthException {
-        private static final long serialVersionUID = 1L;
-        private static final String MESSAGE = "Attribute to be updated does not exist in the result.";
-        private static final String RECOVERY_SUGGESTION = "";
-
-        /**
-         * Default message/recovery suggestion without a cause.
-         */
-        public UserAttributeNotUpdatedException() {
-            super(MESSAGE, RECOVERY_SUGGESTION);
-        }
-
-        /**
-         * Default message/recovery suggestion with a cause.
-         *
-         * @param cause The original error.
-         */
-        public UserAttributeNotUpdatedException(Throwable cause) {
-            super(MESSAGE, cause, RECOVERY_SUGGESTION);
-        }
-    }
-
-    /**
      * Could not perform the action because error occured when delivering the confirmation code.
      */
     public static class CodeDeliveryFailureException extends AuthException {
