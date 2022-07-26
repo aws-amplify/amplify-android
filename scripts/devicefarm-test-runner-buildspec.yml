@@ -42,8 +42,8 @@ phases:
   build:
     commands:
       - echo 'Build phase starting.'
-      - JAVA_HOME=$JDK_8_HOME ./gradlew assembleAndroidTest
-      - JAVA_HOME=$JDK_8_HOME ./gradlew runTestsInDeviceFarm
+      - JAVA_HOME=$JDK_8_HOME ./gradlew assembleAndroidTest --parallel
+      - JAVA_HOME=$JDK_8_HOME ./gradlew runTestsInDeviceFarm --parallel
     finally:
       - echo 'Build phase completed.'
   post_build:
