@@ -270,6 +270,9 @@ public class AuthException extends AmplifyException {
         }
     }
 
+    /**
+     * Could not update user password.
+     */
     public static class UpdatePasswordException extends AuthException {
         private static final long serialVersionUID = 1L;
         private static final String MESSAGE = "Your password cannot be updated.";
