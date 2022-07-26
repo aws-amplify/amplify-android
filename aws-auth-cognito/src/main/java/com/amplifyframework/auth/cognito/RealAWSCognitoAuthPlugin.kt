@@ -32,6 +32,7 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.auth.cognito.usecases.ConfirmResetPasswordUseCase
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
@@ -862,7 +863,26 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        try {
+            val cognitoIdentityProviderClient = requireNotNull(
+                authEnvironment.cognitoAuthService.cognitoIdentityProviderClient
+            )
+
+            val appClient = requireNotNull(configuration.userPool?.appClient)
+
+            GlobalScope.launch {
+                ConfirmResetPasswordUseCase(cognitoIdentityProviderClient, appClient).execute(
+                    username,
+                    newPassword,
+                    confirmationCode,
+                    options,
+                    onSuccess,
+                    onError
+                )
+            }
+        } catch (ex: Exception) {
+            onError.accept(AuthException.InvalidUserPoolConfigurationException(ex))
+        }
     }
 
     override fun confirmResetPassword(
@@ -872,7 +892,14 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        confirmResetPassword(
+            username,
+            newPassword,
+            confirmationCode,
+            AuthConfirmResetPasswordOptions.defaults(),
+            onSuccess,
+            onError
+        )
     }
 
     override fun updatePassword(

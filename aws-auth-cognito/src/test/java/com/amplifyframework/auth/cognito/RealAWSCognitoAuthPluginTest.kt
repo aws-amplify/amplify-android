@@ -17,10 +17,12 @@ package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignUpResult
+import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
@@ -161,5 +163,67 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         coVerify { anyConstructed<ResetPasswordUseCase>().execute(username, options, onSuccess, onError) }
+    }
+
+    @Test
+    fun `confirm reset password fails if cognitoIdentityProviderClient is not set`() {
+        // GIVEN
+        val onSuccess = mockk<Action>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val expectedAuthError = AuthException.InvalidUserPoolConfigurationException(
+            IllegalArgumentException("Required value was null.")
+        )
+
+        val userPool = UserPoolConfiguration.invoke { appClientId = "app Client Id" }
+        every { authService.cognitoIdentityProviderClient } returns null
+        every { authConfiguration.userPool } returns userPool
+
+        val errorCaptor = slot<AuthException.InvalidUserPoolConfigurationException>()
+        justRun { onError.accept(capture(errorCaptor)) }
+
+        // WHEN
+        plugin.confirmResetPassword(
+            "user",
+            "password",
+            "code",
+            AuthConfirmResetPasswordOptions.defaults(),
+            onSuccess,
+            onError
+        )
+
+        // THEN
+        verify(exactly = 0) { onSuccess.call() }
+        assertEquals(expectedAuthError.toString(), errorCaptor.captured.toString())
+    }
+
+    @Test
+    fun `confirm reset password fails if appClientId is not set`() {
+        // GIVEN
+        val onSuccess = mockk<Action>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val expectedAuthError = AuthException.InvalidUserPoolConfigurationException(
+            IllegalArgumentException("Required value was null.")
+        )
+
+        val userPool = UserPoolConfiguration.invoke { appClientId = null }
+        every { authService.cognitoIdentityProviderClient } returns mockk()
+        every { authConfiguration.userPool } returns userPool
+
+        val errorCaptor = slot<AuthException.InvalidUserPoolConfigurationException>()
+        justRun { onError.accept(capture(errorCaptor)) }
+
+        // WHEN
+        plugin.confirmResetPassword(
+            "user",
+            "password",
+            "code",
+            AuthConfirmResetPasswordOptions.defaults(),
+            onSuccess,
+            onError
+        )
+
+        // THEN
+        verify(exactly = 0) { onSuccess.call() }
+        assertEquals(expectedAuthError.toString(), errorCaptor.captured.toString())
     }
 }
