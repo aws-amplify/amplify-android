@@ -33,6 +33,7 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -82,6 +83,7 @@ import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -818,13 +820,31 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun resetPassword(
         username: String,
         options: AuthResetPasswordOptions,
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        try {
+            val cognitoIdentityProviderClient = requireNotNull(
+                authEnvironment.cognitoAuthService.cognitoIdentityProviderClient
+            )
+
+            val appClient = requireNotNull(configuration.userPool?.appClient)
+
+            GlobalScope.launch {
+                ResetPasswordUseCase(cognitoIdentityProviderClient, appClient).execute(
+                    username,
+                    options,
+                    onSuccess,
+                    onError
+                )
+            }
+        } catch (ex: Exception) {
+            onError.accept(AuthException.InvalidUserPoolConfigurationException(ex))
+        }
     }
 
     override fun resetPassword(
@@ -832,7 +852,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        resetPassword(username, AuthResetPasswordOptions.defaults(), onSuccess, onError)
     }
 
     override fun confirmResetPassword(
