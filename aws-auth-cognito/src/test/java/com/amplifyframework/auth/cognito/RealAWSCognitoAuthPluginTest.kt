@@ -14,7 +14,6 @@
  */
 
 package com.amplifyframework.auth.cognito
-
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
 import com.amplifyframework.auth.AuthException
@@ -28,15 +27,14 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
-import io.mockk.coJustRun
-import io.mockk.coVerify
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.invoke
@@ -46,8 +44,8 @@ import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.verify
 import java.util.UUID
-import kotlin.test.assertTrue
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
@@ -157,8 +155,8 @@ class RealAWSCognitoAuthPluginTest {
         plugin.updatePassword("old", "new", onSuccess, onError)
         Thread.sleep(1_000)
 
-        verify(exactly = 0)  { onSuccess.call() }
-        coVerify{ onError.accept(AuthException.InvalidStateException()) }
+        verify(exactly = 0) { onSuccess.call() }
+        coVerify { onError.accept(AuthException.InvalidStateException()) }
     }
 
     @Test
