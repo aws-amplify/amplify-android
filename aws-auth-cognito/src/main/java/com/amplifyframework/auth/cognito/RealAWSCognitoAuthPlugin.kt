@@ -911,7 +911,7 @@ internal class RealAWSCognitoAuthPlugin(
                                     onError.accept(AuthException.UnknownException(it.error))
                                 }
                                 else -> {
-                                    //No-op
+                                    // No-op
                                 }
                             }
                         },
@@ -925,8 +925,6 @@ internal class RealAWSCognitoAuthPlugin(
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
-
-
     }
 
     private suspend fun _updatePassword(
@@ -948,7 +946,7 @@ internal class RealAWSCognitoAuthPlugin(
                 )
             onSuccess.call()
         } catch (e: Exception) {
-            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.localizedMessage))
+            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
         }
     }
 
@@ -1198,6 +1196,9 @@ internal class RealAWSCognitoAuthPlugin(
                                     CognitoAuthExceptionConverter.lookup(signOutState.exception, "Sign out failed.")
                                 )
                             }
+                            else -> {
+                                // No-op
+                            }
                         }
                     }
                     else -> {
@@ -1233,6 +1234,9 @@ internal class RealAWSCognitoAuthPlugin(
                                 SignOutEvent.EventType.SignedOutFailure(AuthException.UnknownException(it.error))
                             )
                         )
+                    }
+                    else -> {
+                        // No-op
                     }
                 }
             },
