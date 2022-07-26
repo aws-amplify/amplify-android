@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderCl
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthException.REPORT_BUG_TO_AWS_SUGGESTION
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
+import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
-import java.lang.Exception
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -61,10 +61,3 @@ internal class ConfirmResetPasswordUseCase(
         }
     }
 }
-
-/**
- * Cognito extension of confirm reset password options to add the platform specific fields.
- */
-data class AWSCognitoAuthConfirmResetPasswordOptions(
-    val metadata: Map<String, String>
-) : AuthConfirmResetPasswordOptions()
