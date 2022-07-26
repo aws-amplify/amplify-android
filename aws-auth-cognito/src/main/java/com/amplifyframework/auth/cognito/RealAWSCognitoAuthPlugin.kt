@@ -917,7 +917,7 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private suspend fun _updatePassword(
-        token: String,
+        accessToken: String,
         oldPassword: String,
         newPassword: String,
         onSuccess: Action,
@@ -926,7 +926,7 @@ internal class RealAWSCognitoAuthPlugin(
         val changePasswordRequest = ChangePasswordRequest.invoke {
             previousPassword = oldPassword
             proposedPassword = newPassword
-            accessToken = token
+            this.accessToken = accessToken
         }
         try {
             authEnvironment.cognitoAuthService
