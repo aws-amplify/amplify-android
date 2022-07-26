@@ -297,9 +297,9 @@ public final class SelectionSet {
                     }
                 }
             }
-            for (String fieldName : requestOptions.modelMetaFields()) {
-                result.add(new SelectionSet(fieldName));
-            }
+//            for (String fieldName : requestOptions.modelMetaFields()) {
+//                result.add(new SelectionSet(fieldName));
+//            }
             return result;
         }
 
@@ -404,9 +404,9 @@ public final class SelectionSet {
                     }
                 }
             }
-            for (String fieldName : requestOptions.modelMetaFields()) {
-                result.add(new SelectionSet(fieldName));
-            }
+//            for (String fieldName : requestOptions.modelMetaFields()) {
+//                result.add(new SelectionSet(fieldName));
+//            }
             return result;
         }
 
