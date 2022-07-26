@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Intent
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
@@ -83,6 +84,10 @@ import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -865,7 +870,35 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<MutableList<AuthUserAttribute>>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
+
+                    GlobalScope.launch {
+                        try {
+                            var accessToken = getAccessToken()
+                            val getUserRequest = GetUserRequest.invoke {
+                                this.accessToken = accessToken
+                            }
+                            val user = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.getUser(getUserRequest)
+                            val userAttributes = buildList {
+                                user?.userAttributes?.mapTo(this) {
+                                    AuthUserAttribute(
+                                        AuthUserAttributeKey.custom(it.name),
+                                        it.value
+                                    )
+                                }
+                            }
+                            onSuccess.accept(userAttributes.toMutableList())
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "fallback message"))
+                        }
+                    }
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
     }
 
     override fun updateUserAttribute(
@@ -926,6 +959,31 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
+    }
+
+    private suspend fun getAccessToken(): String? {
+        return suspendCoroutine { continuation ->
+            var listenerToken: StateChangeListenerToken? = null
+            listenerToken = credentialStoreStateMachine.listen(
+                {
+                    when (it) {
+                        is CredentialStoreState.Success -> {
+                            listenerToken?.let(credentialStoreStateMachine::cancel)
+                            continuation.resume(it.storedCredentials?.cognitoUserPoolTokens?.accessToken)
+                        }
+                        is CredentialStoreState.Error -> {
+                            listenerToken?.let(credentialStoreStateMachine::cancel)
+                            continuation.resumeWithException(AuthException.UnknownException(it.error))
+                        }
+                    }
+                },
+                {
+                    credentialStoreStateMachine.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                    )
+                }
+            )
+        }
     }
 
     override fun getCurrentUser(
