@@ -23,10 +23,13 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
+import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
+import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.invoke
 import io.mockk.mockk
 import io.mockk.verify
+import java.util.UUID
 import org.junit.Before
 import org.junit.Test
 
@@ -40,6 +43,7 @@ class RealAWSCognitoAuthPluginTest {
     }
     private var authStateMachine = mockk<AuthStateMachine>(relaxed = true)
     private var credentialStoreStateMachine = mockk<CredentialStoreStateMachine>(relaxed = true)
+    private var hostedUIClient = mockk<HostedUIClient>()
 
     private lateinit var plugin: RealAWSCognitoAuthPlugin
 
@@ -50,6 +54,7 @@ class RealAWSCognitoAuthPluginTest {
             authEnvironment,
             authStateMachine,
             credentialStoreStateMachine,
+            hostedUIClient,
             logger
         )
     }
@@ -68,6 +73,12 @@ class RealAWSCognitoAuthPluginTest {
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
             lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        val slot = CapturingSlot<(CredentialStoreState) -> Unit>()
+        every { credentialStoreStateMachine.listen(captureLambda(), any()) } answers {
+            slot.captured.invoke(CredentialStoreState.Success(mockk()))
+            UUID.randomUUID()
         }
 
         // WHEN

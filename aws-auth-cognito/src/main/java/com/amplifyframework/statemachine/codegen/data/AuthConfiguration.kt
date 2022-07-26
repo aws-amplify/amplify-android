@@ -22,7 +22,8 @@ import org.json.JSONObject
  */
 data class AuthConfiguration internal constructor(
     val userPool: UserPoolConfiguration?,
-    val identityPool: IdentityPoolConfiguration?
+    val identityPool: IdentityPoolConfiguration?,
+    val oauth: OauthConfiguration?
 ) {
 
     companion object {
@@ -42,6 +43,11 @@ data class AuthConfiguration internal constructor(
                     ?.getJSONObject("CognitoIdentity")
                     ?.getJSONObject(configName)?.let {
                         IdentityPoolConfiguration.fromJson(it).build()
+                    },
+                oauth = pluginJson.optJSONObject("Auth")
+                    ?.optJSONObject(configName)
+                    ?.optJSONObject("OAuth")?.let {
+                        OauthConfiguration.fromJson(it)
                     }
             )
         }

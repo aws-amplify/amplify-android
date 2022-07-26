@@ -16,9 +16,9 @@
 package com.amplifyframework.statemachine.codegen.actions
 
 import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.events.SignInEvent
+import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 
-interface SignInActions {
-    fun startSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithSRP): Action
-    fun startHostedUIAuthAction(event: SignInEvent.EventType.InitiateHostedUISignIn): Action
+interface HostedUIActions {
+    fun showHostedUI(event: HostedUIEvent.EventType.ShowHostedUI): Action
+    fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken): Action
 }

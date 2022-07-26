@@ -74,7 +74,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                     }
                 }
                 is SignInData.HostedUISignInData -> {
-                    SignInEvent(SignInEvent.EventType.InitiateHostedUISignIn())
+                    SignInEvent(SignInEvent.EventType.InitiateHostedUISignIn(data))
                 }
             }
 

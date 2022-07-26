@@ -23,6 +23,7 @@ import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
 import com.amplifyframework.auth.cognito.actions.FetchAwsCredentialsCognitoActions
 import com.amplifyframework.auth.cognito.actions.FetchIdentityCognitoActions
 import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensCognitoActions
+import com.amplifyframework.auth.cognito.actions.HostedUICognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
@@ -55,7 +56,7 @@ internal class AuthStateMachine(
                 SignUpState.Resolver(SignUpCognitoActions),
                 SignInState.Resolver(
                     SRPSignInState.Resolver(SRPCognitoActions),
-                    HostedUISignInState.Resolver(),
+                    HostedUISignInState.Resolver(HostedUICognitoActions),
                     SignInCognitoActions
                 ),
                 SignOutState.Resolver(SignOutCognitoActions),
@@ -83,7 +84,7 @@ internal class AuthStateMachine(
                     SignUpState.Resolver(SignUpCognitoActions).logging(),
                     SignInState.Resolver(
                         SRPSignInState.Resolver(SRPCognitoActions).logging(),
-                        HostedUISignInState.Resolver().logging(),
+                        HostedUISignInState.Resolver(HostedUICognitoActions).logging(),
                         SignInCognitoActions
                     )
                         .logging(),

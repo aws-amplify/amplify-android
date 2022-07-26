@@ -87,7 +87,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     SignUpState.Resolver(mockSignUpActions),
                     SignInState.Resolver(
                         SRPSignInState.Resolver(mockSRPActions),
-                        HostedUISignInState.Resolver(),
+                        HostedUISignInState.Resolver(mockHostedUIActions),
                         mockSignInActions
                     ),
                     SignOutState.Resolver(mockSignOutActions),

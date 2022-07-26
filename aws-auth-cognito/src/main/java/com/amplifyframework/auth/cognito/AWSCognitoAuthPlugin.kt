@@ -83,11 +83,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             val authStateMachine = AuthStateMachine(authEnvironment)
             System.setProperty("aws.frameworkMetadata", UserAgent.string())
             val credentialStoreStateMachine = createCredentialStoreStateMachine(configuration, context)
+            val hostedUIClient = if (configuration.oauth != null) { HostedUIClient(context) } else null
             realPlugin = RealAWSCognitoAuthPlugin(
                 configuration,
                 authEnvironment,
                 authStateMachine,
                 credentialStoreStateMachine,
+                hostedUIClient,
                 logger
             )
         } catch (exception: JSONException) {

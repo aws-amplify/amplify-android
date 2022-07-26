@@ -28,6 +28,7 @@ dependencies {
     implementation dependency.kotlin.serializationJson
     implementation dependency.androidx.appcompat
     implementation dependency.androidx.security
+    implementation dependency.androidx.browser
 
     implementation dependency.aws.core
     implementation dependency.aws.cognitoidentity

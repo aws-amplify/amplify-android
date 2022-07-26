@@ -39,7 +39,8 @@ class AWSCognitoAuthServiceBehaviorTest {
             userPool = UserPoolConfiguration.Builder()
                 .poolId("pool-b")
                 .region(expectedUserPoolRegion)
-                .build()
+                .build(),
+            oauth = null
         )
 
         val testObject = AWSCognitoAuthServiceBehavior.fromConfiguration(config)

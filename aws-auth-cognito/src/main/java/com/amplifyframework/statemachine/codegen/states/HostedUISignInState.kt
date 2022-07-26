@@ -19,6 +19,8 @@ import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
+import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
+import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 
 sealed class HostedUISignInState : State {
     data class NotStarted(val id: String = "") : HostedUISignInState()
@@ -27,15 +29,42 @@ sealed class HostedUISignInState : State {
     data class Done(val id: String = "") : HostedUISignInState()
     data class Error(val exception: Exception) : HostedUISignInState()
 
-    class Resolver() : StateMachineResolver<HostedUISignInState> {
+    class Resolver(private val hostedUIActions: HostedUIActions) : StateMachineResolver<HostedUISignInState> {
         override val defaultState = NotStarted()
 
-        // TODO Implement Resolver
+        private fun asHostedUIEvent(event: StateMachineEvent): HostedUIEvent.EventType? {
+            return (event as? HostedUIEvent)?.eventType
+        }
+
         override fun resolve(
             oldState: HostedUISignInState,
             event: StateMachineEvent
         ): StateResolution<HostedUISignInState> {
-            return StateResolution(oldState)
+            val hostedUIEvent = asHostedUIEvent(event)
+            val defaultResolution = StateResolution(oldState)
+            return when (oldState) {
+                is NotStarted -> when (hostedUIEvent) {
+                    is HostedUIEvent.EventType.ShowHostedUI -> {
+                        val action = hostedUIActions.showHostedUI(hostedUIEvent)
+                        StateResolution(ShowingUI(), listOf(action))
+                    }
+                    else -> defaultResolution
+                }
+                is ShowingUI -> when (hostedUIEvent) {
+                    is HostedUIEvent.EventType.FetchToken -> {
+                        val action = hostedUIActions.fetchHostedUISignInToken(hostedUIEvent)
+                        StateResolution(FetchingToken(), listOf(action))
+                    }
+                    is HostedUIEvent.EventType.ThrowError -> StateResolution((Error(hostedUIEvent.exception)))
+                    else -> defaultResolution
+                }
+                is FetchingToken -> when (hostedUIEvent) {
+                    is HostedUIEvent.EventType.TokenFetched -> StateResolution(Done())
+                    is HostedUIEvent.EventType.ThrowError -> StateResolution((Error(hostedUIEvent.exception)))
+                    else -> defaultResolution
+                }
+                else -> defaultResolution
+            }
         }
     }
 }

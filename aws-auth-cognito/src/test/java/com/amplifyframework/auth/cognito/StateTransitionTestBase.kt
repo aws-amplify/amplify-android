@@ -24,6 +24,7 @@ import com.amplifyframework.statemachine.codegen.actions.FetchAWSCredentialsActi
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
 import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
+import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
@@ -85,6 +86,9 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockSRPActions: SRPActions
+
+    @Mock
+    internal lateinit var mockHostedUIActions: HostedUIActions
 
     @Mock
     internal lateinit var mockSignOutActions: SignOutActions

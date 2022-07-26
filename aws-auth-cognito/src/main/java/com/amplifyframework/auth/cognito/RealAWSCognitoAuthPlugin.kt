@@ -32,6 +32,7 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.auth.cognito.options.HostedUISignInOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -79,6 +80,7 @@ import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
 import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
 import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
+import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
@@ -90,8 +92,8 @@ internal class RealAWSCognitoAuthPlugin(
     private val authEnvironment: AuthEnvironment,
     private val authStateMachine: AuthStateMachine,
     private val credentialStoreStateMachine: CredentialStoreStateMachine,
+    private val hostedUIClient: HostedUIClient?,
     private val logger: Logger
-
 ) : AuthCategoryBehavior {
 
     init {
@@ -462,7 +464,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        signInWithWebUI(callingActivity, AuthWebUISignInOptions.builder().build(), onSuccess, onError)
     }
 
     override fun signInWithWebUI(
@@ -471,7 +473,74 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AuthException(
+                        "Sign in failed.",
+                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
+                    )
+                )
+                // Continue sign in
+                is AuthenticationState.SignedOut -> _signInWithWebUI(callingActivity, options, onSuccess, onError)
+                is AuthenticationState.SignedIn -> onSuccess.accept(
+                    AuthSignInResult(true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null))
+                )
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
+    }
+
+    private fun _signInWithWebUI(
+        callingActivity: Activity,
+        options: AuthWebUISignInOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        if (configuration.oauth == null || hostedUIClient == null) {
+            onError.accept(
+                AuthException(
+                    "Sign in failed.",
+                    "showSignIn called without HostedUI options in awsconfiguration.json"
+                )
+            )
+            return
+        }
+
+        var token: StateChangeListenerToken? = null
+        token = authStateMachine.listen(
+            { authState ->
+                when (val authNState = authState.authNState) {
+                    is AuthenticationState.SigningIn -> {
+                        val hostedUISignInState = authNState.signInState?.hostedUISignInState
+                        if (hostedUISignInState is HostedUISignInState.Error) {
+                            token?.let(authStateMachine::cancel)
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(hostedUISignInState.exception, "Sign in failed.")
+                            )
+                        }
+                    }
+                    is AuthenticationState.SignedIn -> {
+                        token?.let(authStateMachine::cancel)
+                        // Store signed in data to credential store
+                        storeSignedInData(authNState.signedInData, onSuccess, onError)
+                    }
+                    else -> {
+                        // no-op
+                    }
+                }
+            },
+            {
+                val hostedUIOptions = HostedUISignInOptions.createWebSignInOptions(options, configuration.oauth)
+                authStateMachine.send(
+                    AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignInRequested(
+                            SignInData.HostedUISignInData(callingActivity, hostedUIClient, hostedUIOptions)
+                        )
+                    )
+                )
+            }
+        )
     }
 
     override fun handleWebUISignInResponse(intent: Intent?) {
