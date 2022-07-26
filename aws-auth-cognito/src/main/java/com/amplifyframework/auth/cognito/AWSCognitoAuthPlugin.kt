@@ -269,22 +269,24 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         options: AuthConfirmResetPasswordOptions,
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmResetPassword(newPassword, confirmationCode, options, onSuccess, onError)
+        realPlugin.confirmResetPassword(username, newPassword, confirmationCode, options, onSuccess, onError)
     }
 
     override fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmResetPassword(newPassword, confirmationCode, onSuccess, onError)
+        realPlugin.confirmResetPassword(username, newPassword, confirmationCode, onSuccess, onError)
     }
 
     override fun updatePassword(
