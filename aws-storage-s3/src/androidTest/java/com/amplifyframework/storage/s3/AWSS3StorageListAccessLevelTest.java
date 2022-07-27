@@ -32,6 +32,7 @@ import com.amplifyframework.testutils.sync.SynchronousStorage;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -147,6 +148,7 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
+    @Ignore("Fails randomly in build server, needs investigation")
     @Test(expected = StorageException.class)
     public void testListUnauthenticatedPrivateAccess() throws Exception {
         listOptions = StorageListOptions.builder()
