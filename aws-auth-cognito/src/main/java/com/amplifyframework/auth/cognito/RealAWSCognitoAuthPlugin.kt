@@ -884,47 +884,32 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 // Check if user signed in
                 is AuthenticationState.SignedIn -> {
 
-                    var listenerToken: StateChangeListenerToken? = null
-                    listenerToken = credentialStoreStateMachine.listen(
-                        {
-                            when (it) {
-                                is CredentialStoreState.Success -> {
-                                    listenerToken?.let(credentialStoreStateMachine::cancel)
-                                    if (it.storedCredentials?.cognitoUserPoolTokens?.accessToken != null) {
-                                        GlobalScope.launch {
-                                            _updatePassword(
-                                                it.storedCredentials.cognitoUserPoolTokens.accessToken,
-                                                oldPassword,
-                                                newPassword,
-                                                onSuccess,
-                                                onError
-                                            )
-                                        }
-                                    } else {
-                                        onError.accept(AuthException.InvalidAccountTypeException())
-                                    }
-                                }
-                                is CredentialStoreState.Error -> {
-                                    listenerToken?.let(credentialStoreStateMachine::cancel)
-                                    onError.accept(AuthException.UnknownException(it.error))
-                                }
-                                else -> {
-                                    // No-op
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getAccessToken()
+                            if(accessToken != null) {
+                                GlobalScope.launch {
+                                    _updatePassword(
+                                        accessToken,
+                                        oldPassword,
+                                        newPassword,
+                                        onSuccess,
+                                        onError
+                                    )
                                 }
                             }
-                        },
-                        {
-                            credentialStoreStateMachine.send(
-                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                            )
+                            else{
+                                onError.accept(AuthException.InvalidStateException())
+                            }
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                         }
-                    )
+                    }
                 }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
@@ -965,7 +950,7 @@ internal class RealAWSCognitoAuthPlugin(
 
                     GlobalScope.launch {
                         try {
-                            var accessToken = getAccessToken()
+                            val accessToken = getAccessToken()
                             val getUserRequest = GetUserRequest.invoke {
                                 this.accessToken = accessToken
                             }
