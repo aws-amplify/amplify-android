@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
@@ -883,7 +884,74 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
+
+                    var listenerToken: StateChangeListenerToken? = null
+                    listenerToken = credentialStoreStateMachine.listen(
+                        {
+                            when (it) {
+                                is CredentialStoreState.Success -> {
+                                    listenerToken?.let(credentialStoreStateMachine::cancel)
+                                    if (it.storedCredentials?.cognitoUserPoolTokens?.accessToken != null) {
+                                        GlobalScope.launch {
+                                            _updatePassword(
+                                                it.storedCredentials.cognitoUserPoolTokens.accessToken,
+                                                oldPassword,
+                                                newPassword,
+                                                onSuccess,
+                                                onError
+                                            )
+                                        }
+                                    } else {
+                                        onError.accept(AuthException.InvalidAccountTypeException())
+                                    }
+                                }
+                                is CredentialStoreState.Error -> {
+                                    listenerToken?.let(credentialStoreStateMachine::cancel)
+                                    onError.accept(AuthException.UnknownException(it.error))
+                                }
+                                else -> {
+                                    // No-op
+                                }
+                            }
+                        },
+                        {
+                            credentialStoreStateMachine.send(
+                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                            )
+                        }
+                    )
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
+    }
+
+    private suspend fun _updatePassword(
+        accessToken: String,
+        oldPassword: String,
+        newPassword: String,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        val changePasswordRequest = ChangePasswordRequest.invoke {
+            previousPassword = oldPassword
+            proposedPassword = newPassword
+            this.accessToken = accessToken
+        }
+        try {
+            authEnvironment.cognitoAuthService
+                .cognitoIdentityProviderClient?.changePassword(
+                    changePasswordRequest
+                )
+            onSuccess.call()
+        } catch (e: Exception) {
+            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+        }
     }
 
     override fun fetchUserAttributes(
@@ -1124,6 +1192,9 @@ internal class RealAWSCognitoAuthPlugin(
                             }
                         )
                     }
+                    else -> {
+                        // No-op
+                    }
                 }
                 when (val deleteUserState = authState.authZState?.deleteUserState) {
                     is DeleteUserState.UserDeleted -> {
@@ -1182,6 +1253,9 @@ internal class RealAWSCognitoAuthPlugin(
                                     CognitoAuthExceptionConverter.lookup(signOutState.exception, "Sign out failed.")
                                 )
                             }
+                            else -> {
+                                // No-op
+                            }
                         }
                     }
                     else -> {
@@ -1217,6 +1291,9 @@ internal class RealAWSCognitoAuthPlugin(
                                 SignOutEvent.EventType.SignedOutFailure(AuthException.UnknownException(it.error))
                             )
                         )
+                    }
+                    else -> {
+                        // No-op
                     }
                 }
             },
