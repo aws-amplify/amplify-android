@@ -982,7 +982,7 @@ internal class RealAWSCognitoAuthPlugin(
                             }
                             onSuccess.accept(userAttributes.toMutableList())
                         } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "fallback message"))
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                         }
                     }
                 }
