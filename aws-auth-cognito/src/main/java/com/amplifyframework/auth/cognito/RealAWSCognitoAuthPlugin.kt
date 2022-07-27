@@ -21,8 +21,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordReque
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthChannelEventName
@@ -35,9 +33,10 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
-import com.amplifyframework.auth.cognito.helpers.SRPHelper
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
+import com.amplifyframework.auth.cognito.usecases.ConfirmSignUpUseCase
+import com.amplifyframework.auth.cognito.usecases.ResendSignUpCodeUseCase
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
+import com.amplifyframework.auth.cognito.usecases.SignUpUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
@@ -56,9 +55,7 @@ import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.auth.result.step.AuthNextSignInStep
-import com.amplifyframework.auth.result.step.AuthNextSignUpStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
-import com.amplifyframework.auth.result.step.AuthSignUpStep
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -74,7 +71,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
-import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
@@ -113,73 +109,18 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.NotConfigured -> onError.accept(
+            if (authState.authNState is AuthenticationState.Configured) {
+                GlobalScope.launch {
+                    SignUpUseCase(authEnvironment).execute(username, password, options, onSuccess, onError)
+                }
+            } else {
+                onError.accept(
                     AuthException(
                         "Sign up failed.",
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
                 )
-                else -> _signUp(username, password, options, onSuccess, onError)
-            }
-        }
-    }
-
-    private fun _signUp(
-        username: String,
-        password: String,
-        options: AuthSignUpOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
-    ) {
-        logger.verbose("SignUp Starting execution")
-        GlobalScope.launch {
-            try {
-                val userAttributes = options.userAttributes.map {
-                    AttributeType {
-                        name = it.key.keyString
-                        value = it.value
-                    }
-                }
-                val signUpRequest = SignUpRequest {
-                    this.username = username
-                    this.password = password
-                    this.userAttributes = userAttributes
-                    this.clientId = configuration.userPool?.appClient
-                    this.secretHash = SRPHelper.getSecretHash(
-                        username,
-                        configuration.userPool?.appClient,
-                        configuration.userPool?.appClientSecret
-                    )
-                }
-
-                val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.signUp(signUpRequest)
-                val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
-                    mapOf(
-                        "DESTINATION" to details.destination,
-                        "MEDIUM" to details.deliveryMedium?.value,
-                        "ATTRIBUTE" to details.attributeName
-                    )
-                }
-
-                val authSignUpResult = AuthSignUpResult(
-                    false,
-                    AuthNextSignUpStep(
-                        AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                        mapOf(),
-                        AuthCodeDeliveryDetails(
-                            deliveryDetails?.getValue("DESTINATION") ?: "",
-                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                                deliveryDetails?.getValue("MEDIUM")
-                            ),
-                            deliveryDetails?.getValue("ATTRIBUTE")
-                        )
-                    ),
-                    AuthUser(response?.userSub ?: "", username)
-                )
-                onSuccess.accept(authSignUpResult)
-            } catch (exception: Exception) {
-                onError.accept(CognitoAuthExceptionConverter.lookup(exception, "Sign up failed."))
+                return@getCurrentState
             }
         }
     }
@@ -210,50 +151,24 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.NotConfigured -> onError.accept(
+            if (authState.authNState is AuthenticationState.Configured) {
+                GlobalScope.launch {
+                    ConfirmSignUpUseCase(authEnvironment).execute(
+                        username,
+                        confirmationCode,
+                        options,
+                        onSuccess,
+                        onError
+                    )
+                }
+            } else {
+                onError.accept(
                     AuthException(
                         "Confirm sign up failed.",
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
                 )
-                else -> _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
-            }
-        }
-    }
-
-    private fun _confirmSignUp(
-        username: String,
-        confirmationCode: String,
-        options: AuthConfirmSignUpOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
-    ) {
-        logger.verbose("ConfirmSignUp Starting execution")
-        GlobalScope.launch {
-            try {
-                val confirmSignUpRequest = ConfirmSignUpRequest {
-                    this.username = username
-                    this.confirmationCode = confirmationCode
-                    this.clientId = configuration.userPool?.appClient
-                    this.secretHash = SRPHelper.getSecretHash(
-                        username,
-                        configuration.userPool?.appClient,
-                        configuration.userPool?.appClientSecret
-                    )
-                }
-
-                authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp(confirmSignUpRequest)
-                val authSignUpResult = AuthSignUpResult(
-                    true,
-                    AuthNextSignUpStep(AuthSignUpStep.DONE, mapOf(), null),
-                    null
-                )
-                onSuccess.accept(authSignUpResult)
-            } catch (exception: Exception) {
-                onError.accept(
-                    CognitoAuthExceptionConverter.lookup(exception, "Confirm sign up failed.")
-                )
+                return@getCurrentState
             }
         }
     }
@@ -273,71 +188,18 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.NotConfigured -> onError.accept(
+            if (authState.authNState is AuthenticationState.Configured) {
+                GlobalScope.launch {
+                    ResendSignUpCodeUseCase(authEnvironment).execute(username, options, onSuccess, onError)
+                }
+            } else {
+                onError.accept(
                     AuthException(
                         "Resend sign up code failed.",
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
                 )
-                else -> _resendSignUpCode(username, options, onSuccess, onError)
-            }
-        }
-    }
-
-    private fun _resendSignUpCode(
-        username: String,
-        options: AuthResendSignUpCodeOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
-    ) {
-        logger.verbose("ResendSignUpCode Starting execution")
-        GlobalScope.launch {
-            try {
-                val metadata = (options as? AWSCognitoAuthResendSignUpCodeOptions)?.metadata
-
-                val requestOptions = ResendConfirmationCodeRequest {
-                    clientId = configuration.userPool?.appClient
-                    this.username = username
-                    this.secretHash = SRPHelper.getSecretHash(
-                        username,
-                        configuration.userPool?.appClient,
-                        configuration.userPool?.appClientSecret
-                    )
-                    this.clientMetadata = metadata
-                }
-
-                val response =
-                    authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode(
-                        requestOptions
-                    )
-
-                val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
-                    mapOf(
-                        "DESTINATION" to details.destination,
-                        "MEDIUM" to details.deliveryMedium?.value,
-                        "ATTRIBUTE" to details.attributeName
-                    )
-                }
-
-                val authSignUpResult = AuthSignUpResult(
-                    false,
-                    AuthNextSignUpStep(
-                        AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                        mapOf(),
-                        AuthCodeDeliveryDetails(
-                            deliveryDetails?.getValue("DESTINATION") ?: "",
-                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                                deliveryDetails?.getValue("MEDIUM")
-                            ),
-                            deliveryDetails?.getValue("ATTRIBUTE")
-                        )
-                    ),
-                    AuthUser("", username)
-                )
-                onSuccess.accept(authSignUpResult)
-            } catch (exception: Exception) {
-                onError.accept(CognitoAuthExceptionConverter.lookup(exception, "Resend sign up code failed."))
+                return@getCurrentState
             }
         }
     }

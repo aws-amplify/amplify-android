@@ -17,7 +17,6 @@ package com.amplifyframework.statemachine.codegen.states
 
 import com.amplifyframework.auth.cognito.isAuthenticationEvent
 import com.amplifyframework.auth.cognito.isSignOutEvent
-import com.amplifyframework.auth.cognito.isSignUpEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -27,7 +26,6 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 
 sealed class AuthenticationState : State {
     data class NotConfigured(val id: String = "") : AuthenticationState()
