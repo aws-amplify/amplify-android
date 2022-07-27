@@ -892,7 +892,7 @@ internal class RealAWSCognitoAuthPlugin(
                     GlobalScope.launch {
                         try {
                             val accessToken = getAccessToken()
-                            if(accessToken != null) {
+                            if (accessToken != null) {
                                 GlobalScope.launch {
                                     _updatePassword(
                                         accessToken,
@@ -902,8 +902,7 @@ internal class RealAWSCognitoAuthPlugin(
                                         onError
                                     )
                                 }
-                            }
-                            else{
+                            } else {
                                 onError.accept(AuthException.InvalidStateException())
                             }
                         } catch (e: Exception) {
