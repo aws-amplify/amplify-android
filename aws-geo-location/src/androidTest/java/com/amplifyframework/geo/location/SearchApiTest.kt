@@ -16,8 +16,8 @@
 package com.amplifyframework.geo.location
 
 import android.content.Context
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
@@ -29,11 +29,12 @@ import com.amplifyframework.geo.result.GeoSearchResult
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
-import org.junit.Assert.*
-
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.util.*
+import java.util.UUID
 import kotlin.random.Random.Default.nextDouble
 
 /**
@@ -135,10 +136,18 @@ class SearchApiTest {
     private fun signInWithCognito() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
-        auth?.signIn(username, password)
+        try {
+            auth?.signIn(username, password)
+        } catch (e: Exception) {
+            Log.d("SearchApiTest", "Sign In was unsuccessful")
+        }
     }
 
     private fun signOutFromCognito() {
-        auth?.signOut()
+        try {
+            auth?.signOut()
+        } catch (e: Exception) {
+            Log.d("SearchApiTest", "Sign out was unsuccessful")
+        }
     }
 }
