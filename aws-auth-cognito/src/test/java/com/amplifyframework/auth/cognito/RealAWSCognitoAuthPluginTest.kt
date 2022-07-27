@@ -20,8 +20,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordReque
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
@@ -57,8 +55,6 @@ import kotlin.test.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import java.util.UUID
-import kotlin.test.assertTrue
 
 class RealAWSCognitoAuthPluginTest {
 
@@ -267,7 +263,6 @@ class RealAWSCognitoAuthPluginTest {
         coVerify { anyConstructed<ResetPasswordUseCase>().execute(username, options, onSuccess, onError) }
     }
 
-
     @Test
     fun `fetch user attributes with success`() {
         // GIVEN
@@ -295,13 +290,14 @@ class RealAWSCognitoAuthPluginTest {
 
         val userAttributes = listOf(
             AttributeType.invoke {
-                name="email"
-                value="email"
+                name = "email"
+                value = "email"
             },
             AttributeType.invoke {
-                name="nickname"
-                value="nickname"
-            })
+                name = "nickname"
+                value = "nickname"
+            }
+        )
 
         coEvery {
             authService.cognitoIdentityProviderClient?.getUser(any<GetUserRequest>())
@@ -345,5 +341,4 @@ class RealAWSCognitoAuthPluginTest {
         verify(exactly = 0) { onSuccess.accept(any()) }
         coVerify { onError.accept(AuthException.InvalidStateException()) }
     }
-
 }
