@@ -84,13 +84,13 @@ import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -969,7 +969,9 @@ internal class RealAWSCognitoAuthPlugin(
                             val getUserRequest = GetUserRequest.invoke {
                                 this.accessToken = accessToken
                             }
-                            val user = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.getUser(getUserRequest)
+                            val user = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.getUser(
+                                getUserRequest
+                            )
                             val userAttributes = buildList {
                                 user?.userAttributes?.mapTo(this) {
                                     AuthUserAttribute(
