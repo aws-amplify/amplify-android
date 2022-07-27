@@ -14,19 +14,26 @@
  */
 
 package com.amplifyframework.auth.cognito
-
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignUpResult
+import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
+import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
+import io.mockk.CapturingSlot
+import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
@@ -36,7 +43,9 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.verify
+import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
@@ -91,6 +100,91 @@ class RealAWSCognitoAuthPluginTest {
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
         verify { onError.accept(expectedAuthError) }
+    }
+
+    @Test
+    fun `update password with success`() {
+        // GIVEN
+        val onSuccess = mockk<Action>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        val credential = AmplifyCredential(
+            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 120L),
+            null,
+            null
+        )
+
+        val eventSlot = CapturingSlot<(CredentialStoreState) -> Unit>()
+        every { credentialStoreStateMachine.listen(capture(eventSlot), any()) } answers {
+            eventSlot.captured.invoke(CredentialStoreState.Success(credential))
+            UUID.randomUUID()
+        }
+        coEvery {
+            authService.cognitoIdentityProviderClient?.changePassword(any<ChangePasswordRequest>())
+        } returns ChangePasswordResponse.invoke { }
+
+        // WHEN
+        plugin.updatePassword("old", "new", onSuccess, onError)
+        Thread.sleep(1_000)
+        assertTrue { eventSlot.isCaptured }
+
+        verify { onSuccess.call() }
+        coVerify(exactly = 0) { onError.accept(any()) }
+    }
+
+    @Test
+    fun `update password fails when not in SignedIn state`() {
+        // GIVEN
+        val onSuccess = mockk<Action>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.NotConfigured()
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+        // WHEN
+        plugin.updatePassword("old", "new", onSuccess, onError)
+        Thread.sleep(1_000)
+
+        verify(exactly = 0) { onSuccess.call() }
+        coVerify { onError.accept(AuthException.InvalidStateException()) }
+    }
+
+    @Test
+    fun `update password fails when cognitoIdentityProviderClient not set`() {
+        val onSuccess = mockk<Action>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+        val credential = AmplifyCredential(
+            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 120L),
+            null,
+            null
+        )
+        val slot = CapturingSlot<(CredentialStoreState) -> Unit>()
+        every { credentialStoreStateMachine.listen(capture(slot), any()) } answers
+            {
+                slot.captured.invoke(CredentialStoreState.Success(credential))
+                UUID.randomUUID()
+            }
+        plugin.updatePassword("old", "new", onSuccess, onError)
+        Thread.sleep(1_000)
+        assertTrue { slot.isCaptured }
+        verify(exactly = 0) { onSuccess.call() }
+        coVerify { onError.accept(any()) }
     }
 
     @Test
