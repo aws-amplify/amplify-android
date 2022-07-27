@@ -179,7 +179,9 @@ public final class GraphQLInstrumentationTest {
         assertEquals("It's going to be fun!", firstValue.content());
 
         // Cancel the subscription.
-        observer.dispose();
+        if(!observer.isDisposed()) {
+            observer.dispose();
+        }
     }
 
     /**
