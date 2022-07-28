@@ -1,3 +1,20 @@
+## [Release 1.36.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.4)
+
+### Miscellaneous
+- Call to start TransferService regardless of if it has already been started
+- Update transfer message in notification
+- Update the Delete REST API to ensure it would work with and without a body (#1842)
+- Chore(Release): Updating mobile client to the latest (#1847)
+
+[See all changes between 1.36.3 and 1.36.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.3...release_v1.36.4)
+
+## [Release 1.36.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.3)
+
+### Bug Fixes
+- **api:** catch all exceptions when making rest request (#1827)
+
+[See all changes between 1.36.2 and 1.36.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.2...release_v1.36.3)
+
 ## [Release 1.36.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.2)
 
 ### Miscellaneous
