@@ -32,7 +32,6 @@ import com.amplifyframework.testutils.sync.SynchronousStorage;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -112,7 +111,6 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-    @Ignore("Fails randomly in build server, needs investigation")
     @Test
     public void testListUnauthenticatedPublicAccess() throws Exception {
         listOptions = StorageListOptions.builder()
@@ -130,7 +128,6 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-    @Ignore("Fails randomly in build server, needs investigation")
     @Test
     public void testListUnauthenticatedProtectedAccess() throws Exception {
         listOptions = StorageListOptions.builder()
@@ -150,7 +147,6 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-    @Ignore("Fails randomly in build server, needs investigation")
     @Test(expected = StorageException.class)
     public void testListUnauthenticatedPrivateAccess() throws Exception {
         listOptions = StorageListOptions.builder()
@@ -166,7 +162,6 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-    @Ignore("Fails randomly in build server, needs investigation")
     @Test
     public void testListAuthenticatedProtectedAccess() throws Exception {
         mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
@@ -183,7 +178,6 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-    @Ignore("Fails randomly in build server, needs investigation")
     @Test
     public void testListAuthenticatedPrivateAccess() throws Exception {
         mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
@@ -204,7 +198,6 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-    @Ignore("Fails randomly in build server, needs investigation")
     @Test
     public void testListDifferentUsersProtectedAccess() throws Exception {
         mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
@@ -225,7 +218,6 @@ public final class AWSS3StorageListAccessLevelTest {
      *
      * @throws Exception if list is unsuccessful
      */
-    @Ignore("Fails randomly in build server, needs investigation")
     @Test(expected = StorageException.class)
     public void testListDifferentUsersPrivateAccess() throws Exception {
         mobileClient.signIn(userOne.getUsername(), userTwo.getPassword());
