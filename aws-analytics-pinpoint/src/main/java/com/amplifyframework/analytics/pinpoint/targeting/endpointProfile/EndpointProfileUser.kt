@@ -15,15 +15,11 @@
  */
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
-import com.amplifyframework.analytics.pinpoint.internal.core.util.JSONBuilder
-import com.amplifyframework.analytics.pinpoint.internal.core.util.JSONSerializable
 import com.amplifyframework.core.Amplify
-import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
+import kotlinx.serialization.json.*
 import java.util.concurrent.ConcurrentHashMap
 
-class EndpointProfileUser : JSONSerializable {
+class EndpointProfileUser {
     private var userId: String? = null
     private var userAttributes: MutableMap<String, List<String>>? = null
     fun getUserId(): String? {
@@ -50,27 +46,27 @@ class EndpointProfileUser : JSONSerializable {
         return this
     }
 
-    override fun toJSONObject(): JSONObject {
-        val builder = JSONBuilder(null)
-        builder.withAttribute("UserId", userId)
-        if (getUserAttributes() != null) {
-            val attributesJson = JSONObject()
-            for ((key, value) in getUserAttributes()!!) {
-                try {
-                    val array = JSONArray(value)
-                    attributesJson.put(key, array)
-                } catch (e: JSONException) {
-                    // Do not log e due to potentially sensitive information
-                    LOG.warn("Error serializing user attributes.")
+    fun toJSONObject(): JsonObject {
+        return buildJsonObject {
+            put("UserId", userId)
+            if (getUserAttributes() != null) {
+                val attributesJson = buildJsonObject {
+                    for ((key, value) in getUserAttributes()!!) {
+                        try {
+                            put(key, value.map { JsonPrimitive(it) } as JsonElement)
+                        } catch (e: Exception) {
+                            // Do not log e due to potentially sensitive information
+                            LOG.warn("Error serializing user attributes.")
+                        }
+                    }
+                }
+
+                // If there are any attributes put then add the attributes to the structure
+                if (attributesJson.isNotEmpty()) {
+                    put("UserAttributes", attributesJson)
                 }
             }
-
-            // If there are any attributes put then add the attributes to the structure
-            if (attributesJson.length() > 0) {
-                builder.withAttribute("UserAttributes", attributesJson)
-            }
         }
-        return builder.toJSONObject()
     }
 
     companion object {

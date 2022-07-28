@@ -17,79 +17,57 @@
 package com.amplifyframework.analytics.pinpoint.internal.core.idresolver
 
 import android.content.Context
-import com.amplifyframework.analytics.pinpoint.internal.core.system.AndroidPreferences
-import com.amplifyframework.analytics.pinpoint.internal.core.system.AndroidSystem
+import android.content.SharedPreferences
+import com.amplifyframework.analytics.pinpoint.internal.core.util.putString
 import com.amplifyframework.core.Amplify
 import java.util.*
 
 /**
  * Uses Shared prefs to recall and store the unique ID
  *
- * @param appId              used as the shared preferences file name
- * @param applicationContext the application pinpointContext.
+ * @param preferences the shared preferences implementation
  */
 internal class SharedPrefsUniqueIdService(
-    appId: String?,
-    applicationContext: Context?
+    preferences: SharedPreferences
 ) {
-    private val appId: String? = appId
-    private val applicationContext: Context? = applicationContext
+    private val preferences: SharedPreferences = preferences
 
     /**
-     * Get the Id based on the passed in pinpointContext
+     * Get the Id that may be stored in SharedPreferences
      *
-     * @param context The Analytics pinpointContext to use when looking up the id
-     * @return the Id of Analytics pinpointContext
+     * @return the Id of Analytics
      */
-    fun getUniqueId(system: AndroidSystem): String {
-        val prefs = system.getPreferences()
-        if (prefs == null) {
-            LOG.debug("Unable to generate unique id, AndroidSystem has not been fully initialized.")
-            return ""
-        }
-        var uniqueId = getIdFromPreferences(prefs)
+    fun getUniqueId(): String {
+        var uniqueId = getIdFromPreferences()
         if (uniqueId.isNullOrBlank()) {
             // an id doesn't exist for this pinpointContext, create one and persist it
             uniqueId = UUID.randomUUID().toString()
-            storeUniqueId(prefs, uniqueId)
+            storeUniqueId(uniqueId)
         }
         return uniqueId
     }
 
-    private fun getIdFromPreferences(preferences: AndroidPreferences): String? {
+    private fun getIdFromPreferences(): String? {
         return if (legacyId !== "") {
             legacyId
         } else preferences.getString(UNIQUE_ID_KEY, null)
     }
 
     private val legacyId: String
-        private get() {
-            if (appId == null || applicationContext == null) {
-                return ""
-            }
-            val legacyPreferences = applicationContext
-                .getSharedPreferences(
-                    appId,
-                    Context.MODE_PRIVATE
-                )
+        get() {
+            val legacyPreferences = preferences
             val legacyId = legacyPreferences.getString(UNIQUE_ID_KEY, null)
             return legacyId ?: ""
         }
 
     private fun storeUniqueId(
-        preferences: AndroidPreferences,
         uniqueId: String
     ) {
-        try {
-            preferences.putString(UNIQUE_ID_KEY, uniqueId)
-        } catch (ex: Exception) {
-            // Do not log ex due to potentially sensitive information
-            LOG.error("There was an exception when trying to store the unique id into the Preferences.")
-        }
+        preferences.putString(SharedPrefsUniqueIdService.UNIQUE_ID_KEY, uniqueId);
     }
 
     companion object {
-        protected const val UNIQUE_ID_KEY = "UniqueId"
+        private const val UNIQUE_ID_KEY = "UniqueId"
         private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
     }
 }

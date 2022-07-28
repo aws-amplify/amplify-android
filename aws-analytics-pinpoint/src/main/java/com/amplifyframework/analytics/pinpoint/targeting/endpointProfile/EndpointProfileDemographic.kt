@@ -18,13 +18,12 @@ package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 import android.content.Context
 import android.os.Build
 import com.amplifyframework.analytics.pinpoint.internal.core.system.AndroidSystem
-import com.amplifyframework.analytics.pinpoint.internal.core.util.JSONSerializable
-import com.amplifyframework.analytics.pinpoint.internal.core.util.JSONBuilder
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.util.*
 
-class EndpointProfileDemographic(system: AndroidSystem, applicationContext: Context) :
-    JSONSerializable {
+class EndpointProfileDemographic internal constructor(system: AndroidSystem, applicationContext: Context) {
     internal var make = system.getDeviceDetails().manufacturer
     fun getMake() = make
     fun setMake(make: String) = make.also { this.make = it }
@@ -41,7 +40,7 @@ class EndpointProfileDemographic(system: AndroidSystem, applicationContext: Cont
     fun getLocale() = locale
     fun setLocale(locale: Locale) = locale.also { this.locale = it }
 
-    internal var appVersion = system.getAppDetails().versionName()!!
+    internal var appVersion = system.getAppDetails().versionName
     fun getAppVersion() = appVersion
     fun setAppVersion(appVersion: String) = appVersion.also { this.appVersion = it }
 
@@ -53,16 +52,16 @@ class EndpointProfileDemographic(system: AndroidSystem, applicationContext: Cont
     fun getPlatformVersion() = platformVersion
     fun setPlatformVersion(platformVersion: String) = platformVersion.also { this.platformVersion = it }
 
-    override fun toJSONObject(): JSONObject {
-        val builder = JSONBuilder(null)
-        builder.withAttribute("Make", make)
-        builder.withAttribute("Model", model)
-        builder.withAttribute("Timezone", timezone)
-        builder.withAttribute("Locale", locale)
-        builder.withAttribute("AppVersion", appVersion)
-        builder.withAttribute("Platform", platform)
-        builder.withAttribute("PlatformVersion", platformVersion)
-        return builder.toJSONObject()
+    fun toJSONObject(): JsonObject {
+        return buildJsonObject {
+            put("Make", make)
+            put("Model", model)
+            put("Timezone", timezone)
+            put("Locale", locale.isO3Country)
+            put("AppVersion", appVersion)
+            put("Platform", platform)
+            put("PlatformVersion", platformVersion)
+        }
     }
 
     companion object {

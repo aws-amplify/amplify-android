@@ -17,19 +17,21 @@
 package com.amplifyframework.analytics.pinpoint.internal.core.system
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.telephony.TelephonyManager
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
+import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 
 // UUID to identify a unique shared preferences and directory the library
 // can use, will be concatenated with the appId to ensure no collision
 private const val PREFERENCES_AND_FILE_MANAGER_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
 
-open class AndroidSystem {
-    private val preferences: AndroidPreferences
+internal open class AndroidSystem {
+    private val preferences: SharedPreferences
     private val appDetails: AndroidAppDetails
     private val deviceDetails: AndroidDeviceDetails
 
-    constructor(preferences: AndroidPreferences,
+    constructor(preferences: SharedPreferences,
                 appDetails: AndroidAppDetails,
                 deviceDetails: AndroidDeviceDetails) {
         this.preferences = preferences;
@@ -38,9 +40,8 @@ open class AndroidSystem {
     }
 
     constructor(context: Context, appId: String) {
-        preferences = AndroidPreferences(
-            context, appId +
-                    PREFERENCES_AND_FILE_MANAGER_SUFFIX
+        preferences = context.getSharedPreferences(
+            appId + PREFERENCES_AND_FILE_MANAGER_SUFFIX, Context.MODE_PRIVATE
         )
         appDetails = AndroidAppDetails(context, appId)
         deviceDetails = AndroidDeviceDetails(getCarrier(context))
@@ -58,7 +59,7 @@ open class AndroidSystem {
         }
     }
 
-    fun getPreferences(): AndroidPreferences {
+    fun getPreferences(): SharedPreferences {
         return preferences
     }
 

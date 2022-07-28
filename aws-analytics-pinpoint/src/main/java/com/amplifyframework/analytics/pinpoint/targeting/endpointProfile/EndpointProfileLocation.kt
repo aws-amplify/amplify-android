@@ -16,13 +16,13 @@
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
 import android.content.Context
-import com.amplifyframework.analytics.pinpoint.internal.core.util.JSONSerializable
-import com.amplifyframework.analytics.pinpoint.internal.core.util.JSONBuilder
 import com.amplifyframework.core.Amplify
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.util.*
 
-class EndpointProfileLocation(context: Context) : JSONSerializable {
+class EndpointProfileLocation(context: Context) {
     internal var latitude: Double? = null
     fun getLatitude() = latitude
     fun setLatitude(latitude: Double) = latitude.also { this.latitude = it }
@@ -48,15 +48,15 @@ class EndpointProfileLocation(context: Context) : JSONSerializable {
     fun setCountry(country: String) = country.also { this.country = it }
 
 
-    override fun toJSONObject(): JSONObject {
-        val builder = JSONBuilder(null)
-        builder.withAttribute("Latitude", latitude)
-        builder.withAttribute("Longitude", longitude)
-        builder.withAttribute("PostalCode", postalCode)
-        builder.withAttribute("City", city)
-        builder.withAttribute("Region", region)
-        builder.withAttribute("Country", country)
-        return builder.toJSONObject()
+    fun toJSONObject(): JsonObject {
+        return buildJsonObject {
+            put("Latitude", latitude)
+            put("Longitude", longitude)
+            put("PostalCode", postalCode)
+            put("City", city)
+            put("Region", region)
+            put("Country", country)
+        }
     }
 
     companion object {

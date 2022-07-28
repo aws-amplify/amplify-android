@@ -17,17 +17,13 @@ package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
 import android.content.Context
 import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil.isoDateFromMillis
-import com.amplifyframework.analytics.pinpoint.internal.core.util.JSONSerializable
-import com.amplifyframework.analytics.pinpoint.internal.core.util.JSONBuilder
 import com.amplifyframework.analytics.pinpoint.internal.core.util.clip
 import com.amplifyframework.core.Amplify
 import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.internal.core.system.AndroidSystem
 import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
-import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
+import kotlinx.serialization.json.*
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -37,7 +33,7 @@ internal class EndpointProfile(
     private val idService: SharedPrefsUniqueIdService,
     private val system: AndroidSystem,
     applicationContext: Context
-) : JSONSerializable {
+) {
     private val attributes: MutableMap<String, List<String>> = ConcurrentHashMap()
     private val metrics: MutableMap<String, Double> = ConcurrentHashMap()
     private val currentNumOfAttributesAndMetrics = AtomicInteger(0)
@@ -57,9 +53,9 @@ internal class EndpointProfile(
     var effectiveDate: Long = Date().time
     var user: EndpointProfileUser = EndpointProfileUser()
     val applicationId: String
-        get() = system.getAppDetails().appId!!
+        get() = system.getAppDetails().appId
     val endpointId: String
-        get() = idService.getUniqueId(system)
+        get() = idService.getUniqueId()
 
     /**
      * Channel Type of this endpoint, currently defaults to GCM
@@ -247,66 +243,64 @@ internal class EndpointProfile(
         get() = Collections.unmodifiableMap(metrics)
 
     override fun toString(): String {
-        val json = toJSONObject()
-        return try {
-            json.toString(JSON_INDENTATION)
-        } catch (e: JSONException) {
-            json.toString()
-        }
+        return toJSONObject().toString()
     }
 
-    override fun toJSONObject(): JSONObject {
-        val builder = JSONBuilder(null)
-        builder.withAttribute("ApplicationId", applicationId)
-        builder.withAttribute("EndpointId", endpointId)
-        builder.withAttribute("ChannelType", channelType)
-        builder.withAttribute("Address", address)
-        builder.withAttribute("Location", location.toJSONObject())
-        builder.withAttribute("Demographic", demographic.toJSONObject())
-        builder.withAttribute(
-            "EffectiveDate", isoDateFromMillis(
-                effectiveDate
+    fun toJSONObject(): JsonObject {
+        return buildJsonObject {
+            put("ApplicationId", applicationId)
+            put("EndpointId", endpointId)
+            put("ChannelType", channelType.value)
+            put("Address", address)
+            put("Location", location.toJSONObject())
+            put("Demographic", demographic.toJSONObject())
+            put(
+                "EffectiveDate", isoDateFromMillis(
+                    effectiveDate
+                )
             )
-        )
-        builder.withAttribute("OptOut", optOut)
-        val attributesJson = JSONObject()
-        for ((key, value) in allAttributes) {
-            try {
-                val array = JSONArray(value)
-                attributesJson.put(key, array)
-            } catch (e: JSONException) {
-                // Do not log e due to potentially sensitive information
-                LOG.warn("Error serializing attributes.")
+            put("OptOut", optOut)
+            val attributesJson = buildJsonObject {
+                for ((key, value) in allAttributes) {
+                    try {
+                        put(key, value.map { JsonPrimitive(it) } as JsonElement)
+                    } catch (e: Exception) {
+                        // Do not log e due to potentially sensitive information
+                        LOG.warn("Error serializing attributes.")
+                    }
+                }
             }
+            // If there are any attributes put then add the attributes to the structure
+            if (attributesJson.isEmpty()) {
+                put("Attributes", attributesJson)
+            }
+
+            val metricsJson = buildJsonObject {
+                for ((key, value) in allMetrics) {
+                    try {
+                        put(key, value)
+                    } catch (e: Exception) {
+                        // Do not log e due to potentially sensitive information
+                        LOG.error("Error serializing metric.")
+                    }
+                }
+            }
+
+            // If there are any metrics put then add the attributes to the structure
+            if (metricsJson.isEmpty()) {
+                put("Metrics", metricsJson)
+            }
+
+            put("User", user.toJSONObject())
         }
 
-        // If there are any attributes put then add the attributes to the structure
-        if (attributesJson.length() > 0) {
-            builder.withAttribute("Attributes", attributesJson)
-        }
-        val metricsJson = JSONObject()
-        for ((key, value) in allMetrics) {
-            try {
-                metricsJson.put(key, value)
-            } catch (e: JSONException) {
-                // Do not log e due to potentially sensitive information
-                LOG.error("Error serializing metric.")
-            }
-        }
-
-        // If there are any metrics put then add the attributes to the structure
-        if (metricsJson.length() > 0) {
-            builder.withAttribute("Metrics", metricsJson)
-        }
-        builder.withAttribute("User", user.toJSONObject())
-        return builder.toJSONObject()
     }
 
     companion object {
         const val MAX_NUM_OF_METRICS_AND_ATTRIBUTES = 20
-        const val MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH = 50
-        const val MAX_ENDPOINT_ATTRIBUTE_VALUE_LENGTH = 100
-        const val MAX_ENDPOINT_ATTRIBUTE_VALUES = 50
+        private const val MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH = 50
+        private const val MAX_ENDPOINT_ATTRIBUTE_VALUE_LENGTH = 100
+        private const val MAX_ENDPOINT_ATTRIBUTE_VALUES = 50
         private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
         private const val JSON_INDENTATION = 4
         private fun processAttributeMetricKey(key: String): String {
