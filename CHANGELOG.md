@@ -1,3 +1,11 @@
+## [Release 1.36.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.5)
+
+### Miscellaneous
+- Updating the version to 2.50.1 for AWS SDK (#1861)
+- Reduce the importance level of transfer channel for foreground service to prevent sound/vibrate (#1860)
+
+[See all changes between 1.36.4 and 1.36.5](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.4...release_v1.36.5)
+
 ## [Release 1.36.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.4)
 
 ### Miscellaneous
