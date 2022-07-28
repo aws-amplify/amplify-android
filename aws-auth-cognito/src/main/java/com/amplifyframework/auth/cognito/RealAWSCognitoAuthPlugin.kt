@@ -443,9 +443,9 @@ internal class RealAWSCognitoAuthPlugin(
         TODO("Not yet implemented")
     }
 
-    private suspend fun withSession(): AWSCognitoAuthSession {
+    private suspend fun getSession(): AWSCognitoAuthSession {
         return suspendCoroutine { continuation ->
-            Amplify.Auth.fetchAuthSession(
+            fetchAuthSession(
                 { continuation.resume(it as AWSCognitoAuthSession) },
                 { continuation.resumeWithException(it) }
             )
@@ -512,58 +512,6 @@ internal class RealAWSCognitoAuthPlugin(
         )
     }
 
-    // TODO: handle below error scenarios and cleanup
-//    is AuthorizationState.FetchingAuthSession -> {
-//        val fetchUserPoolTokensState = authZState.fetchAuthSessionState.fetchUserPoolTokensState
-//        val fetchIdentityState = authZState.fetchAuthSessionState.fetchIdentityState
-//        val fetchAwsCredentialsState = authZState.fetchAuthSessionState.fetchAwsCredentialsState
-//        when {
-//            fetchUserPoolTokensState is FetchUserPoolTokensState.Error -> {
-//                // invalid account type or unknown error - Ref #AWSCognitoAuthSession.SignedOutOrUnknown
-//                // if no tokens found and no error -> signed out exception - Ref #AWSCognitoAuthSession.SignedOutOrUnknown
-//                userPoolTokensResult = AuthSessionResult.failure(
-//                    AuthException(
-//                        "Signed out or refresh token expired.",
-//                        fetchUserPoolTokensState.exception,
-//                        "Sign in and try again. See the attached exception for more details."
-//                    )
-//                )
-//            }
-//            fetchIdentityState is FetchIdentityState.Error -> {
-//                // if aws creds but no id -> should never happen - Ref #AWSCognitoAuthSession.UnreachableCase
-//                // if no tokens and no id but has aws creds -> should never happen - Ref #AWSCognitoAuthSession.UnreachableCase
-//                identityIdResult = when (configuration.identityPool) {
-//                    null -> AuthSessionResult.failure(AuthException.InvalidAccountTypeException())
-//                    else -> AuthSessionResult.failure(
-//                        AuthException(
-//                            "Failed to fetch identity.",
-//                            fetchIdentityState.exception,
-//                            "Sign in or enable guest access. See the attached exception for more" +
-//                                " details."
-//                        )
-//                    )
-//                }
-//            }
-//            fetchAwsCredentialsState is FetchAwsCredentialsState.Error -> {
-//                // invalid account type or unknown error
-//                // if cognito identity configured -> guest access possible - Ref #AWSCognitoAuthSession.GuestAccessPossible, else -> invalid account type - Ref #AWSCognitoAuthSession.NoAWSCredentials
-//                awsCredentialsResult = AuthSessionResult.failure(
-//                    AuthException(
-//                        "Failed to fetch AWS Credentials.",
-//                        fetchAwsCredentialsState.exception,
-//                        "Sign in or enable guest access. See the attached exception for more details."
-//                    )
-//                )
-//            }
-//        }
-//    }
-//    is AuthorizationState.Error -> {
-//        token?.let(authStateMachine::cancel)
-//        onError.accept(
-//            CognitoAuthExceptionConverter.lookup(authZState.exception, "Fetch auth session failed.")
-//        )
-//    }
-
     override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) {
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
@@ -589,7 +537,7 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         GlobalScope.async {
             try {
-                val tokens = withSession().userPoolTokens
+                val tokens = getSession().userPoolTokens
                 // TODO: Update the stubbed device key when device SRP auth is implemented with its own store.
                 authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.updateDeviceStatus(
                     UpdateDeviceStatusRequest.invoke {
@@ -642,7 +590,7 @@ internal class RealAWSCognitoAuthPlugin(
     private fun _fetchDevices(onSuccess: Consumer<MutableList<AuthDevice>>, onError: Consumer<AuthException>) {
         GlobalScope.async {
             try {
-                val tokens = withSession().userPoolTokens
+                val tokens = getSession().userPoolTokens
                 val response =
                     authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.listDevices(
                         ListDevicesRequest.invoke {
@@ -759,53 +707,35 @@ internal class RealAWSCognitoAuthPlugin(
             when (authState.authNState) {
                 // Check if user signed in
                 is AuthenticationState.SignedIn -> {
-
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getAccessToken()
-                            if (accessToken != null) {
-                                GlobalScope.launch {
-                                    _updatePassword(
-                                        accessToken,
-                                        oldPassword,
-                                        newPassword,
-                                        onSuccess,
-                                        onError
-                                    )
-                                }
-                            } else {
-                                onError.accept(AuthException.InvalidStateException())
-                            }
-                        } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-                        }
-                    }
+                    _updatePassword(oldPassword, newPassword, onSuccess, onError)
                 }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
     }
 
-    private suspend fun _updatePassword(
-        accessToken: String,
+    private fun _updatePassword(
         oldPassword: String,
         newPassword: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        val changePasswordRequest = ChangePasswordRequest.invoke {
-            previousPassword = oldPassword
-            proposedPassword = newPassword
-            this.accessToken = accessToken
-        }
-        try {
-            authEnvironment.cognitoAuthService
-                .cognitoIdentityProviderClient?.changePassword(
-                    changePasswordRequest
-                )
-            onSuccess.call()
-        } catch (e: Exception) {
-            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+        GlobalScope.async {
+            val tokens = getSession().userPoolTokens
+            val changePasswordRequest = ChangePasswordRequest.invoke {
+                previousPassword = oldPassword
+                proposedPassword = newPassword
+                this.accessToken = tokens.value?.accessToken
+            }
+            try {
+                authEnvironment.cognitoAuthService
+                    .cognitoIdentityProviderClient?.changePassword(
+                        changePasswordRequest
+                    )
+                onSuccess.call()
+            } catch (e: Exception) {
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+            }
         }
     }
 
@@ -942,7 +872,7 @@ internal class RealAWSCognitoAuthPlugin(
             }
 
             GlobalScope.async {
-                val accessToken = withSession().userPoolTokens.value?.accessToken
+                val accessToken = getSession().userPoolTokens.value?.accessToken
                 accessToken?.run {
                     val userid = JWTParser.getClaim(accessToken, "sub") ?: ""
                     val username = JWTParser.getClaim(accessToken, "username") ?: ""
