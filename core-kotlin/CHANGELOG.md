@@ -1,3 +1,11 @@
+## [Release 0.20.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.5)
+
+### Miscellaneous
+- Updating the version to 2.50.1 for AWS SDK (#1861)
+- Reduce the importance level of transfer channel for foreground service to prevent sound/vibrate (#1860)
+
+[See all changes between 0.20.4 and 0.20.5](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.4...release-kotlin_v0.20.5)
+
 ## [Release 0.20.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.4)
 
 ### Miscellaneous
