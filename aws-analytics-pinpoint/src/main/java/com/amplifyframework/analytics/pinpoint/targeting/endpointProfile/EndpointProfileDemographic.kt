@@ -18,10 +18,11 @@ package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 import android.content.Context
 import android.os.Build
 import com.amplifyframework.analytics.pinpoint.internal.core.system.AndroidSystem
+import java.util.Locale
+import java.util.TimeZone
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import java.util.*
 
 class EndpointProfileDemographic internal constructor(system: AndroidSystem, applicationContext: Context) {
     internal var make = system.getDeviceDetails().manufacturer

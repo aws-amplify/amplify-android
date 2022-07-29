@@ -16,17 +16,23 @@
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
 import android.content.Context
-import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil.isoDateFromMillis
-import com.amplifyframework.analytics.pinpoint.internal.core.util.clip
-import com.amplifyframework.core.Amplify
 import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.internal.core.system.AndroidSystem
+import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil.isoDateFromMillis
+import com.amplifyframework.analytics.pinpoint.internal.core.util.clip
 import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
-import kotlinx.serialization.json.*
-import java.util.*
+import com.amplifyframework.core.Amplify
+import java.util.Collections
+import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.ArrayList
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 internal class EndpointProfile(
     private val pinpointNotificationClient: PinpointNotificationClient,
@@ -44,8 +50,8 @@ internal class EndpointProfile(
      * @return String (ALL | NONE)
      */
     val optOut: String
-        get() = if (pinpointNotificationClient.areAppNotificationsEnabled() && pinpointNotificationClient.getDeviceToken()
-                .isNotBlank()
+        get() = if (pinpointNotificationClient.areAppNotificationsEnabled() &&
+            pinpointNotificationClient.getDeviceToken().isNotBlank()
         ) "NONE" else "ALL"
 
     var location: EndpointProfileLocation = EndpointProfileLocation(applicationContext)
@@ -179,8 +185,8 @@ internal class EndpointProfile(
             } else {
                 LOG.warn(
                     "Max number of attributes/metrics reached(" +
-                            MAX_NUM_OF_METRICS_AND_ATTRIBUTES +
-                            ")."
+                        MAX_NUM_OF_METRICS_AND_ATTRIBUTES +
+                        ")."
                 )
             }
         } else {
@@ -255,7 +261,8 @@ internal class EndpointProfile(
             put("Location", location.toJSONObject())
             put("Demographic", demographic.toJSONObject())
             put(
-                "EffectiveDate", isoDateFromMillis(
+                "EffectiveDate",
+                isoDateFromMillis(
                     effectiveDate
                 )
             )
@@ -293,7 +300,6 @@ internal class EndpointProfile(
 
             put("User", user.toJSONObject())
         }
-
     }
 
     companion object {
@@ -306,7 +312,10 @@ internal class EndpointProfile(
         private fun processAttributeMetricKey(key: String): String {
             val trimmedKey = key.clip(MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH, false)
             if (trimmedKey.length < key.length) {
-                LOG.warn("The attribute key has been trimmed to a length of $MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH characters.")
+                LOG.warn(
+                    "The attribute key has been trimmed to a length of $MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH " +
+                        "characters."
+                )
             }
             return trimmedKey
         }
@@ -316,7 +325,10 @@ internal class EndpointProfile(
             for ((valuesCount, value) in values.withIndex()) {
                 val trimmedValue = value.clip(MAX_ENDPOINT_ATTRIBUTE_VALUE_LENGTH, false)
                 if (trimmedValue.length < value.length) {
-                    LOG.warn("The attribute value has been trimmed to a length of $MAX_ENDPOINT_ATTRIBUTE_VALUE_LENGTH characters.")
+                    LOG.warn(
+                        "The attribute value has been trimmed to a length of $MAX_ENDPOINT_ATTRIBUTE_VALUE_LENGTH " +
+                            "characters."
+                    )
                 }
                 trimmedValues.add(trimmedValue)
                 if (valuesCount + 1 >= MAX_ENDPOINT_ATTRIBUTE_VALUES) {

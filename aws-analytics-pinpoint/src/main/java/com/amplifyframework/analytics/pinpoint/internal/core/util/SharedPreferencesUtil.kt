@@ -17,7 +17,6 @@
 package com.amplifyframework.analytics.pinpoint.internal.core.util
 
 import android.content.SharedPreferences
-import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.core.Amplify
 
 private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
@@ -25,7 +24,7 @@ fun SharedPreferences.putString(key: String, value: String) {
     try {
         val editor = this.edit()
         editor.putString(key, value)
-        editor.commit()
+        editor.apply()
     } catch (ex: Exception) {
         // Do not log ex due to potentially sensitive information
         LOG.error("There was an exception when trying to store the unique id into the Preferences.")

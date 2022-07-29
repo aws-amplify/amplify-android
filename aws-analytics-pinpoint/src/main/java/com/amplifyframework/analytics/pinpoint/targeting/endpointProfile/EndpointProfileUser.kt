@@ -16,8 +16,12 @@
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
 import com.amplifyframework.core.Amplify
-import kotlinx.serialization.json.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class EndpointProfileUser {
     private var userId: String? = null

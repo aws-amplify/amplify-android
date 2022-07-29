@@ -16,47 +16,42 @@
 package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.content.Context
-import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil.formatISO8601Date
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
-import aws.sdk.kotlin.services.pinpoint.model.*
-import com.amplifyframework.analytics.pinpoint.EventRecorder
+import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
+import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
+import aws.sdk.kotlin.services.pinpoint.model.EndpointRequest
+import aws.sdk.kotlin.services.pinpoint.model.EndpointUser
+import aws.sdk.kotlin.services.pinpoint.model.PinpointException
+import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.internal.core.system.AndroidSystem
+import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil.formatISO8601Date
+import com.amplifyframework.analytics.pinpoint.internal.core.util.putString
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
 import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.Amplify
-import kotlinx.coroutines.CoroutineDispatcher
+import java.util.Date
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import kotlin.collections.ArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.*
-import java.util.concurrent.*
 
 internal class TargetingClient(
     private val pinpointClient: PinpointClient,
     pinpointNotificationClient: PinpointNotificationClient,
     idService: SharedPrefsUniqueIdService,
-    system: AndroidSystem,
-    applicationContext: Context?,
-    executor: ExecutorService = ThreadPoolExecutor(
-        1, 1, 0L, TimeUnit.MILLISECONDS, LinkedBlockingQueue<Runnable>(
-            MAX_EVENT_OPERATIONS
-        ),
-        ThreadPoolExecutor.DiscardPolicy()
-    )
+    private val system: AndroidSystem,
+    applicationContext: Context,
 ) {
     private val endpointProfile: EndpointProfile =
-        EndpointProfile(pinpointNotificationClient, idService, system, applicationContext!!)
-    private val system: AndroidSystem = system
-    private val applicationContext: Context? = applicationContext
+        EndpointProfile(pinpointNotificationClient, idService, system, applicationContext)
     private val globalAttributes: MutableMap<String, List<String>>
     private val globalMetrics: MutableMap<String, Double>
-    private val endpointRunnableQueue: ExecutorService = executor
-    // TODO: should this be passed in?
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
-    private val coroutineScope = CoroutineScope(coroutineDispatcher)
 
     init {
         globalAttributes = loadAttributes()
@@ -159,7 +154,11 @@ internal class TargetingClient(
                 this.endpointId = endpointProfile.endpointId
                 this.endpointRequest = endpointRequest
             }
-        endpointRunnableQueue.execute {
+
+        val coroutineDispatcher = Dispatchers.Default
+        val coroutineScope = CoroutineScope(coroutineDispatcher)
+        val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        coroutineScope.launch(dispatcher) {
             try {
                 LOG.info("Updating EndpointProfile.")
                 coroutineScope.launch {

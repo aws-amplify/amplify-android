@@ -17,7 +17,9 @@ package com.amplifyframework.analytics.pinpoint.internal.core.util
 
 import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * A utility class for date marshalling
