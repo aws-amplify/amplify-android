@@ -47,7 +47,7 @@ public final class DataStoreHubEventFilters {
             OutboxMutationEvent<? extends Model> outboxMutationEvent =
                 (OutboxMutationEvent<? extends Model>) event.getData();
 
-            return modelId.equals(outboxMutationEvent.getElement().getModel().getId()) &&
+            return modelId.equals(outboxMutationEvent.getElement().getModel().getPrimaryKeyString()) &&
                 modelName.equals(outboxMutationEvent.getModelName());
         };
     }
@@ -70,7 +70,7 @@ public final class DataStoreHubEventFilters {
             }
             ModelWithMetadata<? extends Model> modelWithMetadata =
                 (ModelWithMetadata<? extends Model>) event.getData();
-            return modelId.equals(modelWithMetadata.getModel().getId());
+            return modelId.equals(modelWithMetadata.getModel().resolveIdentifier());
         };
     }
 

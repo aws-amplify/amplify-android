@@ -264,12 +264,12 @@ final class SubscriptionProcessor {
         if (original.getModel() instanceof SerializedModel) {
             SerializedModel originalModel = (SerializedModel) original.getModel();
             SerializedModel newModel = SerializedModel.builder()
+                    .modelSchema(event.modelSchema())
                     .serializedData(SerializedModel.parseSerializedData(
                             originalModel.getSerializedData(),
                             event.modelSchema().getName(),
                             schemaRegistry
                     ))
-                    .modelSchema(event.modelSchema())
                     .build();
             return merger.merge(new ModelWithMetadata<>(newModel, original.getSyncMetadata()));
         } else {

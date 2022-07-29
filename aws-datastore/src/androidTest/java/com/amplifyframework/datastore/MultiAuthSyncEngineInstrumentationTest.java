@@ -45,7 +45,6 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.multiauth.GroupPrivatePublicUPIAMAPIPost;
 import com.amplifyframework.testmodels.multiauth.GroupPrivateUPIAMPost;
 import com.amplifyframework.testmodels.multiauth.GroupPublicUPAPIPost;
@@ -127,23 +126,6 @@ public final class MultiAuthSyncEngineInstrumentationTest {
     private final AtomicReference<String> token = new AtomicReference<>();
     private ServiceAccountCredentials googleServiceAccount;
     private HttpRequestInterceptor requestInterceptor;
-
-    /**
-     * Class name: Author.
-     * Signed in with user pools: false.
-     * Signed in with OIDC: false.
-     * Expected result: AuthorizationType.API_KEY.
-     * @throws AmplifyException Not expected.
-     * @throws IOException Not expected.
-     */
-    @Test
-    public void testAuthorAnonymous() throws IOException, AmplifyException {
-        verifyScenario(Author.class,
-                      false,
-                      false,
-                      AuthorizationType.API_KEY
-        );
-    }
 
     /**
      * Class name: OwnerUPPost.
@@ -813,7 +795,15 @@ public final class MultiAuthSyncEngineInstrumentationTest {
                                                     "DataStore error handler received an error.",
                                                     exception))
                                                 .syncExpression(modelSchema.getName(),
-                                                    () -> Where.id("FAKE_ID").getQueryPredicate())
+                                                    () -> {
+                                                        try {
+                                                            return Where.identifier(modelSchema.getModelClass(),
+                                                                    "FAKE_ID").getQueryPredicate();
+                                                        } catch (AmplifyException exception) {
+                                                            fail();
+                                                        }
+                                                        return null;
+                                                    })
                                                 .build();
         CategoryConfiguration dataStoreCategoryConfiguration =
             AmplifyConfiguration.fromConfigFile(context, configResourceId)
@@ -873,7 +863,8 @@ public final class MultiAuthSyncEngineInstrumentationTest {
         if (expectedAuthType != null) {
             expectedEventAccumulator =
                 HubAccumulator
-                    .create(HubChannel.DATASTORE, publicationOf(modelType.getSimpleName(), testRecord.getId()), 1)
+                    .create(HubChannel.DATASTORE, publicationOf(modelType.getSimpleName(),
+                            testRecord.getPrimaryKeyString()), 1)
                     .start();
         } else {
             expectedEventAccumulator = HubAccumulator
@@ -901,9 +892,9 @@ public final class MultiAuthSyncEngineInstrumentationTest {
             modelMap.put("id", modelId);
             modelMap.put("name", recordDetail);
             return SerializedModel.builder()
-                                   .serializedData(modelMap)
-                                   .modelSchema(ModelSchema.fromModelClass(modelType))
-                                   .build();
+                    .modelSchema(ModelSchema.fromModelClass(modelType))
+                    .serializedData(modelMap)
+                    .build();
         } catch (AmplifyException exception) {
             Log.e(modelType.getSimpleName(), "Unable to create an instance of model " + modelType.getSimpleName(),
                   exception);

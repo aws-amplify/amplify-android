@@ -1,15 +1,12 @@
 {
   "query": "subscription OnUpdatePost {
   onUpdatePost {
+    __typename
     _deleted
     _lastChangedAt
     _version
-    authors {
-      items {
-        id
-      }
-      nextToken
-      startedAt
+    author {
+      id
     }
     blog {
       id
@@ -26,6 +23,7 @@
     rating
     status
     title
+    updatedAt
   }
 }
 ",
