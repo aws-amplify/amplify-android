@@ -282,6 +282,7 @@ public final class AWSS3StorageService implements StorageService {
         )
             .setSmallIcon(appIcon)
             .setContentTitle(context.getString(R.string.amplify_storage_notification_title))
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build();
     }
 
@@ -293,7 +294,7 @@ public final class AWSS3StorageService implements StorageService {
             new NotificationChannel(
                 context.getString(R.string.amplify_storage_notification_channel_id),
                 context.getString(R.string.amplify_storage_notification_channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW
             )
         );
     }
