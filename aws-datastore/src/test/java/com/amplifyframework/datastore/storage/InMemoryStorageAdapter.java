@@ -286,7 +286,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         int index = 0;
         for (Model savedItem : items) {
             if (savedItem.getClass().equals(item.getClass())
-                    && savedItem.getId().equals(item.getId())) {
+                    && savedItem.resolveIdentifier().equals(item.resolveIdentifier())) {
                 return index;
             }
             index++;

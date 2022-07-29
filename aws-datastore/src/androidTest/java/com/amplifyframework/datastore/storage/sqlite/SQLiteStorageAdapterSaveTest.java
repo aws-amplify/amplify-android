@@ -320,8 +320,8 @@ public final class SQLiteStorageAdapterSaveTest {
         serializedData.put("updatedAt", johnAdams.getUpdatedAt());
 
         SerializedModel expectedItem = SerializedModel.builder()
-                .serializedData(serializedData)
                 .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                .serializedData(serializedData)
                 .build();
         observer.await(1, TimeUnit.SECONDS);
         observer.assertValueCount(1);
