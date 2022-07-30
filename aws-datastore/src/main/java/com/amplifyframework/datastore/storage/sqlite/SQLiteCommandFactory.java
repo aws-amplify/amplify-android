@@ -235,7 +235,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             if (predicate instanceof QueryPredicateOperation) {
                 QueryPredicateOperation<?> predicateOperation = (QueryPredicateOperation<?>) predicate;
                 String predicateOperationField = predicateOperation.field();
-                sqlPredicateString = getFlutterString(sqlPredicateString, predicateOperationField);
+                sqlPredicateString = getFlutterString(sqlPredicateString, predicateOperation);
                 if (predicateOperationField.equals(PrimaryKey.fieldName()) && predicateOperation.modelName() == null
                         && predicateOperation.operator().type() == QueryOperator.Type.EQUAL) {
                     // The WHERE condition is Where.id("some-ID") but no model name is given.
@@ -295,10 +295,11 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         return new SqlCommand(table.getName(), queryString, bindings);
     }
 
-    private String getFlutterString(String sqlPredicateString, String predicateOperationField) {
+    private String getFlutterString(String sqlPredicateString, QueryPredicateOperation<?> predicateOperation) {
+        String predicateOperationField = predicateOperation.field();
         String updatedSqlPredicateString = sqlPredicateString;
-        if (UserAgent.isFlutter() && !Empty.check(predicateOperationField)
-                && predicateOperationField.startsWith("@@")) {
+        if (UserAgent.isFlutter() && !Empty.check(predicateOperation.field())
+                && predicateOperationField.startsWith("@@") && predicateOperation.modelName() != null) {
             updatedSqlPredicateString = updatedSqlPredicateString.replace(predicateOperationField,
                     Wrap.inBackticks(predicateOperationField));
         }
