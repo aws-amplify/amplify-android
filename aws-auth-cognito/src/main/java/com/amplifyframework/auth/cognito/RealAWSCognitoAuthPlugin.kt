@@ -856,6 +856,7 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         options: AuthConfirmResetPasswordOptions,
@@ -866,6 +867,7 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         onSuccess: Action,
