@@ -148,13 +148,22 @@ sealed class AuthorizationState : State {
                         is AuthorizationEvent.EventType.Fetched -> StateResolution(
                             WaitingToStore(authorizationEvent.amplifyCredential)
                         )
+                        is AuthorizationEvent.EventType.ThrowError -> StateResolution(
+                            Error(authorizationEvent.exception)
+                        )
                         else -> defaultResolution
                     }
-                is SessionEstablished -> when {
+                is SessionEstablished, is Error -> when {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
                     authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(
                         SigningOut()
                     )
+                    authorizationEvent is AuthorizationEvent.EventType.FetchAuthSession -> {
+                        val action =
+                            authorizationActions.initializeFetchAuthSession(AmplifyCredential.Empty)
+                        val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
+                        StateResolution(newState, listOf(action))
+                    }
                     authorizationEvent is AuthorizationEvent.EventType.RefreshAuthSession -> {
                         val action =
                             authorizationActions.refreshAuthSessionAction(authorizationEvent.amplifyCredential)

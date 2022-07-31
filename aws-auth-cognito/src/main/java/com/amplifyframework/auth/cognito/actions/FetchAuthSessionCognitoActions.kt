@@ -39,16 +39,19 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     idToken?.let { mapOf(provider to idToken) }
                 }
 
-                val getIdRequest = GetIdRequest {
+                val request = GetIdRequest {
                     identityPoolId = configuration.identityPool?.poolId
                     loginsMap?.apply { logins = loginsMap }
                 }
 
-                val getIDResponse = cognitoAuthService.cognitoIdentityClient?.getId(getIdRequest)
-                val updatedAmplifyCredential = amplifyCredential.update(identityId = getIDResponse?.identityId)
-                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchAwsCredentials(updatedAmplifyCredential))
+                val response = cognitoAuthService.cognitoIdentityClient?.getId(request)
+
+                response?.identityId?.let {
+                    val updatedAmplifyCredential = amplifyCredential.update(identityId = it)
+                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchAwsCredentials(updatedAmplifyCredential))
+                } ?: throw Exception("Fetching identity id failed.")
             } catch (e: Exception) {
-                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.ThrowError(e))
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
@@ -73,24 +76,25 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     idToken?.let { mapOf(provider to idToken) }
                 }
 
-                val getCredentialsForIdentityRequest = GetCredentialsForIdentityRequest {
+                val request = GetCredentialsForIdentityRequest {
                     this.identityId = identityId
                     loginsMap?.let { logins = loginsMap }
                 }
 
-                val getCredentialsForIdentityResponse =
-                    cognitoAuthService.cognitoIdentityClient?.getCredentialsForIdentity(
-                        getCredentialsForIdentityRequest
+                val response = cognitoAuthService.cognitoIdentityClient?.getCredentialsForIdentity(request)
+
+                response?.credentials?.let {
+                    val credentials = AWSCredentials(
+                        it.accessKeyId,
+                        it.secretKey,
+                        it.sessionToken,
+                        it.expiration?.epochSeconds
                     )
-
-                val credentials = getCredentialsForIdentityResponse?.credentials?.let {
-                    AWSCredentials(it.accessKeyId, it.secretKey, it.sessionToken, it.expiration?.epochSeconds)
-                }
-
-                val updatedAmplifyCredential = amplifyCredential.update(awsCredentials = credentials)
-                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.Fetched(updatedAmplifyCredential))
+                    val updatedAmplifyCredential = amplifyCredential.update(awsCredentials = credentials)
+                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.Fetched(updatedAmplifyCredential))
+                } ?: throw Exception("Fetching AWS credentials failed.")
             } catch (e: Exception) {
-                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.ThrowError(e))
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)

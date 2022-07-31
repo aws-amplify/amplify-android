@@ -27,7 +27,6 @@ class FetchAuthSessionEvent(
         data class FetchIdentity(val amplifyCredential: AmplifyCredential) : EventType()
         data class FetchAwsCredentials(val amplifyCredential: AmplifyCredential) : EventType()
         data class Fetched(val amplifyCredential: AmplifyCredential) : EventType()
-        data class ThrowError(val exception: Exception) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName
