@@ -34,6 +34,7 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
+import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -863,7 +864,32 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            if (authState.authNState is AuthenticationState.NotConfigured) {
+                onError.accept(
+                    AuthException(
+                        "Confirm Reset Password failed.",
+                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
+                    )
+                )
+                return@getCurrentState
+            }
+
+            GlobalScope.launch {
+                try {
+                    authEnvironment.cognitoAuthService.cognitoIdentityProviderClient!!.confirmForgotPassword {
+                        this.username = username
+                        this.confirmationCode = confirmationCode
+                        password = newPassword
+                        clientMetadata =
+                            (options as? AWSCognitoAuthConfirmResetPasswordOptions)?.metadata ?: mapOf()
+                        clientId = configuration.userPool?.appClient
+                    }.let { onSuccess.call() }
+                } catch (ex: Exception) {
+                    onError.accept(CognitoAuthExceptionConverter.lookup(ex, AuthException.REPORT_BUG_TO_AWS_SUGGESTION))
+                }
+            }
+        }
     }
 
     override fun confirmResetPassword(
@@ -873,7 +899,14 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        confirmResetPassword(
+            username,
+            newPassword,
+            confirmationCode,
+            AuthConfirmResetPasswordOptions.defaults(),
+            onSuccess,
+            onError
+        )
     }
 
     override fun updatePassword(
