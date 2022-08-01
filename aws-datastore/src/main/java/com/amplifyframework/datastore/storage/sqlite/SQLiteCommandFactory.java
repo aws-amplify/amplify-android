@@ -299,7 +299,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         String predicateOperationField = predicateOperation.field();
         String updatedSqlPredicateString = sqlPredicateString;
         if (UserAgent.isFlutter() && !Empty.check(predicateOperation.field())
-                && predicateOperationField.startsWith("@@") && predicateOperation.modelName() != null) {
+                && predicateOperationField.startsWith("@@") && predicateOperation.modelName() == null) {
             updatedSqlPredicateString = updatedSqlPredicateString.replace(predicateOperationField,
                     Wrap.inBackticks(predicateOperationField));
         }
