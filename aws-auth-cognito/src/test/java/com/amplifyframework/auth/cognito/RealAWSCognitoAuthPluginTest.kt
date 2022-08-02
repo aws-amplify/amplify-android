@@ -500,6 +500,8 @@ class RealAWSCognitoAuthPluginTest {
 
     @Test
     fun `test signup API with given arguments`() {
+        val latch = CountDownLatch(1)
+
         // GIVEN
         val username = "user"
         val password = "password"
@@ -514,7 +516,10 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         val requestCaptor = slot<SignUpRequest.Builder.() -> Unit>()
-        coJustRun { authService.cognitoIdentityProviderClient?.signUp(capture(requestCaptor)) }
+        coEvery { authService.cognitoIdentityProviderClient?.signUp(capture(requestCaptor)) } coAnswers {
+            latch.countDown()
+            mockk()
+        }
 
         val expectedRequest: SignUpRequest.Builder.() -> Unit = {
             clientId = "app Client Id"
@@ -531,7 +536,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.signUp(username, password, options, {}, {})
-        Thread.sleep(1_000)
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
         // THEN
         assertEquals(SignUpRequest.invoke(expectedRequest), SignUpRequest.invoke(requestCaptor.captured))
@@ -539,6 +544,8 @@ class RealAWSCognitoAuthPluginTest {
 
     @Test
     fun `test signup success`() {
+        val latch = CountDownLatch(1)
+
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignUpResult>>()
         val onError = mockk<Consumer<AuthException>>()
@@ -548,7 +555,7 @@ class RealAWSCognitoAuthPluginTest {
         val options = AuthSignUpOptions.builder().userAttribute(AuthUserAttributeKey.email(), email).build()
 
         val resultCaptor = slot<AuthSignUpResult>()
-        justRun { onSuccess.accept(capture(resultCaptor)) }
+        every { onSuccess.accept(capture(resultCaptor)) } answers { latch.countDown() }
 
         val currentAuthState = mockk<AuthState> {
             coEvery { authNState } returns AuthenticationState.Configured()
@@ -589,7 +596,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.signUp(username, password, options, onSuccess, onError)
-        Thread.sleep(1_000)
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
         // THEN
         verify(exactly = 0) { onError.accept(any()) }
@@ -600,6 +607,8 @@ class RealAWSCognitoAuthPluginTest {
 
     @Test
     fun `test confirm signup API with given arguments`() {
+        val latch = CountDownLatch(1)
+
         // GIVEN
         val username = "user"
         val confirmationCode = "123456"
@@ -613,7 +622,10 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         val requestCaptor = slot<ConfirmSignUpRequest.Builder.() -> Unit>()
-        coJustRun { authService.cognitoIdentityProviderClient?.confirmSignUp(capture(requestCaptor)) }
+        coEvery { authService.cognitoIdentityProviderClient?.confirmSignUp(capture(requestCaptor)) } coAnswers {
+            latch.countDown()
+            mockk()
+        }
 
         val expectedRequest: ConfirmSignUpRequest.Builder.() -> Unit = {
             clientId = "app Client Id"
@@ -624,7 +636,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.confirmSignUp(username, confirmationCode, options, {}, {})
-        Thread.sleep(1_000)
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
         // THEN
         assertEquals(ConfirmSignUpRequest.invoke(expectedRequest), ConfirmSignUpRequest.invoke(requestCaptor.captured))
@@ -632,6 +644,8 @@ class RealAWSCognitoAuthPluginTest {
 
     @Test
     fun `test signup code success`() {
+        val latch = CountDownLatch(1)
+
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignUpResult>>()
         val onError = mockk<Consumer<AuthException>>()
@@ -640,7 +654,7 @@ class RealAWSCognitoAuthPluginTest {
         val options = AuthConfirmSignUpOptions.defaults()
 
         val resultCaptor = slot<AuthSignUpResult>()
-        justRun { onSuccess.accept(capture(resultCaptor)) }
+        every { onSuccess.accept(capture(resultCaptor)) } answers { latch.countDown() }
 
         val currentAuthState = mockk<AuthState> {
             coEvery { authNState } returns AuthenticationState.Configured()
@@ -661,7 +675,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.confirmSignUp(username, confirmationCode, options, onSuccess, onError)
-        Thread.sleep(1_000)
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
         // THEN
         verify(exactly = 0) { onError.accept(any()) }
@@ -672,6 +686,8 @@ class RealAWSCognitoAuthPluginTest {
 
     @Test
     fun `test resend signup code API with given arguments`() {
+        val latch = CountDownLatch(1)
+
         // GIVEN
         val username = "user"
 
@@ -683,7 +699,12 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         val requestCaptor = slot<ResendConfirmationCodeRequest.Builder.() -> Unit>()
-        coJustRun { authService.cognitoIdentityProviderClient?.resendConfirmationCode(capture(requestCaptor)) }
+        coEvery {
+            authService.cognitoIdentityProviderClient?.resendConfirmationCode(capture(requestCaptor))
+        } coAnswers {
+            latch.countDown()
+            mockk()
+        }
 
         val expectedRequest: ResendConfirmationCodeRequest.Builder.() -> Unit = {
             clientId = "app Client Id"
@@ -692,8 +713,13 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         // WHEN
-        plugin.resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), {}, {})
-        Thread.sleep(1_000)
+        plugin.resendSignUpCode(
+            username,
+            AuthResendSignUpCodeOptions.defaults(),
+            { latch.countDown() },
+            { latch.countDown() }
+        )
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
         // THEN
         assertEquals(
@@ -704,13 +730,15 @@ class RealAWSCognitoAuthPluginTest {
 
     @Test
     fun `test resend signup code success`() {
+        val latch = CountDownLatch(1)
+
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignUpResult>>()
         val onError = mockk<Consumer<AuthException>>()
         val username = "user"
 
         val resultCaptor = slot<AuthSignUpResult>()
-        justRun { onSuccess.accept(capture(resultCaptor)) }
+        every { onSuccess.accept(capture(resultCaptor)) } answers { latch.countDown() }
 
         val currentAuthState = mockk<AuthState> {
             coEvery { authNState } returns AuthenticationState.Configured()
@@ -751,7 +779,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), onSuccess, onError)
-        Thread.sleep(1_000)
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
         // THEN
         verify(exactly = 0) { onError.accept(any()) }

@@ -120,7 +120,6 @@ internal class RealAWSCognitoAuthPlugin(
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
                 )
-                return@getCurrentState
             }
         }
     }
@@ -168,7 +167,6 @@ internal class RealAWSCognitoAuthPlugin(
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
                 )
-                return@getCurrentState
             }
         }
     }
@@ -199,7 +197,6 @@ internal class RealAWSCognitoAuthPlugin(
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
                 )
-                return@getCurrentState
             }
         }
     }
