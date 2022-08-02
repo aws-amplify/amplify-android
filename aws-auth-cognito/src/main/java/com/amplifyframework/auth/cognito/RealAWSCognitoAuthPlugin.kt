@@ -19,6 +19,7 @@ import android.app.Activity
 import android.content.Intent
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
@@ -83,6 +84,9 @@ import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -880,47 +884,31 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 // Check if user signed in
                 is AuthenticationState.SignedIn -> {
 
-                    var listenerToken: StateChangeListenerToken? = null
-                    listenerToken = credentialStoreStateMachine.listen(
-                        {
-                            when (it) {
-                                is CredentialStoreState.Success -> {
-                                    listenerToken?.let(credentialStoreStateMachine::cancel)
-                                    if (it.storedCredentials?.cognitoUserPoolTokens?.accessToken != null) {
-                                        GlobalScope.launch {
-                                            _updatePassword(
-                                                it.storedCredentials.cognitoUserPoolTokens.accessToken,
-                                                oldPassword,
-                                                newPassword,
-                                                onSuccess,
-                                                onError
-                                            )
-                                        }
-                                    } else {
-                                        onError.accept(AuthException.InvalidAccountTypeException())
-                                    }
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getAccessToken()
+                            if (accessToken != null) {
+                                GlobalScope.launch {
+                                    _updatePassword(
+                                        accessToken,
+                                        oldPassword,
+                                        newPassword,
+                                        onSuccess,
+                                        onError
+                                    )
                                 }
-                                is CredentialStoreState.Error -> {
-                                    listenerToken?.let(credentialStoreStateMachine::cancel)
-                                    onError.accept(AuthException.UnknownException(it.error))
-                                }
-                                else -> {
-                                    // No-op
-                                }
+                            } else {
+                                onError.accept(AuthException.InvalidStateException())
                             }
-                        },
-                        {
-                            credentialStoreStateMachine.send(
-                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                            )
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                         }
-                    )
+                    }
                 }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
@@ -954,7 +942,37 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<MutableList<AuthUserAttribute>>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
+
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getAccessToken()
+                            val getUserRequest = GetUserRequest.invoke {
+                                this.accessToken = accessToken
+                            }
+                            val user = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.getUser(
+                                getUserRequest
+                            )
+                            val userAttributes = buildList {
+                                user?.userAttributes?.mapTo(this) {
+                                    AuthUserAttribute(
+                                        AuthUserAttributeKey.custom(it.name),
+                                        it.value
+                                    )
+                                }
+                            }
+                            onSuccess.accept(userAttributes.toMutableList())
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+                        }
+                    }
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
     }
 
     override fun updateUserAttribute(
@@ -1015,6 +1033,31 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
+    }
+
+    private suspend fun getAccessToken(): String? {
+        return suspendCoroutine { continuation ->
+            var listenerToken: StateChangeListenerToken? = null
+            listenerToken = credentialStoreStateMachine.listen(
+                {
+                    when (it) {
+                        is CredentialStoreState.Success -> {
+                            listenerToken?.let(credentialStoreStateMachine::cancel)
+                            continuation.resume(it.storedCredentials?.cognitoUserPoolTokens?.accessToken)
+                        }
+                        is CredentialStoreState.Error -> {
+                            listenerToken?.let(credentialStoreStateMachine::cancel)
+                            continuation.resumeWithException(AuthException.UnknownException(it.error))
+                        }
+                    }
+                },
+                {
+                    credentialStoreStateMachine.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                    )
+                }
+            )
+        }
     }
 
     override fun getCurrentUser(
