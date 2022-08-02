@@ -51,6 +51,7 @@ import io.mockk.slot
 import io.mockk.verify
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Before
@@ -162,7 +163,7 @@ class RealAWSCognitoAuthPluginTest {
         // WHEN
         plugin.updatePassword("old", "new", onSuccess, onError)
 
-        latch.await()
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
         assertTrue { eventSlot.isCaptured }
 
         verify { onSuccess.call() }
@@ -186,7 +187,7 @@ class RealAWSCognitoAuthPluginTest {
         }
         // WHEN
         plugin.updatePassword("old", "new", onSuccess, onError)
-        latch.await()
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
         verify(exactly = 0) { onSuccess.call() }
         verify { onError.accept(AuthException.InvalidStateException()) }
@@ -217,7 +218,7 @@ class RealAWSCognitoAuthPluginTest {
                 UUID.randomUUID()
             }
         plugin.updatePassword("old", "new", onSuccess, onError)
-        latch.await()
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
         assertTrue { slot.isCaptured }
         verify(exactly = 0) { onSuccess.call() }
         coVerify { onError.accept(any()) }
@@ -307,7 +308,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // When
         plugin.confirmResetPassword("user", "pass", "code", mockk(), onSuccess, onError)
-        latch.await()
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
         // Then
         verify(exactly = 0) { onSuccess.call() }
@@ -346,7 +347,7 @@ class RealAWSCognitoAuthPluginTest {
         )
 
         // THEN
-        latch.await()
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
         assertEquals(
             ConfirmForgotPasswordRequest.invoke(expectedRequestBuilder),
             ConfirmForgotPasswordRequest.invoke(requestBuilderCaptor.captured)
@@ -374,7 +375,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.confirmResetPassword(user, pass, code, AuthConfirmResetPasswordOptions.defaults(), onSuccess, onError)
 
         // THEN
-        latch.await()
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
         verify(exactly = 0) { onError.accept(any()) }
         verify(exactly = 1) { onSuccess.call() }
     }
@@ -402,7 +403,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.confirmResetPassword(user, pass, code, AuthConfirmResetPasswordOptions.defaults(), onSuccess, onError)
 
         // THEN
-        latch.await()
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
         verify(exactly = 0) { onSuccess.call() }
         verify { onError.accept(resultCaptor.captured) }
 
