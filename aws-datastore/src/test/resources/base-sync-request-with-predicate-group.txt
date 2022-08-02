@@ -2,16 +2,23 @@
   "query": "query SyncBlogOwners($filter: ModelBlogOwnerFilterInput) {
   syncBlogOwners(filter: $filter) {
     items {
+      __typename
       _deleted
       _lastChangedAt
       _version
       blog {
-        _deleted
-        _lastChangedAt
-        _version
-        createdAt
-        id
-        name
+        items {
+          __typename
+          _deleted
+          _lastChangedAt
+          _version
+          createdAt
+          id
+          name
+          updatedAt
+        }
+        nextToken
+        startedAt
       }
       createdAt
       id

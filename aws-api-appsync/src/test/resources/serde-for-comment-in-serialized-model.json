@@ -1,0 +1,125 @@
+{
+  "serializedData": {
+    "post": {
+      "id": "11e2e7b8-0535-47d5-ad34-072a5fa2ca7d",
+      "title": "May 20th 10:29 post"
+    },
+    "title": "Comment title",
+    "content": "Content",
+    "likes": 2
+  },
+  "id": "\"Comment title\"#\"Content\"#\"2\"",
+  "modelSchema": {
+    "associations": {
+      "post": {
+        "targetNames": [],
+        "targetName": "postCommentsId",
+        "name": "BelongsTo",
+        "associatedName": "post",
+        "associatedType": "Post"
+      }
+    },
+    "pluralName": "Comments",
+    "authRules": [],
+    "indexes": {
+      "undefined": {
+        "indexName": "undefined",
+        "indexFieldNames": [
+          "title",
+          "content",
+          "likes"
+        ]
+      }
+    },
+    "modelClass": "com.amplifyframework.testmodels.customprimarykey.Comment",
+    "name": "Comment",
+    "modelSchemaVersion": 1,
+    "modelType": "USER",
+    "fields": {
+      "createdAt": {
+        "javaClassForValue": "com.amplifyframework.core.model.temporal.Temporal$DateTime",
+        "isRequired": false,
+        "isCustomType": false,
+        "isReadOnly": true,
+        "isModel": false,
+        "authRules": [],
+        "name": "createdAt",
+        "isEnum": false,
+        "targetType": "AWSDateTime",
+        "isArray": false
+      },
+      "post": {
+        "javaClassForValue": "com.amplifyframework.testmodels.customprimarykey.Post",
+        "isRequired": false,
+        "isCustomType": false,
+        "isReadOnly": false,
+        "isModel": true,
+        "authRules": [],
+        "name": "post",
+        "isEnum": false,
+        "targetType": "Post",
+        "isArray": false
+      },
+      "description": {
+        "javaClassForValue": "java.lang.String",
+        "isRequired": false,
+        "isCustomType": false,
+        "isReadOnly": false,
+        "isModel": false,
+        "authRules": [],
+        "name": "description",
+        "isEnum": false,
+        "targetType": "String",
+        "isArray": false
+      },
+      "title": {
+        "javaClassForValue": "java.lang.String",
+        "isRequired": true,
+        "isCustomType": false,
+        "isReadOnly": false,
+        "isModel": false,
+        "authRules": [],
+        "name": "title",
+        "isEnum": false,
+        "targetType": "String",
+        "isArray": false
+      },
+      "content": {
+        "javaClassForValue": "java.lang.String",
+        "isRequired": true,
+        "isCustomType": false,
+        "isReadOnly": false,
+        "isModel": false,
+        "authRules": [],
+        "name": "content",
+        "isEnum": false,
+        "targetType": "String",
+        "isArray": false
+      },
+      "likes": {
+        "javaClassForValue": "java.lang.Integer",
+        "isRequired": true,
+        "isCustomType": false,
+        "isReadOnly": false,
+        "isModel": false,
+        "authRules": [],
+        "name": "likes",
+        "isEnum": false,
+        "targetType": "Int",
+        "isArray": false
+      },
+      "updatedAt": {
+        "javaClassForValue": "com.amplifyframework.core.model.temporal.Temporal$DateTime",
+        "isRequired": false,
+        "isCustomType": false,
+        "isReadOnly": true,
+        "isModel": false,
+        "authRules": [],
+        "name": "updatedAt",
+        "isEnum": false,
+        "targetType": "AWSDateTime",
+        "isArray": false
+      }
+    }
+  }
+}

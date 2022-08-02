@@ -1,6 +1,7 @@
 {
   "query": "mutation CreateComment($input: CreateCommentInput!) {
   createComment(input: $input) {
+    __typename
     _deleted
     _lastChangedAt
     _version
@@ -10,12 +11,13 @@
     post {
       id
     }
+    updatedAt
   }
 }
 ",
   "variables": {
     "input": {
-      "commentPostId" : "9a4295d6-8225-495a-a531-beffc8b7ae7d",
+      "postCommentsId" : "9a4295d6-8225-495a-a531-beffc8b7ae7d",
       "content" : "toast",
       "createdAt" : null,
       "id": "426f8e8d-ea0f-4839-a73f-6a2a38565ba1"

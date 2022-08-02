@@ -34,9 +34,11 @@ import com.amplifyframework.util.Wrap;
 
 import com.google.gson.Gson;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -77,28 +79,49 @@ final class SQLiteModelTree {
         if (Empty.check(root)) {
             return new ArrayList<>();
         }
-        Map<ModelSchema, Set<String>> modelMap = new LinkedHashMap<>();
+        Map<ModelSchema, Set<HashMap<String, String>>> modelMap = new LinkedHashMap<>();
         Model rootModel = root.iterator().next();
         ModelSchema rootSchema = registry.getModelSchemaForModelClass(getModelName(rootModel));
-        Set<String> rootIds = new HashSet<>();
+        Set<Serializable> rootIds = new HashSet<>();
         for (T model : root) {
-            rootIds.add(model.getId());
+            rootIds.add(model.getPrimaryKeyString());
         }
         recurseTree(modelMap, rootSchema, rootIds);
 
         List<Model> descendants = new ArrayList<>();
-        for (Map.Entry<ModelSchema, Set<String>> entry : modelMap.entrySet()) {
+        /** This Map keeps information about the primary key fields for a particular schema. For models with composite
+         primary key it will be more than one field. **/
+        for (Map.Entry<ModelSchema, Set<HashMap<String, String>>> entry : modelMap.entrySet()) {
             ModelSchema schema = entry.getKey();
-            for (String id : entry.getValue()) {
+            String dummyJson;
+            for (HashMap<String, String> keyMap : entry.getValue()) {
                 if (rootModel.getClass() == SerializedModel.class) {
+                    Map<String, Object> serializedData = new HashMap<String, Object>();
+                    for (Map.Entry<String, String> keyMapEntry : keyMap.entrySet()) {
+                        serializedData.put(keyMapEntry.getKey(), keyMapEntry.getValue());
+                    }
                     SerializedModel dummyItem = SerializedModel.builder()
-                            .serializedData(Collections.singletonMap("id", id))
                             .modelSchema(schema)
+                            .serializedData(serializedData)
                             .build();
                     descendants.add(dummyItem);
                 } else {
-                    // Create dummy model instance using just the ID and model type
-                    String dummyJson = gson.toJson(Collections.singletonMap("id", id));
+                    /** Loop through primary key fields and get their respective values from the key map.
+                     * Deserialize the key value to the model with primary key values populated.
+                     * This will be used to create appsync delete mutation.  **/
+
+                    HashMap<String, Serializable> hashMap = new HashMap<>();
+                    if (schema.getPrimaryIndexFields().size() > 1) {
+                        Iterator<Map.Entry<String, String>> keyMapIterator = keyMap.entrySet().iterator();
+                        Iterator<String> pkFieldIterator = schema.getPrimaryIndexFields().listIterator();
+                        while (pkFieldIterator.hasNext()) {
+                            hashMap.put(pkFieldIterator.next(), keyMapIterator.next().getValue());
+                        }
+                        dummyJson = gson.toJson(hashMap);
+                    } else {
+                        // Create dummy model instance using just the ID and model type
+                        dummyJson = gson.toJson(Collections.singletonMap("id", keyMap.get("id")));
+                    }
                     Model dummyItem = gson.fromJson(dummyJson, schema.getModelClass());
                     descendants.add(dummyItem);
                 }
@@ -108,9 +131,9 @@ final class SQLiteModelTree {
     }
 
     private void recurseTree(
-            Map<ModelSchema, Set<String>> map,
+            Map<ModelSchema, Set<HashMap<String, String>>> map,
             ModelSchema modelSchema,
-            Collection<String> parentIds
+            Collection<Serializable> parentIds
     ) {
         for (ModelAssociation association : modelSchema.getAssociations().values()) {
             switch (association.getName()) {
@@ -119,27 +142,47 @@ final class SQLiteModelTree {
                     String childModel = association.getAssociatedType(); // model name
                     ModelSchema childSchema = registry.getModelSchemaForModelClass(childModel);
                     SQLiteTable childTable = SQLiteTable.fromSchema(childSchema);
-                    String childId;
+                    List<String> childFields = new ArrayList<>();
                     String parentId;
                     try {
-                        childId = childTable.getPrimaryKey().getName();
-                        parentId = childSchema.getAssociations() // get a map of associations
-                                .get(association.getAssociatedName()) // get @BelongsTo association linked to this field
-                                .getTargetName(); // get the target field (parent) name
+                        /** Get the primary key field name for the tables in local database.**/
+                        childFields.add(childTable.getPrimaryKey().getName());
+                        /** Get the primary key field names for the Model.**/
+                        if (childSchema.getPrimaryIndexFields().size() > 1) {
+                            childFields.addAll(childSchema.getPrimaryIndexFields());
+                        }
+                        parentId = SQLiteTable.getForeignKeyColumnName(childSchema.getVersion(),
+                                // get a map of associations
+                                association.getAssociatedName(), childSchema.getAssociations()
+                                        // get the target field (parent) name
+                                        .get(association.getAssociatedName()));
                     } catch (NullPointerException unexpectedAssociation) {
-                        LOG.warn("Foreign key was not found due to unidirectional relationship without @BelongsTo. " +
-                                "Failed to publish cascading mutations.",
+                        LOG.warn("Foreign key was not found due to unidirectional relationship without " +
+                                        "@BelongsTo. " + "Failed to publish cascading mutations.",
                                 unexpectedAssociation);
                         return;
                     }
 
                     // Collect every children one level deeper than current level
-                    Set<String> childrenIds = new HashSet<>();
-                    try (Cursor cursor = queryChildren(childTable.getName(), childId, parentId, parentIds)) {
+                    Set<Serializable> childrenIds = new HashSet<>();
+                    Set<HashMap<String, String>> childrenIdMap = new HashSet<>();
+                    try (Cursor cursor = queryChildren(childTable.getName(), childFields, parentId, parentIds)) {
+                        /** Populate the mapOfModelPrimaryKeys with the values of primary key for local sql table and
+                         *  the primary key/ keys for the model**/
                         if (cursor != null && cursor.moveToFirst()) {
-                            int index = cursor.getColumnIndexOrThrow(childId);
                             do {
-                                childrenIds.add(cursor.getString(index));
+                                HashMap<String, String> mapOfModelPrimaryKeys = new HashMap<>();
+                                for (String field : childFields) {
+                                    int index = cursor.getColumnIndexOrThrow(field);
+                                    String fieldValue = cursor.getString(index);
+                                    if (!field.equals(SQLiteTable.PRIMARY_KEY_FIELD_NAME)) {
+                                        mapOfModelPrimaryKeys.put(field, fieldValue);
+                                    }
+                                    if (field.equals(childTable.getPrimaryKey().getName())) {
+                                        childrenIds.add(fieldValue);
+                                    }
+                                }
+                                childrenIdMap.add(mapOfModelPrimaryKeys);
                             } while (cursor.moveToNext());
                         }
                     } catch (SQLiteException exception) {
@@ -150,9 +193,9 @@ final class SQLiteModelTree {
                     // Add queried result to the map
                     if (!childrenIds.isEmpty()) {
                         if (!map.containsKey(childSchema)) {
-                            map.put(childSchema, childrenIds);
+                            map.put(childSchema, childrenIdMap);
                         } else {
-                            map.get(childSchema).addAll(childrenIds);
+                            map.get(childSchema).addAll(childrenIdMap);
                         }
                         recurseTree(map, childSchema, childrenIds);
                     }
@@ -166,14 +209,14 @@ final class SQLiteModelTree {
 
     private Cursor queryChildren(
             @NonNull String childTable,
-            @NonNull String childIdField,
+            @NonNull List<String> childIdFields,
             @NonNull String parentIdField,
-            @NonNull Collection<String> parentIds
+            @NonNull Collection<Serializable> parentIds
     ) {
         // Wrap each ID with single quote
         StringBuilder quotedIds = new StringBuilder();
-        for (Iterator<String> ids = parentIds.iterator(); ids.hasNext();) {
-            quotedIds.append(Wrap.inSingleQuotes(ids.next()));
+        for (Iterator<Serializable> ids = parentIds.iterator(); ids.hasNext();) {
+            quotedIds.append(Wrap.inSingleQuotes(ids.next().toString()));
             if (ids.hasNext()) {
                 quotedIds.append(SqlKeyword.SEPARATOR);
             }
@@ -181,7 +224,7 @@ final class SQLiteModelTree {
         // SELECT <child_id> FROM <child_table> WHERE <parent_id> IN (<id_1>, <id_2>, ...)
         String queryString = String.valueOf(SqlKeyword.SELECT) +
                 SqlKeyword.DELIMITER +
-                Wrap.inBackticks(childIdField) +
+                getChildFieldString(childIdFields) +
                 SqlKeyword.DELIMITER +
                 SqlKeyword.FROM +
                 SqlKeyword.DELIMITER +
@@ -196,6 +239,18 @@ final class SQLiteModelTree {
                 Wrap.inParentheses(quotedIds.toString()) +
                 ";";
         return database.rawQuery(queryString, new String[0]);
+    }
+
+    private String getChildFieldString(List<String> childIdFields) {
+        StringBuilder builder = new StringBuilder();
+        Iterator<String> childFieldsIterator = childIdFields.listIterator();
+        while (childFieldsIterator.hasNext()) {
+            builder.append(Wrap.inBackticks(childFieldsIterator.next()));
+            if (childFieldsIterator.hasNext()) {
+                builder.append(", ");
+            }
+        }
+        return builder.toString();
     }
 
     private String getModelName(@NonNull Model model) {
