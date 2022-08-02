@@ -326,6 +326,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.fetchUserAttributes(onSuccess, onError)
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onSuccess.accept(expectedResult.toMutableList()) }
         coVerify(exactly = 0) { onError.accept(any()) }
     }
 
@@ -352,6 +353,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.fetchUserAttributes(onSuccess, onError)
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onError.accept(AuthException.InvalidStateException()) }
         verify(exactly = 0) { onSuccess.accept(any()) }
     }
 }
