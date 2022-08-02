@@ -25,6 +25,7 @@ import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
 import com.amplifyframework.statemachine.codegen.actions.FetchUserPoolTokensActions
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
+import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
 import com.amplifyframework.statemachine.codegen.actions.SignUpActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -37,6 +38,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import org.mockito.Mock
@@ -77,6 +79,9 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockSignUpActions: SignUpActions
+
+    @Mock
+    internal lateinit var mockSignInActions: SignInActions
 
     @Mock
     internal lateinit var mockSRPActions: SRPActions
@@ -141,8 +146,8 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        SRPEvent(
-                            SRPEvent.EventType.InitiateSRP("username", "password")
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password")
                         )
                     )
                 }
@@ -191,6 +196,15 @@ open class StateTransitionTestBase {
                     dispatcher.send(
                         AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
                     )
+                }
+            )
+    }
+
+    internal fun setupSignInActions() {
+        Mockito.`when`(mockSignInActions.startSRPAuthAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(SRPEvent(SRPEvent.EventType.InitiateSRP("username", "password")))
                 }
             )
     }

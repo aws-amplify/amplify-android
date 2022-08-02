@@ -59,13 +59,11 @@ import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link RxAuthBinding}.
@@ -986,12 +984,26 @@ public final class RxAuthBindingTest {
     /**
      * Getting the current user should just pass through to the delegate, to return whatever
      * it would.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
      */
     @Test
-    public void testGetCurrentUser() {
-        AuthUser expected = new AuthUser(RandomString.string(), RandomString.string());
-        when(delegate.getCurrentUser()).thenReturn(expected);
-        assertEquals(expected, auth.getCurrentUser());
+    public void testGetCurrentUser() throws InterruptedException {
+        AuthUser authUser = new AuthUser("testUserId", "testUsername");
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            int positionOfCompletionAction = 0;
+            Consumer<AuthUser> onResult = invocation.getArgument(positionOfCompletionAction);
+            onResult.accept(authUser);
+            return null;
+        }).when(delegate).getCurrentUser(anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<AuthUser> observer = auth.getCurrentUser().test();
+
+        // Assert: Completable completes successfully
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNoErrors()
+                .assertComplete();
     }
 
     /**

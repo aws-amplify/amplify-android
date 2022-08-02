@@ -90,6 +90,9 @@ object JWTParser {
      * @return claim from the JWT as a String.
      */
     fun getClaim(jwt: String, claim: String?): String? {
+        if (jwt.isEmpty()) {
+            return jwt
+        }
         return try {
             val payload = getPayload(jwt)
             val claimValue = claim?.let { payload[claim] }

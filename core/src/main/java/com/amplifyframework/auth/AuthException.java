@@ -271,6 +271,30 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     * Could not update user password.
+     */
+    public static class UpdatePasswordException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Your password cannot be updated.";
+        private static final String RECOVERY_SUGGESTION = "Please sign in and reattempt the operation.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public UpdatePasswordException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public UpdatePasswordException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Could not perform the action because user was not found in the system.
      */
     public static class UserNotFoundException extends AuthException {
@@ -441,6 +465,13 @@ public class AuthException extends AmplifyException {
          */
         public InvalidUserPoolConfigurationException(Throwable cause) {
             super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public InvalidUserPoolConfigurationException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
         }
     }
 

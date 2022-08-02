@@ -360,8 +360,8 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
-    public AuthUser getCurrentUser() {
-        return getSelectedPlugin().getCurrentUser();
+    public void getCurrentUser(@NonNull Consumer<AuthUser> onSuccess, @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().getCurrentUser(onSuccess, onError);
     }
 
     @Override

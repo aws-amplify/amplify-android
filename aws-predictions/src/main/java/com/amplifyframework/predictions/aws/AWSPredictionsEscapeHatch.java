@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,13 +17,14 @@ package com.amplifyframework.predictions.aws;
 
 import androidx.annotation.NonNull;
 
-import com.amazonaws.services.comprehend.AmazonComprehendClient;
-import com.amazonaws.services.polly.AmazonPollyClient;
-import com.amazonaws.services.rekognition.AmazonRekognitionClient;
-import com.amazonaws.services.textract.AmazonTextractClient;
-import com.amazonaws.services.translate.AmazonTranslateClient;
+import aws.sdk.kotlin.services.comprehend.ComprehendClient;
 
 import java.util.Objects;
+
+import aws.sdk.kotlin.services.polly.PollyClient;
+import aws.sdk.kotlin.services.rekognition.RekognitionClient;
+import aws.sdk.kotlin.services.textract.TextractClient;
+import aws.sdk.kotlin.services.translate.TranslateClient;
 
 /**
  * An escape hatch for Predictions, which gives direct access to
@@ -31,18 +32,18 @@ import java.util.Objects;
  * that are not exposed by Amplify, directly.
  */
 public final class AWSPredictionsEscapeHatch {
-    private final AmazonTranslateClient translate;
-    private final AmazonPollyClient polly;
-    private final AmazonRekognitionClient rekognition;
-    private final AmazonTextractClient textract;
-    private final AmazonComprehendClient comprehend;
+    private final TranslateClient translate;
+    private final PollyClient polly;
+    private final RekognitionClient rekognition;
+    private final TextractClient textract;
+    private final ComprehendClient comprehend;
 
     AWSPredictionsEscapeHatch(
-            @NonNull AmazonTranslateClient translate,
-            @NonNull AmazonPollyClient polly,
-            @NonNull AmazonRekognitionClient rekognition,
-            @NonNull AmazonTextractClient textract,
-            @NonNull AmazonComprehendClient comprehend
+            @NonNull TranslateClient translate,
+            @NonNull PollyClient polly,
+            @NonNull RekognitionClient rekognition,
+            @NonNull TextractClient textract,
+            @NonNull ComprehendClient comprehend
     ) {
         this.translate = Objects.requireNonNull(translate);
         this.polly = Objects.requireNonNull(polly);
@@ -57,7 +58,7 @@ public final class AWSPredictionsEscapeHatch {
      * @return the configured Amazon Translate client
      */
     @NonNull
-    public AmazonTranslateClient getTranslateClient() {
+    public TranslateClient getTranslateClient() {
         return translate;
     }
 
@@ -67,7 +68,7 @@ public final class AWSPredictionsEscapeHatch {
      * @return the configured Amazon Polly client
      */
     @NonNull
-    public AmazonPollyClient getPollyClient() {
+    public PollyClient getPollyClient() {
         return polly;
     }
 
@@ -77,7 +78,7 @@ public final class AWSPredictionsEscapeHatch {
      * @return the configured Amazon Rekognition client
      */
     @NonNull
-    public AmazonRekognitionClient getRekognitionClient() {
+    public RekognitionClient getRekognitionClient() {
         return rekognition;
     }
 
@@ -87,7 +88,7 @@ public final class AWSPredictionsEscapeHatch {
      * @return the configured Amazon Textract client
      */
     @NonNull
-    public AmazonTextractClient getTextractClient() {
+    public TextractClient getTextractClient() {
         return textract;
     }
 
@@ -97,7 +98,7 @@ public final class AWSPredictionsEscapeHatch {
      * @return the configured Amazon Comprehend client
      */
     @NonNull
-    public AmazonComprehendClient getComprehendClient() {
+    public ComprehendClient getComprehendClient() {
         return comprehend;
     }
 }
