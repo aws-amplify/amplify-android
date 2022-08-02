@@ -29,6 +29,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
@@ -40,7 +41,6 @@ import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.util.ForEach;
 import com.amplifyframework.util.Time;
 
 import java.util.ArrayList;
@@ -72,7 +72,6 @@ final class SyncProcessor {
     private final AppSync appSync;
     private final Merger merger;
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
-    private final String[] modelNames;
     private final QueryPredicateProvider queryPredicateProvider;
     private final RetryHandler requestRetry;
     private final boolean isSyncRetryEnabled;
@@ -85,9 +84,6 @@ final class SyncProcessor {
         this.merger = builder.merger;
         this.dataStoreConfigurationProvider = builder.dataStoreConfigurationProvider;
         this.queryPredicateProvider = builder.queryPredicateProvider;
-        this.modelNames =
-            ForEach.inCollection(modelProvider.modelSchemas().values(), ModelSchema::getName)
-                .toArray(new String[0]);
         this.requestRetry = builder.requestRetry;
         this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
     }
@@ -114,8 +110,14 @@ final class SyncProcessor {
         TopologicalOrdering ordering =
             TopologicalOrdering.forRegisteredModels(schemaRegistry, modelProvider);
         Collections.sort(modelSchemas, ordering::compare);
+        ArrayList<String> toBeSyncedModelArray = new ArrayList<>();
         for (ModelSchema schema : modelSchemas) {
-            hydrationTasks.add(createHydrationTask(schema));
+            //Check to see if query predicate for this schema is not equal to none. This means customer does
+            // not want to sync the data for this model.
+            if (!QueryPredicates.none().equals(queryPredicateProvider.getPredicate(schema.getName()))) {
+                hydrationTasks.add(createHydrationTask(schema));
+                toBeSyncedModelArray.add(schema.getName());
+            }
         }
 
         return Completable.concat(hydrationTasks)
@@ -125,7 +127,7 @@ final class SyncProcessor {
                 // have started.
                 Amplify.Hub.publish(HubChannel.DATASTORE,
                     HubEvent.create(DataStoreChannelEventName.SYNC_QUERIES_STARTED,
-                        new SyncQueriesStartedEvent(modelNames)
+                        new SyncQueriesStartedEvent(toBeSyncedModelArray.toArray(new String[0]))
                     )
                 );
             })
@@ -255,12 +257,12 @@ final class SyncProcessor {
         if (original.getModel() instanceof SerializedModel) {
             SerializedModel originalModel = (SerializedModel) original.getModel();
             SerializedModel newModel = SerializedModel.builder()
+                    .modelSchema(schema)
                     .serializedData(SerializedModel.parseSerializedData(
                             originalModel.getSerializedData(),
                             schema.getName(),
                             schemaRegistry
                     ))
-                    .modelSchema(schema)
                     .build();
             return new ModelWithMetadata<>((T) newModel, original.getSyncMetadata());
         } else {

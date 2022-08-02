@@ -59,6 +59,8 @@ public final class ModelSchema {
 
     private final String listPluralName;
 
+    private final Model.Type modelType;
+
     // Denotes whether this model has owner based authorization which changes the parameters for subscriptions
     // e.g. @auth(rules: [{allow: owner}]) on the model in the GraphQL Schema
     private final List<AuthRule> authRules;
@@ -78,6 +80,9 @@ public final class ModelSchema {
     // Class of the model this schema will represent
     private final Class<? extends Model> modelClass;
 
+    // Model schema version
+    private final int modelSchemaVersion;
+
     private ModelSchema(Builder builder) {
         this.name = builder.name;
         this.pluralName = builder.pluralName;
@@ -88,6 +93,8 @@ public final class ModelSchema {
         this.associations = builder.associations;
         this.indexes = builder.indexes;
         this.modelClass = builder.modelClass;
+        this.modelType = builder.type;
+        this.modelSchemaVersion = builder.modelSchemaVersion;
     }
 
     /**
@@ -122,6 +129,10 @@ public final class ModelSchema {
                     ? modelConfig.pluralName()
                     : null;
 
+            final Model.Type type = modelConfig != null
+                    ? modelConfig.type()
+                    : Model.Type.USER;
+
             final String listPluralName = modelConfig != null && !modelConfig.listPluralName().isEmpty()
                     ? modelConfig.listPluralName()
                     : null;
@@ -129,6 +140,8 @@ public final class ModelSchema {
             final String syncPluralName = modelConfig != null && !modelConfig.syncPluralName().isEmpty()
                     ? modelConfig.syncPluralName()
                     : null;
+
+            final int modelSchemaVersion = modelConfig != null ? modelConfig.version() : 0;
 
             if (modelConfig != null) {
                 for (com.amplifyframework.core.model.annotations.AuthRule ruleAnnotation : modelConfig.authRules()) {
@@ -170,6 +183,8 @@ public final class ModelSchema {
                     .associations(associations)
                     .indexes(indexes)
                     .modelClass(clazz)
+                    .modelType(type)
+                    .version(modelSchemaVersion)
                     .build();
         } catch (Exception exception) {
             throw new AmplifyException(
@@ -223,7 +238,9 @@ public final class ModelSchema {
             return ModelAssociation.builder()
                     .name(BelongsTo.class.getSimpleName())
                     .targetName(association.targetName())
+                    .targetNames(association.targetNames())
                     .associatedType(association.type().getSimpleName())
+                    .associatedName(field.getName())
                     .build();
         }
         if (field.isAnnotationPresent(HasOne.class)) {
@@ -286,6 +303,16 @@ public final class ModelSchema {
     @Nullable
     public String getListPluralName() {
         return listPluralName;
+    }
+
+    /**
+     * Returns the version number of this model schema.
+     *
+     * @return the version number of this model schema.
+     */
+    @Nullable
+    public int getVersion() {
+        return modelSchemaVersion;
     }
 
     /**
@@ -406,7 +433,8 @@ public final class ModelSchema {
                 getFields(),
                 getAssociations(),
                 getIndexes(),
-                getModelClass()
+                getModelClass(),
+                getVersion()
         );
     }
 
@@ -422,7 +450,16 @@ public final class ModelSchema {
             ", associations=" + associations +
             ", indexes=" + indexes +
             ", modelClass=" + modelClass +
+            ", modelSchemaVersion=" + modelSchemaVersion +
             '}';
+    }
+
+    /**
+     * Returns the type of the model.
+     * @return type of the model.
+     */
+    public Model.Type getModelType() {
+        return modelType;
     }
 
     /**
@@ -439,6 +476,8 @@ public final class ModelSchema {
         private String listPluralName;
         private String syncPluralName;
         private final List<AuthRule> authRules;
+        private Model.Type type;
+        private int modelSchemaVersion;
 
         Builder() {
             this.authRules = new ArrayList<>();
@@ -556,6 +595,28 @@ public final class ModelSchema {
         @NonNull
         public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
             this.modelClass = modelClass;
+            return this;
+        }
+
+        /**
+         * The type of the Model this schema represents.
+         * @param type the class of the model.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder modelType(@NonNull Model.Type type) {
+            this.type = type;
+            return this;
+        }
+
+        /**
+         * The type of the Model this schema represents.
+         * @param modelSchemaVersion schema version.
+         * @return the builder object
+         */
+        @NonNull
+        public Builder version(@NonNull int modelSchemaVersion) {
+            this.modelSchemaVersion = modelSchemaVersion;
             return this;
         }
 

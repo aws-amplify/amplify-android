@@ -43,7 +43,6 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
-import com.amplifyframework.testmodels.commentsblog.PostAuthorJoin;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.ModelAssert;
@@ -96,7 +95,7 @@ public final class BasicCloudSyncInstrumentationTest {
 
         StrictMode.enable();
         Context context = getApplicationContext();
-        @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfiguration");
+        @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfigurationupdated");
 
         // Setup an API
         CategoryConfiguration apiCategoryConfiguration =
@@ -125,7 +124,6 @@ public final class BasicCloudSyncInstrumentationTest {
                 .syncExpression(Post.class, () -> Post.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Comment.class, () -> Comment.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .syncExpression(Author.class, () -> Author.CREATED_AT.gt(tenMinutesAgoDateTime))
-                .syncExpression(PostAuthorJoin.class, () -> PostAuthorJoin.CREATED_AT.gt(tenMinutesAgoDateTime))
                 .build())
             .finish();
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
@@ -194,6 +192,7 @@ public final class BasicCloudSyncInstrumentationTest {
         // This model will get saved to the cloud.
         BlogOwner jameson = BlogOwner.builder()
             .name("Jameson Williams")
+            .createdAt(new Temporal.DateTime(new Date(), 0))
             .build();
 
         // Start watching locally, to see if it shows up on the client.
@@ -243,7 +242,7 @@ public final class BasicCloudSyncInstrumentationTest {
         dataStore.save(updatedRichard);
 
         // Verify that 2 mutations were published.
-        richardAccumulator.await(30, TimeUnit.SECONDS);
+        richardAccumulator.await(60, TimeUnit.SECONDS);
 
         // Verify that the updatedRichard is saved in the DataStore.
         BlogOwner localRichard = dataStore.get(BlogOwner.class, richard.getId());
@@ -280,7 +279,7 @@ public final class BasicCloudSyncInstrumentationTest {
         dataStore.save(updatedOwner);
 
         // Verify that 2 mutations were published.
-        accumulator.await(30, TimeUnit.SECONDS);
+        accumulator.await(60, TimeUnit.SECONDS);
 
         // Verify that the updatedOwner is saved in the DataStore.
         BlogOwner localOwner = dataStore.get(BlogOwner.class, owner.getId());

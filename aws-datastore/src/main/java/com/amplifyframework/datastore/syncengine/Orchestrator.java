@@ -51,7 +51,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long LOCAL_OP_TIMEOUT_SECONDS = 5;
+    private static final long LOCAL_OP_TIMEOUT_SECONDS = 7;
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
