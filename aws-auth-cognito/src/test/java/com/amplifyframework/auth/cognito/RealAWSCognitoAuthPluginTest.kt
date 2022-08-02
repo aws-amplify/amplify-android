@@ -50,13 +50,13 @@ import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.verify
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 class RealAWSCognitoAuthPluginTest {
 
