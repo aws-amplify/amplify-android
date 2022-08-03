@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -255,23 +255,24 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
 
     @Override
     public void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmResetPassword(newPassword, confirmationCode, options, onSuccess, onError);
+        getSelectedPlugin().confirmResetPassword(username, newPassword, confirmationCode, options, onSuccess, onError);
     }
 
     @Override
     public void confirmResetPassword(
-            @NonNull String newPassword,
+            String username, @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmResetPassword(newPassword, confirmationCode, onSuccess, onError);
+        getSelectedPlugin().confirmResetPassword(username, newPassword, confirmationCode, onSuccess, onError);
     }
 
     @Override
