@@ -59,7 +59,6 @@ sealed class SRPSignInState : State {
                 }
                 is RespondingPasswordVerifier -> when (srpEvent) {
                     is SRPEvent.EventType.ThrowPasswordVerifierError -> StateResolution(Error(srpEvent.exception))
-                    is SRPEvent.EventType.FinalizeSRPSignIn -> StateResolution(SignedIn())
                     is SRPEvent.EventType.CancelSRPSignIn -> StateResolution(Cancelling())
                     else -> defaultResolution
                 }

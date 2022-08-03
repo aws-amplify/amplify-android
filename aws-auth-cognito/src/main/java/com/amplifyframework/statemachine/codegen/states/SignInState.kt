@@ -72,7 +72,6 @@ sealed class SignInState : State {
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception), listOf())
                     else -> defaultResolution
                 }
-                is Error -> defaultResolution
                 else -> defaultResolution
             }
         }

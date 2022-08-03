@@ -1,11 +1,13 @@
 package com.amplifyframework.auth.cognito.helpers
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import aws.smithy.kotlin.runtime.time.Instant
+import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.step.AuthNextSignInStep
+import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
@@ -18,7 +20,7 @@ import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 
 object SignInChallengeHelper {
-    fun getNextStepEvent(
+    fun evaluateNextStep(
         userId: String = "",
         username: String,
         response: RespondToAuthChallengeResponse?
@@ -32,9 +34,6 @@ object SignInChallengeHelper {
                     val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
                     SignedInData(userId, username, Date(), SignInMethod.SRP, tokens)
                 }
-//                SRPEvent(SRPEvent.EventType.FinalizeSRPSignIn(signedInData))
-//                logger?.verbose("$id Sending event ${finalizeEvent.type}")
-//                dispatcher.send(finalizeEvent)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
             }
@@ -49,31 +48,41 @@ object SignInChallengeHelper {
         }
     }
 
-//    fun checkNextStep(signInState: SignInState) {
-//        val authChallengeType = ""
-//        val challengeState = (signInState as SignInState.ResolvingChallenge).challengeState
-//        when (challengeState) {
-//            is SignInChallengeState.WaitingForAnswer -> {
-//                when (authChallengeType) {
-//                    "smsMFA" -> {}
-//                    "newPasswordRequired" -> {}
-//                    else -> {}
-//                }
-//            }
-//        }
-//    }
-
-    fun checkNextStep(
-        challengeType: ChallengeNameType,
-        challengeResponse: ChallengeResponse,
+    fun getNextStep(
+        challenge: AuthChallenge,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        when (challengeType) {
-            is ChallengeNameType.SmsMfa -> {}
-            is ChallengeNameType.NewPasswordRequired -> {}
-            is ChallengeNameType.CustomChallenge -> {}
-            else -> {}
+        val challengeParams = challenge.parameters?.toMutableMap() ?: mapOf()
+        when (ChallengeNameType.fromValue(challenge.challengeName)) {
+            is ChallengeNameType.SmsMfa -> {
+                val deliveryDetails = AuthCodeDeliveryDetails(
+                    challengeParams.getValue("CODE_DELIVERY_DESTINATION") ?: "",
+                    AuthCodeDeliveryDetails.DeliveryMedium.fromString(
+                        challengeParams.getValue("CODE_DELIVERY_DELIVERY_MEDIUM")
+                    )
+                )
+                val authSignInResult = AuthSignInResult(
+                    false,
+                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE, mapOf(), deliveryDetails)
+                )
+                onSuccess.accept(authSignInResult)
+            }
+            is ChallengeNameType.NewPasswordRequired -> {
+                val authSignInResult = AuthSignInResult(
+                    false,
+                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD, challengeParams, null)
+                )
+                onSuccess.accept(authSignInResult)
+            }
+            is ChallengeNameType.CustomChallenge -> {
+                val authSignInResult = AuthSignInResult(
+                    false,
+                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE, challengeParams, null)
+                )
+                onSuccess.accept(authSignInResult)
+            }
+            else -> onError.accept(AuthException.UnknownException(Exception("Challenge type not supported.")))
         }
     }
 }

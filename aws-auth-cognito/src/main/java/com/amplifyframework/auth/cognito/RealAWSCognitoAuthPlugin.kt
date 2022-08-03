@@ -33,6 +33,7 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -358,14 +359,19 @@ internal class RealAWSCognitoAuthPlugin(
                 val authZState = authState.authZState
                 when {
                     authNState is AuthenticationState.SigningIn -> {
-                        val srpSignInState = authNState.signInState?.srpSignInState
-                        if (srpSignInState is SRPSignInState.Error) {
-                            token?.let(authStateMachine::cancel)
-                            onError.accept(
-                                CognitoAuthExceptionConverter.lookup(srpSignInState.exception, "Sign in failed.")
-                            )
-                        } else {
-                            // check next step
+                        val srpSignInState = (authNState.signInState as? SignInState.SigningInWithSRP)?.srpSignInState
+                        val challengeState = (authNState.signInState as? SignInState.ResolvingChallenge)?.challengeState
+                        when {
+                            srpSignInState is SRPSignInState.Error -> {
+                                token?.let(authStateMachine::cancel)
+                                onError.accept(
+                                    CognitoAuthExceptionConverter.lookup(srpSignInState.exception, "Sign in failed.")
+                                )
+                            }
+                            challengeState is SignInChallengeState.WaitingForAnswer -> {
+                                token?.let(authStateMachine::cancel)
+                                SignInChallengeHelper.getNextStep(challengeState.challenge, onSuccess, onError)
+                            }
                         }
                     }
                     authNState is AuthenticationState.SignedIn
@@ -392,16 +398,6 @@ internal class RealAWSCognitoAuthPlugin(
         )
     }
 
-//    private static func validateError(signInError: SignInError) -> Result<AuthSignInResult, AuthError> {
-//        if signInError.isUserUnConfirmed {
-//            return .success(AuthSignInResult(nextStep: .confirmSignUp(nil)))
-//        } else if signInError.isResetPassword {
-//            return .success(AuthSignInResult(nextStep: .resetPassword(nil)))
-//        } else {
-//            return .failure(signInError.authError)
-//        }
-//    }
-
     override fun confirmSignIn(
         confirmationCode: String,
         onSuccess: Consumer<AuthSignInResult>,
@@ -417,9 +413,9 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            val (authNState, _) = (authState as AuthState.Configured)
-            val signInState = (authNState as AuthenticationState.SigningIn).signInState
-            val challengeState = (signInState as SignInState.ResolvingChallenge).challengeState
+            val authNState = authState.authNState
+            val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
+            val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
             when (challengeState) {
                 is SignInChallengeState.WaitingForAnswer -> {
                     _confirmSignIn(confirmationCode, options, onSuccess, onError)
@@ -438,9 +434,9 @@ internal class RealAWSCognitoAuthPlugin(
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->
-                val (authNState, _) = (authState as AuthState.Configured)
-                val signInState = (authNState as AuthenticationState.SigningIn).signInState
-                val challengeState = (signInState as SignInState.ResolvingChallenge).challengeState
+                val authNState = authState.authNState
+                val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
+                val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
                 when {
                     authNState is AuthenticationState.SignedIn -> {
                         token?.let(authStateMachine::cancel)
@@ -449,10 +445,6 @@ internal class RealAWSCognitoAuthPlugin(
                             AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
                         )
                         onSuccess.accept(authSignInResult)
-                    }
-                    challengeState is SignInChallengeState.Verifying -> {
-                        token?.let(authStateMachine::cancel)
-//                        SignInChallengeHelper.checkNextStep()
                     }
                     challengeState is SignInChallengeState.Error -> {
                         token?.let(authStateMachine::cancel)
@@ -463,13 +455,7 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val event = SignInChallengeEvent(
-                    SignInChallengeEvent.EventType.VerifyChallengeAnswer(
-                        mapOf(
-                            "Code" to confirmationCode
-                        )
-                    )
-                )
+                val event = SignInChallengeEvent(SignInChallengeEvent.EventType.VerifyChallengeAnswer(confirmationCode))
                 authStateMachine.send(event)
             }
         )

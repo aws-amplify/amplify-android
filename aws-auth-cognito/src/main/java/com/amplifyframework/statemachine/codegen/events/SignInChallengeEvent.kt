@@ -7,7 +7,7 @@ import java.util.Date
 class SignInChallengeEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
         data class WaitForAnswer(val challenge: AuthChallenge) : EventType()
-        data class VerifyChallengeAnswer(val challengeParameters: Map<String, String>) : EventType()
+        data class VerifyChallengeAnswer(val answer: String) : EventType()
         data class Verified(val id: String = "") : EventType()
     }
 
