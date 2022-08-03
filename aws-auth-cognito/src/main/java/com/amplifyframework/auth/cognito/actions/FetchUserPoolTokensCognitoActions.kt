@@ -28,16 +28,23 @@ import java.lang.Exception
 import kotlin.time.Duration.Companion.seconds
 
 object FetchUserPoolTokensCognitoActions : FetchUserPoolTokensActions {
-    override fun refreshFetchUserPoolTokensAction(amplifyCredential: AmplifyCredential?): Action =
+    override fun refreshFetchUserPoolTokensAction(amplifyCredential: AmplifyCredential): Action =
         Action<AuthEnvironment>("RefreshUserPoolTokens") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
+                val authParameters = when (amplifyCredential) {
+                    is AmplifyCredential.UserPool -> amplifyCredential.tokens.refreshToken?.let {
+                        mapOf("REFRESH_TOKEN" to it)
+                    }
+                    is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens.refreshToken?.let {
+                        mapOf("REFRESH_TOKEN" to it)
+                    }
+                    else -> null
+                }
                 val refreshTokenResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.RefreshToken
                     clientId = configuration.userPool?.appClient
-                    authParameters = amplifyCredential?.cognitoUserPoolTokens?.refreshToken?.let {
-                        mapOf("REFRESH_TOKEN" to it)
-                    }
+                    this.authParameters = authParameters
                 }
 
                 val expiresIn = refreshTokenResponse?.authenticationResult?.expiresIn?.toLong() ?: 0
@@ -48,7 +55,7 @@ object FetchUserPoolTokensCognitoActions : FetchUserPoolTokensActions {
                     expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
                 )
 
-                val updatedCredentials = amplifyCredential?.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)
+                val updatedCredentials = AmplifyCredential.UserPool(cognitoUserPoolTokens)
                 val fetchedEvent = FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.Fetched())
                 logger?.verbose("$id Sending event ${fetchedEvent.type}")
                 dispatcher.send(fetchedEvent)

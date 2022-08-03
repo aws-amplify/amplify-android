@@ -25,17 +25,27 @@ import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAwsCredentialsEvent
 
 object FetchAwsCredentialsCognitoActions : FetchAWSCredentialsActions {
-    override fun initFetchAWSCredentialsAction(amplifyCredential: AmplifyCredential?): Action =
+    override fun initFetchAWSCredentialsAction(amplifyCredential: AmplifyCredential): Action =
         Action<AuthEnvironment>("InitFetchAWSCredentials") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
-                val idToken = amplifyCredential?.cognitoUserPoolTokens?.idToken
+                val idToken = when (amplifyCredential) {
+                    is AmplifyCredential.UserPool -> amplifyCredential.tokens.idToken
+                    is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens.idToken
+                    else -> null
+                }
+                val identityId = when(amplifyCredential) {
+                    is AmplifyCredential.IdentityPool -> amplifyCredential.identityId
+                    is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.identityId
+                    else -> null
+                }
+
                 val loginsMap: Map<String, String>? = configuration.userPool?.identityProviderName?.let { provider ->
                     idToken?.let { mapOf(provider to idToken) }
                 }
 
                 val getCredentialsForIdentityRequest = GetCredentialsForIdentityRequest {
-                    identityId = amplifyCredential?.identityId
+                    this.identityId = identityId
                     loginsMap?.let { logins = loginsMap }
                 }
 
@@ -48,7 +58,8 @@ object FetchAwsCredentialsCognitoActions : FetchAWSCredentialsActions {
                     AWSCredentials(it.accessKeyId, it.secretKey, it.sessionToken, it.expiration?.epochSeconds)
                 }
 
-                val updatedAmplifyCredential = amplifyCredential?.copy(awsCredentials = credentials)
+                val updatedAmplifyCredential = amplifyCredential.update(awsCredentials = credentials)
+
                 val fetchedEvent = FetchAwsCredentialsEvent(FetchAwsCredentialsEvent.EventType.Fetched())
                 logger?.verbose("$id Sending event ${fetchedEvent.type}")
                 dispatcher.send(fetchedEvent)

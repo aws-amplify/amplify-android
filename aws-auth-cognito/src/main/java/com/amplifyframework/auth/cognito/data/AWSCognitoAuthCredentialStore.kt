@@ -16,11 +16,9 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
-import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
-import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -41,26 +39,10 @@ class AWSCognitoAuthCredentialStore(
         keyValueRepoFactory.create(context, awsKeyValueStoreIdentifier, isPersistenceEnabled)
 
     override fun saveCredential(credential: AmplifyCredential) =
-        keyValue.put(key, serializeCredential(credential.minimize()))
+        keyValue.put(key, serializeCredential(credential))
 
-    override fun savePartialCredential(
-        cognitoUserPoolTokens: CognitoUserPoolTokens?,
-        identityId: String?,
-        awsCredentials: AWSCredentials?
-    ) {
-        val currentCredentials = retrieveCredential()
-
-        saveCredential(
-            AmplifyCredential(
-                cognitoUserPoolTokens ?: currentCredentials?.cognitoUserPoolTokens,
-                identityId ?: currentCredentials?.identityId,
-                awsCredentials ?: currentCredentials?.awsCredentials
-            )
-        )
-    }
-
-    override fun retrieveCredential(): AmplifyCredential? =
-        deserializeCredential(keyValue.get(key))?.minimize()
+    override fun retrieveCredential(): AmplifyCredential =
+        deserializeCredential(keyValue.get(key))
 
     override fun deleteCredential() = keyValue.remove(key)
 
@@ -78,23 +60,12 @@ class AWSCognitoAuthCredentialStore(
         return prefix.plus(".$sessionKeySuffix")
     }
 
-    private fun deserializeCredential(encodedCredential: String?): AmplifyCredential? =
-        encodedCredential?.let { Json.decodeFromString<AmplifyCredential>(it) }
-
-    private fun serializeCredential(credential: AmplifyCredential) = Json.encodeToString(credential)
-
-    private fun AmplifyCredential.minimize(): AmplifyCredential {
-        return copy(
-            cognitoUserPoolTokens = cognitoUserPoolTokens?.trim(),
-            awsCredentials = awsCredentials?.trim()
-        )
+    private fun deserializeCredential(encodedCredential: String?): AmplifyCredential {
+        val credentials = encodedCredential?.let { Json.decodeFromString(it) as AmplifyCredential }
+        return credentials ?: AmplifyCredential.Empty
     }
 
-    private fun CognitoUserPoolTokens.trim(): CognitoUserPoolTokens? {
-        return if (idToken != null || accessToken != null || refreshToken != null) this else null
-    }
-
-    private fun AWSCredentials.trim(): AWSCredentials? {
-        return if (accessKeyId != null || secretAccessKey != null) this else null
+    private fun serializeCredential(credential: AmplifyCredential): String {
+        return Json.encodeToString(credential)
     }
 }

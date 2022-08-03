@@ -38,12 +38,15 @@ object AuthorizationCognitoActions : AuthorizationActions {
         dispatcher.send(evt)
     }
 
-    override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential?) =
+    override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential) =
         Action<AuthEnvironment>("InitFetchAuthSession") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = amplifyCredential?.cognitoUserPoolTokens?.let {
-                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential))
-            } ?: FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
+            val evt = when (amplifyCredential) {
+                is AmplifyCredential.UserPool -> FetchAuthSessionEvent(
+                    FetchAuthSessionEvent.EventType.FetchUserPoolTokens(amplifyCredential)
+                )
+                else -> FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
+            }
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
