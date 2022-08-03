@@ -33,7 +33,6 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
-import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -453,7 +452,7 @@ internal class RealAWSCognitoAuthPlugin(
                     }
                     challengeState is SignInChallengeState.Verifying -> {
                         token?.let(authStateMachine::cancel)
-                        SignInChallengeHelper.checkNextStep()
+//                        SignInChallengeHelper.checkNextStep()
                     }
                     challengeState is SignInChallengeState.Error -> {
                         token?.let(authStateMachine::cancel)
@@ -464,7 +463,13 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val event = SignInChallengeEvent(SignInChallengeEvent.EventType.VerifyChallengeAnswer(confirmationCode))
+                val event = SignInChallengeEvent(
+                    SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                        mapOf(
+                            "Code" to confirmationCode
+                        )
+                    )
+                )
                 authStateMachine.send(event)
             }
         )

@@ -95,7 +95,7 @@ object SRPCognitoActions : SRPActions {
                     challengeResponses = challengeParams
                 }
 
-                SignInChallengeHelper.getNextStepEvent(response)
+                SignInChallengeHelper.getNextStepEvent("", username, response)
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))
                 logger?.verbose("$id Sending event ${errorEvent.type}")

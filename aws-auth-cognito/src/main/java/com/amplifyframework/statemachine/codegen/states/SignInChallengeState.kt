@@ -28,18 +28,18 @@ sealed class SignInChallengeState : State {
             val defaultResolution = StateResolution(oldState)
             val challengeEvent = asSignInChallengeEvent(event)
             return when (oldState) {
-                is NotStarted -> when(challengeEvent) {
+                is NotStarted -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.WaitForAnswer -> StateResolution(WaitingForAnswer())
                     else -> defaultResolution
                 }
-                is WaitingForAnswer -> when(challengeEvent) {
+                is WaitingForAnswer -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.VerifyChallengeAnswer -> {
                         val action = challengeActions.verifySignInChallenge(challengeEvent)
                         StateResolution(Verifying(), listOf(action))
                     }
                     else -> defaultResolution
                 }
-                is Verifying -> when(challengeEvent) {
+                is Verifying -> when (challengeEvent) {
                     // finalize sign in
                     is SignInChallengeEvent.EventType.Verified -> StateResolution(Verified())
                     else -> defaultResolution

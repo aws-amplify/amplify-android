@@ -18,7 +18,11 @@ import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 
 object SignInChallengeHelper {
-    fun getNextStepEvent(userId:String = "", username: String, response: RespondToAuthChallengeResponse?): StateMachineEvent {
+    fun getNextStepEvent(
+        userId: String = "",
+        username: String,
+        response: RespondToAuthChallengeResponse?
+    ): StateMachineEvent {
         val authenticationResult = response?.authenticationResult
         val challengeNameType = response?.challengeName
         return when {
@@ -35,8 +39,8 @@ object SignInChallengeHelper {
                 AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
             }
             challengeNameType is ChallengeNameType.SmsMfa ||
-                    challengeNameType is ChallengeNameType.CustomChallenge
-                    || challengeNameType is ChallengeNameType.NewPasswordRequired -> {
+                challengeNameType is ChallengeNameType.CustomChallenge
+                || challengeNameType is ChallengeNameType.NewPasswordRequired -> {
                 val challenge =
                     AuthChallenge(challengeNameType.value, username, response.session, response.challengeParameters)
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
