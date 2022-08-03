@@ -750,7 +750,7 @@ internal class RealAWSCognitoAuthPlugin(
 
                     GlobalScope.launch {
                         try {
-                            val accessToken = getAccessToken()
+                            val accessToken = getSession().userPoolTokens.value?.accessToken
                             val getUserRequest = GetUserRequest.invoke {
                                 this.accessToken = accessToken
                             }
@@ -834,31 +834,6 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         TODO("Not yet implemented")
-    }
-
-    private suspend fun getAccessToken(): String? {
-        return suspendCoroutine { continuation ->
-            var listenerToken: StateChangeListenerToken? = null
-            listenerToken = credentialStoreStateMachine.listen(
-                {
-                    when (it) {
-                        is CredentialStoreState.Success -> {
-                            listenerToken?.let(credentialStoreStateMachine::cancel)
-                            continuation.resume(it.storedCredentials?.cognitoUserPoolTokens?.accessToken)
-                        }
-                        is CredentialStoreState.Error -> {
-                            listenerToken?.let(credentialStoreStateMachine::cancel)
-                            continuation.resumeWithException(AuthException.UnknownException(it.error))
-                        }
-                    }
-                },
-                {
-                    credentialStoreStateMachine.send(
-                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                    )
-                }
-            )
-        }
     }
 
     override fun getCurrentUser(
