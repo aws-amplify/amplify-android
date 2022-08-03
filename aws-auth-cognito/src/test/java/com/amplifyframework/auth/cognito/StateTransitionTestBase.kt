@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
+import com.amplifyframework.auth.cognito.actions.DeleteUserActions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
@@ -87,6 +88,9 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockFetchAuthSessionActions: FetchAuthSessionActions
+
+    @Mock
+    internal lateinit var mockDeleteUserActions: DeleteUserActions
 
     internal fun setupAuthActions() {
         Mockito.`when`(mockAuthActions.initializeAuthConfigurationAction(MockitoHelper.anyObject()))

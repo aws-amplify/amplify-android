@@ -68,6 +68,7 @@ import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.util.UserAgent
 import org.json.JSONException
@@ -545,10 +546,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.getCurrentUser(onSuccess, onError)
     }
 
-    override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
-        TODO("Not yet implemented")
-    }
-
     override fun signOut(onSuccess: Action, onError: Consumer<AuthException>) {
         realPlugin.signOut(onSuccess, onError)
     }
@@ -571,6 +568,47 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         }
     }
 
+    private fun _signOut(
+        options: AuthSignOutOptions,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        var token: StateChangeListenerToken? = null
+        token = authStateMachine.listen(
+            { authState ->
+                if (authState is AuthState.Configured) {
+                    val (authNState, authZState) = authState
+                    when {
+                        authNState is AuthenticationState.SignedOut -> {
+                            token?.let(authStateMachine::cancel)
+                            onSuccess.call()
+                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
+                        }
+                        authZState is AuthorizationState.Configured
+                            || authZState is AuthorizationState.SessionEstablished -> {
+                            token?.let(authStateMachine::cancel)
+                            onSuccess.call()
+                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
+                        }
+                        authNState is AuthenticationState.Error -> {
+                            token?.let(authStateMachine::cancel)
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign out failed.")
+                            )
+                        }
+                        else -> {
+                            // no-op
+                        }
+                    }
+                }
+            },
+            {
+                val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
+                authStateMachine.send(event)
+            }
+        )
+    }
+
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
         realPlugin.deleteUser(onSuccess, onError)
 
@@ -580,10 +618,18 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 when (it) {
                     is CredentialStoreState.Success -> {
                         listenerToken?.let(credentialStoreStateMachine::cancel)
-                        if (it.storedCredentials?.cognitoUserPoolTokens?.accessToken != null) {
-                            _deleteUser(it.storedCredentials.cognitoUserPoolTokens.accessToken, onSuccess, onError)
-                        } else {
-                            onError.accept(AuthException.InvalidAccountTypeException())
+                        when (val credential = it.storedCredentials) {
+                            is AmplifyCredential.UserPool -> _deleteUser(
+                                credential.tokens.accessToken!!,
+                                onSuccess,
+                                onError
+                            )
+                            is AmplifyCredential.UserAndIdentityPool -> _deleteUser(
+                                credential.tokens.accessToken!!,
+                                onSuccess,
+                                onError
+                            )
+                            else -> onError.accept(AuthException.InvalidAccountTypeException())
                         }
                     }
                     is CredentialStoreState.Error -> {
@@ -651,43 +697,28 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         )
     }
 
-    private fun _signOut(
-        options: AuthSignOutOptions,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
+    private fun clearCredentialStore(onSuccess: () -> Unit, onError: (error: CredentialStoreState.Error) -> Unit) {
         var token: StateChangeListenerToken? = null
-        token = authStateMachine.listen(
-            { authState ->
-                if (authState is AuthState.Configured) {
-                    val (authNState, authZState) = authState
-                    when {
-                        authNState is AuthenticationState.SignedOut -> {
-                            token?.let(authStateMachine::cancel)
-                            onSuccess.call()
-                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
-                        }
-                        authZState is AuthorizationState.Configured
-                                || authZState is AuthorizationState.SessionEstablished -> {
-                            token?.let(authStateMachine::cancel)
-                            onSuccess.call()
-                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
-                        }
-                        authNState is AuthenticationState.Error -> {
-                            token?.let(authStateMachine::cancel)
-                            onError.accept(
-                                CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign out failed.")
-                            )
-                        }
-                        else -> {
-                            // no-op
-                        }
+        token = credentialStoreStateMachine.listen(
+            {
+                when (it) {
+                    is CredentialStoreState.Success -> {
+                        token?.let(credentialStoreStateMachine::cancel)
+                        onSuccess()
+                    }
+                    is CredentialStoreState.Error -> {
+                        token?.let(credentialStoreStateMachine::cancel)
+                        onError(it)
+                    }
+                    else -> {
+                        // no op
                     }
                 }
             },
             {
-                val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
-                authStateMachine.send(event)
+                credentialStoreStateMachine.send(
+                    CredentialStoreEvent(CredentialStoreEvent.EventType.ClearCredentialStore())
+                )
             }
         )
     }

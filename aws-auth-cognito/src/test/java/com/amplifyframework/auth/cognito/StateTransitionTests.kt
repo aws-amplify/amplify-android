@@ -25,7 +25,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
-import com.amplifyframework.statemachine.codegen.events.FetchUserPoolTokensEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
@@ -33,9 +32,6 @@ import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
-import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
-import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
-import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
@@ -43,7 +39,6 @@ import com.amplifyframework.statemachine.codegen.states.SignUpState
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
@@ -113,7 +108,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                     dispatcher.send(
                         AuthEvent(
-                            AuthEvent.EventType.ConfiguredAuthentication(configuration)
+                            AuthEvent.EventType.ConfiguredAuthentication(configuration, credentials)
                         )
                     )
                 }
@@ -132,7 +127,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                         )
                     )
                     dispatcher.send(
-                        AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(configuration))
+                        AuthEvent(AuthEvent.EventType.ConfiguredAuthentication(configuration, credentials))
                     )
                 }
             )
@@ -196,7 +191,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         val configure =
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, null))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         stateMachine.send(configure)
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
@@ -223,7 +218,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         val configure =
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         stateMachine.send(configure)
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
@@ -268,7 +263,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, null))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
@@ -312,7 +307,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
@@ -355,7 +350,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
@@ -405,7 +400,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
@@ -448,7 +443,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
@@ -459,7 +454,7 @@ class StateTransitionTests : StateTransitionTestBase() {
     fun testFetchAuthSessionSignedIn() {
         setupConfigureSignedIn()
         val configureLatch = CountDownLatch(1)
-        val testLatch = CountDownLatch(2)
+        val testLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         configureLatch.countDown()
         var token: StateChangeListenerToken? = null
@@ -472,20 +467,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     }
                 authState?.run {
                     configureLatch.countDown()
-                    stateMachine.send(
-                        AuthorizationEvent(
-                            AuthorizationEvent.EventType.FetchAuthSession(credentials)
-                        )
-                    )
-                }
-
-                val authZFetchTokensState =
-                    it.authZState.takeIf { itZ ->
-                        itZ is AuthorizationState.FetchingAuthSession &&
-                            itZ.fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens
-                    }
-                authZFetchTokensState?.run {
-                    testLatch.countDown()
+                    stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
                 }
 
                 val authZState =
@@ -503,7 +485,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
         assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
@@ -541,18 +523,14 @@ class StateTransitionTests : StateTransitionTestBase() {
                     }
                 authState?.run {
                     configureLatch.countDown()
-                    stateMachine.send(
-                        AuthorizationEvent(
-                            AuthorizationEvent.EventType.FetchAuthSession(null)
-                        )
-                    )
+                    stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
                 }
 
-                val authZFetchTokensState =
-                    it.authZState.takeIf { itZ -> itZ is AuthorizationState.FetchingAuthSession }
-                assertFalse(
-                    authZFetchTokensState?.fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens
-                )
+//                val authZFetchTokensState =
+//                    it.authZState.takeIf { itZ -> itZ is AuthorizationState.FetchingAuthSession }
+//                assertFalse(
+//                    authZFetchTokensState?.fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens
+//                )
 
                 val authZState =
                     it.authZState.takeIf { itZ -> itZ is AuthorizationState.SessionEstablished }
@@ -569,33 +547,19 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
         assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
     }
 
-    private fun setupRefreshTokens() {
-        Mockito.`when`(mockFetchAuthSessionActions.configureUserPoolTokensAction(credentials))
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        FetchUserPoolTokensEvent(
-                            FetchUserPoolTokensEvent.EventType.Refresh(credentials)
-                        )
-                    )
-                }
-            )
-    }
-
     @Test
     fun testRefreshUserPoolTokens() {
         setupConfigureSignedIn()
-        setupRefreshTokens()
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        val testLatch = CountDownLatch(2)
+        val testLatch = CountDownLatch(1)
         var token: StateChangeListenerToken? = null
         token = stateMachine.listen(
             { it ->
@@ -603,21 +567,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
                 authState?.run {
                     configureLatch.countDown()
-                    stateMachine.send(
-                        AuthorizationEvent(
-                            AuthorizationEvent.EventType.FetchAuthSession(credentials)
-                        )
-                    )
-                }
-
-                val authZRefreshTokensState =
-                    it.authZState.takeIf { itZ ->
-                        itZ is AuthorizationState.FetchingAuthSession &&
-                            itZ.fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens &&
-                            itZ.fetchAuthSessionState?.fetchUserPoolTokensState is FetchUserPoolTokensState.Refreshing
-                    }
-                authZRefreshTokensState?.run {
-                    testLatch.countDown()
+                    stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
                 }
 
                 val authZState =
@@ -635,7 +585,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
         assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
@@ -688,7 +638,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, credentials))
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
         assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
