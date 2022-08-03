@@ -23,7 +23,9 @@ import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
@@ -117,6 +119,77 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onError: Consumer<AuthException>
     ) {
         realPlugin.signUp(username, password, options, onSuccess, onError)
+
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AuthException(
+                        "Sign up failed.",
+                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
+                    )
+                )
+                else -> _signUp(username, password, options, onSuccess, onError)
+            }
+        }
+    }
+
+    override fun signUp(
+        username: String,
+        password: String,
+        options: AuthSignUpOptions,
+        onSuccess: Consumer<AuthSignUpResult>,
+        onError: Consumer<AuthException>
+    ) {
+        logger.verbose("SignUp Starting execution")
+        GlobalScope.launch {
+            try {
+                val userAttributes = options.userAttributes.map {
+                    AttributeType {
+                        name = it.key.keyString
+                        value = it.value
+                    }
+                }
+                val signUpRequest = SignUpRequest {
+                    this.username = username
+                    this.password = password
+                    this.userAttributes = userAttributes
+                    this.clientId = configuration.userPool?.appClient
+                    this.secretHash = SRPHelper.getSecretHash(
+                        username,
+                        configuration.userPool?.appClient,
+                        configuration.userPool?.appClientSecret
+                    )
+                }
+
+                val response = configureCognitoClients().cognitoIdentityProviderClient?.signUp(signUpRequest)
+                val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
+                    mapOf(
+                        "DESTINATION" to details.destination,
+                        "MEDIUM" to details.deliveryMedium?.value,
+                        "ATTRIBUTE" to details.attributeName
+                    )
+                }
+
+                val authSignUpResult = AuthSignUpResult(
+                    false,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
+                        mapOf(),
+                        AuthCodeDeliveryDetails(
+                            deliveryDetails?.getValue("DESTINATION") ?: "",
+                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(
+                                deliveryDetails?.getValue("MEDIUM")
+                            ),
+                            deliveryDetails?.getValue("ATTRIBUTE")
+                        )
+                    ),
+                    AuthUser(response?.userSub ?: "", username)
+                )
+                onSuccess.accept(authSignUpResult)
+            } catch (exception: Exception) {
+                onError.accept(CognitoAuthExceptionConverter.lookup(exception, "Sign up failed."))
+            }
+        }
     }
 
     override fun confirmSignUp(
