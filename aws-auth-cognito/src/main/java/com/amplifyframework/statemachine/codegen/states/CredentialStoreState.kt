@@ -51,7 +51,8 @@ sealed class CredentialStoreState : State {
             val storeEvent = asCredentialStoreEvent(event)
             return when (oldState) {
                 is NotConfigured -> when (storeEvent) {
-                    is CredentialStoreEvent.EventType.MigrateLegacyCredentialStore -> {
+                    is CredentialStoreEvent.EventType.MigrateLegacyCredentialStore,
+                    is CredentialStoreEvent.EventType.LoadCredentialStore -> {
                         val action = storeActions.migrateLegacyCredentialStoreAction()
                         StateResolution(MigratingLegacyStore(), listOf(action))
                     }

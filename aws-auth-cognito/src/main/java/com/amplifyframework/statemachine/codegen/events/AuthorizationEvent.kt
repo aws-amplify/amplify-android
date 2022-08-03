@@ -17,16 +17,17 @@ package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import java.util.Date
 
 class AuthorizationEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {
     sealed class EventType {
-        data class Configure(val configuration: AuthConfiguration) : EventType()
+        object Configure : EventType()
+        //        case fetchUnAuthSession
         data class FetchAuthSession(val amplifyCredential: AmplifyCredential?) : EventType()
-        data class FetchedAuthSession(val amplifyCredential: AmplifyCredential?) : EventType()
         data class UserDeleted(val id: String = "") : EventType()
+        data class CachedCredentialsAvailable(val amplifyCredential: AmplifyCredential) : EventType()
+        data class Fetched(val amplifyCredential: AmplifyCredential?) : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 

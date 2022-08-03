@@ -94,7 +94,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
     override fun authorizationSessionEstablished(amplifyCredential: AmplifyCredential?): Action =
         Action<AuthEnvironment>("AuthZSessionEstablished") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = AuthorizationEvent(AuthorizationEvent.EventType.FetchedAuthSession(amplifyCredential))
+            val evt = AuthorizationEvent(AuthorizationEvent.EventType.Fetched(amplifyCredential))
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

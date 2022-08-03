@@ -23,16 +23,25 @@ import java.util.Date
 class AuthEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {
     sealed class EventType {
-        data class ConfigureAuth(
-            val configuration: AuthConfiguration,
-            val storedCredentials: AmplifyCredential?
-        ) : EventType()
+        data class ConfigureAuth(val configuration: AuthConfiguration) : EventType()
+        data class FetchCachedCredentials(val configuration: AuthConfiguration) : EventType()
+        data class ReceivedCachedCredentials(val storedCredentials: AmplifyCredential?) : EventType()
+        object CachedCredentialsFailed : EventType()
         data class ConfigureAuthentication(
             val configuration: AuthConfiguration,
             val storedCredentials: AmplifyCredential?
         ) : EventType()
-        data class ConfigureAuthorization(val configuration: AuthConfiguration) : EventType()
-        data class ConfiguredAuthentication(val configuration: AuthConfiguration) : EventType()
+
+        data class ConfigureAuthorization(
+            val configuration: AuthConfiguration,
+            val storedCredentials: AmplifyCredential?
+        ) : EventType()
+
+        data class ConfiguredAuthentication(
+            val configuration: AuthConfiguration,
+            val storedCredentials: AmplifyCredential?
+        ) : EventType()
+
         object ConfiguredAuthorization : EventType()
     }
 

@@ -15,6 +15,8 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
+import com.amplifyframework.auth.cognito.isAuthEvent
+import com.amplifyframework.auth.cognito.isSignOutEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -22,6 +24,7 @@ import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
+import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 sealed class SignOutState : State {
@@ -36,13 +39,9 @@ sealed class SignOutState : State {
         StateMachineResolver<SignOutState> {
         override val defaultState = NotStarted("")
 
-        private fun asSignOutEvent(event: StateMachineEvent): SignOutEvent.EventType? {
-            return (event as? SignOutEvent)?.eventType
-        }
-
         override fun resolve(oldState: SignOutState, event: StateMachineEvent): StateResolution<SignOutState> {
             val defaultResolution = StateResolution(oldState)
-            val signOutEvent = asSignOutEvent(event)
+            val signOutEvent = event.isSignOutEvent()
             return when (oldState) {
                 is NotStarted -> when (signOutEvent) {
                     is SignOutEvent.EventType.SignOutLocally -> {
@@ -59,12 +58,14 @@ sealed class SignOutState : State {
                     }
                     else -> defaultResolution
                 }
-                is SigningOutLocally -> when (signOutEvent) {
-                    is SignOutEvent.EventType.SignedOutSuccess -> {
-                        val newState = SignedOut(SignedOutData(signOutEvent.signedInData.username))
+                is SigningOutLocally -> when (event.isAuthEvent()) {
+                    is AuthEvent.EventType.ReceivedCachedCredentials -> {
+                        val newState = SignedOut(SignedOutData(oldState.signedInData.username))
                         StateResolution(newState)
                     }
-                    is SignOutEvent.EventType.SignedOutFailure -> StateResolution(Error(signOutEvent.exception))
+                    is AuthEvent.EventType.CachedCredentialsFailed -> StateResolution(
+                        Error(Exception("Failed clearing store"))
+                    )
                     else -> defaultResolution
                 }
                 is SigningOutGlobally -> when (signOutEvent) {

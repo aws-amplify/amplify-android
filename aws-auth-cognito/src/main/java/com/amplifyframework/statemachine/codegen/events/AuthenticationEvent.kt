@@ -31,6 +31,7 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
             val storedCredentials: AmplifyCredential?
         ) : EventType()
 
+        object Configured : EventType()
         data class InitializedSignedIn(val signedInData: SignedInData) : EventType()
         data class InitializedSignedOut(val signedOutData: SignedOutData) : EventType()
         data class SignInRequested(
@@ -38,6 +39,8 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
             val password: String?,
             val options: AuthSignInOptions
         ) : EventType()
+
+        data class SignInCompleted(val signedInData: SignedInData) : EventType()
 
         data class SignOutRequested(
             val isGlobalSignOut: Boolean = false,

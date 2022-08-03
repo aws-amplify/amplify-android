@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.actions
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -26,9 +27,7 @@ object AuthCognitoActions : AuthActions {
     override fun initializeAuthConfigurationAction(event: AuthEvent.EventType.ConfigureAuth) =
         Action<AuthEnvironment>("InitAuthConfig") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = configuration.userPool?.run {
-                AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, event.storedCredentials))
-            } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration))
+            val evt = AuthEvent(AuthEvent.EventType.FetchCachedCredentials(configuration))
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
@@ -46,7 +45,27 @@ object AuthCognitoActions : AuthActions {
     override fun initializeAuthorizationConfigurationAction(event: AuthEvent.EventType) =
         Action<AuthEnvironment>("InitAuthZConfig") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
+            val handleEvent = { credentials: AmplifyCredential? ->
+                when (credentials) {
+                    null -> AuthorizationEvent(AuthorizationEvent.EventType.Configure)
+                    else -> AuthorizationEvent(AuthorizationEvent.EventType.CachedCredentialsAvailable(credentials))
+                }
+            }
+            val evt = when {
+                event is AuthEvent.EventType.ConfiguredAuthentication -> handleEvent(event.storedCredentials)
+                event is AuthEvent.EventType.ConfigureAuthorization -> handleEvent(event.storedCredentials)
+                else -> AuthorizationEvent(AuthorizationEvent.EventType.Configure)
+            }
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun validateCredentialsAndConfiguration(event: AuthEvent.EventType.ReceivedCachedCredentials) =
+        Action<AuthEnvironment>("InitAuthZConfig") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = configuration.userPool?.run {
+                AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, event.storedCredentials))
+            } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration, event.storedCredentials))
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
