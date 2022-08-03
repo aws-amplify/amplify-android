@@ -16,12 +16,18 @@
 package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthUserAttribute
+import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -292,6 +298,98 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         coVerify { anyConstructed<ResetPasswordUseCase>().execute(username, options, onSuccess, onError) }
+    }
+
+    @Test
+    fun `fetch user attributes with success`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<MutableList<AuthUserAttribute>>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        val credential = AmplifyCredential(
+            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 120L),
+            null,
+            null
+        )
+
+        val eventSlot = CapturingSlot<(CredentialStoreState) -> Unit>()
+        every { credentialStoreStateMachine.listen(capture(eventSlot), any()) } answers {
+            eventSlot.captured.invoke(CredentialStoreState.Success(credential))
+            UUID.randomUUID()
+        }
+
+        val userAttributes = listOf(
+            AttributeType.invoke {
+                name = "email"
+                value = "email"
+            },
+            AttributeType.invoke {
+                name = "nickname"
+                value = "nickname"
+            }
+        )
+
+        val expectedResult = buildList {
+            userAttributes.mapTo(this) {
+                AuthUserAttribute(
+                    AuthUserAttributeKey.custom(it.name),
+                    it.value
+                )
+            }
+        }
+
+        coEvery {
+            authService.cognitoIdentityProviderClient?.getUser(any<GetUserRequest>())
+        } returns GetUserResponse.invoke {
+            this.userAttributes = userAttributes
+        }
+
+        every {
+            onSuccess.accept(expectedResult.toMutableList())
+        } answers {
+            listenLatch.countDown()
+        }
+
+        // WHEN
+        plugin.fetchUserAttributes(onSuccess, onError)
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onSuccess.accept(expectedResult.toMutableList()) }
+        coVerify(exactly = 0) { onError.accept(any()) }
+    }
+
+    @Test
+    fun `fetch user attributes fails when not in SignedIn state`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<MutableList<AuthUserAttribute>>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.NotConfigured()
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        every {
+            onError.accept(AuthException.InvalidStateException())
+        } answers {
+            listenLatch.countDown()
+        }
+
+        // WHEN
+        plugin.fetchUserAttributes(onSuccess, onError)
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onError.accept(AuthException.InvalidStateException()) }
+        verify(exactly = 0) { onSuccess.accept(any()) }
     }
 
     @Test
