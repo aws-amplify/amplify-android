@@ -75,6 +75,10 @@ class RealAWSCognitoAuthPluginTest {
         }
     }
 
+    private val credentials = AmplifyCredential.UserPool(
+        CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
+    )
+
     private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>()
     private var authService = mockk<AWSCognitoAuthServiceBehavior> {
         every { cognitoIdentityProviderClient } returns mockCognitoIPClient
@@ -124,12 +128,7 @@ class RealAWSCognitoAuthPluginTest {
             "Sign up failed.",
             "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
         )
-        val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.NotConfigured()
-        }
-        every { authStateMachine.getCurrentState(captureLambda()) } answers {
-            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
-        }
+        currentState = AuthenticationState.NotConfigured()
 
         // WHEN
         plugin.signUp("user", "pass", AuthSignUpOptions.builder().build(), onSuccess, onError)
@@ -148,10 +147,6 @@ class RealAWSCognitoAuthPluginTest {
         }
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
 
-        val credentials = AmplifyCredential.UserPool(
-            CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
-        )
-
         val currentAuthState = mockk<AuthState> {
             every { authNState } returns AuthenticationState.SignedIn(mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
@@ -168,7 +163,6 @@ class RealAWSCognitoAuthPluginTest {
         plugin.updatePassword("old", "new", onSuccess, onError)
 
         assertTrue { latch.await(5, TimeUnit.SECONDS) }
-        assertTrue { eventSlot.isCaptured }
 
         verify { onSuccess.call() }
         coVerify(exactly = 0) { onError.accept(any()) }
@@ -183,12 +177,8 @@ class RealAWSCognitoAuthPluginTest {
             every { accept(AuthException.InvalidStateException()) } answers { latch.countDown() }
         }
 
-        val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.NotConfigured()
-        }
-        every { authStateMachine.getCurrentState(captureLambda()) } answers {
-            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
-        }
+        currentState = AuthenticationState.NotConfigured()
+
         // WHEN
         plugin.updatePassword("old", "new", onSuccess, onError)
         assertTrue { latch.await(5, TimeUnit.SECONDS) }
@@ -215,7 +205,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.updatePassword("old", "new", onSuccess, onError)
         assertTrue { latch.await(5, TimeUnit.SECONDS) }
-        assertTrue { slot.isCaptured }
+
         verify(exactly = 0) { onSuccess.call() }
         coVerify { onError.accept(any()) }
     }
@@ -297,9 +287,6 @@ class RealAWSCognitoAuthPluginTest {
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val listenLatch = CountDownLatch(1)
 
-        val credentials = AmplifyCredential.UserPool(
-            CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
-        )
         val currentAuthState = mockk<AuthState> {
             every { authNState } returns AuthenticationState.SignedIn(mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
@@ -354,12 +341,8 @@ class RealAWSCognitoAuthPluginTest {
         val onSuccess = mockk<Consumer<MutableList<AuthUserAttribute>>>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val listenLatch = CountDownLatch(1)
-        val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.NotConfigured()
-        }
-        every { authStateMachine.getCurrentState(captureLambda()) } answers {
-            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
-        }
+
+        currentState = AuthenticationState.NotConfigured()
 
         every {
             onError.accept(AuthException.InvalidStateException())
