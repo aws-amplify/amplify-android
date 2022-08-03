@@ -124,9 +124,10 @@ sealed class AuthorizationState : State {
                         else -> defaultResolution
                     }
                 is WaitingToStore -> when (authEvent) {
-                    is AuthEvent.EventType.ReceivedCachedCredentials -> StateResolution(
-                        SessionEstablished(authEvent.storedCredentials)
-                    )
+                    is AuthEvent.EventType.ReceivedCachedCredentials -> {
+                        if (oldState.amplifyCredential is AmplifyCredential.Empty) StateResolution(Configured())
+                        else StateResolution(SessionEstablished(authEvent.storedCredentials))
+                    }
                     is AuthEvent.EventType.CachedCredentialsFailed -> StateResolution(NotConfigured())
                     else -> defaultResolution
                 }
@@ -159,7 +160,12 @@ sealed class AuthorizationState : State {
                     authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(
                         SigningOut()
                     )
-                    // handle refresh tokens
+                    authorizationEvent is AuthorizationEvent.EventType.RefreshAuthSession -> {
+                        val action =
+                            authorizationActions.refreshAuthSessionAction(authorizationEvent.amplifyCredential)
+                        val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
+                        StateResolution(newState, listOf(action))
+                    }
                     else -> defaultResolution
                 }
                 else -> defaultResolution

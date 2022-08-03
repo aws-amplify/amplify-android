@@ -16,6 +16,7 @@
 package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import java.util.Date
 
@@ -24,11 +25,10 @@ class FetchAuthSessionEvent(
     override val time: Date? = null,
 ) : StateMachineEvent {
     sealed class EventType {
-        data class FetchUserPoolTokens(val amplifyCredential: AmplifyCredential) : EventType()
         data class FetchIdentity(val amplifyCredential: AmplifyCredential) : EventType()
-        data class ThrowError(val exception: Exception) : EventType()
         data class FetchAwsCredentials(val amplifyCredential: AmplifyCredential) : EventType()
-        data class FetchedAuthSession(val amplifyCredential: AmplifyCredential) : EventType()
+        data class Fetched(val amplifyCredential: AmplifyCredential) : EventType()
+        data class ThrowError(val exception: Exception) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName

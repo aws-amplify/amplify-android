@@ -55,6 +55,7 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.statemachine.StateChangeListenerToken
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -297,15 +298,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 //            val (_,state) = (authState as AuthState.Configured)
 
             when (val authZState = authState.authZState) {
-                is AuthorizationState.Configured -> _fetchAuthSession(onSuccess, onError)
+                is AuthorizationState.Configured -> _fetchAuthSession(onSuccess = onSuccess, onError = onError)
                 is AuthorizationState.SessionEstablished -> {
                     val credential = authZState.amplifyCredential
                     if (credential.isValid()) onSuccess.accept(credential.getCognitoSession())
-                    else {
-                        authStateMachine.send(
-                            FetchUserPoolTokensEvent(FetchUserPoolTokensEvent.EventType.Refresh(credential))
-                        )
-                    }
+                    else _fetchAuthSession(true, credential, onSuccess = onSuccess, onError = onError)
                 }
                 else -> {
                     // no-op
@@ -314,12 +311,18 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         }
     }
 
-    private fun _fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {
+    private fun _fetchAuthSession(
+        refresh: Boolean = false,
+        amplifyCredential: AmplifyCredential = AmplifyCredential.Empty,
+        onSuccess: Consumer<AuthSession>,
+        onError: Consumer<AuthException>
+    ) {
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->
                 when (val authZState = authState.authZState) {
                     is AuthorizationState.SessionEstablished -> {
+                        //TODO: fix immediate session success
                         token?.let(authStateMachine::cancel)
                         onSuccess.accept(authZState.amplifyCredential.getCognitoSession())
                     }
@@ -338,7 +341,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 }
             },
             {
-                authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
+                if (refresh) authStateMachine.send(
+                    AuthorizationEvent(AuthorizationEvent.EventType.RefreshAuthSession(amplifyCredential))
+                )
+                else authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
             }
         )
     }
@@ -662,7 +668,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                             Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
                         }
                         authZState is AuthorizationState.Configured
-                            || authZState is AuthorizationState.SessionEstablished -> {
+                                || authZState is AuthorizationState.SessionEstablished -> {
                             token?.let(authStateMachine::cancel)
                             onSuccess.call()
                             Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
