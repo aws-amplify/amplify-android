@@ -132,13 +132,7 @@ sealed class AuthorizationState : State {
                 }
                 is SigningIn -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.SignInCompleted -> {
-                        val action = authorizationActions.initializeFetchAuthSession(
-                            AmplifyCredential(
-                                authenticationEvent.signedInData.cognitoUserPoolTokens,
-                                null,
-                                null
-                            )
-                        )
+                        val action = authorizationActions.initializeFetchAuthSession()
                         StateResolution(FetchingAuthSession(FetchAuthSessionState.NotStarted()), listOf(action))
                     }
                     is AuthenticationEvent.EventType.CancelSignIn -> {
@@ -148,7 +142,7 @@ sealed class AuthorizationState : State {
                     else -> defaultResolution
                 }
                 is SigningOut -> when (event.isSignOutEvent()) {
-                    is SignOutEvent.EventType.SignOutLocally -> StateResolution(WaitingToStore(null))
+                    is SignOutEvent.EventType.SignOutLocally -> StateResolution(WaitingToStore(AmplifyCredential.Empty))
                     else -> defaultResolution
                 }
                 is FetchingAuthSession ->

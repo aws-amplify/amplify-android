@@ -28,7 +28,7 @@ object CredentialStoreActions : StoreActions {
             logger?.verbose("$id Starting execution")
             val evt = try {
                 val credentials = legacyCredentialStore.retrieveCredential()
-                credentials?.let {
+                credentials.let {
                     credentialStore.saveCredential(it)
                     legacyCredentialStore.deleteCredential()
                 }
@@ -45,7 +45,7 @@ object CredentialStoreActions : StoreActions {
             logger?.verbose("$id Starting execution")
             val evt = try {
                 credentialStore.deleteCredential()
-                CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(null))
+                CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(AmplifyCredential.Empty))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             }
@@ -58,7 +58,7 @@ object CredentialStoreActions : StoreActions {
             logger?.verbose("$id Starting execution")
             val evt = try {
                 val credentials = credentialStore.retrieveCredential()
-                CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
+                CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials as AmplifyCredential))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             }

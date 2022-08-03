@@ -19,5 +19,5 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 
 interface FetchUserPoolTokensActions {
-    fun refreshFetchUserPoolTokensAction(amplifyCredential: AmplifyCredential?): Action
+    fun refreshFetchUserPoolTokensAction(amplifyCredential: AmplifyCredential): Action
 }

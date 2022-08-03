@@ -27,7 +27,7 @@ class AuthorizationEvent(val eventType: EventType, override val time: Date? = nu
         data class FetchAuthSession(val amplifyCredential: AmplifyCredential?) : EventType()
         data class UserDeleted(val id: String = "") : EventType()
         data class CachedCredentialsAvailable(val amplifyCredential: AmplifyCredential) : EventType()
-        data class Fetched(val amplifyCredential: AmplifyCredential?) : EventType()
+        data class Fetched(val amplifyCredential: AmplifyCredential) : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 

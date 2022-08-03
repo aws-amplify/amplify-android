@@ -19,6 +19,7 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
@@ -32,23 +33,13 @@ object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val userPoolTokens = event.storedCredentials?.cognitoUserPoolTokens
-            val evt = if (userPoolTokens?.accessToken != null) {
-                AuthenticationEvent(
-                    AuthenticationEvent.EventType.InitializedSignedIn(
-                        SignedInData(
-                            "",
-                            "",
-                            Date(),
-                            SignInMethod.SRP,
-                            userPoolTokens
-                        )
-                    )
-                )
-            } else {
-                AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
+            val evt = when(val credentials = event.storedCredentials) {
+                is AmplifyCredential.UserPool -> {
+                    val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, credentials.tokens)
+                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
+                }
+                else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             }
-
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
 

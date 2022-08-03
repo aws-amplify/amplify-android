@@ -21,5 +21,5 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 interface AuthorizationActions {
     fun resetAuthorizationAction(): Action
     fun configureAuthorizationAction(): Action
-    fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential?): Action
+    fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential): Action
 }
