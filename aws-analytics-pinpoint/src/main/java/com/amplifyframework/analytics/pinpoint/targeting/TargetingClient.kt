@@ -16,6 +16,7 @@
 package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.content.Context
+import android.content.SharedPreferences
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
 import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
@@ -24,9 +25,10 @@ import aws.sdk.kotlin.services.pinpoint.model.EndpointUser
 import aws.sdk.kotlin.services.pinpoint.model.PinpointException
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
-import com.amplifyframework.analytics.pinpoint.internal.core.system.AndroidSystem
 import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil.formatISO8601Date
 import com.amplifyframework.analytics.pinpoint.internal.core.util.putString
+import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
+import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
 import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.Amplify
@@ -45,11 +47,13 @@ internal class TargetingClient(
     private val pinpointClient: PinpointClient,
     pinpointNotificationClient: PinpointNotificationClient,
     idService: SharedPrefsUniqueIdService,
-    private val system: AndroidSystem,
+    private val prefs: SharedPreferences,
+    private val appDetails: AndroidAppDetails,
+    private val deviceDetails: AndroidDeviceDetails,
     applicationContext: Context,
 ) {
     private val endpointProfile: EndpointProfile =
-        EndpointProfile(pinpointNotificationClient, idService, system, applicationContext)
+        EndpointProfile(pinpointNotificationClient, idService, appDetails, deviceDetails, applicationContext)
     private val globalAttributes: MutableMap<String, List<String>>
     private val globalMetrics: MutableMap<String, Double>
 
@@ -174,12 +178,12 @@ internal class TargetingClient(
     private fun saveAttributes() {
         val jsonObject = JSONObject(globalAttributes as MutableMap<*, *>)
         val jsonString = jsonObject.toString()
-        system.getPreferences().putString(CUSTOM_ATTRIBUTES_KEY, jsonString)
+        prefs.putString(CUSTOM_ATTRIBUTES_KEY, jsonString)
     }
 
     private fun loadAttributes(): MutableMap<String, List<String>> {
         val outputMap: MutableMap<String, List<String>> = ConcurrentHashMap()
-        val jsonString: String? = system.getPreferences().getString(CUSTOM_ATTRIBUTES_KEY, null)
+        val jsonString: String? = prefs.getString(CUSTOM_ATTRIBUTES_KEY, null)
         if (jsonString.isNullOrBlank()) {
             return outputMap
         }
@@ -204,12 +208,12 @@ internal class TargetingClient(
     private fun saveMetrics() {
         val jsonObject = JSONObject(globalMetrics as MutableMap<*, *>)
         val jsonString = jsonObject.toString()
-        system.getPreferences().putString(CUSTOM_METRICS_KEY, jsonString)
+        prefs.putString(CUSTOM_METRICS_KEY, jsonString)
     }
 
     private fun loadMetrics(): MutableMap<String, Double> {
         val outputMap: MutableMap<String, Double> = ConcurrentHashMap()
-        val jsonString: String? = system.getPreferences().getString(CUSTOM_METRICS_KEY, null)
+        val jsonString: String? = prefs.getString(CUSTOM_METRICS_KEY, null)
         if (jsonString.isNullOrBlank()) {
             return outputMap
         }

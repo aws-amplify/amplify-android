@@ -17,15 +17,20 @@ package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
 import android.content.Context
 import android.os.Build
-import com.amplifyframework.analytics.pinpoint.internal.core.system.AndroidSystem
+import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
+import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import java.util.Locale
 import java.util.TimeZone
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-class EndpointProfileDemographic internal constructor(system: AndroidSystem, applicationContext: Context) {
-    internal var make = system.getDeviceDetails().manufacturer
+class EndpointProfileDemographic internal constructor(
+    appDetails: AndroidAppDetails,
+    deviceDetails: AndroidDeviceDetails,
+    applicationContext: Context
+) {
+    internal var make = deviceDetails.manufacturer
     fun getMake() = make
     fun setMake(make: String) = make.also { this.make = it }
 
@@ -41,7 +46,7 @@ class EndpointProfileDemographic internal constructor(system: AndroidSystem, app
     fun getLocale() = locale
     fun setLocale(locale: Locale) = locale.also { this.locale = it }
 
-    internal var appVersion = system.getAppDetails().versionName
+    internal var appVersion = appDetails.versionName
     fun getAppVersion() = appVersion
     fun setAppVersion(appVersion: String) = appVersion.also { this.appVersion = it }
 

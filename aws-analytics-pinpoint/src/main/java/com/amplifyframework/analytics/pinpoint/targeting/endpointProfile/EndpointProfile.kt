@@ -18,9 +18,10 @@ package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
-import com.amplifyframework.analytics.pinpoint.internal.core.system.AndroidSystem
 import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil.isoDateFromMillis
 import com.amplifyframework.analytics.pinpoint.internal.core.util.clip
+import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
+import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.Amplify
 import java.util.Collections
@@ -37,7 +38,8 @@ import kotlinx.serialization.json.put
 internal class EndpointProfile(
     private val pinpointNotificationClient: PinpointNotificationClient,
     private val idService: SharedPrefsUniqueIdService,
-    private val system: AndroidSystem,
+    private val appDetails: AndroidAppDetails,
+    private val deviceDetails: AndroidDeviceDetails,
     applicationContext: Context
 ) {
     private val attributes: MutableMap<String, List<String>> = ConcurrentHashMap()
@@ -55,11 +57,15 @@ internal class EndpointProfile(
         ) "NONE" else "ALL"
 
     var location: EndpointProfileLocation = EndpointProfileLocation(applicationContext)
-    var demographic: EndpointProfileDemographic = EndpointProfileDemographic(system, applicationContext)
+    var demographic: EndpointProfileDemographic = EndpointProfileDemographic(
+        appDetails,
+        deviceDetails,
+        applicationContext
+    )
     var effectiveDate: Long = Date().time
     var user: EndpointProfileUser = EndpointProfileUser()
     val applicationId: String
-        get() = system.getAppDetails().appId
+        get() = appDetails.appId
     val endpointId: String
         get() = idService.getUniqueId()
 
