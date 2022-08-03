@@ -16,6 +16,8 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.cognito.actions.DeleteUserActions
+import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
+import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
@@ -25,6 +27,7 @@ import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
 import com.amplifyframework.statemachine.codegen.actions.SignUpActions
+import com.amplifyframework.statemachine.codegen.actions.StoreActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignedInData
@@ -33,6 +36,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedUpData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
@@ -61,6 +65,15 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var configuration: AuthConfiguration
+
+    @Mock
+    internal lateinit var credentialStoreActions: StoreActions
+
+    @Mock
+    internal lateinit var credentialStore: AWSCognitoAuthCredentialStore
+
+    @Mock
+    internal lateinit var legacyCredentialStore: AWSCognitoLegacyCredentialStore
 
     @Mock
     internal lateinit var cognitoAuthService: AWSCognitoAuthServiceBehavior
@@ -92,13 +105,60 @@ open class StateTransitionTestBase {
     @Mock
     internal lateinit var mockDeleteUserActions: DeleteUserActions
 
+    internal fun setupCredentialStoreActions() {
+        Mockito.`when`(credentialStoreActions.migrateLegacyCredentialStoreAction())
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                    )
+                }
+            )
+
+        Mockito.`when`(credentialStoreActions.clearCredentialStoreAction())
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
+                    )
+                }
+            )
+
+        Mockito.`when`(credentialStoreActions.loadCredentialStoreAction())
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
+                    )
+                }
+            )
+
+        Mockito.`when`(credentialStoreActions.storeCredentialsAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
+                    )
+                }
+            )
+
+        Mockito.`when`(credentialStoreActions.moveToIdleStateAction())
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.MoveToIdleState())
+                    )
+                }
+            )
+    }
+
     internal fun setupAuthActions() {
         Mockito.`when`(mockAuthActions.initializeAuthConfigurationAction(MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         AuthEvent(
-                            AuthEvent.EventType.ConfigureAuthentication(configuration, credentials)
+                            AuthEvent.EventType.FetchCachedCredentials(configuration)
                         )
                     )
                 }
@@ -113,6 +173,17 @@ open class StateTransitionTestBase {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.Configure(configuration, credentials)
                         )
+                    )
+                }
+            )
+
+        Mockito.`when`(
+            mockAuthActions.validateCredentialsAndConfiguration(MockitoHelper.anyObject())
+        )
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, credentials))
                     )
                 }
             )
@@ -164,7 +235,20 @@ open class StateTransitionTestBase {
             )
 
         Mockito.`when`(
-            mockAuthorizationActions.initializeFetchAuthSession(MockitoHelper.anyObject())
+            mockAuthorizationActions.initializeFetchAuthSession(credentials)
+        )
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        FetchAuthSessionEvent(
+                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
+                        )
+                    )
+                }
+            )
+
+        Mockito.`when`(
+            mockAuthorizationActions.refreshAuthSessionAction(credentials)
         )
             .thenReturn(
                 Action { dispatcher, _ ->
@@ -210,9 +294,7 @@ open class StateTransitionTestBase {
                 Action { dispatcher, _ ->
                     dispatcher.send(SRPEvent(SRPEvent.EventType.FinalizeSRPSignIn()))
                     dispatcher.send(
-                        AuthenticationEvent(
-                            AuthenticationEvent.EventType.InitializedSignedIn(signedInData)
-                        )
+                        AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
                     )
                 }
             )

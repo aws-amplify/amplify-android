@@ -46,7 +46,9 @@ sealed class FetchAuthSessionState : State {
                     when (fetchAuthSessionEvent) {
                         is FetchAuthSessionEvent.EventType.FetchAwsCredentials -> {
                             val action =
-                                fetchAuthSessionActions.fetchAWSCredentialsAction(fetchAuthSessionEvent.amplifyCredential)
+                                fetchAuthSessionActions.fetchAWSCredentialsAction(
+                                    fetchAuthSessionEvent.amplifyCredential
+                                )
                             StateResolution(FetchingAWSCredentials(), listOf(action))
                         }
                         is FetchAuthSessionEvent.EventType.FetchIdentity -> {
@@ -61,7 +63,9 @@ sealed class FetchAuthSessionState : State {
                     when (fetchAuthSessionEvent) {
                         is FetchAuthSessionEvent.EventType.FetchAwsCredentials -> {
                             val action =
-                                fetchAuthSessionActions.fetchAWSCredentialsAction(fetchAuthSessionEvent.amplifyCredential)
+                                fetchAuthSessionActions.fetchAWSCredentialsAction(
+                                    fetchAuthSessionEvent.amplifyCredential
+                                )
                             StateResolution(FetchingAWSCredentials(), listOf(action))
                         }
                         else -> defaultResolution
@@ -71,7 +75,9 @@ sealed class FetchAuthSessionState : State {
                     when (fetchAuthSessionEvent) {
                         is FetchAuthSessionEvent.EventType.Fetched -> {
                             val action =
-                                fetchAuthSessionActions.notifySessionEstablishedAction(fetchAuthSessionEvent.amplifyCredential)
+                                fetchAuthSessionActions.notifySessionEstablishedAction(
+                                    fetchAuthSessionEvent.amplifyCredential
+                                )
                             StateResolution(Fetched(), listOf(action))
                         }
                         else -> defaultResolution

@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito.helpers
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import java.time.Instant
-import kotlin.time.Duration.Companion.seconds
 
 object SessionHelper {
     /**

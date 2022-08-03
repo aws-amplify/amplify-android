@@ -192,7 +192,7 @@ class AWSCognitoAuthCredentialStoreTest {
 
     private fun getCredential(): AmplifyCredential {
         val expiration = 123123L
-        return AmplifyCredential(
+        return AmplifyCredential.UserAndIdentityPool(
             CognitoUserPoolTokens(
                 "idToken",
                 "accessToken",

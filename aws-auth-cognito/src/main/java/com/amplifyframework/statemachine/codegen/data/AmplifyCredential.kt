@@ -33,7 +33,7 @@ sealed class AmplifyCredential {
     @SerialName("identityPool")
     data class IdentityPool(val identityId: String, val credentials: AWSCredentials) : AmplifyCredential()
 
-//    @Serializable
+    //    @Serializable
 //    @SerialName("identityPoolFederated")
     data class IdentityPoolFederated(
         val federatedToken: FederatedToken,
@@ -49,7 +49,11 @@ sealed class AmplifyCredential {
         val credentials: AWSCredentials
     ) : AmplifyCredential()
 
-    fun update(identityId: String? = null, awsCredentials: AWSCredentials? = null): AmplifyCredential {
+    fun update(
+        cognitoUserPoolTokens: CognitoUserPoolTokens? = null,
+        identityId: String? = null,
+        awsCredentials: AWSCredentials? = null
+    ): AmplifyCredential {
         return when {
             identityId != null -> when (this) {
                 is UserAndIdentityPool -> copy(identityId = identityId)

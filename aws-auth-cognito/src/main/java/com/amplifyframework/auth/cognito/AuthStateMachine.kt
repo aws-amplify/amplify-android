@@ -51,7 +51,7 @@ internal class AuthStateMachine(
                 AuthenticationCognitoActions,
             ),
             AuthorizationState.Resolver(
-                FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions), AuthorizationCognitoActions
+                FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions),
                 DeleteUserState.Resolver(DeleteUserActions),
                 AuthorizationCognitoActions
             ),

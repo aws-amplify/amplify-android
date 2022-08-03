@@ -38,11 +38,9 @@ class AWSCognitoAuthCredentialStore(
     private var keyValue: KeyValueRepository =
         keyValueRepoFactory.create(context, awsKeyValueStoreIdentifier, isPersistenceEnabled)
 
-    override fun saveCredential(credential: AmplifyCredential) =
-        keyValue.put(key, serializeCredential(credential))
+    override fun saveCredential(credential: AmplifyCredential) = keyValue.put(key, serializeCredential(credential))
 
-    override fun retrieveCredential(): AmplifyCredential =
-        deserializeCredential(keyValue.get(key))
+    override fun retrieveCredential(): AmplifyCredential = deserializeCredential(keyValue.get(key))
 
     override fun deleteCredential() = keyValue.remove(key)
 

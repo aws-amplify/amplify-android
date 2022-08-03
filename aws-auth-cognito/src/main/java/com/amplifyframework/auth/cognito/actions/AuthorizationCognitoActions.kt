@@ -59,15 +59,23 @@ object AuthorizationCognitoActions : AuthorizationActions {
             val evt = try {
                 when (amplifyCredential) {
                     is AmplifyCredential.UserPool -> {
-                        val updatedCredential = refreshUserPoolTokens(configuration, amplifyCredential, cognitoAuthService)
-                        if(configuration.identityPool != null){
+                        val updatedCredential = refreshUserPoolTokens(
+                            configuration,
+                            amplifyCredential,
+                            cognitoAuthService
+                        )
+                        if (configuration.identityPool != null) {
                             FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
                         } else {
                             AuthorizationEvent(AuthorizationEvent.EventType.Fetched(updatedCredential))
                         }
                     }
                     is AmplifyCredential.UserAndIdentityPool -> {
-                        val updatedCredential = refreshUserPoolTokens(configuration, amplifyCredential, cognitoAuthService)
+                        val updatedCredential = refreshUserPoolTokens(
+                            configuration,
+                            amplifyCredential,
+                            cognitoAuthService
+                        )
                         FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(updatedCredential))
                     }
                     is AmplifyCredential.IdentityPool -> {

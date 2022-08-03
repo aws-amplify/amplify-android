@@ -66,16 +66,12 @@ object CredentialStoreActions : StoreActions {
             dispatcher.send(evt)
         }
 
-    override fun storeCredentialsAction(credentials: AmplifyCredential?) =
+    override fun storeCredentialsAction(credentials: AmplifyCredential) =
         Action<CredentialStoreEnvironment>("StoreCredentials") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
-                credentials?.let {
-                    credentialStore.saveCredential(it)
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
-                } ?: CredentialStoreEvent(
-                    CredentialStoreEvent.EventType.ThrowError(CredentialStoreError("No credentials to store."))
-                )
+                credentialStore.saveCredential(credentials)
+                CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             }

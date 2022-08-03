@@ -37,18 +37,13 @@ sealed class AuthorizationState : State {
     data class Configured(val id: String = "") : AuthorizationState()
     data class SigningIn(val id: String = "") : AuthorizationState()
     data class SigningOut(val id: String = "") : AuthorizationState()
-    data class FetchingAuthSession(override var fetchAuthSessionState: FetchAuthSessionState) :
-        AuthorizationState()
+    data class FetchingAuthSession(override var fetchAuthSessionState: FetchAuthSessionState?) : AuthorizationState()
     data class DeletingUser(override var deleteUserState: DeleteUserState?) : AuthorizationState()
-
-    data class WaitingToStore(var amplifyCredential: AmplifyCredential?) : AuthorizationState()
-    data class SessionEstablished(val amplifyCredential: AmplifyCredential?) :
-        AuthorizationState()
-
+    data class WaitingToStore(var amplifyCredential: AmplifyCredential) : AuthorizationState()
+    data class SessionEstablished(val amplifyCredential: AmplifyCredential) : AuthorizationState()
     data class Error(val exception: Exception) : AuthorizationState()
 
-    open var fetchAuthSessionState: FetchAuthSessionState = FetchAuthSessionState.NotStarted()
-
+    open var fetchAuthSessionState: FetchAuthSessionState? = FetchAuthSessionState.NotStarted()
     open var deleteUserState: DeleteUserState? = DeleteUserState.NotStarted()
 
     override val type = this.toString()
@@ -68,7 +63,7 @@ sealed class AuthorizationState : State {
             val actions = resolution.actions.toMutableList()
             val builder = Builder(resolution.newState)
 
-            oldState.fetchAuthSessionState.let { fetchAuthSessionResolver.resolve(it, event) }.let {
+            oldState.fetchAuthSessionState?.let { fetchAuthSessionResolver.resolve(it, event) }?.let {
                 builder.fetchAuthSessionState = it.newState
                 actions += it.actions
             }
@@ -178,7 +173,7 @@ sealed class AuthorizationState : State {
         var fetchAuthSessionState: FetchAuthSessionState? = null
         var deleteUserState: DeleteUserState? = null
         override fun build(): AuthorizationState = when (authZState) {
-            is FetchingAuthSession -> FetchingAuthSession(fetchAuthSessionState!!)
+            is FetchingAuthSession -> FetchingAuthSession(fetchAuthSessionState)
             is SessionEstablished -> SessionEstablished(authZState.amplifyCredential)
             is DeletingUser -> DeletingUser(deleteUserState)
             else -> authZState
