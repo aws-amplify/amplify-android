@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.options.AuthSignInOptions
-import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
@@ -409,12 +408,10 @@ class StateTransitionTests : StateTransitionTestBase() {
 
     @Test
     fun testSignUp() {
-
     }
 
     @Test
     fun testConfirmSignUp() {
-
     }
 
     @Test

@@ -24,13 +24,8 @@ data class AWSCognitoAuthResendSignUpCodeOptions
 /**
  * Advanced options for resend sign up code.
  * @param metadata Additional custom attributes to be sent to the service such as information about the client
- */ internal constructor(
-    /**
-     * Get custom attributes to be sent to the service such as information about the client.
-     * @return custom attributes to be sent to the service such as information about the client
-     */
-    val metadata: Map<String, String>
-) : AuthResendSignUpCodeOptions() {
+ */
+internal constructor(val metadata: Map<String, String>) : AuthResendSignUpCodeOptions() {
 
     companion object {
         /**
