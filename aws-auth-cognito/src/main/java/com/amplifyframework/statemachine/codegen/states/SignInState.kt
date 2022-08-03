@@ -13,15 +13,16 @@ sealed class SignInState : State {
     data class SigningInWithHostedUI(val id: String = "") : SignInState()
     data class SigningInWithCustom(val id: String = "") : SignInState()
     data class SigningInWithSRPCustom(val id: String = "") : SignInState()
-    data class ResolvingSMSChallenge(val id: String = "") : SignInState()
-    data class ResolvingCustomChallenge(val id: String = "") : SignInState()
+    data class ResolvingChallenge(override var challengeState: SignInChallengeState?) : SignInState()
     data class Done(val id: String = "") : SignInState()
     data class Error(val exception: Exception) : SignInState()
 
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
+    open var challengeState: SignInChallengeState? = SignInChallengeState.NotStarted()
 
     class Resolver(
         private val srpSignInResolver: StateMachineResolver<SRPSignInState>,
+        private val challengeResolver: StateMachineResolver<SignInChallengeState>,
         private val signInActions: SignInActions
     ) :
         StateMachineResolver<SignInState> {
@@ -41,6 +42,11 @@ sealed class SignInState : State {
                 actions += it.actions
             }
 
+            oldState.challengeState?.let { challengeResolver.resolve(it, event) }?.let {
+                builder.challengeState = it.newState
+                actions += it.actions
+            }
+
             return StateResolution(builder.build(), actions)
         }
 
@@ -56,17 +62,13 @@ sealed class SignInState : State {
                         SigningInWithSRP(oldState.srpSignInState),
                         listOf(signInActions.startSRPAuthAction(signInEvent))
                     )
-                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception), listOf())
                     else -> defaultResolution
                 }
                 is SigningInWithSRP -> when (signInEvent) {
-                    is SignInEvent.EventType.ReceivedSMSChallenge -> StateResolution(ResolvingSMSChallenge())
-                    is SignInEvent.EventType.SignedIn -> StateResolution(Done())
-                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception), listOf())
-                    else -> defaultResolution
-                }
-                is ResolvingSMSChallenge -> when (signInEvent) {
-                    is SignInEvent.EventType.SignedIn -> StateResolution(Done())
+                    is SignInEvent.EventType.ReceivedChallenge -> {
+                        val action = signInActions.initResolveChallenge(signInEvent)
+                        StateResolution(ResolvingChallenge(SignInChallengeState.NotStarted()), listOf(action))
+                    }
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception), listOf())
                     else -> defaultResolution
                 }
@@ -79,9 +81,11 @@ sealed class SignInState : State {
     class Builder(private val signInState: SignInState) :
         com.amplifyframework.statemachine.Builder<SignInState> {
         var srpSignInState: SRPSignInState? = null
+        var challengeState: SignInChallengeState? = null
 
         override fun build(): SignInState = when (signInState) {
             is SigningInWithSRP -> SigningInWithSRP(srpSignInState)
+            is ResolvingChallenge -> ResolvingChallenge(challengeState)
             else -> signInState
         }
     }
