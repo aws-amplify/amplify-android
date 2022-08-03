@@ -68,10 +68,14 @@ class AWSCognitoLegacyCredentialStore(
         val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens()
         val awsCredentials = retrieveAWSCredentials()
         val identityId = retrieveIdentityId()
-        if (cognitoUserPoolTokens == null && awsCredentials == null && identityId == null) {
-            return AmplifyCredential.Empty
+        return when {
+            awsCredentials != null && identityId != null -> when (cognitoUserPoolTokens) {
+                null -> AmplifyCredential.IdentityPool(identityId, awsCredentials)
+                else -> AmplifyCredential.UserAndIdentityPool(cognitoUserPoolTokens, identityId, awsCredentials)
+            }
+            cognitoUserPoolTokens != null -> AmplifyCredential.UserPool(cognitoUserPoolTokens)
+            else -> AmplifyCredential.Empty
         }
-        return AmplifyCredential.UserAndIdentityPool(cognitoUserPoolTokens!!, identityId!!, awsCredentials!!)
     }
 
     override fun deleteCredential() {

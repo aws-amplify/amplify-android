@@ -19,7 +19,6 @@ import aws.sdk.kotlin.services.cognitoidentity.model.GetIdRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchIdentityActions
-import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.FetchIdentityEvent

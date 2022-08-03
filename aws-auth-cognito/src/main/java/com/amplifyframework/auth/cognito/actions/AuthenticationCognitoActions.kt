@@ -33,7 +33,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = when(val credentials = event.storedCredentials) {
+            val evt = when (val credentials = event.storedCredentials) {
                 is AmplifyCredential.UserPool -> {
                     val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, credentials.tokens)
                     AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
