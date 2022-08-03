@@ -1,6 +1,7 @@
 #!/bin/bash
 project_arn=$DEVICEFARM_PROJECT_ARN
-device_pool_arn=$DEVICEFARM_POOL_ARN
+read -a device_pool_arns <<< $DEVICEFARM_POOL_ARNS
+device_pool_arn=${device_pool_arns[ $RANDOM % ${#device_pool_arns[@]} ]}
 module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
