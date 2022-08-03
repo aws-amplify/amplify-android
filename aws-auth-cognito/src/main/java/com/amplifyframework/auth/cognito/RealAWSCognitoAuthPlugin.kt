@@ -524,9 +524,6 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-
-//            val (_,state) = (authState as AuthState.Configured)
-
             when (val authZState = authState.authZState) {
                 is AuthorizationState.Configured -> _fetchAuthSession(onSuccess = onSuccess, onError = onError)
                 is AuthorizationState.SessionEstablished -> {
