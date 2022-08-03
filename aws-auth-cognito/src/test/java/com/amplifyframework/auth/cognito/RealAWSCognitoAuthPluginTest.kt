@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
-
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
@@ -465,7 +464,6 @@ class RealAWSCognitoAuthPluginTest {
         val code = "007"
 
         coEvery { mockCognitoIPClient.confirmForgotPassword(captureLambda()) } coAnswers {
-            println("SDK API in ${Thread.currentThread()}")
             ConfirmForgotPasswordResponse.invoke { }
         }
 
