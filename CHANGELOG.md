@@ -1,3 +1,112 @@
+## [Release 1.36.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.6)
+
+### Bug Fixes
+- **api:** allow post request with empty body (#1864)
+
+### Miscellaneous
+- Send snapshot on updates which render an item in list to not qualify a predicate.
+- Revert "Send snapshot on updates which render an item in list to not qualify a predicate."
+- Adding create composite primary key on sqllite table (#1590)
+- Adding support for custom primary key across the codebase.
+- Adding support for custom primary key across the codebase.
+- Added default implementation for resolveIdentifier in Model interface, to make it backwards compatible.
+- Added default implementation for resolveIdentifier in Model interface, to make it backwards compatible.
+- Added default implementation for resolveIdentifier in Model interface, to make it backwards compatible.
+- Work in progress Custom primary key in storage engine.
+- Work in progress Custom primary key in storage engine.
+- test fixes and check style.
+- Adding custom primary key support to SerializedModel.
+- Updating selection set of leaf element to get primary key fields from the schema.
+- Added __typename to appsync selection set so the type can be computed for flutter serialized models.
+- Fixed integration test.
+- Fixed sql index on undefined index not getting created.
+- Fixed sql index on undefined index not getting created.
+- Reverting not needed change.
+- Clean up and updated concatenation logic for primary key.
+- Making SerializedModel resolve identifier return Serializable.
+- Checkstyle fixes.
+- Updated concatenation code for model primary key.
+- Test fix.
+- Test fix.
+- Test fix.
+- Test fix.
+- Test fix.
+- Optimization to make @@primary key only in case of composite primary key.
+- Clean up
+- Increasing timeout for flaky test.
+- Ignoring the test failing in the build.
+- Increasing timeout on AWSDatastore plugin for tests.
+- Updating where.identifier method.
+- Increasing timeout for slow running test.
+- Update testmodels/src/main/java/com/amplifyframework/testmodels/personcar/PersonWithCPK.java
+- Update aws-api-appsync/src/main/java/com/amplifyframework/datastore/appsync/ModelMetadata.java
+- Update aws-api-appsync/src/main/java/com/amplifyframework/datastore/appsync/ModelMetadata.java
+- Update aws-api-appsync/src/main/java/com/amplifyframework/datastore/appsync/ModelMetadata.java
+- Code review suggestions.
+- Update aws-datastore/src/main/java/com/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn.java
+- Update core/src/main/java/com/amplifyframework/core/model/ModelPrimaryKey.java
+- Update aws-datastore/src/androidTest/java/com/amplifyframework/datastore/BasicCloudSyncInstrumentationTest.java
+- Code review suggestions.
+- Increasing time out for orchestrator semaphore
+- Update aws-datastore/src/main/java/com/amplifyframework/datastore/storage/sqlite/SqlQueryProcessor.java
+- Formatting fixes.
+- PR suggestions.
+- Update core/src/main/java/com/amplifyframework/core/model/ModelPrimaryKey.java
+- Update core/src/main/java/com/amplifyframework/core/model/ModelPrimaryKey.java
+- Deprecating where.id method.
+- Checkstyle
+- where.id deprecation in datastore integration tests.
+- Code optimization to create SQL index for primary key fields only if it is a composite.
+- Fixed flaky test.
+- Added an integration test for a flaky unit test.
+- Refactored the code around sync expression predicate of QueryPredicates.all and QueryPredicates.none().
+- Checkstyle
+- Removing integration test for custom primary untill I find a way to fix the environment.
+- Accidental change.
+- Indentations.
+- Fixing get unique key function on Model primary key helper.
+- Update aws-datastore/src/main/java/com/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable.java
+- Fixing cascade delete on a child with custom primary key. (#1731)
+- Updated schema version of testmodels/src/main/java/com/amplifyframework/testmodels/commentsblog/schema.graphql to the latest version.
+- Modifying create mutation to handle custom foreign keys.
+- Updating Create mutation to work with custom foreign keys.
+- Updating Create mutation to work with custom foreign keys.
+- Fix format errors
+- Updating Create mutation to work with custom foreign keys.
+- Fix unit tests
+- Fix format errors
+- Fixing cascade delete on a child with custom primary key. (#1731)
+- Fix typos
+- Fix typos
+- add comment
+- Updating custom key models and adding a unit test with  no sort keys
+- Updated comment models.   Added unit test for custom key with no  sort key.
+- Updated tests and db models to match new schema version.  Added a test for model with a custoom primary key and no sort keys.
+- Cpk bidirectional (#1751)
+- Fix create mutations for custom PK (#1740)
+- Added logic to delete with class name and predicate to support custom primary key.
+- Revert "Added logic to delete with class name and predicate to support custom primary key."
+- Delete with class and predicate as parameters support for custom primary key (#1760)
+- Get pk (#1761)
+- Appsync mutation fk (#1762)
+- Fixing outbox event processed, (#1765)
+- Suppress belongsto index (#1789)
+- Flutter fix (#1769)
+- Integration test fix (#1815)
+- Checkstyle fixes.
+- Integration test fix (#1820)
+- Checkstyle fixes
+- Increasing timeout for test.
+- Ignoring flaky test.
+- Integration test (#1821)
+- Version update (#1825)
+- Cpk version update (#1826)
+- Fixing flutter sql predicate issue Version update. (#1832)
+- Flutter update (#1833)
+- version update (#1837)
+
+[See all changes between 1.36.5 and 1.36.6](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.5...release_v1.36.6)
+
 ## [Release 1.36.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.5)
 
 ### Miscellaneous
