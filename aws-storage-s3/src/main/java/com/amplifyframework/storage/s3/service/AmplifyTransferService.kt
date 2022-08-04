@@ -35,7 +35,7 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.s3.R
 import java.util.concurrent.atomic.AtomicInteger
 
-class AmplifyTransferService : Service() {
+internal class AmplifyTransferService : Service() {
 
     private val log = Amplify.Logging.forNamespace("amplify:aws-s3")
 
