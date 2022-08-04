@@ -1,4 +1,4 @@
-## [Release 0.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.6)
+## [Release 0.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.0)
 
 ### Features
 - **datastore**: Implemented support for custom primary key (#1650)
