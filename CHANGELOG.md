@@ -1,4 +1,4 @@
-## [Release 1.37.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.6)
+## [Release 1.37.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.0)
 
 ### Features
 - **datastore**: Implemented support for custom primary key (#1650)
