@@ -303,7 +303,7 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        SignOutEvent(SignOutEvent.EventType.SignedOutSuccess(signedInData))
+                        SignOutEvent(SignOutEvent.EventType.SignedOutSuccess(SignedOutData(signedInData.username)))
                     )
                     dispatcher.send(
                         AuthenticationEvent(

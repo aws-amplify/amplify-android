@@ -123,7 +123,7 @@ sealed class AuthenticationState : State {
                 }
                 is SigningOut -> when (val signOutEvent = event.isSignOutEvent()) {
                     is SignOutEvent.EventType.SignedOutSuccess -> StateResolution(
-                        SignedOut(SignedOutData(signOutEvent.signedInData.username))
+                        SignedOut(signOutEvent.signedOutData)
                     )
                     else -> defaultResolution
                 }
@@ -131,6 +131,11 @@ sealed class AuthenticationState : State {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
                         val action = authenticationActions.initiateSRPSignInAction(authenticationEvent)
                         StateResolution(SigningIn(oldState.signInState), listOf(action))
+                    }
+                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
+                        val action =
+                            authenticationActions.initiateSignOutAction(authenticationEvent)
+                        StateResolution(SigningOut(oldState.signOutState), listOf(action))
                     }
                     // TODO: find better way to handle other events
                     signUpEvent is SignUpEvent.EventType.InitiateSignUp ||

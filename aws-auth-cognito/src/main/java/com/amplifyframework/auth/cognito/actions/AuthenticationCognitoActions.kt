@@ -72,10 +72,10 @@ object AuthenticationCognitoActions : AuthenticationActions {
 
     override fun initiateSignOutAction(
         event: AuthenticationEvent.EventType.SignOutRequested,
-        signedInData: SignedInData
+        signedInData: SignedInData?
     ) = Action<AuthEnvironment>("InitSignOut") { id, dispatcher ->
         logger?.verbose("$id Starting execution")
-        val evt = if (event.isGlobalSignOut) {
+        val evt = if (event.isGlobalSignOut && signedInData != null) {
             SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData))
         } else {
             SignOutEvent(

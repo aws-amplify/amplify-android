@@ -353,8 +353,10 @@ internal class RealAWSCognitoAuthPlugin(
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->
-                when (val authNState = authState.authNState) {
-                    is AuthenticationState.SigningIn -> {
+                val authNState = authState.authNState
+                val authZState = authState.authZState
+                when {
+                    authNState is AuthenticationState.SigningIn -> {
                         val srpSignInState = authNState.signInState?.srpSignInState
                         if (srpSignInState is SRPSignInState.Error) {
                             token?.let(authStateMachine::cancel)
@@ -363,7 +365,8 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         }
                     }
-                    is AuthenticationState.SignedIn -> {
+                    authNState is AuthenticationState.SignedIn
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult = AuthSignInResult(
                             true,
@@ -884,13 +887,7 @@ internal class RealAWSCognitoAuthPlugin(
                 if (authState is AuthState.Configured) {
                     val (authNState, authZState) = authState
                     when {
-                        authNState is AuthenticationState.SignedOut -> {
-                            token?.let(authStateMachine::cancel)
-                            onSuccess.call()
-                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
-                        }
-                        authZState is AuthorizationState.Configured
-                            || authZState is AuthorizationState.SessionEstablished -> {
+                        authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
                             token?.let(authStateMachine::cancel)
                             onSuccess.call()
                             Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
