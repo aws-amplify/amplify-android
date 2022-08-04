@@ -185,7 +185,6 @@ public final class AWSS3StorageService implements StorageService {
      */
     @NonNull
     public List<StorageItem> listFiles(@NonNull String path, @NonNull String prefix) {
-        startTransferService();
         ArrayList<StorageItem> itemList = new ArrayList<>();
         ListObjectsV2Request request =
                 new ListObjectsV2Request().withBucketName(this.bucket).withPrefix(path);
@@ -229,7 +228,6 @@ public final class AWSS3StorageService implements StorageService {
      * @param transfer an in-progress transfer
      */
     public void pauseTransfer(@NonNull TransferObserver transfer) {
-        startTransferService();
         transferUtility.pause(transfer.getId());
     }
 
@@ -247,19 +245,11 @@ public final class AWSS3StorageService implements StorageService {
      * @param transfer A file transfer to cancel
      */
     public void cancelTransfer(@NonNull TransferObserver transfer) {
-        startTransferService();
         transferUtility.cancel(transfer.getId());
     }
 
     private void startTransferService() {
-        // TODO: When a reset method is defined, stop service.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Intent serviceIntent = new Intent(context, TransferService.class);
-            serviceIntent.putExtra(TransferService.INTENT_KEY_NOTIFICATION, createDefaultNotification());
-            context.startForegroundService(serviceIntent);
-        } else {
-            context.startService(new Intent(context, TransferService.class));
-        }
+        AmplifyTransferService.Companion.start(context);
     }
 
     /**
@@ -271,31 +261,7 @@ public final class AWSS3StorageService implements StorageService {
         return client;
     }
 
-    private Notification createDefaultNotification() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createChannel();
-        }
-        int appIcon = R.drawable.amplify_storage_transfer_notification_icon;
-        return new NotificationCompat.Builder(
-            context,
-            context.getString(R.string.amplify_storage_notification_channel_id)
-        )
-            .setSmallIcon(appIcon)
-            .setContentTitle(context.getString(R.string.amplify_storage_notification_title))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build();
-    }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void createChannel() {
-        NotificationManager notificationManager =
-            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.createNotificationChannel(
-            new NotificationChannel(
-                context.getString(R.string.amplify_storage_notification_channel_id),
-                context.getString(R.string.amplify_storage_notification_channel_name),
-                NotificationManager.IMPORTANCE_LOW
-            )
-        );
-    }
+
+
 }
