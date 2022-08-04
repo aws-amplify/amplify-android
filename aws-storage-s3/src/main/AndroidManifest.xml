@@ -21,5 +21,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <application>
         <service android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService" android:enabled="true" />
+        <service android:name=".service.AmplifyTransferService" android:enabled="true" />
     </application>
 </manifest>
