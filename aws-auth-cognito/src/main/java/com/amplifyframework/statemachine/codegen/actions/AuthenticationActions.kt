@@ -24,6 +24,6 @@ interface AuthenticationActions {
     fun initiateSRPSignInAction(event: AuthenticationEvent.EventType.SignInRequested): Action
     fun initiateSignOutAction(
         event: AuthenticationEvent.EventType.SignOutRequested,
-        signedInData: SignedInData
+        signedInData: SignedInData? = null
     ): Action
 }
