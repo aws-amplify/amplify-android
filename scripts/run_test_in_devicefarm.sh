@@ -4,12 +4,13 @@ module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
 
-read -a skip_projects <<< $SKIP_PROJECTS
-
-if [[ ${skip_projects[*]} =~ ${module_name} ]]; then
-    echo "Module $module_name in list of projects to skip, not running test"
-    exit 0
-fi
+## Enable this for testing only
+#read -a skip_projects <<< $SKIP_PROJECTS
+#
+#if [[ ${skip_projects[*]} =~ ${module_name} ]]; then
+#    echo "Module $module_name in list of projects to skip, not running test"
+#    exit 0
+#fi
 
 if [[ -z "${project_arn}" ]]; then
   echo "DEVICEFARM_PROJECT_ARN environment variable not set."
