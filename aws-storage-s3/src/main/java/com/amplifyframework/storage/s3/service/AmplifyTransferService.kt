@@ -19,10 +19,13 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.net.ConnectivityManager
+import android.os.Binder
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -33,11 +36,12 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferNetworkLossHand
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferStatusUpdaterAccessor
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.s3.R
-import java.util.concurrent.atomic.AtomicInteger
 
 internal class AmplifyTransferService : Service() {
 
     private val log = Amplify.Logging.forNamespace("amplify:aws-s3")
+
+    private val binder = LocalBinder()
 
     /**
      * registers a BroadcastReceiver to receive network status change events. It
@@ -50,16 +54,22 @@ internal class AmplifyTransferService : Service() {
      */
     private var isReceiverNotRegistered = true
 
-    private var shutdownCheckHandler: Handler? = null
-    private var shutdownCheckRunnable: Runnable? = null
+    /**
+     * Handler to post Runnable check to unbind service if all transfers are complete
+     */
+    private var unbindCheckHandler: Handler? = null
 
-    override fun onBind(intent: Intent?): IBinder? {
-        throw UnsupportedOperationException("Can't bind to TransferService")
+    /**
+     * Runnable that unbinds service if all transfers are complete
+     */
+    private var unbindCheckRunnable: Runnable? = null
+
+    override fun onBind(intent: Intent?): IBinder {
+        return binder
     }
 
     override fun onCreate() {
         super.onCreate()
-
         transferNetworkLossHandler = TransferNetworkLossHandler.getInstance(applicationContext)
 
         synchronized(this) {
@@ -80,72 +90,48 @@ internal class AmplifyTransferService : Service() {
                 }
             }
         }
-
-        startForegroundNotificationIfRequired()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForegroundNotificationIfRequired()
+        return START_STICKY
+    }
 
-        synchronized(this) {
-            if (isReceiverNotRegistered) {
+    private fun startUnbindCheck() {
+        unbindCheckHandler?.removeCallbacksAndMessages(null)
+        unbindCheckRunnable = Runnable {
+            log.verbose("AmplifyTransferService unbind check running")
+            if (!TransferStatusUpdaterAccessor.hasActiveTransfer(applicationContext)) {
                 try {
-                    log.info("Registering the network receiver")
-                    this.registerReceiver(
-                        transferNetworkLossHandler,
-                        IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
-                    )
-                    isReceiverNotRegistered = false
-                } catch (iae: java.lang.IllegalArgumentException) {
-                    log.warn(
-                        "Ignoring the exception trying to register the receiver for connectivity change."
-                    )
-                } catch (ise: java.lang.IllegalStateException) {
-                    log.warn("Ignoring the leak in registering the receiver.")
+                    log.verbose("Removing AmplifyTransferService from foreground and unbinding")
+                    stopForegroundAndUnbind(applicationContext)
+                } catch (e: Exception) {
+                    log.error("Error in moving the service out of the foreground state: $e")
+                }
+            } else {
+                log.verbose("Transfers info progress, rescheduling unbind check")
+                unbindCheckRunnable?.let {
+                    unbindCheckHandler?.postDelayed(it, SHUTDOWN_CHECK_INTERVAL_MILLIS)
                 }
             }
         }
 
-        shutdownCheckHandler?.removeCallbacksAndMessages(null)
-        shutdownCheckRunnable = Runnable {
-            // If there are no startForegroundService calls waiting for startService, and all transfers are completed
-            // or paused, then we are safe to stopForeground and kill the service
-            synchronized(pendingStartForegroundCount) {
-                log.verbose("AmplifyTransferService shutdown check running")
-                if (pendingStartForegroundCount.get() == 0 &&
-                    !TransferStatusUpdaterAccessor.hasActiveTransfer(applicationContext)
-                ) {
-                    try {
-                        log.verbose("Shutting down AmplifyTransferService")
-                        stopForeground(true)
-                        stopSelf()
-                    } catch (e: Exception) {
-                        log.error("Error in moving the service out of the foreground state: $e")
-                    }
-                } else {
-                    val pendingStartForegroundCount = pendingStartForegroundCount.get()
-                    if (pendingStartForegroundCount > 0) {
-                        log.verbose("Pending calls to startForeground, rescheduling shutdown check")
-                    } else {
-                        log.verbose("Transfers info progress, rescheduling shutdown check")
-                    }
-                    shutdownCheckRunnable?.let {
-                        shutdownCheckHandler?.postDelayed(it, SHUTDOWN_CHECK_INTERVAL_MILLIS)
-                    }
-                }
-            }
-        }
-
-        shutdownCheckHandler = Handler(Looper.getMainLooper()).apply {
-            shutdownCheckRunnable?.let {
+        unbindCheckHandler = Handler(Looper.getMainLooper()).apply {
+            unbindCheckRunnable?.let {
                 postDelayed(it, SHUTDOWN_CHECK_INTERVAL_MILLIS)
             }
         }
-        return START_STICKY
+    }
+
+    private fun stopUnbindCheck() {
+        log.info("Stopping AmplifyTransferService unbind check")
+        unbindCheckHandler?.removeCallbacksAndMessages(null)
+        unbindCheckRunnable = null
+        unbindCheckHandler = null
     }
 
     override fun onDestroy() {
         try {
+            stopUnbindCheck()
             log.info("De-registering the network receiver.")
             synchronized(this) {
                 if (!isReceiverNotRegistered) {
@@ -154,6 +140,7 @@ internal class AmplifyTransferService : Service() {
                     transferNetworkLossHandler = null
                 }
             }
+
         } catch (iae: IllegalArgumentException) {
             /*
              * Ignore on purpose, just in case the service stops before
@@ -164,68 +151,90 @@ internal class AmplifyTransferService : Service() {
         super.onDestroy()
     }
 
-    private fun startForegroundNotificationIfRequired() {
-        try {
-            synchronized(pendingStartForegroundCount) {
-                log.verbose("Starting AmplifyTransferService in Foreground")
-                startForeground(NOTIFICATION_ID, createDefaultNotification(applicationContext))
-                if (pendingStartForegroundCount.get() > 0) {
-                    pendingStartForegroundCount.decrementAndGet()
-                }
-            }
-        } catch (ex: Exception) {
-            log.error("Error in moving the service to foreground state: $ex")
+    inner class LocalBinder : Binder() {
+        fun getService(): AmplifyTransferService {
+            return this@AmplifyTransferService
         }
-    }
-
-    private fun createDefaultNotification(context: Context): Notification? {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createChannel(context)
-        }
-        val appIcon: Int = R.drawable.amplify_storage_transfer_notification_icon
-        return NotificationCompat.Builder(
-            context,
-            context.getString(R.string.amplify_storage_notification_channel_id)
-        )
-            .setSmallIcon(appIcon)
-            .setContentTitle(context.getString(R.string.amplify_storage_notification_title))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private fun createChannel(context: Context) {
-        val notificationManager = context.getSystemService(NOTIFICATION_SERVICE)
-            as NotificationManager
-        notificationManager.createNotificationChannel(
-            NotificationChannel(
-                context.getString(R.string.amplify_storage_notification_channel_id),
-                context.getString(R.string.amplify_storage_notification_channel_name),
-                NotificationManager.IMPORTANCE_LOW
-            )
-        )
     }
 
     internal companion object {
-        const val NOTIFICATION_ID = 9382
-        const val SHUTDOWN_CHECK_INTERVAL_MILLIS = 8_000L
+        private const val NOTIFICATION_ID = 9382
+        private const val SHUTDOWN_CHECK_INTERVAL_MILLIS = 8_000L
 
-        val pendingStartForegroundCount = AtomicInteger(0)
+        private var boundService: AmplifyTransferService? = null
+        private var boundServiceConnection: ServiceConnection? = null
+        private var notification: Notification? = null
 
-        /**
-         * If Android SDK 26 (Oreo) or above, we must start as ForegroundService to start service from the background.
-         * This will no longer work in Android SDK 31
-         */
-        fun start(context: Context) {
-            synchronized(pendingStartForegroundCount) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val serviceIntent = Intent(context, AmplifyTransferService::class.java)
-                    pendingStartForegroundCount.incrementAndGet()
-                    context.startForegroundService(serviceIntent)
-                } else {
-                    context.startService(Intent(context, AmplifyTransferService::class.java))
+        fun bind(context: Context) {
+            if (boundServiceConnection == null) {
+                boundServiceConnection = object : ServiceConnection {
+                    override fun onServiceConnected(name: ComponentName, service: IBinder?) {
+                        val binder = service as AmplifyTransferService.LocalBinder
+                        boundService = binder.getService()
+                        startForeground(context)
+                    }
+
+                    override fun onServiceDisconnected(name: ComponentName?) {
+                        stopForegroundAndUnbind(context)
+                        boundService = null
+                    }
                 }
             }
+
+            boundServiceConnection?.let {
+                context.bindService(Intent(context, AmplifyTransferService::class.java), it, Context.BIND_AUTO_CREATE)
+            }
+
+            // A new call to to bind will restart counter, removing potential to unbind service too early
+            boundService?.startUnbindCheck()
+        }
+
+        fun startForeground(context: Context) {
+            if (!isNotificationShowing()) {
+                val notification = createDefaultNotification(context)
+                boundService?.startForeground(NOTIFICATION_ID, notification)
+                this.notification = notification
+            }
+        }
+
+        fun stopForegroundAndUnbind(context: Context) {
+            boundService?.stopForeground(true)
+            boundServiceConnection?.let { context.unbindService(it) }
+            boundServiceConnection = null
+            notification = null
+        }
+
+        private fun isNotificationShowing(): Boolean {
+            return notification != null
+        }
+
+        private fun createDefaultNotification(context: Context): Notification? {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                createChannel(context)
+            }
+            val appIcon: Int = R.drawable.amplify_storage_transfer_notification_icon
+            return NotificationCompat.Builder(
+                context,
+                context.getString(R.string.amplify_storage_notification_channel_id)
+            )
+                .setSmallIcon(appIcon)
+                .setContentTitle(context.getString(R.string.amplify_storage_notification_title))
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        private fun createChannel(context: Context) {
+            val notificationManager = context.getSystemService(NOTIFICATION_SERVICE)
+                    as NotificationManager
+            notificationManager.createNotificationChannel(
+                NotificationChannel(
+                    context.getString(R.string.amplify_storage_notification_channel_id),
+                    context.getString(R.string.amplify_storage_notification_channel_name),
+                    NotificationManager.IMPORTANCE_LOW
+                )
+            )
         }
     }
 }
+
