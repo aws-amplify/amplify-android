@@ -1,17 +1,37 @@
 #!/bin/bash
 project_arn=$DEVICEFARM_PROJECT_ARN
-read -a device_pool_arns <<< $DEVICEFARM_POOL_ARNS
-device_pool_arn=${device_pool_arns[ $RANDOM % ${#device_pool_arns[@]} ]}
 module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
+
+read -a skip_projects <<< $SKIP_PROJECTS
+
+if [[ ${skip_projects[*]} =~ ${module_name} ]]; then
+    echo "Module $module_name in list of projects to skip, not running test"
+    exit 0
+fi
 
 if [[ -z "${project_arn}" ]]; then
   echo "DEVICEFARM_PROJECT_ARN environment variable not set."
   exit 1
 fi
+
+# Function to get random device pool in a device farm project
+function pickDeviceFarmPool {
+  # shellcheck disable=SC2046
+  read -a arns <<< $(aws devicefarm list-device-pools \
+                --arn=$project_arn \
+                --type=PRIVATE \
+                --query='devicePools[*].arn' \
+                | jq '.[]')
+
+  echo ${arns[ $RANDOM % ${#arns[@]} ]}
+}
+
+device_pool_arn=$(pickDeviceFarmPool)
+
 if [[ -z "${device_pool_arn}" ]]; then
-  echo "DEVICEFARM_POOL_ARN environment variable not set."
+  echo "Failed to get device pool arn"
   exit 1
 fi
 
