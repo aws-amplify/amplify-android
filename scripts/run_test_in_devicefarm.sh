@@ -24,7 +24,7 @@ function pickDeviceFarmPool {
                 --type=PRIVATE \
                 --region="us-west-2" \
                 --query='devicePools[*].arn' \
-                | jq '.[]')
+                | jq -r '.[]')
 
   echo ${arns[ $RANDOM % ${#arns[@]} ]}
 }
