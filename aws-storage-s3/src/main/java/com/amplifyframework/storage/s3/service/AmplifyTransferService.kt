@@ -66,11 +66,15 @@ internal class AmplifyTransferService : Service() {
             if (isReceiverNotRegistered) {
                 try {
                     log.info("Registering the network receiver")
-                    this.registerReceiver(transferNetworkLossHandler,
-                            IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+                    this.registerReceiver(
+                        transferNetworkLossHandler,
+                        IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+                    )
                     isReceiverNotRegistered = false
                 } catch (iae: IllegalArgumentException) {
-                    log.warn("Ignoring the exception trying to register the receiver for connectivity change.")
+                    log.warn(
+                        "Ignoring the exception trying to register the receiver for connectivity change."
+                    )
                 } catch (ise: IllegalStateException) {
                     log.warn("Ignoring the leak in registering the receiver.")
                 }
@@ -87,11 +91,15 @@ internal class AmplifyTransferService : Service() {
             if (isReceiverNotRegistered) {
                 try {
                     log.info("Registering the network receiver")
-                    this.registerReceiver(transferNetworkLossHandler,
-                            IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+                    this.registerReceiver(
+                        transferNetworkLossHandler,
+                        IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+                    )
                     isReceiverNotRegistered = false
                 } catch (iae: java.lang.IllegalArgumentException) {
-                    log.warn("Ignoring the exception trying to register the receiver for connectivity change.")
+                    log.warn(
+                        "Ignoring the exception trying to register the receiver for connectivity change."
+                    )
                 } catch (ise: java.lang.IllegalStateException) {
                     log.warn("Ignoring the leak in registering the receiver.")
                 }
@@ -102,20 +110,28 @@ internal class AmplifyTransferService : Service() {
         shutdownCheckRunnable = Runnable {
             // If there are no startForegroundService calls waiting for startService, and all transfers are completed
             // or paused, then we are safe to stopForeground and kill the service
-            log.info("AmplifyTransferService shutdown check running")
-            if (pendingStartForegroundCount.get() == 0 &&
-                    !TransferStatusUpdaterAccessor.hasActiveTransfer(applicationContext)) {
-                try {
-                    log.info("Shutting down AmplifyTransferService")
-                    stopForeground(true)
-                    stopSelf()
-                } catch (e: Exception) {
-                    log.error("Error in moving the service out of the foreground state: $e")
-                }
-            } else {
-                log.info("Transfers info progress, rescheduling shutdown check")
-                shutdownCheckRunnable?.let {
-                    shutdownCheckHandler?.postDelayed(it, SHUTDOWN_CHECK_INTERVAL_MILLIS)
+            synchronized(pendingStartForegroundCount) {
+                log.verbose("AmplifyTransferService shutdown check running")
+                if (pendingStartForegroundCount.get() == 0 &&
+                    !TransferStatusUpdaterAccessor.hasActiveTransfer(applicationContext)
+                ) {
+                    try {
+                        log.verbose("Shutting down AmplifyTransferService")
+                        stopForeground(true)
+                        stopSelf()
+                    } catch (e: Exception) {
+                        log.error("Error in moving the service out of the foreground state: $e")
+                    }
+                } else {
+                    val pendingStartForegroundCount = pendingStartForegroundCount.get()
+                    if (pendingStartForegroundCount > 0) {
+                        log.verbose("Pending calls to startForeground, rescheduling shutdown check")
+                    } else {
+                        log.verbose("Transfers info progress, rescheduling shutdown check")
+                    }
+                    shutdownCheckRunnable?.let {
+                        shutdownCheckHandler?.postDelayed(it, SHUTDOWN_CHECK_INTERVAL_MILLIS)
+                    }
                 }
             }
         }
@@ -150,13 +166,11 @@ internal class AmplifyTransferService : Service() {
 
     private fun startForegroundNotificationIfRequired() {
         try {
-            synchronized(this) {
+            synchronized(pendingStartForegroundCount) {
+                log.verbose("Starting AmplifyTransferService in Foreground")
+                startForeground(NOTIFICATION_ID, createDefaultNotification(applicationContext))
                 if (pendingStartForegroundCount.get() > 0) {
-                    log.info("Putting the service in Foreground state.")
-                    startForeground(NOTIFICATION_ID, createDefaultNotification(applicationContext))
                     pendingStartForegroundCount.decrementAndGet()
-                } else {
-                    log.info("Not required to put service in foreground state. Already completed")
                 }
             }
         } catch (ex: Exception) {
@@ -170,30 +184,31 @@ internal class AmplifyTransferService : Service() {
         }
         val appIcon: Int = R.drawable.amplify_storage_transfer_notification_icon
         return NotificationCompat.Builder(
-                context,
-                context.getString(R.string.amplify_storage_notification_channel_id)
+            context,
+            context.getString(R.string.amplify_storage_notification_channel_id)
         )
-                .setSmallIcon(appIcon)
-                .setContentTitle(context.getString(R.string.amplify_storage_notification_title))
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .build()
+            .setSmallIcon(appIcon)
+            .setContentTitle(context.getString(R.string.amplify_storage_notification_title))
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private fun createChannel(context: Context) {
-        val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = context.getSystemService(NOTIFICATION_SERVICE)
+            as NotificationManager
         notificationManager.createNotificationChannel(
-                NotificationChannel(
-                        context.getString(R.string.amplify_storage_notification_channel_id),
-                        context.getString(R.string.amplify_storage_notification_channel_name),
-                        NotificationManager.IMPORTANCE_LOW
-                )
+            NotificationChannel(
+                context.getString(R.string.amplify_storage_notification_channel_id),
+                context.getString(R.string.amplify_storage_notification_channel_name),
+                NotificationManager.IMPORTANCE_LOW
+            )
         )
     }
 
     internal companion object {
         const val NOTIFICATION_ID = 9382
-        const val SHUTDOWN_CHECK_INTERVAL_MILLIS = 10_000L
+        const val SHUTDOWN_CHECK_INTERVAL_MILLIS = 8_000L
 
         val pendingStartForegroundCount = AtomicInteger(0)
 
@@ -202,12 +217,14 @@ internal class AmplifyTransferService : Service() {
          * This will no longer work in Android SDK 31
          */
         fun start(context: Context) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val serviceIntent = Intent(context, AmplifyTransferService::class.java)
-                pendingStartForegroundCount.incrementAndGet()
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(Intent(context, AmplifyTransferService::class.java))
+            synchronized(pendingStartForegroundCount) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val serviceIntent = Intent(context, AmplifyTransferService::class.java)
+                    pendingStartForegroundCount.incrementAndGet()
+                    context.startForegroundService(serviceIntent)
+                } else {
+                    context.startService(Intent(context, AmplifyTransferService::class.java))
+                }
             }
         }
     }

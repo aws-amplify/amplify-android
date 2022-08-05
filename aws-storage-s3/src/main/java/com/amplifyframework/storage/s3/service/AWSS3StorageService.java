@@ -15,26 +15,17 @@
 
 package com.amplifyframework.storage.s3.service;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.core.app.NotificationCompat;
 
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.s3.CognitoAuthProvider;
-import com.amplifyframework.storage.s3.R;
 import com.amplifyframework.storage.s3.utils.S3Keys;
 import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferService;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.mobileconnectors.s3.transferutility.UploadOptions;
 import com.amazonaws.regions.Region;
@@ -260,8 +251,4 @@ public final class AWSS3StorageService implements StorageService {
     public AmazonS3Client getClient() {
         return client;
     }
-
-
-
-
 }
