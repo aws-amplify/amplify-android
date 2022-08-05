@@ -15,16 +15,22 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
+import com.amplifyframework.auth.cognito.isAuthEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 
 sealed class AuthState : State {
     data class NotConfigured(val id: String = "") : AuthState()
     data class ConfiguringAuth(val id: String = "") : AuthState()
+
+    data class WaitingForCachedCredentials(val config: AuthConfiguration) : AuthState()
+
+    data class ValidatingCredentialsAndConfiguration(val id: String = "") : AuthState()
 
     data class ConfiguringAuthentication(
         override var authNState: AuthenticationState?
@@ -53,10 +59,6 @@ sealed class AuthState : State {
         StateMachineResolver<AuthState> {
         override val defaultState = NotConfigured()
 
-        private fun asAuthEvent(event: StateMachineEvent): AuthEvent.EventType? {
-            return (event as? AuthEvent)?.eventType
-        }
-
         override fun resolve(oldState: AuthState, event: StateMachineEvent): StateResolution<AuthState> {
             val resolution = resolveAuthEvent(oldState, event)
             val actions = resolution.actions.toMutableList()
@@ -76,17 +78,30 @@ sealed class AuthState : State {
         }
 
         private fun resolveAuthEvent(oldState: AuthState, event: StateMachineEvent): StateResolution<AuthState> {
-            val authEvent = asAuthEvent(event)
+            val authEvent = event.isAuthEvent()
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
                 is NotConfigured -> when (authEvent) {
                     is AuthEvent.EventType.ConfigureAuth -> StateResolution(
                         ConfiguringAuth(),
-                        listOf(authActions.initializeAuthConfigurationAction(authEvent))
+                        listOf(authActions.initializeAuthConfigurationAction(authEvent)) // verify
                     )
                     else -> defaultResolution
                 }
                 is ConfiguringAuth -> when (authEvent) {
+                    is AuthEvent.EventType.FetchCachedCredentials -> StateResolution(
+                        WaitingForCachedCredentials(authEvent.configuration)
+                    )
+                    else -> defaultResolution
+                }
+                is WaitingForCachedCredentials -> when (authEvent) {
+                    is AuthEvent.EventType.ReceivedCachedCredentials -> StateResolution(
+                        ValidatingCredentialsAndConfiguration(),
+                        listOf(authActions.validateCredentialsAndConfiguration(authEvent))
+                    )
+                    else -> defaultResolution
+                }
+                is ValidatingCredentialsAndConfiguration -> when (authEvent) {
                     is AuthEvent.EventType.ConfigureAuthentication -> StateResolution(
                         ConfiguringAuthentication(AuthenticationState.NotConfigured()),
                         listOf(authActions.initializeAuthenticationConfigurationAction(authEvent))
