@@ -102,16 +102,18 @@ internal class AmplifyTransferService : Service() {
         shutdownCheckRunnable = Runnable {
             // If there are no startForegroundService calls waiting for startService, and all transfers are completed
             // or paused, then we are safe to stopForeground and kill the service
+            log.info("AmplifyTransferService shutdown check running")
             if (pendingStartForegroundCount.get() == 0 &&
-                    TransferStatusUpdaterAccessor.hasActiveTransfer(applicationContext)) {
+                    !TransferStatusUpdaterAccessor.hasActiveTransfer(applicationContext)) {
                 try {
+                    log.info("Shutting down AmplifyTransferService")
                     stopForeground(true)
                     stopSelf()
                 } catch (e: Exception) {
                     log.error("Error in moving the service out of the foreground state: $e")
                 }
-
             } else {
+                log.info("Transfers info progress, rescheduling shutdown check")
                 shutdownCheckRunnable?.let {
                     shutdownCheckHandler?.postDelayed(it, SHUTDOWN_CHECK_INTERVAL_MILLIS)
                 }
