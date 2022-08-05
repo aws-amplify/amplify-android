@@ -27,6 +27,8 @@ import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Consumer;
 
+import com.amazonaws.AmazonClientException;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
@@ -146,11 +148,19 @@ public final class AWSRestOperation extends RestOperation {
             if (ongoingCall != null && ongoingCall.isCanceled()) {
                 return;
             }
-
-            onFailure.accept(new ApiException(
-                "Received an IO exception while making the request.",
-                ioe, "Retry the request."
-            ));
+            
+            ApiException apiException;
+            if (ioe.getCause() != null && ioe.getCause() instanceof AmazonClientException) {
+                apiException = new ApiException(
+                        "Received an exception while making the request.",
+                        ioe.getCause(), "See attached exception for more details.");
+            } else {
+                apiException = new ApiException(
+                        "Received an IO exception while making the request.",
+                        ioe, "Retry the request."
+                );
+            }
+            onFailure.accept(apiException);
         }
     }
 }

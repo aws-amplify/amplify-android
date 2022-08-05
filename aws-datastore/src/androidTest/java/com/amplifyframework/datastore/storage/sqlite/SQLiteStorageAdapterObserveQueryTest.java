@@ -202,7 +202,7 @@ public final class SQLiteStorageAdapterObserveQueryTest {
      * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
      * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
-    //@Test
+    @Test
     public void querySavedDataWithMultiLevelJoins() throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         final BlogOwner blogOwner = BlogOwner.builder()
@@ -565,51 +565,65 @@ public final class SQLiteStorageAdapterObserveQueryTest {
     }
 
     /**
-     * Test querying the saved item in the SQLite database with observeQuery.
+     * Test querying the saved item in the SQLite database with observeQuery then get snapshots of items saved. The
+     * snapshot items are sorted by a String.
      *
      * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
      * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
      */
-    //@Test
-    public void querySavedDataWithMultipleItemsThenItemSaves() throws DataStoreException, InterruptedException {
+    @Test
+    public void querySavedDataWithMultipleItemsThenItemSavesSortedByString()
+            throws DataStoreException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
         Consumer<Cancelable> observationStarted = NoOpConsumer.create();
         Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
         Action onObservationComplete = NoOpAction.create();
         final List<BlogOwner> savedModels = new ArrayList<>();
-        final int numModels = 10;
+        final int numModels = 15;
         AtomicInteger count = new AtomicInteger(0);
-        for (int counter = 0; counter < numModels; counter++) {
+        for (int counter = 5; counter < numModels; counter++) {
             final BlogOwner blogOwner = BlogOwner.builder()
                     .name("namePrefix:" + counter)
                     .build();
             adapter.save(blogOwner);
             savedModels.add(blogOwner);
         }
-
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
             if (count.get() == 0) {
                 for (BlogOwner blogOwner : savedModels) {
                     assertTrue(value.getItems().contains(blogOwner));
                 }
+                List<BlogOwner> sorted = new ArrayList<>(savedModels);
+                Collections.sort(sorted, Comparator
+                        .comparing(BlogOwner::getName)
+                        .reversed()
+                );
+                assertEquals(sorted, value.getItems());
                 latch.countDown();
             } else {
-                assertEquals(12, value.getItems().size());
+                List<BlogOwner> sorted = new ArrayList<>(savedModels);
+                Collections.sort(sorted, Comparator
+                        .comparing(BlogOwner::getName)
+                        .reversed()
+                );
+                assertEquals(sorted, value.getItems());
                 changeLatch.countDown();
             }
             count.incrementAndGet();
         };
+        List<QuerySortBy> sortBy = new ArrayList<>();
+        sortBy.add(BlogOwner.NAME.descending());
         adapter.observeQuery(
                 BlogOwner.class,
-                new ObserveQueryOptions(null, null),
+                new ObserveQueryOptions(null, sortBy),
                 observationStarted,
                 onQuerySnapshot,
                 onObservationError,
                 onObservationComplete);
 
         assertTrue(latch.await(30, TimeUnit.SECONDS));
-        for (int counter = 11; counter < 13; counter++) {
+        for (int counter = 0; counter < 4; counter++) {
             final BlogOwner blogOwner = BlogOwner.builder()
                     .name("namePrefix:" + counter)
                     .build();
@@ -617,6 +631,83 @@ public final class SQLiteStorageAdapterObserveQueryTest {
             adapter.save(blogOwner);
         }
         assertTrue(changeLatch.await(30, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Test querying the saved item in the SQLite database with observeQuery then get snapshots of items saved. The
+     * snapshot items are sorted by a String.
+     *
+     * @throws DataStoreException   On unexpected failure manipulating items in/out of DataStore
+     * @throws InterruptedException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void querySavedDataWithMultipleItemsThenItemSavesSortedByInt()
+            throws DataStoreException, InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch changeLatch = new CountDownLatch(1);
+        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = NoOpAction.create();
+        final List<Post> savedModels = new ArrayList<>();
+        final int numModels = 15;
+        AtomicInteger count = new AtomicInteger(0);
+
+        BlogOwner blogOwner = BlogOwner.builder().name("Test Dummy").build();
+        adapter.save(blogOwner);
+        Blog blog = Blog.builder().name("Blogging for Dummies").owner(blogOwner).build();
+        adapter.save(blog);
+        for (int counter = 5; counter < numModels; counter++) {
+            final Post post = Post.builder()
+                    .title(counter + "-title")
+                    .status(PostStatus.INACTIVE)
+                    .rating(counter)
+                    .blog(blog)
+                    .build();
+            adapter.save(post);
+            savedModels.add(post);
+        }
+        Consumer<DataStoreQuerySnapshot<Post>> onQuerySnapshot = value -> {
+            if (count.get() == 0) {
+                List<Post> sorted = new ArrayList<>(savedModels);
+                Collections.sort(sorted, Comparator
+                        .comparing(Post::getRating)
+                        .reversed()
+                );
+                assertEquals(sorted, value.getItems());
+                latch.countDown();
+            } else {
+                List<Post> sorted = new ArrayList<>(savedModels);
+                Collections.sort(sorted, Comparator
+                        .comparing(Post::getRating)
+                        .reversed()
+                );
+                assertEquals(sorted, value.getItems());
+                changeLatch.countDown();
+            }
+            count.incrementAndGet();
+        };
+        List<QuerySortBy> sortBy = new ArrayList<>();
+        sortBy.add(Post.RATING.descending());
+        adapter.observeQuery(
+                Post.class,
+                new ObserveQueryOptions(null, sortBy),
+                observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
+
+        assertTrue(latch.await(700, TimeUnit.SECONDS));
+        for (int counter = 0; counter < 4; counter++) {
+            Post itemChange = Post.builder()
+                    .title(1 + "-title")
+                    .status(PostStatus.INACTIVE)
+                    .rating(counter)
+                    .blog(blog)
+                    .build();
+            savedModels.add(itemChange);
+            adapter.save(itemChange);
+        }
+        assertTrue(changeLatch.await(300, TimeUnit.SECONDS));
     }
 
     /**

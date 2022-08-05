@@ -20,6 +20,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
+import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Comment;
@@ -42,7 +43,7 @@ public final class TopologicalOrderingTest {
         // Load the models into the registry.
         // They are provided intentionally out of topological order.
         final SimpleModelProvider provider =
-            SimpleModelProvider.withRandomVersion(Comment.class, Blog.class, BlogOwner.class, Post.class);
+            SimpleModelProvider.withRandomVersion(Comment.class, Blog.class, BlogOwner.class, Post.class, Author.class);
 
         final SchemaRegistry registry = SchemaRegistry.instance();
         registry.clear();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ import static org.junit.Assert.assertNotNull;
 public final class RestRequestFactoryTest {
     /**
      * Test if we can create a valid URL.
+     *
      * @throws MalformedURLException Throws if the URL is invalid.
      */
     @Test
@@ -53,6 +54,7 @@ public final class RestRequestFactoryTest {
 
     /**
      * Test if we can create a valid URL with already existing path.
+     *
      * @throws MalformedURLException Throws if the URL is invalid.
      */
     @Test
@@ -67,6 +69,7 @@ public final class RestRequestFactoryTest {
 
     /**
      * Test if path without leading slash is still valid.
+     *
      * @throws MalformedURLException Throws if the URL is invalid.
      */
     @Test
@@ -81,6 +84,7 @@ public final class RestRequestFactoryTest {
 
     /**
      * Test creating a valid URL with queries.
+     *
      * @throws MalformedURLException Throws when the url is invalid.
      */
     @Test
@@ -98,6 +102,7 @@ public final class RestRequestFactoryTest {
 
     /**
      * Test creating a valid URL with queries containing special chars.
+     *
      * @throws MalformedURLException Throws if the URL is invalid.
      */
     @Test
@@ -112,6 +117,7 @@ public final class RestRequestFactoryTest {
 
     /**
      * Test creating a valid URL with path containing special chars.
+     *
      * @throws MalformedURLException Throws if the URL is invalid.
      */
     @Test
@@ -127,6 +133,7 @@ public final class RestRequestFactoryTest {
 
     /**
      * Test creating a valid URL containing special chars.
+     *
      * @throws MalformedURLException Throws if the URL is invalid.
      */
     @Test
@@ -141,6 +148,7 @@ public final class RestRequestFactoryTest {
 
     /**
      * Test if exception is thrown on invalid URL.
+     *
      * @throws MalformedURLException Should throw since the URL is invalid.
      */
     @Test(expected = MalformedURLException.class)
@@ -152,6 +160,7 @@ public final class RestRequestFactoryTest {
 
     /**
      * Test creates a GET request.
+     *
      * @throws MalformedURLException Throws when the URL is invalid.
      */
     @Test
@@ -167,7 +176,84 @@ public final class RestRequestFactoryTest {
     }
 
     /**
+     * Test creates a DELETE request.
+     *
+     * @throws MalformedURLException Throws when the URL is invalid.
+     */
+    @Test
+    public void createDeleteRequestWithoutBody() throws MalformedURLException {
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
+                "/path/to/path",
+                null);
+        Request request = RestRequestFactory.createRequest(url,
+                null,
+                null,
+                HttpMethod.DELETE);
+        assertNotNull("Request should not be null", request);
+    }
+
+    /**
+     * Test creates a DELETE request with a body.
+     *
+     * @throws MalformedURLException Throws when the URL is invalid.
+     */
+    @Test
+    public void createDeleteRequestWithBody() throws MalformedURLException {
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
+                "/path/to/path",
+                null);
+        Request request = RestRequestFactory.createRequest(url,
+                "{}".getBytes(),
+                null,
+                HttpMethod.DELETE);
+        assertNotNull("Request should not be null", request);
+    }
+
+    /**
+     * Test creates a DELETE request with headers.
+     *
+     * @throws MalformedURLException Throws when the URL is invalid.
+     */
+    @Test
+    public void createDeleteRequestWithHeaders() throws MalformedURLException {
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
+                "/path/to/path",
+                null);
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("key1", "value1");
+        Request request = RestRequestFactory.createRequest(url,
+                null,
+                headers,
+                HttpMethod.DELETE);
+        assertNotNull("Request should not be null", request);
+        assertEquals("Header values should be set", "value1", request.header("key1"));
+    }
+
+    /**
+     * Test creates a DELETE request with headers and body.
+     *
+     * @throws MalformedURLException Throws when the URL is invalid.
+     */
+    @Test
+    public void createDeleteRequestWithHeadersANDBody() throws MalformedURLException {
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
+                "/path/to/path",
+                null);
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("key1", "value1");
+        Request request = RestRequestFactory.createRequest(url,
+                "{}".getBytes(),
+                headers,
+                HttpMethod.DELETE);
+        assertNotNull("Request should not be null", request);
+        assertEquals("Header values should be set", "value1", request.header("key1"));
+    }
+
+    /**
      * Test creates a POST request.
+     *
      * @throws MalformedURLException Throws when the URL is invalid.
      */
     @Test
@@ -184,6 +270,7 @@ public final class RestRequestFactoryTest {
 
     /**
      * Test creates a POST request with a body.
+     *
      * @throws MalformedURLException Throws when the URL is invalid.
      */
     @Test
@@ -200,6 +287,7 @@ public final class RestRequestFactoryTest {
 
     /**
      * Test creates a POST request with headers.
+     *
      * @throws MalformedURLException Throws when the URL is invalid.
      */
     @Test

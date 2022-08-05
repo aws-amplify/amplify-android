@@ -161,6 +161,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                             return chain.proceed(decorator.decorate(chain.request()));
                         } catch (ApiException.ApiAuthException apiAuthException) {
                             throw new IOException("Failed to decorate request for authorization.", apiAuthException);
+                        } catch (Exception exception) {
+                            throw new IOException("An error occurred while making the request.", exception);
                         }
                     });
                 }

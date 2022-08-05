@@ -49,6 +49,16 @@ interface SQLCommandFactory {
     Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema);
 
     /**
+     * Generates the set of CREATE INDEX SQL commands for foreign keys from the {@link ModelSchema}.
+     * @param modelSchema the schema of a {@link com.amplifyframework.core.model.Model}
+     *                    for which a CREATE INDEX SQL command needs to be generated.
+     * @return the set of CREATE INDEX SQL commands
+     */
+    @NonNull
+    Set<SqlCommand> createIndexesForForeignKeys(@NonNull ModelSchema modelSchema);
+
+
+    /**
      * Generates the QUERY command in a raw string representation from
      * the {@link ModelSchema}.
      *

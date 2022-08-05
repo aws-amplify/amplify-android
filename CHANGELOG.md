@@ -1,3 +1,54 @@
+## [Release 1.37.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.0)
+
+### Features
+- **datastore**: Implemented support for custom primary key (#1650)
+
+### Bug Fixes
+- **api:** allow post request with empty body (#1864)
+
+[See all changes between 1.36.5 and 1.37.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.5...release_v1.37.0)
+
+## [Release 1.36.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.5)
+
+### Miscellaneous
+- Updating the version to 2.50.1 for AWS SDK (#1861)
+- Reduce the importance level of transfer channel for foreground service to prevent sound/vibrate (#1860)
+
+[See all changes between 1.36.4 and 1.36.5](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.4...release_v1.36.5)
+
+## [Release 1.36.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.4)
+
+### Miscellaneous
+- Call to start TransferService regardless of if it has already been started
+- Update transfer message in notification
+- Update the Delete REST API to ensure it would work with and without a body (#1842)
+- Chore(Release): Updating mobile client to the latest (#1847)
+
+[See all changes between 1.36.3 and 1.36.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.3...release_v1.36.4)
+
+## [Release 1.36.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.3)
+
+### Bug Fixes
+- **api:** catch all exceptions when making rest request (#1827)
+
+[See all changes between 1.36.2 and 1.36.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.2...release_v1.36.3)
+
+## [Release 1.36.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.2)
+
+### Miscellaneous
+- Expand a catch clause to catch all (#1806)
+
+[See all changes between 1.36.1 and 1.36.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.1...release_v1.36.2)
+
+## [Release 1.36.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.1)
+
+### Miscellaneous
+- fix orchestrator failing if emitter is disposed (#1755)
+- catch exceptions from processOutboxItem (#1743)
+- ci: added canary workflow (#1770)
+
+[See all changes between 1.36.0 and 1.36.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.0...release_v1.36.1)
+
 ## [Release 1.36.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.0)
 
 ### Features

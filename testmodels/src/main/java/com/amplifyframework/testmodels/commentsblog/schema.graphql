@@ -1,15 +1,19 @@
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
+
 type Blog @model {
   id: ID!
   name: String!
-  posts: [Post] @connection(name: "BlogPosts")
-  owner: BlogOwner! @connection(name: "BlogOwner")
+  posts: [Post] @hasMany
+  owner: BlogOwner @belongsTo
   createdAt: AWSDateTime
 }
 
 type BlogOwner @model {
   name: String!
   id: ID!
-  blog: Blog @connection(name: "BlogOwner")
+  blog: [Blog] @hasMany
   wea: String
   createdAt: AWSDateTime
 }
@@ -22,9 +26,9 @@ enum PostStatus {
 type Post @model {
   id: ID!
   title: String!
-  blog: Blog @connection(name: "BlogPosts")
-  comments: [Comment] @connection(name: "PostComments")
-  authors: [PostAuthorJoin] @connection(keyName: "byPost", fields: ["id"])
+  blog: Blog @belongsTo
+  comments: [Comment] @hasMany
+  author: Author @belongsTo
   status: PostStatus!
   rating: Int!
   createdAt: AWSDateTime
@@ -33,27 +37,45 @@ type Post @model {
 type Comment @model {
   id: ID!
   content: String
-  post: Post @connection(name: "PostComments")
+  post: Post @belongsTo
   createdAt: AWSDateTime
 }
 
 type Author @model {
   id: ID!
   name: String!
-  posts: [PostAuthorJoin] @connection(keyName: "byAuthor", fields: ["id"])
+  posts: [Post] @hasMany
   createdAt: AWSDateTime
 }
 
-type PostAuthorJoin
-  @model
-  @key(name: "byAuthor", fields: ["authorId"])
-  @key(name: "byPost", fields: ["postId"]) {
+type OtherBlog @model {
   id: ID!
-  authorId: ID!
-  postId: ID!
-  author: Author @connection(fields: ["authorId"])
-  post: Post @connection(fields: ["postId"])
+  name: String!
+  owner: BlogOwnerWithCustomPK! @belongsTo
   createdAt: AWSDateTime
 }
 
+type BlogOwnerWithCustomPK @model
+{
+  name: String! @primaryKey(sortKeyFields: ["wea"])
+  blogs: [OtherBlog] @hasMany
+  id: ID!
+  wea: String!
+  createdAt: AWSDateTime
+}
+
+type Blog2 @model {
+  id: ID!
+  name: String!
+  owner: BlogOwner2! @belongsTo
+  createdAt: AWSDateTime
+}
+
+type BlogOwner2 @model
+{
+  name: String! @primaryKey
+  blogs: [Blog2] @hasMany
+  id: ID!
+  createdAt: AWSDateTime
+}
 
