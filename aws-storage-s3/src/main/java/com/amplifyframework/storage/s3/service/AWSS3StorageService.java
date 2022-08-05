@@ -240,7 +240,7 @@ public final class AWSS3StorageService implements StorageService {
     }
 
     private void startTransferService() {
-        AmplifyTransferService.Companion.start(context);
+        AmplifyTransferService.Companion.bind(context);
     }
 
     /**
