@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
+<<<<<<< Updated upstream
 import android.app.Activity
 import android.content.Intent
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -47,13 +48,82 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlin.test.assertEquals
+=======
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider.getApplicationContext
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.AuthCategory
+import com.amplifyframework.auth.AuthCategoryConfiguration
+import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
+import com.amplifyframework.auth.cognito.data.KeyValueRepository
+import com.amplifyframework.auth.cognito.data.KeyValueRepositoryFactory
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
+import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertTrue
+import org.json.JSONException
+import org.json.JSONObject
+>>>>>>> Stashed changes
 import org.junit.Before
 import org.junit.Test
+<<<<<<< Updated upstream
+=======
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.robolectric.RobolectricTestRunner
+import java.io.InputStream
+import java.io.OutputStream
+import java.security.Key
+import java.security.KeyStore
+import java.security.KeyStoreSpi
+import java.security.Provider
+import java.security.Security
+import java.security.cert.Certificate
+import java.util.*
+>>>>>>> Stashed changes
 
 class AWSCognitoAuthPluginTest {
 
+<<<<<<< Updated upstream
     private lateinit var authPlugin: AWSCognitoAuthPlugin
     private val realPlugin: RealAWSCognitoAuthPlugin = mockk(relaxed = true)
+=======
+    private val PLUGIN_KEY = "awsCognitoAuthPlugin"
+
+    private lateinit var authCategory: AuthCategory
+    companion object {
+        private const val IDENTITY_POOL_ID: String = "identityPoolID"
+        private const val USER_POOL_ID: String = "userPoolID"
+        private const val KEY_WITH_IDENTITY_POOL: String = "amplify.$IDENTITY_POOL_ID.session"
+        private const val KEY_WITH_USER_POOL: String = "amplify.$USER_POOL_ID.session"
+        private const val KEY_WITH_USER_AND_IDENTITY_POOL: String = "amplify.$USER_POOL_ID.$IDENTITY_POOL_ID.session"
+    }
+
+    private val keyValueRepoID: String = "com.amplify.credentialStore"
+
+    @Mock
+    private lateinit var mockConfig: AuthConfiguration
+
+    @Mock
+    private lateinit var mockContext: Context
+
+    @Mock
+    private lateinit var mockKeyValue: KeyValueRepository
+
+    @Mock
+    private lateinit var mockFactory: KeyValueRepositoryFactory
+
+    private lateinit var persistentStore: AWSCognitoAuthCredentialStore
+
+>>>>>>> Stashed changes
 
     @Before
     fun setup() {
@@ -530,6 +600,7 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
+<<<<<<< Updated upstream
         verify {
             realPlugin.resendUserAttributeConfirmationCode(
                 expectedAttributeKey,
@@ -538,6 +609,52 @@ class AWSCognitoAuthPluginTest {
                 expectedOnError
             )
         }
+=======
+        val authConfig = AuthCategoryConfiguration()
+        authConfig.populateFromJSON(json)
+        authCategory.configure(authConfig, context)
+        authCategory.initialize(context)
+
+        Mockito.`when`(
+            mockFactory.create(
+                mockContext,
+                keyValueRepoID,
+                true,
+            )
+        ).thenReturn(mockKeyValue)
+
+        Mockito.`when`(mockKeyValue.get(Mockito.anyString())).thenReturn(
+            serialized(getCredential())
+        )
+
+        val provider = object : Provider("AndroidKeyStore", 1.0, "") {
+            init {
+                put("KeyStore.AndroidKeyStore",
+                    FakeKeyStore::class.java.name)
+            }
+        }
+        provider.pu
+        Security.addProvider(provider)
+    }
+
+    private fun getCredential(): AmplifyCredential {
+        val expiration = 123123L
+        return AmplifyCredential(
+            CognitoUserPoolTokens(
+                "idToken",
+                "accessToken",
+                "refreshToken",
+                expiration
+            ),
+            "identityPool",
+            AWSCredentials(
+                "accessKeyId",
+                "secretAccessKey",
+                "sessionToken",
+                expiration
+            )
+        )
+>>>>>>> Stashed changes
     }
 
     @Test
@@ -608,5 +725,112 @@ class AWSCognitoAuthPluginTest {
     @Test
     fun verifyPluginKey() {
         assertEquals("awsCognitoAuthPlugin", authPlugin.pluginKey)
+    }
+
+    @Test
+    fun testRememberDevice() {
+        setupUserPoolConfig()
+        setupIdentityPoolConfig()
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
+        val testLatch = CountDownLatch(1)
+        authCategory.rememberDevice(
+            { testLatch.countDown() },
+            {}
+        )
+        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+    }
+
+    private fun serialized(credential: AmplifyCredential): String {
+        return Json.encodeToString(credential)
+    }
+
+    private fun setStoreCredentials(credential: AmplifyCredential) {
+        Mockito.`when`(mockKeyValue.get(Mockito.anyString())).thenReturn(serialized(credential))
+
+        setupUserPoolConfig()
+        setupIdentityPoolConfig()
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
+    }
+
+    private fun setupIdentityPoolConfig() {
+        Mockito.`when`(mockConfig.identityPool).thenReturn(
+            IdentityPoolConfiguration {
+                this.poolId = IDENTITY_POOL_ID
+            }
+        )
+    }
+
+    private fun setupUserPoolConfig() {
+        Mockito.`when`(mockConfig.userPool).thenReturn(
+            UserPoolConfiguration {
+                this.poolId = USER_POOL_ID
+                this.appClientId = ""
+            }
+        )
+    }
+
+    class FakeKeyStore : KeyStoreSpi() {
+        private val wrapped =
+            KeyStore.getInstance(KeyStore.getDefaultType())
+
+        override fun engineIsKeyEntry(alias: String?) =
+            wrapped.isKeyEntry(alias)
+        override fun engineIsCertificateEntry(alias: String?) =
+            wrapped.isCertificateEntry(alias)
+
+        override fun engineGetCertificateAlias(p0: Certificate?): String {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineStore(p0: OutputStream?, p1: CharArray?) {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineLoad(p0: InputStream?, p1: CharArray?) {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineGetKey(alias: String?, password: CharArray?)=
+            wrapped.getKey(alias, password)
+
+        override fun engineGetCertificateChain(p0: String?): Array<Certificate> {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineGetCertificate(p0: String?): Certificate {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineGetCreationDate(p0: String?): Date {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineSetKeyEntry(p0: String?, p1: Key?, p2: CharArray?, p3: Array<out Certificate>?) {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineSetKeyEntry(p0: String?, p1: ByteArray?, p2: Array<out Certificate>?) {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineSetCertificateEntry(p0: String?, p1: Certificate?) {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineDeleteEntry(p0: String?) {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineAliases(): Enumeration<String> {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineContainsAlias(p0: String?): Boolean {
+            TODO("Not yet implemented")
+        }
+
+        override fun engineSize(): Int {
+            TODO("Not yet implemented")
+        }
     }
 }

@@ -37,7 +37,7 @@ object SRPCognitoActions : SRPActions {
             val evt = try {
                 srpHelper = SRPHelper(event.username, event.password)
 
-                val secretHash = SRPHelper.getSecretHash(
+                val secretHash = srpHelper.getSecretHash(
                     event.username,
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
@@ -81,7 +81,7 @@ object SRPCognitoActions : SRPActions {
 
                 srpHelper.setUserPoolParams(userId, configuration.userPool?.poolId!!)
                 val m1Signature = srpHelper.getSignature(salt, srpB, secretBlock)
-                val secretHash = SRPHelper.getSecretHash(
+                val secretHash = srpHelper.getSecretHash(
                     username,
                     configuration.userPool.appClient,
                     configuration.userPool.appClientSecret

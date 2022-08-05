@@ -20,7 +20,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpReques
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignUpActions
 import com.amplifyframework.statemachine.codegen.data.SignedUpData
@@ -43,7 +42,7 @@ object SignUpCognitoActions : SignUpActions {
                     this.password = event.password
                     this.userAttributes = userAttributes
                     this.clientId = configuration.userPool?.appClient
-                    this.secretHash = SRPHelper.getSecretHash(
+                    this.secretHash = srpHelper.getSecretHash(
                         event.username,
                         configuration.userPool?.appClient,
                         configuration.userPool?.appClientSecret
@@ -79,7 +78,7 @@ object SignUpCognitoActions : SignUpActions {
                     this.username = event.username
                     this.confirmationCode = event.confirmationCode
                     this.clientId = configuration.userPool?.appClient
-                    this.secretHash = SRPHelper.getSecretHash(
+                    this.secretHash = srpHelper.getSecretHash(
                         event.username,
                         configuration.userPool?.appClient,
                         configuration.userPool?.appClientSecret
