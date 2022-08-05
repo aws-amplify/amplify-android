@@ -22,6 +22,7 @@ function pickDeviceFarmPool {
   read -a arns <<< $(aws devicefarm list-device-pools \
                 --arn=$project_arn \
                 --type=PRIVATE \
+                --region="us-west-2" \
                 --query='devicePools[*].arn' \
                 | jq '.[]')
 
