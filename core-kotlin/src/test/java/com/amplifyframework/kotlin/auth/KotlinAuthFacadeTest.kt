@@ -371,6 +371,23 @@ class KotlinAuthFacadeTest {
     }
 
     /**
+     * When the fetchAuthSession() delegate emits an error, it should
+     * be surfaced by the coroutine API, too.
+     */
+    @Test(expected = AuthException.SessionExpiredException::class)
+    fun fetchAuthSessionThrowsSessionExpired(): Unit = runBlocking {
+        val error = AuthException.SessionExpiredException() as AuthException
+        every {
+            delegate.fetchAuthSession(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 1
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onError.accept(error)
+        }
+        auth.fetchAuthSession()
+    }
+
+    /**
      * When rememberDevice() coroutine is called, it should pass through to the
      * delegate. If the delegate succeeds, so should the coroutine.
      */

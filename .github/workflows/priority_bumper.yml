@@ -1,0 +1,34 @@
+name: Projects priority automation
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  bump_to_p2:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.issue.comments > 10 }}
+    steps:
+      - name: Bump to P2
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROJECT_WORKFLOW_TOKEN }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+          FIELD_ID: ${{ secrets.PRIORITY_COL }}
+          FIELD_OPT_ID: ${{ secrets.P2_OPT_ID }}
+        shell: bash
+        run: curl -s POST https://api.github.com/graphql -H "Authorization:Bearer $GITHUB_TOKEN" --data '{"query":"mutation {updateProjectNextItemField(input:{projectId:\"${{ env.PROJECT_ID }}\" itemId:\"${{ env.ISSUE_ID }}\" fieldId:\"${{ env.FIELD_ID }}\" value:\"${{ env.FIELD_OPT_ID }}\"}) {projectNextItem {id}}}"}' > /dev/null
+
+  bump_to_p1:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.issue.comments > 15 }}
+    steps:
+      - name: Bump to P1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROJECT_WORKFLOW_TOKEN }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+          FIELD_ID: ${{ secrets.PRIORITY_COL }}
+          FIELD_OPT_ID: ${{ secrets.P1_OPT_ID }}
+        shell: bash
+        run: curl -s POST https://api.github.com/graphql -H "Authorization:Bearer $GITHUB_TOKEN" --data '{"query":"mutation {updateProjectNextItemField(input:{projectId:\"${{ env.PROJECT_ID }}\" itemId:\"${{ env.ISSUE_ID }}\" fieldId:\"${{ env.FIELD_ID }}\" value:\"${{ env.FIELD_OPT_ID }}\"}) {projectNextItem {id}}}"}' > /dev/null
+        

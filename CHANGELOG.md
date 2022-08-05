@@ -1,3 +1,22 @@
+## [Release 1.36.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.0)
+
+### Features
+- Add flushEvents HubEvent for analytics (#1792)
+
+### Miscellaneous
+- Update build.gradle
+
+[See all changes between 1.35.7 and 1.36.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.7...release_v1.36.0)
+
+## [Release 1.35.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.7)
+
+### Miscellaneous
+- Fix for adding data back to the delete request if it contains data as that is allowed for the Delete api (#1735)
+- Fix/1485 : Fix for sending the session expired hub event when all credentials are expired (#1779)
+- Updating build.gradle to include the latest version of the aws sdk (#1783)
+
+[See all changes between 1.35.6 and 1.35.7](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.6...release_v1.35.7)
+
 ## [Release 1.35.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.6)
 
 ### Bug Fixes
@@ -12,18 +31,9 @@
 
 [See all changes between 1.35.5 and 1.35.6](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.5...release_v1.35.6)
 
-## [Release 1.36.5-dev-preview.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.5-dev-preview.0)
-
-### Miscellaneous
-
-- Dev preview update and version bump (#1752)
-
-[See all changes between 1.35.5 and 1.36.5-dev-preview.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.5...release_v1.36.5-dev-preview.0)
-
 ## [Release 1.35.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.5)
 
 ### Miscellaneous
-
 - chore: update gson version (#1744)
 - Update notify_comments.yml (#1746)
 - Update SDK version in build.gradle (#1747)
@@ -33,7 +43,6 @@
 ## [Release 1.35.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.4)
 
 ### Miscellaneous
-
 - Update SDK version in build.gradle (#1741)
 
 [See all changes between 1.35.3 and 1.35.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.3...release_v1.35.4)
@@ -41,32 +50,12 @@
 ## [Release 1.35.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.3)
 
 ### Bug Fixes
-
 - When DateTimeParseException is not available for lower apis (#1701)
 
 ### Miscellaneous
-
 - Version bumps (#1721)
 
 [See all changes between 1.35.2 and 1.35.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.2...release_v1.35.3)
-
-## [Release 1.36.0-dev-preview.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.0-dev-preview.0)
-
-### ⚠ BREAKING CHANGES
-
-- The escape hatch for dev-preview supported plugins will no longer return AWSMobileClient.
-
-### Features
-
-- **Auth**:
-  - Redesigned AWS Cognito Plugin architecture using state machines.
-  - Dependency on `AWSMobileClient` is replaced with [AWS SDK for Kotlin](https://github.com/awslabs/aws-sdk-kotlin).
-- **Storage** :
-  - Removed dependency on AWS TransferUtility and other improvements
-- **API and DataStore**:
-  - Dependency on `AWSMobileClient` is replaced with [AWS SDK for Kotlin](https://github.com/awslabs/aws-sdk-kotlin).
-
-[See all changes between 1.35.2 and 1.36.0-dev-preview.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.2...release_v1.36.0-dev-preview.0)
 
 ## [Release 1.35.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.2)
 
