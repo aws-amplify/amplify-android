@@ -37,7 +37,6 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 
 import java.io.File;
 import java.util.HashSet;
@@ -53,7 +52,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Instrumentation test for operational work on upload.
  */
-@Ignore("Contains test which either hang themselves, or hang the suite overall.")
 public final class AWSS3StorageUploadTest {
     private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(20);
 
@@ -113,7 +111,6 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
     public void testUploadSmallFile() throws Exception {
         File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -125,7 +122,6 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
     public void testUploadLargeFile() throws Exception {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -140,7 +136,6 @@ public final class AWSS3StorageUploadTest {
      *         before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
     public void testUploadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -189,7 +184,6 @@ public final class AWSS3StorageUploadTest {
      *         completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);

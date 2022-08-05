@@ -39,7 +39,6 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 
 import java.io.File;
 import java.util.HashSet;
@@ -55,7 +54,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Instrumentation test for operational work on download.
  */
-@Ignore("Contains tests that hang, or hang the suite overall.")
 public final class AWSS3StorageDownloadTest {
     private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(20);
 
@@ -144,7 +142,6 @@ public final class AWSS3StorageDownloadTest {
      *
      * @throws Exception if download fails
      */
-    @Ignore("Contains tests that hang, or hang the suite overall.")
     public void testDownloadSmallFile() throws Exception {
         synchronousStorage.downloadFile(SMALL_FILE_NAME, downloadFile, options);
         FileAssert.assertEquals(smallFile, downloadFile);
@@ -155,7 +152,6 @@ public final class AWSS3StorageDownloadTest {
      *
      * @throws Exception if download fails
      */
-    @Ignore("Contains tests that hang, or hang the suite overall.")
     public void testDownloadLargeFile() throws Exception {
         synchronousStorage.downloadFile(LARGE_FILE_NAME, downloadFile, options, EXTENDED_TIMEOUT_MS);
         FileAssert.assertEquals(largeFile, downloadFile);
@@ -168,7 +164,6 @@ public final class AWSS3StorageDownloadTest {
      * @throws Exception if download is not canceled successfully
      *                   before timeout
      */
-    @Ignore("Contains tests that hang, or hang the suite overall.")
     @SuppressWarnings("unchecked")
     public void testDownloadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
@@ -214,7 +209,6 @@ public final class AWSS3StorageDownloadTest {
      * @throws Exception if download is not paused, resumed, and
      *                   completed successfully before timeout
      */
-    @Ignore("Contains tests that hang, or hang the suite overall.")
     @SuppressWarnings("unchecked")
     public void testDownloadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
