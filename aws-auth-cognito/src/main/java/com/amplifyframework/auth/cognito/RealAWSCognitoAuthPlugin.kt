@@ -136,15 +136,6 @@ internal class RealAWSCognitoAuthPlugin(
     override fun confirmSignUp(
         username: String,
         confirmationCode: String,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
-    ) {
-        confirmSignUp(username, confirmationCode, AuthConfirmSignUpOptions.defaults(), onSuccess, onError)
-    }
-
-    override fun confirmSignUp(
-        username: String,
-        confirmationCode: String,
         options: AuthConfirmSignUpOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
@@ -199,15 +190,6 @@ internal class RealAWSCognitoAuthPlugin(
                 )
             }
         }
-    }
-
-    override fun signIn(
-        username: String?,
-        password: String?,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        signIn(username, password, AuthSignInOptions.defaults(), onSuccess, onError)
     }
 
     override fun signIn(

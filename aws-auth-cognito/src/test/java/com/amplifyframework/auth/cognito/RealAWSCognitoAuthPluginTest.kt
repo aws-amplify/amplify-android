@@ -83,7 +83,7 @@ class RealAWSCognitoAuthPluginTest {
         "M5MDIyfQ.e4RpZTfAb3oXkfq3IwHtR_8Zhn0U1JDV7McZPlBXyhw"
 
     private var logger = mockk<Logger>(relaxed = true)
-    private val appClientId = "topSecretClient"
+    private val appClientId = "app Client Id"
     private var authConfiguration = mockk<AuthConfiguration> {
         every { userPool } returns UserPoolConfiguration.invoke {
             this.appClientId = this@RealAWSCognitoAuthPluginTest.appClientId
@@ -437,6 +437,9 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         assertTrue { latch.await(5, TimeUnit.SECONDS) }
+
+        println(ConfirmForgotPasswordRequest.invoke(expectedRequestBuilder))
+        println(ConfirmForgotPasswordRequest.invoke(requestBuilderCaptor.captured))
         assertEquals(
             ConfirmForgotPasswordRequest.invoke(expectedRequestBuilder),
             ConfirmForgotPasswordRequest.invoke(requestBuilderCaptor.captured)
