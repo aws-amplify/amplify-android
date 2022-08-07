@@ -4,12 +4,12 @@ module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
 
-# Enable this for testing only
-read -a skip_projects <<< $SKIP_PROJECTS
+# List of modules to block testing
+blocklist=(aws-datastore)
 
 if [ "$CODEBUILD_WEBHOOK_BASE_REF" = "main" ]; then
-    echo "Skipping test restricted in main branch, ignoring skip"
-elif [[ ${skip_projects[*]} =~ ${module_name} ]]; then
+    echo "Skipping tests restricted in main branch, ignoring skip"
+elif [ "$SKIP_PROJECTS" = "true" ] && [[ ${blocklist[*]} =~ ${module_name} ]]; then
     echo "Module $module_name in list of projects to skip, not running test"
     exit 0
 fi
