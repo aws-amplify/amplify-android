@@ -18,7 +18,14 @@ package com.amplifyframework.auth.cognito
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.Environment
+import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 
 class AuthEnvironment internal constructor(
     val configuration: AuthConfiguration,
@@ -26,4 +33,28 @@ class AuthEnvironment internal constructor(
     val logger: Logger? = null
 ) : Environment {
     internal lateinit var srpHelper: SRPHelper
+}
+
+fun StateMachineEvent.isAuthEvent(): AuthEvent.EventType? {
+    return (this as? AuthEvent)?.eventType
+}
+
+fun StateMachineEvent.isAuthenticationEvent(): AuthenticationEvent.EventType? {
+    return (this as? AuthenticationEvent)?.eventType
+}
+
+fun StateMachineEvent.isAuthorizationEvent(): AuthorizationEvent.EventType? {
+    return (this as? AuthorizationEvent)?.eventType
+}
+
+fun StateMachineEvent.isSignOutEvent(): SignOutEvent.EventType? {
+    return (this as? SignOutEvent)?.eventType
+}
+
+fun StateMachineEvent.isSignUpEvent(): SignUpEvent.EventType? {
+    return (this as? SignUpEvent)?.eventType
+}
+
+fun StateMachineEvent.isDeleteUserEvent(): DeleteUserEvent.EventType? {
+    return (this as? DeleteUserEvent)?.eventType
 }

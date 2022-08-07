@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -285,6 +285,7 @@ public interface RxAuthCategoryBehavior {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param options Advanced options such as a map of auth information for custom auth
@@ -292,6 +293,7 @@ public interface RxAuthCategoryBehavior {
      *         emits an {@link AuthException} otherwise
      */
     Completable confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options
@@ -299,12 +301,13 @@ public interface RxAuthCategoryBehavior {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @return An Rx {@link Completable} which completes successfully if password reset is confirmed,
      *         emits an {@link AuthException} otherwise
      */
-    Completable confirmResetPassword(@NonNull String newPassword, @NonNull String confirmationCode);
+    Completable confirmResetPassword(String username, @NonNull String newPassword, @NonNull String confirmationCode);
 
     /**
      * Update the password of an existing user - must be signed in to perform this action.

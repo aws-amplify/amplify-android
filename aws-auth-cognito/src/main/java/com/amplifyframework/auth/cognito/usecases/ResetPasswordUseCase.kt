@@ -29,6 +29,9 @@ import com.amplifyframework.core.Consumer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/**
+ * Business logic to reset password if user forgot the old password.
+ */
 internal class ResetPasswordUseCase(
     private val cognitoIdentityProviderClient: CognitoIdentityProviderClient,
     private val appClientId: String

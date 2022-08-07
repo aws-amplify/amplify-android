@@ -21,13 +21,14 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 object SignOutCognitoActions : SignOutActions {
     override fun localSignOutAction(event: SignOutEvent.EventType.SignOutLocally) =
         Action<AuthEnvironment>("LocalSignOut") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = SignOutEvent(SignOutEvent.EventType.SignedOutSuccess(event.signedInData))
+            val evt = SignOutEvent(SignOutEvent.EventType.SignedOutSuccess(SignedOutData(event.signedInData?.username)))
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
