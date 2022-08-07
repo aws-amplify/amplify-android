@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -197,18 +197,32 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Completable confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options
     ) {
         return toCompletable((onComplete, onError) ->
-            delegate.confirmResetPassword(newPassword, confirmationCode, options, onComplete, onError));
+            delegate.confirmResetPassword(
+                username, newPassword, confirmationCode, options, onComplete, onError
+            )
+        );
     }
 
     @Override
-    public Completable confirmResetPassword(@NonNull String newPassword, @NonNull String confirmationCode) {
+    public Completable confirmResetPassword(
+            @NonNull String username,
+            @NonNull String newPassword,
+            @NonNull String confirmationCode) {
         return toCompletable((onComplete, onError) ->
-            delegate.confirmResetPassword(newPassword, confirmationCode, onComplete, onError));
+            delegate.confirmResetPassword(
+                    username,
+                    newPassword,
+                    confirmationCode,
+                    onComplete,
+                    onError
+            )
+        );
     }
 
     @Override
